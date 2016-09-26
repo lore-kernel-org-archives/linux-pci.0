@@ -1,482 +1,1654 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Ondrej Zary <linux@rainbow-software.org>
-To: okaya@codeaurora.org
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
-Date: Thu, 29 Sep 2016 15:49:07 +0200
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
-References: <201609251512.05657.linux@rainbow-software.org> <201609291110.50176.linux@rainbow-software.org> <131b4220b509ed95dfbb35a441ccbc2c@codeaurora.org>
-In-Reply-To: <131b4220b509ed95dfbb35a441ccbc2c@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_TvR7XjBEovwA707"
-Message-Id: <201609291549.07784.linux@rainbow-software.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:64382 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161175AbcIZP2u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Sep 2016 11:28:50 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH] pci/vmd: Move vmd driver to drivers/pci/host
+Date: Mon, 26 Sep 2016 09:28:44 -0600
+Message-Id: <1474903724-383-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Boundary-00=_TvR7XjBEovwA707
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This moves the driver source and Kconfig to the pci host bridge drivers
+directory, relocating the config option to a more approrpiate sub-menu
+instead of occupying the top level location.
 
-On Thursday 29 September 2016, okaya@codeaurora.org wrote:
-> On 2016-09-29 05:10, Ondrej Zary wrote:
-> > On Thursday 29 September 2016, Sinan Kaya wrote:
-> >> On 9/28/2016 3:23 PM, Ondrej Zary wrote:
-> >> > On Wednesday 28 September 2016 20:22:40 Sinan Kaya wrote:
-> >> >> On 9/28/2016 1:02 PM, Ondrej Zary wrote:
-> >> >>>> Thanks, It sounds like you have more than one machine with similar
-> >> >>>>
-> >> >>>>> problems. Can you collect the log from the other machines with
-> >> >>>>> 4.8-rc8?
-> >> >>>>>
-> >> >>>>> and also a boot log with 4.6 kernel where things are working?
-> >> >>>
-> >> >>> The attached logs are from another machine:
-> >> >>>
-> >> >>> dmesg-bad-debug.txt: 4.8-rc8 with your debug patch - bad
-> >> >>>
-> >> >>> dmesg-reverted.txt: 4.8-rc8 with patches (as per Rafael's
-> >> >>> suggestion) reverted - good
-> >> >>>
-> >> >>> dmesg-3.6.txt: 4.6 (Debian kernel) - good
-> >> >>
-> >> >> I think I see a race condition for the SCI interrupt. I need another
-> >> >> dump from 4.8-rc8 with the attached patch to confirm. Let's remove
-> >> >> the previous one and apply this one.
-> >> >
-> >> > dmesg-reverted.txt: 4.8-rc8 w/patches reverted (good)
-> >> > $ head /proc/interrupts
-> >> >            CPU0
-> >> >   0:       8531    XT-PIC  timer
-> >> >   1:          9    XT-PIC  i8042
-> >> >   2:          0    XT-PIC  cascade
-> >> >   8:          1    XT-PIC  rtc0
-> >> >  11:        713    XT-PIC  acpi, uhci_hcd:usb1, uhci_hcd:usb2, nvkm,
-> >> > eth0 12:        161    XT-PIC  i8042
-> >> >  14:       4042    XT-PIC  pata_via
-> >> >  15:          0    XT-PIC  pata_via
-> >> > NMI:          0   Non-maskable interrupts
-> >> >
-> >> > dmesg-bad-debug.txt: 4.8-rc8 (bad)
-> >> > $ head /proc/interrupts
-> >> >            CPU0
-> >> >   0:       8027    XT-PIC  timer
-> >> >   1:        286    XT-PIC  i8042
-> >> >   2:          0    XT-PIC  cascade
-> >> >   8:          1    XT-PIC  rtc0
-> >> >  10:          0    XT-PIC  uhci_hcd:usb1, uhci_hcd:usb2
-> >> >  11:          0    XT-PIC  acpi, nvkm, eth0
-> >> >  12:        161    XT-PIC  i8042
-> >> >  14:       4069    XT-PIC  pata_via
-> >> >  15:          0    XT-PIC  pata_via
-> >> >
-> >> > (I'm moving between different machines through the day - these logs
-> >> > are from different machine than the last ones).
-> >>
-> >> Can you try these patches on your machines please?
-> >
-> > It doesn't even boot :(
->
-> Ok, since I have not seen the full boot log I am guessing that isa api
-> gets called before the link objects are initialized.
+The Kconfig option for VMD has been updated with its X86_64 dependency
+that was implicitly included from the previous location, and added
+missing information for building this driver as a loadable module.
 
-Netconsole did not work (probably because it crashes too early?) and I don't 
-have a null-modem cable.
+Cc: Jon Derrick <jonathan.derrick@intel.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ arch/x86/Kconfig          |  13 -
+ arch/x86/pci/Makefile     |   2 -
+ arch/x86/pci/vmd.c        | 766 ----------------------------------------------
+ drivers/pci/host/Kconfig  |  16 +
+ drivers/pci/host/Makefile |   1 +
+ drivers/pci/host/vmd.c    | 766 ++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 783 insertions(+), 781 deletions(-)
+ delete mode 100644 arch/x86/pci/vmd.c
+ create mode 100644 drivers/pci/host/vmd.c
 
-> Can you appply the first three only (0001, 0002 and 0003) to see if it
-> makes a difference?
-
-It boots with first 3 patches only but the problem remains - see the attached 
-log.
-
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 5c6e747..c320838 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2744,19 +2744,6 @@ config PMC_ATOM
+ 	def_bool y
+         depends on PCI
+ 
+-config VMD
+-	depends on PCI_MSI
+-	tristate "Volume Management Device Driver"
+-	default N
+-	---help---
+-	  Adds support for the Intel Volume Management Device (VMD). VMD is a
+-	  secondary PCI host bridge that allows PCI Express root ports,
+-	  and devices attached to them, to be removed from the default
+-	  PCI domain and placed within the VMD domain. This provides
+-	  more bus resources than are otherwise possible with a
+-	  single domain. If you know your system provides one of these and
+-	  has devices attached to it, say Y; if you are not sure, say N.
+-
+ source "net/Kconfig"
+ 
+ source "drivers/Kconfig"
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 97062a6..5c6fc35 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -23,8 +23,6 @@ obj-y				+= bus_numa.o
+ obj-$(CONFIG_AMD_NB)		+= amd_bus.o
+ obj-$(CONFIG_PCI_CNB20LE_QUIRK)	+= broadcom_bus.o
+ 
+-obj-$(CONFIG_VMD) += vmd.o
+-
+ ifeq ($(CONFIG_PCI_DEBUG),y)
+ EXTRA_CFLAGS += -DDEBUG
+ endif
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+deleted file mode 100644
+index a021b7b..0000000
+--- a/arch/x86/pci/vmd.c
++++ /dev/null
+@@ -1,766 +0,0 @@
+-/*
+- * Volume Management Device driver
+- * Copyright (c) 2015, Intel Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- */
+-
+-#include <linux/device.h>
+-#include <linux/interrupt.h>
+-#include <linux/irq.h>
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/msi.h>
+-#include <linux/pci.h>
+-#include <linux/rculist.h>
+-#include <linux/rcupdate.h>
+-
+-#include <asm/irqdomain.h>
+-#include <asm/device.h>
+-#include <asm/msi.h>
+-#include <asm/msidef.h>
+-
+-#define VMD_CFGBAR	0
+-#define VMD_MEMBAR1	2
+-#define VMD_MEMBAR2	4
+-
+-/*
+- * Lock for manipulating VMD IRQ lists.
+- */
+-static DEFINE_RAW_SPINLOCK(list_lock);
+-
+-/**
+- * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
+- * @node:	list item for parent traversal.
+- * @rcu:	RCU callback item for freeing.
+- * @irq:	back pointer to parent.
+- * @virq:	the virtual IRQ value provided to the requesting driver.
+- *
+- * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
+- * a VMD IRQ using this structure.
+- */
+-struct vmd_irq {
+-	struct list_head	node;
+-	struct rcu_head		rcu;
+-	struct vmd_irq_list	*irq;
+-	unsigned int		virq;
+-};
+-
+-/**
+- * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
+- * @irq_list:	the list of irq's the VMD one demuxes to.
+- * @vmd_vector:	the h/w IRQ assigned to the VMD.
+- * @index:	index into the VMD MSI-X table; used for message routing.
+- * @count:	number of child IRQs assigned to this vector; used to track
+- *		sharing.
+- */
+-struct vmd_irq_list {
+-	struct list_head	irq_list;
+-	struct vmd_dev		*vmd;
+-	unsigned int		vmd_vector;
+-	unsigned int		index;
+-	unsigned int		count;
+-};
+-
+-struct vmd_dev {
+-	struct pci_dev		*dev;
+-
+-	spinlock_t		cfg_lock;
+-	char __iomem		*cfgbar;
+-
+-	int msix_count;
+-	struct msix_entry	*msix_entries;
+-	struct vmd_irq_list	*irqs;
+-
+-	struct pci_sysdata	sysdata;
+-	struct resource		resources[3];
+-	struct irq_domain	*irq_domain;
+-	struct pci_bus		*bus;
+-
+-#ifdef CONFIG_X86_DEV_DMA_OPS
+-	struct dma_map_ops	dma_ops;
+-	struct dma_domain	dma_domain;
+-#endif
+-};
+-
+-static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
+-{
+-	return container_of(bus->sysdata, struct vmd_dev, sysdata);
+-}
+-
+-/*
+- * Drivers managing a device in a VMD domain allocate their own IRQs as before,
+- * but the MSI entry for the hardware it's driving will be programmed with a
+- * destination ID for the VMD MSI-X table.  The VMD muxes interrupts in its
+- * domain into one of its own, and the VMD driver de-muxes these for the
+- * handlers sharing that VMD IRQ.  The vmd irq_domain provides the operations
+- * and irq_chip to set this up.
+- */
+-static void vmd_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+-{
+-	struct vmd_irq *vmdirq = data->chip_data;
+-	struct vmd_irq_list *irq = vmdirq->irq;
+-
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(irq->index);
+-	msg->data = 0;
+-}
+-
+-/*
+- * We rely on MSI_FLAG_USE_DEF_CHIP_OPS to set the IRQ mask/unmask ops.
+- */
+-static void vmd_irq_enable(struct irq_data *data)
+-{
+-	struct vmd_irq *vmdirq = data->chip_data;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&list_lock, flags);
+-	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
+-	raw_spin_unlock_irqrestore(&list_lock, flags);
+-
+-	data->chip->irq_unmask(data);
+-}
+-
+-static void vmd_irq_disable(struct irq_data *data)
+-{
+-	struct vmd_irq *vmdirq = data->chip_data;
+-	unsigned long flags;
+-
+-	data->chip->irq_mask(data);
+-
+-	raw_spin_lock_irqsave(&list_lock, flags);
+-	list_del_rcu(&vmdirq->node);
+-	INIT_LIST_HEAD_RCU(&vmdirq->node);
+-	raw_spin_unlock_irqrestore(&list_lock, flags);
+-}
+-
+-/*
+- * XXX: Stubbed until we develop acceptable way to not create conflicts with
+- * other devices sharing the same vector.
+- */
+-static int vmd_irq_set_affinity(struct irq_data *data,
+-				const struct cpumask *dest, bool force)
+-{
+-	return -EINVAL;
+-}
+-
+-static struct irq_chip vmd_msi_controller = {
+-	.name			= "VMD-MSI",
+-	.irq_enable		= vmd_irq_enable,
+-	.irq_disable		= vmd_irq_disable,
+-	.irq_compose_msi_msg	= vmd_compose_msi_msg,
+-	.irq_set_affinity	= vmd_irq_set_affinity,
+-};
+-
+-static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
+-				     msi_alloc_info_t *arg)
+-{
+-	return 0;
+-}
+-
+-/*
+- * XXX: We can be even smarter selecting the best IRQ once we solve the
+- * affinity problem.
+- */
+-static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
+-{
+-	int i, best = 1;
+-	unsigned long flags;
+-
+-	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
+-		return &vmd->irqs[0];
+-
+-	raw_spin_lock_irqsave(&list_lock, flags);
+-	for (i = 1; i < vmd->msix_count; i++)
+-		if (vmd->irqs[i].count < vmd->irqs[best].count)
+-			best = i;
+-	vmd->irqs[best].count++;
+-	raw_spin_unlock_irqrestore(&list_lock, flags);
+-
+-	return &vmd->irqs[best];
+-}
+-
+-static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+-			unsigned int virq, irq_hw_number_t hwirq,
+-			msi_alloc_info_t *arg)
+-{
+-	struct msi_desc *desc = arg->desc;
+-	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
+-	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
+-
+-	if (!vmdirq)
+-		return -ENOMEM;
+-
+-	INIT_LIST_HEAD(&vmdirq->node);
+-	vmdirq->irq = vmd_next_irq(vmd, desc);
+-	vmdirq->virq = virq;
+-
+-	irq_domain_set_info(domain, virq, vmdirq->irq->vmd_vector, info->chip,
+-			    vmdirq, handle_untracked_irq, vmd, NULL);
+-	return 0;
+-}
+-
+-static void vmd_msi_free(struct irq_domain *domain,
+-			struct msi_domain_info *info, unsigned int virq)
+-{
+-	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
+-	unsigned long flags;
+-
+-	/* XXX: Potential optimization to rebalance */
+-	raw_spin_lock_irqsave(&list_lock, flags);
+-	vmdirq->irq->count--;
+-	raw_spin_unlock_irqrestore(&list_lock, flags);
+-
+-	kfree_rcu(vmdirq, rcu);
+-}
+-
+-static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
+-			   int nvec, msi_alloc_info_t *arg)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
+-
+-	if (nvec > vmd->msix_count)
+-		return vmd->msix_count;
+-
+-	memset(arg, 0, sizeof(*arg));
+-	return 0;
+-}
+-
+-static void vmd_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+-{
+-	arg->desc = desc;
+-}
+-
+-static struct msi_domain_ops vmd_msi_domain_ops = {
+-	.get_hwirq	= vmd_get_hwirq,
+-	.msi_init	= vmd_msi_init,
+-	.msi_free	= vmd_msi_free,
+-	.msi_prepare	= vmd_msi_prepare,
+-	.set_desc	= vmd_set_desc,
+-};
+-
+-static struct msi_domain_info vmd_msi_domain_info = {
+-	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-			  MSI_FLAG_PCI_MSIX,
+-	.ops		= &vmd_msi_domain_ops,
+-	.chip		= &vmd_msi_controller,
+-};
+-
+-#ifdef CONFIG_X86_DEV_DMA_OPS
+-/*
+- * VMD replaces the requester ID with its own.  DMA mappings for devices in a
+- * VMD domain need to be mapped for the VMD, not the device requiring
+- * the mapping.
+- */
+-static struct device *to_vmd_dev(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
+-
+-	return &vmd->dev->dev;
+-}
+-
+-static struct dma_map_ops *vmd_dma_ops(struct device *dev)
+-{
+-	return get_dma_ops(to_vmd_dev(dev));
+-}
+-
+-static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
+-		       gfp_t flag, unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->alloc(to_vmd_dev(dev), size, addr, flag,
+-				       attrs);
+-}
+-
+-static void vmd_free(struct device *dev, size_t size, void *vaddr,
+-		     dma_addr_t addr, unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->free(to_vmd_dev(dev), size, vaddr, addr,
+-				      attrs);
+-}
+-
+-static int vmd_mmap(struct device *dev, struct vm_area_struct *vma,
+-		    void *cpu_addr, dma_addr_t addr, size_t size,
+-		    unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->mmap(to_vmd_dev(dev), vma, cpu_addr, addr,
+-				      size, attrs);
+-}
+-
+-static int vmd_get_sgtable(struct device *dev, struct sg_table *sgt,
+-			   void *cpu_addr, dma_addr_t addr, size_t size,
+-			   unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->get_sgtable(to_vmd_dev(dev), sgt, cpu_addr,
+-					     addr, size, attrs);
+-}
+-
+-static dma_addr_t vmd_map_page(struct device *dev, struct page *page,
+-			       unsigned long offset, size_t size,
+-			       enum dma_data_direction dir,
+-			       unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->map_page(to_vmd_dev(dev), page, offset, size,
+-					  dir, attrs);
+-}
+-
+-static void vmd_unmap_page(struct device *dev, dma_addr_t addr, size_t size,
+-			   enum dma_data_direction dir, unsigned long attrs)
+-{
+-	vmd_dma_ops(dev)->unmap_page(to_vmd_dev(dev), addr, size, dir, attrs);
+-}
+-
+-static int vmd_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+-		      enum dma_data_direction dir, unsigned long attrs)
+-{
+-	return vmd_dma_ops(dev)->map_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
+-}
+-
+-static void vmd_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
+-			 enum dma_data_direction dir, unsigned long attrs)
+-{
+-	vmd_dma_ops(dev)->unmap_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
+-}
+-
+-static void vmd_sync_single_for_cpu(struct device *dev, dma_addr_t addr,
+-				    size_t size, enum dma_data_direction dir)
+-{
+-	vmd_dma_ops(dev)->sync_single_for_cpu(to_vmd_dev(dev), addr, size, dir);
+-}
+-
+-static void vmd_sync_single_for_device(struct device *dev, dma_addr_t addr,
+-				       size_t size, enum dma_data_direction dir)
+-{
+-	vmd_dma_ops(dev)->sync_single_for_device(to_vmd_dev(dev), addr, size,
+-						 dir);
+-}
+-
+-static void vmd_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
+-				int nents, enum dma_data_direction dir)
+-{
+-	vmd_dma_ops(dev)->sync_sg_for_cpu(to_vmd_dev(dev), sg, nents, dir);
+-}
+-
+-static void vmd_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+-				   int nents, enum dma_data_direction dir)
+-{
+-	vmd_dma_ops(dev)->sync_sg_for_device(to_vmd_dev(dev), sg, nents, dir);
+-}
+-
+-static int vmd_mapping_error(struct device *dev, dma_addr_t addr)
+-{
+-	return vmd_dma_ops(dev)->mapping_error(to_vmd_dev(dev), addr);
+-}
+-
+-static int vmd_dma_supported(struct device *dev, u64 mask)
+-{
+-	return vmd_dma_ops(dev)->dma_supported(to_vmd_dev(dev), mask);
+-}
+-
+-#ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
+-static u64 vmd_get_required_mask(struct device *dev)
+-{
+-	return vmd_dma_ops(dev)->get_required_mask(to_vmd_dev(dev));
+-}
+-#endif
+-
+-static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+-{
+-	struct dma_domain *domain = &vmd->dma_domain;
+-
+-	if (get_dma_ops(&vmd->dev->dev))
+-		del_dma_domain(domain);
+-}
+-
+-#define ASSIGN_VMD_DMA_OPS(source, dest, fn)	\
+-	do {					\
+-		if (source->fn)			\
+-			dest->fn = vmd_##fn;	\
+-	} while (0)
+-
+-static void vmd_setup_dma_ops(struct vmd_dev *vmd)
+-{
+-	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
+-	struct dma_map_ops *dest = &vmd->dma_ops;
+-	struct dma_domain *domain = &vmd->dma_domain;
+-
+-	domain->domain_nr = vmd->sysdata.domain;
+-	domain->dma_ops = dest;
+-
+-	if (!source)
+-		return;
+-	ASSIGN_VMD_DMA_OPS(source, dest, alloc);
+-	ASSIGN_VMD_DMA_OPS(source, dest, free);
+-	ASSIGN_VMD_DMA_OPS(source, dest, mmap);
+-	ASSIGN_VMD_DMA_OPS(source, dest, get_sgtable);
+-	ASSIGN_VMD_DMA_OPS(source, dest, map_page);
+-	ASSIGN_VMD_DMA_OPS(source, dest, unmap_page);
+-	ASSIGN_VMD_DMA_OPS(source, dest, map_sg);
+-	ASSIGN_VMD_DMA_OPS(source, dest, unmap_sg);
+-	ASSIGN_VMD_DMA_OPS(source, dest, sync_single_for_cpu);
+-	ASSIGN_VMD_DMA_OPS(source, dest, sync_single_for_device);
+-	ASSIGN_VMD_DMA_OPS(source, dest, sync_sg_for_cpu);
+-	ASSIGN_VMD_DMA_OPS(source, dest, sync_sg_for_device);
+-	ASSIGN_VMD_DMA_OPS(source, dest, mapping_error);
+-	ASSIGN_VMD_DMA_OPS(source, dest, dma_supported);
+-#ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
+-	ASSIGN_VMD_DMA_OPS(source, dest, get_required_mask);
+-#endif
+-	add_dma_domain(domain);
+-}
+-#undef ASSIGN_VMD_DMA_OPS
+-#else
+-static void vmd_teardown_dma_ops(struct vmd_dev *vmd) {}
+-static void vmd_setup_dma_ops(struct vmd_dev *vmd) {}
+-#endif
+-
+-static char __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
+-				  unsigned int devfn, int reg, int len)
+-{
+-	char __iomem *addr = vmd->cfgbar +
+-			     (bus->number << 20) + (devfn << 12) + reg;
+-
+-	if ((addr - vmd->cfgbar) + len >=
+-	    resource_size(&vmd->dev->resource[VMD_CFGBAR]))
+-		return NULL;
+-
+-	return addr;
+-}
+-
+-/*
+- * CPU may deadlock if config space is not serialized on some versions of this
+- * hardware, so all config space access is done under a spinlock.
+- */
+-static int vmd_pci_read(struct pci_bus *bus, unsigned int devfn, int reg,
+-			int len, u32 *value)
+-{
+-	struct vmd_dev *vmd = vmd_from_bus(bus);
+-	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
+-	unsigned long flags;
+-	int ret = 0;
+-
+-	if (!addr)
+-		return -EFAULT;
+-
+-	spin_lock_irqsave(&vmd->cfg_lock, flags);
+-	switch (len) {
+-	case 1:
+-		*value = readb(addr);
+-		break;
+-	case 2:
+-		*value = readw(addr);
+-		break;
+-	case 4:
+-		*value = readl(addr);
+-		break;
+-	default:
+-		ret = -EINVAL;
+-		break;
+-	}
+-	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
+-	return ret;
+-}
+-
+-/*
+- * VMD h/w converts non-posted config writes to posted memory writes. The
+- * read-back in this function forces the completion so it returns only after
+- * the config space was written, as expected.
+- */
+-static int vmd_pci_write(struct pci_bus *bus, unsigned int devfn, int reg,
+-			 int len, u32 value)
+-{
+-	struct vmd_dev *vmd = vmd_from_bus(bus);
+-	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
+-	unsigned long flags;
+-	int ret = 0;
+-
+-	if (!addr)
+-		return -EFAULT;
+-
+-	spin_lock_irqsave(&vmd->cfg_lock, flags);
+-	switch (len) {
+-	case 1:
+-		writeb(value, addr);
+-		readb(addr);
+-		break;
+-	case 2:
+-		writew(value, addr);
+-		readw(addr);
+-		break;
+-	case 4:
+-		writel(value, addr);
+-		readl(addr);
+-		break;
+-	default:
+-		ret = -EINVAL;
+-		break;
+-	}
+-	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
+-	return ret;
+-}
+-
+-static struct pci_ops vmd_ops = {
+-	.read		= vmd_pci_read,
+-	.write		= vmd_pci_write,
+-};
+-
+-static void vmd_attach_resources(struct vmd_dev *vmd)
+-{
+-	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
+-	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
+-}
+-
+-static void vmd_detach_resources(struct vmd_dev *vmd)
+-{
+-	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
+-	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
+-}
+-
+-/*
+- * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
+- */
+-static int vmd_find_free_domain(void)
+-{
+-	int domain = 0xffff;
+-	struct pci_bus *bus = NULL;
+-
+-	while ((bus = pci_find_next_bus(bus)) != NULL)
+-		domain = max_t(int, domain, pci_domain_nr(bus));
+-	return domain + 1;
+-}
+-
+-static int vmd_enable_domain(struct vmd_dev *vmd)
+-{
+-	struct pci_sysdata *sd = &vmd->sysdata;
+-	struct resource *res;
+-	u32 upper_bits;
+-	unsigned long flags;
+-	LIST_HEAD(resources);
+-
+-	res = &vmd->dev->resource[VMD_CFGBAR];
+-	vmd->resources[0] = (struct resource) {
+-		.name  = "VMD CFGBAR",
+-		.start = 0,
+-		.end   = (resource_size(res) >> 20) - 1,
+-		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+-	};
+-
+-	/*
+-	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
+-	 * put 32-bit resources in the window.
+-	 *
+-	 * There's no hardware reason why a 64-bit window *couldn't*
+-	 * contain a 32-bit resource, but pbus_size_mem() computes the
+-	 * bridge window size assuming a 64-bit window will contain no
+-	 * 32-bit resources.  __pci_assign_resource() enforces that
+-	 * artificial restriction to make sure everything will fit.
+-	 *
+-	 * The only way we could use a 64-bit non-prefechable MEMBAR is
+-	 * if its address is <4GB so that we can convert it to a 32-bit
+-	 * resource.  To be visible to the host OS, all VMD endpoints must
+-	 * be initially configured by platform BIOS, which includes setting
+-	 * up these resources.  We can assume the device is configured
+-	 * according to the platform needs.
+-	 */
+-	res = &vmd->dev->resource[VMD_MEMBAR1];
+-	upper_bits = upper_32_bits(res->end);
+-	flags = res->flags & ~IORESOURCE_SIZEALIGN;
+-	if (!upper_bits)
+-		flags &= ~IORESOURCE_MEM_64;
+-	vmd->resources[1] = (struct resource) {
+-		.name  = "VMD MEMBAR1",
+-		.start = res->start,
+-		.end   = res->end,
+-		.flags = flags,
+-		.parent = res,
+-	};
+-
+-	res = &vmd->dev->resource[VMD_MEMBAR2];
+-	upper_bits = upper_32_bits(res->end);
+-	flags = res->flags & ~IORESOURCE_SIZEALIGN;
+-	if (!upper_bits)
+-		flags &= ~IORESOURCE_MEM_64;
+-	vmd->resources[2] = (struct resource) {
+-		.name  = "VMD MEMBAR2",
+-		.start = res->start + 0x2000,
+-		.end   = res->end,
+-		.flags = flags,
+-		.parent = res,
+-	};
+-
+-	sd->vmd_domain = true;
+-	sd->domain = vmd_find_free_domain();
+-	if (sd->domain < 0)
+-		return sd->domain;
+-
+-	sd->node = pcibus_to_node(vmd->dev->bus);
+-
+-	vmd->irq_domain = pci_msi_create_irq_domain(NULL, &vmd_msi_domain_info,
+-						    x86_vector_domain);
+-	if (!vmd->irq_domain)
+-		return -ENODEV;
+-
+-	pci_add_resource(&resources, &vmd->resources[0]);
+-	pci_add_resource(&resources, &vmd->resources[1]);
+-	pci_add_resource(&resources, &vmd->resources[2]);
+-	vmd->bus = pci_create_root_bus(&vmd->dev->dev, 0, &vmd_ops, sd,
+-				       &resources);
+-	if (!vmd->bus) {
+-		pci_free_resource_list(&resources);
+-		irq_domain_remove(vmd->irq_domain);
+-		return -ENODEV;
+-	}
+-
+-	vmd_attach_resources(vmd);
+-	vmd_setup_dma_ops(vmd);
+-	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+-	pci_rescan_bus(vmd->bus);
+-
+-	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
+-			       "domain"), "Can't create symlink to domain\n");
+-	return 0;
+-}
+-
+-static irqreturn_t vmd_irq(int irq, void *data)
+-{
+-	struct vmd_irq_list *irqs = data;
+-	struct vmd_irq *vmdirq;
+-
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+-		generic_handle_irq(vmdirq->virq);
+-	rcu_read_unlock();
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+-{
+-	struct vmd_dev *vmd;
+-	int i, err;
+-
+-	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+-		return -ENOMEM;
+-
+-	vmd = devm_kzalloc(&dev->dev, sizeof(*vmd), GFP_KERNEL);
+-	if (!vmd)
+-		return -ENOMEM;
+-
+-	vmd->dev = dev;
+-	err = pcim_enable_device(dev);
+-	if (err < 0)
+-		return err;
+-
+-	vmd->cfgbar = pcim_iomap(dev, VMD_CFGBAR, 0);
+-	if (!vmd->cfgbar)
+-		return -ENOMEM;
+-
+-	pci_set_master(dev);
+-	if (dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(64)) &&
+-	    dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32)))
+-		return -ENODEV;
+-
+-	vmd->msix_count = pci_msix_vec_count(dev);
+-	if (vmd->msix_count < 0)
+-		return -ENODEV;
+-
+-	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
+-				 GFP_KERNEL);
+-	if (!vmd->irqs)
+-		return -ENOMEM;
+-
+-	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
+-					 sizeof(*vmd->msix_entries),
+-					 GFP_KERNEL);
+-	if (!vmd->msix_entries)
+-		return -ENOMEM;
+-	for (i = 0; i < vmd->msix_count; i++)
+-		vmd->msix_entries[i].entry = i;
+-
+-	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
+-						vmd->msix_count);
+-	if (vmd->msix_count < 0)
+-		return vmd->msix_count;
+-
+-	for (i = 0; i < vmd->msix_count; i++) {
+-		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+-		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
+-		vmd->irqs[i].index = i;
+-
+-		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
+-				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
+-		if (err)
+-			return err;
+-	}
+-
+-	spin_lock_init(&vmd->cfg_lock);
+-	pci_set_drvdata(dev, vmd);
+-	err = vmd_enable_domain(vmd);
+-	if (err)
+-		return err;
+-
+-	dev_info(&vmd->dev->dev, "Bound to PCI domain %04x\n",
+-		 vmd->sysdata.domain);
+-	return 0;
+-}
+-
+-static void vmd_remove(struct pci_dev *dev)
+-{
+-	struct vmd_dev *vmd = pci_get_drvdata(dev);
+-
+-	vmd_detach_resources(vmd);
+-	pci_set_drvdata(dev, NULL);
+-	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+-	pci_stop_root_bus(vmd->bus);
+-	pci_remove_root_bus(vmd->bus);
+-	vmd_teardown_dma_ops(vmd);
+-	irq_domain_remove(vmd->irq_domain);
+-}
+-
+-#ifdef CONFIG_PM
+-static int vmd_suspend(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	pci_save_state(pdev);
+-	return 0;
+-}
+-
+-static int vmd_resume(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	pci_restore_state(pdev);
+-	return 0;
+-}
+-#endif
+-static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
+-
+-static const struct pci_device_id vmd_ids[] = {
+-	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
+-	{0,}
+-};
+-MODULE_DEVICE_TABLE(pci, vmd_ids);
+-
+-static struct pci_driver vmd_drv = {
+-	.name		= "vmd",
+-	.id_table	= vmd_ids,
+-	.probe		= vmd_probe,
+-	.remove		= vmd_remove,
+-	.driver		= {
+-		.pm	= &vmd_dev_pm_ops,
+-	},
+-};
+-module_pci_driver(vmd_drv);
+-
+-MODULE_AUTHOR("Intel Corporation");
+-MODULE_LICENSE("GPL v2");
+-MODULE_VERSION("0.6");
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 9b485d8..93865eb 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -274,4 +274,20 @@ config PCIE_ARTPEC6
+ 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+ 	  SoCs.  This PCIe controller uses the DesignWare core.
+ 
++config VMD
++	depends on PCI_MSI && X86_64
++	tristate "Intel Volume Management Device Driver"
++	default N
++	---help---
++	  Adds support for the Intel Volume Management Device (VMD). VMD is a
++	  secondary PCI host bridge that allows PCI Express root ports,
++	  and devices attached to them, to be removed from the default
++	  PCI domain and placed within the VMD domain. This provides
++	  more bus resources than are otherwise possible with a
++	  single domain. If you know your system provides one of these and
++	  has devices attached to it, say Y; if you are not sure, say N.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called vmd.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 8843410..afea1c6 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -31,3 +31,4 @@ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+ obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
++obj-$(CONFIG_VMD) += vmd.o
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+new file mode 100644
+index 0000000..a021b7b
+--- /dev/null
++++ b/drivers/pci/host/vmd.c
+@@ -0,0 +1,766 @@
++/*
++ * Volume Management Device driver
++ * Copyright (c) 2015, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#include <linux/device.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/msi.h>
++#include <linux/pci.h>
++#include <linux/rculist.h>
++#include <linux/rcupdate.h>
++
++#include <asm/irqdomain.h>
++#include <asm/device.h>
++#include <asm/msi.h>
++#include <asm/msidef.h>
++
++#define VMD_CFGBAR	0
++#define VMD_MEMBAR1	2
++#define VMD_MEMBAR2	4
++
++/*
++ * Lock for manipulating VMD IRQ lists.
++ */
++static DEFINE_RAW_SPINLOCK(list_lock);
++
++/**
++ * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
++ * @node:	list item for parent traversal.
++ * @rcu:	RCU callback item for freeing.
++ * @irq:	back pointer to parent.
++ * @virq:	the virtual IRQ value provided to the requesting driver.
++ *
++ * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
++ * a VMD IRQ using this structure.
++ */
++struct vmd_irq {
++	struct list_head	node;
++	struct rcu_head		rcu;
++	struct vmd_irq_list	*irq;
++	unsigned int		virq;
++};
++
++/**
++ * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
++ * @irq_list:	the list of irq's the VMD one demuxes to.
++ * @vmd_vector:	the h/w IRQ assigned to the VMD.
++ * @index:	index into the VMD MSI-X table; used for message routing.
++ * @count:	number of child IRQs assigned to this vector; used to track
++ *		sharing.
++ */
++struct vmd_irq_list {
++	struct list_head	irq_list;
++	struct vmd_dev		*vmd;
++	unsigned int		vmd_vector;
++	unsigned int		index;
++	unsigned int		count;
++};
++
++struct vmd_dev {
++	struct pci_dev		*dev;
++
++	spinlock_t		cfg_lock;
++	char __iomem		*cfgbar;
++
++	int msix_count;
++	struct msix_entry	*msix_entries;
++	struct vmd_irq_list	*irqs;
++
++	struct pci_sysdata	sysdata;
++	struct resource		resources[3];
++	struct irq_domain	*irq_domain;
++	struct pci_bus		*bus;
++
++#ifdef CONFIG_X86_DEV_DMA_OPS
++	struct dma_map_ops	dma_ops;
++	struct dma_domain	dma_domain;
++#endif
++};
++
++static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
++{
++	return container_of(bus->sysdata, struct vmd_dev, sysdata);
++}
++
++/*
++ * Drivers managing a device in a VMD domain allocate their own IRQs as before,
++ * but the MSI entry for the hardware it's driving will be programmed with a
++ * destination ID for the VMD MSI-X table.  The VMD muxes interrupts in its
++ * domain into one of its own, and the VMD driver de-muxes these for the
++ * handlers sharing that VMD IRQ.  The vmd irq_domain provides the operations
++ * and irq_chip to set this up.
++ */
++static void vmd_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct vmd_irq *vmdirq = data->chip_data;
++	struct vmd_irq_list *irq = vmdirq->irq;
++
++	msg->address_hi = MSI_ADDR_BASE_HI;
++	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(irq->index);
++	msg->data = 0;
++}
++
++/*
++ * We rely on MSI_FLAG_USE_DEF_CHIP_OPS to set the IRQ mask/unmask ops.
++ */
++static void vmd_irq_enable(struct irq_data *data)
++{
++	struct vmd_irq *vmdirq = data->chip_data;
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&list_lock, flags);
++	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
++	raw_spin_unlock_irqrestore(&list_lock, flags);
++
++	data->chip->irq_unmask(data);
++}
++
++static void vmd_irq_disable(struct irq_data *data)
++{
++	struct vmd_irq *vmdirq = data->chip_data;
++	unsigned long flags;
++
++	data->chip->irq_mask(data);
++
++	raw_spin_lock_irqsave(&list_lock, flags);
++	list_del_rcu(&vmdirq->node);
++	INIT_LIST_HEAD_RCU(&vmdirq->node);
++	raw_spin_unlock_irqrestore(&list_lock, flags);
++}
++
++/*
++ * XXX: Stubbed until we develop acceptable way to not create conflicts with
++ * other devices sharing the same vector.
++ */
++static int vmd_irq_set_affinity(struct irq_data *data,
++				const struct cpumask *dest, bool force)
++{
++	return -EINVAL;
++}
++
++static struct irq_chip vmd_msi_controller = {
++	.name			= "VMD-MSI",
++	.irq_enable		= vmd_irq_enable,
++	.irq_disable		= vmd_irq_disable,
++	.irq_compose_msi_msg	= vmd_compose_msi_msg,
++	.irq_set_affinity	= vmd_irq_set_affinity,
++};
++
++static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
++				     msi_alloc_info_t *arg)
++{
++	return 0;
++}
++
++/*
++ * XXX: We can be even smarter selecting the best IRQ once we solve the
++ * affinity problem.
++ */
++static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
++{
++	int i, best = 1;
++	unsigned long flags;
++
++	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
++		return &vmd->irqs[0];
++
++	raw_spin_lock_irqsave(&list_lock, flags);
++	for (i = 1; i < vmd->msix_count; i++)
++		if (vmd->irqs[i].count < vmd->irqs[best].count)
++			best = i;
++	vmd->irqs[best].count++;
++	raw_spin_unlock_irqrestore(&list_lock, flags);
++
++	return &vmd->irqs[best];
++}
++
++static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
++			unsigned int virq, irq_hw_number_t hwirq,
++			msi_alloc_info_t *arg)
++{
++	struct msi_desc *desc = arg->desc;
++	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
++	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
++
++	if (!vmdirq)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&vmdirq->node);
++	vmdirq->irq = vmd_next_irq(vmd, desc);
++	vmdirq->virq = virq;
++
++	irq_domain_set_info(domain, virq, vmdirq->irq->vmd_vector, info->chip,
++			    vmdirq, handle_untracked_irq, vmd, NULL);
++	return 0;
++}
++
++static void vmd_msi_free(struct irq_domain *domain,
++			struct msi_domain_info *info, unsigned int virq)
++{
++	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
++	unsigned long flags;
++
++	/* XXX: Potential optimization to rebalance */
++	raw_spin_lock_irqsave(&list_lock, flags);
++	vmdirq->irq->count--;
++	raw_spin_unlock_irqrestore(&list_lock, flags);
++
++	kfree_rcu(vmdirq, rcu);
++}
++
++static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
++
++	if (nvec > vmd->msix_count)
++		return vmd->msix_count;
++
++	memset(arg, 0, sizeof(*arg));
++	return 0;
++}
++
++static void vmd_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
++{
++	arg->desc = desc;
++}
++
++static struct msi_domain_ops vmd_msi_domain_ops = {
++	.get_hwirq	= vmd_get_hwirq,
++	.msi_init	= vmd_msi_init,
++	.msi_free	= vmd_msi_free,
++	.msi_prepare	= vmd_msi_prepare,
++	.set_desc	= vmd_set_desc,
++};
++
++static struct msi_domain_info vmd_msi_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++			  MSI_FLAG_PCI_MSIX,
++	.ops		= &vmd_msi_domain_ops,
++	.chip		= &vmd_msi_controller,
++};
++
++#ifdef CONFIG_X86_DEV_DMA_OPS
++/*
++ * VMD replaces the requester ID with its own.  DMA mappings for devices in a
++ * VMD domain need to be mapped for the VMD, not the device requiring
++ * the mapping.
++ */
++static struct device *to_vmd_dev(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
++
++	return &vmd->dev->dev;
++}
++
++static struct dma_map_ops *vmd_dma_ops(struct device *dev)
++{
++	return get_dma_ops(to_vmd_dev(dev));
++}
++
++static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
++		       gfp_t flag, unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->alloc(to_vmd_dev(dev), size, addr, flag,
++				       attrs);
++}
++
++static void vmd_free(struct device *dev, size_t size, void *vaddr,
++		     dma_addr_t addr, unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->free(to_vmd_dev(dev), size, vaddr, addr,
++				      attrs);
++}
++
++static int vmd_mmap(struct device *dev, struct vm_area_struct *vma,
++		    void *cpu_addr, dma_addr_t addr, size_t size,
++		    unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->mmap(to_vmd_dev(dev), vma, cpu_addr, addr,
++				      size, attrs);
++}
++
++static int vmd_get_sgtable(struct device *dev, struct sg_table *sgt,
++			   void *cpu_addr, dma_addr_t addr, size_t size,
++			   unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->get_sgtable(to_vmd_dev(dev), sgt, cpu_addr,
++					     addr, size, attrs);
++}
++
++static dma_addr_t vmd_map_page(struct device *dev, struct page *page,
++			       unsigned long offset, size_t size,
++			       enum dma_data_direction dir,
++			       unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->map_page(to_vmd_dev(dev), page, offset, size,
++					  dir, attrs);
++}
++
++static void vmd_unmap_page(struct device *dev, dma_addr_t addr, size_t size,
++			   enum dma_data_direction dir, unsigned long attrs)
++{
++	vmd_dma_ops(dev)->unmap_page(to_vmd_dev(dev), addr, size, dir, attrs);
++}
++
++static int vmd_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir, unsigned long attrs)
++{
++	return vmd_dma_ops(dev)->map_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
++}
++
++static void vmd_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
++			 enum dma_data_direction dir, unsigned long attrs)
++{
++	vmd_dma_ops(dev)->unmap_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
++}
++
++static void vmd_sync_single_for_cpu(struct device *dev, dma_addr_t addr,
++				    size_t size, enum dma_data_direction dir)
++{
++	vmd_dma_ops(dev)->sync_single_for_cpu(to_vmd_dev(dev), addr, size, dir);
++}
++
++static void vmd_sync_single_for_device(struct device *dev, dma_addr_t addr,
++				       size_t size, enum dma_data_direction dir)
++{
++	vmd_dma_ops(dev)->sync_single_for_device(to_vmd_dev(dev), addr, size,
++						 dir);
++}
++
++static void vmd_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
++				int nents, enum dma_data_direction dir)
++{
++	vmd_dma_ops(dev)->sync_sg_for_cpu(to_vmd_dev(dev), sg, nents, dir);
++}
++
++static void vmd_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
++				   int nents, enum dma_data_direction dir)
++{
++	vmd_dma_ops(dev)->sync_sg_for_device(to_vmd_dev(dev), sg, nents, dir);
++}
++
++static int vmd_mapping_error(struct device *dev, dma_addr_t addr)
++{
++	return vmd_dma_ops(dev)->mapping_error(to_vmd_dev(dev), addr);
++}
++
++static int vmd_dma_supported(struct device *dev, u64 mask)
++{
++	return vmd_dma_ops(dev)->dma_supported(to_vmd_dev(dev), mask);
++}
++
++#ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
++static u64 vmd_get_required_mask(struct device *dev)
++{
++	return vmd_dma_ops(dev)->get_required_mask(to_vmd_dev(dev));
++}
++#endif
++
++static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
++{
++	struct dma_domain *domain = &vmd->dma_domain;
++
++	if (get_dma_ops(&vmd->dev->dev))
++		del_dma_domain(domain);
++}
++
++#define ASSIGN_VMD_DMA_OPS(source, dest, fn)	\
++	do {					\
++		if (source->fn)			\
++			dest->fn = vmd_##fn;	\
++	} while (0)
++
++static void vmd_setup_dma_ops(struct vmd_dev *vmd)
++{
++	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
++	struct dma_map_ops *dest = &vmd->dma_ops;
++	struct dma_domain *domain = &vmd->dma_domain;
++
++	domain->domain_nr = vmd->sysdata.domain;
++	domain->dma_ops = dest;
++
++	if (!source)
++		return;
++	ASSIGN_VMD_DMA_OPS(source, dest, alloc);
++	ASSIGN_VMD_DMA_OPS(source, dest, free);
++	ASSIGN_VMD_DMA_OPS(source, dest, mmap);
++	ASSIGN_VMD_DMA_OPS(source, dest, get_sgtable);
++	ASSIGN_VMD_DMA_OPS(source, dest, map_page);
++	ASSIGN_VMD_DMA_OPS(source, dest, unmap_page);
++	ASSIGN_VMD_DMA_OPS(source, dest, map_sg);
++	ASSIGN_VMD_DMA_OPS(source, dest, unmap_sg);
++	ASSIGN_VMD_DMA_OPS(source, dest, sync_single_for_cpu);
++	ASSIGN_VMD_DMA_OPS(source, dest, sync_single_for_device);
++	ASSIGN_VMD_DMA_OPS(source, dest, sync_sg_for_cpu);
++	ASSIGN_VMD_DMA_OPS(source, dest, sync_sg_for_device);
++	ASSIGN_VMD_DMA_OPS(source, dest, mapping_error);
++	ASSIGN_VMD_DMA_OPS(source, dest, dma_supported);
++#ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
++	ASSIGN_VMD_DMA_OPS(source, dest, get_required_mask);
++#endif
++	add_dma_domain(domain);
++}
++#undef ASSIGN_VMD_DMA_OPS
++#else
++static void vmd_teardown_dma_ops(struct vmd_dev *vmd) {}
++static void vmd_setup_dma_ops(struct vmd_dev *vmd) {}
++#endif
++
++static char __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
++				  unsigned int devfn, int reg, int len)
++{
++	char __iomem *addr = vmd->cfgbar +
++			     (bus->number << 20) + (devfn << 12) + reg;
++
++	if ((addr - vmd->cfgbar) + len >=
++	    resource_size(&vmd->dev->resource[VMD_CFGBAR]))
++		return NULL;
++
++	return addr;
++}
++
++/*
++ * CPU may deadlock if config space is not serialized on some versions of this
++ * hardware, so all config space access is done under a spinlock.
++ */
++static int vmd_pci_read(struct pci_bus *bus, unsigned int devfn, int reg,
++			int len, u32 *value)
++{
++	struct vmd_dev *vmd = vmd_from_bus(bus);
++	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
++	unsigned long flags;
++	int ret = 0;
++
++	if (!addr)
++		return -EFAULT;
++
++	spin_lock_irqsave(&vmd->cfg_lock, flags);
++	switch (len) {
++	case 1:
++		*value = readb(addr);
++		break;
++	case 2:
++		*value = readw(addr);
++		break;
++	case 4:
++		*value = readl(addr);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
++	return ret;
++}
++
++/*
++ * VMD h/w converts non-posted config writes to posted memory writes. The
++ * read-back in this function forces the completion so it returns only after
++ * the config space was written, as expected.
++ */
++static int vmd_pci_write(struct pci_bus *bus, unsigned int devfn, int reg,
++			 int len, u32 value)
++{
++	struct vmd_dev *vmd = vmd_from_bus(bus);
++	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
++	unsigned long flags;
++	int ret = 0;
++
++	if (!addr)
++		return -EFAULT;
++
++	spin_lock_irqsave(&vmd->cfg_lock, flags);
++	switch (len) {
++	case 1:
++		writeb(value, addr);
++		readb(addr);
++		break;
++	case 2:
++		writew(value, addr);
++		readw(addr);
++		break;
++	case 4:
++		writel(value, addr);
++		readl(addr);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
++	return ret;
++}
++
++static struct pci_ops vmd_ops = {
++	.read		= vmd_pci_read,
++	.write		= vmd_pci_write,
++};
++
++static void vmd_attach_resources(struct vmd_dev *vmd)
++{
++	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
++	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
++}
++
++static void vmd_detach_resources(struct vmd_dev *vmd)
++{
++	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
++	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
++}
++
++/*
++ * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
++ */
++static int vmd_find_free_domain(void)
++{
++	int domain = 0xffff;
++	struct pci_bus *bus = NULL;
++
++	while ((bus = pci_find_next_bus(bus)) != NULL)
++		domain = max_t(int, domain, pci_domain_nr(bus));
++	return domain + 1;
++}
++
++static int vmd_enable_domain(struct vmd_dev *vmd)
++{
++	struct pci_sysdata *sd = &vmd->sysdata;
++	struct resource *res;
++	u32 upper_bits;
++	unsigned long flags;
++	LIST_HEAD(resources);
++
++	res = &vmd->dev->resource[VMD_CFGBAR];
++	vmd->resources[0] = (struct resource) {
++		.name  = "VMD CFGBAR",
++		.start = 0,
++		.end   = (resource_size(res) >> 20) - 1,
++		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
++	};
++
++	/*
++	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
++	 * put 32-bit resources in the window.
++	 *
++	 * There's no hardware reason why a 64-bit window *couldn't*
++	 * contain a 32-bit resource, but pbus_size_mem() computes the
++	 * bridge window size assuming a 64-bit window will contain no
++	 * 32-bit resources.  __pci_assign_resource() enforces that
++	 * artificial restriction to make sure everything will fit.
++	 *
++	 * The only way we could use a 64-bit non-prefechable MEMBAR is
++	 * if its address is <4GB so that we can convert it to a 32-bit
++	 * resource.  To be visible to the host OS, all VMD endpoints must
++	 * be initially configured by platform BIOS, which includes setting
++	 * up these resources.  We can assume the device is configured
++	 * according to the platform needs.
++	 */
++	res = &vmd->dev->resource[VMD_MEMBAR1];
++	upper_bits = upper_32_bits(res->end);
++	flags = res->flags & ~IORESOURCE_SIZEALIGN;
++	if (!upper_bits)
++		flags &= ~IORESOURCE_MEM_64;
++	vmd->resources[1] = (struct resource) {
++		.name  = "VMD MEMBAR1",
++		.start = res->start,
++		.end   = res->end,
++		.flags = flags,
++		.parent = res,
++	};
++
++	res = &vmd->dev->resource[VMD_MEMBAR2];
++	upper_bits = upper_32_bits(res->end);
++	flags = res->flags & ~IORESOURCE_SIZEALIGN;
++	if (!upper_bits)
++		flags &= ~IORESOURCE_MEM_64;
++	vmd->resources[2] = (struct resource) {
++		.name  = "VMD MEMBAR2",
++		.start = res->start + 0x2000,
++		.end   = res->end,
++		.flags = flags,
++		.parent = res,
++	};
++
++	sd->vmd_domain = true;
++	sd->domain = vmd_find_free_domain();
++	if (sd->domain < 0)
++		return sd->domain;
++
++	sd->node = pcibus_to_node(vmd->dev->bus);
++
++	vmd->irq_domain = pci_msi_create_irq_domain(NULL, &vmd_msi_domain_info,
++						    x86_vector_domain);
++	if (!vmd->irq_domain)
++		return -ENODEV;
++
++	pci_add_resource(&resources, &vmd->resources[0]);
++	pci_add_resource(&resources, &vmd->resources[1]);
++	pci_add_resource(&resources, &vmd->resources[2]);
++	vmd->bus = pci_create_root_bus(&vmd->dev->dev, 0, &vmd_ops, sd,
++				       &resources);
++	if (!vmd->bus) {
++		pci_free_resource_list(&resources);
++		irq_domain_remove(vmd->irq_domain);
++		return -ENODEV;
++	}
++
++	vmd_attach_resources(vmd);
++	vmd_setup_dma_ops(vmd);
++	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
++	pci_rescan_bus(vmd->bus);
++
++	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
++			       "domain"), "Can't create symlink to domain\n");
++	return 0;
++}
++
++static irqreturn_t vmd_irq(int irq, void *data)
++{
++	struct vmd_irq_list *irqs = data;
++	struct vmd_irq *vmdirq;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
++		generic_handle_irq(vmdirq->virq);
++	rcu_read_unlock();
++
++	return IRQ_HANDLED;
++}
++
++static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
++{
++	struct vmd_dev *vmd;
++	int i, err;
++
++	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
++		return -ENOMEM;
++
++	vmd = devm_kzalloc(&dev->dev, sizeof(*vmd), GFP_KERNEL);
++	if (!vmd)
++		return -ENOMEM;
++
++	vmd->dev = dev;
++	err = pcim_enable_device(dev);
++	if (err < 0)
++		return err;
++
++	vmd->cfgbar = pcim_iomap(dev, VMD_CFGBAR, 0);
++	if (!vmd->cfgbar)
++		return -ENOMEM;
++
++	pci_set_master(dev);
++	if (dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(64)) &&
++	    dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32)))
++		return -ENODEV;
++
++	vmd->msix_count = pci_msix_vec_count(dev);
++	if (vmd->msix_count < 0)
++		return -ENODEV;
++
++	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
++				 GFP_KERNEL);
++	if (!vmd->irqs)
++		return -ENOMEM;
++
++	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
++					 sizeof(*vmd->msix_entries),
++					 GFP_KERNEL);
++	if (!vmd->msix_entries)
++		return -ENOMEM;
++	for (i = 0; i < vmd->msix_count; i++)
++		vmd->msix_entries[i].entry = i;
++
++	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
++						vmd->msix_count);
++	if (vmd->msix_count < 0)
++		return vmd->msix_count;
++
++	for (i = 0; i < vmd->msix_count; i++) {
++		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
++		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
++		vmd->irqs[i].index = i;
++
++		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
++				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
++		if (err)
++			return err;
++	}
++
++	spin_lock_init(&vmd->cfg_lock);
++	pci_set_drvdata(dev, vmd);
++	err = vmd_enable_domain(vmd);
++	if (err)
++		return err;
++
++	dev_info(&vmd->dev->dev, "Bound to PCI domain %04x\n",
++		 vmd->sysdata.domain);
++	return 0;
++}
++
++static void vmd_remove(struct pci_dev *dev)
++{
++	struct vmd_dev *vmd = pci_get_drvdata(dev);
++
++	vmd_detach_resources(vmd);
++	pci_set_drvdata(dev, NULL);
++	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
++	pci_stop_root_bus(vmd->bus);
++	pci_remove_root_bus(vmd->bus);
++	vmd_teardown_dma_ops(vmd);
++	irq_domain_remove(vmd->irq_domain);
++}
++
++#ifdef CONFIG_PM
++static int vmd_suspend(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	pci_save_state(pdev);
++	return 0;
++}
++
++static int vmd_resume(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	pci_restore_state(pdev);
++	return 0;
++}
++#endif
++static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
++
++static const struct pci_device_id vmd_ids[] = {
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
++	{0,}
++};
++MODULE_DEVICE_TABLE(pci, vmd_ids);
++
++static struct pci_driver vmd_drv = {
++	.name		= "vmd",
++	.id_table	= vmd_ids,
++	.probe		= vmd_probe,
++	.remove		= vmd_remove,
++	.driver		= {
++		.pm	= &vmd_dev_pm_ops,
++	},
++};
++module_pci_driver(vmd_drv);
++
++MODULE_AUTHOR("Intel Corporation");
++MODULE_LICENSE("GPL v2");
++MODULE_VERSION("0.6");
 -- 
-Ondrej Zary
+2.7.2
 
---Boundary-00=_TvR7XjBEovwA707
-Content-Type: text/plain;
-  charset="iso-8859-15";
-  name="dmesg-bad2.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="dmesg-bad2.txt"
-
-[    0.000000] Linux version 4.8.0-rc8+ (zary@gsql) (gcc version 4.7.2 (Debian 4.7.2-5) ) #122 SMP Thu Sep 29 15:42:41 CEST 2016
-[    0.000000] x86/fpu: Legacy x87 FPU detected.
-[    0.000000] x86/fpu: Using 'eager' FPU context switches.
-[    0.000000] e820: BIOS-provided physical RAM map:
-[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable
-[    0.000000] BIOS-e820: [mem 0x000000000009fc00-0x000000000009ffff] reserved
-[    0.000000] BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff] reserved
-[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x00000000077fbfff] usable
-[    0.000000] BIOS-e820: [mem 0x00000000077fc000-0x00000000077fefff] ACPI data
-[    0.000000] BIOS-e820: [mem 0x00000000077ff000-0x00000000077fffff] ACPI NVS
-[    0.000000] BIOS-e820: [mem 0x00000000ffff0000-0x00000000ffffffff] reserved
-[    0.000000] Notice: NX (Execute Disable) protection missing in CPU!
-[    0.000000] SMBIOS 2.3 present.
-[    0.000000] DMI: System Manufacturer System Name/A7VL133, BIOS ASUS A7VL133-VM ACPI BIOS Revision 1008 06/10/2002
-[    0.000000] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
-[    0.000000] e820: remove [mem 0x000a0000-0x000fffff] usable
-[    0.000000] e820: last_pfn = 0x77fc max_arch_pfn = 0x100000
-[    0.000000] MTRR default type: uncachable
-[    0.000000] MTRR fixed ranges enabled:
-[    0.000000]   00000-9FFFF write-back
-[    0.000000]   A0000-AFFFF uncachable
-[    0.000000]   B0000-BFFFF write-combining
-[    0.000000]   C0000-FFFFF uncachable
-[    0.000000] MTRR variable ranges enabled:
-[    0.000000]   0 base 000000000 mask FFC000000 write-back
-[    0.000000]   1 base 004000000 mask FFE000000 write-back
-[    0.000000]   2 base 006000000 mask FFF000000 write-back
-[    0.000000]   3 base 007000000 mask FFF800000 write-back
-[    0.000000]   4 base 0F0000000 mask FF8000000 write-combining
-[    0.000000]   5 disabled
-[    0.000000]   6 disabled
-[    0.000000]   7 base 0F8000000 mask FFC000000 write-combining
-[    0.000000] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WC  UC- WT  
-[    0.000000] initial memory mapped: [mem 0x00000000-0x01bfffff]
-[    0.000000] Base memory trampoline at [c009b000] 9b000 size 16384
-[    0.000000] BRK [0x016b7000, 0x016b7fff] PGTABLE
-[    0.000000] ACPI: Early table checksum verification disabled
-[    0.000000] ACPI: RSDP 0x00000000000F6DA0 000014 (v00 ASUS  )
-[    0.000000] ACPI: RSDT 0x00000000077FC000 00002C (v01 ASUS   A7VL133  30303031 MSFT 31313031)
-[    0.000000] ACPI: FACP 0x00000000077FC080 000074 (v01 ASUS   A7VL133  30303031 MSFT 31313031)
-[    0.000000] ACPI: DSDT 0x00000000077FC100 0027F0 (v01 ASUS   A7VL133  00001000 MSFT 0100000B)
-[    0.000000] ACPI: FACS 0x00000000077FF000 000040
-[    0.000000] ACPI: BOOT 0x00000000077FC040 000028 (v01 ASUS   A7VL133  30303031 MSFT 31313031)
-[    0.000000] 0MB HIGHMEM available.
-[    0.000000] 119MB LOWMEM available.
-[    0.000000]   mapped low ram: 0 - 077fc000
-[    0.000000]   low ram: 0 - 077fc000
-[    0.000000] BRK [0x016b8000, 0x016b8fff] PGTABLE
-[    0.000000] Zone ranges:
-[    0.000000]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
-[    0.000000]   Normal   [mem 0x0000000001000000-0x00000000077fbfff]
-[    0.000000]   HighMem  empty
-[    0.000000] Movable zone start for each node
-[    0.000000] Early memory node ranges
-[    0.000000]   node   0: [mem 0x0000000000001000-0x000000000009efff]
-[    0.000000]   node   0: [mem 0x0000000000100000-0x00000000077fbfff]
-[    0.000000] Initmem setup node 0 [mem 0x0000000000001000-0x00000000077fbfff]
-[    0.000000] On node 0 totalpages: 30618
-[    0.000000] free_area_init_node: node 0, pgdat c15b1a60, node_mem_map c770c020
-[    0.000000]   DMA zone: 32 pages used for memmap
-[    0.000000]   DMA zone: 0 pages reserved
-[    0.000000]   DMA zone: 3998 pages, LIFO batch:0
-[    0.000000]   Normal zone: 208 pages used for memmap
-[    0.000000]   Normal zone: 26620 pages, LIFO batch:7
-[    0.000000] Using APIC driver default
-[    0.000000] ACPI: PM-Timer IO Port: 0xe408
-[    0.000000] smpboot: Allowing 1 CPUs, 0 hotplug CPUs
-[    0.000000] Local APIC disabled by BIOS -- you can enable it with "lapic"
-[    0.000000] APIC: disable apic facility
-[    0.000000] APIC: switched to apic NOOP
-[    0.000000] PM: Registered nosave memory: [mem 0x00000000-0x00000fff]
-[    0.000000] PM: Registered nosave memory: [mem 0x0009f000-0x0009ffff]
-[    0.000000] PM: Registered nosave memory: [mem 0x000a0000-0x000effff]
-[    0.000000] PM: Registered nosave memory: [mem 0x000f0000-0x000fffff]
-[    0.000000] e820: [mem 0x07800000-0xfffeffff] available for PCI devices
-[    0.000000] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645519600211568 ns
-[    0.000000] setup_percpu: NR_CPUS:8 nr_cpumask_bits:8 nr_cpu_ids:1 nr_node_ids:1
-[    0.000000] percpu: Embedded 19 pages/cpu @c76f6000 s47980 r0 d29844 u77824
-[    0.000000] pcpu-alloc: s47980 r0 d29844 u77824 alloc=19*4096
-[    0.000000] pcpu-alloc: [0] 0 
-[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 30378
-[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-test root=/dev/sda1 ro quiet
-[    0.000000] PID hash table entries: 512 (order: -1, 2048 bytes)
-[    0.000000] Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
-[    0.000000] Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
-[    0.000000] Initializing CPU#0
-[    0.000000] Initializing HighMem for node 0 (00000000:00000000)
-[    0.000000] Memory: 114352K/122472K available (3921K kernel code, 437K rwdata, 1520K rodata, 524K init, 412K bss, 8120K reserved, 0K cma-reserved, 0K highmem)
-[    0.000000] virtual kernel memory layout:
-[    0.000000]     fixmap  : 0xfff17000 - 0xfffff000   ( 928 kB)
-[    0.000000]     pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
-[    0.000000]     vmalloc : 0xc7ffc000 - 0xff7fe000   ( 888 MB)
-[    0.000000]     lowmem  : 0xc0000000 - 0xc77fc000   ( 119 MB)
-[    0.000000]       .init : 0xc15c1000 - 0xc1644000   ( 524 kB)
-[    0.000000]       .data : 0xc13d4761 - 0xc15bf4e0   (1963 kB)
-[    0.000000]       .text : 0xc1000000 - 0xc13d4761   (3921 kB)
-[    0.000000] Checking if this processor honours the WP bit even in supervisor mode...Ok.
-[    0.000000] SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
-[    0.000000] Hierarchical RCU implementation.
-[    0.000000] 	Build-time adjustment of leaf fanout to 32.
-[    0.000000] 	RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=1.
-[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=32, nr_cpu_ids=1
-[    0.000000] NR_IRQS:2304 nr_irqs:32 16
-[    0.000000] CPU 0 irqstacks, hard=c701c000 soft=c701e000
-[    0.000000] Console: colour VGA+ 80x25
-[    0.000000] console [tty0] enabled
-[    0.000000] tsc: Fast TSC calibration using PIT
-[    0.000000] tsc: Detected 857.676 MHz processor
-[    0.004009] Calibrating delay loop (skipped), value calculated using timer frequency.. 1715.35 BogoMIPS (lpj=3430704)
-[    0.004022] pid_max: default: 32768 minimum: 301
-[    0.004070] ACPI: Core revision 20160422
-[    0.010358] ACPI: 1 ACPI AML tables successfully acquired and loaded
-[    0.010374] 
-[    0.010382] ACPI: setting ELCR to 0200 (from 0e20)
-[    0.010477] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
-[    0.010483] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
-[    0.011708] Last level iTLB entries: 4KB 0, 2MB 0, 4MB 0
-[    0.011719] Last level dTLB entries: 4KB 0, 2MB 0, 4MB 0, 1GB 0
-[    0.017764] Freeing SMP alternatives memory: 16K (c1644000 - c1648000)
-[    0.018383] smpboot: Max logical packages: 1
-[    0.018393] smpboot: weird, boot CPU (#0) not listed by the BIOS
-[    0.018396] smpboot: SMP motherboard not detected
-[    0.018398] smpboot: SMP disabled
-[    0.018405] smpboot: Local APIC not detected. Using dummy APIC emulation.
-[    0.018411] Performance Events: 
-[    0.018422] no APIC, boot with the "lapic" boot parameter to force-enable it.
-[    0.018424] no hardware sampling interrupt available.
-[    0.018432] AMD PMU driver.
-[    0.018443] ... version:                0
-[    0.018446] ... bit width:              48
-[    0.018449] ... generic registers:      4
-[    0.018452] ... value mask:             0000ffffffffffff
-[    0.018455] ... max period:             00007fffffffffff
-[    0.018458] ... fixed-purpose events:   0
-[    0.018460] ... event mask:             000000000000000f
-[    0.019871] x86: Booted up 1 node, 1 CPUs
-[    0.019883] smpboot: Total of 1 processors activated (1715.35 BogoMIPS)
-[    0.020596] devtmpfs: initialized
-[    0.021748] PM: Registering ACPI NVS region [mem 0x077ff000-0x077fffff] (4096 bytes)
-[    0.022017] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
-[    0.022512] NET: Registered protocol family 16
-[    0.023195] cpuidle: using governor ladder
-[    0.023201] cpuidle: using governor menu
-[    0.023311] Simple Boot Flag at 0x3a set to 0x1
-[    0.023335] clocksource: pit: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1601818034827 ns
-[    0.023358] ACPI: bus type PCI registered
-[    0.030132] PCI: PCI BIOS revision 2.10 entry at 0xf10c0, last bus=1
-[    0.030136] PCI: Using configuration type 1 for base access
-[    0.036253] HugeTLB registered 4 MB page size, pre-allocated 0 pages
-[    0.036944] ACPI: Added _OSI(Module Device)
-[    0.036950] ACPI: Added _OSI(Processor Device)
-[    0.036954] ACPI: Added _OSI(3.0 _SCP Extensions)
-[    0.036958] ACPI: Added _OSI(Processor Aggregator Device)
-[    0.040959] ACPI: Interpreter enabled
-[    0.041039] ACPI: (supports S0 S1 S4 S5)
-[    0.041046] ACPI: Using PIC for interrupt routing
-[    0.041155] PCI: Ignoring host bridge windows from ACPI; if necessary, use "pci=use_crs" and report a bug
-[    0.054248] ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 9 10 *11 12 14 15)
-[    0.054463] ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 *10 11 12 14 15)
-[    0.054657] ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 *5 6 7 9 10 11 12 14 15)
-[    0.054849] ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 *9 10 11 12 14 15)
-[    0.055060] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
-[    0.055080] acpi PNP0A03:00: _OSC: OS supports [Segments MSI]
-[    0.055100] acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
-[    0.055118] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
-[    0.055273] acpi PNP0A03:00: host bridge window [io  0x0cf8-0x0cff] (ignored)
-[    0.055281] acpi PNP0A03:00: host bridge window [io  0x0000-0x0cf7 window] (ignored)
-[    0.055287] acpi PNP0A03:00: host bridge window [io  0x0d00-0xffff window] (ignored)
-[    0.055293] acpi PNP0A03:00: host bridge window [mem 0x000a0000-0x000bffff window] (ignored)
-[    0.055299] acpi PNP0A03:00: host bridge window [mem 0x000c8000-0x000dffff window] (ignored)
-[    0.055305] acpi PNP0A03:00: host bridge window [mem 0x07800000-0xffffffff window] (ignored)
-[    0.055309] PCI: root bus 00: using default resources
-[    0.055549] PCI host bridge to bus 0000:00
-[    0.055559] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    0.055565] pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffff]
-[    0.055574] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.055619] pci 0000:00:00.0: [1106:0305] type 00 class 0x060000
-[    0.055642] pci 0000:00:00.0: reg 0x10: [mem 0xf8000000-0xfbffffff pref]
-[    0.056110] pci 0000:00:01.0: [1106:8305] type 01 class 0x060400
-[    0.056180] pci 0000:00:01.0: supports D1
-[    0.056280] pci 0000:00:01.0: System wakeup disabled by ACPI
-[    0.056498] pci 0000:00:07.0: [1106:0686] type 00 class 0x060100
-[    0.056838] pci 0000:00:07.1: [1106:0571] type 00 class 0x01018a
-[    0.056889] pci 0000:00:07.1: reg 0x20: [io  0xd800-0xd80f]
-[    0.056913] pci 0000:00:07.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
-[    0.056919] pci 0000:00:07.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
-[    0.056925] pci 0000:00:07.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
-[    0.056930] pci 0000:00:07.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
-[    0.057190] pci 0000:00:07.2: [1106:3038] type 00 class 0x0c0300
-[    0.057237] pci 0000:00:07.2: reg 0x20: [io  0xd400-0xd41f]
-[    0.057368] pci 0000:00:07.2: System wakeup disabled by ACPI
-[    0.057565] pci 0000:00:07.3: [1106:3038] type 00 class 0x0c0300
-[    0.057612] pci 0000:00:07.3: reg 0x20: [io  0xd000-0xd01f]
-[    0.057744] pci 0000:00:07.3: System wakeup disabled by ACPI
-[    0.057944] pci 0000:00:07.4: [1106:3057] type 00 class 0x068000
-[    0.058015] pci 0000:00:07.4: quirk: [io  0xe200-0xe27f] claimed by vt82c686 HW-mon
-[    0.058023] pci 0000:00:07.4: quirk: [io  0xe800-0xe80f] claimed by vt82c686 SMB
-[    0.058272] pci 0000:00:07.5: [1106:3058] type 00 class 0x040100
-[    0.058292] pci 0000:00:07.5: reg 0x10: [io  0xb800-0xb8ff]
-[    0.058306] pci 0000:00:07.5: reg 0x14: [io  0xb400-0xb403]
-[    0.058319] pci 0000:00:07.5: reg 0x18: [io  0xb000-0xb003]
-[    0.058632] pci 0000:00:0e.0: [10ec:8139] type 00 class 0x020000
-[    0.058654] pci 0000:00:0e.0: reg 0x10: [io  0xa400-0xa4ff]
-[    0.058668] pci 0000:00:0e.0: reg 0x14: [mem 0xee800000-0xee8000ff]
-[    0.058708] pci 0000:00:0e.0: reg 0x30: [mem 0x00000000-0x00007fff pref]
-[    0.058746] pci 0000:00:0e.0: supports D1 D2
-[    0.058752] pci 0000:00:0e.0: PME# supported from D1 D2 D3hot D3cold
-[    0.059123] pci 0000:01:00.0: [5333:8a26] type 00 class 0x030000
-[    0.059144] pci 0000:01:00.0: reg 0x10: [mem 0xef000000-0xef07ffff]
-[    0.059157] pci 0000:01:00.0: reg 0x14: [mem 0xf0000000-0xf7ffffff pref]
-[    0.059196] pci 0000:01:00.0: reg 0x30: [mem 0xefff0000-0xefffffff pref]
-[    0.059242] pci 0000:01:00.0: supports D1 D2
-[    0.059421] pci 0000:00:01.0: PCI bridge to [bus 01]
-[    0.059432] pci 0000:00:01.0:   bridge window [mem 0xef000000-0xefdfffff]
-[    0.059443] pci 0000:00:01.0:   bridge window [mem 0xeff00000-0xf7ffffff pref]
-[    0.059456] pci_bus 0000:00: on NUMA node 0
-[    0.062655] vgaarb: setting as boot device: PCI:0000:01:00.0
-[    0.062665] vgaarb: device added: PCI:0000:01:00.0,decodes=io+mem,owns=io+mem,locks=none
-[    0.062669] vgaarb: loaded
-[    0.062674] vgaarb: bridge control possible 0000:01:00.0
-[    0.063000] SCSI subsystem initialized
-[    0.063282] libata version 3.00 loaded.
-[    0.063321] ACPI: bus type USB registered
-[    0.063475] usbcore: registered new interface driver usbfs
-[    0.063530] usbcore: registered new interface driver hub
-[    0.063593] usbcore: registered new device driver usb
-[    0.063745] PCI: Using ACPI for IRQ routing
-[    0.063760] PCI: pci_cache_line_size set to 32 bytes
-[    0.063825] e820: reserve RAM buffer [mem 0x0009fc00-0x0009ffff]
-[    0.063832] e820: reserve RAM buffer [mem 0x077fc000-0x07ffffff]
-[    0.065399] clocksource: Switched to clocksource pit
-[    0.089361] pnp: PnP ACPI init
-[    0.090015] system 00:00: [mem 0x00000000-0x0009ffff] could not be reserved
-[    0.090030] system 00:00: [mem 0x000f0000-0x000fffff] could not be reserved
-[    0.090037] system 00:00: [mem 0x00100000-0x077fffff] could not be reserved
-[    0.090045] system 00:00: [mem 0xfffe0000-0xffffffff] could not be reserved
-[    0.090051] system 00:00: [mem 0xfee00000-0xfee00fff] has been reserved
-[    0.090071] system 00:00: Plug and Play ACPI device, IDs PNP0c01 (active)
-[    0.090822] system 00:01: [io  0x03f0-0x03f1] has been reserved
-[    0.090832] system 00:01: [io  0x04d0-0x04d1] has been reserved
-[    0.090850] system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
-[    0.091103] system 00:02: [io  0xe400-0xe47f] has been reserved
-[    0.091111] system 00:02: [io  0xe800-0xe80f] has been reserved
-[    0.091118] system 00:02: [io  0xe200-0xe27f] has been reserved
-[    0.091130] system 00:02: Plug and Play ACPI device, IDs PNP0c02 (active)
-[    0.091507] pnp 00:03: Plug and Play ACPI device, IDs PNP0b00 (active)
-[    0.091895] pnp 00:04: [dma 2]
-[    0.092031] pnp 00:04: Plug and Play ACPI device, IDs PNP0700 (active)
-[    0.092821] pnp 00:05: [dma 3]
-[    0.093009] pnp 00:05: Plug and Play ACPI device, IDs PNP0401 (active)
-[    0.093719] pnp 00:06: Plug and Play ACPI device, IDs PNP0501 (active)
-[    0.094478] pnp 00:07: Plug and Play ACPI device, IDs PNP0501 (active)
-[    0.095094] pnp 00:08: Plug and Play ACPI device, IDs PNP0303 (active)
-[    0.095354] pnp 00:09: Plug and Play ACPI device, IDs PNP0f13 (active)
-[    0.095568] pnp: PnP ACPI: found 10 devices
-[    0.095584] PnPBIOS: Disabled
-[    0.138392] clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
-[    0.138462] clocksource: Switched to clocksource acpi_pm
-[    0.138541] pci 0000:00:0e.0: BAR 6: assigned [mem 0x08000000-0x08007fff pref]
-[    0.138556] pci 0000:00:01.0: PCI bridge to [bus 01]
-[    0.138569] pci 0000:00:01.0:   bridge window [mem 0xef000000-0xefdfffff]
-[    0.138578] pci 0000:00:01.0:   bridge window [mem 0xeff00000-0xf7ffffff pref]
-[    0.138650] pci_bus 0000:00: resource 4 [io  0x0000-0xffff]
-[    0.138657] pci_bus 0000:00: resource 5 [mem 0x00000000-0xffffffff]
-[    0.138664] pci_bus 0000:01: resource 1 [mem 0xef000000-0xefdfffff]
-[    0.138672] pci_bus 0000:01: resource 2 [mem 0xeff00000-0xf7ffffff pref]
-[    0.138807] NET: Registered protocol family 2
-[    0.139536] TCP established hash table entries: 1024 (order: 0, 4096 bytes)
-[    0.139571] TCP bind hash table entries: 1024 (order: 1, 8192 bytes)
-[    0.139617] TCP: Hash tables configured (established 1024 bind 1024)
-[    0.139766] UDP hash table entries: 256 (order: 1, 8192 bytes)
-[    0.139802] UDP-Lite hash table entries: 256 (order: 1, 8192 bytes)
-[    0.140175] NET: Registered protocol family 1
-[    0.140255] pci 0000:00:00.0: Applying VIA southbridge workaround
-[    0.140270] pci 0000:00:01.0: disabling DAC on VIA PCI bridge
-[    0.140284] pci 0000:00:07.0: Disabling VIA external APIC routing
-[    0.140690] ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
-[    0.140775] pci 0000:00:07.2: PCI INT D: no GSI
-[    0.140995] ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
-[    0.141055] pci 0000:00:07.3: PCI INT D: no GSI
-[    0.141113] pci 0000:01:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
-[    0.141120] PCI: CLS 32 bytes, default 32
-[    0.143012] futex hash table entries: 256 (order: 1, 8192 bytes)
-[    0.144692] workingset: timestamp_bits=30 max_order=15 bucket_order=0
-[    0.158608] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)
-[    0.158623] io scheduler noop registered
-[    0.158626] io scheduler deadline registered
-[    0.158776] io scheduler cfq registered (default)
-[    0.159922] input: Power Button as /devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0C:00/input/input0
-[    0.159939] ACPI: Power Button [PWRB]
-[    0.160447] input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input1
-[    0.160456] ACPI: Power Button [PWRF]
-[    0.160635] tsc: Marking TSC unstable due to TSC halts in idle
-[    0.160824] Warning: Processor Platform Limit event detected, but not handled.
-[    0.160827] Consider compiling CPUfreq support into your kernel.
-[    0.161769] isapnp: Scanning for PnP cards...
-[    0.516469] isapnp: No Plug & Play device found
-[    0.516788] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-[    0.537619] 00:06: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
-[    0.558475] 00:07: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
-[    0.560183] Non-volatile memory driver v1.3
-[    0.560191] Linux agpgart interface v0.103
-[    0.560355] [drm] Initialized drm 1.1.0 20060810
-[    0.570966] loop: module loaded
-[    0.571335] pata_via 0000:00:07.1: version 0.3.4
-[    0.574456] scsi host0: pata_via
-[    0.574986] scsi host1: pata_via
-[    0.575223] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xd800 irq 14
-[    0.575230] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xd808 irq 15
-[    0.575475] 8139cp: 8139cp: 10/100 PCI Ethernet driver v1.3 (Mar 22, 2004)
-[    0.575484] 8139cp 0000:00:0e.0: This (id 10ec:8139 rev 10) is not an 8139C+ compatible chip, use 8139too
-[    0.575567] 8139too: 8139too Fast Ethernet driver 0.9.28
-[    0.576743] ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 10
-[    0.576752] PCI: setting IRQ 10 as level-triggered
-[    0.577749] 8139too 0000:00:0e.0 eth0: RealTek RTL8139 at 0x0001a400, 00:40:95:08:18:34, IRQ 10
-[    0.577848] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-[    0.577851] ehci-pci: EHCI PCI platform driver
-[    0.577924] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
-[    0.577963] ohci-pci: OHCI PCI platform driver
-[    0.578012] uhci_hcd: USB Universal Host Controller Interface driver
-[    0.578385] ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
-[    0.578466] uhci_hcd 0000:00:07.2: PCI INT D: no GSI
-[    0.578515] uhci_hcd 0000:00:07.2: UHCI Host Controller
-[    0.578567] uhci_hcd 0000:00:07.2: new USB bus registered, assigned bus number 1
-[    0.578640] uhci_hcd 0000:00:07.2: irq 9, io base 0x0000d400
-[    0.580270] hub 1-0:1.0: USB hub found
-[    0.580314] hub 1-0:1.0: 2 ports detected
-[    0.581141] ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
-[    0.581228] uhci_hcd 0000:00:07.3: PCI INT D: no GSI
-[    0.581265] uhci_hcd 0000:00:07.3: UHCI Host Controller
-[    0.581295] uhci_hcd 0000:00:07.3: new USB bus registered, assigned bus number 2
-[    0.581364] uhci_hcd 0000:00:07.3: irq 9, io base 0x0000d000
-[    0.582355] hub 2-0:1.0: USB hub found
-[    0.582392] hub 2-0:1.0: 2 ports detected
-[    0.583089] i8042: PNP: PS/2 Controller [PNP0303:PS2K,PNP0f13:PS2M] at 0x60,0x64 irq 1,12
-[    0.583722] serio: i8042 KBD port at 0x60,0x64 irq 1
-[    0.583757] serio: i8042 AUX port at 0x60,0x64 irq 12
-[    0.584624] mousedev: PS/2 mouse device common for all mice
-[    0.585434] rtc_cmos 00:03: RTC can wake from S4
-[    0.585911] rtc_cmos 00:03: rtc core: registered rtc_cmos as rtc0
-[    0.585975] rtc_cmos 00:03: alarms up to one year, 242 bytes nvram
-[    0.586784] NET: Registered protocol family 17
-[    0.586943] Using IPI No-Shortcut mode
-[    0.587683] registered taskstats version 1
-[    0.588870] console [netcon0] enabled
-[    0.588875] netconsole: network logging started
-[    0.588965] rtc_cmos 00:03: setting system clock to 2016-09-29 13:45:19 UTC (1475156719)
-[    0.589114] PM: Hibernation image not present or could not be loaded.
-[    0.615687] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input2
-[    0.738823] ata1.00: ATA-4: ST33210A, 3.02, max UDMA/33
-[    0.738836] ata1.00: 6346368 sectors, multi 16: LBA 
-[    0.743727] ata1.00: configured for UDMA/33
-[    0.744558] scsi 0:0:0:0: Direct-Access     ATA      ST33210A         3.02 PQ: 0 ANSI: 5
-[    0.745506] sd 0:0:0:0: [sda] 6346368 512-byte logical blocks: (3.25 GB/3.03 GiB)
-[    0.745713] sd 0:0:0:0: [sda] Write Protect is off
-[    0.745721] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    0.745805] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[    0.772146]  sda: sda1 sda2 < sda5 >
-[    0.773927] sd 0:0:0:0: [sda] Attached SCSI disk
-[    1.079169] random: fast init done
-[    1.152065] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0xc5ce6d8a44, max_idle_ns: 440795234972 ns
-[    2.210145] input: PS/2 BYD TouchPad as /devices/platform/i8042/serio1/input/input4
-[    2.233551] EXT4-fs (sda1): mounting ext3 file system using the ext4 subsystem
-[    2.259908] EXT4-fs (sda1): mounted filesystem with ordered data mode. Opts: (null)
-[    2.259989] VFS: Mounted root (ext3 filesystem) readonly on device 8:1.
-[    2.263117] Freeing unused kernel memory: 524K (c15c1000 - c1644000)
-[    2.263442] Write protecting the kernel text: 3924k
-[    2.263535] Write protecting the kernel read-only data: 1524k
-[    4.386350] udevd (114): /proc/114/oom_adj is deprecated, please use /proc/114/oom_score_adj instead.
-[    6.036430] random: crng init done
-[    6.552131] Adding 112416k swap on /dev/sda5.  Priority:-1 extents:1 across:112416k 
-[    6.571931] EXT4-fs (sda1): re-mounted. Opts: (null)
-[    7.032913] EXT4-fs (sda1): re-mounted. Opts: errors=remount-ro
-[    8.977967] 8139too 0000:00:0e.0 eth0: link up, 100Mbps, full-duplex, lpa 0x45E1
-
---Boundary-00=_TvR7XjBEovwA707--
