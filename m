@@ -1,84 +1,317 @@
-Return-Path: <thomas.petazzoni@free-electrons.com>
-Return-Path: <thomas.petazzoni@free-electrons.com>
-Date: Tue, 13 Sep 2016 17:50:28 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Bharat Kumar Gogada
- <bharat.kumar.gogada@xilinx.com>, "robh@kernel.org" <robh@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, "colin.king@canonical.com"
- <colin.king@canonical.com>, Soren Brinkmann <sorenb@xilinx.com>, Michal
- Simek <michals@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>, Ravikiran Gummaluri <rgummal@xilinx.com>,
- Ley Foon Tan <lftan@altera.com>, Kishon Vijay Abraham I <kishon@ti.com>,
- Murali Karicheri <m-karicheri2@ti.com>
-Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-Message-ID: <20160913175028.0642d82f@free-electrons.com>
-In-Reply-To: <20160913153402.GA4138@localhost>
-References: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
-	<57C57975.7040306@arm.com>
-	<8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
-	<57C59FE8.30307@arm.com>
-	<8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
-	<57C6B7F1.5000001@arm.com>
-	<8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
-	<20160912220241.GG23532@localhost>
-	<57D7ADA8.5060201@arm.com>
-	<20160913150511.GC27748@localhost>
-	<20160913153402.GA4138@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:42803 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750761AbcIZEWU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 00:22:20 -0400
+Subject: Re: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
+To: Leon Romanovsky <leon@kernel.org>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
+ <20160925072624.GV4088@leon.nu>
+From: Adit Ranadive <aditr@vmware.com>
+CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Message-ID: <9c9f3668-ff2b-f421-2270-3193c0f62cc9@vmware.com>
+Date: Sun, 25 Sep 2016 21:22:11 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20160925072624.GV4088@leon.nu>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Sun, Sep 25 2016 at 10:26:24AM +0300, Leon Romanovsky wrote:
+> > On Sat, Sep 24, 2016 at 04:21:26PM -0700, Adit Ranadive wrote:
+> > We share some common structures with the user-level driver. This patch adds
+> > those structures and shared functions to traverse the QP/CQ rings.
 
-On Tue, 13 Sep 2016 10:34:02 -0500, Bjorn Helgaas wrote:
+<...>
 
-> > After looking at this myself, I'm not happy with this either.  It feels
-> > like there are bugs lurking here and we're just hiding one of them.
+> > +
+> > +#include <linux/types.h>
+> > +
+> > +#define PVRDMA_UVERBS_ABI_VERSION	3
+> > +#define PVRDMA_BOARD_ID			1
+> > +#define PVRDMA_REV_ID			1
 > > 
-> > Here are the callers of irq_domain_add_linear() for legacy INTx in
-> > drivers/pci/host:
+> > Please don't add defines which you are not using in the library and the
+> > two above are not in use.
+> >
+
+I'll move these to the pvrdma.h file.
+
+<...>
+
+> > diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
+> > new file mode 100644
+> > index 0000000..430d8a5
+
+<...>
+
+> > +
+> > +#ifndef __PVRDMA_UAPI_H__
+> > +#define __PVRDMA_UAPI_H__
+> > +
+> > +#include <linux/types.h>
+> > +
+> > +#define PVRDMA_VERSION 17
 > > 
-> >   advk_pcie_init_irq_domain    LEGACY_IRQ_NUM   (4)
-> >   dra7xx_pcie_init_irq_domain  4
-> >   ks_dw_pcie_host_init         MAX_LEGACY_IRQS  (4)
-> >   altera_pcie_init_irq_domain  INTX_NUM + 1     (5)
-> >   nwl_pcie_init_irq_domain     INTX_NUM + 1     (5)
-> >   xilinx_pcie_init_irq_domain  4  
-> 
-> The altera change corresponding to this was 99496bd2971f ("PCI: altera: Fix
-> error when INTx is 4").  I should have noticed this inconsistency back
-> then.
-> 
-> Are aardvark, dra7xx, keystone, and xilinx (non-NWL) broken because they
-> only request 4 IRQs and only INTA, INTB, and INTC work?
-> 
-> > I think all of these use the of_irq_parse_and_map_pci() path you
-> > mentioned, so if the problem is in the way that path works, I would
-> > think these should *all* be requesting the same number of interrupts
-> > in the domain.
+> > What do you plan to do with this VERSION?
+> > How is it related to ABI?
+> >
+
+Not related. This is only for the driver to know which APIs to support.
+For example, an older driver would still be able to work with a newer
+device. I can move this to pvrdma.h as well.
+
+To be honest, I thought I can move this file into the uapi folder since
+the structures here are shared with the user-level library. Based on
+your comments in this thread and the other ones, I think it makes sense
+to move this file back to the pvrdma driver folder and rename it 
+(pvrdma_wqe.h?) to avoid confusion. There might still be some duplicate
+code (especially the UAR offsets and WQE structs) here and in our
+user-level library.
+
+Let me know if that makes sense.
+
+> > +
+> > +#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
+> > +#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
+> > +#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
+> > +#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
+> > +#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
+> > +#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
+> > +#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
+> > +#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
+> > +#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
 > > 
-> > I agree with Marc that we should request 4 IRQs, because that's what
-> > we need.  If we can't do that for some reason, we ought to at least
-> > make all these callers the same.
+> > +
+> > +/* PVRDMA atomic compare and swap */
+> > +struct pvrdma_exp_cmp_swap {
+> > 
+> > _EXP_ looks very similar to MLNX_OFED naming convention.
+> > 
 
-Thanks for Cc'ing about this issue. Indeed, the Aardvark driver
-supports all of INT{A,B,C,D}, so the current situation doesn't work. As
-suggested, the simplest solution is to just allocate an irq domain with
-5 IRQs, like is done in the Altera driver.
+Yes, the operation was based on that. Any concerns? 
+I can rename this and the one below.
 
-However, my feeling is that a more correct solution would be to have a
-translation between the PCI_INTERRUPT_PIN value (in the range 0x1 to
-0x4) to the hwirq value (in the range 0x0 to 0x3).
+> > +	__u64 swap_val;
+> > +	__u64 compare_val;
+> > +	__u64 swap_mask;
+> > +	__u64 compare_mask;
+> > +};
+> > +
+> > +/* PVRDMA atomic fetch and add */
+> > +struct pvrdma_exp_fetch_add {
+> > 
+> > The same as above.
+> > 
+> > +	__u64 add_val;
+> > +	__u64 field_boundary;
+> > +};
+> > +
+> > +/* PVRDMA address vector. */
+> > +struct pvrdma_av {
+> > +	__u32 port_pd;
+> > +	__u32 sl_tclass_flowlabel;
+> > +	__u8 dgid[16];
+> > +	__u8 src_path_bits;
+> > +	__u8 gid_index;
+> > +	__u8 stat_rate;
+> > +	__u8 hop_limit;
+> > +	__u8 dmac[6];
+> > +	__u8 reserved[6];
+> > +};
+> > +
+> > +/* PVRDMA scatter/gather entry */
+> > +struct pvrdma_sge {
+> > +	__u64   addr;
+> > +	__u32   length;
+> > +	__u32   lkey;
+> > +};
+> > +
+> > +/* PVRDMA receive queue work request */
+> > +struct pvrdma_rq_wqe_hdr {
+> > +	__u64 wr_id;		/* wr id */
+> > +	__u32 num_sge;		/* size of s/g array */
+> > +	__u32 total_len;	/* reserved */
+> > +};
+> > +/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
+> > +
+> > +/* PVRDMA send queue work request */
+> > +struct pvrdma_sq_wqe_hdr {
+> > +	__u64 wr_id;		/* wr id */
+> > +	__u32 num_sge;		/* size of s/g array */
+> > +	__u32 total_len;	/* reserved */
+> > +	__u32 opcode;		/* operation type */
+> > +	__u32 send_flags;	/* wr flags */
+> > +	union {
+> > +		__u32 imm_data;
+> > +		__u32 invalidate_rkey;
+> > +	} ex;
+> > +	__u32 reserved;
+> > +	union {
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u32 rkey;
+> > +			__u8 reserved[4];
+> > +		} rdma;
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u64 compare_add;
+> > +			__u64 swap;
+> > +			__u32 rkey;
+> > +			__u32 reserved;
+> > +		} atomic;
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u32 log_arg_sz;
+> > +			__u32 rkey;
+> > +			union {
+> > +				struct pvrdma_exp_cmp_swap  cmp_swap;
+> > +				struct pvrdma_exp_fetch_add fetch_add;
+> > +			} wr_data;
+> > +		} masked_atomics;
+> > +		struct {
+> > +			__u64 iova_start;
+> > +			__u64 pl_pdir_dma;
+> > +			__u32 page_shift;
+> > +			__u32 page_list_len;
+> > +			__u32 length;
+> > +			__u32 access_flags;
+> > +			__u32 rkey;
+> > +		} fast_reg;
+> > +		struct {
+> > +			__u32 remote_qpn;
+> > +			__u32 remote_qkey;
+> > +			struct pvrdma_av av;
+> > +		} ud;
+> > +	} wr;
+> > +};
+> > 
+> > No, I have half-baked patch series which refactors this structure in kernel.
+> > There is no need to put this structure in UAPI.
+> >
 
-Best regards,
+This is specific to our device.. We do need to enqueue the WQE in this format
+for the device to recognize it. This is the same format that the user-level
+library will put the WQE in. As I said above, we can move this to the main
+pvrdma driver directory if you prefer.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+> > +/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
+> > +
+> > +/* Completion queue element. */
+> > +struct pvrdma_cqe {
+> > +	__u64 wr_id;
+> > +	__u64 qp;
+> > +	__u32 opcode;
+> > +	__u32 status;
+> > +	__u32 byte_len;
+> > +	__u32 imm_data;
+> > +	__u32 src_qp;
+> > +	__u32 wc_flags;
+> > +	__u32 vendor_err;
+> > +	__u16 pkey_index;
+> > +	__u16 slid;
+> > +	__u8 sl;
+> > +	__u8 dlid_path_bits;
+> > +	__u8 port_num;
+> > +	__u8 smac[6];
+> > +	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
+> > +};
+> > +
+> > +struct pvrdma_ring {
+> > +	atomic_t prod_tail;	/* Producer tail. */
+> > +	atomic_t cons_head;	/* Consumer head. */
+> > +};
+> > +
+> > +struct pvrdma_ring_state {
+> > +	struct pvrdma_ring tx;	/* Tx ring. */
+> > +	struct pvrdma_ring rx;	/* Rx ring. */
+> > +};
+> > +
+> > +static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
+> > +{
+> > +	/* Generates fewer instructions than a less-than. */
+> > +	return (idx & ~((max_elems << 1) - 1)) == 0;
+> > +}
+> > +
+> > +static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
+> > +{
+> > +	const unsigned int idx = atomic_read(var);
+> > +
+> > +	if (pvrdma_idx_valid(idx, max_elems))
+> > +		return idx & (max_elems - 1);
+> > +	return PVRDMA_INVALID_IDX;
+> > +}
+> > +
+> > +static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
+> > +{
+> > +	__u32 idx = atomic_read(var) + 1;	/* Increment. */
+> > 
+> > It is definitely different atomic_read than you expect. From my grep
+> > searches on my machine, linux kernel doesn't export in standard headers
+> > the atomic_* functions and C has their implementation of that functions.
+> > 
+
+This would probably change for the user-level library, so no need have this file
+in UAPI.
+
+> > +
+> > +	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
+> > +	atomic_set(var, idx);
+> > +}
+> > +
+> > +static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
+> > +					      __u32 max_elems, __u32 *out_tail)
+> > +{
+> > +	const __u32 tail = atomic_read(&r->prod_tail);
+> > +	const __u32 head = atomic_read(&r->cons_head);
+> > +
+> > +	if (pvrdma_idx_valid(tail, max_elems) &&
+> > +	    pvrdma_idx_valid(head, max_elems)) {
+> > +		*out_tail = tail & (max_elems - 1);
+> > +		return tail != (head ^ max_elems);
+> > +	}
+> > +	return PVRDMA_INVALID_IDX;
+> > +}
+> > +
+> > +static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
+> > +					     __u32 max_elems, __u32 *out_head)
+> > +{
+> > +	const __u32 tail = atomic_read(&r->prod_tail);
+> > +	const __u32 head = atomic_read(&r->cons_head);
+> > +
+> > +	if (pvrdma_idx_valid(tail, max_elems) &&
+> > +	    pvrdma_idx_valid(head, max_elems)) {
+> > +		*out_head = head & (max_elems - 1);
+> > +		return tail != head;
+> > +	}
+> > +	return PVRDMA_INVALID_IDX;
+> > +}
+> > +
+> > +static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
+> > +						__u32 max_elems, __u32 *idx)
+> > +{
+> > +	const __u32 tail = atomic_read(&r->prod_tail);
+> > +	const __u32 head = atomic_read(&r->cons_head);
+> > +
+> > +	if (pvrdma_idx_valid(tail, max_elems) &&
+> > +	    pvrdma_idx_valid(head, max_elems) &&
+> > +	    pvrdma_idx_valid(*idx, max_elems)) {
+> > +		if (tail > head && (*idx < tail && *idx >= head))
+> > +			return true;
+> > +		else if (head > tail && (*idx >= head || *idx < tail))
+> > +			return true;
+> > +	}
+> > +	return false;
+> > +}
+> > +
+> > +#endif /* __PVRDMA_UAPI_H__ */
+> > 
+> > I suggest completely remove this file from UAPI headers folder.
+> > 
+
+I can move this back to the pvrdma driver folder.
