@@ -1,48 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:55540 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761275AbcINRgi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 13:36:38 -0400
-Date: Wed, 14 Sep 2016 11:36:36 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        pv-drivers <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Jorgen S. Hansen" <jhansen@vmware.com>,
-        Aditya Sarwade <asarwade@vmware.com>,
-        George Zhang <georgezhang@vmware.com>,
-        Bryan Tan <bryantan@vmware.com>
-Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
-Message-ID: <20160914173636.GA10309@obsidianresearch.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <20160912180251.GH5843@obsidianresearch.com>
- <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:12171 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1161935AbcIZSSv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 14:18:51 -0400
+Subject: Re: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for PVRDMA
+To: Yuval Shaia <yuval.shaia@oracle.com>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
+ <20160926072739.GB6352@yuval-lap.Home>
+CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+From: Adit Ranadive <aditr@vmware.com>
+Message-ID: <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
+Date: Mon, 26 Sep 2016 11:15:28 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+In-Reply-To: <20160926072739.GB6352@yuval-lap.Home>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 12, 2016 at 10:43:00PM +0000, Adit Ranadive wrote:
-> On Mon, Sep 12, 2016 at 11:03:39 -0700, Jason Gunthorpe wrote:
-> > On Sun, Sep 11, 2016 at 09:49:10PM -0700, Adit Ranadive wrote:
-> > > [2] Libpvrdma User-level library - 
-> > > http://git.openfabrics.org/?p=~aditr/libpvrdma.git;a=summary
-> > 
-> > You will probably find that rdma-plumbing will be the best way to get
-> > your userspace component into the distributors.
+On Mon, Sep 26, 2016 at 00:27:40AM -0700, Yuval Shaia wrote:
+> On Sat, Sep 24, 2016 at 04:21:37PM -0700, Adit Ranadive wrote:
+> > +
+> > +	/* Currently, the driver only supports RoCE mode. */
+> > +	if (dev->dsr->caps.mode != PVRDMA_DEVICE_MODE_ROCE) {
+> > +		dev_err(&pdev->dev, "unsupported transport %d\n",
+> > +			dev->dsr->caps.mode);
+> > +		ret = -EINVAL;
 > 
-> Hi Jason,
+> This is some fatal error with the device, not that something wrong with the
+> function's argument.
+> Suggesting to replace with -EFAULT.
 > 
-> Sorry I haven't paying attention to that discussion. Do you know how soon 
-> distros will pick up the rdma-plumbing stuff?
 
-We desire to use this as the vehical for the userspace included with
-the 4.9 kernel.
-
-I anticipate the tree will be running by Oct 1.
-
-Jason
+Thanks, will fix this one and the others here.
