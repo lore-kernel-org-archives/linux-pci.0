@@ -1,125 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52762 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935428AbcIEQw2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 12:52:28 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>,
-        Jason Taylor <jason.taylor@simplivity.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 4.4 028/113] genirq/msi: Make sure PCI MSIs are activated early
-Date: Mon,  5 Sep 2016 18:43:51 +0200
-Message-Id: <20160905164350.435027692@linuxfoundation.org>
-In-Reply-To: <20160905164349.217621339@linuxfoundation.org>
-References: <20160905164349.217621339@linuxfoundation.org>
+Received: from mail.kernel.org ([198.145.29.136]:49604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759799AbcIZF5b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Sep 2016 01:57:31 -0400
+Date: Mon, 26 Sep 2016 08:57:24 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 00/16] Add Paravirtual RDMA Driver
+Message-ID: <20160926055724.GF4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <20160925070352.GU4088@leon.nu>
+ <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="nCRcqX7cEx7rr7Pe"
+In-Reply-To: <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
 
-------------------
+--nCRcqX7cEx7rr7Pe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Marc Zyngier <marc.zyngier@arm.com>
+On Sun, Sep 25, 2016 at 10:25:12PM -0700, Adit Ranadive wrote:
+> On Sun, Sep 25 2016 at 10:03:52AM +0300, Leon Romanovsky wrote:
+> > On Sat, Sep 24, 2016 at 04:21:24PM -0700, Adit Ranadive wrote:
+> >
+> > <...>
+> >
+> > >  include/uapi/rdma/pvrdma-abi.h                 |   99 ++
+> > >  include/uapi/rdma/pvrdma-uapi.h                |  255 +++++
+> >
+> > As Jason said, you need a very good reason to split and create number of
+> > files per-driver in UAPI folder.
+>
+> I can move the pvrdma-uapi.h back to the pvrdma driver folder.
 
-commit f3b0946d629c8bfbd3e5f038e30cb9c711a35f10 upstream.
+Yes, please.
 
-Bharat Kumar Gogada reported issues with the generic MSI code, where the
-end-point ended up with garbage in its MSI configuration (both for the vector
-and the message).
+--nCRcqX7cEx7rr7Pe
+Content-Type: application/pgp-signature; name="signature.asc"
 
-It turns out that the two MSI paths in the kernel are doing slightly different
-things:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-generic MSI: disable MSI -> allocate MSI -> enable MSI -> setup EP
-PCI MSI: disable MSI -> allocate MSI -> setup EP -> enable MSI
+iQIcBAEBAgAGBQJX6LjEAAoJEORje4g2clindLIP/jgUoUZPBbrikjk+BK1cdCH7
+JFgcG/+qH4csI4PKYA+Iwzf1fq/p6GruYXtaNfH/w5i2C/CCFIwclfTKOJvfdlfT
+1URXp1V4ip3K0UxRtzxU+YWzGowZ/SXz1e+ERJBOfcBHW6mDS/ttEIuSaXhT1Q3J
+5oKBvnjQEz1El7GHdU/8GTHw5nUZWHnmxFaOYPoNeyvrjyijIt/2kZhhIQ9/7jbX
+0P3rT9tNHWchFc/ySRzQfULeKRTsUPvsL1H8Cq4NlYTYHGIiHCMpBkv+gs+OrbSK
+D2CgLYcJhtXKk5zYCSHvEARPTXbZ/tP935CBGIERMAscPlIxI9clMu2SqTloy/E4
+V7CSV1yD5VQCkNKCYv5v+TKQmwbNvP6zEV6cNwSVnhIQjSPWqtF7Bv4ju3neapcf
+BqoCenjNDu3E9d8EIzZoI2CsVAnV+jwnA1J3+vjxbUU7CGRjovGT+U74KLO60PA6
+d8Cde/6OJ2ItbG0rEByNlUjAweVrQa1o3t3JBu5KgWxUcCyvqqZWytYPXX/9zjO+
+IDjtkdYmcveXfHss/e0ELa8cNWrTa7fzgcuQ5Hnc8SUVbNcoIgilyFdmBSRpNZvA
+pPWMUSYG1aXAlN80lAo6Ni1BarLieCD6LDeicavdiONYfxB7tQcaImlxjcCHhRpx
+A/Zj1v4nLt18MNBDUZOZ
+=gVJf
+-----END PGP SIGNATURE-----
 
-And it turns out that end-points are allowed to latch the content of the MSI
-configuration registers as soon as MSIs are enabled.  In Bharat's case, the
-end-point ends up using whatever was there already, which is not what you
-want.
-
-In order to make things converge, we introduce a new MSI domain flag
-(MSI_FLAG_ACTIVATE_EARLY) that is unconditionally set for PCI/MSI. When set,
-this flag forces the programming of the end-point as soon as the MSIs are
-allocated.
-
-A consequence of this is that we have an extra activate in irq_startup, but
-that should be without much consequence.
-
-tglx:
-
- - Several people reported a VMWare regression with PCI/MSI-X passthrough. It
-   turns out that the patch also cures that issue.
-
- - We need to have a look at the MSI disable interrupt path, where we write
-   the msg to all zeros without disabling MSI in the PCI device. Is that
-   correct?
-
-Fixes: 52f518a3a7c2 "x86/MSI: Use hierarchical irqdomains to manage MSI interrupts"
-Reported-and-tested-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Reported-and-tested-by: Foster Snowhill <forst@forstwoof.ru>
-Reported-by: Matthias Prager <linux@matthiasprager.de>
-Reported-by: Jason Taylor <jason.taylor@simplivity.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Link: http://lkml.kernel.org/r/1468426713-31431-1-git-send-email-marc.zyngier@arm.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/pci/msi.c   |    2 ++
- include/linux/msi.h |    2 ++
- kernel/irq/msi.c    |   11 +++++++++++
- 3 files changed, 15 insertions(+)
-
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1278,6 +1278,8 @@ struct irq_domain *pci_msi_create_irq_do
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		pci_msi_domain_update_chip_ops(info);
- 
-+	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
-+
- 	domain = msi_create_irq_domain(fwnode, info, parent);
- 	if (!domain)
- 		return NULL;
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -258,6 +258,8 @@ enum {
- 	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
- 	/* Support PCI MSIX interrupts */
- 	MSI_FLAG_PCI_MSIX		= (1 << 3),
-+	/* Needs early activate, required for PCI */
-+	MSI_FLAG_ACTIVATE_EARLY		= (1 << 4),
- };
- 
- int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -303,6 +303,17 @@ int msi_domain_alloc_irqs(struct irq_dom
- 		else
- 			dev_dbg(dev, "irq [%d-%d] for MSI\n",
- 				virq, virq + desc->nvec_used - 1);
-+		/*
-+		 * This flag is set by the PCI layer as we need to activate
-+		 * the MSI entries before the PCI layer enables MSI in the
-+		 * card. Otherwise the card latches a random msi message.
-+		 */
-+		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
-+			struct irq_data *irq_data;
-+
-+			irq_data = irq_domain_get_irq_data(domain, desc->irq);
-+			irq_domain_activate_irq(irq_data);
-+		}
- 	}
- 
- 	return 0;
-
-
+--nCRcqX7cEx7rr7Pe--
