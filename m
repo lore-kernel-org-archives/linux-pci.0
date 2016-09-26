@@ -1,95 +1,103 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5 4/4] PCI: Add a macro to set default alignment for all
- PCI devices
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1473757234-5284-5-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160929140014.GB31048@localhost>
-Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
-        paulus@samba.org, bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 30 Sep 2016 12:13:30 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752998AbcIZF5G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Sep 2016 01:57:06 -0400
+Date: Mon, 26 Sep 2016 08:56:57 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
+Message-ID: <20160926055657.GE4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
+ <20160925073010.GW4088@leon.nu>
+ <7ddc5906-6ba8-335e-c0b8-eb60427a1be8@vmware.com>
 MIME-Version: 1.0
-In-Reply-To: <20160929140014.GB31048@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <313ed70e-d857-6429-e5ca-6d22b0a39c98@linux.vnet.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="gJgGjUUWrnN4mpen"
+In-Reply-To: <7ddc5906-6ba8-335e-c0b8-eb60427a1be8@vmware.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/9/29 22:00, Bjorn Helgaas wrote:
 
-> On Tue, Sep 13, 2016 at 05:00:34PM +0800, Yongji Xie wrote:
->> When vfio passthroughs a PCI device of which MMIO BARs are
->> smaller than PAGE_SIZE, guest will not handle the mmio
->> accesses to the BARs which leads to mmio emulations in host.
->>
->> This is because vfio will not allow to passthrough one BAR's
->> mmio page which may be shared with other BARs. Otherwise,
->> there will be a backdoor that guest can use to access BARs
->> of other guest.
->>
->> This patch adds a macro to set default alignment for all
->> PCI devices. Then we could solve this issue on some platforms
->> which would easily hit this issue because of their 64K page
->> such as PowerNV platform by defining this macro as PAGE_SIZE.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   arch/powerpc/include/asm/pci.h |    4 ++++
->>   drivers/pci/pci.c              |    4 ++++
->>   2 files changed, 8 insertions(+)
->>
->> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
->> index e9bd6cf..5e31bc2 100644
->> --- a/arch/powerpc/include/asm/pci.h
->> +++ b/arch/powerpc/include/asm/pci.h
->> @@ -28,6 +28,10 @@
->>   #define PCIBIOS_MIN_IO		0x1000
->>   #define PCIBIOS_MIN_MEM		0x10000000
->>   
->> +#ifdef CONFIG_PPC_POWERNV
->> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
->> +#endif
->> +
->>   struct pci_dev;
->>   
->>   /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 37f8062..9c61cbe 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->>   	resource_size_t align = 0;
->>   	char *p;
->>   
->> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
->> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
->> +	*resize = false;
->> +#endif
-> I'm a little confused about how this works.
+--gJgGjUUWrnN4mpen
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Sun, Sep 25, 2016 at 10:22:02PM -0700, Adit Ranadive wrote:
+> On Sun, Sep 25 2016 at 10:30:10AM +0300, Leon Romanovsky wrote:
+> > On Sat, Sep 24, 2016 at 04:21:40PM -0700, Adit Ranadive wrote:
+> > > Add maintainer info for the PVRDMA driver.
+> > >
+> > > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> > > Reviewed-by: George Zhang <georgezhang@vmware.com>
+> > > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> > > Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> > > Signed-off-by: Adit Ranadive <aditr@vmware.com>
+> > > ---
+> > > Changes v4->v5:
+> > >  - Added pvrdma files to common UAPI folder.
+> > > ---
+> > >  MAINTAINERS | 9 +++++++++
+> > >  1 file changed, 9 insertions(+)
+> > >
+> > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > index 87e23cd..5023dc0 100644
+> > > --- a/MAINTAINERS
+> > > +++ b/MAINTAINERS
+> > > @@ -12615,6 +12615,15 @@ S:	Maintained
+> > >  F:	drivers/scsi/vmw_pvscsi.c
+> > >  F:	drivers/scsi/vmw_pvscsi.h
+> > >
+> > > +VMWARE PVRDMA DRIVER
+> > > +M:	Adit Ranadive <aditr@vmware.com>
+> > > +M:	VMware PV-Drivers <pv-drivers@vmware.com>
+> > > +L:	linux-rdma@vger.kernel.org
+> > > +S:	Maintained
+> > > +F:	drivers/infiniband/hw/pvrdma/
+> > > +F:	include/uapi/rdma/pvrdma-abi.h
+> > > +F:	include/uapi/rdma/pvrdma-uapi.h
+> >
+> > Please remove the last two lines, these files will be maintained by
+> > Doug.
+> >
+> > Thanks
+> >
 >
-> I think this change only does something if the user specifies
-> "pci=resource_alignment=..." or writes to the /sys/.../resource_alignment
-> file, because those are the only ways to set resource_alignment_param.
+> Ok. Based on your recent patch series on export vendor specific ABIs,
+> the ABI files were added to be maintained [1] by individual driver owners.
+> Is that not the case now?
+
+I based my answer on this response from Doug [1], maybe I'm wrong.
+
+[1] http://marc.info/?l=linux-rdma&m=147464894811998&w=2
+
 >
-> If that's true, isn't the *default* to align to PAGE_SIZE?  So I don't
-> understand what PCIBIOS_DEFAULT_ALIGNMENT changes.
+> [1] http://marc.info/?l=linux-rdma&m=147455473718235&w=2
 
-In pci_reassigndev_resource_alignment(), we can see:
+--gJgGjUUWrnN4mpen
+Content-Type: application/pgp-signature; name="signature.asc"
 
-align = pci_specified_resource_alignment(dev);
-     if (!align)
-         return;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-So we would still align the device's BAR to PAGE_SIZE without
-set resource_alignment_param if we set @align to a default value
-in pci_specified_resource_alignment().
+iQIcBAEBAgAGBQJX6LipAAoJEORje4g2clincckP/1fxA2jFABGw1a7XAg7AHLrh
+p749jZMLOmA5Yr1IEVtWD7YyTupZEQvkKZBIWhMAJTxhp4mzPhde2ZQ5Yoiky/3u
+rfH/wYFhVjO9KmEEFPgOmxyjl7t3Imb5fyTxbfAoXWe4qwOAV4/D5FOBWrd7EeJr
+jUE7M59hWArkevTEAOz8lxx7olAtzBa8D+Ik6c22ZTDV/mDfSmdlZrGr7xq2lNqw
+CUYLyObuUvsELZoSSfhNV5tt9Uc6YT4lAgGFar0+xoRo3WzR/WKx8Iv9DX2+xbCC
+LX4MsOMwqUxzUA7vD1J+tJKlG7Jjfm5WH5DQIx9/HBFOA2grEreY87z5YdQqTjNH
+lJ6h5nYA69QwEZwvIgh0CgpOj5lqIzLwzS3GMlCTErylIHSmV99u0MkLXG+LI5gv
+A+FDteV+lG1zOL7Xpfe8lolAyGMlykMEGKfXx3L2XwUUjvomCfUUejWzLEP1rgzG
+pCYHS2UL3iG74YfOSgzy5/jV3PyAwmFmC2rgdjx+UFipBICEqWCH9rbdXd6L+1Bp
+Va3Og52ZNS1MmBtcQbi+uvzultE1J1UdPGahJt3vthzzjh6+gYqhOR8LBzfnE/vu
+195lqR1NF07n0uDID8sdmfnsSOwl4FP2mqlaiMVfoJznFjyKgNoHtj8zz755F85M
+ALxeYVazTcTP8LHSe0ku
+=H3iT
+-----END PGP SIGNATURE-----
 
-> And I'm hoping we can get rid of the resize flag based on the
-> discussion of the previous patch.
-
-Will do.
-
-Thanks,
-Yongji
+--gJgGjUUWrnN4mpen--
