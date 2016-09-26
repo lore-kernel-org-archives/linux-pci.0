@@ -1,86 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757497AbcILVJh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:09:37 -0400
-Subject: [PATCH v2 5/8] PCI: pciehp: Don't re-read Slot Status when handling
- surprise event
-To: Mayurkumar Patel <mayurkumar.patel@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
-        linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Date: Mon, 12 Sep 2016 16:09:28 -0500
-Message-ID: <20160912210928.22258.74566.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Mon, 26 Sep 2016 23:08:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@ozlabs.org, bhelgaas@google.com, mpe@ellerman.id.au
+Subject: Re: [PATCH 4/4] drivers/pci/hotplug: Support surprise hotplug
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1474460130-8316-5-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20160921165703.GA17457@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160921165703.GA17457@localhost>
+Message-Id: <20160926130802.GA16718@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mayurkumar Patel <mayurkumar.patel@intel.com>
+On Wed, Sep 21, 2016 at 11:57:03AM -0500, Bjorn Helgaas wrote:
+>Hi Gavin,
+>
+>You don't need my ack for any of these, and I assume you'll merge them
+>through the powerpc tree.
+>
+>Minor comments below, feel free to ignore them.
+>
+>On Wed, Sep 21, 2016 at 10:15:30PM +1000, Gavin Shan wrote:
+>> ...
+>> @@ -536,9 +565,16 @@ static struct pnv_php_slot *pnv_php_alloc_slot(struct device_node *dn)
+>>  	if (unlikely(!php_slot))
+>>  		return NULL;
+>>  
+>> +	php_slot->event = kzalloc(sizeof(struct pnv_php_event), GFP_KERNEL);
+>> +	if (unlikely(!php_slot->event)) {
+>> +		kfree(php_slot);
+>> +		return NULL;
+>> +	}
+>
+>Since you *always* allocate the event when allocating the php_slot,
+>making the event a member of php_slot (instead of keeping a pointer to
+>it) would simplify your memory management a bit.
+>
+>It seems to be the style in this file to use "unlikely" liberally, but
+>I really doubt there's any performance consideration in this code.  To
+>me it adds more clutter than usefulness.
+>
+>> +static irqreturn_t pnv_php_interrupt(int irq, void *data)
+>> +{
+>> +	struct pnv_php_slot *php_slot = data;
+>> +	struct pci_dev *pchild, *pdev = php_slot->pdev;
+>> +	struct eeh_dev *edev;
+>> +	struct eeh_pe *pe;
+>> +	struct pnv_php_event *event;
+>> +	u16 sts, lsts;
+>> +	u8 presence;
+>> +	bool added;
+>> +	unsigned long flags;
+>> +	int ret;
+>> +
+>> +	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &sts);
+>> +	sts &= (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
+>> +	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, sts);
+>
+>I didn't realize that this is some sort of hybrid of native PCIe
+>hotplug and PowerNV-specific stuff.  Wonder if there's any opportunity
+>to combine with or leverage pciehp.  That seems pretty blue-sky
+>though, since there's so much PowerNV special sauce here.
+>
 
-Previously we read Slot Status when handling a surprise event.  But Slot
-Status might have changed since we identified the event, and the event_type
-already tells us whether to enable or disable the slot, so there's no need
-to read it again.
+Bjorn, thanks a lot for your comments. All comments except last one
+(leverage pciehp) are covered in v2 which wasn't copied to linux-pci@
+list to avoid unnecessary traffic. Yeah, the driver is too much PowerNV
+platform specific things, which makes it hard to be built on top of
+pciehp.
 
-Remove handle_surprise_event() and queue the power work directly.
-
-[bhelgaas: changelog]
-Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
----
- drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
- 1 file changed, 2 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 7ea3e61..a787684 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -302,20 +302,6 @@ static void handle_button_press_event(struct slot *p_slot)
- /*
-  * Note: This function must be called with slot->lock held
-  */
--static void handle_surprise_event(struct slot *p_slot)
--{
--	u8 getstatus;
--
--	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
--		pciehp_queue_power_work(p_slot, DISABLE_REQ);
--	else
--		pciehp_queue_power_work(p_slot, ENABLE_REQ);
--}
--
--/*
-- * Note: This function must be called with slot->lock held
-- */
- static void handle_link_event(struct slot *p_slot, u32 event)
- {
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -378,14 +364,14 @@ static void interrupt_event_handler(struct work_struct *work)
- 		pciehp_green_led_off(p_slot);
- 		break;
- 	case INT_PRESENCE_ON:
--		handle_surprise_event(p_slot);
-+		pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 		break;
- 	case INT_PRESENCE_OFF:
- 		/*
- 		 * Regardless of surprise capability, we need to
- 		 * definitely remove a card that has been pulled out!
- 		 */
--		handle_surprise_event(p_slot);
-+		pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 		break;
- 	case INT_LINK_UP:
- 	case INT_LINK_DOWN:
-
+Thanks,
+Gavin
