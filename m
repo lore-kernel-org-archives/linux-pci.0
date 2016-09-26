@@ -1,138 +1,141 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 2 Sep 2016 16:38:45 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
-	dhdang@apm.com, ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org, jcm@redhat.com,
-	andrea.gallo@linaro.org, jeremy.linton@arm.com,
-	liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH V5 1/5] PCI: Embed pci_ecam_ops in pci_config_window
- structure
-Message-ID: <20160902153845.GA11234@red-moon>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
- <1470661541-26270-2-git-send-email-tn@semihalf.com>
- <20160901182345.GA18461@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49982 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760934AbcIZGDt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Sep 2016 02:03:49 -0400
+Date: Mon, 26 Sep 2016 09:03:42 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for PVRDMA
+Message-ID: <20160926060342.GG4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
+ <20160925075703.GX4088@leon.nu>
+ <da4a09fc-bef1-60ea-f9af-7c505a9af6d6@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160901182345.GA18461@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="fqSO13Wp+IaiYtoI"
+In-Reply-To: <da4a09fc-bef1-60ea-f9af-7c505a9af6d6@vmware.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 01, 2016 at 01:23:45PM -0500, Bjorn Helgaas wrote:
-> On Mon, Aug 08, 2016 at 03:05:37PM +0200, Tomasz Nowicki wrote:
-> > pci_config_window keeps pointer to pci_ecam_ops and every time
-> > we want to deallocate pci_config_window (pci_ecam_free()) we need to make
-> > sure to free pci_ecam_ops in case it was dynamically allocated prior to
-> > pci_ecam_create() call.
-> 
-> I think this is a theoretical problem, right?  All the current callers
-> pass a pointer to a static pci_ecam_ops struct that does not need to
-> be deallocated.
-> 
-> I see that the next patch uses a pci_ecam_ops struct on the stack,
 
-I asked Tomasz why we need to have pci_ecam_ops on the stack in the
-first place since I do not think it is needed, or nicer (actually I
-think it is not nice at all, what's the problem in making it static ?).
+--fqSO13Wp+IaiYtoI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Anyway, that's part of this thread but I think Tomasz was looking
-more for feedback/agreement on the whole quirks mechanism to check
-if it is fine, more below.
+On Sun, Sep 25, 2016 at 10:10:43PM -0700, Adit Ranadive wrote:
+> On sun, Sep 25 2016 at 10:57:03AM +0300, Leon Romanovsky wrote:
+> > On Sat, Sep 24, 2016 at 04:21:37PM -0700, Adit Ranadive wrote:
+> > > This patch adds the support to register a RDMA device with the kernel RDMA
+> > > stack as well as a kernel module. This also initializes the underlying
+> > > virtual PCI device.
+> > >
+> > > Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+> > > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> > > Reviewed-by: George Zhang <georgezhang@vmware.com>
+> > > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> > > Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> > > Signed-off-by: Adit Ranadive <aditr@vmware.com>
+>
+> <...>
+>
+> > > +
+> > > +#include <linux/errno.h>
+> > > +#include <linux/inetdevice.h>
+> > > +#include <linux/init.h>
+> > > +#include <linux/module.h>
+> > > +#include <linux/slab.h>
+> > > +#include <rdma/ib_addr.h>
+> > > +#include <rdma/ib_smi.h>
+> > > +#include <rdma/ib_user_verbs.h>
+> > > +#include <net/addrconf.h>
+> > > +#include <rdma/pvrdma-abi.h>
+> > > +
+> > > +#include "pvrdma.h"
+> > > +
+> > > +#define DRV_NAME	"pvrdma"
+> > > +#define DRV_VERSION	"1.0"
+> > > +#define DRV_RELDATE	"January 1, 2013"
+> > > +
+> > > +static const char pvrdma_version[] =
+> > > +	DRV_NAME ": PVRDMA InfiniBand driver v"
+> > > +	DRV_VERSION " (" DRV_RELDATE ")\n";
+> >
+> > This is a good example why driver version and reldate are useless in
+> > kernel. We are in 2016 and not in 2013. All these data are forgotten to
+> > update right after the developer copied it from other pre-historic driver
+> > (very common practice in netdev). It is worth to stop to use this totally
+> > useless defines.
+> >
+>
+> Sorry, in our case it was the Mellanox mlx4 driver :). Yeah, I can remove
+> DRV_VERSION and DRV_RELDATE. I'll keep the MODULE_VERSION since we keep
+> track of our virtual driver versions that way. So when there are any changes
+> to our driver we typically bump up the version. Not sure if that's a netdev
+> or misc device practice and if thats followed here.
 
-> which would definitely cause issues without this patch, so I agree we
-> need something like this; I'm just trying to make the changelog make
-> more sense.
-> 
-> > To avoid that extra effort, embed pci_ecam_ops in pci_config_window,
-> > instead of just a pointer.
-> > 
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > To: Jayachandran C <jchandra@broadcom.com>
-> 
-> This looks like an editing mistake?
+They always promise to do it, but after year or two they are stopping.
+The funny thing starts when they start debug customer issues in specific
+distro with mix of backported fixes/features from old and new kernels.
 
-Yes it is.
+>
+> <...>
+>
+> > > +static void pvrdma_get_fw_ver_str(struct ib_device *device, char *str,
+> > > +				  size_t str_len)
+> > > +{
+> > > +	struct pvrdma_dev *dev =
+> > > +		container_of(device, struct pvrdma_dev, ib_dev);
+> > > +	snprintf(str, str_len, "%d.%d.%d\n",
+> > > +		 (int) (dev->dsr->caps.fw_ver >> 32),
+> > > +		 (int) (dev->dsr->caps.fw_ver >> 16) & 0xffff,
+> > > +		 (int) dev->dsr->caps.fw_ver & 0xffff);
+> > > +}
+> >
+> > Yuval already pointed it to you.
+> > Thanks to Ira, we have general function in core to print FW version.
+> > Please use them.
+> >
+>
+> If you are referring to commit 5fa76c20458518ed6181adddef2e31c5afc0745c
+> then isnt this is exactly what Ira did for the other providers?
+> Here, the pvrdma_get_fw_ver_str function is registered as a callback for
+> the get_dev_fw_str API. Please our pvrdma_register_device function where
+> we register our callbacks with ib_core:
+> https://patchwork.kernel.org/patch/9349357/
+>
+> > > +	dev->ib_dev.get_dev_fw_str = pvrdma_get_fw_ver_str;
 
-I think the most important bit about this series is to agree on
-whether it is ok to keep quirks in drivers/pci/host/mcfg-quirks.c
-or we need to find a different dir for it, and of course to make
-sure the quirks mechanism is fine with everyone.
+You are right,
+Sorry for that.
 
-Thanks !
-Lorenzo
+>
+>
 
-> >  arch/arm64/kernel/pci.c  | 2 +-
-> >  drivers/pci/ecam.c       | 6 +++---
-> >  include/linux/pci-ecam.h | 2 +-
-> >  3 files changed, 5 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index acf3872..981e828 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -183,7 +183,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-> >  		return NULL;
-> >  	}
-> >  
-> > -	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-> > +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops.pci_ops;
-> >  	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
-> >  				   ri->cfg);
-> >  	if (!bus)
-> > diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> > index 43ed08d..24242f0 100644
-> > --- a/drivers/pci/ecam.c
-> > +++ b/drivers/pci/ecam.c
-> > @@ -52,7 +52,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
-> >  		return ERR_PTR(-ENOMEM);
-> >  
-> >  	cfg->parent = dev;
-> > -	cfg->ops = ops;
-> > +	cfg->ops = *ops;
-> >  	cfg->busr.start = busr->start;
-> >  	cfg->busr.end = busr->end;
-> >  	cfg->busr.flags = IORESOURCE_BUS;
-> > @@ -138,7 +138,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >  			       int where)
-> >  {
-> >  	struct pci_config_window *cfg = bus->sysdata;
-> > -	unsigned int devfn_shift = cfg->ops->bus_shift - 8;
-> > +	unsigned int devfn_shift = cfg->ops.bus_shift - 8;
-> >  	unsigned int busn = bus->number;
-> >  	void __iomem *base;
-> >  
-> > @@ -149,7 +149,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >  	if (per_bus_mapping)
-> >  		base = cfg->winp[busn];
-> >  	else
-> > -		base = cfg->win + (busn << cfg->ops->bus_shift);
-> > +		base = cfg->win + (busn << cfg->ops.bus_shift);
-> >  	return base + (devfn << devfn_shift) + where;
-> >  }
-> >  
-> > diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> > index 7adad20..0ce2920 100644
-> > --- a/include/linux/pci-ecam.h
-> > +++ b/include/linux/pci-ecam.h
-> > @@ -39,7 +39,7 @@ struct pci_config_window {
-> >  	struct resource			res;
-> >  	struct resource			busr;
-> >  	void				*priv;
-> > -	struct pci_ecam_ops		*ops;
-> > +	struct pci_ecam_ops		ops;
-> >  	union {
-> >  		void __iomem		*win;	/* 64-bit single mapping */
-> >  		void __iomem		**winp; /* 32-bit per-bus mapping */
-> > -- 
-> > 1.9.1
-> > 
-> 
+--fqSO13Wp+IaiYtoI
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX6Lo+AAoJEORje4g2clinvVEP/j1rYd32uSEJE8qHkcJeGgqg
+XnFwoMTm0Iy7aPETlCAWw688aVi1aaBWrxdnuJ7xf5W9nvmzamCfKSjvNprMgxVl
+jsReWSCnLzeXywIPbrd4kCfbsBlde0F0fBaeEWlChHa5z+m8lVjY5lPTQN2gSFP7
+/Rq9INhqtuIR/c3YUMoPsOMtEJZHYmOzOXCX21l72lgBBz/9KSHoQHoUBTpZsm+i
+obwtyD3N3tie0oq+/njleFL8EZiIcT4nFqOgEjnEfmAlGNWYrqHXEdKw9VtO+zMQ
+epf8WinFSuzPhP9xlbNKntOrXOkjEiwt/IDUkyONtm6A5BpMGL+ZoPZdf6F0J24R
+B8WGJrfY/DwfeQBJG/Vw4osH/fIxRdUzyHJLClkP+WdebCfkBA6mVRVcRf3zytcE
+mQdzs4SSZymeDxOM07qjEZdLsjwc1racD3sl/XxN6oUv0fndyu7xE4in4JCCrjq8
+ylbjSz1NG/+UljlJBECkvjrnTTO6LaTuuqipF6+zxFcJtb9pJFFAw23HMeqq9NxA
+cr9p5xdwrTNj52ONjq3EwH1d4buxIcvoGrsnW71kcPoBSrn1xfoZE73J3FIGlgEW
+E8OVdPn1Fp9/8MEdbih3p2Cf4ONMvvXnmj0L2CR22BmMWe/hTLwuCl1J4jin2+9k
+/YwNeayAJZlVwMQrpNXk
+=ApJE
+-----END PGP SIGNATURE-----
+
+--fqSO13Wp+IaiYtoI--
