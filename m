@@ -1,304 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:41002 "EHLO arroyo.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754905AbcI2Ics (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 04:32:48 -0400
-Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <2837059.ka7z3gzjF2@wuerfel> <57DA5CC1.6030502@ti.com>
- <6722152.QTF992tLpW@wuerfel> <57E8BB69.4020804@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
-        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
-        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>, <nsekhar@ti.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>, <linux-ntb@googlegroups.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57ECD15F.9070708@ti.com>
-Date: Thu, 29 Sep 2016 14:01:27 +0530
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53688 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751497AbcIZXnV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 19:43:21 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8QNgiv4054011
+        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 19:43:20 -0400
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25q8tnu6me-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 19:43:20 -0400
+Received: from localhost
+        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 27 Sep 2016 09:43:17 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2527C2BB0061
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:09 +1000 (EST)
+Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
+        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8QNh9ic5112066
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:09 +1000
+Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
+        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8QNh8ql016180
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:08 +1000
+Date: Tue, 27 Sep 2016 09:43:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bhelgaas@google.com, mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
+ pci_update_resource()
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <57E8BB69.4020804@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-Id: <20160926234336.GA9190@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
+>In pci_update_resource(), the PCI device's memory decoding (0x2 in
+>PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
+>PCI device's memory space wasn't asked to be always on by @pdev->
+>mmio_always_on. The PF's memory decoding might be disabled when
+>updating its IOV BARs in the following path. Actually, the PF's
+>memory decoding shouldn't be disabled in this scenario as the PF
+>has been started to provide services:
+>
+>   sriov_numvfs_store
+>   pdev->driver->sriov_configure
+>   mlx5_core_sriov_configure
+>   pci_enable_sriov
+>   sriov_enable
+>   pcibios_sriov_enable
+>   pnv_pci_sriov_enable
+>   pnv_pci_vf_resource_shift
+>   pci_update_resource
+>
+>This doesn't change the PF's memory decoding in the path by introducing
+>additional parameter (@mmio_force_on) to pci_update_resource().
+>
+>Reported-by: Carol Soto <clsoto@us.ibm.com>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Tested-by: Carol Soto <clsoto@us.ibm.com>
+>---
 
-On Monday 26 September 2016 11:38 AM, Kishon Vijay Abraham I wrote:
-> Hi Arnd,
-> 
-> On Thursday 22 September 2016 07:04 PM, Arnd Bergmann wrote:
->> On Thursday, September 15, 2016 2:03:05 PM CEST Kishon Vijay Abraham I wrote:
->>> On Wednesday 14 September 2016 06:55 PM, Arnd Bergmann wrote:
->>>> On Wednesday, September 14, 2016 10:41:56 AM CEST Kishon Vijay Abraham I wrote:
->>>> I've added the drivers/ntb maintainers to Cc, given that there is
->>>> a certain degree of overlap between your work and the existing
->>>> code, I think they should be part of the discussion.
->>>>  
->>>>> Known Limitation:
->>>>> 	*) Does not support multi-function devices
->>>>
->>>> If I understand it right, this was a problem for USB and adding
->>>> it later made it somewhat inconsistent. Maybe we can at least
->>>> try to come up with an idea of how multi-function devices
->>>> could be handled even if we don't implement it until someone
->>>> actually needs it.
->>>
->>> Actually IMO multi-function device in PCI should be much simpler than it is for
->>> USB. In the case of USB, all the functions in a multi-function device will
->>> share the same *usb configuration* . (USB device can have multiple
->>> configuration but only one can be enabled at a time). A multi-function USB
->>> device will still have a single vendor-id/product-id/class... So I think a
->>> separate library (composite.c) in USB makes sense.
->>
->> Ok, makes sense.
->>
->>> But in the case of PCI, every function can be treated independently since all
->>> the functions have it's own 4KB configuration space. Each function can be
->>> configured independently. Each can have it's own vendor-id/product-id/class..
->>> I'm not sure if we'll need a separate library for PCI like we have for USB.
->>
->> I think it depends on whether we want to add the software multi-function
->> support you mention.
->>
->>> Now the restriction for not allowing multi-function device is because of the
->>> following structure definition.
->>>
->>> struct pci_epc {
->>> 	..
->>>         struct pci_epf *epf;
->>> 	..
->>> };
->>>
->>> EPC has a single reference to EPF and it is used *only* to notify the function
->>> driver when the link is up. (If this can be changed to use notification
->>> mechanism, multi-function devices can be supported here)
->>>
->>> One more place where this restriction arises is in designware driver
->>>
->>> struct dw_pcie_ep {
->>> 	..
->>>         u8 bar_to_atu[6];
->>> 	..
->>> };
->>>
->>> We use single ATU window to configure a BAR (in BAR). If there are multiple
->>> functions, then this should also be modified since each function has 6 BARs.
->>>
->>> This can be fixed without much effort unless some other issue props up.
->>
->> Ok.
->>
->>>>
->>>> Is your hardware able to make the PCIe endpoint look like
->>>> a device with multiple PCI functions, or would one have to
->>>> do this in software inside of a single PCI function if we
->>>> ever need it?
->>>
->>> The hardware I have doesn't support multiple PCI functions (like having a
->>> separate configuration space for each function). It has a dedicated space for
->>> configuration space supporting only one function. [Section 24.9.7.3.2
->>> PCIe_SS_EP_CFG_DBICS Register Description in  [1]].
->>>
->>> yeah, it has to be done in software (but that won't be multi-function device in
->>> PCI terms).
->>>
->>> [1] -> http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf
->>
->> Ok, so in theory there can be other hardware (and quite likely is)
->> that supports multiple functions, and we can extend the framework
->> to support them without major obstacles, but your hardware doesn't,
->> so you kept it simple with one hardcoded function, right?
-> 
-> right, PCIe can have upto 8 functions. So the issues with the current framework
-> has to be fixed. I don't expect major obstacles with this as of now.
->>
->> Seems completely reasonable to me.
->>
->>>>> TODO:
->>>>> 	*) access buffers in RC
->>>>> 	*) raise MSI interrupts
->>>>> 	*) Enable user space control for the RC side PCI driver
->>>>
->>>> The user space control would end up just being one of several
->>>> gadget drivers, right? E.g. gadget drivers for standard hardware
->>>> (8250 uart, ATA, NVMe, some ethernet) could be done as kernel
->>>> drivers while a user space driver can be used for things that
->>>> are more unusual and that don't need to interface to another
->>>> part of the kernel?
->>>
->>> Actually I didn't mean that. It was more with respect to the host side PCI test
->>> driver (drivers/misc/pci_endpoint_test.c). Right now it validates BAR, irq
->>> itself. I wanted to change this so that the user controls which tests to run.
->>> (Like for USB gadget zero tests, testusb.c invokes ioctls to perform various
->>> tests). Similarly I want to have a userspace program invoke pci_endpoint_test
->>> to perform various PCI tests.
->>
->> Ok, I see. So what I described above would be yet another function
->> driver that can be implemented, but so far, you have not planned
->> to do that because there was not need, right?
-> 
-> right. I felt pci_endpoint_test is the generic function that would be of
-> interest to all the vendors. Any new function can be added by taking
-> pci_endpoint_test as a reference.
-> 
-> The simple usecase I plan to work on after completing the framework is to have
-> a camera sensor in one board and display in another board (the boards connected
-> using PCIe) and the display showing the the camera capture.
->>
->>>>
->>>>> 	*) Adapt all other users of designware to use the new design (only
->>>>> 	   dra7xx has been adapted)
->>>>
->>>> I don't fully understand this part. Does every designware based
->>>> driver need modifications, or are the changes to the
->>>> generic parts of the designware driver enough to make it
->>>> work for the simpler platforms?
->>>
->>> I have changed the core designware driver structures (like previously the
->>> platform drivers will only use pcie_port, but now I introduced struct dw_pcie
->>> to support both host and endpoint). This will break (compilation failure) all
->>> the designware based drivers (except dra7xx). All these drivers should be
->>> adapted to the new change (even if they work only in host mode these has to be
->>> adapted).
->>
->> Ah, so we have to do two separate modifications to each designware driver:
->>
->> a) make it work with your patch (mandatory)
->> b) make it support endpoint mode (optional)
-> 
-> yes.
->>
->>>>> HOW TO:
->>>>>
->>>>> ON THE EP SIDE:
->>>>> ***************
->>>>>
->>>>> /* EP function is configured using configfs */
->>>>> # mount -t configfs none /sys/kernel/config
->>>>>
->>>>> /* PCI EP core layer creates "pci_ep" entry in configfs */
->>>>> # cd /sys/kernel/config/pci_ep/
->>>>>
->>>>> /*
->>>>>  * This is the 1st step in creating an endpoint function. This
->>>>>  * creates the endpoint function device *instance*. The string
->>>>>  * before the .<num> suffix will identify the driver this
->>>>>  * EP function will bind to.
->>>>>  * Just pci_epf_test is also valid. The .<num> suffix is used
->>>>>  * if there are multiple PCI controllers and all of them wants
->>>>>  * to use the same function.
->>>>>  */
->>>>> # mkdir pci_epf_test.0
->>>>
->>>> I haven't used USB gadgets, but I assume this is modeled around
->>>> the same interface. If there are notable differences, please mention
->>>> what they are. Otherwise the general concept seems rather nice to me.
->>>
->>> Yeah, both USB gadget and PCI endpoint use configfs interface but the semantics
->>> are quite different.
->>>
->>> Every directory in *usb_gadget* corresponds to a gadget device, and the gadget
->>> device has a functions sub-directory which has the USB functions. And these
->>> directories have fields or attributes specific to USB.
->>>
->>> But in the case of PCI, every directory in *pci_ep* corresponds to a PCI
->>> function and it has fields or attributes specific to PCI function.
->>
->> Ok, I see.
->>
->>> The main reason for using configfs for PCI endpoint is to give the users to
->>> control "which function has to be bound to which controller". The same concept
->>> is used for USB gadget as well but there it is "which gadget device has to be
->>> bound to which controller".
->>
->> We should still find out whether it's important that you can have
->> a single PCI function with a software multi-function support of some
->> sort. We'd still be limited to six BARs in total, and would also need
->> something to identify those sub-functions, so implementing that might
->> get quite hairy.
+Bjorn, could you please have a quick review on this when you have available
+time? We're running into SRIOV issue that is fixed by this patch.
 
-Thought a bit on how to implement this and felt we should have the following
-entities:-
-	* Function (or main function)
-	* sub-Function
-	* device
+Thanks,
+Gavin 
 
-Function: a single PCI function (as defined in the PCI specification with a
-separate configuration space). It will have control over the PCI header, manage
-BAR's and interrupts. It may or may not have sub-functions (sub-functions can
-be one or many).
-	Managing BAR's: The sub-functions will not have information
-			about BAR's. It will just request the number of
-			address space it requires to the main *function*. The
-			main function will allocate one BAR for each such
-			request based on the BAR availability.
+> arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
+> drivers/pci/iov.c                         | 2 +-
+> drivers/pci/pci.c                         | 2 +-
+> drivers/pci/setup-res.c                   | 9 +++++----
+> include/linux/pci.h                       | 2 +-
+> 5 files changed, 9 insertions(+), 8 deletions(-)
+>
+>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>index bc0c91e..2d6a2b7 100644
+>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>@@ -999,7 +999,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+> 		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
+> 			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+> 			 num_vfs, offset);
+>-		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+>+		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
+> 	}
+> 	return 0;
+> }
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index 2194b44..117aae6 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+> 		return;
+>
+> 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
+>-		pci_update_resource(dev, i);
+>+		pci_update_resource(dev, i, false);
+>
+> 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+> 	pci_iov_set_numvfs(dev, iov->num_VFs);
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index aab9d51..87a33c0 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
+> 		return;
+>
+> 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
+>-		pci_update_resource(dev, i);
+>+		pci_update_resource(dev, i, false);
+> }
+>
+> static const struct pci_platform_pm_ops *pci_platform_pm;
+>diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>index 66c4d8f..e8a50ff 100644
+>--- a/drivers/pci/setup-res.c
+>+++ b/drivers/pci/setup-res.c
+>@@ -26,7 +26,7 @@
+> #include "pci.h"
+>
+>
+>-void pci_update_resource(struct pci_dev *dev, int resno)
+>+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
+> {
+> 	struct pci_bus_region region;
+> 	bool disable;
+>@@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+> 	 * disable decoding so that a half-updated BAR won't conflict
+> 	 * with another device.
+> 	 */
+>-	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
+>+	disable = (res->flags & IORESOURCE_MEM_64) &&
+>+		  !mmio_force_on && !dev->mmio_always_on;
+> 	if (disable) {
+> 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> 		pci_write_config_word(dev, PCI_COMMAND,
+>@@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+> 	res->flags &= ~IORESOURCE_STARTALIGN;
+> 	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
+> 	if (resno < PCI_BRIDGE_RESOURCES)
+>-		pci_update_resource(dev, resno);
+>+		pci_update_resource(dev, resno, false);
+>
+> 	return 0;
+> }
+>@@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+> 	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
+> 		 resno, res, (unsigned long long) addsize);
+> 	if (resno < PCI_BRIDGE_RESOURCES)
+>-		pci_update_resource(dev, resno);
+>+		pci_update_resource(dev, resno, false);
+>
+> 	return 0;
+> }
+>diff --git a/include/linux/pci.h b/include/linux/pci.h
+>index 0ab8359..99231d1 100644
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
+> void pci_reset_secondary_bus(struct pci_dev *dev);
+> void pcibios_reset_secondary_bus(struct pci_dev *dev);
+> void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>-void pci_update_resource(struct pci_dev *dev, int resno);
+>+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
+> int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+> int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+> int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+>-- 
+>2.1.0
+>
 
-	Managing interrupts:
-		FOR MSI: Say each main function is capable of supporting 32 MSI
-			 interrupts. Each sub-function can request 'n' number
-			 of interrupts. (The sub-function will not be aware of
-			 the MSI number allocated to it). For each
-			 sub-function the interrupts will be numbered from
-			 '1..n'. The main function will map the sub-function
-			 interrupt to MSI interrupt number.
-
-		For legacy: No management is required, since one interrupt
-			    line will be shared by all sub-functions. The host
-			    driver will check the interrupt status register.
-
-Is there any thing else that has to be managed by the main Function?
-
-Here the framework should be modified to add a new interface between the
-sub-function and main Function. A *simple* main Function should also be added
-to manage only the BARs and interrupts. For any special use case, new main
-Function has to be created.
-The host side driver for this main function will be bound to it using the
-existing PCI host side mechanism. (using device id/vendor id/class code etc..).
-
-sub-Function: Not defined in PCI specification. It will be *part* of the main
-function. There can be one or more sub-function within a main function. Each
-sub-function within a main function will be independent of each other.
-It will request the number of local address space required and the number of
-MSI interrupts from the main function.
-Each sub-function should have a separate host side driver. But how do we bind
-the host side driver with the sub-function? Here the existing host side PCI
-framework won't work.
-
-Some options for binding sub-function to it's host side driver:
-Have a separate vendor-id/product id for each sub function. (But the *pci_dev*
-for the sub-function will not be created by host side PCI framework. The PCI
-framework shouldn't also have to do it because this is not standard).
-
-The main *function* driver will scan the list of it's sub-functions (We can
-make the 1st BAR to be used by main *Function* and have these informations
-there.) and for each function it creates a new *pci_dev* allocating the memory
-resources. This way the sub-function host side driver can be created just like
-a regular PCI driver. I'm not sure if creating a pci_dev from a pci driver will
-have any adverse effects.
-
-The other option is to define a new type of device (say pci_func_dev) and make
-the main *function* driver create these devices when it is getting probed. For
-binding, we can maybe just use a compatible string populated by the
-sub-function driver when it registers with the main function driver. Since this
-doesn't use an existing data structure, this should not be very difficult to
-implement.
-
-With either options, lspci won't list any sub-functions.
-
-device: one or more function (main function) will constitute a device. This
-shouldn't be too difficult to implement.
-
-I think most of the complexity lies in the design of sub-function. Please let
-me know your thoughts and other ideas.
-
-Thanks
-Kishon
