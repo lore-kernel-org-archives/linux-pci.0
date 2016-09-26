@@ -1,63 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35552 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752632AbcILWPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 18:15:53 -0400
-Date: Mon, 12 Sep 2016 17:15:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Simon Horman <horms@verge.net.au>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: Don't disable/unprepare clocks on
- prepare/enable failure
-Message-ID: <20160912221547.GJ23532@localhost>
-References: <1472635702-26465-1-git-send-email-geert+renesas@glider.be>
+Received: from userp1040.oracle.com ([156.151.31.81]:32279 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761025AbcIZHQO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 03:16:14 -0400
+Date: Mon, 26 Sep 2016 10:16:01 +0300
+From: Yuval Shaia <yuval.shaia@oracle.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 08/16] IB/pvrdma: Add device command support
+Message-ID: <20160926071601.GA6352@yuval-lap.Home>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <47e16986707ddbe0ffa15795ef9ae60d15bdd728.1474759181.git.aditr@vmware.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472635702-26465-1-git-send-email-geert+renesas@glider.be>
+In-Reply-To: <47e16986707ddbe0ffa15795ef9ae60d15bdd728.1474759181.git.aditr@vmware.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 11:28:22AM +0200, Geert Uytterhoeven wrote:
-> If clk_prepare_enable() fails, we must not call clk_disable_unprepare()
-> in the error path.
+Minor question/suggestion inline.
+(sorry for missing it till now).
+
+Yuval
+
+On Sat, Sep 24, 2016 at 04:21:32PM -0700, Adit Ranadive wrote:
+> This patch enables posting Verb requests and receiving responses to/from
+> the backend PVRDMA emulation layer.
 > 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-Applied to pci/host-rcar for v4.9, thanks!
-
+> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> Reviewed-by: George Zhang <georgezhang@vmware.com>
+> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> Signed-off-by: Adit Ranadive <aditr@vmware.com>
 > ---
->  drivers/pci/host/pcie-rcar.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> Changes v4->v5:
+>  - Moved the timeout to pvrdma_cmd_recv.
+>  - Added additional response code parameter to pvrdma_cmd_post.
 > 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 65db7a2215090ff4..0f5c2b2b4f8dfcd2 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -782,7 +782,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
->  	}
->  	err = clk_prepare_enable(pcie->clk);
->  	if (err)
-> -		goto fail_clk;
-> +		return err;
->  
->  	pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
->  	if (IS_ERR(pcie->bus_clk)) {
-> @@ -792,7 +792,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
->  	}
->  	err = clk_prepare_enable(pcie->bus_clk);
->  	if (err)
-> -		goto err_map_reg;
-> +		goto fail_clk;
->  
->  	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
->  	if (!i) {
+> Changes v3->v4:
+>  - Removed the min check and added a BUILD_BUG_ON check for size.
+> 
+> Changes v2->v3:
+>  - Converted pvrdma_cmd_recv to inline.
+>  - Added a min check in the memcpy to cmd_slot.
+>  - Removed the boolean from pvrdma_cmd_post.
+> ---
+>  drivers/infiniband/hw/pvrdma/pvrdma_cmd.c | 117 ++++++++++++++++++++++++++++++
+>  1 file changed, 117 insertions(+)
+>  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+> 
+> diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+> new file mode 100644
+> index 0000000..21f1af8
+> --- /dev/null
+> +++ b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+> @@ -0,0 +1,117 @@
+> +/*
+> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of EITHER the GNU General Public License
+> + * version 2 as published by the Free Software Foundation or the BSD
+> + * 2-Clause License. This program is distributed in the hope that it
+> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
+> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+> + * See the GNU General Public License version 2 for more details at
+> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program available in the file COPYING in the main
+> + * directory of this source tree.
+> + *
+> + * The BSD 2-Clause License
+> + *
+> + *     Redistribution and use in source and binary forms, with or
+> + *     without modification, are permitted provided that the following
+> + *     conditions are met:
+> + *
+> + *      - Redistributions of source code must retain the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer.
+> + *
+> + *      - Redistributions in binary form must reproduce the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer in the documentation and/or other materials
+> + *        provided with the distribution.
+> + *
+> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+> + * OF THE POSSIBILITY OF SUCH DAMAGE.
+> + */
+> +
+> +#include <linux/list.h>
+> +
+> +#include "pvrdma.h"
+> +
+> +#define PVRDMA_CMD_TIMEOUT	10000 /* ms */
+> +
+> +static inline int pvrdma_cmd_recv(struct pvrdma_dev *dev,
+> +				  union pvrdma_cmd_resp *resp,
+> +				  unsigned resp_code)
+> +{
+> +	int err;
+> +
+> +	dev_dbg(&dev->pdev->dev, "receive response from device\n");
+> +
+> +	err = wait_for_completion_interruptible_timeout(&dev->cmd_done,
+> +			msecs_to_jiffies(PVRDMA_CMD_TIMEOUT));
+> +	if (err == 0 || err == -ERESTARTSYS) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "completion timeout or interrupted\n");
+> +		return -ETIMEDOUT;
+> +	}
+> +
+> +	spin_lock(&dev->cmd_lock);
+> +	memcpy(resp, dev->resp_slot, sizeof(*resp));
+> +	spin_unlock(&dev->cmd_lock);
+> +
+> +	if (resp->hdr.ack != resp_code) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "unknown response %#x expected %#x\n",
+> +			 resp->hdr.ack, resp_code);
+> +		return -EFAULT;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +int
+> +pvrdma_cmd_post(struct pvrdma_dev *dev, union pvrdma_cmd_req *req,
+> +		union pvrdma_cmd_resp *resp, unsigned resp_code)
+> +{
+> +	int err;
+> +
+> +	dev_dbg(&dev->pdev->dev, "post request to device\n");
+> +
+> +	/* Serializiation */
+> +	down(&dev->cmd_sema);
+> +
+> +	BUILD_BUG_ON(sizeof(union pvrdma_cmd_req) !=
+> +		     sizeof(struct pvrdma_cmd_modify_qp));
+> +
+> +	spin_lock(&dev->cmd_lock);
+> +	memcpy(dev->cmd_slot, req, sizeof(*req));
+> +	spin_unlock(&dev->cmd_lock);
+> +
+> +	init_completion(&dev->cmd_done);
+> +	pvrdma_write_reg(dev, PVRDMA_REG_REQUEST, 0);
+> +
+> +	/* Make sure the request is written before reading status. */
+> +	mb();
+> +
+> +	err = pvrdma_read_reg(dev, PVRDMA_REG_ERR);
+> +	if (err == 0) {
+> +		if (resp != NULL)
+> +			err = pvrdma_cmd_recv(dev, resp, resp_code);
+> +	} else {
+> +		dev_warn(&dev->pdev->dev, "failed to write request %d\n", err);
+> +	}
+
+Please note that callers checks if err<0  while here err!=0 considered as
+error.
+Looking at similar code in pvrdma_pci_probe i can see that function
+"translates" this error to -EINVAL. Suggesting to do the same here
+(although -EINVAL is not a good choice, if device can be more friendly with
+the return code then we can propagate it up or just print a suitable error
+i.e. EAGAIN or ENOMEM otherwise EFAULT should be sufficient).
+
+> +
+> +	up(&dev->cmd_sema);
+> +
+> +	return err;
+> +}
 > -- 
-> 1.9.1
+> 2.7.4
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
