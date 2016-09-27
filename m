@@ -1,64 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:24761 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965526AbcIXXWP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:22:15 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v5 01/16] vmxnet3: Move PCI Id to pci_ids.h
-Date: Sat, 24 Sep 2016 16:21:25 -0700
-Message-ID: <0ed494851c6a1de2152f68be6a1735af6579d3ae.1474759181.git.aditr@vmware.com>
-In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
-References: <cover.1474759181.git.aditr@vmware.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:58177 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934281AbcI0UMp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:12:45 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Lukas Wunner <lukas@wunner.de>,
+        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 3/5] pci: No config access for removed devices
+Date: Tue, 27 Sep 2016 16:23:33 -0400
+Message-Id: <1475007815-28354-4-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The VMXNet3 PCI Id will be shared with our paravirtual RDMA driver.
-Moved it to the shared location in pci_ids.h.
+If we've  detected that the PCI device is removed, there is no need to
+access the device's config space. This patch has all the device config
+reads and writes return error when in such a state.
 
-Suggested-by: Leon Romanovsky <leon@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
+If the device is not present on a config read, the value returned will be
+set to all 1's. This is the same as what hardware is expected to return
+when accessing a removed device, but software can do this faster without
+relying on hardware.
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/net/vmxnet3/vmxnet3_int.h | 3 +--
- include/linux/pci_ids.h           | 1 +
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ include/linux/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
-index 74fc030..2bd6bf8 100644
---- a/drivers/net/vmxnet3/vmxnet3_int.h
-+++ b/drivers/net/vmxnet3/vmxnet3_int.h
-@@ -119,9 +119,8 @@ enum {
- };
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 36b759c..7a320ca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -929,28 +929,46 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
  
- /*
-- * PCI vendor and device IDs.
-+ * Maximum devices supported.
-  */
--#define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
- #define MAX_ETHERNET_CARDS		10
- #define MAX_PCI_PASSTHRU_DEVICE		6
+ static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+ {
++	if (unlikely(dev->is_removed)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+ {
++	if (unlikely(dev->is_removed)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
+ }
+ static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
+ 					u32 *val)
+ {
++	if (unlikely(dev->is_removed)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+ {
++	if (unlikely(dev->is_removed))
++		return -ENODEV;
+ 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+ {
++	if (unlikely(dev->is_removed))
++		return -ENODEV;
+ 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+ }
+ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 					 u32 val)
+ {
++	if (unlikely(dev->is_removed))
++		return -ENODEV;
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
  
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..98bb455 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2251,6 +2251,7 @@
- #define PCI_DEVICE_ID_RASTEL_2PORT	0x2000
- 
- #define PCI_VENDOR_ID_VMWARE		0x15ad
-+#define PCI_DEVICE_ID_VMWARE_VMXNET3	0x07b0
- 
- #define PCI_VENDOR_ID_ZOLTRIX		0x15b0
- #define PCI_DEVICE_ID_ZOLTRIX_2BD0	0x2bd0
 -- 
-2.7.4
+2.7.2
 
