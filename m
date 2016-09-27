@@ -1,45 +1,141 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <alex.williamson@redhat.com>
+Return-Path: <alex.williamson@redhat.com>
+Date: Tue, 27 Sep 2016 13:13:35 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tyler Baicar <tbaicar@codeaurora.org>, lenb@kernel.org, bhelgaas@google.com, paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com, axboe@fb.com, izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bp@suse.de
-Subject: Re: [PATCH V2 0/2] Correct AER severity for printing AER information
-Date: Wed, 21 Sep 2016 02:27:10 +0200
-Message-ID: <4757037.bRpWDgK618@vostro.rjw.lan>
-In-Reply-To: <20160920194103.GD4941@localhost>
-References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org> <20160920194103.GD4941@localhost>
+Cc: "Neftin, Sasha" <sasha.neftin@intel.com>,
+        Jeff Kirsher
+ <jeffrey.t.kirsher@intel.com>, linux-pci@vger.kernel.org,
+        davem@davemloft.net, bhelgaas@google.com, netdev@vger.kernel.org,
+        nhorman@redhat.com, sassmann@redhat.com, jogreene@redhat.com,
+        guru.anbalagane@oracle.com
+Subject: Re: [net-next 5/5] PCI: disable FLR for 82579 device
+Message-ID: <20160927131335.2edd72cb@t450s.home>
+In-Reply-To: <20160927181702.GA7275@localhost>
+References: <1474612741-75681-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	<1474612741-75681-6-git-send-email-jeffrey.t.kirsher@intel.com>
+	<20160923140136.GC1514@localhost>
+	<1474664726.2389.7.camel@intel.com>
+	<176f2366-e225-75fb-8cad-909a8f7e808c@intel.com>
+	<20160927181702.GA7275@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, September 20, 2016 02:41:03 PM Bjorn Helgaas wrote:
-> On Wed, Sep 14, 2016 at 03:14:44PM -0600, Tyler Baicar wrote:
-> > AER severity handling has two issues that cause the AER information to
-> > be printed incorrectly. The first issue is that the function to calculate
-> > the AER severity is called twice in the code path to print the AER
-> > information. The second issue is that the original call to calculate the
-> > AER severity expects the CPER severity but is recieving the GHES
-> > severity.
-> > 
-> > V2: Fix minor typo in commit text.
-> > 
-> > V1: https://lkml.org/lkml/2016/9/12/1075
-> > 
-> > Tyler Baicar (2):
-> >   PCI/AER: Remove duplicate AER severity translation
-> >   acpi: apei: send correct severity to calculate AER severity
-> > 
-> >  drivers/acpi/apei/ghes.c               | 2 +-
-> >  drivers/pci/pcie/aer/aerdrv_errprint.c | 6 ++----
-> >  include/linux/aer.h                    | 2 +-
-> >  3 files changed, 4 insertions(+), 6 deletions(-)
-> 
-> I applied both to pci/aer for v4.9, thanks!
-> 
-> Rafael, the second one is strictly ACPI, and I'd be happy to let you
-> deal with it if you prefer.
+On Tue, 27 Sep 2016 13:17:02 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-It can go in via PCI I think.  Either way is fine by me actually. :-)
+> On Sun, Sep 25, 2016 at 10:02:43AM +0300, Neftin, Sasha wrote:
+> > On 9/24/2016 12:05 AM, Jeff Kirsher wrote:  
+> > >On Fri, 2016-09-23 at 09:01 -0500, Bjorn Helgaas wrote:  
+> > >>On Thu, Sep 22, 2016 at 11:39:01PM -0700, Jeff Kirsher wrote:  
+> > >>>From: Sasha Neftin <sasha.neftin@intel.com>
+> > >>>
+> > >>>82579 has a problem reattaching itself after the device is detached.
+> > >>>The bug was reported by Redhat. The suggested fix is to disable
+> > >>>FLR capability in PCIe configuration space.
+> > >>>
+> > >>>Reproduction:
+> > >>>Attach the device to a VM, then detach and try to attach again.
+> > >>>
+> > >>>Fix:
+> > >>>Disable FLR capability to prevent the 82579 from hanging.  
+> > >>Is there a bugzilla or other reference URL to include here?  Should
+> > >>this be marked for stable?  
+> > >So the author is in Israel, meaning it is their weekend now.  I do not
+> > >believe Sasha monitors email over the weekend, so a response to your
+> > >questions won't happen for a few days.
+> > >
+> > >I tried searching my archives for more information, but had no luck finding
+> > >any additional information.
+> > >  
+> > >>>Signed-off-by: Sasha Neftin <sasha.neftin@intel.com>
+> > >>>Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+> > >>>Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> > >>>---
+> > >>>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> > >>>  1 file changed, 21 insertions(+)
+> > >>>
+> > >>>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > >>>index 44e0ff3..59fba6e 100644
+> > >>>--- a/drivers/pci/quirks.c
+> > >>>+++ b/drivers/pci/quirks.c
+> > >>>@@ -4431,3 +4431,24 @@ static void quirk_intel_qat_vf_cap(struct
+> > >>>pci_dev *pdev)
+> > >>>  	}
+> > >>>  }
+> > >>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443,
+> > >>>quirk_intel_qat_vf_cap);
+> > >>>+/*
+> > >>>+ * Workaround FLR issues for 82579
+> > >>>+ * This code disables the FLR (Function Level Reset) via PCIe, in
+> > >>>order
+> > >>>+ * to workaround a bug found while using device passthrough, where the
+> > >>>+ * interface would become non-responsive.
+> > >>>+ * NOTE: the FLR bit is Read/Write Once (RWO) in config space, so if
+> > >>>+ * the BIOS or kernel writes this register * then this workaround will
+> > >>>+ * not work.  
+> > >>This doesn't sound like a root cause.  Is the issue a hardware
+> > >>erratum?  Linux PCI core bug?  VFIO bug?  Device firmware bug?
+> > >>
+> > >>The changelog suggests that the problem only affects passthrough,
+> > >>which suggests some sort of kernel bug related to how passthrough is
+> > >>implemented.  
+> 
+> If this bug affects all scenarios, not just passthrough, the changelog
+> should not mention passthrough.
+> 
+> > >>>+ */
+> > >>>+static void quirk_intel_flr_cap_dis(struct pci_dev *dev)
+> > >>>+{
+> > >>>+	int pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+> > >>>+	if (pos) {
+> > >>>+		u8 cap;
+> > >>>+		pci_read_config_byte(dev, pos + PCI_AF_CAP, &cap);
+> > >>>+		cap = cap & (~PCI_AF_CAP_FLR);
+> > >>>+		pci_write_config_byte(dev, pos + PCI_AF_CAP, cap);
+> > >>>+	}
+> > >>>+}
+> > >>>+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502,
+> > >>>quirk_intel_flr_cap_dis);
+> > >>>+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503,
+> > >>>quirk_intel_flr_cap_dis);
+> > >>>-- 
+> > >>>2.7.4
+> > >>>
+> > >>>--
+> > >>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > >>>the body of a message to majordomo@vger.kernel.org
+> > >>>More majordomo info at  http://vger.kernel.org/majordomo-info.html  
+> > 
+> > Hello,
+> > 
+> > Original bugzilla thread could be found here:
+> > https://bugzilla.redhat.com/show_bug.cgi?format=multiple&id=966840  
+> 
+> That bugzilla is private and I can't read it.
 
+Hmm, I can, but I don't see anything in it that supports this.  Is that
+really the right bz?  It's the right hardware, but has all sorts of FUD
+about the version of various other components in the stack.
+ 
+> > This is our HW bug, exist only in 82579 devices. More new devices
+> > have no such problem. We have found root cause and suggested this
+> > solution.   
+> 
+> Is there an erratum you can reference?
+> 
+> > This solution should work for a 95% of cases, so I do not
+> > think that this is fragile. For another cases possible solution is
+> > get up working system and manually disable FLR, before VM start use
+> > our adapter.  
+> 
+> I don't think a 95% solution is sufficient.  Can you use the
+> pci_dev_specific_reset() framework to make a 100% solution?
+
+Right, plus when this does work I suspect it removes the one mechanism
+we have to reset the device, which depending on how obscure the failure
+scenario is, isn't a clear cut improvement for device assignment.
 Thanks,
-Rafael
+
+Alex
