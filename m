@@ -1,216 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:57964 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761918AbcINMC4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 08:02:56 -0400
-From: Zhichang Yuan <yuanzhichang@hisilicon.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
-CC: <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <will.deacon@arm.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
-        <minyard@acm.org>, <benh@kernel.crashing.org>,
-        <lorenzo.pieralisi@arm.com>, <liviu.dudau@arm.com>,
-        <zourongrong@gmail.com>, <john.garry@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V3 4/4] ARM64 LPC: support earlycon for UART connected to LPC
-Date: Wed, 14 Sep 2016 20:15:54 +0800
-Message-ID: <1473855354-150093-5-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+Received: from mail.kernel.org ([198.145.29.136]:45852 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933805AbcI0TUI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 15:20:08 -0400
+Date: Tue, 27 Sep 2016 14:20:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bhelgaas@google.com, mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
+ pci_update_resource()
+Message-ID: <20160927192003.GA14642@localhost>
+References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Hi Gavin,
 
-This patch support the earlycon for UART connected to LPC on Hip06.
-This patch is depended on the LPC driver.
+On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
+> In pci_update_resource(), the PCI device's memory decoding (0x2 in
+> PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
+> PCI device's memory space wasn't asked to be always on by @pdev->
+> mmio_always_on. The PF's memory decoding might be disabled when
+> updating its IOV BARs in the following path. Actually, the PF's
+> memory decoding shouldn't be disabled in this scenario as the PF
+> has been started to provide services:
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
----
- drivers/bus/hisi_lpc.c               | 113 +++++++++++++++++++++++++++++++++++
- drivers/tty/serial/8250/8250_early.c |  26 +++++++-
- 2 files changed, 137 insertions(+), 2 deletions(-)
+The reason we disable memory decoding while updating a 64-bit BAR is
+because we can't do the update atomically, and a half-updated BAR might
+conflict with other devices.
 
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-index 9b364d0..2269828 100644
---- a/drivers/bus/hisi_lpc.c
-+++ b/drivers/bus/hisi_lpc.c
-@@ -360,6 +360,119 @@ void hisilpc_comm_outb(void *devobj, unsigned long ptaddr,
- 
- 
- /**
-+ * hisilpc_early_in - read/input operation specific for hisi LPC earlycon.
-+ * @devobj: pointer to device relevant information of the caller.
-+ * @inbuf: the buffer where the read back data is populated.
-+ *
-+ * for earlycon, dlen and count should be one.
-+ *
-+ * Return the data read from earlycon on success, error ID on fail.
-+ *
-+ */
-+static unsigned int __init hisilpc_early_in(struct uart_port *port, int offset)
-+{
-+	unsigned int backval = 0;
-+	unsigned int ret = 0;
-+	struct lpc_cycle_para para;
-+	struct hisilpc_dev lpcdev;
-+
-+	if (!port->mapbase || !port->iobase || !port->membase)
-+		return -EINVAL;
-+
-+	para.opflags = FG_EARLYCON_LPC;
-+	para.csize = 1;
-+	lpcdev.membase = port->membase;
-+
-+	ret = hisilpc_target_in(&lpcdev, &para,
-+				port->iobase + (offset << port->regshift),
-+				(unsigned char *)&backval, 1);
-+	return (ret) ? : backval;
-+}
-+
-+/**
-+ * hisilpc_early_out - write/output operation specific for hisi LPC earlycon.
-+ * @port: pointer to uart_port of eralycon
-+ *
-+ * for earlycon, dlen and count should be one.
-+ *
-+ */
-+static void __init hisilpc_early_out(struct uart_port *port, int offset,
-+					int value)
-+{
-+	struct lpc_cycle_para para;
-+	struct hisilpc_dev lpcdev;
-+
-+	if (!port->mapbase || !port->iobase || !port->membase)
-+		return;
-+
-+	para.opflags = FG_EARLYCON_LPC;
-+	para.csize = 1;
-+	lpcdev.membase = port->membase;
-+
-+	(void)hisilpc_target_out(&lpcdev, &para,
-+				port->iobase + (offset << port->regshift),
-+				(unsigned char *)&value, 1);
-+}
-+
-+
-+/**
-+ * early_hisilpc8250_setup - initilize the lpc earlycon
-+ * @device: pointer to the elarycon device
-+ * @options: a option string from earlycon kernel-parameter
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int __init early_hisilpc8250_setup(struct earlycon_device *device,
-+						const char *options)
-+{
-+	char *p;
-+	int ret;
-+
-+	if (!device->port.membase)
-+		return -ENODEV;
-+
-+	if (device->port.iotype != UPIO_MEM)
-+		return -EINVAL;
-+
-+	if (device->options) {
-+		p = strchr(device->options, ',');
-+		if (p && (p + 1) != '\0') {
-+			ret = kstrtoul(++p, 0,
-+				(unsigned long *)&device->port.iobase);
-+			if (ret || device->port.iobase == 0)
-+				return ret ?: -EFAULT;
-+		} else
-+			device->port.iobase = 0x2f8;
-+	} else {
-+		device->port.iobase = 0x2f8;
-+		device->baud = 0;
-+	}
-+
-+	device->port.serial_in = hisilpc_early_in;
-+	device->port.serial_out = hisilpc_early_out;
-+	/* must convert iotype to UPIO_PORT for Hip06 indirect-io */
-+	device->port.iotype = UPIO_PORT;
-+
-+	/* disable interrupts from LPC */
-+	writel(LPC_IRQ_CLEAR, device->port.membase + LPC_REG_IRQ_ST);
-+	/* ensure the LPC is available */
-+	while (!(readl(device->port.membase + LPC_REG_OP_STATUS) &
-+			LPC_STATUS_IDLE))
-+		cpu_relax();
-+
-+	return early_serial8250_setup(device, options);
-+}
-+
-+
-+
-+EARLYCON_DECLARE(hisilpcuart, early_hisilpc8250_setup);
-+OF_EARLYCON_DECLARE(hisilpcuart, "hisilicon,lpc-uart",
-+					early_hisilpc8250_setup);
-+
-+
-+
-+/**
-  * hisilpc_ischild_ipmi - check whether the designated device is ipmi
-  * @dev: the device to be checked.
-  * @data: the value used to match the acpi device in checking.
-diff --git a/drivers/tty/serial/8250/8250_early.c b/drivers/tty/serial/8250/8250_early.c
-index 85a12f0..3b5d0a8 100644
---- a/drivers/tty/serial/8250/8250_early.c
-+++ b/drivers/tty/serial/8250/8250_early.c
-@@ -37,7 +37,7 @@
- #include <asm/io.h>
- #include <asm/serial.h>
- 
--static unsigned int __init serial8250_early_in(struct uart_port *port, int offset)
-+static unsigned int __init serial8250_early_in_raw(struct uart_port *port, int offset)
- {
- 	offset <<= port->regshift;
- 
-@@ -57,7 +57,7 @@ static unsigned int __init serial8250_early_in(struct uart_port *port, int offse
- 	}
- }
- 
--static void __init serial8250_early_out(struct uart_port *port, int offset, int value)
-+static void __init serial8250_early_out_raw(struct uart_port *port, int offset, int value)
- {
- 	offset <<= port->regshift;
- 
-@@ -80,6 +80,28 @@ static void __init serial8250_early_out(struct uart_port *port, int offset, int
- 	}
- }
- 
-+static inline void __init serial8250_early_out(struct uart_port *port,
-+					int offset, int value)
-+{
-+	if (port->serial_out)
-+		port->serial_out(port, offset, value);
-+	else {
-+		port->serial_out = serial8250_early_out_raw;
-+		serial8250_early_out_raw(port, offset, value);
-+	}
-+}
-+
-+static inline unsigned int __init serial8250_early_in(struct uart_port *port,
-+					int offset)
-+{
-+	if (port->serial_in)
-+		return port->serial_in(port, offset);
-+
-+	port->serial_in = serial8250_early_in_raw;
-+	return serial8250_early_in_raw(port, offset);
-+}
-+
-+
- #define BOTH_EMPTY (UART_LSR_TEMT | UART_LSR_THRE)
- 
- static void __init serial_putc(struct uart_port *port, int c)
--- 
-1.9.1
+You need to explain what is special about these SR-IOV BARs that makes it
+safe to update them non-atomically while decoding is enabled.
 
+>    sriov_numvfs_store
+>    pdev->driver->sriov_configure
+>    mlx5_core_sriov_configure
+>    pci_enable_sriov
+>    sriov_enable
+>    pcibios_sriov_enable
+>    pnv_pci_sriov_enable
+>    pnv_pci_vf_resource_shift
+>    pci_update_resource
+> 
+> This doesn't change the PF's memory decoding in the path by introducing
+> additional parameter (@mmio_force_on) to pci_update_resource().
+> 
+> Reported-by: Carol Soto <clsoto@us.ibm.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Tested-by: Carol Soto <clsoto@us.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
+>  drivers/pci/iov.c                         | 2 +-
+>  drivers/pci/pci.c                         | 2 +-
+>  drivers/pci/setup-res.c                   | 9 +++++----
+>  include/linux/pci.h                       | 2 +-
+>  5 files changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index bc0c91e..2d6a2b7 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -999,7 +999,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
+>  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+>  			 num_vfs, offset);
+> -		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+> +		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
+>  	}
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2194b44..117aae6 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+>  		return;
+>  
+>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
+> -		pci_update_resource(dev, i);
+> +		pci_update_resource(dev, i, false);
+>  
+>  	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+>  	pci_iov_set_numvfs(dev, iov->num_VFs);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index aab9d51..87a33c0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
+>  		return;
+>  
+>  	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
+> -		pci_update_resource(dev, i);
+> +		pci_update_resource(dev, i, false);
+>  }
+>  
+>  static const struct pci_platform_pm_ops *pci_platform_pm;
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 66c4d8f..e8a50ff 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -26,7 +26,7 @@
+>  #include "pci.h"
+>  
+>  
+> -void pci_update_resource(struct pci_dev *dev, int resno)
+> +void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
+>  {
+>  	struct pci_bus_region region;
+>  	bool disable;
+> @@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+>  	 * disable decoding so that a half-updated BAR won't conflict
+>  	 * with another device.
+>  	 */
+> -	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
+> +	disable = (res->flags & IORESOURCE_MEM_64) &&
+> +		  !mmio_force_on && !dev->mmio_always_on;
+>  	if (disable) {
+>  		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>  		pci_write_config_word(dev, PCI_COMMAND,
+> @@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+>  	res->flags &= ~IORESOURCE_STARTALIGN;
+>  	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
+>  	if (resno < PCI_BRIDGE_RESOURCES)
+> -		pci_update_resource(dev, resno);
+> +		pci_update_resource(dev, resno, false);
+>  
+>  	return 0;
+>  }
+> @@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+>  	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
+>  		 resno, res, (unsigned long long) addsize);
+>  	if (resno < PCI_BRIDGE_RESOURCES)
+> -		pci_update_resource(dev, resno);
+> +		pci_update_resource(dev, resno, false);
+>  
+>  	return 0;
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0ab8359..99231d1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
+>  void pci_reset_secondary_bus(struct pci_dev *dev);
+>  void pcibios_reset_secondary_bus(struct pci_dev *dev);
+>  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+> -void pci_update_resource(struct pci_dev *dev, int resno);
+> +void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
+>  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+>  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
