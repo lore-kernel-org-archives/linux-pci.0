@@ -1,65 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:49745 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754972AbcIAPiR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2016 11:38:17 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 0/3] pci: remove msi_controller registration API
-Date: Thu,  1 Sep 2016 17:38:01 +0200
-Message-Id: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from smtp-out4.electric.net ([192.162.216.190]:63689 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752345AbcI0JaF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 05:30:05 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Adit Ranadive' <aditr@vmware.com>,
+        Yuval Shaia <yuval.shaia@oracle.com>
+CC: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "pv-drivers@vmware.com" <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jhansen@vmware.com" <jhansen@vmware.com>,
+        "asarwade@vmware.com" <asarwade@vmware.com>,
+        "georgezhang@vmware.com" <georgezhang@vmware.com>,
+        "bryantan@vmware.com" <bryantan@vmware.com>
+Subject: RE: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for
+ PVRDMA
+Date: Tue, 27 Sep 2016 09:21:27 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB010A6EA@AcuExch.aculab.com>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
+ <20160926072739.GB6352@yuval-lap.Home>
+ <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
+In-Reply-To: <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-This small patch series aims at removing the small msi_controller
-registration API implemented in drivers/of/of_pci.c.
-
-In order to do so, it moves the last two users of this API to the
-generic MSI support:
-
- - The pci-aardvark driver is moved to use the generic MSI
-   support. This driver is both the provider of the MSI capability and
-   the consumer of this capability.
-
- - The pci-mvebu driver is cleaned up from using the msi_controller
-   registration API. This driver is only consuming MSI capabilies from
-   another driver (irq-armada-370-xp) which was migrated to the
-   generic MSI support some time ago. Therefore, this patch is simply
-   removing dead code.
-
-Finally, the last commit removed the now unused API.
-
-Thanks,
-
-Thomas
-
-Thomas Petazzoni (3):
-  pci: pci-aardvark: move to MSI handling using generic MSI support
-  pci: pci-mvebu: remove useless MSI enabling code
-  of: pci: remove unused MSI controller helpers
-
- drivers/of/of_pci.c             |  45 -----------
- drivers/pci/host/pci-aardvark.c | 172 ++++++++++++++++------------------------
- drivers/pci/host/pci-mvebu.c    |  17 ----
- include/linux/of_pci.h          |  11 ---
- 4 files changed, 67 insertions(+), 178 deletions(-)
-
--- 
-2.7.4
-
+RnJvbTogQWRpdCBSYW5hZGl2ZQ0KPiBTZW50OiAyNiBTZXB0ZW1iZXIgMjAxNiAxOToxNQ0KPiBP
+biBNb24sIFNlcCAyNiwgMjAxNiBhdCAwMDoyNzo0MEFNIC0wNzAwLCBZdXZhbCBTaGFpYSB3cm90
+ZToNCj4gPiBPbiBTYXQsIFNlcCAyNCwgMjAxNiBhdCAwNDoyMTozN1BNIC0wNzAwLCBBZGl0IFJh
+bmFkaXZlIHdyb3RlOg0KPiA+ID4gKw0KPiA+ID4gKwkvKiBDdXJyZW50bHksIHRoZSBkcml2ZXIg
+b25seSBzdXBwb3J0cyBSb0NFIG1vZGUuICovDQo+ID4gPiArCWlmIChkZXYtPmRzci0+Y2Fwcy5t
+b2RlICE9IFBWUkRNQV9ERVZJQ0VfTU9ERV9ST0NFKSB7DQo+ID4gPiArCQlkZXZfZXJyKCZwZGV2
+LT5kZXYsICJ1bnN1cHBvcnRlZCB0cmFuc3BvcnQgJWRcbiIsDQo+ID4gPiArCQkJZGV2LT5kc3It
+PmNhcHMubW9kZSk7DQo+ID4gPiArCQlyZXQgPSAtRUlOVkFMOw0KPiA+DQo+ID4gVGhpcyBpcyBz
+b21lIGZhdGFsIGVycm9yIHdpdGggdGhlIGRldmljZSwgbm90IHRoYXQgc29tZXRoaW5nIHdyb25n
+IHdpdGggdGhlDQo+ID4gZnVuY3Rpb24ncyBhcmd1bWVudC4NCj4gPiBTdWdnZXN0aW5nIHRvIHJl
+cGxhY2Ugd2l0aCAtRUZBVUxULg0KPiA+DQo+IA0KPiBUaGFua3MsIHdpbGwgZml4IHRoaXMgb25l
+IGFuZCB0aGUgb3RoZXJzIGhlcmUuDQoNCldvbid0IEVGQVVMVCBnZW5lcmF0ZSBTSUdTRUdWID8N
+Cg0KCURhdmlkDQoNCg==
