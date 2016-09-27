@@ -1,131 +1,74 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V10 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that
- might be reused for ACPI
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
- <1473152938-17388-8-git-send-email-tn@semihalf.com>
- <alpine.DEB.2.20.1609061149090.5647@nanos>
- <292d1dd1-0084-d796-b852-6cad2099eb66@semihalf.com>
- <CAJZ5v0iYc=1CN546MaabJdoNBUW8JbeD_qt8hSSDBPLJnB8Hug@mail.gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier
- <marc.zyngier@arm.com>, Jason Cooper <jason@lakedaemon.net>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Will Deacon <will.deacon@arm.com>, Catalin Marinas
- <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
- shijie.huang@arm.com, robert.richter@caviumnetworks.com,
- Marcin Wojtas <mw@semihalf.com>, Linux PCI <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- Andrea Gallo <andrea.gallo@linaro.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Al Stone <al.stone@linaro.org>, G Gregory <graeme.gregory@linaro.org>,
- David Daney <ddaney.cavm@gmail.com>, Sinan Kaya <okaya@codeaurora.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <c3228e58-5fbe-692f-5047-df4cff12d1f8@semihalf.com>
-Date: Wed, 7 Sep 2016 09:49:31 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0iYc=1CN546MaabJdoNBUW8JbeD_qt8hSSDBPLJnB8Hug@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:1675 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932573AbcI0UMp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:12:45 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Lukas Wunner <lukas@wunner.de>,
+        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 2/5] pci: Add is_removed state
+Date: Tue, 27 Sep 2016 16:23:32 -0400
+Message-Id: <1475007815-28354-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06.09.2016 13:29, Rafael J. Wysocki wrote:
-> On Tue, Sep 6, 2016 at 12:22 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
->> Hi Thomas,
->>
->>
->> On 06.09.2016 11:50, Thomas Gleixner wrote:
->>>
->>> On Tue, 6 Sep 2016, Tomasz Nowicki wrote:
->>>>
->>>> -static int __init its_pci_msi_init(void)
->>>> +static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
->>>> +                                      const char *name)
->>>>  {
->>>> -       struct device_node *np;
->>>>         struct irq_domain *parent;
->>>>
->>>> +       parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
->>>> +       if (!parent || !msi_get_domain_info(parent)) {
->>>> +               pr_err("%s: Unable to locate ITS domain\n", name);
->>>> +               return -ENXIO;
->>>> +       }
->>>> +
->>>> +       if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
->>>> +                                      parent)) {
->>>> +               pr_err("%s: Unable to create PCI domain\n", name);
->>>> +               return -ENOMEM;
->>>
->>>
->>> So you have error codes here.
->>>
->>>> +       }
->>>> +
->>>> +       return 0;
->>>> +}
->>>> +
->>>> +static int __init its_pci_of_msi_init(void)
->>>> +{
->>>> +       struct device_node *np;
->>>> +
->>>>         for (np = of_find_matching_node(NULL, its_device_id); np;
->>>>              np = of_find_matching_node(np, its_device_id)) {
->>>>                 if (!of_property_read_bool(np, "msi-controller"))
->>>>                         continue;
->>>>
->>>> -               parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
->>>> -               if (!parent || !msi_get_domain_info(parent)) {
->>>> -                       pr_err("%s: unable to locate ITS domain\n",
->>>> -                              np->full_name);
->>>> +               if (its_pci_msi_init_one(of_node_to_fwnode(np),
->>>> np->full_name))
->>>>                         continue;
->>>> -               }
->>>> -
->>>> -               if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
->>>> -                                              &its_pci_msi_domain_info,
->>>> -                                              parent)) {
->>>> -                       pr_err("%s: unable to create PCI domain\n",
->>>> -                              np->full_name);
->>>> -                       continue;
->>>> -               }
->>>>
->>>>                 pr_info("PCI/MSI: %s domain created\n", np->full_name);
->>>>         }
->>>>
->>>>         return 0;
->>>
->>>
->>> And no matter what you return success
->>>
->>>>  }
->>>> +
->>>> +static int __init its_pci_msi_init(void)
->>>> +{
->>>> +       its_pci_of_msi_init();
->>>
->>>
->>> Which you subsequently ignore here. What's the point?
->>>
->>
->> Well, this patch is meant to refactor the code. It does not change the error
->> handing nor the functionality. However, you have got a point but IMO it
->> should be fixed in separate patch if possible.
->
-> But you are refactoring the code, so it would make sense to clean it
-> up while at it.  Perhaps add one more patch to the series?
->
+This adds a new state for devices that were once in the system, but
+unexpectedly removed. This is so device tear down functions can observe
+the device is not accessible so it may skip attempting to initialize
+the hardware.
 
-I have a look at the code again and come to the conclusion the code is 
-fine now. We iterate over available its nodes and try to probe driver. 
-There might be an error for one of it (print error message) but we keep 
-trying for the rest. One of it might be probed successfully. So there is 
-no reason to escape in half way. Since its_pci_of_msi_init() always 
-returns 0 I can remove return statement so we would have:
-void its_pci_of_msi_init(void) instead.
+The pciehp and pcie-dpc drivers are aware of when the link is down,
+so these explicitly set this flag when its handlers detect the device
+is gone.
 
-Thanks,
-Tomasz
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_pci.c | 2 ++
+ drivers/pci/pcie/pcie-dpc.c      | 1 +
+ include/linux/pci.h              | 1 +
+ 3 files changed, 4 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 9e69403..299ea5e 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 				break;
+ 			}
+ 		}
++		if (!presence)
++			dev->is_removed = 1;
+ 		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 250f878..756eae4 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -44,6 +44,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
++		dev->is_removed = 1;
+ 		pci_stop_and_remove_bus_device(dev);
+ 		pci_dev_put(dev);
+ 	}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c81fbf7..36b759c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -337,6 +337,7 @@ struct pci_dev {
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
++	unsigned int	is_removed:1;	/* device was surprise removed */
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+-- 
+2.7.2
+
