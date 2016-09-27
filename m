@@ -1,77 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56224 "EHLO mail.kernel.org"
+Received: from arroyo.ext.ti.com ([198.47.19.12]:34335 "EHLO arroyo.ext.ti.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752333AbcIMVCg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 17:02:36 -0400
-Date: Tue, 13 Sep 2016 16:02:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI: Fix bridge_d3 update on device removal
-Message-ID: <20160913210231.GG4138@localhost>
-References: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
+        id S1753520AbcI0LgD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 07:36:03 -0400
+Subject: Re: [RFC PATCH 08/11] pci: controller: dra7xx: Add EP mode support
+To: Rob Herring <robh@kernel.org>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+ <1473829927-20466-9-git-send-email-kishon@ti.com>
+ <20160923145259.GA28285@rob-hp-laptop>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>, <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57EA5962.90700@ti.com>
+Date: Tue, 27 Sep 2016 17:04:58 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
+In-Reply-To: <20160923145259.GA28285@rob-hp-laptop>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 06:20:46AM +0200, Lukas Wunner wrote:
-> Starting with v4.8, we allow a PCIe port to runtime suspend to D3hot if
-> the port itself and its children satisfy a number of conditions.  Once a
-> child is removed, we recheck those conditions in case the removed device
-> was blocking the port from suspending.
-> 
-> The rechecking needs to happen *after* the device has been removed from
-> the bus it resides on.  Otherwise when walking the port's subordinate
-> bus in pci_bridge_d3_update(), the device being removed would
-> erroneously still be taken into account.
-> 
-> However the device is removed from the bus_list in pci_destroy_dev() and
-> we currently recheck *before* that.  Fix it.
-> 
-> Fixes: 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Hi,
 
-9d26d3a8f1b0 appeared in v4.8-rc1, so I assume this fix should be merged
-before v4.8, right?
-
-I applied it to for-linus with Mika's reviewed-by and Rafael's acked-by on
-that assumption.
-
-> ---
->  drivers/pci/remove.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+On Friday 23 September 2016 08:22 PM, Rob Herring wrote:
+> On Wed, Sep 14, 2016 at 10:42:04AM +0530, Kishon Vijay Abraham I wrote:
+>> The PCIe controller integrated in dra7xx SoCs is capable of operating
+>> in endpoint mode. Add support for dra7xx SoCs to operate in endpoint
+>> mode.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  Documentation/devicetree/bindings/pci/ti-pci.txt |   30 ++-
+>>  drivers/pci/controller/Kconfig                   |   21 +++
+>>  drivers/pci/controller/pci-dra7xx.c              |  211 +++++++++++++++++++---
+>>  3 files changed, 225 insertions(+), 37 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> index 60e2516..b0e76f6 100644
+>> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> @@ -1,17 +1,22 @@
+>>  TI PCI Controllers
+>>  
+>>  PCIe Designware Controller
+>> - - compatible: Should be "ti,dra7-pcie""
+>> - - reg : Two register ranges as listed in the reg-names property
+>> - - reg-names : The first entry must be "ti-conf" for the TI specific registers
+>> -	       The second entry must be "rc-dbics" for the designware pcie
+>> -	       registers
+>> -	       The third entry must be "config" for the PCIe configuration space
+>> + - compatible: Should be "ti,dra7-pcie" for RC
+>> +	       Should be "ti,dra7-pcie-ep" for EP
+>>   - phys : list of PHY specifiers (used by generic PHY framework)
+>>   - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+>>  	       number of PHYs as specified in *phys* property.
+>>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+>>  	       where <X> is the instance number of the pcie from the HW spec.
+>> + - num-lanes as specified in ../designware-pcie.txt
+>> +
+>> +HOST MODE
+>> +=========
+>> + - reg : Two register ranges as listed in the reg-names property
+>> + - reg-names : The first entry must be "ti-conf" for the TI specific registers
+>> +	       The second entry must be "rc-dbics" for the designware pcie
+>> +	       registers
+>> +	       The third entry must be "config" for the PCIe configuration space
+>>   - interrupts : Two interrupt entries must be specified. The first one is for
+>>  		main interrupt line and the second for MSI interrupt line.
+>>   - #address-cells,
+>> @@ -19,13 +24,24 @@ PCIe Designware Controller
+>>     #interrupt-cells,
+>>     device_type,
+>>     ranges,
+>> -   num-lanes,
+>>     interrupt-map-mask,
+>>     interrupt-map : as specified in ../designware-pcie.txt
+>>  
+>>  Optional Property:
+>>   - gpios : Should be added if a gpio line is required to drive PERST# line
 > 
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index d1ef7ac..f9357e0 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -40,6 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	list_del(&dev->bus_list);
->  	up_write(&pci_bus_sem);
->  
-> +	pci_bridge_d3_device_removed(dev);
->  	pci_free_resources(dev);
->  	put_device(&dev->dev);
->  }
-> @@ -96,8 +97,6 @@ static void pci_remove_bus_device(struct pci_dev *dev)
->  		dev->subordinate = NULL;
->  	}
->  
-> -	pci_bridge_d3_device_removed(dev);
-> -
->  	pci_destroy_dev(dev);
->  }
->  
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Don't you need gpios as the input side of GPIO outputs in RC mode? Or 
+> for EP mode they are all handled by h/w?
+
+I couldn't find any mention of the gpios being used in EP mode. I'll check this
+again.
+
+Thanks
+Kishon
