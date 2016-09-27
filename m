@@ -1,75 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Sat, 24 Sep 2016 23:00:40 +0200
-Message-ID: <2866656.cISrGNv8pP@wuerfel>
-In-Reply-To: <05a573de-e963-6590-6ed3-55af97067d7a@gmail.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <1849232.KJrfRPHGN6@wuerfel> <05a573de-e963-6590-6ed3-55af97067d7a@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36920 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751631AbcI0OAl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 10:00:41 -0400
+Date: Tue, 27 Sep 2016 16:00:44 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com
+Subject: Re: [PATCH v7 3/8] thunderbolt: Kconfig for Thunderbolt Networking
+Message-ID: <20160927140044.GA21133@kroah.com>
+References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+ <1474983821-2313-4-git-send-email-amir.jer.levy@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "minyard@acm.org" <minyard@acm.org>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- zhichang <zhichang.yuan02@gmail.com>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "kantyzc@163.com" <kantyzc@163.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474983821-2313-4-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 24, 2016 4:14:15 PM CEST zhichang wrote:
+On Tue, Sep 27, 2016 at 04:43:36PM +0300, Amir Levy wrote:
+> Update to the Kconfig Thunderbolt description to add
+> Thunderbolt networking as an option.
+> The menu item "Thunderbolt support" now offers:
+> "Apple Hardware Support" (existing)
+>         and/or
+> "Thunderbolt Networking" (new)
 > 
-> In V3, the outb is :
+> You can choose the driver for your platform or build both drivers -
+> each driver will detect if it can run on the specific platform.
+> If the Thunderbolt Networking option is chosen, Thunderbolt Networking
+> will be enabled between Linux non-Apple systems, macOS and
+> Windows based systems.
+> Thunderbolt Networking will not affect any other Thunderbolt feature that
+> was previous available to Linux users on either Apple or
+> non-Apple platforms.
 > 
-> void outb(u8 value, unsigned long addr)
-> {
->         if (!arm64_extio_ops || arm64_extio_ops->start > addr ||
->                         arm64_extio_ops->end < addr)
->                 writeb(value, PCI_IOBASE + addr);
->         else
->                 if (arm64_extio_ops->pfout)
->                         arm64_extio_ops->pfout(arm64_extio_ops->devpara,
->                                 addr + arm64_extio_ops->ptoffset, &value,
->                                 sizeof(u8), 1);
-> }
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
+>  drivers/thunderbolt/Makefile |  2 +-
+>  2 files changed, 24 insertions(+), 5 deletions(-)
 > 
-> here, arm64_extio_ops->ptoffset is the offset between the real legacy IO address
-> and the logical IO address, similar to the offset of primary address and
-> secondary address in PCI bridge.
+> diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+> index c121acc..376e5bb 100644
+> --- a/drivers/thunderbolt/Kconfig
+> +++ b/drivers/thunderbolt/Kconfig
+> @@ -1,13 +1,32 @@
+> -menuconfig THUNDERBOLT
+> -	tristate "Thunderbolt support for Apple devices"
+> +config THUNDERBOLT
+> +	tristate "Thunderbolt support"
+>  	depends on PCI
+>  	select CRC32
+>  	help
+> -	  Cactus Ridge Thunderbolt Controller driver
+> +	  Thunderbolt Controller driver
+> +
+> +if THUNDERBOLT
+> +
+> +config THUNDERBOLT_APPLE
+> +	tristate "Apple hardware support"
+> +	help
+>  	  This driver is required if you want to hotplug Thunderbolt devices on
+>  	  Apple hardware.
+>  
+>  	  Device chaining is currently not supported.
+>  
+> -	  To compile this driver a module, choose M here. The module will be
+> +	  To compile this driver as a module, choose M here. The module will be
+>  	  called thunderbolt.
+> +
+> +config THUNDERBOLT_ICM
 
-Ok, though we can probably simplify this by making the assumption that
-'ptoffset' is the negative of 'start', as the bus we register should
-always start at port zero.
+You are adding a config option here that is not used in the tree yet.
+Please wait until you need the option to actually add it :)
 
-> But in V3, LPC driver call pci_address_to_pio to request the logical IO as PCI
-> host bridge during its probing.
+You might just want to do the APPLE stuff here, that way you can drop in
+the networking stuff in a simple patch at the end of this series.
 
-Right, so this still needs to be fixed.
+thanks,
 
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
