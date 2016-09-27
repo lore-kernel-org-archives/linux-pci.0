@@ -1,140 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43436 "EHLO mail.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:1675 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752824AbcIRRHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Sep 2016 13:07:16 -0400
-Date: Sun, 18 Sep 2016 20:07:07 +0300
-From: Leon Romanovsky <leonro@leon.nu>
-To: Yuval Shaia <yuval.shaia@oracle.com>
-Cc: Adit Ranadive <aditr@vmware.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        pv-drivers <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Jorgen S. Hansen" <jhansen@vmware.com>,
-        Aditya Sarwade <asarwade@vmware.com>,
-        George Zhang <georgezhang@vmware.com>,
-        Bryan Tan <bryantan@vmware.com>
-Subject: Re: [PATCH v4 09/16] IB/pvrdma: Add support for Completion Queues
-Message-ID: <20160918170707.GL2923@leon.nu>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <1473655766-31628-10-git-send-email-aditr@vmware.com>
- <20160914124321.GE15800@yuval-lap.uk.oracle.com>
- <BLUPR0501MB836640F5ECEAB3A99CD82BFC5F00@BLUPR0501MB836.namprd05.prod.outlook.com>
- <20160915073611.GA3851@yuval-lap.uk.oracle.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="9ToWwKEyhugL+MAz"
-In-Reply-To: <20160915073611.GA3851@yuval-lap.uk.oracle.com>
+        id S932747AbcI0UMq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:12:46 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Lukas Wunner <lukas@wunner.de>,
+        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 4/5] pcie/aer: Cache capability position
+Date: Tue, 27 Sep 2016 16:23:34 -0400
+Message-Id: <1475007815-28354-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This saves the position of the error reporting capability so that it
+doesn't need to be rediscovered during error handling.
 
---9ToWwKEyhugL+MAz
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
+ drivers/pci/pcie/aer/aerdrv_core.c | 18 ++++++++++++------
+ drivers/pci/probe.c                |  3 ++-
+ include/linux/pci.h                |  5 +++++
+ 4 files changed, 24 insertions(+), 12 deletions(-)
 
-On Thu, Sep 15, 2016 at 10:36:12AM +0300, Yuval Shaia wrote:
-> Hi Adit,
-> Please see my comments inline.
->
-> Besides that I have no more comment for this patch.
->
-> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
->
-> Yuval
->
-> On Thu, Sep 15, 2016 at 12:07:29AM +0000, Adit Ranadive wrote:
-> > On Wed, Sep 14, 2016 at 05:43:37 -0700, Yuval Shaia wrote:
-> > > On Sun, Sep 11, 2016 at 09:49:19PM -0700, Adit Ranadive wrote:
-> > > > +
-> > > > +static int pvrdma_poll_one(struct pvrdma_cq *cq, struct pvrdma_qp
-> > > **cur_qp,
-> > > > +			   struct ib_wc *wc)
-> > > > +{
-> > > > +	struct pvrdma_dev *dev = to_vdev(cq->ibcq.device);
-> > > > +	int has_data;
-> > > > +	unsigned int head;
-> > > > +	bool tried = false;
-> > > > +	struct pvrdma_cqe *cqe;
-> > > > +
-> > > > +retry:
-> > > > +	has_data = pvrdma_idx_ring_has_data(&cq->ring_state->rx,
-> > > > +					    cq->ibcq.cqe, &head);
-> > > > +	if (has_data == 0) {
-> > > > +		if (tried)
-> > > > +			return -EAGAIN;
-> > > > +
-> > > > +		/* Pass down POLL to give physical HCA a chance to poll. */
-> > > > +		pvrdma_write_uar_cq(dev, cq->cq_handle |
-> > > PVRDMA_UAR_CQ_POLL);
-> > > > +
-> > > > +		tried = true;
-> > > > +		goto retry;
-> > > > +	} else if (has_data == PVRDMA_INVALID_IDX) {
-> > >
-> > > I didn't went throw the entire life cycle of RX-ring's head and tail but you
-> > > need to make sure that PVRDMA_INVALID_IDX error is recoverable one, i.e
-> > > there is probability that in the next call to pvrdma_poll_one it will be fine.
-> > > Otherwise it is an endless loop.
-> >
-> > We have never run into this issue internally but I don't think we can recover here
->
-> I briefly reviewed the life cycle of RX-ring's head and tail and didn't
-> caught any suspicious place that might corrupt it.
-> So glad to see that you never encountered this case.
->
-> > in the driver. The only way to recover would be to destroy and recreate the CQ
-> > which we shouldn't do since it could be used by multiple QPs.
->
-> Agree.
-> But don't they hit the same problem too?
->
-> > We don't have a way yet to recover in the device. Once we add that this check
-> > should go away.
->
-> To be honest i have no idea how to do that - i was expecting driver's vendors
-> to come up with an ideas :)
-> I once came up with an idea to force restart of the driver but it was
-> rejected.
->
-> >
-> > The reason I returned an error value from poll_cq in v3 was to break the possible
-> > loop so that it might give clients a chance to recover. But since poll_cq is not expected
-> > to fail I just log the device error here. I can revert to that version if you want to break
-> > the possible loop.
->
-> Clients (ULPs) cannot recover from this case. They even do not check the
-> reason of the error and treats any error as -EAGAIN.
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 48d21e0..24c6722 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -134,7 +134,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+ 	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+ 				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+ 
+-	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	aer_pos = pdev->aer_cap;
+ 	/* Clear error status */
+ 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
+ 	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
+@@ -173,7 +173,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+ 	 */
+ 	set_downstream_devices_error_reporting(pdev, false);
+ 
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	pos = pdev->aer_cap;
+ 	/* Disable Root's interrupt in response to error messages */
+ 	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+@@ -200,7 +200,7 @@ irqreturn_t aer_irq(int irq, void *context)
+ 	unsigned long flags;
+ 	int pos;
+ 
+-	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
++	pos = pdev->port->aer_cap;
+ 	/*
+ 	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
+ 	 * and Root error producer/consumer index
+@@ -343,7 +343,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	u32 reg32;
+ 	int pos;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 
+ 	/* Disable Root's interrupt in response to error messages */
+ 	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+@@ -396,7 +396,7 @@ static void aer_error_resume(struct pci_dev *dev)
+ 	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+ 
+ 	/* Clean AER Root Error Status */
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+ 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
+ 	if (dev->error_state == pci_channel_io_normal)
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 521e39c..d9175ef 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -40,7 +40,7 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
++	if (!dev->aer_cap)
+ 		return -EIO;
+ 
+ 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+@@ -62,7 +62,7 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ 	int pos;
+ 	u32 status;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 	if (!pos)
+ 		return -EIO;
+ 
+@@ -83,7 +83,7 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	if (!pci_is_pcie(dev))
+ 		return -ENODEV;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 	if (!pos)
+ 		return -EIO;
+ 
+@@ -102,6 +102,12 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++int pci_aer_init(struct pci_dev *dev)
++{
++	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	return pci_cleanup_aer_error_status_regs(dev);
++}
++
+ /**
+  * add_error_device - list device to be handled
+  * @e_info: pointer to error info
+@@ -158,7 +164,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	if (!(reg16 & PCI_EXP_AER_FLAGS))
+ 		return false;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 	if (!pos)
+ 		return false;
+ 
+@@ -555,7 +561,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 		 * Correctable error does not need software intervention.
+ 		 * No need to go through error recovery process.
+ 		 */
+-		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++		pos = dev->aer_cap;
+ 		if (pos)
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+@@ -647,7 +653,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	info->status = 0;
+ 	info->tlp_header_valid = 0;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	pos = dev->aer_cap;
+ 
+ 	/* The device might not support AER */
+ 	if (!pos)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 93f280d..1575724 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1666,7 +1666,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Enable ACS P2P upstream forwarding */
+ 	pci_enable_acs(dev);
+ 
+-	pci_cleanup_aer_error_status_regs(dev);
++	/* Advanced Error Reporting */
++	pci_aer_init(dev);
+ }
+ 
+ /*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7a320ca..306e5c6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -268,6 +268,9 @@ struct pci_dev {
+ 	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
+ 	u8		revision;	/* PCI revision, low byte of class word */
+ 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
++#ifdef CONFIG_PCIEAER
++	u16		aer_cap;	/* AER capability offset */
++#endif
+ 	u8		pcie_cap;	/* PCIe capability offset */
+ 	u8		msi_cap;	/* MSI capability offset */
+ 	u8		msix_cap;	/* MSI-X capability offset */
+@@ -1390,9 +1393,11 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ #ifdef CONFIG_PCIEAER
+ void pci_no_aer(void);
+ bool pci_aer_available(void);
++int pci_aer_init(struct pci_dev *dev);
+ #else
+ static inline void pci_no_aer(void) { }
+ static inline bool pci_aer_available(void) { return false; }
++static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
+ #endif
+ 
+ #ifdef CONFIG_PCIE_ECRC
+-- 
+2.7.2
 
-It is because poll_one is not expected to fall.
-
->
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---9ToWwKEyhugL+MAz
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX3sm7AAoJEORje4g2clinRrwP/1EFDeDViJt15ncCnvxRxk/M
-GxzKk8yfT7UqCv+ZX8kDIIm/o1RyLgmZov6SPm2ldXk63xfriWqe1RAVd120WTcM
-ZaD+kum8bXtwPSOCqnSfPk3uN0CVWnxHPOXcculF10sR4UcMctGAP5IjLzmGV55l
-xLZtnVbhaQEs7dpeAUYDk9h4+NOiedewb3YUaA/rsNp8+ceZB1jRTPX+JY5OBdEV
-RDmHUo72m0sING0lRLOX7TWXv6xpOk2Jqq3r3SgzPAemI9FZynCWEhiGuF010dMW
-R+uhA22NwOwobLXf7beBQ4/cgHm1PlUM7Cjkhx3sZb7N9+/01tCSI4kzIhtsOTfc
-bdPs/LH2gNMdm8mj5NJCDXPRK47IMVVmJ9qysUEElM5ierPHby7Y2R2951cS8x1G
-dM6VDVAw9YyBUNKK/yWfYRQMS/mYbmhBk4lZahp7Z96IaO3tMCo7Sncp28hQ5hm6
-L8+za80kyotyR6TQ9zRHjLfZ4xVNH8Zru9lOyYl9IO+f0KsNTOTNu5AU+80q3PLG
-pmXfyD8TItf5ldFwrfXr67ER1Nx2jGkJ3fhoD6KSry0krZguo5lilCSCz/HK4QB7
-KL4uOSVr4sOft5gZtzvQC/ek3H7Onz6+JhVzWdhto/+zzpUsCQDgVlj4QTbPaFSO
-CiVjr5sJf/59kVnuyG1V
-=ll8U
------END PGP SIGNATURE-----
-
---9ToWwKEyhugL+MAz--
