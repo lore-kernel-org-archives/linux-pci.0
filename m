@@ -1,43 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:27193 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751088AbcIZVTb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 17:19:31 -0400
-Subject: Re: [PATCH v5 00/16] Add Paravirtual RDMA Driver
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <cover.1474759181.git.aditr@vmware.com>
- <20160925070352.GU4088@leon.nu>
- <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
- <20160926165104.GA12011@obsidianresearch.com>
- <b4e0acd9-e1a2-f6ac-0afa-c0fd62dd62f0@vmware.com>
- <20160926210724.GA16413@obsidianresearch.com>
-CC: Leon Romanovsky <leon@kernel.org>, <dledford@redhat.com>,
-        <linux-rdma@vger.kernel.org>, <pv-drivers@vmware.com>,
-        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <jhansen@vmware.com>, <asarwade@vmware.com>,
-        <georgezhang@vmware.com>, <bryantan@vmware.com>
-From: Adit Ranadive <aditr@vmware.com>
-Message-ID: <b1b78471-c136-fd24-6d4c-96e855e03b3b@vmware.com>
-Date: Mon, 26 Sep 2016 14:16:20 -0700
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37119 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753835AbcI0ONw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 10:13:52 -0400
+Date: Tue, 27 Sep 2016 16:13:42 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com
+Subject: Re: [PATCH v7 5/8] thunderbolt: Networking state machine
+Message-ID: <20160927141342.GC21133@kroah.com>
+References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+ <1474983821-2313-6-git-send-email-amir.jer.levy@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160926210724.GA16413@obsidianresearch.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474983821-2313-6-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 26, 2016 at 14:07:24PM -0700, Jason Gunthorpe wrote:
-> On Mon, Sep 26, 2016 at 01:40:10PM -0700, Adit Ranadive wrote:
+On Tue, Sep 27, 2016 at 04:43:38PM +0300, Amir Levy wrote:
+> This patch builds the peer to peer communication path.
+> Communication is established by a negotiation process whereby messages are
+> sent back and forth between the peers until a connection is established.
+> This includes the Thunderbolt Network driver communication with the second
+> peer via Intel Connection Manager(ICM) firmware.
+>   +--------------------+            +--------------------+
+>   |Host 1              |            |Host 2              |
+>   |                    |            |                    |
+>   |     +-----------+  |            |     +-----------+  |
+>   |     |Thunderbolt|  |            |     |Thunderbolt|  |
+>   |     |Networking |  |            |     |Networking |  |
+>   |     |Driver     |  |            |     |Driver     |  |
+>   |     +-----------+  |            |     +-----------+  |
+>   |              ^     |            |              ^     |
+>   |              |     |            |              |     |
+>   | +------------+---+ |            | +------------+---+ |
+>   | |Thunderbolt |   | |            | |Thunderbolt |   | |
+>   | |Controller  v   | |            | |Controller  v   | |
+>   | |         +---+  | |            | |         +---+  | |
+>   | |         |ICM|<-+-+------------+-+-------->|ICM|  | |
+>   | |         +---+  | |            | |         +---+  | |
+>   | +----------------+ |            | +----------------+ |
+>   +--------------------+            +--------------------+
+> Note that this patch only establishes the link between the two hosts and
+> not Network Packet handling - this is dealt with in the next patch.
 > 
-> > Wouldnt they be some overlap between the user-space and kernel driver? Or is
-> > it expected that the common structures (even device specific ones) be moved to
-> > the ABI file?
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  drivers/thunderbolt/icm/Makefile  |   2 +-
+>  drivers/thunderbolt/icm/icm_nhi.c | 303 ++++++++++++++-
+>  drivers/thunderbolt/icm/net.c     | 793 ++++++++++++++++++++++++++++++++++++++
+>  drivers/thunderbolt/icm/net.h     |  70 ++++
+>  4 files changed, 1157 insertions(+), 11 deletions(-)
+>  create mode 100644 drivers/thunderbolt/icm/net.c
 > 
-> Yes, even device specific structures must be in the abi file. Anything
-> that is used with copy_to_user/copy_from_user/etc.
-> 
+> diff --git a/drivers/thunderbolt/icm/Makefile b/drivers/thunderbolt/icm/Makefile
+> index f0d0fbb..94a2797 100644
+> --- a/drivers/thunderbolt/icm/Makefile
+> +++ b/drivers/thunderbolt/icm/Makefile
+> @@ -1,2 +1,2 @@
+>  obj-${CONFIG_THUNDERBOLT_ICM} += thunderbolt-icm.o
+> -thunderbolt-icm-objs := icm_nhi.o
+> +thunderbolt-icm-objs := icm_nhi.o net.o
+> diff --git a/drivers/thunderbolt/icm/icm_nhi.c b/drivers/thunderbolt/icm/icm_nhi.c
+> index 984aa7c..578eb14 100644
+> --- a/drivers/thunderbolt/icm/icm_nhi.c
+> +++ b/drivers/thunderbolt/icm/icm_nhi.c
+> @@ -74,6 +74,12 @@ static const struct nla_policy nhi_genl_policy[NHI_ATTR_MAX + 1] = {
+>  					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
+>  	[NHI_ATTR_MSG_FROM_ICM]		= { .type = NLA_BINARY,
+>  					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
+> +	[NHI_ATTR_LOCAL_ROUTE_STRING]	= {.len = sizeof(struct route_string)},
+> +	[NHI_ATTR_LOCAL_UUID]		= { .len = sizeof(uuid_be) },
+> +	[NHI_ATTR_REMOTE_UUID]		= { .len = sizeof(uuid_be) },
 
-Ok. Will make sure we consolidate the common stuff in the ABI file in the 
-next version.
-
-Thanks,
-Adit
+Be consistent in your choice of whitespace please.
