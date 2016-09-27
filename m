@@ -1,33 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, devicetree@vger.kernel.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH 0/9] PCI: rockchip: Cleanups against v10
-Date: Thu, 01 Sep 2016 22:52:49 +0200
-Message-ID: <6064818.1vCMXWIdYQ@wuerfel>
-In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <benh@au1.ibm.com>
+Return-Path: <benh@au1.ibm.com>
+Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
+ pci_update_resource()
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Gavin Shan
+ <gwshan@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, clsoto@us.ibm.com,
+        linuxppc-dev@lists.ozlabs.org
+Date: Wed, 28 Sep 2016 07:45:32 +1000
+In-Reply-To: <20160927192003.GA14642@localhost>
+References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <20160927192003.GA14642@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1475012732.2857.293.camel@au1.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 1, 2016 11:43:52 AM CEST Bjorn Helgaas wrote:
-> These are cleanups against 2098142ae87d, the current pci/host-rockchip
-> head in my tree.  This is basically the v10 driver posting (it's not
-> identical because I had already tweaked a few things and squashed in
-> Brian's bug fix).
+On Tue, 2016-09-27 at 14:20 -0500, Bjorn Helgaas wrote:
+> On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
+> > In pci_update_resource(), the PCI device's memory decoding (0x2 in
+> > PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
+> > PCI device's memory space wasn't asked to be always on by @pdev->
+> > mmio_always_on. The PF's memory decoding might be disabled when
+> > updating its IOV BARs in the following path. Actually, the PF's
+> > memory decoding shouldn't be disabled in this scenario as the PF
+> > has been started to provide services:
+> 
+> The reason we disable memory decoding while updating a 64-bit BAR is
+> because we can't do the update atomically, and a half-updated BAR might
+> conflict with other devices.
+> 
+> You need to explain what is special about these SR-IOV BARs that makes it
+> safe to update them non-atomically while decoding is enabled.
 
-I looked over the series and everything looks good, I particularly
-like the way that 	patches 7 and 8 make the code so much more readable.
+The IOV BAR won't decode until SR-IOV is enabled right ? Gavin, I don't
+think we update it "live", so it should be safe...
 
-	Arnd
+Cheers,
+Ben.
