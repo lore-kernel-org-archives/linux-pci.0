@@ -1,88 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25710 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756132AbcIGQSI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Sep 2016 12:18:08 -0400
-Date: Wed, 7 Sep 2016 12:28:59 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv2 2/4] pci: No config access for removed devices
-Message-ID: <20160907162859.GA28381@localhost.localdomain>
-References: <1473199219-3369-3-git-send-email-keith.busch@intel.com>
- <201609072050.VbWFO505%fengguang.wu@intel.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35671 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752075AbcI0DEj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 23:04:39 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8R32nH7083793
+        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 23:04:38 -0400
+Received: from e28smtp06.in.ibm.com (e28smtp06.in.ibm.com [125.16.236.6])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25q5mm3kru-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 23:04:37 -0400
+Received: from localhost
+        by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 27 Sep 2016 08:34:34 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+        by d28dlp02.in.ibm.com (Postfix) with ESMTP id 6C2153940064
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 08:34:31 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+        by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8R34VeD4784160
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 08:34:31 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+        by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8R34SUi007527
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 08:34:30 +0530
+Subject: Re: [PATCH v5 0/4] PCI: Introduce a way to enforce all MMIO BARs not
+ to share PAGE_SIZE
+To: bhelgaas@google.com
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
+        paulus@samba.org, linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Tue, 27 Sep 2016 11:04:22 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201609072050.VbWFO505%fengguang.wu@intel.com>
+In-Reply-To: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <b3bc8af9-f54b-d248-ba32-ac3d8f67a938@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 07, 2016 at 08:03:32PM +0800, kbuild test robot wrote:
-> All errors (new ones prefixed by >>):
-> 
->    arch/mips/txx9/generic/pci.c: In function 'early_read_config_word':
-> >> arch/mips/txx9/generic/pci.c:49:1: error: the frame size of 1528 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
->     }
->     ^
+Hi Bjorn,
+
+Kindly Ping... Any comment on V5?
+
+Thanks,
+Yongji
+
+On 2016/9/13 17:00, Yongji Xie wrote:
+> This series introduces a way for PCI resource allocator to force
+> MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
+> driver. Because current VFIO implementation disallows to mmap
+> sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
+> with other BARs for security reasons. Thus, we have to handle mmio
+> access to these BARs in QEMU emulation rather than in guest which
+> will cause some performance loss.
 >
->    cc1: all warnings being treated as errors
-> 
-> vim +49 arch/mips/txx9/generic/pci.c
-> 
-> 89d63fe1 Atsushi Nemoto 2008-07-11  33  	struct pci_bus fake_bus;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  34  
-> 89d63fe1 Atsushi Nemoto 2008-07-11  35  	fake_dev.bus = &fake_bus;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  36  	fake_dev.sysdata = hose;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  37  	fake_dev.devfn = devfn;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  38  	fake_bus.number = bus;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  39  	fake_bus.sysdata = hose;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  40  	fake_bus.ops = hose->pci_ops;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  41  
-> 89d63fe1 Atsushi Nemoto 2008-07-11  42  	if (bus != top_bus)
-> 89d63fe1 Atsushi Nemoto 2008-07-11  43  		/* Fake a parent bus structure. */
-> 89d63fe1 Atsushi Nemoto 2008-07-11  44  		fake_bus.parent = &fake_bus;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  45  	else
-> 89d63fe1 Atsushi Nemoto 2008-07-11  46  		fake_bus.parent = NULL;
-> 89d63fe1 Atsushi Nemoto 2008-07-11  47  
-> 89d63fe1 Atsushi Nemoto 2008-07-11  48  	return pci_read_config_word(&fake_dev, offset, value);
-> 89d63fe1 Atsushi Nemoto 2008-07-11 @49  }
+> In our solution, we try to make use of the existing code path of
+> resource_alignment kernel parameter and add a macro to set default
+> alignment for it. Thus we can define this macro by default on some
+> archs which may easily hit the performance issue because of their
+> 64K page.
+>
+> In this series, patch 1,2 fixed bugs of using resource_alignment;
+> patch 3 tried to add a new option for resource_alignment to use
+> IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4
+> adds a macro to set the default alignment of all MMIO BARs.
+>
+> Changelog v5:
+> - Rebased against v4.8-rc6
+> - Drop the patch that forbidding disable memory decoding in
+>    pci_reassigndev_resource_alignment()
+>
+> Changelog v4:
+> - Rebased against v4.8-rc1
+> - Drop one irrelevant patch
+> - Drop the patch that adding wildcard to resource_alignment to enforce
+>    the alignment of all MMIO BARs to be at least PAGE_SIZE
+> - Change the format of option "noresize" of resource_alignment
+> - Code style improvements
+>
+> Changelog v3:
+> - Ignore enforced alignment to fixed BARs
+> - Fix issue that disabling memory decoding when reassigning the alignment
+> - Only enable default alignment on PowerNV platform
+>
+> Changelog v2:
+> - Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+>
+> Yongji Xie (4):
+>    PCI: Ignore enforced alignment when kernel uses existing firmware setup
+>    PCI: Ignore enforced alignment to VF BARs
+>    PCI: Add a new option for resource_alignment to reassign alignment
+>    PCI: Add a macro to set default alignment for all PCI devices
+>
+>   Documentation/kernel-parameters.txt |    9 +++--
+>   arch/powerpc/include/asm/pci.h      |    4 +++
+>   drivers/pci/pci.c                   |   63 +++++++++++++++++++++++++++++------
+>   3 files changed, 63 insertions(+), 13 deletions(-)
+>
 
-
-Hmm, why is this function allocating such large structures on the
-stack? It looks like the size of struct pci_dev and struct pci_bus
-already exceeded 1024 bytes.
-
-I have no hardware to test this, but it looks to me there is no reason to
-have struct pci_dev and the following should save quite a bite of space:
-
----
-diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
-index 1f6bc9a..285d84e 100644
---- a/arch/mips/txx9/generic/pci.c
-+++ b/arch/mips/txx9/generic/pci.c
-@@ -29,12 +29,8 @@ static int __init
- early_read_config_word(struct pci_controller *hose,
- 		       int top_bus, int bus, int devfn, int offset, u16 *value)
- {
--	struct pci_dev fake_dev;
- 	struct pci_bus fake_bus;
- 
--	fake_dev.bus = &fake_bus;
--	fake_dev.sysdata = hose;
--	fake_dev.devfn = devfn;
- 	fake_bus.number = bus;
- 	fake_bus.sysdata = hose;
- 	fake_bus.ops = hose->pci_ops;
-@@ -45,7 +41,7 @@ early_read_config_word(struct pci_controller *hose,
- 	else
- 		fake_bus.parent = NULL;
- 
--	return pci_read_config_word(&fake_dev, offset, value);
-+	return pci_bus_read_config_word(&fake_bus, devfn, offset, value);
- }
- 
- int __init txx9_pci66_check(struct pci_controller *hose, int top_bus,
---
