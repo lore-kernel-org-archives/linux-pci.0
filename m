@@ -1,133 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0043.outbound.protection.outlook.com ([104.47.2.43]:28739
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755486AbcIRDhc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 17 Sep 2016 23:37:32 -0400
-From: Po Liu <po.liu@nxp.com>
-To: Shawn Guo <shawnguo@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>,
-        "M.H. Lian" <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        "Bjorn Helgaas" <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>
-Subject: RE: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Date: Sun, 18 Sep 2016 03:37:27 +0000
-Message-ID: <VI1PR0401MB1709F91B0C1EB6C80D741E4492F50@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
- <1473741659-17618-1-git-send-email-po.liu@nxp.com>
- <1473741659-17618-3-git-send-email-po.liu@nxp.com>
- <20160918005212.GF15478@tiger>
-In-Reply-To: <20160918005212.GF15478@tiger>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.136]:38264 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933709AbcI0SRI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 14:17:08 -0400
+Date: Tue, 27 Sep 2016 13:17:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Neftin, Sasha" <sasha.neftin@intel.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        linux-pci@vger.kernel.org, davem@davemloft.net,
+        bhelgaas@google.com, netdev@vger.kernel.org, nhorman@redhat.com,
+        sassmann@redhat.com, jogreene@redhat.com,
+        guru.anbalagane@oracle.com
+Subject: Re: [net-next 5/5] PCI: disable FLR for 82579 device
+Message-ID: <20160927181702.GA7275@localhost>
+References: <1474612741-75681-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1474612741-75681-6-git-send-email-jeffrey.t.kirsher@intel.com>
+ <20160923140136.GC1514@localhost>
+ <1474664726.2389.7.camel@intel.com>
+ <176f2366-e225-75fb-8cad-909a8f7e808c@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <176f2366-e225-75fb-8cad-909a8f7e808c@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgU2hhd24sDQoNCg0KPiAgLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gIEZyb206IFNo
-YXduIEd1byBbbWFpbHRvOnNoYXduZ3VvQGtlcm5lbC5vcmddDQo+ICBTZW50OiBTdW5kYXksIFNl
-cHRlbWJlciAxOCwgMjAxNiA4OjUyIEFNDQo+ICBUbzogUG8gTGl1DQo+ICBDYzogbGludXgtcGNp
-QHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0K
-PiAgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5v
-cmc7IFJveSBaYW5nOyBBcm5kDQo+ICBCZXJnbWFubjsgTWFyYyBaeW5naWVyOyBTdHVhcnQgWW9k
-ZXI7IExlbyBMaTsgTS5ILiBMaWFuOyBNdXJhbGkNCj4gIEthcmljaGVyaTsgQmpvcm4gSGVsZ2Fh
-czsgTWluZ2thaSBIdQ0KPiAgU3ViamVjdDogUmU6IFtQQVRDSCB2NSAzLzNdIHBjaTphZXI6IGFk
-ZCBzdXBwb3J0IGFlciBpbnRlcnJ1cHQgd2l0aCBub25lDQo+ICBNU0kvTVNJLVgvSU5UeCBtb2Rl
-DQo+ICANCj4gIE9uIFR1ZSwgU2VwIDEzLCAyMDE2IGF0IDEyOjQwOjU5UE0gKzA4MDAsIFBvIExp
-dSB3cm90ZToNCj4gID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBv
-cnQgTVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZS4NCj4gID4gV2hlbiBjaGlwIHN1cHBvcnQgdGhl
-IGFlciBpbnRlcnJ1cHQgd2l0aCBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsDQo+ICA+IG1heWJl
-IHRoZXJlIGlzIGludGVycnVwdCBsaW5lIGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZSBpbnRl
-cnJ1cHQNCj4gID4gbnVtYmVyIGluIHRoZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5p
-cnEgd2l0aCBpdC4NCj4gID4NCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhw
-LmNvbT4NCj4gIA0KPiAgV2lsbCB0aGUgbmV3IGtlcm5lbCB3b3JrIHdpdGggZXhpc3Rpbmcvb2xk
-IERUQj8gIEknbSB0cnlpbmcgdG8NCj4gIHVuZGVyc3RhbmQgdGhlIGRlcGVuZGVuY3kgYmV0d2Vl
-biBkcml2ZXIgYW5kIERUUyBjaGFuZ2VzLg0KDQpZZXMsIFdlJ3ZlIG5ldmVyIHVzZSBuYW1lICdp
-bnRyJyBiZWZvcmUuIFNvIHdlIHJlbW92ZSBpdCBpcyBvay4gDQonYWVyJyBpcyBhIGR0cyBuYW1l
-IGZvciByZXNlYXJjaGluZyBpdCdzIHRydWUgaW50ZXJydXB0IG51bWJlciBieSBrZXJuZWwuIFRo
-aXMgcGF0Y2ggaXMgZmlyc3QgdGltZSB0byB1c2UgbmFtZSAnYWVyJy4gU28gaXQgbXVzdCBiZSBj
-b21wYXRpYmxlIHdpdGggZXhpc3Rpbmcvb2xkIERUQi4NCg0KPiAgDQo+ICBTaGF3bg0KPiAgDQo+
-ICA+IC0tLQ0KPiAgPiBjaGFuZ2VzIGZvciB2NToNCj4gID4gCS0gQWRkIGNsZWFyICdhZXInIGlu
-dGVycnVwLW5hbWVzIGRlc2NyaXB0aW9uDQo+ICA+DQo+ICA+ICAuLi4vZGV2aWNldHJlZS9iaW5k
-aW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0ICAgICB8IDExICsrKysrLS0tDQo+ICA+ICBkcml2
-ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jICAgICAgICAgICAgICAgICAgICB8IDMxDQo+ICAr
-KysrKysrKysrKysrKysrKysrLS0tDQo+ICA+ICAyIGZpbGVzIGNoYW5nZWQsIDM1IGluc2VydGlv
-bnMoKyksIDcgZGVsZXRpb25zKC0pDQo+ICA+DQo+ICA+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0
-aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiAgPiBiL0Rv
-Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+
-ICA+IGluZGV4IDQxZTlmNTUuLjEwMWQwYTcgMTAwNjQ0DQo+ICA+IC0tLSBhL0RvY3VtZW50YXRp
-b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+ICsrKyBi
-L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0
-DQo+ICA+IEBAIC0xOCw4ICsxOCwxMCBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAgPiAgLSBy
-ZWc6IGJhc2UgYWRkcmVzc2VzIGFuZCBsZW5ndGhzIG9mIHRoZSBQQ0llIGNvbnRyb2xsZXINCj4g
-ID4gIC0gaW50ZXJydXB0czogQSBsaXN0IG9mIGludGVycnVwdCBvdXRwdXRzIG9mIHRoZSBjb250
-cm9sbGVyLiBNdXN0DQo+ICBjb250YWluIGFuDQo+ICA+ICAgIGVudHJ5IGZvciBlYWNoIGVudHJ5
-IGluIHRoZSBpbnRlcnJ1cHQtbmFtZXMgcHJvcGVydHkuDQo+ICA+IC0tIGludGVycnVwdC1uYW1l
-czogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4gID4gLSAgImludHIiOiBU
-aGUgaW50ZXJydXB0IHRoYXQgaXMgYXNzZXJ0ZWQgZm9yIGNvbnRyb2xsZXIgaW50ZXJydXB0cw0K
-PiAgPiArLSBpbnRlcnJ1cHQtbmFtZXM6IEl0IG1heSBiZSBpbmNsdWRlIHRoZSBmb2xsb3dpbmcg
-ZW50cmllczoNCj4gID4gKyAgImFlciI6IFRoZSBpbnRlcnJ1cHQgdGhhdCBpcyBhc3NlcnRlZCBm
-b3IgYWVyIGludGVycnVwdA0KPiAgPiArICAicG1lIjogVGhlIGludGVycnVwdCB0aGF0IGlzIGFz
-c2VydGVkIGZvciBwbWUgaW50ZXJydXB0DQo+ICA+ICsgIC4uLi4uLg0KPiAgPiAgLSBmc2wscGNp
-ZS1zY2ZnOiBNdXN0IGluY2x1ZGUgdHdvIGVudHJpZXMuDQo+ICA+ICAgIFRoZSBmaXJzdCBlbnRy
-eSBtdXN0IGJlIGEgbGluayB0byB0aGUgU0NGRyBkZXZpY2Ugbm9kZQ0KPiAgPiAgICBUaGUgc2Vj
-b25kIGVudHJ5IG11c3QgYmUgJzAnIG9yICcxJyBiYXNlZCBvbiBwaHlzaWNhbCBQQ0llDQo+ICBj
-b250cm9sbGVyIGluZGV4Lg0KPiAgPiBAQCAtMzUsOCArMzcsOSBAQCBFeGFtcGxlOg0KPiAgPiAg
-CQlyZWcgPSA8MHgwMCAweDAzNDAwMDAwIDB4MCAweDAwMDEwMDAwICAgLyogY29udHJvbGxlcg0K
-PiAgcmVnaXN0ZXJzICovDQo+ICA+ICAJCSAgICAgICAweDQwIDB4MDAwMDAwMDAgMHgwIDB4MDAw
-MDIwMDA+OyAvKiBjb25maWd1cmF0aW9uDQo+ICBzcGFjZSAqLw0KPiAgPiAgCQlyZWctbmFtZXMg
-PSAicmVncyIsICJjb25maWciOw0KPiAgPiAtCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMTc3IElS
-UV9UWVBFX0xFVkVMX0hJR0g+OyAvKg0KPiAgY29udHJvbGxlciBpbnRlcnJ1cHQgKi8NCj4gID4g
-LQkJaW50ZXJydXB0LW5hbWVzID0gImludHIiOw0KPiAgPiArCQlpbnRlcnJ1cHRzID0gPEdJQ19T
-UEkgMTc2IElSUV9UWVBFX0xFVkVMX0hJR0g+LCAvKiBhZXINCj4gIGludGVycnVwdCAqLw0KPiAg
-PiArCQkJPEdJQ19TUEkgMTc3IElSUV9UWVBFX0xFVkVMX0hJR0g+OyAvKiBwbWUgaW50ZXJydXB0
-ICovDQo+ICA+ICsJCWludGVycnVwdC1uYW1lcyA9ICJhZXIiLCAicG1lIjsNCj4gID4gIAkJZnNs
-LHBjaWUtc2NmZyA9IDwmc2NmZyAwPjsNCj4gID4gIAkJI2FkZHJlc3MtY2VsbHMgPSA8Mz47DQo+
-ICA+ICAJCSNzaXplLWNlbGxzID0gPDI+Ow0KPiAgPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kv
-cGNpZS9wb3J0ZHJ2X2NvcmUuYw0KPiAgPiBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3Jl
-LmMgaW5kZXggZTkyNzBiNC4uN2M0OTQzZCAxMDA2NDQNCj4gID4gLS0tIGEvZHJpdmVycy9wY2kv
-cGNpZS9wb3J0ZHJ2X2NvcmUuYw0KPiAgPiArKysgYi9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZf
-Y29yZS5jDQo+ICA+IEBAIC0xNiw2ICsxNiw3IEBADQo+ICA+ICAjaW5jbHVkZSA8bGludXgvc2xh
-Yi5oPg0KPiAgPiAgI2luY2x1ZGUgPGxpbnV4L3BjaWVwb3J0X2lmLmg+DQo+ICA+ICAjaW5jbHVk
-ZSA8bGludXgvYWVyLmg+DQo+ICA+ICsjaW5jbHVkZSA8bGludXgvb2ZfaXJxLmg+DQo+ICA+DQo+
-ICA+ICAjaW5jbHVkZSAiLi4vcGNpLmgiDQo+ICA+ICAjaW5jbHVkZSAicG9ydGRydi5oIg0KPiAg
-PiBAQCAtMjAwLDYgKzIwMSwyOCBAQCBzdGF0aWMgaW50IHBjaWVfcG9ydF9lbmFibGVfbXNpeChz
-dHJ1Y3QgcGNpX2Rldg0KPiAgPiAqZGV2LCBpbnQgKnZlY3RvcnMsIGludCBtYXNrKSAgc3RhdGlj
-IGludCBpbml0X3NlcnZpY2VfaXJxcyhzdHJ1Y3QNCj4gID4gcGNpX2RldiAqZGV2LCBpbnQgKmly
-cXMsIGludCBtYXNrKSAgew0KPiAgPiAgCWludCBpLCBpcnEgPSAtMTsNCj4gID4gKwlpbnQgcmV0
-Ow0KPiAgPiArCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBOVUxMOw0KPiAgPiArDQo+ICA+ICsJ
-Zm9yIChpID0gMDsgaSA8IFBDSUVfUE9SVF9ERVZJQ0VfTUFYU0VSVklDRVM7IGkrKykNCj4gID4g
-KwkJaXJxc1tpXSA9IDA7DQo+ICA+ICsNCj4gID4gKwlpZiAoZGV2LT5idXMtPmRldi5vZl9ub2Rl
-KQ0KPiAgPiArCQlucCA9IGRldi0+YnVzLT5kZXYub2Zfbm9kZTsNCj4gID4gKw0KPiAgPiArCS8q
-IElmIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQgTVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZSwN
-Cj4gID4gKwkgKiByZXF1ZXN0IGlycSBmb3IgYWVyDQo+ICA+ICsJICovDQo+ICA+ICsJaWYgKElT
-X0VOQUJMRUQoQ09ORklHX09GX0lSUSkgJiYgbnAgJiYNCj4gID4gKwkJCShtYXNrICYgUENJRV9Q
-T1JUX1NFUlZJQ0VfUE1FKSkgew0KPiAgPiArCQlyZXQgPSBvZl9pcnFfZ2V0X2J5bmFtZShucCwg
-ImFlciIpOw0KPiAgPiArCQlpZiAocmV0ID4gMCkgew0KPiAgPiArCQkJaXJxc1tQQ0lFX1BPUlRf
-U0VSVklDRV9BRVJfU0hJRlRdID0gcmV0Ow0KPiAgPiArCQkJaWYgKGRldi0+aXJxKQ0KPiAgPiAr
-CQkJCWlycSA9IGRldi0+aXJxOw0KPiAgPiArCQkJZ290byBub19tc2k7DQo+ICA+ICsJCX0NCj4g
-ID4gKwl9DQo+ICA+DQo+ICA+ICAJLyoNCj4gID4gIAkgKiBJZiBNU0kgY2Fubm90IGJlIHVzZWQg
-Zm9yIFBDSWUgUE1FIG9yIGhvdHBsdWcsIHdlIGhhdmUgdG8gdXNlDQo+ICBAQA0KPiAgPiAtMjI1
-LDExICsyNDgsMTMgQEAgc3RhdGljIGludCBpbml0X3NlcnZpY2VfaXJxcyhzdHJ1Y3QgcGNpX2Rl
-diAqZGV2LA0KPiAgaW50ICppcnFzLCBpbnQgbWFzaykNCj4gID4gIAkJaXJxID0gZGV2LT5pcnE7
-DQo+ICA+DQo+ICA+ICAgbm9fbXNpOg0KPiAgPiAtCWZvciAoaSA9IDA7IGkgPCBQQ0lFX1BPUlRf
-REVWSUNFX01BWFNFUlZJQ0VTOyBpKyspDQo+ICA+IC0JCWlycXNbaV0gPSBpcnE7DQo+ICA+ICsJ
-Zm9yIChpID0gMDsgaSA8IFBDSUVfUE9SVF9ERVZJQ0VfTUFYU0VSVklDRVM7IGkrKykgew0KPiAg
-PiArCQlpZiAoIWlycXNbaV0pDQo+ICA+ICsJCQlpcnFzW2ldID0gaXJxOw0KPiAgPiArCX0NCj4g
-ID4gIAlpcnFzW1BDSUVfUE9SVF9TRVJWSUNFX1ZDX1NISUZUXSA9IC0xOw0KPiAgPg0KPiAgPiAt
-CWlmIChpcnEgPCAwKQ0KPiAgPiArCWlmIChpcnEgPCAwICYmIGlycXNbUENJRV9QT1JUX1NFUlZJ
-Q0VfQUVSX1NISUZUXSA8IDApDQo+ICA+ICAJCXJldHVybiAtRU5PREVWOw0KPiAgPiAgCXJldHVy
-biAwOw0KPiAgPiAgfQ0KPiAgPiAtLQ0KPiAgPiAyLjEuMC4yNy5nOTZkYjMyNA0KPiAgPg0KPiAg
-Pg0KPiAgPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXw0K
-PiAgPiBsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdA0KPiAgPiBsaW51eC1hcm0ta2VybmVs
-QGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gID4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsDQo=
+On Sun, Sep 25, 2016 at 10:02:43AM +0300, Neftin, Sasha wrote:
+> On 9/24/2016 12:05 AM, Jeff Kirsher wrote:
+> >On Fri, 2016-09-23 at 09:01 -0500, Bjorn Helgaas wrote:
+> >>On Thu, Sep 22, 2016 at 11:39:01PM -0700, Jeff Kirsher wrote:
+> >>>From: Sasha Neftin <sasha.neftin@intel.com>
+> >>>
+> >>>82579 has a problem reattaching itself after the device is detached.
+> >>>The bug was reported by Redhat. The suggested fix is to disable
+> >>>FLR capability in PCIe configuration space.
+> >>>
+> >>>Reproduction:
+> >>>Attach the device to a VM, then detach and try to attach again.
+> >>>
+> >>>Fix:
+> >>>Disable FLR capability to prevent the 82579 from hanging.
+> >>Is there a bugzilla or other reference URL to include here?  Should
+> >>this be marked for stable?
+> >So the author is in Israel, meaning it is their weekend now.  I do not
+> >believe Sasha monitors email over the weekend, so a response to your
+> >questions won't happen for a few days.
+> >
+> >I tried searching my archives for more information, but had no luck finding
+> >any additional information.
+> >
+> >>>Signed-off-by: Sasha Neftin <sasha.neftin@intel.com>
+> >>>Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+> >>>Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> >>>---
+> >>>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> >>>  1 file changed, 21 insertions(+)
+> >>>
+> >>>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >>>index 44e0ff3..59fba6e 100644
+> >>>--- a/drivers/pci/quirks.c
+> >>>+++ b/drivers/pci/quirks.c
+> >>>@@ -4431,3 +4431,24 @@ static void quirk_intel_qat_vf_cap(struct
+> >>>pci_dev *pdev)
+> >>>  	}
+> >>>  }
+> >>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443,
+> >>>quirk_intel_qat_vf_cap);
+> >>>+/*
+> >>>+ * Workaround FLR issues for 82579
+> >>>+ * This code disables the FLR (Function Level Reset) via PCIe, in
+> >>>order
+> >>>+ * to workaround a bug found while using device passthrough, where the
+> >>>+ * interface would become non-responsive.
+> >>>+ * NOTE: the FLR bit is Read/Write Once (RWO) in config space, so if
+> >>>+ * the BIOS or kernel writes this register * then this workaround will
+> >>>+ * not work.
+> >>This doesn't sound like a root cause.  Is the issue a hardware
+> >>erratum?  Linux PCI core bug?  VFIO bug?  Device firmware bug?
+> >>
+> >>The changelog suggests that the problem only affects passthrough,
+> >>which suggests some sort of kernel bug related to how passthrough is
+> >>implemented.
+
+If this bug affects all scenarios, not just passthrough, the changelog
+should not mention passthrough.
+
+> >>>+ */
+> >>>+static void quirk_intel_flr_cap_dis(struct pci_dev *dev)
+> >>>+{
+> >>>+	int pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+> >>>+	if (pos) {
+> >>>+		u8 cap;
+> >>>+		pci_read_config_byte(dev, pos + PCI_AF_CAP, &cap);
+> >>>+		cap = cap & (~PCI_AF_CAP_FLR);
+> >>>+		pci_write_config_byte(dev, pos + PCI_AF_CAP, cap);
+> >>>+	}
+> >>>+}
+> >>>+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502,
+> >>>quirk_intel_flr_cap_dis);
+> >>>+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503,
+> >>>quirk_intel_flr_cap_dis);
+> >>>-- 
+> >>>2.7.4
+> >>>
+> >>>--
+> >>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >>>the body of a message to majordomo@vger.kernel.org
+> >>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Hello,
+> 
+> Original bugzilla thread could be found here:
+> https://bugzilla.redhat.com/show_bug.cgi?format=multiple&id=966840
+
+That bugzilla is private and I can't read it.
+
+> This is our HW bug, exist only in 82579 devices. More new devices
+> have no such problem. We have found root cause and suggested this
+> solution. 
+
+Is there an erratum you can reference?
+
+> This solution should work for a 95% of cases, so I do not
+> think that this is fragile. For another cases possible solution is
+> get up working system and manually disable FLR, before VM start use
+> our adapter.
+
+I don't think a 95% solution is sufficient.  Can you use the
+pci_dev_specific_reset() framework to make a 100% solution?
+
+Bjorn
