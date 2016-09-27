@@ -1,185 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:34958 "EHLO
-        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbcIGUWT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2016 16:22:19 -0400
-Received: by mail-lf0-f42.google.com with SMTP id l131so6675850lfl.2
-        for <linux-pci@vger.kernel.org>; Wed, 07 Sep 2016 13:22:18 -0700 (PDT)
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
-Date: Wed, 07 Sep 2016 23:22:14 +0300
-Message-ID: <6896977.DKiraAXap6@wasted.cogentembedded.com>
+Received: from mail.kernel.org ([198.145.29.136]:46636 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751594AbcI0T3n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 15:29:43 -0400
+Date: Tue, 27 Sep 2016 14:29:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Long Li <longli@exchange.microsoft.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
+Subject: Re: [PATCH 1/2 v2] pci-hyperv: properly handle pci bus remove
+Message-ID: <20160927192935.GB14642@localhost>
+References: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+On Wed, Sep 14, 2016 at 07:10:01PM -0700, Long Li wrote:
+> From: Long Li <longli@microsoft.com>
+> 
+> hv_pci_devices_present is called in hv_pci_remove when we remove a PCI device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the bus is already removed before the call, so we don't need to rescan the bus in the workqueue scheduled from hv_pci_devices_present. By introducing status hv_pcibus_removed, we can avoid this situation.
+> 
+> The patch fixes the following kernel panic.
+> 
+> [  383.853124] Workqueue: events pci_devices_present_work [pci_hyperv]
+> [  383.853124] task: ffff88007f5f8000 ti: ffff88007f600000 task.ti:
+> ffff88007f600000
+> [  383.853124] RIP: 0010:[<ffffffff81349806>]  [<ffffffff81349806>]
+> pci_is_pcie+0x6/0x20
+> [  383.853124] RSP: 0018:ffff88007f603d38  EFLAGS: 00010206
+> [  383.853124] RAX: ffff88007f5f8000 RBX: 642f3d4854415056 RCX:
+> ffff88007f603fd8
+> [  383.853124] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
+> 642f3d4854415056
+> [  383.853124] RBP: ffff88007f603d68 R08: 0000000000000246 R09:
+> ffffffffa045eb9e
+> [  383.853124] R10: ffff88007b419a80 R11: ffffea0001c0ef40 R12:
+> ffff880003ee1c00
+> [  383.853124] R13: 63702f30303a3137 R14: 0000000000000000 R15:
+> 0000000000000246
+> [  383.853124] FS:  0000000000000000(0000) GS:ffff88007b400000(0000)
+> knlGS:0000000000000000
+> [  383.853124] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  383.853124] CR2: 00007f68b3f52350 CR3: 0000000003546000 CR4:
+> 00000000000406f0
+> [  383.853124] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> [  383.853124] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+> 0000000000000400
+> [  383.853124] Stack:
+> [  383.853124]  ffff88007f603d68 ffffffff8134db17 0000000000000008
+> ffff880003ee1c00
+> [  383.853124]  63702f30303a3137 ffff880003d8edb8 ffff88007f603da0
+> ffffffff8134ee2d
+> [  383.853124]  ffff880003d8ed00 ffff88007f603dd8 ffff880075fec320
+> ffff880003d8edb8
+> [  383.853124] Call Trace:
+> [  383.853124]  [<ffffffff8134db17>] ? pci_scan_slot+0x27/0x140
+> [  383.853124]  [<ffffffff8134ee2d>] pci_scan_child_bus+0x3d/0x150
+> [  383.853124]  [<ffffffffa045ef5a>]
+> pci_devices_present_work+0x3ea/0x400 [pci_hyperv]
+> [  383.853124]  [<ffffffff810a682b>] process_one_work+0x17b/0x470
+> [  383.853124]  [<ffffffff810a7666>] worker_thread+0x126/0x410
+> [  383.853124]  [<ffffffff810a7540>] ? rescuer_thread+0x460/0x460
+> [  383.853124]  [<ffffffff810aee1f>] kthread+0xcf/0xe0
+> [  383.853124]  [<ffffffff810aed50>] ?
+> kthread_create_on_node+0x140/0x140
+> [  383.853124]  [<ffffffff81699958>] ret_from_fork+0x58/0x90
+> [  383.853124]  [<ffffffff810aed50>] ?
+> kthread_create_on_node+0x140/0x140
+> [  383.853124] Code: 89 e5 5d 25 f0 00 00 00 c1 f8 04 c3 66 0f 1f 84 00
+> 00 00 00 00 66 66 66 66 90 55 0f b6 47 4a 48 89 e5 5d c3 90 66 66 66 66
+> 90 55 <80> 7f 4a 00 48 89 e5 5d 0f 95 c0 c3 0f 1f 40 00 66 2e 0f 1f 84
+> [  383.853124] RIP  [<ffffffff81349806>] pci_is_pcie+0x6/0x20
+> [  383.853124]  RSP <ffff88007f603d38>
 
-Initially, the PCIe link speed is set up only at 2.5 GT/s.
-For better performance,  we're trying to increase link speed to 5 GT/s.
+Personally, I would remove the timestamps and addresses from this trace
+because I don't think they contribute to diagnosing the problem.
 
-[Sergei Shtylyov: indented the macro definitions with tabs, renamed the
-SPCHG register bits for consistency, renamed the link speed field/values,
-fixed too long lines, fixed redundancy in clearing the MACSR register bits,
-fixed grammar/typos in  the comments/messages, removed unrelated/useless
-changes, fixed bugs in rcar_rwm32() calls done to set the bits, removed
-unneeded braces, removed non-informative comment, reworded the patch
-summary/description.]
+> Signed-off-by: Long Li <longli@microsoft.com>
 
-Signed-off-by: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+I'm ready to apply these but am waiting for an ack from the maintainers
+listed in MAINTAINERS (feel free to update that if it's out of date).
 
----
-The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
-
- drivers/pci/host/pcie-rcar.c |  103 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 103 insertions(+)
-
-Index: pci/drivers/pci/host/pcie-rcar.c
-===================================================================
---- pci.orig/drivers/pci/host/pcie-rcar.c
-+++ pci/drivers/pci/host/pcie-rcar.c
-@@ -48,6 +48,10 @@
- #define  CFINIT			1
- #define PCIETSTR		0x02004
- #define  DATA_LINK_ACTIVE	1
-+#define PCIEINTR		0x02008
-+#define  PCIEINTMAC		(1 << 13)
-+#define PCIEINTER		0x0200C
-+#define  PCIEINTMACE		(1 << 13)
- #define PCIEERRFR		0x02020
- #define  UNSUPPORTED_REQUEST	(1 << 4)
- #define PCIEMSIFR		0x02044
-@@ -84,8 +88,21 @@
- #define IDSETR1			0x011004
- #define TLCTLR			0x011048
- #define MACSR			0x011054
-+#define  SPCHG			(1 << 5)
-+#define  SPCHGFIN		(1 << 4)
-+#define  SPCHGSUC		(1 << 7)
-+#define  SPCHGFAIL		(1 << 6)
-+#define  LINK_SPEED		(0xf << 16)
-+#define  LINK_SPEED_2_5GTS	(1 << 16)
-+#define  LINK_SPEED_5_0GTS	(2 << 16)
- #define MACCTLR			0x011058
-+#define  SPEED_CHANGE		(1 << 24)
- #define  SCRAMBLE_DISABLE	(1 << 27)
-+#define MACINTENR		0x01106C
-+#define  SPCHGFINE		(1 << 4)
-+#define MACS2R			0x011078
-+#define MACCGSPSETR		0x011084
-+#define  SPCNGRSN		(1 << 31)
- 
- /* R-Car H1 PHY */
- #define H1_PCIEPHYADRR		0x04000c
-@@ -385,6 +402,51 @@ static int rcar_pcie_setup(struct list_h
- 	return 1;
- }
- 
-+void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
-+{
-+	u32 macsr;
-+
-+	dev_info(pcie->dev, "Trying speed up to 5 GT/s\n");
-+
-+	if ((rcar_pci_read_reg(pcie, MACSR) & SPCHGFIN) ||
-+	    (rcar_pci_read_reg(pcie, MACCTLR) & SPEED_CHANGE)) {
-+		dev_err(pcie->dev, "Speed changing is in progress\n");
-+		return;
-+	}
-+
-+	if ((rcar_pci_read_reg(pcie, MACSR) & LINK_SPEED) ==
-+	    LINK_SPEED_5_0GTS) {
-+		dev_err(pcie->dev, "Current link speed is already 5 GT/s\n");
-+		return;
-+	}
-+
-+	if ((rcar_pci_read_reg(pcie, MACS2R) & LINK_SPEED) !=
-+	    LINK_SPEED_5_0GTS) {
-+		dev_err(pcie->dev,
-+			"Current max support link speed not 5 GT/s\n");
-+		return;
-+	}
-+
-+	/* Set target link speed to 5.0 GT/s */
-+	rcar_rmw32(pcie, EXPCAP(12), PCI_EXP_LNKSTA_CLS,
-+		   PCI_EXP_LNKSTA_CLS_5_0GB);
-+
-+	/* Set speed change reason as intentional factor */
-+	rcar_rmw32(pcie, MACCGSPSETR, SPCNGRSN, 0);
-+
-+	/* Clear SPCHGFIN, SPCHGSUC, and SPCHGFAIL */
-+	macsr = rcar_pci_read_reg(pcie, MACSR);
-+	if (macsr & (SPCHGFIN | SPCHGSUC | SPCHGFAIL))
-+		rcar_pci_write_reg(pcie, macsr, MACSR);
-+
-+	/* Enable interrupt */
-+	rcar_rmw32(pcie, MACINTENR, SPCHGFINE, SPCHGFINE);
-+	rcar_rmw32(pcie, PCIEINTER, PCIEINTMACE, PCIEINTMACE);
-+
-+	/* Start link speed change */
-+	rcar_rmw32(pcie, MACCTLR, SPEED_CHANGE, SPEED_CHANGE);
-+}
-+
- static int rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct pci_bus *bus, *child;
-@@ -416,6 +478,9 @@ static int rcar_pcie_enable(struct rcar_
- 
- 	pci_bus_add_devices(bus);
- 
-+	/* Try setting 5 GT/s link speed */
-+	rcar_pcie_force_speedup(pcie);
-+
- 	return 0;
- }
- 
-@@ -621,6 +686,44 @@ static irqreturn_t rcar_pcie_msi_irq(int
- 	struct rcar_msi *msi = &pcie->msi;
- 	unsigned long reg;
- 
-+	if (rcar_pci_read_reg(pcie, PCIEINTR) & PCIEINTMAC) {
-+		dev_dbg(pcie->dev, "MAC interrupt received\n");
-+
-+		rcar_rmw32(pcie, MACSR, SPCHGFIN, SPCHGFIN);
-+
-+		/* Disable this interrupt */
-+		rcar_rmw32(pcie, MACINTENR, SPCHGFINE, 0);
-+		rcar_rmw32(pcie, PCIEINTER, PCIEINTMACE, 0);
-+
-+		if (rcar_pci_read_reg(pcie, MACSR) & SPCHGFAIL) {
-+			dev_err(pcie->dev, "Speed change failed\n");
-+
-+			rcar_rmw32(pcie, MACSR, SPCHGFAIL, SPCHGFAIL);
-+			/*
-+			 * TODO: if speed change failed we need to enable
-+			 * "L0 enter" interrupt and set "speed change disabled"
-+			 * state. After L0 interrupt rising, we must clear it,
-+			 * wait for 200 ms and set "speed change enabled" state
-+			 * according to the R-Car Series, 2nd Generation User's
-+			 * Manual, section 50.3.9.
-+			 */
-+			return IRQ_HANDLED;
-+		}
-+
-+		if (rcar_pci_read_reg(pcie, MACSR) & SPCHGSUC)
-+			rcar_rmw32(pcie, MACSR, SPCHGSUC, SPCHGSUC);
-+
-+		/* Check speed */
-+		if ((rcar_pci_read_reg(pcie, MACSR) & LINK_SPEED) ==
-+		    LINK_SPEED_5_0GTS)
-+			dev_info(pcie->dev, "Current link speed now 5 GT/s\n");
-+		else
-+			dev_info(pcie->dev,
-+				 "Current link speed now 2.5 GT/s\n");
-+
-+		return IRQ_HANDLED;
-+	}
-+
- 	reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
- 
- 	/* MSI & INTx share an interrupt - we only handle MSI here */
-
+> ---
+>  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index a8deeca..4a37598 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -348,6 +348,7 @@ enum hv_pcibus_state {
+>  	hv_pcibus_init = 0,
+>  	hv_pcibus_probed,
+>  	hv_pcibus_installed,
+> +	hv_pcibus_removed,
+>  	hv_pcibus_maximum
+>  };
+>  
+> @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
+>  		put_pcichild(hpdev, hv_pcidev_ref_initial);
+>  	}
+>  
+> -	/* Tell the core to rescan bus because there may have been changes. */
+> -	if (hbus->state == hv_pcibus_installed) {
+> +	switch (hbus->state) {
+> +	case hv_pcibus_installed:
+> +		/*
+> +		 * Tell the core to rescan bus
+> +		 * because there may have been changes.
+> +		 */
+>  		pci_lock_rescan_remove();
+>  		pci_scan_child_bus(hbus->pci_bus);
+>  		pci_unlock_rescan_remove();
+> -	} else {
+> +		break;
+> +
+> +	case hv_pcibus_init:
+> +	case hv_pcibus_probed:
+>  		survey_child_resources(hbus);
+> +		break;
+> +
+> +	default:
+> +		break;
+>  	}
+>  
+>  	up(&hbus->enum_sem);
+> @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
+>  	if (!hbus)
+>  		return -ENOMEM;
+> +	hbus->state = hv_pcibus_init;
+>  
+>  	/*
+>  	 * The PCI bus "domain" is what is called "segment" in ACPI and
+> @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  		pci_stop_root_bus(hbus->pci_bus);
+>  		pci_remove_root_bus(hbus->pci_bus);
+>  		pci_unlock_rescan_remove();
+> +		hbus->state = hv_pcibus_removed;
+>  	}
+>  
+>  	ret = hv_send_resources_released(hdev);
+> -- 
+> 1.8.5.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
