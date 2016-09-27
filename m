@@ -1,63 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42640 "EHLO mail.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:58177 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751124AbcITTqT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Sep 2016 15:46:19 -0400
-Date: Tue, 20 Sep 2016 14:46:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: agordeev@redhat.com, linux-pci@vger.kernel.org,
-        davem@davemloft.net, shane.huang@amd.com
-Subject: Re: [PATCH, RFC] PCI: use pci_intx_for_msi in pci_alloc_irq_vectors
-Message-ID: <20160920194614.GE4941@localhost>
-References: <1473577767-9888-1-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473577767-9888-1-git-send-email-hch@lst.de>
+        id S932573AbcI0UMo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:12:44 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Lukas Wunner <lukas@wunner.de>,
+        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 0/5] PCI access on removed devices
+Date: Tue, 27 Sep 2016 16:23:30 -0400
+Message-Id: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph,
+We observe that software's removing of a device generates potentially
+1000's of MMIO and config space access when unbinding from the removed
+hardware, and this reliance on hardware to handle this slows down
+software's total tear down time for handling a removed device.
 
-On Sun, Sep 11, 2016 at 09:09:27AM +0200, Christoph Hellwig wrote:
-> Alex pointed out that we might want to use pci_intx_for_msi in
-> pci_alloc_irq_vectors for the case where allocating MSI or MSI-X vectors
-> fails completely.  I tried to read up the history behind pci_intx_for_msi,
-> but the changelogs seem a bit confusing, e.g. the comment in the tg3
-> around that code that was replaced by this quirk only talk about
-> _disabling_ INT-X.  Maybe someone can help me to shed some light about
-> this workaround, and help answering the question wether we need it
-> in this case.
+This series reduces the number of non-functional MMIO and config space
+accesses on a hot removed device. In some cases, we measure device
+unbinding that used to take 100's of milliseconds to complete in < 1ms.
 
-If we want to do this, I'd like to have a changelog that explains
-*why*, so I'm ignoring it for now.  I'm not nacking it; I just don't
-understand why we should do it yet, and I'm too lazy to do all the
-research myself.
+v3 -> v4:
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Cc: David Miller <davem@davemloft.net>
-> Cc: Shane Huang <shane.huang@amd.com>
-> ---
->  drivers/pci/msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 9da5ecb..a4b443f 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1215,7 +1215,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->  
->  	/* use legacy irq if allowed */
->  	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
-> -		pci_intx(dev, 1);
-> +		pci_intx_for_msi(dev, 1);
->  		return 1;
->  	}
->  
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Merged up to current pci/hotplug.
+
+  The aer initialization is done only when CONFIG_PCIAER is enabled,
+  similar to how ATS support is managed.
+
+  Removed making "is_removed" sticky on the checking
+  pci_device_is_present. Only pciehp and pcie-dpc set this state in
+  this series.
+
+  Added the MIPs dependency. This was okay'ed, but I don't see it in
+  the linux-mips tree.
+
+Keith Busch (5):
+  mips/pci: Reduce stack frame usage
+  pci: Add is_removed state
+  pci: No config access for removed devices
+  pcie/aer: Cache capability position
+  pci/msix: Skip disabling removed devices
+
+ arch/mips/txx9/generic/pci.c       |  6 +-----
+ drivers/pci/hotplug/pciehp_pci.c   |  2 ++
+ drivers/pci/msi.c                  |  7 ++++++-
+ drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
+ drivers/pci/pcie/aer/aerdrv_core.c | 12 ++++++------
+ drivers/pci/pcie/pcie-dpc.c        |  1 +
+ drivers/pci/probe.c                |  2 ++
+ include/linux/pci.h                | 20 ++++++++++++++++++++
+ 8 files changed, 43 insertions(+), 17 deletions(-)
+
+-- 
+2.7.2
+
