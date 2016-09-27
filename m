@@ -1,135 +1,189 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609300844.24325.linux@rainbow-software.org>
- <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
- <201609301756.25894.linux@rainbow-software.org>
- <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
- <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
-        ravikanth.nalla@hpe.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
-Date: Fri, 30 Sep 2016 16:24:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:45594 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932947AbcI0Nqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 09:46:46 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v7 2/8] thunderbolt: Updating the register definitions
+Date: Tue, 27 Sep 2016 16:43:35 +0300
+Message-Id: <1474983821-2313-3-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/30/2016 3:39 PM, Rafael J. Wysocki wrote:
->> how do we feel about increasing the ISA IRQ range to 256 so that
->> > we are safe for all SCI interrupts?
-> I'm not sure how this is related to the problem at hand.  Care to elaborate?
-> 
+Adding more Thunderbolt(TM) register definitions
+and some helper macros.
 
-Sure, let me explain. 
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
-The code maintains a static array per IRQ number (acpi_irq_penalty) to assign 
-penalties for each IRQ so that during the Link Object allocation, the code 
-tries to choose an IRQ with less penalty that has not been used by another 
-PCI/IRQ if possible.
-
-In the kernels prior to my change, the type of the SCI
-interrupt is given to the ACPI PCI Link driver via this function.
-
-+void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
-+{
-+	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
-+		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
-+		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
-+			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
-+		else
-+			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
-+	}
-+}
-
-This function says given the trigger and polarity, if it is ACTIVE_LOW and LEVEL
-then increment the penalty by PCI_USING. It also does some ACPI parameter 
-checking and assigns ISA_ALWAYS if the parameters are not compatible so that
-this IRQ is never used for PCI. ISA_AKWAYS is the maximum penalty that can 
-be assigned.
-
-> And why exactly was that race condition not present before your changes?
-The size of acpi_irq_penalty array used to be 256. This number puts an 
-artificial limit on the IRQ numbers that can be assigned to PCI. ACPI spec does
-not put any limits on the PCI numbers and extended IRQ resources can be used
-for this purpose. 
-
-During my patch, three things happened:
-1. acpi_irq_penalty got renamed to acpi_isa_irq_penalty and the array size was 
-reduced to 16 from 256.
-2. Since we have no idea about the range of PCI interrupts that can be assigned
-through ACPI, we tried to refactor the code so that PCI interrupts are calculated
-by the time API is called by walking the PCI Link list here.
-
-static int acpi_irq_pci_sharing_penalty(int irq)
-
-We don't have to preallocate a fixed size array this way and can support any PCI
-numbers that we want.
-
-While refactoring the code, we said we could take the next step and get rid of the
-acpi_penalize_sci_irq function and calculate the penalty dynamically similar to
-acpi_irq_pci_sharing_penalty function. 
-
-The new way to determine if SCI interrupt parameters are compatible is as follows:
-
-	/*
-	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
-	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
-	* use for PCI IRQs.
-	*/
-	if (irq == acpi_gbl_FADT.sci_interrupt) {
-		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
-
-		if (type != IRQ_TYPE_LEVEL_LOW)
-			penalty += PIRQ_PENALTY_ISA_ALWAYS;
-		else
-			penalty += PIRQ_PENALTY_PCI_USING;
-	}
-  
-This relies on irq_get_trigger_type function to return the correct type. 
-
-I now remember that Bjorn indicated the race condition possibility in this thread
-here.
-
-https://lkml.org/lkml/2016/3/8/640
-
-> > > This looks racy, because we test irq_get_trigger_type() without any
-> > > kind of locking, and later acpi_register_gsi() calls
-> > > irq_create_fwspec_mapping(), which looks like it sets the new trigger
-> > > type.  But I don't know how to fix that.
-> > 
-> > Right, if that pci link allocation code can be executed concurrent, then you
-> > might end up with problem, but isn't that a problem even without
-> > irq_get_trigger_type()?
-
-> Yes.  It's not a new problem, I just noticed it since we're thinking
-> more about the details of what's happening here.
-
-and this is exactly what we have hit in this thread. The value
-irq_get_trigger_type(irq) returns does not match what was given with
-acpi_penalize_sci_irq and we end up penalizing the PCI IRQ for no reason.
-
-Since the issue is specific to SCI interrupts and SCI interrupts cannot be 
-greater than 256, my proposal is 
-1. restore the code for the SCI penalty like in my last email 
-2. increase the array size back to 256
-3. use the acpi_irq_pci_sharing_penalty only if IRQ number is greater than 256
-and we know that IRQ numbers are not bounded and can go all the way up to
-65535.
-
-I hope it makes sense now. I tend to skip details sometimes. Feel free to
-send more questions.
-
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+index 75cf069..b8e961f 100644
+--- a/drivers/thunderbolt/nhi_regs.h
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -9,6 +9,11 @@
+ 
+ #include <linux/types.h>
+ 
++#define NHI_MMIO_BAR 0
++
++#define TBT_RING_MIN_NUM_BUFFERS	2
++#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
++
+ enum ring_flags {
+ 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
+ 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
+@@ -39,6 +44,33 @@ struct ring_desc {
+ 	u32 time; /* write zero */
+ } __packed;
+ 
++/**
++ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
++ * This is same as struct ring_desc, but without the use of bitfields and
++ * with explicit endianity.
++ */
++struct tbt_buf_desc {
++	__le64 phys;
++	__le32 attributes;
++	__le32 time;
++};
++
++#define DESC_ATTR_LEN_SHIFT		0
++#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
++#define DESC_ATTR_EOF_SHIFT		12
++#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
++#define DESC_ATTR_SOF_SHIFT		16
++#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
++#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
++#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
++#define DESC_ATTR_DESC_DONE		BIT(21)
++#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
++#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
++#define DESC_ATTR_INT_EN		BIT(23)
++#define DESC_ATTR_OFFSET_SHIFT		24
++#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
++
++
+ /* NHI registers in bar 0 */
+ 
+ /*
+@@ -60,6 +92,30 @@ struct ring_desc {
+  */
+ #define REG_RX_RING_BASE	0x08000
+ 
++#define REG_RING_STEP			16
++#define REG_RING_PHYS_LO_OFFSET		0
++#define REG_RING_PHYS_HI_OFFSET		4
++#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
++#define REG_RING_CONS_SHIFT		0
++#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
++#define REG_RING_PROD_SHIFT		16
++#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
++#define REG_RING_SIZE_OFFSET		12
++#define REG_RING_SIZE_SHIFT		0
++#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
++#define REG_RING_BUF_SIZE_SHIFT		16
++#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
++
++#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
++			      ((iobase) + (ringbase) + \
++			      ((ringnumber) * REG_RING_STEP) + \
++			      REG_RING_CONS_PROD_OFFSET)
++
++#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
++				       REG_RING_PROD_SHIFT)
++
++#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
++				       REG_RING_CONS_SHIFT)
+ /*
+  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
+  * 00: enum_ring_flags
+@@ -77,6 +133,19 @@ struct ring_desc {
+  * ..: unknown
+  */
+ #define REG_RX_OPTIONS_BASE	0x29800
++#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
++#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
++				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
++#define REG_RX_OPTS_MASK_OFFSET		4
++#define REG_RX_OPTS_MASK_EOF_SHIFT	0
++#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
++#define REG_RX_OPTS_MASK_SOF_SHIFT	16
++#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
++
++#define REG_OPTS_STEP			32
++#define REG_OPTS_E2E_EN			BIT(28)
++#define REG_OPTS_RAW			BIT(30)
++#define REG_OPTS_VALID			BIT(31)
+ 
+ /*
+  * three bitfields: tx, rx, rx overflow
+@@ -86,6 +155,7 @@ struct ring_desc {
+  */
+ #define REG_RING_NOTIFY_BASE	0x37800
+ #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
++#define REG_RING_NOTIFY_STEP	4
+ 
+ /*
+  * two bitfields: rx, tx
+@@ -94,8 +164,47 @@ struct ring_desc {
+  */
+ #define REG_RING_INTERRUPT_BASE	0x38200
+ #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
++#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
++#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
++							    (num_paths))
++#define RING_INT_DISABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_ENABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_DISABLE_TX(base, ring_num) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_ENABLE_TX(base, ring_num) \
++	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
++	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
++			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++
++#define REG_RING_INTERRUPT_STEP	4
++
++#define REG_INT_THROTTLING_RATE	0x38c00
++#define REG_INT_THROTTLING_RATE_STEP	4
++#define NUM_INT_VECTORS			16
++
++#define REG_INT_VEC_ALLOC_BASE	0x38c40
++#define REG_INT_VEC_ALLOC_STEP		4
++#define REG_INT_VEC_ALLOC_FIELD_BITS	4
++#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
++#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
++					 REG_INT_VEC_ALLOC_FIELD_BITS)
+ 
+ /* The last 11 bits contain the number of hops supported by the NHI port. */
+ #define REG_HOP_COUNT		0x39640
++#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
++
++#define REG_HOST_INTERFACE_RST	0x39858
++
++#define REG_DMA_MISC		0x39864
++#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
+ 
+ #endif
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
+
