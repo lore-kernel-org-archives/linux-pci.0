@@ -1,146 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: Ondrej Zary <linux@rainbow-software.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609291549.07784.linux@rainbow-software.org>
- <e90fb01a-77e3-a094-9631-0b703972c750@codeaurora.org>
- <201609291848.33803.linux@rainbow-software.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <701eeb2f-bfc2-d541-4f6f-34be200ea44a@codeaurora.org>
-Date: Thu, 29 Sep 2016 13:18:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <201609291848.33803.linux@rainbow-software.org>
-Content-Type: multipart/mixed;
- boundary="------------EDEE035209F4AB984312D6F5"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:45594 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933183AbcI0Nqu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Sep 2016 09:46:50 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v7 3/8] thunderbolt: Kconfig for Thunderbolt Networking
+Date: Tue, 27 Sep 2016 16:43:36 +0300
+Message-Id: <1474983821-2313-4-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------EDEE035209F4AB984312D6F5
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+Update to the Kconfig Thunderbolt description to add
+Thunderbolt networking as an option.
+The menu item "Thunderbolt support" now offers:
+"Apple Hardware Support" (existing)
+        and/or
+"Thunderbolt Networking" (new)
 
-On 9/29/2016 12:48 PM, Ondrej Zary wrote:
->> Let's see the new set. If this doesn't work, I'll have to provide you with
->> > another patch to get the penalty counts again. The original debug aids
->> > patch may not apply after these.
-> It boots but the IRQ problem still remains the same. See the attached logs:
-> dmesg-bad.txt: without the irq -> link->irq.active change
-> dmesg-bad2.txt: with the irq -> link->irq.active change
-> dmesg-bad2-debug.txt: as above with modified debug patch
-> 
-> @@ -876,8 +893,11 @@ void acpi_penalize_isa_irq(int irq, int active)
->  {
->         int penalty = active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
-> 
-> -       if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-> +       if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty))) {
->                 acpi_isa_irq_penalty[irq] += penalty;
-> +               pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", 
-> __func__,
-> +                               __LINE__, irq,  acpi_irq_get_penalty(irq), 
-> active);
-> +       }
->  }
-> 
+You can choose the driver for your platform or build both drivers -
+each driver will detect if it can run on the specific platform.
+If the Thunderbolt Networking option is chosen, Thunderbolt Networking
+will be enabled between Linux non-Apple systems, macOS and
+Windows based systems.
+Thunderbolt Networking will not affect any other Thunderbolt feature that
+was previous available to Linux users on either Apple or
+non-Apple platforms.
 
-The previous two patches were in the right direction.
-
-Can we also get the same output from 4.6 kernel with the attached patch for the
-same machine you sent these?
-
-Something about SCI still doesn't feel right.
-
-The IRQ assignment fails if the penalty is greater than PIRQ_PENALTY_ISA_ALWAYS.
-This will happen if BIOS tells us to use an IRQ and same IRQ is in use by the 
-SCI.
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
---------------EDEE035209F4AB984312D6F5
-Content-Type: text/plain; charset=UTF-8;
- name="0001-ACPI-PCI-IRQ-debug-aids-for-4.6.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-ACPI-PCI-IRQ-debug-aids-for-4.6.patch"
-
->From 609da980e4af9757b33a9d4f0771a08f1a1e17fe Mon Sep 17 00:00:00 2001
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Thu, 29 Sep 2016 13:16:49 -0400
-Subject: [PATCH] ACPI, PCI, IRQ: debug aids for 4.6
-
-Change-Id: I9c6170034ec30f04372315de3076f610f7e87668
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 ---
- drivers/acpi/pci_link.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+ drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  2 +-
+ 2 files changed, 24 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index ededa90..0bd51f0 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -541,6 +541,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 	else
- 		irq = link->irq.possible[link->irq.possible_count - 1];
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..376e5bb 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,32 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
  
-+	pr_info("irq : %d\n", irq);
-+	pr_info("acpi_irq_balance : %d\n", acpi_irq_balance);
-+	pr_info("link->irq.active : %d\n", link->irq.active);
-+	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
- 	if (acpi_irq_balance || !link->irq.active) {
- 		/*
- 		 * Select the best IRQ.  This is done in reverse to promote
-@@ -548,10 +552,21 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 		 */
- 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
- 			if (acpi_irq_penalty[irq] >
--			    acpi_irq_penalty[link->irq.possible[i]])
-+			    acpi_irq_penalty[link->irq.possible[i]]) {
-+				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.possible[i], acpi_irq_penalty[link->irq.possible[i]]);
-+				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", irq, acpi_irq_penalty[irq]);
- 				irq = link->irq.possible[i];
-+			}
- 		}
- 	}
-+	for (i = (link->irq.possible_count - 1); i >= 0; i--) {
-+		pr_info("penalty[%d] = 0x%x\n",
-+				link->irq.possible[i],
-+		    acpi_irq_penalty[link->irq.possible[i]]);
-+	}
-+	pr_info("irq : %d\n", irq);
-+	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
 +
- 	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
- 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
- 			    "Try pci=noacpi or acpi=off\n",
-@@ -569,6 +584,7 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 		return -ENODEV;
- 	} else {
- 		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
-+		pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.active, acpi_irq_penalty[link->irq.active]);
- 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
- 		       acpi_device_name(link->device),
- 		       acpi_device_bid(link->device), link->irq.active);
-@@ -824,6 +840,9 @@ void acpi_penalize_isa_irq(int irq, int active)
- 			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
- 		else
- 			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt Networking"
++	help
++	  This driver is required if you want Thunderbolt Networking on
++	  non-Apple hardware.
++	  It creates a virtual Ethernet device that enables computer to
++	  computer communication over a Thunderbolt cable.
 +
-+		pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", __func__,
-+				__LINE__, irq,  acpi_irq_penalty[irq], active);
- 	}
- }
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..7a85bd1 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
  
 -- 
-1.9.1
+2.7.4
 
-
---------------EDEE035209F4AB984312D6F5--
