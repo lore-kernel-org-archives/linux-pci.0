@@ -1,81 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:36377 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756077AbcIRDjt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Sep 2016 23:39:49 -0400
-Message-Id: <8661098ee5e355f91e9d9c61248e3ac9980b16aa.1474130360.git.lukas@wunner.de>
-In-Reply-To: <cover.1474130360.git.lukas@wunner.de>
-References: <cover.1474130360.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 18 Sep 2016 05:39:20 +0200
-Subject: [PATCH v2 1/5] PCI: Afford direct-complete to devices with
- nonstandard PM
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
+Received: from mga07.intel.com ([134.134.136.100]:35456 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932600AbcI1Ora (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Sep 2016 10:47:30 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM) Networking
+Date: Wed, 28 Sep 2016 17:44:22 +0300
+Message-Id: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are devices not power-manageable by the platform, but still able
-to runtime suspend to D3cold with a nonstandard mechanism.  One example
-is laptop hybrid graphics where the discrete GPU and its built-in HDA
-controller are power-managed either with a _DSM (AMD PowerXpress, Nvidia
-Optimus) or a separate gmux controller (MacBook Pro).  Another example
-is Thunderbolt on Macs which is power-managed with custom ACPI methods.
+This driver enables Thunderbolt Networking on non-Apple platforms
+running Linux.
 
-When putting the system to sleep, we currently handle such devices
-improperly by transitioning them from D3cold to D3hot (the default power
-state defined at the top of pci_target_state()).  This wastes energy and
-prolongs the suspend sequence (powering up the Thunderbolt controller
-takes 2 seconds).
+Thunderbolt Networking provides peer-to-peer connections to transfer
+files between computers, perform PC migrations, and/or set up small
+workgroups with shared storage.
 
-Avoid that by assuming that a nonstandard PM mechanism is at work if the
-device is not platform-power-manageable but currently in D3cold.
+This is a virtual connection that emulates an Ethernet adapter that
+enables Ethernet networking with the benefit of Thunderbolt superfast
+medium capability.
 
-If the device is wakeup enabled, we might still have to wake it up from
-D3cold if PME cannot be signaled from that power state.
+Thunderbolt Networking enables two hosts and several devices that
+have a Thunderbolt controller to be connected together in a linear
+(Daisy chain) series from a single port.
 
-The check for devices without PM capability comes before the check for
-D3cold since such devices could in theory also be powered down by
-nonstandard means and should then be afforded direct-complete as well.
+Thunderbolt Networking for Linux is compatible with Thunderbolt
+Networking on systems running macOS or Windows and also supports
+Thunderbolt generation 2 and 3 controllers.
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Note that all pre-existing Thunderbolt generation 3 features, such as
+USB, Display and other Thunderbolt device connectivity will continue
+to function exactly as they did prior to enabling Thunderbolt Networking.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..72a9d3a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1959,9 +1959,22 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
- 		default:
- 			target_state = state;
- 		}
--	} else if (!dev->pm_cap) {
-+
-+		return target_state;
-+	}
-+
-+	if (!dev->pm_cap)
- 		target_state = PCI_D0;
--	} else if (device_may_wakeup(&dev->dev)) {
-+
-+	/*
-+	 * If the device is in D3cold even though it's not power-manageable by
-+	 * the platform, it may have been powered down by nonstandard means.
-+	 * Best to let it slumber.
-+	 */
-+	if (dev->current_state == PCI_D3cold)
-+		target_state = PCI_D3cold;
-+
-+	if (device_may_wakeup(&dev->dev)) {
- 		/*
- 		 * Find the deepest state from which the device can generate
- 		 * wake-up events, make it the target state and enable device
+Code and Software Specifications:
+This kernel code creates a virtual ethernet device for computer to
+computer communication over a Thunderbolt cable.
+The new driver is a separate driver to the existing Thunderbolt driver.
+It is designed to work on systems running Linux that
+interface with Intel Connection Manager (ICM) firmware based
+Thunderbolt controllers that support Thunderbolt Networking.
+The kernel code operates in coordination with the Thunderbolt user-
+space daemon to implement full Thunderbolt networking functionality.
+
+Hardware Specifications:
+Thunderbolt Hardware specs have not yet been published but are used
+where necessary for register definitions. 
+
+Changes since v7:
+ - Removed debug prints
+ - Edited error prints
+ - Edited copyright notice
+ - Changed the Kconfig patch to be after the code changes
+
+These patches were pushed to GitHub where they can be reviewed more
+comfortably with green/red highlighting:
+	https://github.com/01org/thunderbolt-software-kernel-tree
+
+Daemon code:
+	https://github.com/01org/thunderbolt-software-daemon
+
+For reference, here's a link to version 6:
+[v7]:	https://lkml.org/lkml/2016/9/27/244
+
+Amir Levy (8):
+  thunderbolt: Macro rename
+  thunderbolt: Updating the register definitions
+  thunderbolt: Communication with the ICM (firmware)
+  thunderbolt: Networking state machine
+  thunderbolt: Networking transmit and receive
+  thunderbolt: Kconfig for Thunderbolt Networking
+  thunderbolt: Networking doc
+  thunderbolt: Adding maintainer entry
+
+ Documentation/00-INDEX                   |    2 +
+ Documentation/thunderbolt/networking.txt |  132 ++
+ MAINTAINERS                              |    8 +-
+ drivers/thunderbolt/Kconfig              |   27 +-
+ drivers/thunderbolt/Makefile             |    3 +-
+ drivers/thunderbolt/icm/Makefile         |    2 +
+ drivers/thunderbolt/icm/icm_nhi.c        | 1514 ++++++++++++++++++++
+ drivers/thunderbolt/icm/icm_nhi.h        |   82 ++
+ drivers/thunderbolt/icm/net.c            | 2254 ++++++++++++++++++++++++++++++
+ drivers/thunderbolt/icm/net.h            |  287 ++++
+ drivers/thunderbolt/nhi_regs.h           |  115 +-
+ 11 files changed, 4417 insertions(+), 9 deletions(-)
+ create mode 100644 Documentation/thunderbolt/networking.txt
+ create mode 100644 drivers/thunderbolt/icm/Makefile
+ create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
+ create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
+ create mode 100644 drivers/thunderbolt/icm/net.c
+ create mode 100644 drivers/thunderbolt/icm/net.h
+
 -- 
-2.9.3
+2.7.4
 
