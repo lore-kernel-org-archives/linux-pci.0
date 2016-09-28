@@ -1,86 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38476 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:28787 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759948AbcINVuJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 17:50:09 -0400
-Date: Wed, 14 Sep 2016 16:50:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-pci@vger.kernel.org,
-        Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH -next] PCI: spear: Use builtin_platform_driver to
- simplify the code
-Message-ID: <20160914215003.GE16581@localhost>
-References: <1473510634-23872-1-git-send-email-weiyj.lk@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473510634-23872-1-git-send-email-weiyj.lk@gmail.com>
+        id S932858AbcI1OsG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Sep 2016 10:48:06 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v8 8/8] thunderbolt: Adding maintainer entry
+Date: Wed, 28 Sep 2016 17:44:30 +0300
+Message-Id: <1475073870-2126-9-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Paul]
+Add Amir Levy as maintainer for Thunderbolt(TM) ICM driver
 
-On Sat, Sep 10, 2016 at 12:30:34PM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> Use the builtin_platform_driver() macro to make the code simpler.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> ---
->  drivers/pci/host/pcie-spear13xx.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index 09aed85..1c957eb 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -364,8 +364,4 @@ static struct platform_driver spear13xx_pcie_driver = {
->  	},
->  };
->  
-> -static int __init spear13xx_pcie_init(void)
-> -{
-> -	return platform_driver_register(&spear13xx_pcie_driver);
-> -}
-> -device_initcall(spear13xx_pcie_init);
-> +builtin_platform_driver(spear13xx_pcie_driver);
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ MAINTAINERS | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Hmm.  It looks like maybe we could use builtin_platform_driver_probe()?
-In most or all of the drivers/pci/host drivers?
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 01bff8e..a4a4614 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10358,7 +10358,13 @@ F:	include/uapi/linux/stm.h
+ THUNDERBOLT DRIVER
+ M:	Andreas Noever <andreas.noever@gmail.com>
+ S:	Maintained
+-F:	drivers/thunderbolt/
++F:	drivers/thunderbolt/*
++
++THUNDERBOLT ICM DRIVER
++M:	Amir Levy <amir.jer.levy@intel.com>
++S:	Maintained
++F:	drivers/thunderbolt/icm/
++F:	Documentation/thunderbolt/networking.txt
+ 
+ TI BQ27XXX POWER SUPPLY DRIVER
+ R:	Andrew F. Davis <afd@ti.com>
+-- 
+2.7.4
 
-If you want to do that, please base your patches on my
-pci/demodularize branch, since that's where I would apply them.
-
-I have to say that the plethora of helper macros is getting a little
-confusing:
-
-  module_driver
-  module_platform_driver
-  module_platform_driver_probe
-  module_pci_driver
-  ...
-  builtin_driver
-  builtin_platform_driver
-  builtin_platform_driver_probe
-  builtin_pci_driver
-  ...
-
-Actually, seeing the list organized like this makes me feel better,
-like there really is some underlying structure here.  It's just hard
-to discover in the middle of all the comments and CPP magic.
-
-It is kind of amusing that each one has a big comment header like:
-
-  /* module_platform_driver_probe() - Helper macro for drivers that don't do
-   * anything special in module init/exit.  This eliminates a lot of
-   * boilerplate.  Each module may only use this macro once, and
-   * calling it replaces module_init() and module_exit()
-   */
-
-It amuses me that the comments about eliminating boilerplate are
-*themselves* boilerplate.  I guess I'm easily amused.
-
-Bjorn
