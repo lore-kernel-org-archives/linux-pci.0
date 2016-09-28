@@ -1,775 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:49402 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759803AbcIMRM7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 13:12:59 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
-        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
-        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
-        <nsekhar@ti.com>
-Subject: [RFC PATCH] pci: rename *host* directory to *controller*
-Date: Tue, 13 Sep 2016 22:40:47 +0530
-Message-ID: <1473786653-12759-6-git-send-email-kishon@ti.com>
-In-Reply-To: <1473786653-12759-1-git-send-email-kishon@ti.com>
-References: <1473786653-12759-1-git-send-email-kishon@ti.com>
+Return-Path: <sasha.neftin@intel.com>
+Return-Path: <sasha.neftin@intel.com>
+From: "Neftin, Sasha" <sasha.neftin@intel.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>, Alex Williamson
+	<alex.williamson@redhat.com>, "Duyck, Alexander H"
+	<alexander.h.duyck@intel.com>, "Ruinskiy, Dima" <dima.ruinskiy@intel.com>,
+	"Avargil, Raanan" <raanan.avargil@intel.com>, "Neftin, Sasha"
+	<sasha.neftin@intel.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "Kirsher, Jeffrey T"
+	<jeffrey.t.kirsher@intel.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, David Miller <davem@davemloft.net>, "Bjorn
+ Helgaas" <bhelgaas@google.com>, Netdev <netdev@vger.kernel.org>, Neil Horman
+	<nhorman@redhat.com>, "sassmann@redhat.com" <sassmann@redhat.com>, "John
+ Greene" <jogreene@redhat.com>, "guru.anbalagane@oracle.com"
+	<guru.anbalagane@oracle.com>
+Subject: RE: [net-next 5/5] PCI: disable FLR for 82579 device
+Date: Wed, 28 Sep 2016 15:33:52 +0000
+Message-ID: <630A6B92B7EDEB45A87E20D3D286660153E14465@hasmsx109.ger.corp.intel.com>
+References: <1474612741-75681-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1474612741-75681-6-git-send-email-jeffrey.t.kirsher@intel.com>
+ <20160923140136.GC1514@localhost> <1474664726.2389.7.camel@intel.com>
+ <176f2366-e225-75fb-8cad-909a8f7e808c@intel.com>
+ <20160927181702.GA7275@localhost> <20160927131335.2edd72cb@t450s.home>
+ <CAKgT0UczaC-5z9GB74xhU11iWLu5_n75najKzBZcvk1T3C16Og@mail.gmail.com>
+In-Reply-To: <CAKgT0UczaC-5z9GB74xhU11iWLu5_n75najKzBZcvk1T3C16Og@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Renamed the *host* directory present inside
-drivers/pci to *controller*. Some of the controllers present in
-drivers/pci/host is capable of operating in endpoint mode.
-So having these drivers in *host* directory might not be appropriate.
-This is in preparation for adding endpoint mode support for some of
-controller drivers present here.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- MAINTAINERS                                        |   50 ++++++++++----------
- drivers/Makefile                                   |    3 ++
- drivers/pci/Kconfig                                |    2 +-
- drivers/pci/Makefile                               |    3 --
- drivers/pci/{host => controller}/Kconfig           |   35 +++++++++++++-
- drivers/pci/{host => controller}/Makefile          |    0
- drivers/pci/{host => controller}/pci-aardvark.c    |    0
- drivers/pci/{host => controller}/pci-dra7xx.c      |    0
- drivers/pci/{host => controller}/pci-exynos.c      |    0
- drivers/pci/{host => controller}/pci-host-common.c |    0
- .../pci/{host => controller}/pci-host-generic.c    |    0
- drivers/pci/{host => controller}/pci-hyperv.c      |    0
- drivers/pci/{host => controller}/pci-imx6.c        |    0
- drivers/pci/{host => controller}/pci-keystone-dw.c |    0
- drivers/pci/{host => controller}/pci-keystone.c    |    0
- drivers/pci/{host => controller}/pci-keystone.h    |    0
- drivers/pci/{host => controller}/pci-layerscape.c  |    0
- drivers/pci/{host => controller}/pci-mvebu.c       |    0
- drivers/pci/{host => controller}/pci-rcar-gen2.c   |    0
- drivers/pci/{host => controller}/pci-tegra.c       |    0
- .../pci/{host => controller}/pci-thunder-ecam.c    |    0
- drivers/pci/{host => controller}/pci-thunder-pem.c |    0
- drivers/pci/{host => controller}/pci-versatile.c   |    0
- drivers/pci/{host => controller}/pci-xgene-msi.c   |    0
- drivers/pci/{host => controller}/pci-xgene.c       |    0
- drivers/pci/{host => controller}/pcie-altera-msi.c |    0
- drivers/pci/{host => controller}/pcie-altera.c     |    0
- drivers/pci/{host => controller}/pcie-armada8k.c   |    0
- drivers/pci/{host => controller}/pcie-artpec6.c    |    0
- .../{host => controller}/pcie-designware-plat.c    |    0
- drivers/pci/{host => controller}/pcie-designware.c |    0
- drivers/pci/{host => controller}/pcie-designware.h |    0
- drivers/pci/{host => controller}/pcie-hisi.c       |    0
- drivers/pci/{host => controller}/pcie-iproc-bcma.c |    0
- drivers/pci/{host => controller}/pcie-iproc-msi.c  |    0
- .../pci/{host => controller}/pcie-iproc-platform.c |    0
- drivers/pci/{host => controller}/pcie-iproc.c      |    0
- drivers/pci/{host => controller}/pcie-iproc.h      |    0
- drivers/pci/{host => controller}/pcie-qcom.c       |    0
- drivers/pci/{host => controller}/pcie-rcar.c       |    0
- drivers/pci/{host => controller}/pcie-spear13xx.c  |    0
- drivers/pci/{host => controller}/pcie-xilinx-nwl.c |    0
- drivers/pci/{host => controller}/pcie-xilinx.c     |    0
- 43 files changed, 62 insertions(+), 31 deletions(-)
- rename drivers/pci/{host => controller}/Kconfig (93%)
- rename drivers/pci/{host => controller}/Makefile (100%)
- rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
- rename drivers/pci/{host => controller}/pci-dra7xx.c (100%)
- rename drivers/pci/{host => controller}/pci-exynos.c (100%)
- rename drivers/pci/{host => controller}/pci-host-common.c (100%)
- rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
- rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
- rename drivers/pci/{host => controller}/pci-imx6.c (100%)
- rename drivers/pci/{host => controller}/pci-keystone-dw.c (100%)
- rename drivers/pci/{host => controller}/pci-keystone.c (100%)
- rename drivers/pci/{host => controller}/pci-keystone.h (100%)
- rename drivers/pci/{host => controller}/pci-layerscape.c (100%)
- rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
- rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
- rename drivers/pci/{host => controller}/pci-tegra.c (100%)
- rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
- rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
- rename drivers/pci/{host => controller}/pci-versatile.c (100%)
- rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
- rename drivers/pci/{host => controller}/pci-xgene.c (100%)
- rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
- rename drivers/pci/{host => controller}/pcie-altera.c (100%)
- rename drivers/pci/{host => controller}/pcie-armada8k.c (100%)
- rename drivers/pci/{host => controller}/pcie-artpec6.c (100%)
- rename drivers/pci/{host => controller}/pcie-designware-plat.c (100%)
- rename drivers/pci/{host => controller}/pcie-designware.c (100%)
- rename drivers/pci/{host => controller}/pcie-designware.h (100%)
- rename drivers/pci/{host => controller}/pcie-hisi.c (100%)
- rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
- rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
- rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
- rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
- rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
- rename drivers/pci/{host => controller}/pcie-qcom.c (100%)
- rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
- rename drivers/pci/{host => controller}/pcie-spear13xx.c (100%)
- rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
- rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a5e1270..3db2531 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5662,7 +5662,7 @@ F:	arch/x86/kernel/cpu/mshyperv.c
- F:	drivers/hid/hid-hyperv.c
- F:	drivers/hv/
- F:	drivers/input/serio/hyperv-keyboard.c
--F:	drivers/pci/host/pci-hyperv.c
-+F:	drivers/pci/controller/pci-hyperv.c
- F:	drivers/net/hyperv/
- F:	drivers/scsi/storvsc_drv.c
- F:	drivers/video/fbdev/hyperv_fb.c
-@@ -8945,7 +8945,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
--F:	drivers/pci/host/pcie-altera.c
-+F:	drivers/pci/controller/pcie-altera.c
- 
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
-@@ -8953,7 +8953,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/versatile.txt
--F:	drivers/pci/host/pci-versatile.c
-+F:	drivers/pci/controller/pci-versatile.c
- 
- PCI DRIVER FOR APPLIEDMICRO XGENE
- M:	Tanmay Inamdar <tinamdar@apm.com>
-@@ -8961,7 +8961,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
--F:	drivers/pci/host/pci-xgene.c
-+F:	drivers/pci/controller/pci-xgene.c
- 
- PCI DRIVER FOR FREESCALE LAYERSCAPE
- M:	Minghuan Lian <minghuan.Lian@freescale.com>
-@@ -8971,7 +8971,7 @@ L:	linuxppc-dev@lists.ozlabs.org
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
--F:	drivers/pci/host/*layerscape*
-+F:	drivers/pci/controller/*layerscape*
- 
- PCI DRIVER FOR IMX6
- M:	Richard Zhu <Richard.Zhu@freescale.com>
-@@ -8979,14 +8979,14 @@ M:	Lucas Stach <l.stach@pengutronix.de>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/host/*imx6*
-+F:	drivers/pci/controller/*imx6*
- 
- PCI DRIVER FOR TI KEYSTONE
- M:	Murali Karicheri <m-karicheri2@ti.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/host/*keystone*
-+F:	drivers/pci/controller/*keystone*
- 
- PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
- M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-@@ -8994,14 +8994,14 @@ M:	Jason Cooper <jason@lakedaemon.net>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/host/*mvebu*
-+F:	drivers/pci/controller/*mvebu*
- 
- PCI DRIVER FOR AARDVARK (Marvell Armada 3700)
- M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/host/pci-aardvark.c
-+F:	drivers/pci/controller/pci-aardvark.c
- 
- PCI DRIVER FOR NVIDIA TEGRA
- M:	Thierry Reding <thierry.reding@gmail.com>
-@@ -9009,7 +9009,7 @@ L:	linux-tegra@vger.kernel.org
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
--F:	drivers/pci/host/pci-tegra.c
-+F:	drivers/pci/controller/pci-tegra.c
- 
- PCI DRIVER FOR TI DRA7XX
- M:	Kishon Vijay Abraham I <kishon@ti.com>
-@@ -9017,14 +9017,14 @@ L:	linux-omap@vger.kernel.org
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/ti-pci.txt
--F:	drivers/pci/host/pci-dra7xx.c
-+F:	drivers/pci/controller/pci-dra7xx.c
- 
- PCI DRIVER FOR RENESAS R-CAR
- M:	Simon Horman <horms@verge.net.au>
- L:	linux-pci@vger.kernel.org
- L:	linux-renesas-soc@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/host/*rcar*
-+F:	drivers/pci/controller/*rcar*
- 
- PCI DRIVER FOR SAMSUNG EXYNOS
- M:	Jingoo Han <jingoohan1@gmail.com>
-@@ -9032,30 +9032,30 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/host/pci-exynos.c
-+F:	drivers/pci/controller/pci-exynos.c
- 
- PCI DRIVER FOR SYNOPSIS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
- M:	Pratyush Anand <pratyush.anand@gmail.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/host/*designware*
-+F:	drivers/pci/controller/*designware*
- 
- PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
- M:	Joao Pinto <jpinto@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
--F:	drivers/pci/host/pcie-designware-plat.c
-+F:	drivers/pci/controller/pcie-designware-plat.c
- 
- PCI DRIVER FOR GENERIC OF HOSTS
- M:	Will Deacon <will.deacon@arm.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
--F:	drivers/pci/host/pci-host-common.c
--F:	drivers/pci/host/pci-host-generic.c
-+F:	Documentation/devicetree/bindings/pci/controller-generic-pci.txt
-+F:	drivers/pci/controller/pci-host-common.c
-+F:	drivers/pci/controller/pci-host-generic.c
- 
- PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
- M:	Keith Busch <keith.busch@intel.com>
-@@ -9067,7 +9067,7 @@ PCIE DRIVER FOR ST SPEAR13XX
- M:	Pratyush Anand <pratyush.anand@gmail.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/host/*spear*
-+F:	drivers/pci/controller/*spear*
- 
- PCI MSI DRIVER FOR ALTERA MSI IP
- M:	Ley Foon Tan <lftan@altera.com>
-@@ -9075,7 +9075,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
--F:	drivers/pci/host/pcie-altera-msi.c
-+F:	drivers/pci/controller/pcie-altera-msi.c
- 
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
-@@ -9083,7 +9083,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
--F:	drivers/pci/host/pci-xgene-msi.c
-+F:	drivers/pci/controller/pci-xgene-msi.c
- 
- PCIE DRIVER FOR AXIS ARTPEC
- M:	Niklas Cassel <niklas.cassel@axis.com>
-@@ -9092,7 +9092,7 @@ L:	linux-arm-kernel@axis.com
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/axis,artpec*
--F:	drivers/pci/host/*artpec*
-+F:	drivers/pci/controller/*artpec*
- 
- PCIE DRIVER FOR HISILICON
- M:	Zhou Wang <wangzhou1@hisilicon.com>
-@@ -9100,14 +9100,14 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
--F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/controller/pcie-hisi.c
- 
- PCIE DRIVER FOR QUALCOMM MSM
- M:     Stanimir Varbanov <svarbanov@mm-sol.com>
- L:     linux-pci@vger.kernel.org
- L:     linux-arm-msm@vger.kernel.org
- S:     Maintained
--F:     drivers/pci/host/*qcom*
-+F:     drivers/pci/controller/*qcom*
- 
- PCIE DRIVER FOR CAVIUM THUNDERX
- M:	David Daney <david.daney@cavium.com>
-@@ -9115,7 +9115,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/pci-thunder-*
--F:	drivers/pci/host/pci-thunder-*
-+F:	drivers/pci/controller/pci-thunder-*
- 
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 8c070ad..10cb1ad 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -16,6 +16,9 @@ obj-$(CONFIG_GPIOLIB)		+= gpio/
- obj-y				+= pwm/
- obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
- obj-$(CONFIG_PCI)		+= pci/
-+# PCI controller drivers
-+obj-y				+= pci/controller/
-+
- obj-$(CONFIG_PARISC)		+= parisc/
- obj-$(CONFIG_RAPIDIO)		+= rapidio/
- obj-y				+= video/
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 5f116a6..c603a8a 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -132,5 +132,5 @@ config PCI_HYPERV
-           PCI devices from a PCI backend to support PCI driver domains.
- 
- source "drivers/pci/hotplug/Kconfig"
--source "drivers/pci/host/Kconfig"
-+source "drivers/pci/controller/Kconfig"
- source "drivers/pci/endpoint/Kconfig"
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 8db5079..b924cc9 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -65,6 +65,3 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- obj-$(CONFIG_OF) += of.o
- 
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
--
--# PCI host controller drivers
--obj-y += host/
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/controller/Kconfig
-similarity index 93%
-rename from drivers/pci/host/Kconfig
-rename to drivers/pci/controller/Kconfig
-index 9b485d8..4c55c2d 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -1,10 +1,10 @@
--menu "PCI host controller drivers"
--	depends on PCI
-+menu "PCI controller drivers"
- 
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	help
- 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
-@@ -16,12 +16,14 @@ config PCI_MVEBU
- 	depends on ARCH_MVEBU || ARCH_DOVE
- 	depends on ARM
- 	depends on OF
-+	depends on PCI
- 
- config PCI_AARDVARK
- 	bool "Aardvark PCIe controller"
- 	depends on ARCH_MVEBU && ARM64
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	help
- 	 Add support for Aardvark 64bit PCIe Host Controller. This
- 	 controller is part of the South Bridge of the Marvel Armada
-@@ -31,6 +33,7 @@ config PCIE_XILINX_NWL
- 	bool "NWL PCIe Core"
- 	depends on ARCH_ZYNQMP
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	help
- 	 Say 'Y' here if you want kernel support for Xilinx
- 	 NWL PCIe controller. The controller can act as Root Port
-@@ -40,6 +43,7 @@ config PCIE_XILINX_NWL
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	---help---
- 	 This selects the DesignWare PCIe controller support. Select this if
-@@ -52,6 +56,7 @@ config PCIE_DW_PLAT
- config PCIE_DW
- 	bool
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
-@@ -59,17 +64,20 @@ config PCI_EXYNOS
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW
-+	depends on PCI
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
- 	depends on SOC_IMX6Q
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW
- 
- config PCI_TEGRA
- 	bool "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA && !ARM64
-+	depends on PCI
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
- 	  on NVIDIA Tegra SoCs.
-@@ -78,6 +86,7 @@ config PCI_RCAR_GEN2
- 	bool "Renesas R-Car Gen2 Internal PCI controller"
- 	depends on ARM
- 	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on PCI
- 	help
- 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
- 	  There are 3 internal PCI controllers available with a single
-@@ -87,16 +96,19 @@ config PCIE_RCAR
- 	bool "Renesas R-Car PCIe controller"
- 	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	help
- 	  Say Y here if you want PCIe controller support on R-Car SoCs.
- 
- config PCI_HOST_COMMON
- 	bool
-+	depends on PCI
- 	select PCI_ECAM
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
- 	depends on (ARM || ARM64) && OF
-+	depends on PCI
- 	select PCI_HOST_COMMON
- 	select IRQ_DOMAIN
- 	help
-@@ -107,6 +119,7 @@ config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
- 	depends on ARCH_SPEAR13XX
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW
- 	help
-@@ -116,6 +129,7 @@ config PCI_KEYSTONE
- 	bool "TI Keystone PCIe controller"
- 	depends on ARCH_KEYSTONE
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	select PCIEPORTBUS
- 	help
-@@ -127,6 +141,7 @@ config PCI_KEYSTONE
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
- 	depends on ARCH_ZYNQ || MICROBLAZE
-+	depends on PCI
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
-@@ -135,6 +150,7 @@ config PCI_XGENE
- 	bool "X-Gene PCIe controller"
- 	depends on ARCH_XGENE
- 	depends on OF
-+	depends on PCI
- 	select PCIEPORTBUS
- 	help
- 	  Say Y here if you want internal PCI support on APM X-Gene SoC.
-@@ -145,6 +161,7 @@ config PCI_XGENE_MSI
- 	bool "X-Gene v1 PCIe MSI feature"
- 	depends on PCI_XGENE
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	default y
- 	help
- 	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
-@@ -154,6 +171,7 @@ config PCI_LAYERSCAPE
- 	bool "Freescale Layerscape PCIe controller"
- 	depends on OF && (ARM || ARCH_LAYERSCAPE)
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	select MFD_SYSCON
- 	help
-@@ -162,9 +180,11 @@ config PCI_LAYERSCAPE
- config PCI_VERSATILE
- 	bool "ARM Versatile PB PCI controller"
- 	depends on ARCH_VERSATILE
-+	depends on PCI
- 
- config PCIE_IPROC
- 	tristate
-+	depends on PCI
- 	help
- 	  This enables the iProc PCIe core controller support for Broadcom's
- 	  iProc family of SoCs. An appropriate bus interface driver needs
-@@ -174,6 +194,7 @@ config PCIE_IPROC_PLATFORM
- 	tristate "Broadcom iProc PCIe platform bus driver"
- 	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
- 	depends on OF
-+	depends on PCI
- 	select PCIE_IPROC
- 	default ARCH_BCM_IPROC
- 	help
-@@ -183,6 +204,7 @@ config PCIE_IPROC_PLATFORM
- config PCIE_IPROC_BCMA
- 	tristate "Broadcom iProc PCIe BCMA bus driver"
- 	depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
-+	depends on PCI
- 	select PCIE_IPROC
- 	select BCMA
- 	select PCI_DOMAINS
-@@ -195,6 +217,7 @@ config PCIE_IPROC_MSI
- 	bool "Broadcom iProc PCIe MSI support"
- 	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	default ARCH_BCM_IPROC
- 	help
- 	  Say Y here if you want to enable MSI support for Broadcom's iProc
-@@ -204,6 +227,7 @@ config PCIE_ALTERA
- 	bool "Altera PCIe controller"
- 	depends on ARM || NIOS2
- 	depends on OF_PCI
-+	depends on PCI
- 	select PCI_DOMAINS
- 	help
- 	  Say Y here if you want to enable PCIe controller support on Altera
-@@ -213,6 +237,7 @@ config PCIE_ALTERA_MSI
- 	bool "Altera PCIe MSI feature"
- 	depends on PCIE_ALTERA
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	help
- 	  Say Y here if you want PCIe MSI support for the Altera FPGA.
- 	  This MSI driver supports Altera MSI to GIC controller IP.
-@@ -221,6 +246,7 @@ config PCI_HISI
- 	depends on OF && ARM64
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW
- 	help
-@@ -231,6 +257,7 @@ config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
- 	depends on ARCH_QCOM && OF
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	select PCIEPORTBUS
- 	help
-@@ -241,6 +268,7 @@ config PCIE_QCOM
- config PCI_HOST_THUNDER_PEM
- 	bool "Cavium Thunder PCIe controller to off-chip devices"
- 	depends on OF && ARM64
-+	depends on PCI
- 	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
-@@ -248,6 +276,7 @@ config PCI_HOST_THUNDER_PEM
- config PCI_HOST_THUNDER_ECAM
- 	bool "Cavium Thunder ECAM controller to on-chip devices on pass-1.x silicon"
- 	depends on OF && ARM64
-+	depends on PCI
- 	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
-@@ -256,6 +285,7 @@ config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
- 	depends on ARCH_MVEBU
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	select PCIEPORTBUS
- 	help
-@@ -268,6 +298,7 @@ config PCIE_ARTPEC6
- 	bool "Axis ARTPEC-6 PCIe controller"
- 	depends on MACH_ARTPEC6
- 	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI
- 	select PCIE_DW
- 	select PCIEPORTBUS
- 	help
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/controller/Makefile
-similarity index 100%
-rename from drivers/pci/host/Makefile
-rename to drivers/pci/controller/Makefile
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-similarity index 100%
-rename from drivers/pci/host/pci-aardvark.c
-rename to drivers/pci/controller/pci-aardvark.c
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
-similarity index 100%
-rename from drivers/pci/host/pci-dra7xx.c
-rename to drivers/pci/controller/pci-dra7xx.c
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/controller/pci-exynos.c
-similarity index 100%
-rename from drivers/pci/host/pci-exynos.c
-rename to drivers/pci/controller/pci-exynos.c
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-similarity index 100%
-rename from drivers/pci/host/pci-host-common.c
-rename to drivers/pci/controller/pci-host-common.c
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
-similarity index 100%
-rename from drivers/pci/host/pci-host-generic.c
-rename to drivers/pci/controller/pci-host-generic.c
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-similarity index 100%
-rename from drivers/pci/host/pci-hyperv.c
-rename to drivers/pci/controller/pci-hyperv.c
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/controller/pci-imx6.c
-similarity index 100%
-rename from drivers/pci/host/pci-imx6.c
-rename to drivers/pci/controller/pci-imx6.c
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/controller/pci-keystone-dw.c
-similarity index 100%
-rename from drivers/pci/host/pci-keystone-dw.c
-rename to drivers/pci/controller/pci-keystone-dw.c
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/controller/pci-keystone.c
-similarity index 100%
-rename from drivers/pci/host/pci-keystone.c
-rename to drivers/pci/controller/pci-keystone.c
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/controller/pci-keystone.h
-similarity index 100%
-rename from drivers/pci/host/pci-keystone.h
-rename to drivers/pci/controller/pci-keystone.h
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/controller/pci-layerscape.c
-similarity index 100%
-rename from drivers/pci/host/pci-layerscape.c
-rename to drivers/pci/controller/pci-layerscape.c
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-similarity index 100%
-rename from drivers/pci/host/pci-mvebu.c
-rename to drivers/pci/controller/pci-mvebu.c
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
-similarity index 100%
-rename from drivers/pci/host/pci-rcar-gen2.c
-rename to drivers/pci/controller/pci-rcar-gen2.c
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-similarity index 100%
-rename from drivers/pci/host/pci-tegra.c
-rename to drivers/pci/controller/pci-tegra.c
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/controller/pci-thunder-ecam.c
-similarity index 100%
-rename from drivers/pci/host/pci-thunder-ecam.c
-rename to drivers/pci/controller/pci-thunder-ecam.c
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/controller/pci-thunder-pem.c
-similarity index 100%
-rename from drivers/pci/host/pci-thunder-pem.c
-rename to drivers/pci/controller/pci-thunder-pem.c
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/controller/pci-versatile.c
-similarity index 100%
-rename from drivers/pci/host/pci-versatile.c
-rename to drivers/pci/controller/pci-versatile.c
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
-similarity index 100%
-rename from drivers/pci/host/pci-xgene-msi.c
-rename to drivers/pci/controller/pci-xgene-msi.c
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
-similarity index 100%
-rename from drivers/pci/host/pci-xgene.c
-rename to drivers/pci/controller/pci-xgene.c
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
-similarity index 100%
-rename from drivers/pci/host/pcie-altera-msi.c
-rename to drivers/pci/controller/pcie-altera-msi.c
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-similarity index 100%
-rename from drivers/pci/host/pcie-altera.c
-rename to drivers/pci/controller/pcie-altera.c
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/controller/pcie-armada8k.c
-similarity index 100%
-rename from drivers/pci/host/pcie-armada8k.c
-rename to drivers/pci/controller/pcie-armada8k.c
-diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/controller/pcie-artpec6.c
-similarity index 100%
-rename from drivers/pci/host/pcie-artpec6.c
-rename to drivers/pci/controller/pcie-artpec6.c
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/controller/pcie-designware-plat.c
-similarity index 100%
-rename from drivers/pci/host/pcie-designware-plat.c
-rename to drivers/pci/controller/pcie-designware-plat.c
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/controller/pcie-designware.c
-similarity index 100%
-rename from drivers/pci/host/pcie-designware.c
-rename to drivers/pci/controller/pcie-designware.c
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/controller/pcie-designware.h
-similarity index 100%
-rename from drivers/pci/host/pcie-designware.h
-rename to drivers/pci/controller/pcie-designware.h
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/controller/pcie-hisi.c
-similarity index 100%
-rename from drivers/pci/host/pcie-hisi.c
-rename to drivers/pci/controller/pcie-hisi.c
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc-bcma.c
-rename to drivers/pci/controller/pcie-iproc-bcma.c
-diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc-msi.c
-rename to drivers/pci/controller/pcie-iproc-msi.c
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc-platform.c
-rename to drivers/pci/controller/pcie-iproc-platform.c
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc.c
-rename to drivers/pci/controller/pcie-iproc.c
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc.h
-rename to drivers/pci/controller/pcie-iproc.h
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/controller/pcie-qcom.c
-similarity index 100%
-rename from drivers/pci/host/pcie-qcom.c
-rename to drivers/pci/controller/pcie-qcom.c
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-similarity index 100%
-rename from drivers/pci/host/pcie-rcar.c
-rename to drivers/pci/controller/pcie-rcar.c
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/controller/pcie-spear13xx.c
-similarity index 100%
-rename from drivers/pci/host/pcie-spear13xx.c
-rename to drivers/pci/controller/pcie-spear13xx.c
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-similarity index 100%
-rename from drivers/pci/host/pcie-xilinx-nwl.c
-rename to drivers/pci/controller/pcie-xilinx-nwl.c
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-similarity index 100%
-rename from drivers/pci/host/pcie-xilinx.c
-rename to drivers/pci/controller/pcie-xilinx.c
--- 
-1.7.9.5
-
+DQpTaW5jZSBJIHdvcmtlZCB3aXRoIFNhc2hhIG9uIHRoaXMgSSB3aWxsIHByb3ZpZGUgYSBiaXQg
+b2YgaW5mb3JtYXRpb24gZnJvbSB3aGF0IEkgdW5kZXJzdGFuZCBvZiB0aGlzIGJ1ZyBhcyB3ZWxs
+Lg0KDQpPbiBUdWUsIFNlcCAyNywgMjAxNiBhdCAxMjoxMyBQTSwgQWxleCBXaWxsaWFtc29uIDxh
+bGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbT4gd3JvdGU6DQo+IE9uIFR1ZSwgMjcgU2VwIDIwMTYg
+MTM6MTc6MDIgLTA1MDANCj4gQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPiB3cm90
+ZToNCj4NCj4+IE9uIFN1biwgU2VwIDI1LCAyMDE2IGF0IDEwOjAyOjQzQU0gKzAzMDAsIE5lZnRp
+biwgU2FzaGEgd3JvdGU6DQo+PiA+IE9uIDkvMjQvMjAxNiAxMjowNSBBTSwgSmVmZiBLaXJzaGVy
+IHdyb3RlOg0KPj4gPiA+T24gRnJpLCAyMDE2LTA5LTIzIGF0IDA5OjAxIC0wNTAwLCBCam9ybiBI
+ZWxnYWFzIHdyb3RlOg0KPj4gPiA+Pk9uIFRodSwgU2VwIDIyLCAyMDE2IGF0IDExOjM5OjAxUE0g
+LTA3MDAsIEplZmYgS2lyc2hlciB3cm90ZToNCj4+ID4gPj4+RnJvbTogU2FzaGEgTmVmdGluIDxz
+YXNoYS5uZWZ0aW5AaW50ZWwuY29tPg0KPj4gPiA+Pj4NCj4+ID4gPj4+ODI1NzkgaGFzIGEgcHJv
+YmxlbSByZWF0dGFjaGluZyBpdHNlbGYgYWZ0ZXIgdGhlIGRldmljZSBpcyBkZXRhY2hlZC4NCj4+
+ID4gPj4+VGhlIGJ1ZyB3YXMgcmVwb3J0ZWQgYnkgUmVkaGF0LiBUaGUgc3VnZ2VzdGVkIGZpeCBp
+cyB0byBkaXNhYmxlIA0KPj4gPiA+Pj5GTFIgY2FwYWJpbGl0eSBpbiBQQ0llIGNvbmZpZ3VyYXRp
+b24gc3BhY2UuDQo+PiA+ID4+Pg0KPj4gPiA+Pj5SZXByb2R1Y3Rpb246DQo+PiA+ID4+PkF0dGFj
+aCB0aGUgZGV2aWNlIHRvIGEgVk0sIHRoZW4gZGV0YWNoIGFuZCB0cnkgdG8gYXR0YWNoIGFnYWlu
+Lg0KPj4gPiA+Pj4NCj4+ID4gPj4+Rml4Og0KPj4gPiA+Pj5EaXNhYmxlIEZMUiBjYXBhYmlsaXR5
+IHRvIHByZXZlbnQgdGhlIDgyNTc5IGZyb20gaGFuZ2luZy4NCj4+ID4gPj5JcyB0aGVyZSBhIGJ1
+Z3ppbGxhIG9yIG90aGVyIHJlZmVyZW5jZSBVUkwgdG8gaW5jbHVkZSBoZXJlPyAgDQo+PiA+ID4+
+U2hvdWxkIHRoaXMgYmUgbWFya2VkIGZvciBzdGFibGU/DQo+PiA+ID5TbyB0aGUgYXV0aG9yIGlz
+IGluIElzcmFlbCwgbWVhbmluZyBpdCBpcyB0aGVpciB3ZWVrZW5kIG5vdy4gIEkgZG8gDQo+PiA+
+ID5ub3QgYmVsaWV2ZSBTYXNoYSBtb25pdG9ycyBlbWFpbCBvdmVyIHRoZSB3ZWVrZW5kLCBzbyBh
+IHJlc3BvbnNlIA0KPj4gPiA+dG8geW91ciBxdWVzdGlvbnMgd29uJ3QgaGFwcGVuIGZvciBhIGZl
+dyBkYXlzLg0KPj4gPiA+DQo+PiA+ID5JIHRyaWVkIHNlYXJjaGluZyBteSBhcmNoaXZlcyBmb3Ig
+bW9yZSBpbmZvcm1hdGlvbiwgYnV0IGhhZCBubyANCj4+ID4gPmx1Y2sgZmluZGluZyBhbnkgYWRk
+aXRpb25hbCBpbmZvcm1hdGlvbi4NCj4+ID4gPg0KDQpJIGFncmVlIHRoYXQgd2UgZG8gcHJvYmFi
+bHkgbmVlZCB0byB1cGRhdGUgdGhlIHBhdGNoIGRlc2NyaXB0aW9uIHNpbmNlIGl0IGlzbid0IGV4
+YWN0bHkgY2xlYXIgd2hhdCB0aGlzIGlzIGZpeGluZyBvciB3aGF0IHdhcyBhY3R1YWxseSBicm9r
+ZW4uDQoNCj4+ID4gPj4+U2lnbmVkLW9mZi1ieTogU2FzaGEgTmVmdGluIDxzYXNoYS5uZWZ0aW5A
+aW50ZWwuY29tPg0KPj4gPiA+Pj5UZXN0ZWQtYnk6IEFhcm9uIEJyb3duIDxhYXJvbi5mLmJyb3du
+QGludGVsLmNvbT4NCj4+ID4gPj4+U2lnbmVkLW9mZi1ieTogSmVmZiBLaXJzaGVyIDxqZWZmcmV5
+LnQua2lyc2hlckBpbnRlbC5jb20+DQo+PiA+ID4+Pi0tLQ0KPj4gPiA+Pj4gIGRyaXZlcnMvcGNp
+L3F1aXJrcy5jIHwgMjEgKysrKysrKysrKysrKysrKysrKysrDQo+PiA+ID4+PiAgMSBmaWxlIGNo
+YW5nZWQsIDIxIGluc2VydGlvbnMoKykNCj4+ID4gPj4+DQo+PiA+ID4+PmRpZmYgLS1naXQgYS9k
+cml2ZXJzL3BjaS9xdWlya3MuYyBiL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGluZGV4IA0KPj4gPiA+
+Pj40NGUwZmYzLi41OWZiYTZlIDEwMDY0NA0KPj4gPiA+Pj4tLS0gYS9kcml2ZXJzL3BjaS9xdWly
+a3MuYw0KPj4gPiA+Pj4rKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPj4gPiA+Pj5AQCAtNDQz
+MSwzICs0NDMxLDI0IEBAIHN0YXRpYyB2b2lkIHF1aXJrX2ludGVsX3FhdF92Zl9jYXAoc3RydWN0
+IA0KPj4gPiA+Pj5wY2lfZGV2ICpwZGV2KQ0KPj4gPiA+Pj4gICAgICAgICB9DQo+PiA+ID4+PiAg
+fQ0KPj4gPiA+Pj4gIERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUws
+IDB4NDQzLCANCj4+ID4gPj4+cXVpcmtfaW50ZWxfcWF0X3ZmX2NhcCk7DQo+PiA+ID4+PisvKg0K
+Pj4gPiA+Pj4rICogV29ya2Fyb3VuZCBGTFIgaXNzdWVzIGZvciA4MjU3OQ0KPj4gPiA+Pj4rICog
+VGhpcyBjb2RlIGRpc2FibGVzIHRoZSBGTFIgKEZ1bmN0aW9uIExldmVsIFJlc2V0KSB2aWEgUENJ
+ZSwgDQo+PiA+ID4+Pitpbg0KPj4gPiA+Pj5vcmRlcg0KPj4gPiA+Pj4rICogdG8gd29ya2Fyb3Vu
+ZCBhIGJ1ZyBmb3VuZCB3aGlsZSB1c2luZyBkZXZpY2UgcGFzc3Rocm91Z2gsIA0KPj4gPiA+Pj4r
+IHdoZXJlIHRoZQ0KPj4gPiA+Pj4rICogaW50ZXJmYWNlIHdvdWxkIGJlY29tZSBub24tcmVzcG9u
+c2l2ZS4NCj4+ID4gPj4+KyAqIE5PVEU6IHRoZSBGTFIgYml0IGlzIFJlYWQvV3JpdGUgT25jZSAo
+UldPKSBpbiBjb25maWcgc3BhY2UsIA0KPj4gPiA+Pj4rIHNvIGlmDQo+PiA+ID4+PisgKiB0aGUg
+QklPUyBvciBrZXJuZWwgd3JpdGVzIHRoaXMgcmVnaXN0ZXIgKiB0aGVuIHRoaXMgDQo+PiA+ID4+
+Pisgd29ya2Fyb3VuZCB3aWxsDQo+PiA+ID4+PisgKiBub3Qgd29yay4NCj4+ID4gPj5UaGlzIGRv
+ZXNuJ3Qgc291bmQgbGlrZSBhIHJvb3QgY2F1c2UuICBJcyB0aGUgaXNzdWUgYSBoYXJkd2FyZSAN
+Cj4+ID4gPj5lcnJhdHVtPyAgTGludXggUENJIGNvcmUgYnVnPyAgVkZJTyBidWc/ICBEZXZpY2Ug
+ZmlybXdhcmUgYnVnPw0KPj4gPiA+Pg0KPj4gPiA+PlRoZSBjaGFuZ2Vsb2cgc3VnZ2VzdHMgdGhh
+dCB0aGUgcHJvYmxlbSBvbmx5IGFmZmVjdHMgcGFzc3Rocm91Z2gsIA0KPj4gPiA+PndoaWNoIHN1
+Z2dlc3RzIHNvbWUgc29ydCBvZiBrZXJuZWwgYnVnIHJlbGF0ZWQgdG8gaG93IHBhc3N0aHJvdWdo
+IA0KPj4gPiA+PmlzIGltcGxlbWVudGVkLg0KPj4NCj4+IElmIHRoaXMgYnVnIGFmZmVjdHMgYWxs
+IHNjZW5hcmlvcywgbm90IGp1c3QgcGFzc3Rocm91Z2gsIHRoZSANCj4+IGNoYW5nZWxvZyBzaG91
+bGQgbm90IG1lbnRpb24gcGFzc3Rocm91Z2guDQo+Pg0KPj4gPiA+Pj4rICovDQo+PiA+ID4+Pitz
+dGF0aWMgdm9pZCBxdWlya19pbnRlbF9mbHJfY2FwX2RpcyhzdHJ1Y3QgcGNpX2RldiAqZGV2KSB7
+DQo+PiA+ID4+PisgICAgICAgIGludCBwb3MgPSBwY2lfZmluZF9jYXBhYmlsaXR5KGRldiwgUENJ
+X0NBUF9JRF9BRik7DQo+PiA+ID4+PisgICAgICAgIGlmIChwb3MpIHsNCj4+ID4gPj4+KyAgICAg
+ICAgICAgICAgICB1OCBjYXA7DQo+PiA+ID4+PisgICAgICAgICAgICAgICAgcGNpX3JlYWRfY29u
+ZmlnX2J5dGUoZGV2LCBwb3MgKyBQQ0lfQUZfQ0FQLCAmY2FwKTsNCj4+ID4gPj4+KyAgICAgICAg
+ICAgICAgICBjYXAgPSBjYXAgJiAoflBDSV9BRl9DQVBfRkxSKTsNCj4+ID4gPj4+KyAgICAgICAg
+ICAgICAgICBwY2lfd3JpdGVfY29uZmlnX2J5dGUoZGV2LCBwb3MgKyBQQ0lfQUZfQ0FQLCBjYXAp
+Ow0KPj4gPiA+Pj4rICAgICAgICB9DQo+PiA+ID4+Pit9DQo+PiA+ID4+PitERUNMQVJFX1BDSV9G
+SVhVUF9FQVJMWShQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDE1MDIsDQo+PiA+ID4+PnF1aXJrX2lu
+dGVsX2Zscl9jYXBfZGlzKTsNCj4+ID4gPj4+K0RFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9W
+RU5ET1JfSURfSU5URUwsIDB4MTUwMywNCj4+ID4gPj4+cXVpcmtfaW50ZWxfZmxyX2NhcF9kaXMp
+Ow0KPj4gPiA+Pj4tLQ0KPj4gPiA+Pj4yLjcuNA0KPj4gPiA+Pj4NCj4+ID4gPj4+LS0NCj4+ID4g
+Pj4+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2Ny
+aWJlIA0KPj4gPiA+Pj5saW51eC1wY2kiIGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnIA0KPj4gPiA+Pj5Nb3JlIG1ham9yZG9tbyBpbmZvIGF0ICAN
+Cj4+ID4gPj4+aHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+PiA+
+DQo+PiA+IEhlbGxvLA0KPj4gPg0KPj4gPiBPcmlnaW5hbCBidWd6aWxsYSB0aHJlYWQgY291bGQg
+YmUgZm91bmQgaGVyZToNCj4+ID4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVn
+LmNnaT9mb3JtYXQ9bXVsdGlwbGUmaWQ9OTY2ODQwDQo+Pg0KPj4gVGhhdCBidWd6aWxsYSBpcyBw
+cml2YXRlIGFuZCBJIGNhbid0IHJlYWQgaXQuDQo+DQo+IEhtbSwgSSBjYW4sIGJ1dCBJIGRvbid0
+IHNlZSBhbnl0aGluZyBpbiBpdCB0aGF0IHN1cHBvcnRzIHRoaXMuICBJcyANCj4gdGhhdCByZWFs
+bHkgdGhlIHJpZ2h0IGJ6PyAgSXQncyB0aGUgcmlnaHQgaGFyZHdhcmUsIGJ1dCBoYXMgYWxsIHNv
+cnRzIA0KPiBvZiBGVUQgYWJvdXQgdGhlIHZlcnNpb24gb2YgdmFyaW91cyBvdGhlciBjb21wb25l
+bnRzIGluIHRoZSBzdGFjay4NCg0KSXQgbG9va3MgbGlrZSB3ZSBoYWQgYSBsb2NhbCBjb3B5IG9m
+IHRoZSBidWd6aWxsYSBzYXZlZCBoZXJlLCB0aG91Z2ggaXQgb25seSBnb2VzIHVwIHRvIGNvbW1l
+bnQgMTMgd2hpY2ggaXMgd2hlcmUgSSB0aGluayB3ZSBzdGFydGVkIHdvcmtpbmcgdGhpcyBvbiBv
+dXIgc2lkZS4gIEkgYmVsaWV2ZSB3aGF0IHRoaXMgcGF0Y2ggaXMgYXR0ZW1wdGluZyB0byByZXNv
+bHZlIGlzIHJlbGF0ZWQgdG8gY29tbWVudCA4IHdoZXJlIHRoZSBkcml2ZXIgcmV0dXJuZWQgInBy
+b2JlIG9mDQowMDAwOjAwOjE5LjAgZmFpbGVkIHdpdGggZXJyb3Ig4oCQMiIgaW5zdGVhZCBvZiBj
+b3JyZWN0bHkgcHJvYmluZyB0aGUgaW50ZXJmYWNlLg0KDQpTbyB0aGUgYnVnIGFzIHJlcG9ydGVk
+IHdhcyB0aGF0IGUxMDAwZSBoYWQgYSBwcm9ibGVtIHJlYXR0YWNoaW5nIGl0c2VsZiB0byB0aGUg
+UEhZIGFmdGVyIGl0IHdhcyBhdHRhY2hlZCB0byBhIFZNLiAgU2FzaGEsIHBsZWFzZSBmZWVsIGZy
+ZWUgdG8gY29ycmVjdCBtZSBpZiBJIGhhdmUgdGhpcyBiaXQgd3JvbmcuICBJIGhhZCBiZWVuIHRv
+bGQgdGhlIHByb2JsZW0gd2FzIHRoZSBGTFIgZnVuY3Rpb25hbGl0eSB3YXNuJ3QgZnVsbHkgaW1w
+bGVtZW50ZWQgc28gdGhhdCB3YXMgd2h5IHRoZXkgd2VyZSB3YW50aW5nIHRvIGRlZmVhdHVyZSBp
+dC4gIEkgaGFkIGFzc3VtZWQgdGhhdCB0aGVyZSB3YXMgc3VwcG9ydCBmb3IgYSByZXNldCBvbiBE
+MC0+RDMtPkQwLCBidXQgSSBqdXN0IHJlYWxpemVkIHRoYXQgcHJvYmFibHkgaXNuJ3QgdGhlIGNh
+c2Ugc2luY2UgaXQgbG9va3MgbGlrZSBteSBsb2NhbCBzeXN0ZW0gc2V0cyB0aGUgTm9Tb2Z0UlNU
+IGJpdC4NCg0KPj4gPiBUaGlzIGlzIG91ciBIVyBidWcsIGV4aXN0IG9ubHkgaW4gODI1NzkgZGV2
+aWNlcy4gTW9yZSBuZXcgZGV2aWNlcyANCj4+ID4gaGF2ZSBubyBzdWNoIHByb2JsZW0uIFdlIGhh
+dmUgZm91bmQgcm9vdCBjYXVzZSBhbmQgc3VnZ2VzdGVkIHRoaXMgDQo+PiA+IHNvbHV0aW9uLg0K
+Pj4NCj4+IElzIHRoZXJlIGFuIGVycmF0dW0geW91IGNhbiByZWZlcmVuY2U/DQo+Pg0KPj4gPiBU
+aGlzIHNvbHV0aW9uIHNob3VsZCB3b3JrIGZvciBhIDk1JSBvZiBjYXNlcywgc28gSSBkbyBub3Qg
+dGhpbmsgDQo+PiA+IHRoYXQgdGhpcyBpcyBmcmFnaWxlLiBGb3IgYW5vdGhlciBjYXNlcyBwb3Nz
+aWJsZSBzb2x1dGlvbiBpcyBnZXQgdXAgDQo+PiA+IHdvcmtpbmcgc3lzdGVtIGFuZCBtYW51YWxs
+eSBkaXNhYmxlIEZMUiwgYmVmb3JlIFZNIHN0YXJ0IHVzZSBvdXIgDQo+PiA+IGFkYXB0ZXIuDQo+
+Pg0KPj4gSSBkb24ndCB0aGluayBhIDk1JSBzb2x1dGlvbiBpcyBzdWZmaWNpZW50LiAgQ2FuIHlv
+dSB1c2UgdGhlDQo+PiBwY2lfZGV2X3NwZWNpZmljX3Jlc2V0KCkgZnJhbWV3b3JrIHRvIG1ha2Ug
+YSAxMDAlIHNvbHV0aW9uPw0KDQpJIGNhbiB0cnkgd29ya2luZyB3aXRoIFNhc2hhIG9uIHRoaXMg
+dG8gc2VlIHdoYXQgd2UgY2FuIGRvLg0KDQo+IFJpZ2h0LCBwbHVzIHdoZW4gdGhpcyBkb2VzIHdv
+cmsgSSBzdXNwZWN0IGl0IHJlbW92ZXMgdGhlIG9uZSBtZWNoYW5pc20gDQo+IHdlIGhhdmUgdG8g
+cmVzZXQgdGhlIGRldmljZSwgd2hpY2ggZGVwZW5kaW5nIG9uIGhvdyBvYnNjdXJlIHRoZSANCj4g
+ZmFpbHVyZSBzY2VuYXJpbyBpcywgaXNuJ3QgYSBjbGVhciBjdXQgaW1wcm92ZW1lbnQgZm9yIGRl
+dmljZSBhc3NpZ25tZW50Lg0KPiBUaGFua3MsDQo+DQo+IEFsZXgNCg0KSSdsbCB3b3JrIHdpdGgg
+U2FzaGEgdG8gc2VlIHdoYXQgd2UgY2FuIGRvLiAgT2RkcyBhcmUgdGhlcmUgaXMgc29tZSBzb3J0
+IG9mIHByb2JsZW0gYmV0d2VlbiB0aGUgTUFDL1BIWSB0aGF0IG5lZWRzIHRvIGJlIHJlc29sdmVk
+IHdoZW4gd2UgcGVyZm9ybSB0aGUgZnVuY3Rpb24gbGV2ZWwgcmVzZXQgc28gd2Ugd2lsbCBwcm9i
+YWJseSBuZWVkIHRvIGFkZCBjb2RlIHNvIHRoYXQgd2UgcmVzZXQgdGhlIHBhcnQgYW5kIHJlLWVz
+dGFibGlzaCB0aGUgbGluayB3aXRoIHRoZSBQSFkgYWZ0ZXIgdGhlIHJlc2V0Lg0KDQotIEFsZXgN
+Cg0KDQpIZWxsbywNCkkgd291bGQgbGlrZSBjbGFyaWZ5IGEgZmV3IHBvaW50cy4NCg0KMS4gODI1
+NzkgY2xpZW50IGRldmljZXMgZG8gbm90IHN1cHBvcnQgZnVuY3Rpb25hbCBsZXZlbCByZXNldCAo
+RkxSKS4gVW5mb3J0dW5hdGVseSwgaXQgYWR2ZXJ0aXNlcyBGTFIgY2FwYWJpbGl0eSAtICB0aGlz
+IGlzIGEgYnVnLiBTbywgd2hlbiBWTSBzb2Z0d2FyZSBldmVuIGFjY2lkZW50YWxseSB0cmllcyB0
+byBhY2Nlc3MgRkxSLCB0aGF0IGNhdXNlcyBvdXIgZGV2aWNlIHRvIGhhbmcuIFRvIGVsaW1pbmF0
+ZSB0aGlzIHByb2JsZW0gd2UgZGVjaWRlZCB0byBkaXNhYmxlIEZMUiB2aWEgZHJpdmVycy9wY2kv
+cXVpcmtzLmMgDQpJbiBwcmV2aW91cyBlLW1haWwgSSB3cm90ZSB0aGF0IHRoZSBzb2x1dGlvbiBz
+aG91bGQgd29yayBmb3IgYSA5NSUgb2YgY2FzZXMuIENhc2VzIHdoZXJlIGl0IG1pZ2h0IG5vdCB3
+b3JrIGlmIEJJT1Mgd3JpdGVzIEZMUiBjYXBhYmlsaXR5IGJlZm9yZSB0aGUgT1MgKEluIDgyNTc5
+IGRldmljZSBGTFIgY2FwYWJpbGl0eSBpcyBSV08gLSByZWFkIHdyaXRlIG9uY2UpLiBCdXQgdGhp
+cyBpcyBhIHZlcnkgd2VpcmQgc2NlbmFyaW8sIHNvIHByb2JhYmx5IHRoZSB3b3JrYXJvdW5kIHdp
+bGwgd29yayBjbG9zZSB0byAxMDAlLiBBbHNvLCBJIHdvdWxkIGxpa2UgdG8gYWRkIHRoYXQgd2Ug
+aGF2ZSBydW4gbG90cyBvZiB0ZXN0cyBvdmVyIDgyNTc5IGluIG91ciBsYWIgYW5kIGVuc3VyZWQg
+dGhhdCBhbGwgZmxvd3Mgd29yayBwcm9wZXJseS4NCg0KMi4gRDAtPkQzLUQwIGZsb3cgaXMgbm90
+IGFmZmVjdGVkIGFuZCBpcyBpbiBmYWN0IHN1cHBvcnRlZCBieSA4MjU3OS4NCg0KMy4gSSB3aWxs
+IGxvb2sgZm9yIGFuIGVycmF0dW0gZXhwbGFpbmluZyB0aGlzLg0KDQpUaGFua3MsDQpTYXNoYQ0K
+DQoNCg0KDQoNCg==
