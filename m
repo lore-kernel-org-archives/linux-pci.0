@@ -1,213 +1,184 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
-To: Tomasz Nowicki <tn@semihalf.com>, <helgaas@kernel.org>,
-        <will.deacon@arm.com>, <catalin.marinas@arm.com>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-3-git-send-email-tn@semihalf.com>
-CC: <arnd@arndb.de>, <hanjun.guo@linaro.org>, <okaya@codeaurora.org>,
-        <jchandra@broadcom.com>, <cov@codeaurora.org>, <dhdang@apm.com>,
-        <ard.biesheuvel@linaro.org>, <robert.richter@caviumnetworks.com>,
-        <mw@semihalf.com>, <Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
-        <wangyijing@huawei.com>, <msalter@redhat.com>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
-        <andrea.gallo@linaro.org>, <jeremy.linton@arm.com>,
-        <gabriele.paoloni@huawei.com>, <jhugo@codeaurora.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <57D76626.1050109@huawei.com>
-Date: Tue, 13 Sep 2016 10:36:22 +0800
-MIME-Version: 1.0
-In-Reply-To: <1473449047-10499-3-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v8 2/8] thunderbolt: Updating the register definitions
+Date: Wed, 28 Sep 2016 17:44:24 +0300
+Message-Id: <1475073870-2126-3-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz
+Adding more Thunderbolt(TM) register definitions
+and some helper macros.
 
-ÔÚ 2016/9/10 3:24, Tomasz Nowicki Ð´µÀ:
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite CFG accessors
-> set and configuration space range.
->
-> In first place pci_mcfg_parse() saves machine's IDs and revision number
-> (these come from MCFG header) in order to match against known quirk entries.
-> Then the algorithm traverses available quirk list (static array),
-> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-> returns custom PCI config ops and/or CFG resource structure.
->
-> When adding new quirk there are two possibilities:
-> 1. Override default pci_generic_ecam_ops ops but CFG resource comes from MCFG
-> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops, MCFG_RES_EMPTY },
-> 2. Override default pci_generic_ecam_ops ops and CFG resource. For this case
-> it is also allowed get CFG resource from quirk entry w/o having it in MCFG.
-> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
->    DEFINE_RES_MEM(START, SIZE) },
->
-> pci_generic_ecam_ops and MCFG entries will be used for platforms
-> free from quirks.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> ---
->   drivers/acpi/pci_mcfg.c | 80 +++++++++++++++++++++++++++++++++++++++++++++----
->   1 file changed, 74 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index ffcc651..2b8acc7 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -32,6 +32,59 @@ struct mcfg_entry {
->   	u8			bus_start;
->   	u8			bus_end;
->   };
-> +struct mcfg_fixup {
-> +	char oem_id[ACPI_OEM_ID_SIZE + 1];
-> +	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
-> +	u32 oem_revision;
-> +	u16 seg;
-> +	struct resource bus_range;
-> +	struct pci_ecam_ops *ops;
-> +	struct resource cfgres;
-> +};
-> +
-> +#define MCFG_DOM_ANY			(-1)
-> +#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-> +						((end) - (start) + 1),	\
-> +						NULL, IORESOURCE_BUS)
-> +#define MCFG_BUS_ANY		MCFG_BUS_RANGE(0x0, 0xff)
-> +#define MCFG_RES_EMPTY		DEFINE_RES_NAMED(0, 0, NULL, 0)
-> +
-> +static struct mcfg_fixup mcfg_quirks[] = {
-> +/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
-> +};
-> +
-> +static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-> +static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
-> +static u32 mcfg_oem_revision;
-> +
-> +static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
-> +				  struct resource *cfgres,
-> +				  struct pci_ecam_ops **ecam_ops)
-> +{
-> +	struct mcfg_fixup *f;
-> +	int i;
-> +
-> +	/*
-> +	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
-> +	 * table ID, and OEM revision from MCFG table standard header.
-> +	 */
-> +	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
-> +		if (f->seg == root->segment &&
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
-why not use MCFG_DOM_RANGE, I think MCFG_DOM_RANGE is better.
-if drop MCFG_DOM_RANGE, mcfg_quirks[] will be more complex.
-
-static struct mcfg_fixup mcfg_quirks[] = {
-/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
-#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
-	/* SoC pass1.x */
-	{ "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-	{ "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
-	  MCFG_RES_EMPTY},
-#endif
-.....
-};
-
-As PATCH v5 we only need define mcfg_quirks as below, It looks better.
-static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
-/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
-#ifdef CONFIG_PCI_HOST_THUNDER_PEM
-	/* Pass2.0 */
-	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
-	  thunder_pem_cfg_init },
-	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
-	  thunder_pem_cfg_init },
-#endif
-#ifdef CONFIG_PCI_HISI_ACPI
-	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
-	  NULL, hisi_pcie_acpi_hip05_init},
-	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
-	  NULL, hisi_pcie_acpi_hip06_init},
-	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
-	  NULL, hisi_pcie_acpi_hip07_init},
-#endif
-};
-
-> +		    resource_contains(&f->bus_range, &root->secondary) &&
-> +		    !memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
-> +		    !memcmp(f->oem_table_id, mcfg_oem_table_id,
-> +		            ACPI_OEM_TABLE_ID_SIZE) &&
-> +		    f->oem_revision == mcfg_oem_revision) {
-> +			if (f->cfgres.start)
-> +				*cfgres = f->cfgres;
-> +			if (f->ops)
-> +				*ecam_ops =  f->ops;
-> +			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
-> +				 f->oem_id, f->oem_table_id, f->oem_revision);
-> +			return;
-> +		}
-> +	}
-> +}
->
->   /* List to save MCFG entries */
->   static LIST_HEAD(pci_mcfg_list);
-> @@ -61,14 +114,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
->
->   	}
->
-> -	if (!root->mcfg_addr)
-> -		return -ENXIO;
-> -
->   skip_lookup:
->   	memset(&res, 0, sizeof(res));
-> -	res.start = root->mcfg_addr + (bus_res->start << 20);
-> -	res.end = res.start + (resource_size(bus_res) << 20) - 1;
-> -	res.flags = IORESOURCE_MEM;
-> +	if (root->mcfg_addr) {
-> +		res.start = root->mcfg_addr + (bus_res->start << 20);
-> +		res.end = res.start + (resource_size(bus_res) << 20) - 1;
-> +		res.flags = IORESOURCE_MEM;
-> +	}
-> +
-> +	/*
-> +	 * Let to override default ECAM ops and CFG resource range.
-> +	 * Also, this might even retrieve CFG resource range in case MCFG
-> +	 * does not have it. Invalid CFG start address means MCFG firmware bug
-> +	 * or we need another quirk in array.
-> +	 */
-> +	pci_mcfg_match_quirks(root, &res, &ops);
-> +	if (!res.start)
-> +		return -ENXIO;
-> +
->   	*cfgres = res;
->   	*ecam_ops = ops;
->   	return 0;
-> @@ -101,6 +164,11 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
->   		list_add(&e->list, &pci_mcfg_list);
->   	}
->
-> +	/* Save MCFG IDs and revision for quirks matching */
-> +	memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
-> +	memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
-> +	mcfg_oem_revision = header->revision;
-> +
->   	pr_info("MCFG table detected, %d entries\n", n);
->   	return 0;
->   }
->
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+index 75cf069..b8e961f 100644
+--- a/drivers/thunderbolt/nhi_regs.h
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -9,6 +9,11 @@
+ 
+ #include <linux/types.h>
+ 
++#define NHI_MMIO_BAR 0
++
++#define TBT_RING_MIN_NUM_BUFFERS	2
++#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
++
+ enum ring_flags {
+ 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
+ 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
+@@ -39,6 +44,33 @@ struct ring_desc {
+ 	u32 time; /* write zero */
+ } __packed;
+ 
++/**
++ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
++ * This is same as struct ring_desc, but without the use of bitfields and
++ * with explicit endianity.
++ */
++struct tbt_buf_desc {
++	__le64 phys;
++	__le32 attributes;
++	__le32 time;
++};
++
++#define DESC_ATTR_LEN_SHIFT		0
++#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
++#define DESC_ATTR_EOF_SHIFT		12
++#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
++#define DESC_ATTR_SOF_SHIFT		16
++#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
++#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
++#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
++#define DESC_ATTR_DESC_DONE		BIT(21)
++#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
++#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
++#define DESC_ATTR_INT_EN		BIT(23)
++#define DESC_ATTR_OFFSET_SHIFT		24
++#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
++
++
+ /* NHI registers in bar 0 */
+ 
+ /*
+@@ -60,6 +92,30 @@ struct ring_desc {
+  */
+ #define REG_RX_RING_BASE	0x08000
+ 
++#define REG_RING_STEP			16
++#define REG_RING_PHYS_LO_OFFSET		0
++#define REG_RING_PHYS_HI_OFFSET		4
++#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
++#define REG_RING_CONS_SHIFT		0
++#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
++#define REG_RING_PROD_SHIFT		16
++#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
++#define REG_RING_SIZE_OFFSET		12
++#define REG_RING_SIZE_SHIFT		0
++#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
++#define REG_RING_BUF_SIZE_SHIFT		16
++#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
++
++#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
++			      ((iobase) + (ringbase) + \
++			      ((ringnumber) * REG_RING_STEP) + \
++			      REG_RING_CONS_PROD_OFFSET)
++
++#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
++				       REG_RING_PROD_SHIFT)
++
++#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
++				       REG_RING_CONS_SHIFT)
+ /*
+  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
+  * 00: enum_ring_flags
+@@ -77,6 +133,19 @@ struct ring_desc {
+  * ..: unknown
+  */
+ #define REG_RX_OPTIONS_BASE	0x29800
++#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
++#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
++				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
++#define REG_RX_OPTS_MASK_OFFSET		4
++#define REG_RX_OPTS_MASK_EOF_SHIFT	0
++#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
++#define REG_RX_OPTS_MASK_SOF_SHIFT	16
++#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
++
++#define REG_OPTS_STEP			32
++#define REG_OPTS_E2E_EN			BIT(28)
++#define REG_OPTS_RAW			BIT(30)
++#define REG_OPTS_VALID			BIT(31)
+ 
+ /*
+  * three bitfields: tx, rx, rx overflow
+@@ -86,6 +155,7 @@ struct ring_desc {
+  */
+ #define REG_RING_NOTIFY_BASE	0x37800
+ #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
++#define REG_RING_NOTIFY_STEP	4
+ 
+ /*
+  * two bitfields: rx, tx
+@@ -94,8 +164,47 @@ struct ring_desc {
+  */
+ #define REG_RING_INTERRUPT_BASE	0x38200
+ #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
++#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
++#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
++							    (num_paths))
++#define RING_INT_DISABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_ENABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_DISABLE_TX(base, ring_num) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_ENABLE_TX(base, ring_num) \
++	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
++	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
++			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++
++#define REG_RING_INTERRUPT_STEP	4
++
++#define REG_INT_THROTTLING_RATE	0x38c00
++#define REG_INT_THROTTLING_RATE_STEP	4
++#define NUM_INT_VECTORS			16
++
++#define REG_INT_VEC_ALLOC_BASE	0x38c40
++#define REG_INT_VEC_ALLOC_STEP		4
++#define REG_INT_VEC_ALLOC_FIELD_BITS	4
++#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
++#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
++					 REG_INT_VEC_ALLOC_FIELD_BITS)
+ 
+ /* The last 11 bits contain the number of hops supported by the NHI port. */
+ #define REG_HOP_COUNT		0x39640
++#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
++
++#define REG_HOST_INTERFACE_RST	0x39858
++
++#define REG_DMA_MISC		0x39864
++#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
+ 
+ #endif
+-- 
+2.7.4
