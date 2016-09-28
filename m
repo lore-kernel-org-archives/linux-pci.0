@@ -1,85 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0062.outbound.protection.outlook.com ([104.47.34.62]:63143
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752398AbcI1FpL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Sep 2016 01:45:11 -0400
-From: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "holler@ahsoftware.de" <holler@ahsoftware.de>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: ATA failure regression
-Date: Wed, 28 Sep 2016 05:45:08 +0000
-Message-ID: <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
-References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
- <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 28 Sep 2016 11:54:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 0/5] PCI PM refinements
+Message-ID: <20160928165445.GB5658@localhost>
+References: <cover.1474130360.git.lukas@wunner.de>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1474130360.git.lukas@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi=20
+On Sun, Sep 18, 2016 at 05:39:20AM +0200, Lukas Wunner wrote:
+> Here's the second installment of this series, based on feedback from
+> Rafael. (Thanks!)
+> 
+> To reiterate, these refinements are meant to speed up and reduce power
+> consumption when entering and leaving system sleep and when shutting
+> down the system.  For details, please refer to the cover letter of v1:
+> http://www.spinics.net/lists/linux-pci/msg53702.html
+> 
+> As usual I've pushed the patches to GitHub in case anyone prefers
+> reviewing in a GUI:
+> https://github.com/l1k/linux/commits/pci_pm_refinements_v2
+> 
+> 
+> Changes since v1:
+> 
+> * Patch [1/5] now sports an ack by Rafael.
+> 
+> * Patch [2/5]:
+>   * In acpi_pci_get_power_state(), only check for ACPI_STATE_UNKNOWN
+>     instead of ACPI_STATE_D0 and ACPI_STATE_D3_COLD.
+>   * Move the change to pci_update_current_state() to new patch [3/5].
+> 
+> * Patch [3/5]:
+>   * Instead of solely relying on the platform firmware to report D3cold,
+>     also probe the vendor ID and assume D3cold if it can't be read.
+>     This should ensure proper detection of D3cold on pre-ACPI 4.0
+>     platforms (which will never report anything deeper than D3hot)
+>     as well as for devices with nonstandard PM mechanisms.
+>   * The two existing workarounds for D3cold are removed from
+>     pci_update_current_state(), as explained in the commit message.
+> 
+> * Patch [5/5]:
+>   * Disable runtime PM on the device to prevent it from being runtime
+>     resumed during the remainder of the shutdown process.
+> 
+> Thanks,
+> 
+> Lukas
+> 
+> 
+> Lukas Wunner (5):
+>   PCI: Afford direct-complete to devices with nonstandard PM
+>   PCI: Query platform firmware for device power state
+>   PCI: Recognize D3cold in pci_update_current_state()
+>   PCI: Avoid unnecessary resume after direct-complete
 
-Can someone please help me to debug this issue?
+I applied the patches above with Rafael's acks to pci/pm for v4.9, thanks,
+Lukas!  I particularly appreciate your changelogs -- they're very readable,
+complete, and consistent in style.
 
-Regards
-Nehal
+>   PCI: Avoid unnecessary resume on shutdown
 
------Original Message-----
-From: Shah, Nehal-bakulchandra=20
-Sent: Monday, September 26, 2016 3:45 PM
-To: 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>
-Cc: Deucher, Alexander <Alexander.Deucher@amd.com>; linux-pci@vger.kernel.o=
-rg; holler@ahsoftware.de; tj@kernel.org; linux-ide@vger.kernel.org; linux-k=
-ernel@vger.kernel.org
-Subject: RE: ATA failure regression
+Sounds like there's still a little discussion on this, so I haven't applied
+this one yet.
 
-Hi Bharat
-
-Thanks for the reply. I have observed following thing
-
-If IOMMU is enabled in BIOS and I use following option FCH SATA Debug Optio=
-ns --> Unused SATA Port Auto Shut Down Disabled. Issue is not happening. I =
-have attached dmesg and lspci output with this option
-
-Also I have attached lspci log with IOMMU disabled.
-
-When issue is happening I am not able to take lspci logs as it stops in ini=
-tramfs itself. I will try to get.
-
-
-Thanks
-
-Nehal
------Original Message-----
-From: Bharat Kumar Gogada [mailto:bharat.kumar.gogada@xilinx.com]
-Sent: Friday, September 23, 2016 3:40 PM
-To: Shah, Nehal-bakulchandra <Nehal-bakulchandra.Shah@amd.com>; linux-kerne=
-l@vger.kernel.org; linux-pci@vger.kernel.org; holler@ahsoftware.de; tj@kern=
-el.org; linux-ide@vger.kernel.org
-Cc: Deucher, Alexander <Alexander.Deucher@amd.com>
-Subject: RE: ATA failure regression
-
-> Hi All,
->=20
-> Resending this wider audience
->=20
-> Currently I am working on AMD future platform.  I am hitting the same=20
-> bug of ATA Failure Regression reported in past.
-> (https://patchwork.kernel.org/patch/6875661/) or=20
-> http://lkml.iu.edu/hypermail/linux/kernel/1507.3/01961.html
->=20
-> I am newbie to this and because of this Ubuntu  16.04 is not booting.=20
-> If disable IOMMU and MSI obviously it works but that is not solution.=20
-> Even when I bisected it boiled to same place which was mentioned in past =
-discussion.
->=20
-So here when you are disabling MSI, it is working with legacy interrupts or=
- MSI-X.
-Can you post the end sata device lscpi -xxx -vvv content.=20
-
-Bharat
+>  drivers/pci/pci-acpi.c   | 22 ++++++++++++++++++++
+>  drivers/pci/pci-driver.c | 24 ++++++++++++++++++++--
+>  drivers/pci/pci.c        | 52 ++++++++++++++++++++++++++++++++----------------
+>  drivers/pci/pci.h        |  3 +++
+>  4 files changed, 82 insertions(+), 19 deletions(-)
+> 
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
