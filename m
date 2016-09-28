@@ -1,80 +1,97 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Punit Agrawal <punit.agrawal@arm.com>,
-        Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2] drivers: acpi: fix GIC irq model default PCI IRQ polarity
-Date: Tue, 13 Sep 2016 00:16:45 +0200
-Message-ID: <1512953.mRIMTKV6b1@vostro.rjw.lan>
-In-Reply-To: <1473180663-20590-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1473180663-20590-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:17211 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932916AbcI1OsA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Sep 2016 10:48:00 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v8 6/8] thunderbolt: Kconfig for Thunderbolt Networking
+Date: Wed, 28 Sep 2016 17:44:28 +0300
+Message-Id: <1475073870-2126-7-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, September 06, 2016 05:51:03 PM Lorenzo Pieralisi wrote:
-> On ACPI ARM based systems the GIC interrupt controller
-> and corresponding interrupt model permit only the high
-> polarity for level interrupts.
-> 
-> ACPI firmware describes PCI legacy IRQs through entries
-> in the _PRT objects. Entries in the _PRT can be of two types:
-> 
-> - Static: not configurable, trigger/polarity default to level-low,
->   _PRT entry defines the global GSI interrupt number
-> - Configurable: _PRT interrupt entry contains a reference to the
->   corresponding PCI interrupt link device (that in turn provides the
->   interrupt descriptor through its _CRS/_PRS methods)
-> 
-> Configurable IRQ entries are not currently allowed by the ACPI
-> specification on ARM since they can only be used for interrupt pins that
-> are routable, as per ACPI specifications (version 6.1, 6.2.13):
-> 
-> "[...] There are two ways that _PRT can be used. Typically, the
-> interrupt input that a given PCI interrupt is on is configurable. For
-> example, a given PCI interrupt might be configured for either IRQ 10 or
-> 11 on an 8259 interrupt controller. In this model, each interrupt is
-> represented in the ACPI namespace as a PCI Interrupt Link Device. [...]"
-> 
-> ARM platforms GIC configurations do not allow dynamic IRQ routing,
-> since routing is statically laid out at synthesis time; therefore PCI
-> interrupt links cannot be used for PCI legacy IRQ descriptions in the
-> _PRT on ARM systems.
-> 
-> On the other hand, current core ACPI code handling PCI legacy IRQs
-> consider IRQ trigger/polarity for static _PRT entries as level-low.
-> 
-> On ARM systems with a GIC interrupt controller and corresponding
-> ACPI interrupt model this does not work in that GIC interrupt
-> controller is only capable of handling level interrupts whose
-> polarity is high (for PCI legacy IRQs - that are level-low by
-> specification - this means that the legacy IRQs are inverted before
-> reaching the interrupt controller pin), resulting in IRQ allocation
-> failures such as:
-> 
-> genirq: Setting trigger mode 8 for irq 18 failed (gic_set_type+0x0/0x48)
-> 
-> Change the default polarity for PCI legacy IRQs to high on systems
-> booting wth ACPI on platforms with a GIC interrupt controller model,
-> fixing the discrepancy between specification and HW behaviour.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Cc: Punit Agrawal <punit.agrawal@arm.com>
-> Cc: Duc Dang <dhdang@apm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Sinan Kaya <okaya@codeaurora.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
+Update to the Kconfig Thunderbolt description to add
+Thunderbolt networking as an option.
+The menu item "Thunderbolt support" now offers:
+"Apple Hardware Support" (existing)
+        and/or
+"Thunderbolt Networking" (new)
 
-Applied.
+You can choose the driver for your platform or build both drivers -
+each driver will detect if it can run on the specific platform.
+If the Thunderbolt Networking option is chosen, Thunderbolt Networking
+will be enabled between Linux non-Apple systems, macOS and
+Windows based systems.
+Thunderbolt Networking will not affect any other Thunderbolt feature that
+was previous available to Linux users on either Apple or
+non-Apple platforms.
 
-Thanks,
-Rafael
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  3 ++-
+ 2 files changed, 25 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..376e5bb 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,32 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt Networking"
++	help
++	  This driver is required if you want Thunderbolt Networking on
++	  non-Apple hardware.
++	  It creates a virtual Ethernet device that enables computer to
++	  computer communication over a Thunderbolt cable.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..b6aa6a3 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,4 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
++obj-${CONFIG_THUNDERBOLT_ICM} += icm/
+-- 
+2.7.4
 
