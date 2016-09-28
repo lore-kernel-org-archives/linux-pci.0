@@ -1,158 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 04/15] drivers: acpi: iort: add support for IOMMU
- fwnode registration
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1471274620-20754-5-git-send-email-lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <408a90be-df15-b4fb-169d-81c1743c6c16@linaro.org>
-Date: Mon, 5 Sep 2016 21:00:09 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52398 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751962AbcI1Wmy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Sep 2016 18:42:54 -0400
+Date: Wed, 28 Sep 2016 17:42:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au,
+        zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to
+ reassign alignment
+Message-ID: <20160928224246.GC20897@localhost>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1471274620-20754-5-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
-> The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
-> components that allow creating the kernel data structures required to
-> probe and initialize the IOMMU devices.
->
-> This patch provides support in the IORT kernel code to register IOMMU
-> components and their respective fwnode.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+On Tue, Sep 13, 2016 at 05:00:33PM +0800, Yongji Xie wrote:
+> When using resource_alignment kernel parameter, the current
+> implement reassigns the alignment by changing resources' size
+> which can potentially break some drivers. For example, the driver
+> uses the size to locate some register whose length is related
+> to the size.
+> 
+> This patch adds a new option "noresize" for the parameter to
+> solve this problem.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 > ---
->  drivers/acpi/arm64/iort.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iort.h      |  8 ++++++
->  2 files changed, 73 insertions(+)
->
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index cad7d1d..01a5258 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -20,7 +20,9 @@
->
->  #include <linux/iort.h>
->  #include <linux/kernel.h>
-> +#include <linux/list.h>
->  #include <linux/pci.h>
-> +#include <linux/slab.h>
->
->  struct iort_its_msi_chip {
->  	struct list_head	list;
-> @@ -28,6 +30,69 @@ struct iort_its_msi_chip {
->  	u32			translation_id;
->  };
->
-> +struct iort_fwnode {
-> +	struct list_head list;
-> +	struct acpi_iort_node *iort_node;
-> +	struct fwnode_handle *fwnode;
-> +};
-> +static LIST_HEAD(iort_fwnode_list);
-> +static DEFINE_SPINLOCK(iort_fwnode_lock);
+>  Documentation/kernel-parameters.txt |    9 ++++++---
+>  drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
+>  2 files changed, 33 insertions(+), 13 deletions(-)
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index a4f4d69..d6a340d 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				window. The default value is 64 megabytes.
+>  		resource_alignment=
+>  				Format:
+> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> -				[<order of align>@]pci:<vendor>:<device>\
+> -						[:<subvendor>:<subdevice>][; ...]
+> +				[<order of align>@][noresize@][<domain>:]
+> +				<bus>:<slot>.<func>[; ...]
+> +				[<order of align>@][noresize@]pci:<vendor>:<device>
+> +				[:<subvendor>:<subdevice>][; ...]
+>  				Specifies alignment and device to reassign
+>  				aligned memory resources.
+>  				If <order of align> is not specified,
+> @@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				instances of a device, the PCI vendor,
+>  				device, subvendor, and subdevice may be
+>  				specified, e.g., 4096@pci:8086:9c22:103c:198f
+> +				noresize: Don't change the resources' sizes when
+> +				reassigning alignment.
+>  		ecrc=		Enable/disable PCIe ECRC (transaction layer
+>  				end-to-end CRC checking).
+>  				bios: Use BIOS/firmware settings. This is the
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b8357d7..37f8062 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+>  /**
+>   * pci_specified_resource_alignment - get resource alignment specified by user.
+>   * @dev: the PCI device to get
+> + * @resize: whether or not to change resources' size when reassigning alignment
+>   *
+>   * RETURNS: Resource alignment if it is specified.
+>   *          Zero if it is not specified.
+>   */
+> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+> +		bool *resize)
+>  {
+>  	int seg, bus, slot, func, align_order, count;
+>  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+> @@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  		} else {
+>  			align_order = -1;
+>  		}
 > +
-> +/**
-> + * iort_set_fwnode() - Create iort_fwnode and use it to register
-> + *		       iommu data in the iort_fwnode_list
-> + *
-> + * @node: IORT table node associated with the IOMMU
-> + * @fwnode: fwnode associated with the IORT node
-> + *
-> + * Returns: 0 on success
-> + *          <0 on failure
-> + */
-> +int iort_set_fwnode(struct acpi_iort_node *iort_node,
-> +		    struct fwnode_handle *fwnode)
-> +{
-> +	struct iort_fwnode *np;
+> +		if (!strncmp(p, "noresize@", 9)) {
+> +			*resize = false;
+> +			p += 9;
+> +		} else
+> +			*resize = true;
 > +
-> +	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
-> +
-> +	if (WARN_ON(!np))
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&np->list);
-> +	np->iort_node = iort_node;
-> +	np->fwnode = fwnode;
-> +
-> +	spin_lock(&iort_fwnode_lock);
-> +	list_add_tail(&np->list, &iort_fwnode_list);
-> +	spin_unlock(&iort_fwnode_lock);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
-> + *
-> + * @node: IORT table node to be looked-up
-> + *
-> + * Returns: fwnode_handle pointer on success, NULL on failure
-> +*/
-> +struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
-> +{
-> +	struct iort_fwnode *curr;
-> +	struct fwnode_handle *fwnode = NULL;
-> +
-> +	spin_lock(&iort_fwnode_lock);
-> +	list_for_each_entry(curr, &iort_fwnode_list, list) {
-> +		if (curr->iort_node == node) {
-> +			fwnode = curr->fwnode;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&iort_fwnode_lock);
-> +
-> +	return fwnode;
-> +}
-> +
->  typedef acpi_status (*iort_find_node_callback)
->  	(struct acpi_iort_node *node, void *context);
->
-> diff --git a/include/linux/iort.h b/include/linux/iort.h
-> index 9bb30c5..666a3de 100644
-> --- a/include/linux/iort.h
-> +++ b/include/linux/iort.h
-> @@ -30,12 +30,20 @@ struct fwnode_handle *iort_find_domain_token(int trans_id);
->  void iort_table_detect(void);
->  u32 iort_msi_map_rid(struct device *dev, u32 req_id);
->  struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
-> +int iort_set_fwnode(struct acpi_iort_node *iort_node,
-> +		    struct fwnode_handle *fwnode);
-> +struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node);
->  #else
->  static inline void iort_table_detect(void) { }
->  static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
->  { return req_id; }
->  static inline struct irq_domain *
->  iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
-> +static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
-> +				  struct fwnode_handle *fwnode)
-> +{ return -ENODEV; }
-> +static inline struct fwnode_handle *
-> +iort_get_fwnode(struct acpi_iort_node *node) { return NULL; }
->  #endif
->
->  #define IORT_ACPI_DECLARE(name, table_id, fn)		\
+>  		if (strncmp(p, "pci:", 4) == 0) {
+>  			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+>  			p += 4;
+> @@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  {
+>  	int i;
+>  	struct resource *r;
+> +	bool resize = true;
+>  	resource_size_t align, size;
+>  	u16 command;
+>  
+> @@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		return;
+>  
+>  	/* check if specified PCI is target device to reassign */
+> -	align = pci_specified_resource_alignment(dev);
+> +	align = pci_specified_resource_alignment(dev, &resize);
+>  	if (!align)
+>  		return;
+>  
+> @@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		}
+>  
+>  		size = resource_size(r);
+> -		if (size < align) {
+> -			size = align;
+> -			dev_info(&dev->dev,
+> -				"Rounding up size of resource #%d to %#llx.\n",
+> -				i, (unsigned long long)size);
+> +		if (resize) {
+> +			if (size < align) {
+> +				size = align;
+> +				dev_info(&dev->dev,
+> +					"Rounding up size of resource #%d to %#llx.\n",
+> +					i, (unsigned long long)size);
+> +			}
+> +			r->flags |= IORESOURCE_UNSET;
+> +			r->end = size - 1;
+> +			r->start = 0;
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Why do you want to keep this code that changes the size of the resource?
+Can't we just *always* use IORESOURCE_STARTALIGN as below?  It seems like
+that would potentially fix bugs, as you mention.
 
-Thanks
-Hanjun
+I think it'd be better if we didn't change the size, even if the user
+didn't specify "noresize@".  We wouldn't even need the "noresize@" option
+then.
+
+Or is there some reason to keep the resize?  If it's just a question of
+being afraid to change the existing behavior because of the risk, I'm
+willing to take that risk.
+
+> +		} else {
+> +			r->flags &= ~IORESOURCE_SIZEALIGN;
+> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
+> +			r->start = max(align, size);
+> +			r->end = r->start + size - 1;
+>  		}
+> -		r->flags |= IORESOURCE_UNSET;
+> -		r->end = size - 1;
+> -		r->start = 0;
+>  	}
+>  	/* Need to disable bridge's resource window,
+>  	 * to enable the kernel to reassign new resource
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
