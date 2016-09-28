@@ -1,116 +1,135 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 12/14] drivers: acpi: iort: replace rid map type with
- type mask
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-13-lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <1dee1475-79e1-257a-1ebd-d1a9ac033ca4@linaro.org>
-Date: Tue, 13 Sep 2016 16:26:12 +0800
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+To: Ondrej Zary <linux@rainbow-software.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201609281032.35190.linux@rainbow-software.org>
+ <b404278b-d8e1-2b16-e044-c30d27ba8c25@codeaurora.org>
+ <201609281902.31500.linux@rainbow-software.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <76303bb8-7ae2-9a6b-8e5d-a144ae7c6009@codeaurora.org>
+Date: Wed, 28 Sep 2016 14:22:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160909142343.13314-13-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <201609281902.31500.linux@rainbow-software.org>
+Content-Type: multipart/mixed;
+ boundary="------------9D3701B128FA71C9F7B9780B"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+This is a multi-part message in MIME format.
+--------------9D3701B128FA71C9F7B9780B
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
-On 2016/9/9 22:23, Lorenzo Pieralisi wrote:
-> IORT tables provide data that allow the kernel to carry out
-> device ID mappings between endpoints and system components
-> (eg interrupt controllers, IOMMUs). When the mapping for a
-> given device ID is carried out, the translation mechanism
-> is done on a per-subsystem basis rather than a component
-> subtype (ie the IOMMU kernel layer will look for mappings
-> from a device to all IORT node types corresponding to IOMMU
-> components), therefore the corresponding mapping API should
-> work on a range (ie mask) of IORT node types corresponding
-> to a common set of components (eg IOMMUs) rather than a
-> specific node type.
->
-> Upgrade the IORT iort_node_map_rid() API to work with a
-> type mask instead of a single node type so that it can
-> be used for mappings that span multiple components types
-> (ie IOMMUs).
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/arm64/iort.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index a12dda9..36ea93e 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -25,6 +25,9 @@
->  #include <linux/platform_device.h>
->  #include <linux/slab.h>
->
-> +#define IORT_TYPE_MASK(type)	(1 << (type))
-> +#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-> +
->  struct iort_its_msi_chip {
->  	struct list_head	list;
->  	struct fwnode_handle	*fw_node;
-> @@ -283,7 +286,7 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
->
->  static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
->  						u32 rid_in, u32 *rid_out,
-> -						u8 type)
-> +						u8 type_mask)
->  {
->  	u32 rid = rid_in;
->
-> @@ -292,7 +295,7 @@ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
->  		struct acpi_iort_id_mapping *map;
->  		int i;
->
-> -		if (node->type == type) {
-> +		if (IORT_TYPE_MASK(node->type) & type_mask) {
->  			if (rid_out)
->  				*rid_out = rid;
->  			return node;
-> @@ -365,7 +368,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
->  	if (!node)
->  		return req_id;
->
-> -	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-> +	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
->  	return dev_id;
->  }
+On 9/28/2016 1:02 PM, Ondrej Zary wrote:
+>> Thanks, It sounds like you have more than one machine with similar
+>> > problems. Can you collect the log from the other machines with 4.8-rc8?
+>> >
+>> > and also a boot log with 4.6 kernel where things are working?
+> The attached logs are from another machine:
+> 
+> dmesg-bad-debug.txt: 4.8-rc8 with your debug patch - bad
+> 
+> dmesg-reverted.txt: 4.8-rc8 with patches (as per Rafael's suggestion) 
+> reverted - good
+> 
+> dmesg-3.6.txt: 4.6 (Debian kernel) - good
 
-I think you forgot to update another function which is ok in your v4
-patch set:
+I think I see a race condition for the SCI interrupt. I need another dump from
+4.8-rc8 with the attached patch to confirm. Let's remove the previous one and
+apply this one.
 
-@@ -411,7 +414,7 @@ iort_dev_find_its_id(struct device *dev, u32 req_id, 
-unsigned int idx,
-  		return -ENXIO;
-  	}
 
--	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
-  	if (!node) {
-  		dev_err(dev, "can't find related ITS node\n");
-  		return -ENXIO;
 
-Others are look good to me.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Thanks
-Hanjun
+--------------9D3701B128FA71C9F7B9780B
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-acpi-pci_link-debug-aids-v2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-acpi-pci_link-debug-aids-v2.patch"
+
+>From 3545aba9f138bd233264c151d8c32cd417bfb09f Mon Sep 17 00:00:00 2001
+From: Sinan Kaya <okaya@codeaurora.org>
+Date: Tue, 27 Sep 2016 18:35:15 -0400
+Subject: [PATCH] acpi: pci_link: debug aids v2
+
+Change-Id: I6c459cb5888d95f5f1ef7c0e2f138fb9c65f40e5
+---
+ drivers/acpi/pci_link.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index c983bf7..92a6506 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -508,6 +508,8 @@ static int acpi_irq_get_penalty(int irq)
+ 			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+ 		else
+ 			penalty += PIRQ_PENALTY_PCI_USING;
++
++		pr_info("%s:%d adding SCI penalty: 0x%x \n", __func__, __LINE__, penalty);
+ 	}
+ 
+ 	if (irq < ACPI_MAX_ISA_IRQS)
+@@ -592,6 +594,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 	else
+ 		irq = link->irq.possible[link->irq.possible_count - 1];
+ 
++	pr_info("irq : %d\n", irq);
++	pr_info("acpi_irq_balance : %d\n", acpi_irq_balance);
++	pr_info("link->irq.active : %d\n", link->irq.active);
++	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
+ 	if (acpi_irq_balance || !link->irq.active) {
+ 		/*
+ 		 * Select the best IRQ.  This is done in reverse to promote
+@@ -599,11 +605,22 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 		 */
+ 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+ 			if (acpi_irq_get_penalty(irq) >
+-			    acpi_irq_get_penalty(link->irq.possible[i]))
++			    acpi_irq_get_penalty(link->irq.possible[i])) {
++				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.possible[i], acpi_irq_get_penalty(link->irq.possible[i]));
++				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", irq, acpi_irq_get_penalty(irq));
+ 				irq = link->irq.possible[i];
++			    }
+ 		}
+ 	}
+ 	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
++		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
++			pr_info("penalty[%d] = 0x%x\n",
++					link->irq.possible[i],
++			    acpi_irq_get_penalty(link->irq.possible[i]));
++		}
++		pr_info("irq : %d\n", irq);
++		pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
++
+ 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+ 			    "Try pci=noacpi or acpi=off\n",
+ 			    acpi_device_name(link->device),
+@@ -870,9 +887,12 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+  */
+ void acpi_penalize_isa_irq(int irq, int active)
+ {
+-	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
++	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty))) {
+ 		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+ 		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
++		pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", __func__,
++				__LINE__, irq,  acpi_irq_get_penalty(irq), active);
++	}
+ }
+ 
+ bool acpi_isa_irq_available(int irq)
+-- 
+1.9.1
+
+
+--------------9D3701B128FA71C9F7B9780B--
