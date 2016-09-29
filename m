@@ -1,45 +1,30 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic
- MCFG driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
- <1470661541-26270-3-git-send-email-tn@semihalf.com>
- <20160905022247.GC30488@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, Lorenzo.Pieralisi@arm.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
- dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <6ed71efa-e1fc-32bc-925d-454f93711e37@semihalf.com>
-Date: Tue, 6 Sep 2016 20:04:05 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:38762 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751710AbcI2Ss2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Sep 2016 14:48:28 -0400
+Date: Thu, 29 Sep 2016 20:48:24 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
+        brking@us.ibm.com, haver@linux.vnet.ibm.com,
+        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com,
+        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
+Message-ID: <20160929184824.GA4380@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-6-git-send-email-hch@lst.de> <87twcyk1cd.fsf@linux.vnet.ibm.com> <20160929183757.GA4106@lst.de> <87lgyak0ja.fsf@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20160905022247.GC30488@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87lgyak0ja.fsf@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05.09.2016 04:22, Bjorn Helgaas wrote:
-> On Mon, Aug 08, 2016 at 03:05:38PM +0200, Tomasz Nowicki wrote:
->> pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
->> of arch/arm64/ directory. In preparation for adding MCFG quirk handling
->> extend pci_acpi_setup_ecam_mapping() functionality to accept custom
->> PCI config accessors (function's argument).
->>
->> For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
->
-> I'm not sure we gain much by moving pci_acpi_setup_ecam_mapping() from
-> arm64 code to generic code, since nobody else uses it yet.  But if you
-> do want to move it, can you do the move (with no other change at all)
-> in one patch, and add the new "ops" argument in a second patch?  I
-> just don't want the "ops" change to get lost in the noise of the move.
+On Thu, Sep 29, 2016 at 03:45:29PM -0300, Gabriel Krisman Bertazi wrote:
+> I'm stepping up to assist with the genwqe_card driver just now, since we
+> (ibm) missed some of the last patches that went in.  I'll add myself to
+> maintainers file.
 
-Yes, will do.
-
-Tomasz
+Can your forward it to Greg together with whatever other changes are
+pending for the driver?
