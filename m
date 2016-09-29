@@ -1,90 +1,146 @@
-Return-Path: <marc.zyngier@arm.com>
-Return-Path: <marc.zyngier@arm.com>
-Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
- support
-To: Tomasz Nowicki <tn@semihalf.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, rjw@rjwysocki.net
-References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
- <1473249412-20226-1-git-send-email-tn@semihalf.com>
- <20160909092012.GC19669@red-moon>
- <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
-Cc: tglx@linutronix.de, jason@lakedaemon.net, helgaas@kernel.org,
- rafael@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com,
- hanjun.guo@linaro.org, shijie.huang@arm.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
- okaya@codeaurora.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <57D6A7DD.1060305@arm.com>
-Date: Mon, 12 Sep 2016 14:04:29 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+To: Ondrej Zary <linux@rainbow-software.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201609291549.07784.linux@rainbow-software.org>
+ <e90fb01a-77e3-a094-9631-0b703972c750@codeaurora.org>
+ <201609291848.33803.linux@rainbow-software.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <701eeb2f-bfc2-d541-4f6f-34be200ea44a@codeaurora.org>
+Date: Thu, 29 Sep 2016 13:18:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <201609291848.33803.linux@rainbow-software.org>
+Content-Type: multipart/mixed;
+ boundary="------------EDEE035209F4AB984312D6F5"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/09/16 13:37, Tomasz Nowicki wrote:
-> Hi Rafael,
+This is a multi-part message in MIME format.
+--------------EDEE035209F4AB984312D6F5
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
+
+On 9/29/2016 12:48 PM, Ondrej Zary wrote:
+>> Let's see the new set. If this doesn't work, I'll have to provide you with
+>> > another patch to get the penalty counts again. The original debug aids
+>> > patch may not apply after these.
+> It boots but the IRQ problem still remains the same. See the attached logs:
+> dmesg-bad.txt: without the irq -> link->irq.active change
+> dmesg-bad2.txt: with the irq -> link->irq.active change
+> dmesg-bad2-debug.txt: as above with modified debug patch
 > 
-> On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
->> Hi Rafael,
->>
->> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
->>> IORT shows representation of IO topology for ARM based systems.
->>> It describes how various components are connected together on
->>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>>
->>> Initial support allows to detect IORT table presence and save its
->>> root pointer obtained through acpi_get_table(). The pointer validity
->>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->>> is not set while using IORT nodes we would dereference unmapped pointers.
->>>
->>> For the aforementioned reason call iort_table_detect() from acpi_init()
->>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>>
->>> Add generic helpers which are helpful for scanning and retrieving
->>> information from IORT table content. List of the most important helpers:
->>> - iort_find_dev_node() finds IORT node for a given device
->>> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>>   final translation
->>>
->>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
->>> ARM64 specific nature. The code there is considered only for ARM64.
->>> The long term plan is to keep all ARM64 specific tables support
->>> in this place e.g. GTDT table.
->>>
->>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> ---
->>
->> Apart from the minor commit logs oversights we consider these two
->> patches ready to go, please let us know if there is something you want
->> changed since we are at risk of missing yet another merge window.
->>
->> It is ARM64 specific code, we created and moved the code to its
->> ARM64 specific directory and we are happy to maintain it as such,
->> we need your ACK to get this done so if there is something you
->> want changed please let us know otherwise I would ask your ACK
->> on these two patches to give Marc a go-ahead for -next and
->> hopefully 4.9.
+> @@ -876,8 +893,11 @@ void acpi_penalize_isa_irq(int irq, int active)
+>  {
+>         int penalty = active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
 > 
-> Kindly reminder. Is there anything we need to do more about these 
-> patches? Please let us know. Note this is the major thing for incoming 
-> IORT more advance feature.
+> -       if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
+> +       if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty))) {
+>                 acpi_isa_irq_penalty[irq] += penalty;
+> +               pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", 
+> __func__,
+> +                               __LINE__, irq,  acpi_irq_get_penalty(irq), 
+> active);
+> +       }
+>  }
+> 
 
-May I convey a slight sense of urgency here? I'd like to cut the irqchip
-branch for 4.9 pretty soon (this week), in order to let it sink in -next
-for a few days at the very least.
+The previous two patches were in the right direction.
 
-It'd be a bit disappointing if these patches missed the boat this time
-again.
+Can we also get the same output from 4.6 kernel with the attached patch for the
+same machine you sent these?
 
-Thanks,
+Something about SCI still doesn't feel right.
 
-	M.
+The IRQ assignment fails if the penalty is greater than PIRQ_PENALTY_ISA_ALWAYS.
+This will happen if BIOS tells us to use an IRQ and same IRQ is in use by the 
+SCI.
+
+
 -- 
-Jazz is not dead. It just smells funny...
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+--------------EDEE035209F4AB984312D6F5
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-ACPI-PCI-IRQ-debug-aids-for-4.6.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-ACPI-PCI-IRQ-debug-aids-for-4.6.patch"
+
+>From 609da980e4af9757b33a9d4f0771a08f1a1e17fe Mon Sep 17 00:00:00 2001
+From: Sinan Kaya <okaya@codeaurora.org>
+Date: Thu, 29 Sep 2016 13:16:49 -0400
+Subject: [PATCH] ACPI, PCI, IRQ: debug aids for 4.6
+
+Change-Id: I9c6170034ec30f04372315de3076f610f7e87668
+---
+ drivers/acpi/pci_link.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index ededa90..0bd51f0 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -541,6 +541,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 	else
+ 		irq = link->irq.possible[link->irq.possible_count - 1];
+ 
++	pr_info("irq : %d\n", irq);
++	pr_info("acpi_irq_balance : %d\n", acpi_irq_balance);
++	pr_info("link->irq.active : %d\n", link->irq.active);
++	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
+ 	if (acpi_irq_balance || !link->irq.active) {
+ 		/*
+ 		 * Select the best IRQ.  This is done in reverse to promote
+@@ -548,10 +552,21 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 		 */
+ 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+ 			if (acpi_irq_penalty[irq] >
+-			    acpi_irq_penalty[link->irq.possible[i]])
++			    acpi_irq_penalty[link->irq.possible[i]]) {
++				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.possible[i], acpi_irq_penalty[link->irq.possible[i]]);
++				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", irq, acpi_irq_penalty[irq]);
+ 				irq = link->irq.possible[i];
++			}
+ 		}
+ 	}
++	for (i = (link->irq.possible_count - 1); i >= 0; i--) {
++		pr_info("penalty[%d] = 0x%x\n",
++				link->irq.possible[i],
++		    acpi_irq_penalty[link->irq.possible[i]]);
++	}
++	pr_info("irq : %d\n", irq);
++	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
++
+ 	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
+ 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+ 			    "Try pci=noacpi or acpi=off\n",
+@@ -569,6 +584,7 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 		return -ENODEV;
+ 	} else {
+ 		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
++		pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.active, acpi_irq_penalty[link->irq.active]);
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
+@@ -824,6 +840,9 @@ void acpi_penalize_isa_irq(int irq, int active)
+ 			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+ 		else
+ 			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
++
++		pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", __func__,
++				__LINE__, irq,  acpi_irq_penalty[irq], active);
+ 	}
+ }
+ 
+-- 
+1.9.1
+
+
+--------------EDEE035209F4AB984312D6F5--
