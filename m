@@ -1,60 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26323 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965166AbcIPUHt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:07:49 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>,
-        Grant Likely <grant.likely@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v14 12/17] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Fri, 16 Sep 2016 13:02:02 -0700
-Message-Id: <20160916200207.21439-13-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 01/14] drivers: iommu: add FWNODE_IOMMU fwnode type
+Date: Thu, 29 Sep 2016 22:59:40 +0200
+Message-ID: <3178073.UTpgCTN6if@vostro.rjw.lan>
+In-Reply-To: <20160929141520.GA29244@red-moon>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com> <20160909142343.13314-2-lorenzo.pieralisi@arm.com> <20160929141520.GA29244@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+On Thursday, September 29, 2016 03:15:20 PM Lorenzo Pieralisi wrote:
+> Hi Rafael,
+> 
+> On Fri, Sep 09, 2016 at 03:23:30PM +0100, Lorenzo Pieralisi wrote:
+> > On systems booting with a device tree, every struct device is
+> > associated with a struct device_node, that represents its DT
+> > representation. The device node can be used in generic kernel
+> > contexts (eg IRQ translation, IOMMU streamid mapping), to
+> > retrieve the properties associated with the device and carry
+> > out kernel operation accordingly. Owing to the 1:1 relationship
+> > between the device and its device_node, the device_node can also
+> > be used as a look-up token for the device (eg looking up a device
+> > through its device_node), to retrieve the device in kernel paths
+> > where the device_node is available.
+> > 
+> > On systems booting with ACPI, the same abstraction provided by
+> > the device_node is required to provide look-up functionality.
+> > 
+> > Therefore, mirroring the approach implemented in the IRQ domain
+> > kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
+> > 
+> > This patch also implements a glue kernel layer that allows to
+> > allocate/free FWNODE_IOMMU fwnode_handle structures and associate
+> > them with IOMMU devices.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> > Cc: Joerg Roedel <joro@8bytes.org>
+> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > ---
+> >  include/linux/fwnode.h |  1 +
+> >  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
+> >  2 files changed, 26 insertions(+)
+> > 
+> > diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+> > index 8516717..6e10050 100644
+> > --- a/include/linux/fwnode.h
+> > +++ b/include/linux/fwnode.h
+> > @@ -19,6 +19,7 @@ enum fwnode_type {
+> >  	FWNODE_ACPI_DATA,
+> >  	FWNODE_PDATA,
+> >  	FWNODE_IRQCHIP,
+> > +	FWNODE_IOMMU,
+> 
+> This patch provides groundwork for this series and it is key for
+> the rest of it, basically the point here is that we need a fwnode
+> to differentiate platform devices created out of static ACPI tables
+> entries (ie IORT), that represent IOMMU components.
+> 
+> The corresponding device is not an ACPI device (I could fabricate one as
+> it is done for other static tables entries eg FADT power button, but I
+> do not necessarily see the reason for doing that given that all we need
+> the fwnode for is a token identifier), so FWNODE_ACPI does not apply
+> here.
+> 
+> Please let me know if it is reasonable how I sorted this out (it
+> is basically identical to IRQCHIP, just another enum entry), the
+> remainder of the code depends on this.
 
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device
-resource flags parsing.
+I'm not familiar with the use case, so I don't see anything unreasonable
+in it.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+If you're asking about whether or not I mind adding more fwnode types in
+principle, then no, I don't. :-) 
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903..d1bb76c 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -131,9 +131,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
- 		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-2.8.3
+Thanks,
+Rafael
 
