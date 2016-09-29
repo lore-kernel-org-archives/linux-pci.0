@@ -1,178 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53688 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751497AbcIZXnV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 19:43:21 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8QNgiv4054011
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 19:43:20 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25q8tnu6me-1
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35537 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S934896AbcI2Xxv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 19:53:51 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8TNqoIx125271
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:50 -0400
+Received: from e23smtp06.au.ibm.com (e23smtp06.au.ibm.com [202.81.31.148])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 25s8suh4us-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2016 19:43:20 -0400
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:50 -0400
 Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Tue, 27 Sep 2016 09:43:17 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2527C2BB0061
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:09 +1000 (EST)
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8QNh9ic5112066
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:09 +1000
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8QNh8ql016180
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2016 09:43:08 +1000
-Date: Tue, 27 Sep 2016 09:43:36 +1000
+        Fri, 30 Sep 2016 09:53:47 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id E960D357805A
+        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8TNriN44915678
+        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+        by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8TNrhbR026932
+        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bhelgaas@google.com, mpe@ellerman.id.au, clsoto@us.ibm.com
-Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
- pci_update_resource()
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Message-Id: <20160926234336.GA9190@gwshan>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+        benh@au1.ibm.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        clsoto@us.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v2 1/2] pci: Call pcibios_sriov_enable() before IOV BARs are enabled
+Date: Fri, 30 Sep 2016 09:47:49 +1000
+Message-Id: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
->In pci_update_resource(), the PCI device's memory decoding (0x2 in
->PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
->PCI device's memory space wasn't asked to be always on by @pdev->
->mmio_always_on. The PF's memory decoding might be disabled when
->updating its IOV BARs in the following path. Actually, the PF's
->memory decoding shouldn't be disabled in this scenario as the PF
->has been started to provide services:
->
->   sriov_numvfs_store
->   pdev->driver->sriov_configure
->   mlx5_core_sriov_configure
->   pci_enable_sriov
->   sriov_enable
->   pcibios_sriov_enable
->   pnv_pci_sriov_enable
->   pnv_pci_vf_resource_shift
->   pci_update_resource
->
->This doesn't change the PF's memory decoding in the path by introducing
->additional parameter (@mmio_force_on) to pci_update_resource().
->
->Reported-by: Carol Soto <clsoto@us.ibm.com>
->Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->Tested-by: Carol Soto <clsoto@us.ibm.com>
->---
+In current implementation, pcibios_sriov_enable() is used by PPC
+PowerNV platform only. In PowerNV specific pcibios_sriov_enable(),
+PF's IOV BARs might be updated (shifted) by pci_update_resource().
+It means the IOV BARs aren't ready for decoding incoming memory
+address until pcibios_sriov_enable() returns.
 
-Bjorn, could you please have a quick review on this when you have available
-time? We're running into SRIOV issue that is fixed by this patch.
+This calls pcibios_sriov_enable() earlier before the IOV BARs are
+enabled. As the result, the IOV BARs have been configured correctly
+when they are enabled.
 
-Thanks,
-Gavin 
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Tested-by: Carol Soto <clsoto@us.ibm.com>
+---
+ drivers/pci/iov.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-> arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
-> drivers/pci/iov.c                         | 2 +-
-> drivers/pci/pci.c                         | 2 +-
-> drivers/pci/setup-res.c                   | 9 +++++----
-> include/linux/pci.h                       | 2 +-
-> 5 files changed, 9 insertions(+), 8 deletions(-)
->
->diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->index bc0c91e..2d6a2b7 100644
->--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->@@ -999,7 +999,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
-> 		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
-> 			 i, &res2, res, (offset > 0) ? "En" : "Dis",
-> 			 num_vfs, offset);
->-		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
->+		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
-> 	}
-> 	return 0;
-> }
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index 2194b44..117aae6 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
-> 		return;
->
-> 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
->-		pci_update_resource(dev, i);
->+		pci_update_resource(dev, i, false);
->
-> 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
-> 	pci_iov_set_numvfs(dev, iov->num_VFs);
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index aab9d51..87a33c0 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
-> 		return;
->
-> 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
->-		pci_update_resource(dev, i);
->+		pci_update_resource(dev, i, false);
-> }
->
-> static const struct pci_platform_pm_ops *pci_platform_pm;
->diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->index 66c4d8f..e8a50ff 100644
->--- a/drivers/pci/setup-res.c
->+++ b/drivers/pci/setup-res.c
->@@ -26,7 +26,7 @@
-> #include "pci.h"
->
->
->-void pci_update_resource(struct pci_dev *dev, int resno)
->+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
-> {
-> 	struct pci_bus_region region;
-> 	bool disable;
->@@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
-> 	 * disable decoding so that a half-updated BAR won't conflict
-> 	 * with another device.
-> 	 */
->-	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
->+	disable = (res->flags & IORESOURCE_MEM_64) &&
->+		  !mmio_force_on && !dev->mmio_always_on;
-> 	if (disable) {
-> 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> 		pci_write_config_word(dev, PCI_COMMAND,
->@@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
-> 	res->flags &= ~IORESOURCE_STARTALIGN;
-> 	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
-> 	if (resno < PCI_BRIDGE_RESOURCES)
->-		pci_update_resource(dev, resno);
->+		pci_update_resource(dev, resno, false);
->
-> 	return 0;
-> }
->@@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
-> 	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
-> 		 resno, res, (unsigned long long) addsize);
-> 	if (resno < PCI_BRIDGE_RESOURCES)
->-		pci_update_resource(dev, resno);
->+		pci_update_resource(dev, resno, false);
->
-> 	return 0;
-> }
->diff --git a/include/linux/pci.h b/include/linux/pci.h
->index 0ab8359..99231d1 100644
->--- a/include/linux/pci.h
->+++ b/include/linux/pci.h
->@@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
-> void pci_reset_secondary_bus(struct pci_dev *dev);
-> void pcibios_reset_secondary_bus(struct pci_dev *dev);
-> void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
->-void pci_update_resource(struct pci_dev *dev, int resno);
->+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
-> int __must_check pci_assign_resource(struct pci_dev *dev, int i);
-> int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-> int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->-- 
->2.1.0
->
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2194b44..f1343f0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -303,13 +303,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_iov_set_numvfs(dev, nr_virtfn);
+-	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+-	pci_cfg_access_lock(dev);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	msleep(100);
+-	pci_cfg_access_unlock(dev);
+-
+ 	iov->initial_VFs = initial;
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+@@ -320,6 +313,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		goto err_pcibios;
+ 	}
+ 
++	pci_iov_set_numvfs(dev, nr_virtfn);
++	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
++	pci_cfg_access_lock(dev);
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
++	msleep(100);
++	pci_cfg_access_unlock(dev);
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = pci_iov_add_virtfn(dev, i, 0);
+ 		if (rc)
+-- 
+2.1.0
 
