@@ -1,70 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51571 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:34470 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761706AbcINW7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 18:59:16 -0400
-Date: Wed, 14 Sep 2016 16:59:10 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: "Woodruff, Robert J" <robert.j.woodruff@intel.com>
-Cc: Adit Ranadive <aditr@vmware.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        pv-drivers <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Jorgen S. Hansen" <jhansen@vmware.com>,
-        Aditya Sarwade <asarwade@vmware.com>,
-        George Zhang <georgezhang@vmware.com>,
-        Bryan Tan <bryantan@vmware.com>
-Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
-Message-ID: <20160914225910.GB3567@obsidianresearch.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <20160912180251.GH5843@obsidianresearch.com>
- <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
- <20160914173636.GA10309@obsidianresearch.com>
- <DM2PR0501MB844473AE0FCAD0FD748D43DC5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
- <9C6B67F36DCAFC479B1CF6A967258A8C7DE14CE8@ORSMSX115.amr.corp.intel.com>
- <9C6B67F36DCAFC479B1CF6A967258A8C7DE14D3E@ORSMSX115.amr.corp.intel.com>
+        id S1751670AbcI2T1g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Sep 2016 15:27:36 -0400
+Date: Thu, 29 Sep 2016 13:27:35 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
+Message-ID: <20160929132735.25f20db7@t450s.home>
+In-Reply-To: <20160929192404.GA4964@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+        <1473600688-24043-5-git-send-email-hch@lst.de>
+        <20160929132101.248d79c0@t450s.home>
+        <20160929192404.GA4964@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9C6B67F36DCAFC479B1CF6A967258A8C7DE14D3E@ORSMSX115.amr.corp.intel.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 10:20:22PM +0000, Woodruff, Robert J wrote:
+On Thu, 29 Sep 2016 21:24:04 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-> >this new scheme works with >kernel.org 4.8, then it is possible
-> >that it could go into that OFED-4.8 Release, but again, we are
-> >still looking at the new scheme and evaluating how it affects >the
-> >community OFED.
+> On Thu, Sep 29, 2016 at 01:21:01PM -0600, Alex Williamson wrote:
+> > Sorry for the delay, slipped by me.  Overall a really nice cleanup.
+> > One tiny nit, the commit log mis-names the function as
+> > pci_irq_allocate_vectors instead of pci_alloc_irq_vectors.  With that,
+> > 
+> > Acked-by: Alex Williamson <alex.williamson@redhat.com>
+> > 
+> > Let me know if you're wanting me to pull this through my tree, I'm
+> > assuming not.  Thanks,  
 > 
-> One other question.  Jason, the OFA (and its members) want to
-> maintain the dual-license (BSD/GPL) for the code, as is the case for
-> all the code that was in the OFA git trees on the OFA server that
-> you pulled from.
+> Please pull in through your tree.  If you can also just fix up that
+> type that'd be even better.
 
-The code in the OFA trees has a mixture of licenses. It is all GPLv2
-compatible for sure, but there are at least three variations of the
-'BSD' license. As far as I know, only the 2 clause OpenIB.org BSD
-license is approved for use in OFA projects. Someone from the board
-could correct me if I am wrong.
+Will do.  Thanks,
 
-This means the 3 projects with the BSD patent clause, hosted on the
-OFA servers, were already not conforming.
-
-As is Intels HFI1 driver which uses a three clause BSD license.
-
-> package follows that licensing model for accepting any new code into
-> that combined repo ?
-
-As with the kernel we'd discourage 're-licensing' existing files.
-
-However, since this is not a OFA project, I, personally, would not
-turn away a GPLv2 compatible contribution, but I am proposing that the
-'default' license for the project be OFA compatible.
-
-I think license enforcement of its members falls to the OFA.
-
-Doug may feel differently.
-
-Jason
+Alex
