@@ -1,410 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:34207 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756241AbcILEu2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:28 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v4 02/16] IB/pvrdma: Add user-level shared functions
-Date: Sun, 11 Sep 2016 21:49:12 -0700
-Message-ID: <1473655766-31628-3-git-send-email-aditr@vmware.com>
-In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 29 Sep 2016 09:09:25 -0400
+From: okaya@codeaurora.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+In-Reply-To: <201609291110.50176.linux@rainbow-software.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201609282123.48506.linux@rainbow-software.org>
+ <946fcb62-272b-61b3-9afa-7c27a1ce7419@codeaurora.org>
+ <201609291110.50176.linux@rainbow-software.org>
+Message-ID: <131b4220b509ed95dfbb35a441ccbc2c@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We share some common structures with the user-level driver. This patch
-adds those structures and shared functions to traverse the QP/CQ rings.
+On 2016-09-29 05:10, Ondrej Zary wrote:
+> On Thursday 29 September 2016, Sinan Kaya wrote:
+>> On 9/28/2016 3:23 PM, Ondrej Zary wrote:
+>> > On Wednesday 28 September 2016 20:22:40 Sinan Kaya wrote:
+>> >> On 9/28/2016 1:02 PM, Ondrej Zary wrote:
+>> >>>> Thanks, It sounds like you have more than one machine with similar
+>> >>>>
+>> >>>>> problems. Can you collect the log from the other machines with
+>> >>>>> 4.8-rc8?
+>> >>>>>
+>> >>>>> and also a boot log with 4.6 kernel where things are working?
+>> >>>
+>> >>> The attached logs are from another machine:
+>> >>>
+>> >>> dmesg-bad-debug.txt: 4.8-rc8 with your debug patch - bad
+>> >>>
+>> >>> dmesg-reverted.txt: 4.8-rc8 with patches (as per Rafael's suggestion)
+>> >>> reverted - good
+>> >>>
+>> >>> dmesg-3.6.txt: 4.6 (Debian kernel) - good
+>> >>
+>> >> I think I see a race condition for the SCI interrupt. I need another
+>> >> dump from 4.8-rc8 with the attached patch to confirm. Let's remove the
+>> >> previous one and apply this one.
+>> >
+>> > dmesg-reverted.txt: 4.8-rc8 w/patches reverted (good)
+>> > $ head /proc/interrupts
+>> >            CPU0
+>> >   0:       8531    XT-PIC  timer
+>> >   1:          9    XT-PIC  i8042
+>> >   2:          0    XT-PIC  cascade
+>> >   8:          1    XT-PIC  rtc0
+>> >  11:        713    XT-PIC  acpi, uhci_hcd:usb1, uhci_hcd:usb2, nvkm, eth0
+>> >  12:        161    XT-PIC  i8042
+>> >  14:       4042    XT-PIC  pata_via
+>> >  15:          0    XT-PIC  pata_via
+>> > NMI:          0   Non-maskable interrupts
+>> >
+>> > dmesg-bad-debug.txt: 4.8-rc8 (bad)
+>> > $ head /proc/interrupts
+>> >            CPU0
+>> >   0:       8027    XT-PIC  timer
+>> >   1:        286    XT-PIC  i8042
+>> >   2:          0    XT-PIC  cascade
+>> >   8:          1    XT-PIC  rtc0
+>> >  10:          0    XT-PIC  uhci_hcd:usb1, uhci_hcd:usb2
+>> >  11:          0    XT-PIC  acpi, nvkm, eth0
+>> >  12:        161    XT-PIC  i8042
+>> >  14:       4069    XT-PIC  pata_via
+>> >  15:          0    XT-PIC  pata_via
+>> >
+>> > (I'm moving between different machines through the day - these logs are
+>> > from different machine than the last ones).
+>> 
+>> Can you try these patches on your machines please?
+> 
+> It doesn't even boot :(
 
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v3->v4:
- - Moved pvrdma_sge into pvrdma_uapi.h
----
- drivers/infiniband/hw/pvrdma/pvrdma_uapi.h | 255 +++++++++++++++++++++++++++++
- drivers/infiniband/hw/pvrdma/pvrdma_user.h |  99 +++++++++++
- 2 files changed, 354 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_user.h
+Ok, since I have not seen the full boot log I am guessing that isa api 
+gets called before the link objects are initialized.
 
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h b/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
-new file mode 100644
-index 0000000..430d8a5
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
-@@ -0,0 +1,255 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef __PVRDMA_UAPI_H__
-+#define __PVRDMA_UAPI_H__
-+
-+#include <linux/types.h>
-+
-+#define PVRDMA_VERSION 17
-+
-+#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
-+#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
-+#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
-+#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
-+#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
-+#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
-+#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
-+#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
-+#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
-+
-+/* PVRDMA atomic compare and swap */
-+struct pvrdma_exp_cmp_swap {
-+	__u64 swap_val;
-+	__u64 compare_val;
-+	__u64 swap_mask;
-+	__u64 compare_mask;
-+};
-+
-+/* PVRDMA atomic fetch and add */
-+struct pvrdma_exp_fetch_add {
-+	__u64 add_val;
-+	__u64 field_boundary;
-+};
-+
-+/* PVRDMA address vector. */
-+struct pvrdma_av {
-+	__u32 port_pd;
-+	__u32 sl_tclass_flowlabel;
-+	__u8 dgid[16];
-+	__u8 src_path_bits;
-+	__u8 gid_index;
-+	__u8 stat_rate;
-+	__u8 hop_limit;
-+	__u8 dmac[6];
-+	__u8 reserved[6];
-+};
-+
-+/* PVRDMA scatter/gather entry */
-+struct pvrdma_sge {
-+	__u64   addr;
-+	__u32   length;
-+	__u32   lkey;
-+};
-+
-+/* PVRDMA receive queue work request */
-+struct pvrdma_rq_wqe_hdr {
-+	__u64 wr_id;		/* wr id */
-+	__u32 num_sge;		/* size of s/g array */
-+	__u32 total_len;	/* reserved */
-+};
-+/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
-+
-+/* PVRDMA send queue work request */
-+struct pvrdma_sq_wqe_hdr {
-+	__u64 wr_id;		/* wr id */
-+	__u32 num_sge;		/* size of s/g array */
-+	__u32 total_len;	/* reserved */
-+	__u32 opcode;		/* operation type */
-+	__u32 send_flags;	/* wr flags */
-+	union {
-+		__u32 imm_data;
-+		__u32 invalidate_rkey;
-+	} ex;
-+	__u32 reserved;
-+	union {
-+		struct {
-+			__u64 remote_addr;
-+			__u32 rkey;
-+			__u8 reserved[4];
-+		} rdma;
-+		struct {
-+			__u64 remote_addr;
-+			__u64 compare_add;
-+			__u64 swap;
-+			__u32 rkey;
-+			__u32 reserved;
-+		} atomic;
-+		struct {
-+			__u64 remote_addr;
-+			__u32 log_arg_sz;
-+			__u32 rkey;
-+			union {
-+				struct pvrdma_exp_cmp_swap  cmp_swap;
-+				struct pvrdma_exp_fetch_add fetch_add;
-+			} wr_data;
-+		} masked_atomics;
-+		struct {
-+			__u64 iova_start;
-+			__u64 pl_pdir_dma;
-+			__u32 page_shift;
-+			__u32 page_list_len;
-+			__u32 length;
-+			__u32 access_flags;
-+			__u32 rkey;
-+		} fast_reg;
-+		struct {
-+			__u32 remote_qpn;
-+			__u32 remote_qkey;
-+			struct pvrdma_av av;
-+		} ud;
-+	} wr;
-+};
-+/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
-+
-+/* Completion queue element. */
-+struct pvrdma_cqe {
-+	__u64 wr_id;
-+	__u64 qp;
-+	__u32 opcode;
-+	__u32 status;
-+	__u32 byte_len;
-+	__u32 imm_data;
-+	__u32 src_qp;
-+	__u32 wc_flags;
-+	__u32 vendor_err;
-+	__u16 pkey_index;
-+	__u16 slid;
-+	__u8 sl;
-+	__u8 dlid_path_bits;
-+	__u8 port_num;
-+	__u8 smac[6];
-+	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
-+};
-+
-+struct pvrdma_ring {
-+	atomic_t prod_tail;	/* Producer tail. */
-+	atomic_t cons_head;	/* Consumer head. */
-+};
-+
-+struct pvrdma_ring_state {
-+	struct pvrdma_ring tx;	/* Tx ring. */
-+	struct pvrdma_ring rx;	/* Rx ring. */
-+};
-+
-+static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
-+{
-+	/* Generates fewer instructions than a less-than. */
-+	return (idx & ~((max_elems << 1) - 1)) == 0;
-+}
-+
-+static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
-+{
-+	const unsigned int idx = atomic_read(var);
-+
-+	if (pvrdma_idx_valid(idx, max_elems))
-+		return idx & (max_elems - 1);
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
-+{
-+	__u32 idx = atomic_read(var) + 1;	/* Increment. */
-+
-+	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
-+	atomic_set(var, idx);
-+}
-+
-+static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
-+					      __u32 max_elems, __u32 *out_tail)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems)) {
-+		*out_tail = tail & (max_elems - 1);
-+		return tail != (head ^ max_elems);
-+	}
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
-+					     __u32 max_elems, __u32 *out_head)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems)) {
-+		*out_head = head & (max_elems - 1);
-+		return tail != head;
-+	}
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
-+						__u32 max_elems, __u32 *idx)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems) &&
-+	    pvrdma_idx_valid(*idx, max_elems)) {
-+		if (tail > head && (*idx < tail && *idx >= head))
-+			return true;
-+		else if (head > tail && (*idx >= head || *idx < tail))
-+			return true;
-+	}
-+	return false;
-+}
-+
-+#endif /* __PVRDMA_UAPI_H__ */
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_user.h b/drivers/infiniband/hw/pvrdma/pvrdma_user.h
-new file mode 100644
-index 0000000..35f8c1e
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_user.h
-@@ -0,0 +1,99 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef __PVRDMA_USER_H__
-+#define __PVRDMA_USER_H__
-+
-+#include <linux/types.h>
-+
-+#define PVRDMA_UVERBS_ABI_VERSION	3
-+#define PVRDMA_BOARD_ID			1
-+#define PVRDMA_REV_ID			1
-+
-+struct pvrdma_alloc_ucontext_resp {
-+	u32 qp_tab_size;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_alloc_pd_resp {
-+	u32 pdn;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_create_cq {
-+	u64 buf_addr;
-+	u32 buf_size;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_create_cq_resp {
-+	u32 cqn;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_resize_cq {
-+	u64 buf_addr;
-+	u32 buf_size;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_create_srq {
-+	u64 buf_addr;
-+};
-+
-+struct pvrdma_create_srq_resp {
-+	u32 srqn;
-+	u32 reserved;
-+};
-+
-+struct pvrdma_create_qp {
-+	u64 rbuf_addr;
-+	u64 sbuf_addr;
-+	u32 rbuf_size;
-+	u32 sbuf_size;
-+	u64 qp_addr;
-+};
-+
-+#endif /* __PVRDMA_USER_H__ */
--- 
-2.7.4
 
+Can you appply the first three only (0001, 0002 and 0003) to see if it 
+makes a difference?
+
+> 
+> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or 
+> acpi=off
+> BUG: unable to handle kernel paging request at e3382f64
+> IP: [<c11ecf61>] acpi_irq_get_penalty+0x69/0xa5
+> *pde = 00000000
+> Oops: 0000 [#1] SMP
+> Modules linked in:
+> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.8.0-rc8+ #114
+> Hardware name: System Manufacturer System Name/A7VL133, BIOS ASUS
+> A7VL133-VM ACPI BIOS Revision 1008 06/10/2002
+> task: c7094000 task.stack: c7098000
+> EIP: 0060:[<c11ecf61>] EFLAGS: 00210202 CPU:  0
+> EIP is at acpi_irq_get_penalty+0x69/0xa5
+> ...
+> Call Trace:
+> acpi_isa_irq_available
+> acpi_pci_irq_enable
+> pcibios_enable_device
+> do_pci_enable_device
+> quirk_usb_early_handoff
+> pci_get_subsys
+> pci_fixup_device
+> pci_apply_final_quirks
+> pci_proc_init
+> do_one_initcall
+> parse_args
+> kernel_init_freeable
+> kernel_init_freeable
+> ret_from_kernel_thread
+> rest_init
