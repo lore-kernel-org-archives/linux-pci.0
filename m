@@ -1,48 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Sep 2016 10:25:38 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Yang-Leo Li <leoyang.li@nxp.com>,
-        Minghuan Lian <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:33246 "EHLO
+        caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755107AbcI2OY0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 10:24:26 -0400
+Date: Thu, 29 Sep 2016 10:24:24 -0400
+To: Steve Kenton <skenton@ou.edu>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>
-Subject: Re: [PATCH v4 1/2] nxp/dts: add pcie aer interrupt-name property in
- the dts
-Message-ID: <20160905022537.GF25778@tiger>
-References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <1472625442-23309-1-git-send-email-po.liu@nxp.com>
+        yinghai Lu <yinghai@kernel.org>,
+        Blackmagic Developer Support <developer@blackmagicdesign.com>
+Subject: Re: lspci not showing motherboard ethernet controller after PCIe
+ card firmware update change from 32-bit to 64-bit BAR
+Message-ID: <20160929142424.GB14309@csclub.uwaterloo.ca>
+References: <2cc60cd1-bab1-a086-2326-7ce161b8f083@ou.edu>
+ <efdbf332-841c-7617-efd1-facf785472fd@ou.edu>
+ <20160926155018.GL14311@csclub.uwaterloo.ca>
+ <68936975-5496-0e0d-5137-d48575e8ec0d@ou.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472625442-23309-1-git-send-email-po.liu@nxp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <68936975-5496-0e0d-5137-d48575e8ec0d@ou.edu>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 02:37:21PM +0800, Po Liu wrote:
-> NXP some platforms aer interrupt was not MSI/MSI-X/INTx
-> but using interrupt line independently. This patch add a "aer"
-> interrupt-names for aer interrupt.
-> With the interrupt-names "aer", code could probe aer interrupt
-> line for pcie root port, replace the aer interrupt service irq.
-> This is intend to fixup the Layerscape platforms which aer interrupt
-> was not MSI/MSI-X/INTx, but using interrupt line independently.
+On Wed, Sep 28, 2016 at 09:05:44AM -0500, Steve Kenton wrote:
+> I decided to experiment with /sys/bus/pci and the BIOS settings to try
+> and understand things better.
 > 
-> Signed-off-by: Po Liu <po.liu@nxp.com>
-> ---
-> changes for V4:
-> 	- Add comments explain why to add this patch
-> 	- Move the binding changes to pci code patch
+> The BIOS has a settings to enable/disable the on-board LAN. When the
+> Blackmagic card firmware is upgraded
+> bus[03] and hence the on-board LAN disappears, but the apparently unused
+> bus[02] is still visible and
+> the BIOS setting is still enabled. When the BIOS LAN settings is
+> disabled busses[02][03] and the on-board
+> LAN disappear. In both cases, the "disappeared" resources are not
+> restored by echo to /sys/.../rescan
 > 
->  arch/arm/boot/dts/ls1021a.dtsi                 |  6 ++++--
->  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 18 +++++++++---------
->  arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi | 16 ++++++++--------
+> Why? What can the BIOS be doing to the chipset/busses[02][03] to make
+> them invisible to /sys manipulation?
 
-Do not mix up arm dts changes with arm64 ones.  Use separate patch
-please.
+It can activate the reset line to the network chip making it never able
+to respond to anything.  Or it could even power it off.
 
-Shawn
+And PCIe is point to point, so they are not really busses anymore.
+So at least turning off the network chip means no link on that point to
+point PCIe link and hence no "bus" there.
+
+> There is apparently something I do not understand about the H81 chipset
+> PCIe configuration. I have
+> been reading the Intel Series 8 / Series C220 Chipset documentation but
+> so far have come up empty.
+> 
+> Anybody have cluebat for me?
+
+I wish.
+
+-- 
+Len Sorensen
