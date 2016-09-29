@@ -1,136 +1,60 @@
-Return-Path: <marc.zyngier@arm.com>
-Return-Path: <marc.zyngier@arm.com>
-Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
- <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
- <57C57975.7040306@arm.com>
- <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C59FE8.30307@arm.com>
- <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C6B7F1.5000001@arm.com>
- <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160912220241.GG23532@localhost>
-Cc: "robh@kernel.org" <robh@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- Soren Brinkmann <sorenb@xilinx.com>, Michal Simek <michals@xilinx.com>,
- "arnd@arndb.de" <arnd@arndb.de>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ravikiran Gummaluri <rgummal@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <57D7ADA8.5060201@arm.com>
-Date: Tue, 13 Sep 2016 08:41:28 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39073 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754095AbcI2Spi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 14:45:38 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8TIhIKn105862
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 14:45:37 -0400
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25s3cbf0a7-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 14:45:37 -0400
+Received: from localhost
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
+        Thu, 29 Sep 2016 15:45:34 -0300
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        alex.williamson@redhat.com, kvm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+        <1473600688-24043-6-git-send-email-hch@lst.de>
+        <87twcyk1cd.fsf@linux.vnet.ibm.com> <20160929183757.GA4106@lst.de>
+Date: Thu, 29 Sep 2016 15:45:29 -0300
+In-Reply-To: <20160929183757.GA4106@lst.de> (Christoph Hellwig's message of
+        "Thu, 29 Sep 2016 20:37:57 +0200")
 MIME-Version: 1.0
-In-Reply-To: <20160912220241.GG23532@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
+Message-Id: <87lgyak0ja.fsf@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/09/16 23:02, Bjorn Helgaas wrote:
-> On Thu, Sep 01, 2016 at 05:19:55AM +0000, Bharat Kumar Gogada wrote:
->>>>>>> Hi Bharat,
->>>>>>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
->>>>>>>> nwl_pcie
->>>>>>> *pcie)
->>>>>>>>     }
->>>>>>>>
->>>>>>>>     pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
->>>>>>>> -                                                   INTX_NUM,
->>>>>>>> +                                                   INTX_NUM + 1,
->>>>>>>>                                                     &legacy_domain_ops,
->>>>>>>>                                                     pcie);
->>>>>>>
->>>>>>> This feels like the wrong thing to do. You have INTX_NUM irqs, so
->>>>>>> the domain allocation should reflect this. On the other hand, the
->>>>>>> way the driver currently deals with mappings is quite broken
->>>>>>> (consistently adding 1 to
->>>>> the HW interrupt).
->>>>>>>
->>>>>> Hi Marc,
->>>>>>
->>>>>> Without above change I get following crash in kernel while booting.
->>>>>>
->>>>>> [    2.441684] error: hwirq 0x4 is too large for dummy
->>>>>>
->>>>>> [    2.441694] ------------[ cut here ]------------
->>>>>>
->>>>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
->>>>>>
->>>>>> [    2.441702] Modules linked in:
->>>>>>
->>>>>> [    2.441706]
->>>>>>
->>>>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
->>>>>>
->>>>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
->>>>>>
->>>>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
->>>>> ffffffc071888000
->>>>>>
->>>>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
->>>>>>
->>>>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
->>>>>>
->>>>>> In kernel/irq/irqdomain.c function irq_domain_associate
->>>>>>
->>>>>> if (WARN(hwirq >= domain->hwirq_max,
->>>>>>                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain-
->>>> name))
->>>>>>                 return -EINVAL;
->>>>>>
->>>>>> Here the hwirq and hwirq_max are equal to 4 without the above
->>>>>> condition
->>>>> (INTX_NUM + 1) due to which crash is coming.
->>>>>> This is happening as the legacy interrupts are starting from 1 (INTA).
->>>>>
->>>>> I understood that. I'm still persisting in saying that you have the wrong fix.
->>>>>
->>>>> Your domain should always allocate many interrupts as you have
->>>>> interrupt sources. These interrupts (hwirq) should be numbered from 0 to (n-
->>> 1).
->>>>
->>>> Agreed, but here comes the problem the hwirq for legacy interrupts
->>>> will start at 0x1 to 0x4 (INTA to INTD) and these values are as per
->>>> PCIe specification for legacy interrupts. So these cannot be numbered
->>>> from 0. So when 0x4 (INTD) for a multi-function device comes the crash
->>>> occurs.
->>>
->>> So who provides this hwirq? Who calls irq_domain_associate() with hwirq set to
->>> 4?
->>>
->> PCIe subsystem invokes pcibios_add_device function in arch/arm64/kernel/pci.c for every pci device.
->> The purpose of this function is to assign dev->irq using of_irq_parse_and_map_pci.
->> of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads PCI_INTERRUPT_PIN from configuration space and saves it
->> in parameter of struct of_phandle_args.
->> This structure is passed to irq_create_of_mapping where it invokes irq_create_fwspec_mapping.
->> irq_create_fwspec_mapping invokes irq_domain_translate and gets hwirq, here the above saved PCI_INTERRUPT_PIN value is assigned 
->> to hwirq (*hwirq = fwspec->param[0]).
->> And then using this hwirq irq_create_mapping -> irq_domain_associate were invoked and mapping is created for virtual irq with this hwirq.
->> So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x4 and so hwirq starts from 0x1 to 0x4.
->>
->> So the values are more generic w.r.t to protocol, that's why hwirq will range from 0x1 to 0x4. 
->> And then if you check pcie-altera.c they are doing this adding one in their handler and while creating legacy domain.
-> 
-> Is this resolved yet?  Marc, are you happy, or should we iterate on this
-> again?
+Christoph Hellwig <hch@lst.de> writes:
+
+> On Thu, Sep 29, 2016 at 03:28:02PM -0300, Gabriel Krisman Bertazi wrote:
+>> Christoph Hellwig <hch@lst.de> writes:
+>> 
+>> > Simply the interrupt setup by using the new PCI layer helpers.
+>> 
+>> Good clean up.  Tested and:
+>> 
+>> Acked-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+>
+> Which tree should this go in through?
+
+I'd say Greg's char-misc tree.
+
+I'm stepping up to assist with the genwqe_card driver just now, since we
+(ibm) missed some of the last patches that went in.  I'll add myself to
+maintainers file.
 
 
-Ah, sorry to have dropped the ball on this patch.
-
-I guess that given that the infrastructure imposes the hwirq range on
-the host drivers, Bharat's approach is the only way (and a number of
-other host drivers are already slightly broken). I'll try and have a
-look at solving this at the generic level. In the meantime:
-
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Gabriel Krisman Bertazi
+
