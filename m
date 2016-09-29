@@ -1,63 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46118 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756110AbcINT01 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 15:26:27 -0400
-Date: Wed, 14 Sep 2016 14:26:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Rajat Jain <rajatja@google.com>,
-        MikaWesterberg@linux.intel.com, linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
-Message-ID: <20160914192621.GA10559@localhost>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160914084117.GX1811@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160914084117.GX1811@lahna.fi.intel.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52901 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754950AbcI2Gqa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 02:46:30 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8T6h0HT090675
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:29 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25rv9au6su-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:29 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Thu, 29 Sep 2016 02:46:28 -0400
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v6 1/4] PCI: Ignore enforced alignment when kernel uses existing firmware setup
+Date: Thu, 29 Sep 2016 14:46:18 +0800
+In-Reply-To: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1475131581-4373-2-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 11:41:17AM +0300, Mika Westerberg wrote:
-> On Mon, Sep 12, 2016 at 04:08:47PM -0500, Bjorn Helgaas wrote:
-> > This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
-> > patches and reworked it to keep the enclosing loop around the pciehp ISR.
-> > 
-> > The patches I added are trivial ones to clarify variable names, make dmesg
-> > messages consistent, and remove useless code.
-> > 
-> > [1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
-> > [2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
-> > 
-> > ---
-> > 
-> > Bjorn Helgaas (5):
-> >       PCI: pciehp: Rename pcie_isr() locals for clarity
-> >       PCI: pciehp: Return IRQ_NONE when we can't read interrupt status
-> >       PCI: pciehp: Remove unnecessary guard
-> >       PCI: pciehp: Clean up dmesg "Slot(%s)" messages
-> >       PCI: pciehp: Remove useless pciehp_get_latch_status() calls
-> > 
-> > Mayurkumar Patel (3):
-> >       PCI: pciehp: Process all hotplug events before looking for new ones
-> >       PCI: pciehp: Don't re-read Slot Status when queuing hotplug event
-> >       PCI: pciehp: Don't re-read Slot Status when handling surprise event
-> > 
-> > 
-> >  drivers/pci/hotplug/pciehp_ctrl.c |   83 ++++++++++++---------------------
-> >  drivers/pci/hotplug/pciehp_hpc.c  |   94 ++++++++++++++++++++-----------------
-> >  2 files changed, 82 insertions(+), 95 deletions(-)
-> 
-> I don't have any machines with native PCIe hotplug support enabled but
-> regardless the series looks good to me,
-> 
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+PCI resources allocator will use firmware setup and not try to
+reassign resource when PCI_PROBE_ONLY or IORESOURCE_PCI_FIXED
+is set.
 
-Thanks a lot for taking the time to review it!  I added your Reviewed-by.
+The enforced alignment in pci_reassigndev_resource_alignment()
+should be ignored in this case. Otherwise, some PCI devices'
+resources would be released here and not re-allocated.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..2d85a96 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,6 +4959,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		if (*p)
++			pr_info_once("PCI: resource_alignment ignored with PCI_PROBE_ONLY\n");
++		spin_unlock(&resource_alignment_lock);
++		return 0;
++	}
++
+ 	while (*p) {
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+@@ -5063,6 +5070,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
++		if (r->flags & IORESOURCE_PCI_FIXED) {
++			dev_info(&dev->dev, "No alignment for fixed BAR%d: %pR\n",
++				i, r);
++			continue;
++		}
++
+ 		size = resource_size(r);
+ 		if (size < align) {
+ 			size = align;
+-- 
+1.7.9.5
+
