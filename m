@@ -1,75 +1,95 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com, tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com, charles.chenxin@huawei.com, hanjun.guo@linaro.org, linuxarm@huawei.com
-Subject: Re: [RFC PATCH V2 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Fri, 02 Sep 2016 01:38:04 +0200
-Message-ID: <2811400.eXt00oZUV7@vostro.rjw.lan>
-In-Reply-To: <57C79F3E.4050405@huawei.com>
-References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com> <2194589.LrAdKSkzcT@vostro.rjw.lan> <57C79F3E.4050405@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43484 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752168AbcI2OAV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Sep 2016 10:00:21 -0400
+Date: Thu, 29 Sep 2016 09:00:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au,
+        zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v5 4/4] PCI: Add a macro to set default alignment for all
+ PCI devices
+Message-ID: <20160929140014.GB31048@localhost>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1473757234-5284-5-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473757234-5284-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 01, 2016 11:23:42 AM Dongdong Liu wrote:
->=20
-> =E5=9C=A8 2016/9/1 6:56, Rafael J. Wysocki =E5=86=99=E9=81=93:
-> > On Wednesday, August 31, 2016 07:48:14 PM Dongdong Liu wrote:
-> >> Add specific quirks for PCI config space accessors.This involves:
-> >> 1. New initialization call hisi_pcie_acpi_init() to get RC config =
-resource
-> >> with hardcoded range address and setup ecam mapping.
-> >> 2. New entry in common quirk array.
-> >>
-> >> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> >> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> >
-> > Well, what exactly is the ACPI support you're adding?  Is it the EC=
-AM part only
-> > or is there anything more to it?
-> >
->=20
-> Hi Rafael, thanks for replying.
->=20
-> Our host bridge is non ECAM only for the RC bus config space;
-> for any other bus underneath the root bus we support ECAM access.
->=20
-> In our case we cannot use the standard MCFG object to pass the RC its=
-elf config space addresses.
-> The more discuss information can be found:
-> https://lkml.org/lkml/2016/2/22/1087
-> [...]
-> I have looked into this and in our case we cannot use the
-> standard MCFG object to pass the RC config space addresses.
->=20
-> The reason is that in our HW we have the config base addresses of the=
+On Tue, Sep 13, 2016 at 05:00:34PM +0800, Yongji Xie wrote:
+> When vfio passthroughs a PCI device of which MMIO BARs are
+> smaller than PAGE_SIZE, guest will not handle the mmio
+> accesses to the BARs which leads to mmio emulations in host.
+> 
+> This is because vfio will not allow to passthrough one BAR's
+> mmio page which may be shared with other BARs. Otherwise,
+> there will be a backdoor that guest can use to access BARs
+> of other guest.
+> 
+> This patch adds a macro to set default alignment for all
+> PCI devices. Then we could solve this issue on some platforms
+> which would easily hit this issue because of their 64K page
+> such as PowerNV platform by defining this macro as PAGE_SIZE.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci.h |    4 ++++
+>  drivers/pci/pci.c              |    4 ++++
+>  2 files changed, 8 insertions(+)
+> 
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index e9bd6cf..5e31bc2 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -28,6 +28,10 @@
+>  #define PCIBIOS_MIN_IO		0x1000
+>  #define PCIBIOS_MIN_MEM		0x10000000
+>  
+> +#ifdef CONFIG_PPC_POWERNV
+> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
+> +#endif
+> +
+>  struct pci_dev;
+>  
+>  /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 37f8062..9c61cbe 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  	resource_size_t align = 0;
+>  	char *p;
+>  
+> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
+> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
+> +	*resize = false;
+> +#endif
 
-> root complex ports that are less than 0x100000 byte distant one from
-> the other as we only map the first 0x10000 bytes.
-> Now the MCFG acpi framework always fix the MCFG resource size to 0x10=
-0000
-> for each bus; therefore if we pass our RC addresses through MCFG we e=
-nd
-> up with a resource conflict.
-> To give you a practical example we are in a situation where we have:
->=20
-> port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
-> port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
-> port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
-> port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
-> So if we pass the base addresses through MCFG the resources
-> will overlap as MCFG will consider 0x100000 size for each base
-> address of the root complex (only the RC bus uses that address)
-> So far I do not see many option other than using _DSD to pass
-> these RC config base addresses.
+I'm a little confused about how this works.
 
-It still is not entirely clear to me what the "ACPI support" is here.
+I think this change only does something if the user specifies
+"pci=resource_alignment=..." or writes to the /sys/.../resource_alignment
+file, because those are the only ways to set resource_alignment_param.
 
-Do you read any configuration information from the ACPI tables or simil=
-ar?
+If that's true, isn't the *default* to align to PAGE_SIZE?  So I don't
+understand what PCIBIOS_DEFAULT_ALIGNMENT changes.
 
-If so, where is the format of it documented?
+And I'm hoping we can get rid of the resize flag based on the
+discussion of the previous patch.
 
-Thanks,
-Rafael
+>  	spin_lock(&resource_alignment_lock);
+>  	p = resource_alignment_param;
+>  	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
