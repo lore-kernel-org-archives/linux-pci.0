@@ -1,80 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46789 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965171AbcIPUGw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:06:52 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V2 4/5] PCI: add CRS support to error handling path
-Date: Fri, 16 Sep 2016 16:06:33 -0400
-Message-Id: <1474056395-21843-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
-References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49688 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751795AbcI2TVD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Sep 2016 15:21:03 -0400
+Date: Thu, 29 Sep 2016 13:21:01 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
+Message-ID: <20160929132101.248d79c0@t450s.home>
+In-Reply-To: <1473600688-24043-5-git-send-email-hch@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+        <1473600688-24043-5-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIE spec allows an endpoint device to extend the initialization time
-beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
-vendor ID read request.
+On Sun, 11 Sep 2016 15:31:26 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-This basically means "I'm busy now, please call me back later".
+> Simply the interrupt setup by using the new PCI layer helpers.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/vfio/pci/vfio_pci_intrs.c   | 45 +++++++++----------------------------
+>  drivers/vfio/pci/vfio_pci_private.h |  1 -
+>  2 files changed, 10 insertions(+), 36 deletions(-)
 
-There are two moving parts to CRS support from the SW perspective. One part
-is to determine if CRS is supported or not. The second part is to set the
-CRS visibility register.
+Sorry for the delay, slipped by me.  Overall a really nice cleanup.
+One tiny nit, the commit log mis-names the function as
+pci_irq_allocate_vectors instead of pci_alloc_irq_vectors.  With that,
 
-As part of the probe, the Linux kernel sets the above two conditions in
-pci_enable_crs function. The kernel is also honoring the returned CRS in
-pci_bus_read_dev_vendor_id function if supported. The function will poll up
-to specified amount of time while endpoint is returning CRS response.
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
-resets.
+Let me know if you're wanting me to pull this through my tree, I'm
+assuming not.  Thanks,
 
-The hot reset is initiated by starting a secondary bus reset. This patch is
-adding vendor ID read immediately after a bus reset so that the
-initialization procedure can be extended by the amount of time endpoint
-requires.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8aecab1..e913467 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3833,6 +3833,16 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
+Alex
  
-+static int pci_dev_probe_crs(struct pci_dev *dev, void *data)
-+{
-+	u32 l;
-+
-+	pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
-+				   60 * 1000);
-+
-+	return 0;
-+}
-+
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	u16 ctrl;
-@@ -3874,6 +3884,7 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
-+	pci_walk_bus(dev->subordinate, pci_dev_probe_crs, NULL);
- }
- EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
- 
--- 
-1.9.1
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 152b438..a1d283e 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -250,6 +250,7 @@ static irqreturn_t vfio_msihandler(int irq, void *arg)
+>  static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+> +	unsigned int flag = msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+>  	int ret;
+>  
+>  	if (!is_irq_none(vdev))
+> @@ -259,35 +260,13 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+>  	if (!vdev->ctx)
+>  		return -ENOMEM;
+>  
+> -	if (msix) {
+> -		int i;
+> -
+> -		vdev->msix = kzalloc(nvec * sizeof(struct msix_entry),
+> -				     GFP_KERNEL);
+> -		if (!vdev->msix) {
+> -			kfree(vdev->ctx);
+> -			return -ENOMEM;
+> -		}
+> -
+> -		for (i = 0; i < nvec; i++)
+> -			vdev->msix[i].entry = i;
+> -
+> -		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
+> -		if (ret < nvec) {
+> -			if (ret > 0)
+> -				pci_disable_msix(pdev);
+> -			kfree(vdev->msix);
+> -			kfree(vdev->ctx);
+> -			return ret;
+> -		}
+> -	} else {
+> -		ret = pci_enable_msi_range(pdev, 1, nvec);
+> -		if (ret < nvec) {
+> -			if (ret > 0)
+> -				pci_disable_msi(pdev);
+> -			kfree(vdev->ctx);
+> -			return ret;
+> -		}
+> +	/* return the number of supported vectors if we can't get all: */
+> +	ret = pci_alloc_irq_vectors(pdev, 1, nvec, flag);
+> +	if (ret < nvec) {
+> +		if (ret > 0)
+> +			pci_free_irq_vectors(pdev);
+> +		kfree(vdev->ctx);
+> +		return ret;
+>  	}
+>  
+>  	vdev->num_ctx = nvec;
+> @@ -315,7 +294,7 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+>  	if (vector < 0 || vector >= vdev->num_ctx)
+>  		return -EINVAL;
+>  
+> -	irq = msix ? vdev->msix[vector].vector : pdev->irq + vector;
+> +	irq = pci_irq_vector(pdev, vector);
+>  
+>  	if (vdev->ctx[vector].trigger) {
+>  		free_irq(irq, vdev->ctx[vector].trigger);
+> @@ -408,11 +387,7 @@ static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
+>  
+>  	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
+>  
+> -	if (msix) {
+> -		pci_disable_msix(vdev->pdev);
+> -		kfree(vdev->msix);
+> -	} else
+> -		pci_disable_msi(pdev);
+> +	pci_free_irq_vectors(pdev);
+>  
+>  	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+>  	vdev->num_ctx = 0;
+> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+> index 2128de8..f561ac1 100644
+> --- a/drivers/vfio/pci/vfio_pci_private.h
+> +++ b/drivers/vfio/pci/vfio_pci_private.h
+> @@ -72,7 +72,6 @@ struct vfio_pci_device {
+>  	struct perm_bits	*msi_perm;
+>  	spinlock_t		irqlock;
+>  	struct mutex		igate;
+> -	struct msix_entry	*msix;
+>  	struct vfio_pci_irq_ctx	*ctx;
+>  	int			num_ctx;
+>  	int			irq_type;
 
