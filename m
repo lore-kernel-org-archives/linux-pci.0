@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V3 1/4] ARM64 LPC: Indirect ISA port IO introduced
-To: Arnd Bergmann <arnd@arndb.de>, "zhichang.yuan" <yuanzhichang@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <8337589.pzGt0MZ9xn@wuerfel> <57D95BBC.9030405@hisilicon.com>
- <5264074.nuyDhEuOR4@wuerfel>
-From: zhichang <zhichang.yuan02@gmail.com>
-Message-ID: <c6fe6d43-5e8b-ee88-a328-83d998b51c5a@gmail.com>
-Date: Wed, 21 Sep 2016 17:26:06 +0800
+From: Po Liu <po.liu@nxp.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH v6 1/3] arm/dts-ls1021: add pcie aer/pme interrupt-name
+ property in the dts
+Date: Fri, 30 Sep 2016 17:11:35 +0800
+Message-ID: <1475226697-7709-1-git-send-email-po.liu@nxp.com>
+In-Reply-To: <1473741659-17618-3-git-send-email-po.liu@nxp.com>
+References: <1473741659-17618-3-git-send-email-po.liu@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <5264074.nuyDhEuOR4@wuerfel>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,122 +17,69 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, gregkh@linuxfoundation.org,
- benh@kernel.crashing.org, john.garry@huawei.com, will.deacon@arm.com,
- linux-kernel@vger.kernel.org, xuwei5@hisilicon.com, linuxarm@huawei.com,
- linux-serial@vger.kernel.org, linux-pci@vger.kernel.org, zourongrong@gmail.com,
- liviu.dudau@arm.com, kantyzc@163.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ Minghuan Lian <minghuan.lian@nxp.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksIEFybmQsCgoKT24gMjAxNuW5tDA55pyIMTTml6UgMjI6MjMsIEFybmQgQmVyZ21hbm4gd3Jv
-dGU6Cj4gT24gV2VkbmVzZGF5LCBTZXB0ZW1iZXIgMTQsIDIwMTYgMTA6MTY6MjggUE0gQ0VTVCB6
-aGljaGFuZy55dWFuIHdyb3RlOgo+Pj4KPj4+IE5vIG5lZWQgdG8gZ3VhcmQgaW5jbHVkZXMgd2l0
-aCBhbiAjaWZkZWYuCj4+IElmIHJlbW92ZSAjaWZkZWYgaGVyZSwgZXh0aW8uaCBzaG91bGQgbm90
-IGNvbnRhaW4gYW55IGZ1bmN0aW9uIGV4dGVybmFsIGRlY2xhcmF0aW9ucyB3aG9zZSBkZWZpbml0
-aW9ucyBhcmUgaW4KPj4gZXh0aW8uYyBjb21waWxlZCBvbmx5IHdoZW4gQ09ORklHX0FSTTY0X0lO
-RElSRUNUX1BJTyBpcyB5ZXMuCj4gIAo+IFRoZXJlIGlzIG5vIHByb2JsZW0gd2l0aCBtYWtpbmcg
-ZGVjbGFyYXRpb25zIHZpc2libGUgZm9yIGZ1bmN0aW9ucyB0aGF0Cj4gYXJlIG5vdCBwYXJ0IG9m
-IHRoZSBrZXJuZWwsIHdlIGRvIHRoYXQgYWxsIHRoZSB0aW1lLgo+IAo+Pj4+ICsjZGVmaW5lIEJV
-SUxEU19SVyhid2wsIHR5cGUpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICtzdGF0aWMgaW5saW5lIHZvaWQgcmVhZHMjI2J3bChjb25zdCB2b2xh
-dGlsZSB2b2lkIF9faW9tZW0gKmFkZHIsICAgIFwKPj4+PiArICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHZvaWQgKmJ1ZmZlciwgdW5zaWduZWQgaW50IGNvdW50KSAgICAgICBcCj4+Pj4gK3sg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgaWYgKGNvdW50KSB7ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgICAgICAgICAgdHlwZSAqYnVm
-ID0gYnVmZmVyOyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcCj4+Pj4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgICAgICAgICBkbyB7ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgICAgICAgICAgICAgICAgICB0
-eXBlIHggPSBfX3Jhd19yZWFkIyNid2woYWRkcik7ICAgICAgICAgICAgICAgICBcCj4+Pj4gKyAg
-ICAgICAgICAgICAgICAgICAgKmJ1ZisrID0geDsgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgICAgICAgICB9IHdoaWxlICgtLWNvdW50KTsgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgIH0gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcCj4+Pj4gK30g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArc3RhdGljIGlubGluZSB2b2lkIHdy
-aXRlcyMjYndsKHZvbGF0aWxlIHZvaWQgX19pb21lbSAqYWRkciwgICAgICAgICBcCj4+Pj4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCB2b2lkICpidWZmZXIsIHVuc2lnbmVkIGlu
-dCBjb3VudCkgXAo+Pj4+ICt7ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgIGlmIChjb3VudCkgeyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcCj4+Pj4gKyAg
-ICAgICAgICAgIGNvbnN0IHR5cGUgKmJ1ZiA9IGJ1ZmZlcjsgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgICAgICAgICAgZG8geyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcCj4+Pj4gKyAg
-ICAgICAgICAgICAgICAgICAgX19yYXdfd3JpdGUjI2J3bCgqYnVmKyssIGFkZHIpOyAgICAgICAg
-ICAgICAgICAgXAo+Pj4+ICsgICAgICAgICAgICB9IHdoaWxlICgtLWNvdW50KTsgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwKPj4+PiArICAgIH0gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcCj4+Pj4gK30K
-Pj4+PiArCj4+Pj4gK0JVSUxEU19SVyhiLCB1OCkKPj4+Cj4+PiBXaHkgaXMgdGhpcyBpbiBoZXJl
-Pwo+PiB0aGUgcmVhZHNiL3dyaXRlc2IgYXJlIGRlZmluZWQgaW4gYXNtLWdlbmVyaWMvaW8uaCB3
-aGljaCBpcyBpbmNsdWRlZCBsYXRlciwgYnV0IHRoZSByZWRlZmluZWQgaW5zYi9vdXRzYiBuZWVk
-Cj4+IHRvIGNhbGwgdGhlbS4gV2l0aG91dCB0aGVzZSByZWFkc2Ivd3JpdGVzYiBkZWZpbml0aW9u
-IGJlZm9yZSBpbnNiL291dHNiIHJlZGVmaW5lZCwgY29tcGlsZSBlcnJvciBvY2N1ci4KPj4KPj4g
-SXQgc2VlbXMgdGhhdCBjb3B5IGFsbCB0aGUgZGVmaW5pdGlvbnMgb2YgImFzbS1nZW5lcmljL2lv
-LmgiIGlzIG5vdCBhIGdvb2QgaWRlYSwgc28gSSBtb3ZlIHRoZSBkZWZpbml0aW9ucyBvZgo+PiB0
-aG9zZSBmdW5jdGlvbiBuZWVkZWQgaGVyZS4uLi4KPj4KPj4gT2suIEkgdGhpbmsgeW91ciBpZGVh
-IGJlbG93IGRlZmluaW5nIGluKHMpL291dChzKSBpbiBhIGMgZmlsZSBjYW4gc29sdmUgdGhpcyBp
-c3N1ZS4KPj4KPj4gI2lmZGVmIENPTkZJR19BUk02NF9JTkRJUkVDVF9QSU8KPj4gI2RlZmluZSBp
-bmIgaW5iCj4+IGV4dGVybiB1OCBpbmIodW5zaWduZWQgbG9uZyBhZGRyKTsKPj4KPj4gI2RlZmlu
-ZSBvdXRiIG91dGIKPj4gZXh0ZXJuIHZvaWQgb3V0Yih1OCB2YWx1ZSwgdW5zaWduZWQgbG9uZyBh
-ZGRyKTsKPj4KPj4gI2RlZmluZSBpbnNiIGluc2IKPj4gZXh0ZXJuIHZvaWQgaW5zYih1bnNpZ25l
-ZCBsb25nIGFkZHIsIHZvaWQgKmJ1ZmZlciwgdW5zaWduZWQgaW50IGNvdW50KTsKPj4KPj4gI2Rl
-ZmluZSBvdXRzYiBvdXRzYgo+PiBleHRlcm4gdm9pZCBvdXRzYih1bnNpZ25lZCBsb25nIGFkZHIs
-IGNvbnN0IHZvaWQgKmJ1ZmZlciwgdW5zaWduZWQgaW50IGNvdW50KTsKPj4gI2VuZGlmCj4+Cj4+
-IGFuZCBkZWZpbml0aW9ucyBvZiBhbGwgdGhlc2UgZnVuY3Rpb25zIGFyZSBpbiBleHRpby5jIDoK
-Pj4KPj4gdTggaW5iKHVuc2lnbmVkIGxvbmcgYWRkcikKPj4gewo+PiAgICAgICAgIGlmICghYXJt
-NjRfZXh0aW9fb3BzIHx8IGFybTY0X2V4dGlvX29wcy0+c3RhcnQgPiBhZGRyIHx8Cj4+ICAgICAg
-ICAgICAgICAgICAgICAgICAgIGFybTY0X2V4dGlvX29wcy0+ZW5kIDwgYWRkcikKPj4gICAgICAg
-ICAgICAgICAgIHJldHVybiByZWFkYihQQ0lfSU9CQVNFICsgYWRkcik7Cj4+ICAgICAgICAgZWxz
-ZQo+PiAgICAgICAgICAgICAgICAgcmV0dXJuIGFybTY0X2V4dGlvX29wcy0+cGZpbiA/Cj4+ICAg
-ICAgICAgICAgICAgICAgICAgICAgIGFybTY0X2V4dGlvX29wcy0+cGZpbihhcm02NF9leHRpb19v
-cHMtPmRldnBhcmEsCj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYWRkciArIGFy
-bTY0X2V4dGlvX29wcy0+cHRvZmZzZXQsIE5VTEwsCj4+ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgc2l6ZW9mKHU4KSwgMSkgOiAtMTsKPj4gfQo+PiAuLi4uLgo+IAo+IFllcywgc291
-bmRzIGdvb2QuCj4gCj4+Pj4gQEAgLTE0OSw2ICsxODUsNjAgQEAgc3RhdGljIGlubGluZSB1NjQg
-X19yYXdfcmVhZHEoY29uc3Qgdm9sYXRpbGUgdm9pZCBfX2lvbWVtICphZGRyKQo+Pj4+ICAjZGVm
-aW5lIElPX1NQQUNFX0xJTUlUICAgICAgICAgICAgICAoUENJX0lPX1NJWkUgLSAxKQo+Pj4+ICAj
-ZGVmaW5lIFBDSV9JT0JBU0UgICAgICAgICAgKCh2b2lkIF9faW9tZW0gKilQQ0lfSU9fU1RBUlQp
-Cj4+Pj4gIAo+Pj4+ICsKPj4+PiArLyoKPj4+PiArICogcmVkZWZpbmUgdGhlIGluKHMpYi9vdXQo
-cyliIGZvciBpbmRpcmVjdC1JTy4KPj4+PiArICovCj4+Pj4gKyNkZWZpbmUgaW5iIGluYgo+Pj4+
-ICtzdGF0aWMgaW5saW5lIHU4IGluYih1bnNpZ25lZCBsb25nIGFkZHIpCj4+Pj4gK3sKPj4+PiAr
-I2lmZGVmIENPTkZJR19BUk02NF9JTkRJUkVDVF9QSU8KPj4+PiArICAgIGlmIChhcm02NF9leHRp
-b19vcHMgJiYgYXJtNjRfZXh0aW9fb3BzLT5zdGFydCA8PSBhZGRyICYmCj4+Pj4gKyAgICAgICAg
-ICAgICAgICAgICAgYWRkciA8PSBhcm02NF9leHRpb19vcHMtPmVuZCkKPj4+PiArICAgICAgICAg
-ICAgcmV0dXJuIGV4dGlvX2luYihhZGRyKTsKPj4+PiArI2VuZGlmCj4+Pj4gKyAgICByZXR1cm4g
-cmVhZGIoUENJX0lPQkFTRSArIGFkZHIpOwo+Pj4+ICt9Cj4+Pj4gKwo+Pj4KPj4+IExvb2tzIG9r
-LCBidXQgeW91IG9ubHkgc2VlbSB0byBkbyB0aGlzIGZvciB0aGUgOC1iaXQKPj4+IGFjY2Vzc29y
-cywgd2hlbiBpdCBzaG91bGQgYmUgZG9uZSBmb3IgMTYtYml0IGFuZCAzMi1iaXQKPj4+IG9uZXMg
-YXMgd2VsbCBmb3IgY29uc2lzdGVuY3kuCj4+IEhpcDA2IExQQyBvbmx5IHN1cHBvcnQgOC1iaXQg
-SS9PIG9wZXJhdGlvbnMgb24gdGhlIGRlc2lnbmF0ZWQgcG9ydC4KPiAKPiBUaGF0IGlzIGFuIGlu
-dGVyZXN0aW5nIGxpbWl0YXRpb24uIE1heWJlIHN0aWxsIGNhbGwgdGhlIGV4dGlvIG9wZXJhdGlv
-bnMKPiBhbmQgaGF2ZSB0aGVtIGRvIFdBUk5fT05fT05DRSgpIGluc3RlYWQ/Cj4gCj4gSWYgeW91
-IGdldCBhIGRyaXZlciB0aGF0IGNhbGxzIGludy9vdXR3IG9uIHRoZSByYW5nZSB0aGF0IGlzIG93
-bmVkCj4gYnkgdGhlIExQQyBidXMsIHlvdSBvdGhlcndpc2UgZ2V0IGFuIHVuaGFuZGxlZCBwYWdl
-IGZhdWx0IGluIGtlcm5lbAo+IHNwYWNlLCB3aGljaCBpcyBub3QgYXMgbmljZS4KCkFzIGZvciB0
-aGlzIGlzc3VlLCBJIHByb3ZpZGVkIGEgd3JvbmcgcmVwbHkgaW4gdGhlIGxhc3QgZW1haWwuCkFm
-dGVyIGRvdWJsZS1jaGVja2luZyB3aXRoIFNvQyBndXlzLCB0aGUgaW53KGwpL291dHcobCkgYXJl
-IE9LIHdpdGggbXVsdGlwbGUgOC1iaXQgdHJhbnNmZXJzIHRvIGNvbnNlY3V0aXZlCkkvTyBhZGRy
-ZXNzZXMuCgpTb3JyeSBmb3IgdGhlIHdyb25nIGluZm9ybWF0aW9uIQpXaWxsIHN1cHBvcnQgaW53
-KGwpL291dHcobCkgaW4gVjQuCgpCZXN0LApaaGljaGFuZwoKCj4gCj4+Pj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvYnVzL2V4dGlvLmMgYi9kcml2ZXJzL2J1cy9leHRpby5jCj4+Pj4gbmV3IGZpbGUg
-bW9kZSAxMDA2NDQKPj4+PiBpbmRleCAwMDAwMDAwLi4xZTdhOWM1Cj4+Pj4gLS0tIC9kZXYvbnVs
-bAo+Pj4+ICsrKyBiL2RyaXZlcnMvYnVzL2V4dGlvLmMKPj4+PiBAQCAtMCwwICsxLDY2IEBACj4+
-Pgo+Pj4gVGhpcyBpcyBpbiBhIGdsb2JhbGx5IHZpc2libGUgZGlyZWN0b3J5Cj4+Pgo+Pj4+ICsK
-Pj4+PiArc3RydWN0IGV4dGlvX29wcyAqYXJtNjRfZXh0aW9fb3BzOwo+Pj4KPj4+IEJ1dCB0aGUg
-aWRlbnRpZmllciB1c2VzIGFuIGFyY2hpdGVjdHVyZSBzcGVjaWZpYyBwcmVmaXguIEVpdGhlcgo+
-Pj4gbW92ZSB0aGUgd2hvbGUgZmlsZSBpbnRvIGFyY2gvYXJtNjQsIG9yIG1ha2UgdGhlIG5hbWlu
-ZyBzbyB0aGF0Cj4+PiBpdCBjYW4gYmUgdXNlZCBmb3IgZXZlcnl0aGluZy4KPj4KPj4gSSBwZXJm
-ZXIgdG8gbW92ZSB0aGUgd2hvbGUgZmlsZSBpbnRvIGFyY2gvYXJtNjQsIGV4dGlvLmggd2lsbCBi
-ZSBtb3ZlZCB0byBhcmNoL2FybTY0L2luY2x1ZGUvYXNtOwo+IAo+IE9rLCB0aGF0IHNpbXBsaWZp
-ZXMgaXQgYSBsb3QsIHlvdSBjYW4ganVzdCBkbyBldmVyeXRoaW5nIGluIGFzbS9pby5oIHRoZW4u
-Cj4gCj4gCUFybmQKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlz
-dHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3Rp
-bmZvL2xpbnV4LWFybS1rZXJuZWwK
+NXP arm aer/pme interrupts was not MSI/MSI-X/INTx but using interrupt
+line independently. This patch add a "aer" "pme" interrupt-names for
+aer/pme interrupts.
+
+With the interrupt-names "aer","pme" code could probe aer/pme interrupt
+line for pcie root port, replace the aer/pme interrupt service irqs.
+
+This patch is intend to fixup the Layerscape platforms which aer/pme
+interrupt was not MSI/MSI-X/INTx, but using interrupt line independently.
+
+Since the interrupt-names "intr" never been used. Remove it.
+
+Signed-off-by: Po Liu <po.liu@nxp.com>
+---
+changes for v6:
+	- add remove "intr" reason;
+	- add "pme" interrupt;
+
+ arch/arm/boot/dts/ls1021a.dtsi | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dtsi
+index 368e219..9b3cb3b 100644
+--- a/arch/arm/boot/dts/ls1021a.dtsi
++++ b/arch/arm/boot/dts/ls1021a.dtsi
+@@ -634,7 +634,9 @@
+ 			reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+ 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
++			interrupts = <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>,
++					   <GIC_SPI 183 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
++			interrupt-names = "pme", "aer";
+ 			fsl,pcie-scfg = <&scfg 0>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -657,7 +659,9 @@
+ 			reg = <0x00 0x03500000 0x0 0x00010000   /* controller registers */
+ 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>;
++			interrupts = <GIC_SPI 182 IRQ_TYPE_LEVEL_HIGH>,
++					   <GIC_SPI 184 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
++			interrupt-names = "pme", "aer";
+ 			fsl,pcie-scfg = <&scfg 1>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+-- 
+2.1.0.27.g96db324
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
