@@ -1,91 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Date: Wed, 07 Sep 2016 01:57:11 +0200
-Message-ID: <1546158.G8Vnv1pldV@vostro.rjw.lan>
-In-Reply-To: <20160728152831.GA1929@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <2841548.NIYVpJFBcH@vostro.rjw.lan> <20160728152831.GA1929@wunner.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201609300844.24325.linux@rainbow-software.org>
+ <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
+ <201609301756.25894.linux@rainbow-software.org>
+ <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
+ <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
+ <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
+ <CAJZ5v0isjggpiSnFYy_1omEorTD6HSWe2jCsRmvugyH6qiYq2g@mail.gmail.com>
+ <a1d4d971-2737-c831-1f34-93f2be449478@codeaurora.org>
+ <CAJZ5v0gKFVEYFhyge8+_ZTSg_OK6uzBByivgbvEV-Up4Q3YSiw@mail.gmail.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
+        ravikanth.nalla@hpe.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <230f80d3-b7f0-6b33-5176-5de568576f48@codeaurora.org>
+Date: Fri, 30 Sep 2016 17:33:51 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
- linux-samsung-soc@vger.kernel.org,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Inki Dae <inki.dae@samsung.com>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
- linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAJZ5v0gKFVEYFhyge8+_ZTSg_OK6uzBByivgbvEV-Up4Q3YSiw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 28, 2016 05:28:31 PM Lukas Wunner wrote:
-> On Thu, Jul 28, 2016 at 02:30:31AM +0200, Rafael J. Wysocki wrote:
-> > On Monday, July 25, 2016 12:48:32 AM Lukas Wunner wrote:
-> > > On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
-> > > > On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
-> > > > > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
-> > > > > no driver is bound to the NHI. Doesn't feel pretty to me though.
-> > > > > 
-> > > > > Ultimately this seems to be the same issue as with calling
-> > > > > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
-> > > > > can likewise be allowed if a runtime PM ref is held for the devices
-> > > > > and the call happens under lock_system_sleep()?
-> > > > 
-> > > > No, the whole synchronization scheme in the links code would have had to be
-> > > > changed for that to really work.
-> > > > 
-> > > > And it really is about what is needed (at least in principle) to run your
-> > > > device.  If you think you need device X with a driver to handle device Y
-> > > > correctly, then either you need it all the time, from probe to remove, or
-> > > > you just don't really need it at all.
-> > > 
-> > > Real life isn't as simple as that.
-> > > 
-> > > In this case, we have consumers (hotplug ports) which are doing fine
-> > > if the driver for the supplier (NHI) is not loaded. But once it loads,
-> > > the links must be in place.
-> > 
-> > Hmm.
-> > 
-> > What if it is not loaded and the system suspends.  Will everything work
-> > as expected after the subsequent resume?
+On 9/30/2016 5:27 PM, Rafael J. Wysocki wrote:
+> On Fri, Sep 30, 2016 at 11:14 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 9/30/2016 5:04 PM, Rafael J. Wysocki wrote:
+>>>>>
+>>>>> I hope it makes sense now. I tend to skip details sometimes. Feel free to
+>>>>> send more questions.
+>>> Thanks for the information!
+>>>
+>>> IIUC, basically, what you are proposing would be to restore the old
+>>> penalizing method for IRQs in the 0-255 range and use the new approach
+>>> for the rest, right?
+>>
+>> Correct.
+>>
+>>>
+>>> What's the drawback, if any?
+>>
+>> I don't see any drawback to be honest.
 > 
-> The short answer is yes.
+> I'd go for it then, if Bjorn doesn't hate it.
 
-OK
+OK. I'll prep something.
+Bjorn?
 
-I think it's possible to add a link flag to address this case.
+> 
+>> The reason why I got rid of these ISA
+>> API functions was to remove some of the x86ism from ACPI code. This was Bjorn's
+>> request to clean it up and we failed in two places so far.
+>>
+>> 1. acpi_irq_penalty_init
+>> 2. acpi_penalize_sci_irq
+>>
+>> and we ended up reverting both of these changes. The reverts are all because of the
+>> fact that these APIs are called asynchronously without any coordination with the
+>> PCI Link object or the interrupt controller driver about when it is a good time to be
+>> called.
+>>
+>> During this debug, I learnt that acpi_penalize_isa_irq gets called before even ACPI
+>> gets to initialize and relies on static IRQ array for keeping the penalties.
+> 
+> So maybe add some comments to that code to explain why things are
+> arranged the way they are.  We may need/want to revisit it at one
+> point and such comments will be very useful then.
 
-Namely, if that flag is passed to device_link_add(), the link will be
-added in the DEVICE_LINK_ACTIVE state right away, but that will need to
-be synchronized against all possible transitions of the consumer device
-(at least).
+Yeah, I think this code definitely needs some documentation. It ended up being
+one of the most fragile places in the kernel. This is my 3rd attempt to rearrange
+the code.
 
-It's better to do that in a separate patch for this reason IMO.
+> 
+> Thanks,
+> Rafael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Thanks,
-Rafael
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
