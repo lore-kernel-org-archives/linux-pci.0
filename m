@@ -1,114 +1,95 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
-Date: Mon,  5 Sep 2016 22:05:39 +0200
-Message-Id: <1473105940-9761-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 4/4] PCI: Add a macro to set default alignment for all
+ PCI devices
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1473757234-5284-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160929140014.GB31048@localhost>
+Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
+        paulus@samba.org, bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 30 Sep 2016 12:13:30 +0800
+MIME-Version: 1.0
+In-Reply-To: <20160929140014.GB31048@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <313ed70e-d857-6429-e5ca-6d22b0a39c98@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Firmware agnostic code lands in common functions which do necessary
-domain initialization based on unique domain handler. DT specific
-code goes to DT specific init call.
+On 2016/9/29 22:00, Bjorn Helgaas wrote:
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 +++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 15 deletions(-)
+> On Tue, Sep 13, 2016 at 05:00:34PM +0800, Yongji Xie wrote:
+>> When vfio passthroughs a PCI device of which MMIO BARs are
+>> smaller than PAGE_SIZE, guest will not handle the mmio
+>> accesses to the BARs which leads to mmio emulations in host.
+>>
+>> This is because vfio will not allow to passthrough one BAR's
+>> mmio page which may be shared with other BARs. Otherwise,
+>> there will be a backdoor that guest can use to access BARs
+>> of other guest.
+>>
+>> This patch adds a macro to set default alignment for all
+>> PCI devices. Then we could solve this issue on some platforms
+>> which would easily hit this issue because of their 64K page
+>> such as PowerNV platform by defining this macro as PAGE_SIZE.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   arch/powerpc/include/asm/pci.h |    4 ++++
+>>   drivers/pci/pci.c              |    4 ++++
+>>   2 files changed, 8 insertions(+)
+>>
+>> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+>> index e9bd6cf..5e31bc2 100644
+>> --- a/arch/powerpc/include/asm/pci.h
+>> +++ b/arch/powerpc/include/asm/pci.h
+>> @@ -28,6 +28,10 @@
+>>   #define PCIBIOS_MIN_IO		0x1000
+>>   #define PCIBIOS_MIN_MEM		0x10000000
+>>   
+>> +#ifdef CONFIG_PPC_POWERNV
+>> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
+>> +#endif
+>> +
+>>   struct pci_dev;
+>>   
+>>   /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 37f8062..9c61cbe 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>>   	resource_size_t align = 0;
+>>   	char *p;
+>>   
+>> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
+>> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
+>> +	*resize = false;
+>> +#endif
+> I'm a little confused about how this works.
+>
+> I think this change only does something if the user specifies
+> "pci=resource_alignment=..." or writes to the /sys/.../resource_alignment
+> file, because those are the only ways to set resource_alignment_param.
+>
+> If that's true, isn't the *default* to align to PAGE_SIZE?  So I don't
+> understand what PCIBIOS_DEFAULT_ALIGNMENT changes.
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index aee60ed..d2c2496 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -106,34 +106,48 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
- 
--static int __init its_pci_msi_init(void)
-+static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
-+				       const char *name)
- {
--	struct device_node *np;
- 	struct irq_domain *parent;
- 
-+	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
-+	if (!parent || !msi_get_domain_info(parent)) {
-+		pr_err("%s: Unable to locate ITS domain\n", name);
-+		return -ENXIO;
-+	}
-+
-+	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
-+				       parent)) {
-+		pr_err("%s: Unable to create PCI domain\n", name);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init its_pci_of_msi_init(void)
-+{
-+	struct device_node *np;
-+
- 	for (np = of_find_matching_node(NULL, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
--		if (!parent || !msi_get_domain_info(parent)) {
--			pr_err("%s: unable to locate ITS domain\n",
--			       np->full_name);
-+		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
- 			continue;
--		}
--
--		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
--					       &its_pci_msi_domain_info,
--					       parent)) {
--			pr_err("%s: unable to create PCI domain\n",
--			       np->full_name);
--			continue;
--		}
- 
- 		pr_info("PCI/MSI: %s domain created\n", np->full_name);
- 	}
- 
- 	return 0;
- }
-+
-+static int __init its_pci_msi_init(void)
-+{
-+	its_pci_of_msi_init();
-+
-+	return 0;
-+}
- early_initcall(its_pci_msi_init);
--- 
-1.9.1
+In pci_reassigndev_resource_alignment(), we can see:
+
+align = pci_specified_resource_alignment(dev);
+     if (!align)
+         return;
+
+So we would still align the device's BAR to PAGE_SIZE without
+set resource_alignment_param if we set @align to a default value
+in pci_specified_resource_alignment().
+
+> And I'm hoping we can get rid of the resize flag based on the
+> discussion of the previous patch.
+
+Will do.
+
+Thanks,
+Yongji
