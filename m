@@ -1,43 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V2 5/5] PCI: handle CRS returned by device after FLR
-Date: Fri, 16 Sep 2016 16:06:34 -0400
-Message-Id: <1474056395-21843-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
-References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 30 Sep 2016 09:14:42 -0400
+From: okaya@codeaurora.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+In-Reply-To: <201609300844.24325.linux@rainbow-software.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201609292000.56943.linux@rainbow-software.org>
+ <34355440-197d-44c7-b27d-535267d1161c@codeaurora.org>
+ <201609300844.24325.linux@rainbow-software.org>
+Message-ID: <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An endpoint is allowed to issue CRS following an FLR request to indicate
-that it is not ready to accept new requests. Changing the polling mechanism
-in FLR wait function to go read the vendor ID instead of the command/status
-register. A CRS indication will only be given if the address to be read is
-vendor ID.
+On 2016-09-30 02:44, Ondrej Zary wrote:
+> On Friday 30 September 2016, Sinan Kaya wrote:
+>> On 9/29/2016 2:00 PM, Ondrej Zary wrote:
+>> >> The previous two patches were in the right direction.
+>> >>
+>> >> > Can we also get the same output from 4.6 kernel with the attached
+>> >> > patch for the same machine you sent these?
+>> >
+>> > Here it is.
+>> >
+>> >> > Something about SCI still doesn't feel right.
+>> >> >
+>> >> > The IRQ assignment fails if the penalty is greater than
+>> >> > PIRQ_PENALTY_ISA_ALWAYS. This will happen if BIOS tells us to use an
+>> >> > IRQ and same IRQ is in use by the SCI.
+>> 
+>> Thanks, I reverted penalize_sci function and dropped patch #1. Can you 
+>> try
+>> this again?
+> 
+> It seems to work, at least on one machine.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ok, that comfirms my suspicion. We are  having trouble detecting sci 
+interrupt  type and we end up penalizing the wrong value.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e913467..1def11e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3729,7 +3729,8 @@ static void pci_flr_wait(struct pci_dev *dev)
- 
- 	do {
- 		msleep(100);
--		pci_read_config_dword(dev, PCI_COMMAND, &id);
-+		pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-+					   60 * 1000);
- 	} while (i++ < 10 && id == ~0);
- 
- 	if (id == ~0)
--- 
-1.9.1
+Can you try your other machines too?
+
+I need to do some research now.
