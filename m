@@ -1,46 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:37126 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933488AbcIZUoO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 16:44:14 -0400
-Subject: Re: [PATCH v5 00/16] Add Paravirtual RDMA Driver
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <cover.1474759181.git.aditr@vmware.com>
- <20160925070352.GU4088@leon.nu>
- <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
- <20160926165104.GA12011@obsidianresearch.com>
-CC: Leon Romanovsky <leon@kernel.org>, <dledford@redhat.com>,
-        <linux-rdma@vger.kernel.org>, <pv-drivers@vmware.com>,
-        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <jhansen@vmware.com>, <asarwade@vmware.com>,
-        <georgezhang@vmware.com>, <bryantan@vmware.com>
-From: Adit Ranadive <aditr@vmware.com>
-Message-ID: <b4e0acd9-e1a2-f6ac-0afa-c0fd62dd62f0@vmware.com>
-Date: Mon, 26 Sep 2016 13:40:10 -0700
+Received: from cn.fujitsu.com ([59.151.112.132]:22816 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750818AbcI3CwJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 22:52:09 -0400
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <bigeasy@linutronix.de>
+Subject: [PATCH] aer: function comments cleanup
+Date: Fri, 30 Sep 2016 10:52:57 +0800
+Message-ID: <1475203977-21926-1-git-send-email-caoj.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20160926165104.GA12011@obsidianresearch.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 26, 2016 at 10:51:04AM -0600, Jason Gunthorpe wrote:
-> On Sun, Sep 25, 2016 at 10:25:12PM -0700, Adit Ranadive wrote:
-> > > As Jason said, you need a very good reason to split and create number of
-> > > files per-driver in UAPI folder.
-> > 
-> > I can move the pvrdma-uapi.h back to the pvrdma driver folder.
-> 
-> Just don't copy any of the content into your user space provider.
+Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks. I wanted to clarify regarding device specific structures since that
-is what our pvrdma-uapi.h file has.
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 48d21e0..20eea86 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -294,7 +294,6 @@ static void aer_remove(struct pcie_device *dev)
+ /**
+  * aer_probe - initialize resources
+  * @dev: pointer to the pcie_dev data structure
+- * @id: pointer to the service id data structure
+  *
+  * Invoked when PCI Express bus loads AER service driver.
+  */
+-- 
+2.1.0
 
-Wouldnt they be some overlap between the user-space and kernel driver? Or is
-it expected that the common structures (even device specific ones) be moved to
-the ABI file?
 
-For the mlx4 driver I see that the structures in include/linux/mlx4/qp.h
-and in libmlx4/src/wqe.h are similar.
 
-Thanks,
-Adit
