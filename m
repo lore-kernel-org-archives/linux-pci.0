@@ -1,345 +1,119 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 27 Oct 2016 11:35:59 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rick Kerkhof <rick.2889@gmail.com>, linux-acpi@vger.kernel.org,
-        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org
-Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
- via Power Resources
-Message-ID: <20161027093559.GC27017@al>
-References: <bug-98398-8800@http.bugs.freedesktop.org/>
- <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
- <20161026225641.GA27017@al>
- <20161027081748.GX1476@lahna.fi.intel.com>
- <20161027090604.GB27017@al>
- <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
- <20161027093011.GZ1476@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161027093011.GZ1476@lahna.fi.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize function"
+Date: Sat,  1 Oct 2016 13:46:16 -0400
+Message-Id: <1475343976-20744-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
+References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 27, 2016 at 12:30:11PM +0300, Mika Westerberg wrote:
-> On Thu, Oct 27, 2016 at 09:15:19AM +0000, Rick Kerkhof wrote:
-> >    I can confirm what Peter said, path contains \_SB_.PCI0.RP05 and
-> >    power_state contains D3hot.
-> 
-> And there are no power_resources_Dx directories under
-> /sys/bus/pci/devices/0000:00:1c.4/firmware_node?
+This reverts commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize
+function"). SCI penalty API was replaced by the runtime penalty calculation
+based on the value of acpi_gbl_FADT.sci_interrupt.
 
-Correct, this is what Rick sent me yesterday for
-ls -lR /sys/bus/pci/devices/0000:00:1c.4/firmware_node/
+acpi_gbl_FADT.sci_interrupt type does not get updated at the right time
+for some platforms and results in incorrect penalty assignment for PCI
+IRQs as irq_get_trigger_type returns the wrong type.
 
-    .:
-    totaal 0
-    -r--r--r--  1 root root 4096 26 okt 22:10 adr
-    drwxr-xr-x  3 root root    0 26 okt 22:12 device:32
-    drwxr-xr-x 12 root root    0 26 okt 22:12 LNXVIDEO:00
-    -r--r--r--  1 root root 4096 26 okt 22:10 path
-    lrwxrwxrwx  1 root root    0 26 okt 22:10 physical_node -> ../../../../pci0000:00/0000:00:1c.4
-    drwxr-xr-x  2 root root    0 26 okt 22:12 power
-    -r--r--r--  1 root root 4096 26 okt 22:10 power_state
-    lrwxrwxrwx  1 root root    0 26 okt 22:10 subsystem -> ../../../../../bus/acpi
-    -rw-r--r--  1 root root 4096 26 okt 22:10 uevent
+Link: http://www.spinics.net/lists/linux-pci/msg54599.html
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/kernel/acpi/boot.c |  1 +
+ drivers/acpi/pci_link.c     | 34 ++++++++++++++--------------------
+ include/linux/acpi.h        |  1 +
+ 3 files changed, 16 insertions(+), 20 deletions(-)
 
-    ./device:32:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:12 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:12 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:12 uevent
-
-    ./device:32/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:12 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:12 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:12 control
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:12 runtime_usage
-
-    ./LNXVIDEO:00:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:33
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:34
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:35
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:36
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:37
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:38
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:39
-    drwxr-xr-x 3 root root    0 26 okt 22:31 device:3a
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 driver -> ../../../../../../bus/acpi/drivers/video
-    -r--r--r-- 1 root root 4096 26 okt 22:31 hid
-    drwxr-xr-x 3 root root    0 26 okt 22:31 input
-    -r--r--r-- 1 root root 4096 26 okt 22:31 modalias
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    lrwxrwxrwx 1 root root    0 26 okt 22:31 physical_node -> ../../../../../pci0000:00/0000:00:1c.4/0000:01:00.0
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    -r--r--r-- 1 root root 4096 26 okt 22:31 power_state
-    -r--r--r-- 1 root root 4096 26 okt 22:31 status
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:33:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:33/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:34:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:34/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:35:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:35/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:36:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:36/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:37:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:37/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:38:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:38/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:39:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:39/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/device:3a:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 adr
-    -r--r--r-- 1 root root 4096 26 okt 22:31 path
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../bus/acpi
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/device:3a/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/input:
-    totaal 0
-    drwxr-xr-x 6 root root 0 26 okt 22:31 input4
-
-    ./LNXVIDEO:00/input/input4:
-    totaal 0
-    drwxr-xr-x 2 root root    0 26 okt 22:31 capabilities
-    lrwxrwxrwx 1 root root    0 26 okt 22:31 device -> ../../../LNXVIDEO:00
-    drwxr-xr-x 3 root root    0 26 okt 22:31 event4
-    drwxr-xr-x 2 root root    0 26 okt 22:31 id
-    -r--r--r-- 1 root root 4096 26 okt 22:31 modalias
-    -r--r--r-- 1 root root 4096 26 okt 22:31 name
-    -r--r--r-- 1 root root 4096 26 okt 22:31 phys
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    -r--r--r-- 1 root root 4096 26 okt 22:31 properties
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../../class/input
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-    -r--r--r-- 1 root root 4096 26 okt 22:31 uniq
-
-    ./LNXVIDEO:00/input/input4/capabilities:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 abs
-    -r--r--r-- 1 root root 4096 26 okt 22:31 ev
-    -r--r--r-- 1 root root 4096 26 okt 22:31 ff
-    -r--r--r-- 1 root root 4096 26 okt 22:31 key
-    -r--r--r-- 1 root root 4096 26 okt 22:31 led
-    -r--r--r-- 1 root root 4096 26 okt 22:31 msc
-    -r--r--r-- 1 root root 4096 26 okt 22:31 rel
-    -r--r--r-- 1 root root 4096 26 okt 22:31 snd
-    -r--r--r-- 1 root root 4096 26 okt 22:31 sw
-
-    ./LNXVIDEO:00/input/input4/event4:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 dev
-    lrwxrwxrwx 1 root root    0 26 okt 22:31 device -> ../../input4
-    drwxr-xr-x 2 root root    0 26 okt 22:31 power
-    lrwxrwxrwx 1 root root    0 26 okt 22:10 subsystem -> ../../../../../../../../../class/input
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 uevent
-
-    ./LNXVIDEO:00/input/input4/event4/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/input/input4/id:
-    totaal 0
-    -r--r--r-- 1 root root 4096 26 okt 22:31 bustype
-    -r--r--r-- 1 root root 4096 26 okt 22:31 product
-    -r--r--r-- 1 root root 4096 26 okt 22:31 vendor
-    -r--r--r-- 1 root root 4096 26 okt 22:31 version
-
-    ./LNXVIDEO:00/input/input4/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./LNXVIDEO:00/power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:31 control
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:31 runtime_usage
-
-    ./power:
-    totaal 0
-    -rw-r--r-- 1 root root 4096 26 okt 22:11 async
-    -rw-r--r-- 1 root root 4096 26 okt 22:11 autosuspend_delay_ms
-    -rw-r--r-- 1 root root 4096 26 okt 22:11 control
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_active_kids
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_active_time
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_enabled
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_status
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_suspended_time
-    -r--r--r-- 1 root root 4096 26 okt 22:11 runtime_usage
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 90d84c3..0ffd26e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+ 
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
++	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+ 
+ 	/*
+ 	 * stash over-ride to indicate we've been here
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 06c2a11..6a2af19 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -495,27 +495,10 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ 
+ static int acpi_irq_get_penalty(int irq)
+ {
+-	int penalty = 0;
+-
+-	/*
+-	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+-	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+-	* use for PCI IRQs.
+-	*/
+-	if (irq == acpi_gbl_FADT.sci_interrupt) {
+-		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+-
+-		if (type != IRQ_TYPE_LEVEL_LOW)
+-			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			penalty += PIRQ_PENALTY_PCI_USING;
+-	}
+-
+-	if (irq < ACPI_MAX_ISA_IRQS)
+-		return penalty + acpi_irq_penalty[irq];
++	if (irq < ACPI_MAX_IRQS)
++		return acpi_irq_penalty[irq];
+ 
+-	penalty += acpi_irq_pci_sharing_penalty(irq);
+-	return penalty;
++	return acpi_irq_pci_sharing_penalty(irq);
+ }
+ 
+ int __init acpi_irq_penalty_init(void)
+@@ -886,6 +869,17 @@ bool acpi_isa_irq_available(int irq)
+ 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
++{
++	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
++		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
++		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
++			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
++		else
++			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
++	}
++}
++
+ /*
+  * Over-ride default table to reserve additional IRQs for use by ISA
+  * e.g. acpi_irq_isa=5
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4d8452c..85ac7d5 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -318,6 +318,7 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ extern int ec_read(u8 addr, u8 *val);
 -- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+1.9.1
+
