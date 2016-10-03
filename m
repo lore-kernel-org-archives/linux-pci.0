@@ -1,70 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:39285 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933222AbcJRBfx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:35:53 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 2/4] PCI: rockchip: Mark RC as common clock architecture
-Date: Tue, 18 Oct 2016 09:41:27 +0800
-Message-Id: <1476754889-21804-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
+To: Jonathan Liu <net147@gmail.com>
+References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
+ <CANwerB2bhMbkQrGG55Bq-yrFk_DC3Pz2tF0CRrt4ccmrzTmrzQ@mail.gmail.com>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <bf16b077-603f-bc7e-cd7b-bf006242f781@codeaurora.org>
+Date: Sun, 2 Oct 2016 21:07:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <CANwerB2bhMbkQrGG55Bq-yrFk_DC3Pz2tF0CRrt4ccmrzTmrzQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The default value of common clock configuration is
-zero indicating Rockchip's RC is using asynchronous
-clock architecture but actually we are using common
-clock. This will confuses some EP drivers if they
-need some different settings referring to this value.
-So let's fix it.
+On 10/2/2016 7:40 AM, Jonathan Liu wrote:
+> This series fixes one or more network adapters in VirtualBox not
+> working with Linux 32-bit x86 guest if I have 4 network adapters
+> enabled. The following message no longer appears in the kernel log:
+> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+> 
+> Tested-by: Jonathan Liu <net147@gmail.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Thanks for the test. I didn't realize that VirtualBox was broken too.
 
----
+So far I got some random test results in the mail list that something
+is broken. I hope to hear more that we close the issue for some time
+now. 
 
-Changes in v4:
-- rebase on the next branch
+The IRQ stuff got broken three times already. Hopefully, this will be
+the seal.
 
-Changes in v3:
-- rebase the code since it isn't cleanly applied again
-
-Changes in v2:
-- rebase the code since it isn't cleanly applied after Bjorn's cleanup
-
- drivers/pci/host/pcie-rockchip.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 3ede865..8e260d2 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -141,6 +141,7 @@
- #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
- #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
-+#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
- #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
- #define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
- #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
-@@ -536,6 +537,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 
- 	rockchip_pcie_set_power_limit(rockchip);
- 
-+	/* Set RC's clock architecture as common clock */
-+	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+	status |= PCIE_RC_CONFIG_LCS_CCC;
-+	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+
- 	/* Enable Gen1 training */
- 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
- 			    PCIE_CLIENT_CONFIG);
 -- 
-2.3.7
-
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
