@@ -1,139 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48056 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938941AbcJGQ0h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:26:37 -0400
-Subject: [PATCH 3/5] PCI: tegra: Swap order of pads_writel() reg/val
- arguments
-To: Alexandre Courbot <gnurou@gmail.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Stephen Warren <swarren@wwwdotorg.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:26:32 -0500
-Message-ID: <20161007162632.23718.27618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162615.23718.84354.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162615.23718.84354.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org
+Cc: Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V3 1/2] PCI: add CRS support to error handling path
+Date: Mon,  3 Oct 2016 01:36:59 -0400
+Message-Id: <1475473021-14251-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
+References: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Swap order of pads_writel() arguments to match the "dev, pos, val"
-order used by pci_write_config_word() and other drivers.  No functional
-change intended.
+The PCIE spec allows an endpoint device to extend the initialization time
+beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
+vendor ID read request.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This basically means "I'm busy now, please call me back later".
+
+There are two moving parts to CRS support from the SW perspective. One part
+is to determine if CRS is supported or not. The second part is to set the
+CRS visibility register.
+
+As part of the probe, the Linux kernel sets the above two conditions in
+pci_enable_crs function. The kernel is also honoring the returned CRS in
+pci_bus_read_dev_vendor_id function if supported. The function will poll up
+to specified amount of time while endpoint is returning CRS response.
+
+The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
+resets.
+
+The hot reset is initiated by starting a secondary bus reset. A bus/device
+restore follows the reset.  This patch is adding vendor ID read into dev
+restore function to validate that the device is accessible before writing
+the register contents. If the device issues CRS, the code might poll up
+to 60 seconds.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pci-tegra.c |   30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/pci/pci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 146b69f..4b01893 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -337,13 +337,13 @@ static u32 afi_readl(struct tegra_pcie *pcie, unsigned long offset)
- 	return readl(pcie->afi + offset);
- }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..c8749b9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4020,6 +4020,12 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
  
--static inline void pads_writel(struct tegra_pcie *pcie, u32 value,
--			       unsigned long offset)
-+static void pads_writel(struct tegra_pcie *pcie, unsigned long offset,
-+			u32 value)
+ static void pci_dev_restore(struct pci_dev *dev)
  {
- 	writel(value, pcie->pads + offset);
++	u32 l;
++
++	/* see if the device is accessible first */
++	if (!pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 60 * 1000))
++		return;
++
+ 	pci_restore_state(dev);
+ 	pci_reset_notify(dev, false);
  }
- 
--static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
-+static u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
- {
- 	return readl(pcie->pads + offset);
- }
-@@ -797,12 +797,12 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	int err;
- 
- 	/* initialize internal PHY, enable up to 16 PCIE lanes */
--	pads_writel(pcie, 0x0, PADS_CTL_SEL);
-+	pads_writel(pcie, PADS_CTL_SEL, 0);
- 
- 	/* override IDDQ to 1 on all 4 lanes */
- 	value = pads_readl(pcie, PADS_CTL);
- 	value |= PADS_CTL_IDDQ_1L;
--	pads_writel(pcie, value, PADS_CTL);
-+	pads_writel(pcie, PADS_CTL, value);
- 
- 	/*
- 	 * Set up PHY PLL inputs select PLLE output as refclock,
-@@ -811,19 +811,19 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	value = pads_readl(pcie, soc->pads_pll_ctl);
- 	value &= ~(PADS_PLL_CTL_REFCLK_MASK | PADS_PLL_CTL_TXCLKREF_MASK);
- 	value |= PADS_PLL_CTL_REFCLK_INTERNAL_CML | soc->tx_ref_sel;
--	pads_writel(pcie, value, soc->pads_pll_ctl);
-+	pads_writel(pcie, soc->pads_pll_ctl, value);
- 
- 	/* reset PLL */
- 	value = pads_readl(pcie, soc->pads_pll_ctl);
- 	value &= ~PADS_PLL_CTL_RST_B4SM;
--	pads_writel(pcie, value, soc->pads_pll_ctl);
-+	pads_writel(pcie, soc->pads_pll_ctl, value);
- 
- 	usleep_range(20, 100);
- 
- 	/* take PLL out of reset  */
- 	value = pads_readl(pcie, soc->pads_pll_ctl);
- 	value |= PADS_PLL_CTL_RST_B4SM;
--	pads_writel(pcie, value, soc->pads_pll_ctl);
-+	pads_writel(pcie, soc->pads_pll_ctl, value);
- 
- 	/* wait for the PLL to lock */
- 	err = tegra_pcie_pll_wait(pcie, 500);
-@@ -835,12 +835,12 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	/* turn off IDDQ override */
- 	value = pads_readl(pcie, PADS_CTL);
- 	value &= ~PADS_CTL_IDDQ_1L;
--	pads_writel(pcie, value, PADS_CTL);
-+	pads_writel(pcie, PADS_CTL, value);
- 
- 	/* enable TX/RX data */
- 	value = pads_readl(pcie, PADS_CTL);
- 	value |= PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L;
--	pads_writel(pcie, value, PADS_CTL);
-+	pads_writel(pcie, PADS_CTL, value);
- 
- 	return 0;
- }
-@@ -853,17 +853,17 @@ static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
- 	/* disable TX/RX data */
- 	value = pads_readl(pcie, PADS_CTL);
- 	value &= ~(PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L);
--	pads_writel(pcie, value, PADS_CTL);
-+	pads_writel(pcie, PADS_CTL, value);
- 
- 	/* override IDDQ */
- 	value = pads_readl(pcie, PADS_CTL);
- 	value |= PADS_CTL_IDDQ_1L;
--	pads_writel(pcie, value, PADS_CTL);
-+	pads_writel(pcie, PADS_CTL, value);
- 
- 	/* reset PLL */
- 	value = pads_readl(pcie, soc->pads_pll_ctl);
- 	value &= ~PADS_PLL_CTL_RST_B4SM;
--	pads_writel(pcie, value, soc->pads_pll_ctl);
-+	pads_writel(pcie, soc->pads_pll_ctl, value);
- 
- 	usleep_range(20, 100);
- 
-@@ -935,10 +935,10 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- 	}
- 
- 	/* Configure the reference clock driver */
--	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
-+	pads_writel(pcie, PADS_REFCLK_CFG0, soc->pads_refclk_cfg0);
- 
- 	if (soc->num_ports > 2)
--		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
-+		pads_writel(pcie, PADS_REFCLK_CFG1, soc->pads_refclk_cfg1);
- 
- 	return 0;
- }
-
+-- 
+1.9.1
