@@ -1,58 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49824 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933163AbcJGQax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:30:53 -0400
-Subject: [PATCH 5/7] PCI: designware-plat: Remove redundant
- dw_plat_pcie.mem_base
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:30:49 -0500
-Message-ID: <20161007163049.24388.215.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <bf16b077-603f-bc7e-cd7b-bf006242f781@codeaurora.org>
+References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
+ <CANwerB2bhMbkQrGG55Bq-yrFk_DC3Pz2tF0CRrt4ccmrzTmrzQ@mail.gmail.com> <bf16b077-603f-bc7e-cd7b-bf006242f781@codeaurora.org>
+From: Jonathan Liu <net147@gmail.com>
+Date: Mon, 3 Oct 2016 19:03:28 +1100
+Message-ID: <CANwerB2fNtCDZLiAFZ3XPE_6NJ7STnUfhaLmWKUp-eU+8_FzfA@mail.gmail.com>
+Subject: Re: [1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
+        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
+        linux@rainbow-software.org, timur@codeaurora.org,
+        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the struct dw_plat_pcie.mem_base member, which is only used as a
-temporary.  No functional change intended.
+On 3 October 2016 at 12:07, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 10/2/2016 7:40 AM, Jonathan Liu wrote:
+>> This series fixes one or more network adapters in VirtualBox not
+>> working with Linux 32-bit x86 guest if I have 4 network adapters
+>> enabled. The following message no longer appears in the kernel log:
+>> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+>>
+>> Tested-by: Jonathan Liu <net147@gmail.com>
+>
+> Thanks for the test. I didn't realize that VirtualBox was broken too.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware-plat.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+I am running VirtualBox on Windows 7 64-bit host with Linux guest. The
+problem occurs in the Linux guest.
 
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index 17da005..d9d01e7 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -25,8 +25,7 @@
- #include "pcie-designware.h"
- 
- struct dw_plat_pcie {
--	void __iomem		*mem_base;
--	struct pcie_port	pp;
-+	struct pcie_port	pp;	/* pp.dbi_base is DT 0th resource */
- };
- 
- static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
-@@ -100,11 +99,9 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	pp->dev = &pdev->dev;
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	dw_plat_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
--	if (IS_ERR(dw_plat_pcie->mem_base))
--		return PTR_ERR(dw_plat_pcie->mem_base);
--
--	pp->dbi_base = dw_plat_pcie->mem_base;
-+	pp->dbi_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(pp->dbi_base))
-+		return PTR_ERR(pp->dbi_base);
- 
- 	ret = dw_plat_add_pcie_port(pp, pdev);
- 	if (ret < 0)
-
+>
+> So far I got some random test results in the mail list that something
+> is broken. I hope to hear more that we close the issue for some time
+> now.
+>
+> The IRQ stuff got broken three times already. Hopefully, this will be
+> the seal.
