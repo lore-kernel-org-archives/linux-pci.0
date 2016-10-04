@@ -1,157 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-de.keymile.com ([195.8.104.250]:48171 "EHLO
-        mail-de.keymile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758770AbcJYMiF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 08:38:05 -0400
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Valentin Longchamp <valentin.longchamp@keymile.com>
-Subject: Device tree nodes for devices behind a PCIe switch
-Message-ID: <90e305c7-be1f-8c37-f489-0701de697de4@keymile.com>
-Date: Tue, 25 Oct 2016 14:32:33 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize function"
+Date: Tue,  4 Oct 2016 17:15:19 -0400
+Message-Id: <1475615720-31047-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+The SCI function was removed in two steps (first refactor and then remove).
+This patch does the revert in one step.
 
-We have a board that embeds an FPGA with multiple functions (MFD driver) that is
-connected to the the PCIe bus with a PCIe switch (more precisely PLX/Avago's
-8714), since we have several PCIe devices on the board.
+The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+refactored the original code so that SCI penalty is calculated dynamically
+by the time get_penalty function is called. This patch does a partial
+revert for the SCI functionality only.
 
-The MFD driver that I have written and tested on the development boards relies
-on a device tree node to configure the several "sub-devices" embedded in the
-FPGA. On the testing setup, this was pretty simple since the CPU dev board has
-no PCIe switch and when I connect the FPGA dev board on the PCI of the CPU dev
-board here is what I get:
+The commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize function") is
+for the removal of the function. SCI penalty API was replaced by the
+runtime penalty calculation based on the value of
+acpi_gbl_FADT.sci_interrupt.
 
-> root@192:~# lspci
-> 0000:00:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
-> 0001:02:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
-> 0001:03:00.0 Unassigned class [ff00]: Altera Corporation Device 006d (rev 01)
-> 0002:04:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
-> 0003:06:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
-> root@192:~# lspci -t
-> -+-[0003:06]---00.0-[07]--
->  +-[0002:04]---00.0-[05]--
->  +-[0001:02]---00.0-[03]----00.0
->  \-[0000:00]---00.0-[01]--
+The IRQ type does not get updated at the right time for some platforms and
+results in incorrect penalty assignment for PCI IRQs as
+irq_get_trigger_type returns the wrong type.
 
-The Altera FPGA is "directly connected" to the root of the PCIe.
+The register_gsi function delivers the IRQ found in the ACPI table to
+the interrupt controller driver.  Penalties are calculated before a
+link object is enabled to find out which interrupt has the least number
+of users. By the time penalties are calculated, the IRQ is not registered
+yet and the API returns the wrong type.
 
-With this device tree node for the corresponding PCIe bus, the pci_dev gets the
-femt of_node assigned and I can work with it in the MFD driver.
+Tested-by: Jonathan Liu <net147@gmail.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Link: https://lkml.org/lkml/2016/10/4/283
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/kernel/acpi/boot.c |  1 +
+ drivers/acpi/pci_link.c     | 34 ++++++++++++++--------------------
+ include/linux/acpi.h        |  1 +
+ 3 files changed, 16 insertions(+), 20 deletions(-)
 
-> pci1: pcie@ffe250000 {
-> 		pcie@0 {
-> 			femt {
-> 				/* 0001:03:00.0 -> domain:bus:device.fn
-> 				 * reg must be npt000ss bbbbbbbb dddddfff rrrrrrrr
-> 				 * according to http://sametwice.com/of_pci_bus_address
-> 				 */
-> 				reg = <0x00030000 0 0 0 0>;
-> 				#address-cells = <1>;
-> 				#size-cells = <1>;
-> 				gpio@100 {
-> 					compatible = "keymile,femt-gpio";
-> 					reg = <0x100 20>;
-> 					gpio-controller;
-> 					#gpio-cells = <2>;
-> 				};
-> 				gpio@180 {
-> 					compatible = "keymile,femt-gpio";
-> 					reg = <0x180 20>;
-> 					gpio-controller;
-> 					#gpio-cells = <2>;
-> 				};
-> 			};
-> 		};
-> 	};
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 90d84c3..0ffd26e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+ 
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
++	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+ 
+ 	/*
+ 	 * stash over-ride to indicate we've been here
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 06c2a11..6a2af19 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -495,27 +495,10 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ 
+ static int acpi_irq_get_penalty(int irq)
+ {
+-	int penalty = 0;
+-
+-	/*
+-	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+-	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+-	* use for PCI IRQs.
+-	*/
+-	if (irq == acpi_gbl_FADT.sci_interrupt) {
+-		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+-
+-		if (type != IRQ_TYPE_LEVEL_LOW)
+-			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			penalty += PIRQ_PENALTY_PCI_USING;
+-	}
+-
+-	if (irq < ACPI_MAX_ISA_IRQS)
+-		return penalty + acpi_irq_penalty[irq];
++	if (irq < ACPI_MAX_IRQS)
++		return acpi_irq_penalty[irq];
+ 
+-	penalty += acpi_irq_pci_sharing_penalty(irq);
+-	return penalty;
++	return acpi_irq_pci_sharing_penalty(irq);
+ }
+ 
+ int __init acpi_irq_penalty_init(void)
+@@ -886,6 +869,17 @@ bool acpi_isa_irq_available(int irq)
+ 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
++{
++	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
++		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
++		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
++			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
++		else
++			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
++	}
++}
++
+ /*
+  * Over-ride default table to reserve additional IRQs for use by ISA
+  * e.g. acpi_irq_isa=5
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4d8452c..85ac7d5 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -318,6 +318,7 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ extern int ec_read(u8 addr, u8 *val);
+-- 
+1.9.1
 
-On our board, the PCIe switch raises the complexity by a level and I cannot get
-the femt of_node to assigned to the corresponding pci_device. By debugging a
-little bit I have found out that the pci_set_of_node() call from
-pci_scan_device() directly returns because there is no of_node for the bus the
-FPGA is on.
-
-Based on this I have tried to add the busses created by the PLX bridge to my
-device tree.
-
-Here are my lspci outputs:
-
-> root@kmcent2:~# lspci -t
-> -[0000:00]---00.0-[01-06]----00.0-[02-06]--+-01.0-[03]----00.0
->                                            +-02.0-[04]--
->                                            +-03.0-[05]----00.0
->                                            \-04.0-[06]----00.0
-> root@kmcent2:~# lspci
-> 00:00.0 PCI bridge: Freescale Semiconductor Inc Device 0821 (rev 11)
-> 01:00.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
-> 02:01.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
-> 02:02.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
-> 02:03.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
-> 02:04.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
-> 03:00.0 Ethernet controller: Marvell Technology Group Ltd. Device fc00
-> 05:00.0 Unassigned class [ff00]: Altera Corporation Device 006d (rev 01)
-> 06:00.0 Bridge: PLX Technology, Inc. PEX 8732 32-lane, 8-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ab)
-
-And here is my attempt at describing it in the device tree:
-
-> 	pci0: pcie@ffe240000 {
-> 		reg = <0xf 0xfe240000 0 0x10000>;
-> 		ranges = <0x02000000 0 0xe0000000 0xc 0x00000000 0x0 0x20000000
-> 			  0x01000000 0 0x00000000 0xf 0xf8000000 0x0 0x00010000>;
-> 		pcie@0 {
-> 			/* 00:00.0 root fsl cpu */
-> 			ranges = <0x02000000 0 0xe0000000
-> 				  0x02000000 0 0xe0000000
-> 				  0 0x20000000
-> 
-> 				  0x01000000 0 0x00000000
-> 				  0x01000000 0 0x00000000
-> 				  0 0x00010000>;
-> 			bridge@2,3 {
-> 				/* 02:03.0 bridge PLX */
-> 				reg = <0x00021100 0 0 0 0>;
-> 				#address-cells = <3>;
-> 				#size-cells = <2>;
-> 				bridge@5,0 {
-> 					/* 05:00.0 bridge PLX */
-> 					reg = <0x00050000 0 0 0 0>;
-> 					#address-cells = <3>;
-> 					#size-cells = <2>;
-> 					femt {
-> 						/* 00:00.0 FPGA */
-> 						reg = <0x00000000 0 0 0 0>;
-> 						#address-cells = <1>;
-> 						#size-cells = <1>;
-> 						interrupts = <0>;
-> 						gpio@100 {
-> 							compatible = "keymile,femt-gpio";
-> 							reg = <0x100 20>;
-> 							gpio-controller;
-> 							#gpio-cells = <2>;
-> 						};
-> 						gpio@180 {
-> 							compatible = "keymile,femt-gpio";
-> 							reg = <0x180 20>;
-> 							gpio-controller;
-> 							#gpio-cells = <2>;
-> 						};
-> 					};
-> 				};
-> 			};
-> 		};
-> 	};
-
-Is it really necessary to rebuild all this hierarchy in the device tree or have
-I missed something that would allow me to get rid of this complex description of
-the whole PCIe bus in the device tree ? PCIe is dynamic and can be enumerated
-and it would be great to have an easier way to "link" an of_node to certain pci_dev.
-
-If there is no other way than the complete description in the device tree, any
-suggestion about what is wrong in my above device tree attempt ? Am I missing
-one "intermediate" bus level ?
-
-Valentin
