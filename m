@@ -1,174 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44752 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754383AbcJDVQG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Oct 2016 17:16:06 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Sinan Kaya <okaya@codeaurora.org>, Len Brown <lenb@kernel.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
-Date: Tue,  4 Oct 2016 17:15:17 -0400
-Message-Id: <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <m-karicheri2@ti.com>
+Return-Path: <m-karicheri2@ti.com>
+Subject: Re: ks_dw_pcie_initiate_link_train() question
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20161004174051.GE3449@localhost>
+CC: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <57F4248C.1010203@ti.com>
+Date: Tue, 4 Oct 2016 17:52:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <20161004174051.GE3449@localhost>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
-size to 16").
+On 10/04/2016 01:40 PM, Bjorn Helgaas wrote:
+> Hi Murali,
+> 
+> This code looks suspicious.  Can you comment?
+> 
+>     void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
+>     {
+>         u32 val;
+> 
+>         /* Disable Link training */
+>         val = readl(ks_pcie->va_app_base + CMD_STATUS);
+>         val &= ~LTSSM_EN_VAL;
+>         writel(LTSSM_EN_VAL | val,  ks_pcie->va_app_base + CMD_STATUS);
+> 
+> Here we cleared the LTSSM_EN_VAL bit in "val", but then we add it
+> right back in before writing it back to CMD_STATUS.
+> 
+> That looks like a cut and paste error to me, but of course I don't
+> know the hardware.
+> 
+>         /* Initiate Link Training */
+>         val = readl(ks_pcie->va_app_base + CMD_STATUS);
+>         writel(LTSSM_EN_VAL | val,  ks_pcie->va_app_base + CMD_STATUS);
+>     }
+> 
+> 
+Bjorn,
 
-The code maintains a fixed size array for IRQ penalties. The array
-gets updated by external calls such as acpi_penalize_sci_irq,
-acpi_penalize_isa_irq to reflect the actual interrupt usage of the
-system. Since the IRQ distribution is platform specific, this is
-not known ahead of time. The IRQs get updated based on the SCI
-interrupt number BIOS has chosen or the ISA IRQs that were assigned
-to existing peripherals.
+Good catch! That is a cut-n-paste error. Here is the description from
+device manual
 
-By the time ACPI gets initialized, this code tries to determine an
-IRQ number based on penalty values in this array. It will try to locate
-the IRQ with the least penalty assignment so that interrupt sharing is
-avoided if possible.
+================
+Disable link training by de-asserting the LTSSM_EN bit in the PCIESS
+Command Status Register (CMD_STATUS[LTSSM_EN]=0). Upon reset, the
+LTSSM_EN is de-asserted automatically by hardware.
 
-A couple of notes about the external APIs:
-1. These API can be called before the ACPI is started. Therefore, one
-cannot assume that the PCI link objects are initialized for calculating
-penalties.
-2. The polarity and trigger information passed via the
-acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-is reporting as the call might have been placed before the IRQ is
-registered by the interrupt subsystem.
+Initiate link training can be initiated by asserting LTSSM_EN bit in the
+CMD_STATUS register (CMD_STATUS[LTSSM_EN]=1).
+================================================
 
-The previous change was in the direction to remove these external API and
-try to calculate the penalties at runtime for the ISA path as well. This
-didn't work out well with the existing platforms.
+Probably it works because it is de-asserted automatically upon
+reset by hardware. Let me test this and send you a patch? 
 
-Restoring the old behavior for IRQ < 256 and the new behavior will remain
-effective for IRQ >= 256.
-
-Tested-by: Jonathan Liu <net147@gmail.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
-Link: http://www.gossamer-threads.com/lists/linux/kernel/2537016#2537016
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index c983bf7..f3792f4 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
-  * enabled system.
-  */
- 
-+#define ACPI_MAX_IRQS		256
- #define ACPI_MAX_ISA_IRQS	16
- 
- #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
-@@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
- #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
- #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
- 
--static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
-+static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
- 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
- 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
- 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
-@@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
- 	}
- 
- 	if (irq < ACPI_MAX_ISA_IRQS)
--		return penalty + acpi_isa_irq_penalty[irq];
-+		return penalty + acpi_irq_penalty[irq];
- 
- 	penalty += acpi_irq_pci_sharing_penalty(irq);
- 	return penalty;
-@@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
- 
- 			for (i = 0; i < link->irq.possible_count; i++) {
- 				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
--					acpi_isa_irq_penalty[link->irq.
-+					acpi_irq_penalty[link->irq.
- 							 possible[i]] +=
- 					    penalty;
- 			}
- 
- 		} else if (link->irq.active &&
--				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
--			acpi_isa_irq_penalty[link->irq.active] +=
-+				(link->irq.active < ACPI_MAX_IRQS)) {
-+			acpi_irq_penalty[link->irq.active] +=
- 			    PIRQ_PENALTY_PCI_POSSIBLE;
- 		}
- 	}
-@@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
- }
- 
- /*
-- * modify acpi_isa_irq_penalty[] from cmdline
-+ * modify acpi_irq_penalty[] from cmdline
-  */
- static int __init acpi_irq_penalty_update(char *str, int used)
- {
-@@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
- 	for (i = 0; i < 16; i++) {
- 		int retval;
- 		int irq;
--		int new_penalty;
- 
- 		retval = get_option(&str, &irq);
- 
- 		if (!retval)
- 			break;	/* no number found */
- 
--		/* see if this is a ISA IRQ */
--		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
-+		if (irq < 0)
-+			continue;
-+
-+		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
- 			continue;
- 
- 		if (used)
--			new_penalty = acpi_irq_get_penalty(irq) +
--					PIRQ_PENALTY_ISA_USED;
-+			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-+				PIRQ_PENALTY_ISA_USED;
- 		else
--			new_penalty = 0;
-+			acpi_irq_penalty[irq] = 0;
- 
--		acpi_isa_irq_penalty[irq] = new_penalty;
- 		if (retval != 2)	/* no next number */
- 			break;
- 	}
-@@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
-  */
- void acpi_penalize_isa_irq(int irq, int active)
- {
--	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
--		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
--		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-+	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
-+		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-+		    (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
- }
- 
- bool acpi_isa_irq_available(int irq)
- {
--	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
-+	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
- 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
- }
- 
 -- 
-1.9.1
-
+Murali Karicheri
+Linux Kernel, Keystone
