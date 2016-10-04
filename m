@@ -1,146 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55336 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S946700AbcJaUlu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Oct 2016 16:41:50 -0400
-Date: Mon, 31 Oct 2016 15:41:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Hannes Reinecke <hare@suse.de>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, agraf@suse.de
-Subject: Re: [PATCH v2] pci: Don't set RCB bit in LNKCTL if the upstream
- bridge hasn't
-Message-ID: <20161031204144.GA14603@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477492216-39910-1-git-send-email-jthumshirn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477492216-39910-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: [PATCH V2 0/3] ACPI,PCI,IRQ: revert penalty calculation for SCI
+Date: Tue,  4 Oct 2016 17:15:16 -0400
+Message-Id: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 04:30:16PM +0200, Johannes Thumshirn wrote:
-> The Read Completion Boundary bit must only be set on a device or endpoint if
-> it is set on the upstream bridge.
+Restoring the old behavior for IRQ < 256 and the dynamic penalty behavior
+will remain effective for IRQ >= 256.
 
-Please include the spec reference and a stable tag (if you think
-that's relevant) in the next version.
+By the time ACPI gets initialized, this code tries to determine an
+IRQ number based on penalty values in this array. It will try to locate
+the IRQ with the least penalty assignment so that interrupt sharing is
+avoided if possible.
 
-I know you have an internal SuSE bugzilla that isn't useful here.  I
-would like a public bugzilla at bugzilla.kernel.org with an attached
-"lspci -vv" output and dmesg log.  You can exclude things that are
-proprietary or otherwise secret, but this is a fairly subtle area
-related to MPS and MRRS.  We have known issue there, and if/when we
-get around to addressing them, I'd like to have public documentation
-about pitfalls we need to avoid.
+A couple of notes about the external APIs:
+1. These API can be called before the ACPI is started. Therefore, one
+cannot assume that the PCI link objects are initialized for calculating
+penalties.
+2. The polarity and trigger information passed via the
+acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
+is reporting as the call might have been placed before the IRQ is
+registered by the interrupt subsystem.
 
-It would really be helpful if this changelog could include an outline
-of what's going wrong from the hardware point of view when the
-endpoint's RCB is set incorrectly.  I've read the spec, but I'm not
-enough of a hardware person to develop intution about what's failing
-here.  A concrete scenario would help a lot, e.g.,
+The reverted changes were in the direction to remove these external API and
+try to calculate the penalties at runtime for the ISA, SCI as well as PCI
+IRQS. This didn't work out well with the existing platforms.
 
-  - Root Port RCB is 64 bytes
-  - Endpoint RCB is 128 bytes (incorrect per spec, since Root Port's
-    RDB is only 64 bytes)
-  - Endpoint issues Memory Read Request for 128 bytes, 128-byte
-    aligned
-  - Root Port responds to Memory Read Request with two 64-byte
-    Completions
-  - Endpoint (as the Receiver) has RCB of 128, so it is expecting a
-    single Completion and sees two Completions as a violation of the
-    "Completions for Requests which do not cross the naturally aligned
-    address boundaries at integer multiples of RCB bytes must include
-    all data specified in the Request" rule in 2.3.1.1, and treats
-    this as a Malformed TLP.
+Changes from V1 (https://lkml.org/lkml/2016/10/1/106):
+* Commit message updates
 
-If that's really the scenario, we should be able to see this in the
-lspci output, e.g., something like:
+Sinan Kaya (3):
+  Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
+  ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
+  Revert "ACPI,PCI,IRQ: remove SCI penalize function"
 
-  # lspci -vv
-  # modprobe mlx4
-  # lspci -vv
+ arch/x86/kernel/acpi/boot.c |  1 +
+ drivers/acpi/pci_link.c     | 71 ++++++++++++++++++++++-----------------------
+ include/linux/acpi.h        |  1 +
+ 3 files changed, 37 insertions(+), 36 deletions(-)
 
-should show no error in the first lspci, but something in the second.
+-- 
+1.9.1
 
-It seems plausible that this is exposed by a BIOS bug.  I'd like to
-include specifics about the adapter, the machine, and BIOS version in
-the changelog to help connect this fix with the machine known to have
-the problem.
-
-> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/pci/probe.c | 29 +++++++++++++++++++++++++++--
->  1 file changed, 27 insertions(+), 2 deletions(-)
-> 
-> Changes from v1:
-> * Check if we have a upstream bridge to not trip on a NULL pointer
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ab00267..716c5cf 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1439,6 +1439,19 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
->  		dev_warn(&dev->dev, "PCI-X settings not supported\n");
->  }
->  
-> +static bool pcie_get_upstream_rcb(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *bridge = pci_upstream_bridge(dev);
-> +	u16 lnkctl;
-> +
-> +	if (!bridge)
-> +		return false;
-> +
-> +	pcie_capability_read_word(bridge, PCI_EXP_LNKCTL, &lnkctl);
-> +
-> +	return lnkctl & PCI_EXP_LNKCTL_RCB;
-> +}
-> +
->  static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  {
->  	int pos;
-> @@ -1468,9 +1481,21 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
->  
->  	/* Initialize Link Control Register */
-> -	if (pcie_cap_has_lnkctl(dev))
-> +	if (pcie_cap_has_lnkctl(dev)) {
-> +		bool us_rcb;
-> +		u16 clear;
-> +		u16 set;
-> +
-> +		us_rcb = pcie_get_upstream_rcb(dev);
-
-Per spec (PCIe r3.0, sec 7.8.7), RCB is applicable only to Root Ports,
-Endpoints, and Bridges.  This is somewhat ambiguous: the "Bridge"
-definition in "Terms and Acronyms" seems to include Switch Ports, but
-the text in 7.8.7 seems to exclude Switch Ports.
-
-In any case, 7.8.7 is clear that we should set this bit only if the
-RCB in the upstream *Root Port* (not the nearest upstream switch port
-as we're using here) is set.
-
-> +
-> +		clear = ~hpp->pci_exp_lnkctl_and;
-> +		set = hpp->pci_exp_lnkctl_or;
-> +		if (!us_rcb)
-> +			set &= ~PCI_EXP_LNKCTL_RCB;
-> +
->  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
-> -			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-> +						  clear, set);
-> +	}
->  
->  	/* Find Advanced Error Reporting Enhanced Capability */
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> -- 
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
