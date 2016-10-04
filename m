@@ -1,46 +1,52 @@
-Return-Path: <flyos@mailoo.org>
-Return-Path: <flyos@mailoo.org>
-From: Pierre de Villemereuil <flyos@mailoo.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Bjorn Helgaas <helgaas@kernel.org>, Mathias Nyman <mathias.nyman@linux.intel.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-Date: Tue, 11 Oct 2016 10:06:47 +1300
-Message-ID: <1758161.mMDqyN5NJP@flyosflip>
-In-Reply-To: <20161008103140.GA7725@wunner.de>
-References: <20161005204119.GA5961@wunner.de> <Pine.LNX.4.44L0.1610061029430.1630-100000@iolanthe.rowland.org> <20161008103140.GA7725@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55623 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751597AbcJDOaJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Oct 2016 10:30:09 -0400
+Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
+ [LNKD]. Try pci=noacpi or acpi=off
+To: Ondrej Zary <linux@rainbow-software.org>
+References: <201609251512.05657.linux@rainbow-software.org>
+ <201610021853.19635.linux@rainbow-software.org>
+ <fd149c27-d703-5338-2461-17621b4b1ae5@codeaurora.org>
+ <201610030925.58304.linux@rainbow-software.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
+        ravikanth.nalla@hpe.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <2d75b1ba-9226-3713-2b1e-7829b89a8856@codeaurora.org>
+Date: Tue, 4 Oct 2016 10:30:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201610030925.58304.linux@rainbow-software.org>
+Content-Type: text/plain; charset=iso-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi guys!
+Hi Ondrej,
 
-Thanks for your efforts for fixing this bug! (The workaround of 
-loading the kernel with "usbcore.autosuspend=-1" works very fine for 
-me now).
+On 10/3/2016 3:25 AM, Ondrej Zary wrote:
+> On Monday 03 October 2016, Sinan Kaya wrote:
+>> On 10/2/2016 12:53 PM, Ondrej Zary wrote:
+>>>> Can we have some testing coverage? and eventually have tested-by?
+>>>
+>>> Works on two affected machines. More tests tomorrow.
+>>
+>> Thanks, appreciate the feedback. Looking forward to hear your other test
+>> results.
+> 
+> The other two affected machines are working too.
+> 
 
-Meanwhile, Asus gave me the expected response:
+Can I have your "tested by" before I repost the new version with updated
+commit message?
 
-"Hello Mr. De Villemereuil,
+Sinan
 
-Thank you for having solicited the ASUS Technical Support.
-
-A reading your email I understand that your PC has a problem with 
-the firmware bios from linux report.
-
-Unfortunately, Linux is not part of our areas and we are not trained 
-on.
-
-So we have no confirmation on the Linux of the report.
-
-Thank you for your understanding and wish you a good day."
-
-I attached the explanation from Mathias about what is going on, but 
-apparently if a bug of THEIR firmware is discovered on Linux, they 
-simply freak out and say they don't do Linux (kinda expected...). 
-
-So, I guess they won't release a fix for that... Makes your effort 
-even more relevant since they sell quite a lot of computers and 
-motherboards.
-
-Cheers,
-Pierre.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
