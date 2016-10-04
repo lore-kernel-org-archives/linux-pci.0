@@ -1,61 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <soren.brinkmann@xilinx.com>,
-        <christophe.jaillet@wanadoo.fr>, <grygorii.strashko@ti.com>,
-        <yinghai@kernel.org>, <lorenzo.pieralisi@arm.com>,
-        <fengguang.wu@intel.com>, <michal.simek@xilinx.com>,
-        <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <rgummal@xilinx.com>, Bharat Kumar Gogada <bharatku@xilinx.com>
-Subject: [PATCH 2/6] PCI: Xilinx : Clear interrupt register for invalid interrupt.
-Date: Thu, 1 Sep 2016 15:44:42 +0530
-Message-ID: <1472724886-28301-2-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
-References: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>, Len Brown <lenb@kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V2 2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
+Date: Tue,  4 Oct 2016 17:15:18 -0400
+Message-Id: <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The interrupt decode register is not being cleared if
-an invalid interrupt arises. This patch adds checks
-and clears decode register in this case.
+The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+resource requirements") removed PCI_USING penalty from
+acpi_pci_link_allocate function as there is no longer a fixed size penalty
+array for both PCI and IRQ interrupts.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+We need to add the PCI_USING penalty for ISA interrupts too if the link is
+in use and matches our ISA IRQ number.
+
+Tested-by: Jonathan Liu <net147@gmail.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pcie-xilinx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_link.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index bd64677..de1c758 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -434,7 +434,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		/* Check whether interrupt valid */
- 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
- 			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
--			return IRQ_HANDLED;
-+			goto error;
- 		}
- 
- 		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
-@@ -456,7 +456,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 
- 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
- 			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
--			return IRQ_HANDLED;
-+			goto error;
- 		}
- 
- 		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-@@ -501,6 +501,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 	if (status & XILINX_PCIE_INTR_MST_ERRP)
- 		dev_warn(port->dev, "Master error poison\n");
- 
-+error:
- 	/* Clear the Interrupt Decode register */
- 	pcie_write(port, status, XILINX_PCIE_REG_IDR);
- 
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index f3792f4..06c2a11 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -620,6 +620,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 			    acpi_device_bid(link->device));
+ 		return -ENODEV;
+ 	} else {
++		if (link->irq.active < ACPI_MAX_IRQS)
++			acpi_irq_penalty[link->irq.active] +=
++				PIRQ_PENALTY_PCI_USING;
++
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
 -- 
-2.1.1
+1.9.1
+
