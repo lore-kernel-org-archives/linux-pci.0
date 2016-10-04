@@ -1,171 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50552 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:42122 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933163AbcJGQcq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:32:46 -0400
-Subject: [PATCH 1/8] PCI: artpec6: Name private struct pointer "artpec6"
- consistently
-To: Jesper Nilsson <jesper.nilsson@axis.com>,
-        Niklas Cassel <niklas.cassel@axis.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
-Date: Fri, 07 Oct 2016 11:32:33 -0500
-Message-ID: <20161007163233.24751.17505.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1753108AbcJDRRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Oct 2016 13:17:35 -0400
+Date: Tue, 4 Oct 2016 12:17:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>, rajatxjain@gmail.com
+Subject: Re: [PATCH v3] PCI: rockchip: Increase the Max Credit update
+ interval.
+Message-ID: <20161004171730.GB3449@localhost>
+References: <c7a733c8-df1c-3917-9874-15496fe95758@rock-chips.com>
+ <1474591842-27836-1-git-send-email-rajatja@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474591842-27836-1-git-send-email-rajatja@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a device-specific name, "artpec6", for struct artpec6_pcie pointers
-to hint that this is device-specific information.  No functional change
-intended.
+On Thu, Sep 22, 2016 at 05:50:42PM -0700, Rajat Jain wrote:
+> This increases the likelihood of link state to automatically go to L1
+> and save some power.
+> 
+> The default credit update interval of 7.5 us results in the rootport
+> sending UpdateFC-P and UpdateFC-NP packets too often, thus resulting
+> in the link never going to L1, and always staying in L0/L0s. The
+> value 24 us was chosen after some experiments and peeking over the
+> PCIe bus to see that we do enter L1 substate when there is not enough
+> traffic on the PCIe bus.
+> 
+> Signed-off-by: Rajat Jain <rajatja@google.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-artpec6.c |   57 +++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 29 deletions(-)
+Applied with Shawn's ack to pci/host-rockchip for v4.9, thanks!
 
-diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
-index 39bf1a6..55f69eb 100644
---- a/drivers/pci/host/pcie-artpec6.c
-+++ b/drivers/pci/host/pcie-artpec6.c
-@@ -67,16 +67,16 @@ struct artpec6_pcie {
- 
- static int artpec6_pcie_establish_link(struct pcie_port *pp)
- {
--	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pp);
-+	struct artpec6_pcie *artpec6 = to_artpec6_pcie(pp);
- 	u32 val;
- 	unsigned int retries;
- 
- 	/* Hold DW core in reset */
--	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	regmap_read(artpec6->regmap, PCIECFG, &val);
- 	val |= PCIECFG_CORE_RESET_REQ;
--	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	regmap_write(artpec6->regmap, PCIECFG, val);
- 
--	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	regmap_read(artpec6->regmap, PCIECFG, &val);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
- 		PCIECFG_CISRREN |	/* Reference clock term. 100 Ohm */
-@@ -84,27 +84,27 @@ static int artpec6_pcie_establish_link(struct pcie_port *pp)
- 	val |= PCIECFG_REFCLK_ENABLE;
- 	val &= ~PCIECFG_DBG_OEN;
- 	val &= ~PCIECFG_CLKREQ_B;
--	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	regmap_write(artpec6->regmap, PCIECFG, val);
- 	usleep_range(5000, 6000);
- 
--	regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+	regmap_read(artpec6->regmap, NOCCFG, &val);
- 	val |= NOCCFG_ENABLE_CLK_PCIE;
--	regmap_write(artpec6_pcie->regmap, NOCCFG, val);
-+	regmap_write(artpec6->regmap, NOCCFG, val);
- 	usleep_range(20, 30);
- 
--	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	regmap_read(artpec6->regmap, PCIECFG, &val);
- 	val |= PCIECFG_PCLK_ENABLE | PCIECFG_PLL_ENABLE;
--	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	regmap_write(artpec6->regmap, PCIECFG, val);
- 	usleep_range(6000, 7000);
- 
--	regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+	regmap_read(artpec6->regmap, NOCCFG, &val);
- 	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
--	regmap_write(artpec6_pcie->regmap, NOCCFG, val);
-+	regmap_write(artpec6->regmap, NOCCFG, val);
- 
- 	retries = 50;
- 	do {
- 		usleep_range(1000, 2000);
--		regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+		regmap_read(artpec6->regmap, NOCCFG, &val);
- 		retries--;
- 	} while (retries &&
- 		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
-@@ -112,14 +112,14 @@ static int artpec6_pcie_establish_link(struct pcie_port *pp)
- 	retries = 50;
- 	do {
- 		usleep_range(1000, 2000);
--		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
-+		val = readl(artpec6->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
- 
- 	/* Take DW core out of reset */
--	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	regmap_read(artpec6->regmap, PCIECFG, &val);
- 	val &= ~PCIECFG_CORE_RESET_REQ;
--	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	regmap_write(artpec6->regmap, PCIECFG, val);
- 	usleep_range(100, 200);
- 
- 	/*
-@@ -137,9 +137,9 @@ static int artpec6_pcie_establish_link(struct pcie_port *pp)
- 	dw_pcie_setup_rc(pp);
- 
- 	/* assert LTSSM enable */
--	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	regmap_read(artpec6->regmap, PCIECFG, &val);
- 	val |= PCIECFG_LTSSM_ENABLE;
--	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	regmap_write(artpec6->regmap, PCIECFG, val);
- 
- 	/* check if the link is up or not */
- 	if (!dw_pcie_wait_for_link(pp))
-@@ -227,18 +227,17 @@ static int artpec6_add_pcie_port(struct pcie_port *pp,
- 
- static int artpec6_pcie_probe(struct platform_device *pdev)
- {
--	struct artpec6_pcie *artpec6_pcie;
-+	struct artpec6_pcie *artpec6;
- 	struct pcie_port *pp;
- 	struct resource *dbi_base;
- 	struct resource *phy_base;
- 	int ret;
- 
--	artpec6_pcie = devm_kzalloc(&pdev->dev, sizeof(*artpec6_pcie),
--				    GFP_KERNEL);
--	if (!artpec6_pcie)
-+	artpec6 = devm_kzalloc(&pdev->dev, sizeof(*artpec6), GFP_KERNEL);
-+	if (!artpec6)
- 		return -ENOMEM;
- 
--	pp = &artpec6_pcie->pp;
-+	pp = &artpec6->pp;
- 	pp->dev = &pdev->dev;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -247,21 +246,21 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 
- 	phy_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
--	artpec6_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
--	if (IS_ERR(artpec6_pcie->phy_base))
--		return PTR_ERR(artpec6_pcie->phy_base);
-+	artpec6->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
-+	if (IS_ERR(artpec6->phy_base))
-+		return PTR_ERR(artpec6->phy_base);
- 
--	artpec6_pcie->regmap =
-+	artpec6->regmap =
- 		syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
- 						"axis,syscon-pcie");
--	if (IS_ERR(artpec6_pcie->regmap))
--		return PTR_ERR(artpec6_pcie->regmap);
-+	if (IS_ERR(artpec6->regmap))
-+		return PTR_ERR(artpec6->regmap);
- 
- 	ret = artpec6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
- 
--	platform_set_drvdata(pdev, artpec6_pcie);
-+	platform_set_drvdata(pdev, artpec6);
- 	return 0;
- }
- 
-
+> ---
+> v3: Fix the commit message.
+> v2: Use the link bandwidth change irq to program the register.
+> 
+>  drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index c3593e6..99e700f 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -95,6 +95,11 @@
+>  #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+>  #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+>  #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
+> +#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+> +		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+>  #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+>  #define   PCIE_CORE_INT_PRFPE			BIT(0)
+>  #define   PCIE_CORE_INT_CRFPE			BIT(1)
+> @@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  }
+>  
+> +static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+> +{
+> +	u32 val;
+> +
+> +	/* Update Tx credit maximum update interval */
+> +	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
+> +	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
+> +	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
+> +	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
+> +}
+> +
+>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  				      struct pci_bus *bus, int dev)
+>  {
+> @@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+>  		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+>  	} else if (reg & PCIE_CLIENT_INT_PHY) {
+>  		dev_dbg(dev, "phy link changes\n");
+> +		rockchip_pcie_update_txcredit_mui(rockchip);
+>  		rockchip_pcie_clr_bw_int(rockchip);
+>  	}
+>  
+> -- 
+> 2.8.0.rc3.226.g39d4020
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
