@@ -1,103 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46396 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755983AbcJ1Wri (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 28 Oct 2016 18:47:38 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 next 2/3] pci: No config access for removed devices
-Date: Fri, 28 Oct 2016 18:58:16 -0400
-Message-Id: <1477695497-6207-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+To: Jon Masters <jcm@jonmasters.org>, Arnd Bergmann <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
+ <5869118.UilSPY9Sai@wuerfel>
+ <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
+CC: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        <devicetree@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <gabriele.paoloni@huawei.com>, <minyard@acm.org>,
+        <gregkh@linuxfoundation.org>, <benh@kernel.crashing.org>,
+        <will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
+        <xuwei5@hisilicon.com>, <linuxarm@huawei.com>,
+        <linux-serial@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <zourongrong@gmail.com>, <liviu.dudau@arm.com>, <kantyzc@163.com>,
+        <zhichang.yuan02@gmail.com>
+Message-ID: <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
+Date: Tue, 4 Oct 2016 13:02:25 +0100
+MIME-Version: 1.0
+In-Reply-To: <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we've  detected that the PCI device is removed, there is no need to
-access the device's config space. This patch has all the device config
-reads and writes return error when in such a state.
+On 02/10/2016 23:03, Jon Masters wrote:
+> On 09/14/2016 02:32 PM, Arnd Bergmann wrote:
+>> On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
+>
+>>> And there are probably multiple child devices under LPC, the global arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi driver can not support I/O
+>>> operation registering, serial driver has serial_in/serial_out to
+>>> be registered. So, only the PIO range for ipmi device is stored
+>>> in arm64_extio_ops and the indirect-IO
+>>> works well for ipmi device.
+>>
+>> You should not do that in the serial driver, please just use the
+>> normal 8250 driver that works fine once you handle the entire
+>> port range.
+>
+> Just for the record, Arnd has the right idea. There is only one type of
+> UART permitted by SBSA (PL011). We carved out an exception for a design
+> that was already in flight and allowed it to be 16550. That other design
+> was then corrected in future generations to be PL011 as we required it
+> to be. Then there's the Hip06. I've given feedback elsewhere about the
+> need for there to be (at most) two types of UART in the wild. This "LPC"
+> stuff needs cleaning up (feedback given elsewhere already on that), but
+> we won't be adding a third serial driver into the mix in order to make
+> it work. There will be standard ARM servers. There will not be the
+> kinda-sorta-standard. Thanks.
+>
 
-If the device is not present on a config read, the value returned will be
-set to all 1's. This is the same as what hardware is expected to return
-when accessing a removed device, but software can do this faster without
-relying on hardware.
+Right, so I think Zhichang can make the necessary generic changes to 
+8250 OF driver to support IO port as well as MMIO-based.
 
-When checking if a device is present, we short-cut the removal by
-returning the known state instead of querying the bus.
+However an LPC-based earlycon driver is still required.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c   |  2 ++
- include/linux/pci.h | 18 ++++++++++++++++++
- 2 files changed, 20 insertions(+)
+A note on hip07-based D05 (for those unaware): this does not use 
+LPC-based uart. It uses PL011. The hardware guys have managed some 
+trickery where they loopback the serial line around the BMC/CPLD. But we 
+still need it for hip06 D03 and any other boards which want to use LPC 
+bus for uart.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba34907..c412095 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4966,6 +4966,8 @@ bool pci_device_is_present(struct pci_dev *pdev)
- {
- 	u32 v;
- 
-+	if (pdev->is_removed)
-+		return false;
- 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
- }
- EXPORT_SYMBOL_GPL(pci_device_is_present);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2115d19..a92eedb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -936,28 +936,46 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
- 
- static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
- 					u32 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
- 					 u32 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- 
--- 
-2.7.2
+A question on SBSA: does it propose how to provide serial via BMC for SOL?
 
+
+> Jon.
+>
+>
+> .
+>
