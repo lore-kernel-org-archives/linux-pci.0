@@ -1,44 +1,32 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51918 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933077AbcJLMxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:53:46 -0400
-Subject: [PATCH v2 4/5] PCI: iproc: Remove redundant null pointer checking
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Wed, 12 Oct 2016 07:53:42 -0500
-Message-ID: <20161012125342.24076.88359.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <sergei.shtylyov@cogentembedded.com>
+Return-Path: <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <3386780.3qrqUfW7i7@wasted.cogentembedded.com>
+ <20161004171322.GA3449@localhost>
+Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <d45069af-cd92-faf3-6dbe-dac85419ca4d@cogentembedded.com>
+Date: Tue, 4 Oct 2016 20:36:41 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161004171322.GA3449@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-The callers never pass a null "pcie" pointer (they check for kzalloc
-failure), so we don't need to check here.  The bus driver should never call
-the probe function with a null ->dev pointer, so we don't need to check
-that either.  No functional change intended.
+On 10/04/2016 08:13 PM, Bjorn Helgaas wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-iproc.c |    3 ---
- 1 file changed, 3 deletions(-)
+>> Initially, the PCIe link speed is set up only  at 2.5 GT/s.
+>> For better performance,  we're trying to increase link speed to 5 GT/s.
+>>
+>> Based on the original patch by Grigory Kletsko
+>> <grigory.kletsko@cogentembedded.com>.
+>>
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>
+> I addressed Simon's comment for you, added his ack, and applied this to
+> pci/host-rcar for v4.9.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 12a5156..e9210f6 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -462,9 +462,6 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 	void *sysdata;
- 	struct pci_bus *bus;
- 
--	if (!pcie || !pcie->dev)
--		return -EINVAL;
--
- 	dev = pcie->dev;
- 	ret = devm_request_pci_bus_resources(dev, res);
- 	if (ret)
+    Thank you!
 
+MBR, Sergei
