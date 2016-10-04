@@ -1,166 +1,45 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/VMD: Use local SRCU to prevent delaying global RCU
-Date: Thu,  6 Oct 2016 16:47:42 -0600
-Message-Id: <1475794062-3114-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Oct 2016 09:23:30 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
+ function"
+In-Reply-To: <1475343976-20744-3-git-send-email-okaya@codeaurora.org>
+Message-ID: <alpine.DEB.2.20.1610040919110.5278@nanos>
+References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org> <1475343976-20744-3-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SRCU lets synchronize_srcu depend on VMD-local RCU primitives,
-preventing long delays from locking up RCU in other systems. VMD
-performs a synchronize when removing a device, but will hit all irq
-lists if the device uses all VMD vectors. This patch will not help VMD's
-RCU synchronization, but will isolate the read side delays to the VMD
-subsystem. Additionally, the use of SRCU in VMD's isr will keep it
-isolated from any other RCU waiters in the rest of the system.
+On Sat, 1 Oct 2016, Sinan Kaya wrote:
 
-The patch was tested using concurrent fio and nvme resets:
-[global]
-rw=read
-bs=4k
-direct=1
-ioengine=libaio
-iodepth=32
-norandommap
-timeout=300
-runtime=1000000000
+> This reverts commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize
+> function"). SCI penalty API was replaced by the runtime penalty calculation
+> based on the value of acpi_gbl_FADT.sci_interrupt.
 
-[nvme0]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme0n1
+This does more than only reverting said commit ....
+ 
+> acpi_gbl_FADT.sci_interrupt type does not get updated at the right time
+> for some platforms and results in incorrect penalty assignment for PCI
+> IRQs as irq_get_trigger_type returns the wrong type.
 
-[nvme1]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme1n1
+And the obvious question is: Why does irq_get_trigger_type() return the
+wrong type?
 
-while (true) do
-	for i in /sys/class/nvme/nvme*; do
-		echo "Resetting ${i##*/}"
-		echo 1 > $i/reset_controller;
-		sleep 5
-	done;
-done
+What's the root cause of this problem? Your changelog does not tell
+anything.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
-Applies to pci/host-vmd with cherry-pick:
-21c80c9fefc3db10b530a96eb0478c29eb28bf77 x86/PCI: VMD: Fix infinite loop
-executing irq's
+Thanks,
 
-
- drivers/pci/host/vmd.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 5705852..6bd57ee 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-+#include <linux/srcu.h>
- #include <linux/rculist.h>
- #include <linux/rcupdate.h>
- 
-@@ -39,7 +40,6 @@ static DEFINE_RAW_SPINLOCK(list_lock);
- /**
-  * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
-  * @node:	list item for parent traversal.
-- * @rcu:	RCU callback item for freeing.
-  * @irq:	back pointer to parent.
-  * @enabled:	true if driver enabled IRQ
-  * @virq:	the virtual IRQ value provided to the requesting driver.
-@@ -48,7 +48,6 @@ static DEFINE_RAW_SPINLOCK(list_lock);
-  */
- struct vmd_irq {
- 	struct list_head	node;
--	struct rcu_head		rcu;
- 	struct vmd_irq_list	*irq;
- 	bool			enabled;
- 	unsigned int		virq;
-@@ -56,11 +55,13 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-+ * @srcu:	SRCU struct for local synchronization.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
-+	struct srcu_struct	srcu;
- 	unsigned int		count;
- };
- 
-@@ -218,14 +219,14 @@ static void vmd_msi_free(struct irq_domain *domain,
- 	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
- 	unsigned long flags;
- 
--	synchronize_rcu();
-+	synchronize_srcu(&vmdirq->irq->srcu);
- 
- 	/* XXX: Potential optimization to rebalance */
- 	raw_spin_lock_irqsave(&list_lock, flags);
- 	vmdirq->irq->count--;
- 	raw_spin_unlock_irqrestore(&list_lock, flags);
- 
--	kfree_rcu(vmdirq, rcu);
-+	kfree(vmdirq);
- }
- 
- static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
-@@ -639,11 +640,12 @@ static irqreturn_t vmd_irq(int irq, void *data)
- {
- 	struct vmd_irq_list *irqs = data;
- 	struct vmd_irq *vmdirq;
-+	int idx;
- 
--	rcu_read_lock();
-+	idx = srcu_read_lock(&irqs->srcu);
- 	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
- 		generic_handle_irq(vmdirq->virq);
--	rcu_read_unlock();
-+	srcu_read_unlock(&irqs->srcu, idx);
- 
- 	return IRQ_HANDLED;
- }
-@@ -689,6 +691,10 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENOMEM;
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
-+		err = init_srcu_struct(&vmd->irqs[i].srcu);
-+		if (err)
-+			return err;
-+
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-@@ -707,11 +713,19 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	return 0;
- }
- 
-+static void vmd_cleanup_srcu(struct vmd_dev *vmd)
-+{
-+	int i;
-+	for (i = 0; i < vmd->msix_count; i++)
-+		cleanup_srcu_struct(&vmd->irqs[i].srcu);
-+}
-+
- static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
- 	vmd_detach_resources(vmd);
-+	vmd_cleanup_srcu(vmd);
- 	pci_set_drvdata(dev, NULL);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
--- 
-1.8.3.1
+	tglx
