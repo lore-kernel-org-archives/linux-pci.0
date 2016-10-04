@@ -1,59 +1,174 @@
-Return-Path: <andriy.shevchenko@linux.intel.com>
-Return-Path: <andriy.shevchenko@linux.intel.com>
-Message-ID: <1477150280.6423.19.camel@linux.intel.com>
-Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_state hook
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Date: Sat, 22 Oct 2016 18:31:20 +0300
-In-Reply-To: <20161019180402.GA3220@wunner.de>
-References: 
-	<63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
-	 <20161019151055.GA16147@localhost>
-	 <1476892081.11323.503.camel@linux.intel.com>
-	 <20161019180402.GA3220@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44752 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754383AbcJDVQG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Oct 2016 17:16:06 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>, Len Brown <lenb@kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
+Date: Tue,  4 Oct 2016 17:15:17 -0400
+Message-Id: <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-10-19 at 20:04 +0200, Lukas Wunner wrote:
-> On Wed, Oct 19, 2016 at 06:48:01PM +0300, Andy Shevchenko wrote:
-> > On Wed, 2016-10-19 at 10:10 -0500, Bjorn Helgaas wrote:
-> > > On Sun, Oct 09, 2016 at 02:46:29PM +0200, Lukas Wunner wrote:
+This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
+size to 16").
 
+The code maintains a fixed size array for IRQ penalties. The array
+gets updated by external calls such as acpi_penalize_sci_irq,
+acpi_penalize_isa_irq to reflect the actual interrupt usage of the
+system. Since the IRQ distribution is platform specific, this is
+not known ahead of time. The IRQs get updated based on the SCI
+interrupt number BIOS has chosen or the ISA IRQs that were assigned
+to existing peripherals.
 
-> However so far only 4.9-rc1 is broken and we still have like 7 weeks
-> to get the fix in.
+By the time ACPI gets initialized, this code tries to determine an
+IRQ number based on penalty values in this array. It will try to locate
+the IRQ with the least penalty assignment so that interrupt sharing is
+avoided if possible.
 
-One week less. :-)
+A couple of notes about the external APIs:
+1. These API can be called before the ACPI is started. Therefore, one
+cannot assume that the PCI link objects are initialized for calculating
+penalties.
+2. The polarity and trigger information passed via the
+acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
+is reporting as the call might have been placed before the IRQ is
+registered by the interrupt subsystem.
 
-> > > Fixes: 5823d0893ec2 ("x86/platform/intel-mid: Add Power Management
-> > > Unit driver")
-> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > 
-> > > Sounds like this should be marked for stable, since v4.8 contains
-> > > 5823d0893ec2 and is apparently broken?
-> > 
-> > At that point there was no "feature" commit in the tree. Perhaps the
-> > Fixes tag should point to the "feature" commit instead. Am I right,
-> > Lukas?
-> 
-> Right, the Fixes tag should be:
-> 
-> Fixes: cc7cc02bada8 ("PCI: Query platform firmware for device power
-> state")
-> 
-> And this shouldn't get backported to 4.8, the issue is only present
-> in 4.9-rc1 so far.
-> 
-> @Ingo: Do you want me to repost with Bjorn's ack and the correct
-> Fixes: tag?
+The previous change was in the direction to remove these external API and
+try to calculate the penalties at runtime for the ISA path as well. This
+didn't work out well with the existing platforms.
 
-I didn't noticed the patch in last urgent pull request, so, I assume you
-need to send v3.
+Restoring the old behavior for IRQ < 256 and the new behavior will remain
+effective for IRQ >= 256.
 
+Tested-by: Jonathan Liu <net147@gmail.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Link: http://www.gossamer-threads.com/lists/linux/kernel/2537016#2537016
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index c983bf7..f3792f4 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+  * enabled system.
+  */
+ 
++#define ACPI_MAX_IRQS		256
+ #define ACPI_MAX_ISA_IRQS	16
+ 
+ #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+@@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+ #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
+ #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
+ 
+-static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
++static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
+@@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
+ 	}
+ 
+ 	if (irq < ACPI_MAX_ISA_IRQS)
+-		return penalty + acpi_isa_irq_penalty[irq];
++		return penalty + acpi_irq_penalty[irq];
+ 
+ 	penalty += acpi_irq_pci_sharing_penalty(irq);
+ 	return penalty;
+@@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
+ 
+ 			for (i = 0; i < link->irq.possible_count; i++) {
+ 				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
+-					acpi_isa_irq_penalty[link->irq.
++					acpi_irq_penalty[link->irq.
+ 							 possible[i]] +=
+ 					    penalty;
+ 			}
+ 
+ 		} else if (link->irq.active &&
+-				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
+-			acpi_isa_irq_penalty[link->irq.active] +=
++				(link->irq.active < ACPI_MAX_IRQS)) {
++			acpi_irq_penalty[link->irq.active] +=
+ 			    PIRQ_PENALTY_PCI_POSSIBLE;
+ 		}
+ 	}
+@@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
+ }
+ 
+ /*
+- * modify acpi_isa_irq_penalty[] from cmdline
++ * modify acpi_irq_penalty[] from cmdline
+  */
+ static int __init acpi_irq_penalty_update(char *str, int used)
+ {
+@@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+ 	for (i = 0; i < 16; i++) {
+ 		int retval;
+ 		int irq;
+-		int new_penalty;
+ 
+ 		retval = get_option(&str, &irq);
+ 
+ 		if (!retval)
+ 			break;	/* no number found */
+ 
+-		/* see if this is a ISA IRQ */
+-		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
++		if (irq < 0)
++			continue;
++
++		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
+ 			continue;
+ 
+ 		if (used)
+-			new_penalty = acpi_irq_get_penalty(irq) +
+-					PIRQ_PENALTY_ISA_USED;
++			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
++				PIRQ_PENALTY_ISA_USED;
+ 		else
+-			new_penalty = 0;
++			acpi_irq_penalty[irq] = 0;
+ 
+-		acpi_isa_irq_penalty[irq] = new_penalty;
+ 		if (retval != 2)	/* no next number */
+ 			break;
+ 	}
+@@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+  */
+ void acpi_penalize_isa_irq(int irq, int active)
+ {
+-	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
+-		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+-		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
++	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
++		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
++		    (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
+ }
+ 
+ bool acpi_isa_irq_available(int irq)
+ {
+-	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
++	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+ 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+1.9.1
+
