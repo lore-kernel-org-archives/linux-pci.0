@@ -1,70 +1,181 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, Pierre de Villemereuil <flyos@mailoo.org>, linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: check for PME in targeted sleep state
-Date: Fri, 21 Oct 2016 22:55:11 +0200
-Message-ID: <14794360.GyRuIHiIML@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1610211640150.1898-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1610211640150.1898-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35816 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750803AbcJEEgw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Oct 2016 00:36:52 -0400
+Received: by mail-pf0-f176.google.com with SMTP id s13so83207164pfd.2
+        for <linux-pci@vger.kernel.org>; Tue, 04 Oct 2016 21:36:52 -0700 (PDT)
+Date: Tue, 4 Oct 2016 21:36:48 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>
+Subject: Re: [PATCH v2] PCI: rockchip: Support property to specify the link
+ capability
+Message-ID: <20161005043647.GA125531@google.com>
+References: <1475636776-11386-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475636776-11386-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 21, 2016 04:45:38 PM Alan Stern wrote:
-> One some systems, the firmware does not allow certain PCI devices to
-> be put in deep D-states.  This can cause problems for wakeup
-> signalling, if the device does not support PME# in the deepest allowed
-> suspend state.  For example, Pierre reports that on his system, ACPI
-> does not permit his xHCI host controller to go into D3 during runtime
-> suspend -- but D3 is the only state in which the controller can generate
-> PME# signals.  As a result, the controller goes into runtime suspend
-> but never wakes up, so it doesn't work properly.  USB devices plugged
-> into the controller are never detected.
-> 
-> If the device relies on PME# for wakeup signals but is not capable of
-> generating PME# in the target state, the PCI core should accurately
-> report that it cannot do wakeup from runtime suspend.  This patch
-> modifies the pci_dev_run_wake() routine to add this check.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: Lukas Wunner <lukas@wunner.de>
-> Reported-by: Pierre de Villemereuil <flyos@mailoo.org>
-> Tested-by: Pierre de Villemereuil <flyos@mailoo.org>
-> CC: <stable@vger.kernel.org>
+Hi Shawn,
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+On Wed, Oct 05, 2016 at 11:06:16AM +0800, Shawn Lin wrote:
+> From: Brian Norris <briannorris@chromium.org>
+> 
+> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+> ms waiting for training that will never happen, let's add a property
+> from devicetree to specify link capability.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
 > ---
 > 
-> [as1814]
+> Changes in v2:
+> - rename the property to rockchip,max-link-speed according to
+>   Bjorn's recommendation and take some bits from imx6q-pcie to
+>   make this requirement more consisent.
 > 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+>  drivers/pci/host/pcie-rockchip.c                   | 61 ++++++++++++++--------
+>  2 files changed, 41 insertions(+), 22 deletions(-)
 > 
->  drivers/pci/pci.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> Index: usb-4.x/drivers/pci/pci.c
-> ===================================================================
-> --- usb-4.x.orig/drivers/pci/pci.c
-> +++ usb-4.x/drivers/pci/pci.c
-> @@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
->  	if (!dev->pme_support)
->  		return false;
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index ba67b39..8335f03 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -42,6 +42,8 @@ Required properties:
+>  Optional Property:
+>  - ep-gpios: contain the entry for pre-reset gpio
+>  - num-lanes: number of lanes to use
+> +- rockchip,max-link-speed: Specify PCI gen for link capability. Must
+> +	be '2' for gen2, otherwise will default to gen1.
+>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 35591b1..ca3db51 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -53,6 +53,7 @@
+>  #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+>  #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+>  #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
+> +#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+>  #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+>  #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+>  #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+> @@ -205,6 +206,7 @@ struct rockchip_pcie {
+>  	struct	gpio_desc *ep_gpio;
+>  	u32	lanes;
+>  	u8	root_bus_nr;
+> +	int	link_gen;
+>  	struct	device *dev;
+>  	struct	irq_domain *irq_domain;
+>  };
+> @@ -443,13 +445,21 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
 >  
-> +	/* PME-capable in principle, but not from the intended sleep state */
-> +	if (!pci_pme_capable(dev, pci_target_state(dev)))
-> +		return false;
+> +	if (rockchip->link_gen == 2) {
+> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
+> +				    PCIE_CLIENT_CONFIG);
+> +	} else {
+> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
+> +				    PCIE_CLIENT_CONFIG);
+> +		dev_info(dev, "max link speed is gen 1\n");
+> +	}
 > +
->  	while (bus->parent) {
->  		struct pci_dev *bridge = bus->self;
+>  	rockchip_pcie_write(rockchip,
+>  			    PCIE_CLIENT_CONF_ENABLE |
+>  			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+>  			    PCIE_CLIENT_ARI_ENABLE |
+>  			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+> -			    PCIE_CLIENT_MODE_RC |
+> -			    PCIE_CLIENT_GEN_SEL_2,
+> +			    PCIE_CLIENT_MODE_RC,
+>  				PCIE_CLIENT_CONFIG);
 >  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	err = phy_power_on(rockchip->phy);
+> @@ -550,29 +560,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		msleep(20);
+>  	}
+>  
+> -	/*
+> -	 * Enable retrain for gen2. This should be configured only after
+> -	 * gen1 finished.
+> -	 */
+> -	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> -	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +	if (rockchip->link_gen == 2) {
+> +		/*
+> +		 * Enable retrain for gen2. This should be configured only after
+> +		 * gen1 finished.
+> +		 */
+> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> +		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +
+> +		timeout = jiffies + msecs_to_jiffies(500);
+> +		for (;;) {
+> +			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+> +			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+> +					PCIE_CORE_PL_CONF_SPEED_5G) {
+> +				dev_dbg(dev, "PCIe link training gen2 pass!\n");
+> +				break;
+> +			}
+>  
+> -	timeout = jiffies + msecs_to_jiffies(500);
+> -	for (;;) {
+> -		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+> -		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+> -		    PCIE_CORE_PL_CONF_SPEED_5G) {
+> -			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+> -			break;
+> -		}
+> +			if (time_after(jiffies, timeout)) {
+> +				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+> +				break;
+> +			}
+>  
+> -		if (time_after(jiffies, timeout)) {
+> -			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+> -			break;
+> +			msleep(20);
+>  		}
+> -
+> -		msleep(20);
+>  	}
+>  
+>  	/* Check the final link width from negotiated lane counter from MGMT */
+> @@ -781,6 +793,11 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>  		rockchip->lanes = 1;
+>  	}
+>  
+> +	err = of_property_read_u32(node, "rockchip,max-link-speed",
+> +				   &rockchip->link_gen);
+> +	if (err)
+> +		rockchip->link_gen = 1;
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+I realize you copied this from the IMX6 driver, but this allows people
+to put anything but '2' in the property, and we'll treat it like '1'.
+How about in the !err case, we check that the value is either 1 or 2,
+and return an error for anything else?
+
+Brian
+
+> +
+>  	rockchip->core_rst = devm_reset_control_get(dev, "core");
+>  	if (IS_ERR(rockchip->core_rst)) {
+>  		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+> -- 
+> 2.3.7
+> 
+> 
