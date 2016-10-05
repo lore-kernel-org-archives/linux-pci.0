@@ -1,234 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42220 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755138AbcJLNxp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:53:45 -0400
-Subject: [PATCH v2 5/6] PCI: keystone: Add app register accessors
-To: Murali Karicheri <m-karicheri2@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:53:40 -0500
-Message-ID: <20161012135340.29306.58996.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 5 Oct 2016 15:38:52 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
+ function"
+In-Reply-To: <1475615720-31047-4-git-send-email-okaya@codeaurora.org>
+Message-ID: <alpine.DEB.2.20.1610051538310.8953@nanos>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org> <1475615720-31047-4-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device-specific register accessors for consistency across host drivers.
-No functional change intended.
+On Tue, 4 Oct 2016, Sinan Kaya wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-keystone-dw.c |   72 +++++++++++++++++++++---------------
- 1 file changed, 41 insertions(+), 31 deletions(-)
+> The SCI function was removed in two steps (first refactor and then remove).
+> This patch does the revert in one step.
+> 
+> The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> refactored the original code so that SCI penalty is calculated dynamically
+> by the time get_penalty function is called. This patch does a partial
+> revert for the SCI functionality only.
+> 
+> The commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize function") is
+> for the removal of the function. SCI penalty API was replaced by the
+> runtime penalty calculation based on the value of
+> acpi_gbl_FADT.sci_interrupt.
+> 
+> The IRQ type does not get updated at the right time for some platforms and
+> results in incorrect penalty assignment for PCI IRQs as
+> irq_get_trigger_type returns the wrong type.
+> 
+> The register_gsi function delivers the IRQ found in the ACPI table to
+> the interrupt controller driver.  Penalties are calculated before a
+> link object is enabled to find out which interrupt has the least number
+> of users. By the time penalties are calculated, the IRQ is not registered
+> yet and the API returns the wrong type.
+> 
+> Tested-by: Jonathan Liu <net147@gmail.com>
+> Tested-by: Ondrej Zary <linux@rainbow-software.org>
+> Link: https://lkml.org/lkml/2016/10/4/283
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index 1de39af..9397c46 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -88,6 +88,16 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp)
- 	return ks_pcie->app.start + MSI_IRQ;
- }
- 
-+static u32 ks_dw_app_readl(struct keystone_pcie *ks_pcie, u32 offset)
-+{
-+	return readl(ks_pcie->va_app_base + offset);
-+}
-+
-+static void ks_dw_app_writel(struct keystone_pcie *ks_pcie, u32 offset, u32 val)
-+{
-+	writel(val, ks_pcie->va_app_base + offset);
-+}
-+
- void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
- {
- 	struct pcie_port *pp = &ks_pcie->pp;
-@@ -95,7 +105,7 @@ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
- 	u32 pending, vector;
- 	int src, virq;
- 
--	pending = readl(ks_pcie->va_app_base + MSI0_IRQ_STATUS + (offset << 4));
-+	pending = ks_dw_app_readl(ks_pcie, MSI0_IRQ_STATUS + (offset << 4));
- 
- 	/*
- 	 * MSI0 status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
-@@ -125,9 +135,9 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
- 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
- 
--	writel(BIT(bit_pos),
--	       ks_pcie->va_app_base + MSI0_IRQ_STATUS + (reg_offset << 4));
--	writel(reg_offset + MSI_IRQ_OFFSET, ks_pcie->va_app_base + IRQ_EOI);
-+	ks_dw_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
-+			 BIT(bit_pos));
-+	ks_dw_app_writel(ks_pcie, IRQ_EOI, reg_offset + MSI_IRQ_OFFSET);
- }
- 
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
-@@ -136,8 +146,8 @@ void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
- 
- 	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
--	writel(BIT(bit_pos),
--	       ks_pcie->va_app_base + MSI0_IRQ_ENABLE_SET + (reg_offset << 4));
-+	ks_dw_app_writel(ks_pcie, MSI0_IRQ_ENABLE_SET + (reg_offset << 4),
-+			 BIT(bit_pos));
- }
- 
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-@@ -146,8 +156,8 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
- 
- 	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
--	writel(BIT(bit_pos),
--	       ks_pcie->va_app_base + MSI0_IRQ_ENABLE_CLR + (reg_offset << 4));
-+	ks_dw_app_writel(ks_pcie, MSI0_IRQ_ENABLE_CLR + (reg_offset << 4),
-+			 BIT(bit_pos));
- }
- 
- static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
-@@ -239,7 +249,7 @@ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
- 	int i;
- 
- 	for (i = 0; i < MAX_LEGACY_IRQS; i++)
--		writel(0x1, ks_pcie->va_app_base + IRQ_ENABLE_SET + (i << 4));
-+		ks_dw_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
- }
- 
- void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
-@@ -249,7 +259,7 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
- 	u32 pending;
- 	int virq;
- 
--	pending = readl(ks_pcie->va_app_base + IRQ_STATUS + (offset << 4));
-+	pending = ks_dw_app_readl(ks_pcie, IRQ_STATUS + (offset << 4));
- 
- 	if (BIT(0) & pending) {
- 		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
-@@ -258,20 +268,19 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
- 	}
- 
- 	/* EOI the INTx interrupt */
--	writel(offset, ks_pcie->va_app_base + IRQ_EOI);
-+	ks_dw_app_writel(ks_pcie, IRQ_EOI, offset);
- }
- 
- void ks_dw_pcie_enable_error_irq(struct keystone_pcie *ks_pcie)
- {
--	writel(ERR_IRQ_ALL, ks_pcie->va_app_base + ERR_IRQ_ENABLE_SET);
-+	ks_dw_app_writel(ks_pcie, ERR_IRQ_ENABLE_SET, ERR_IRQ_ALL);
- }
- 
- irqreturn_t ks_dw_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
- {
- 	u32 status;
- 
--	status = readl(ks_pcie->va_app_base + ERR_IRQ_STATUS_RAW) &
--			    ERR_IRQ_ALL;
-+	status = ks_dw_app_readl(ks_pcie, ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
- 	if (!status)
- 		return IRQ_NONE;
- 
-@@ -280,7 +289,7 @@ irqreturn_t ks_dw_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
- 			status);
- 
- 	/* Ack the IRQ; status bits are RW1C */
--	writel(status, ks_pcie->va_app_base + ERR_IRQ_STATUS);
-+	ks_dw_app_writel(ks_pcie, ERR_IRQ_STATUS, status);
- 	return IRQ_HANDLED;
- }
- 
-@@ -329,11 +338,11 @@ static void ks_dw_pcie_set_dbi_mode(struct keystone_pcie *ks_pcie)
- {
- 	u32 val;
- 
--	writel(DBI_CS2_EN_VAL | readl(ks_pcie->va_app_base + CMD_STATUS),
--	       ks_pcie->va_app_base + CMD_STATUS);
-+	val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
-+	ks_dw_app_writel(ks_pcie, CMD_STATUS, DBI_CS2_EN_VAL | val);
- 
- 	do {
--		val = readl(ks_pcie->va_app_base + CMD_STATUS);
-+		val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
- 	} while (!(val & DBI_CS2_EN_VAL));
- }
- 
-@@ -347,11 +356,11 @@ static void ks_dw_pcie_clear_dbi_mode(struct keystone_pcie *ks_pcie)
- {
- 	u32 val;
- 
--	writel(~DBI_CS2_EN_VAL & readl(ks_pcie->va_app_base + CMD_STATUS),
--		     ks_pcie->va_app_base + CMD_STATUS);
-+	val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
-+	ks_dw_app_writel(ks_pcie, CMD_STATUS, ~DBI_CS2_EN_VAL & val);
- 
- 	do {
--		val = readl(ks_pcie->va_app_base + CMD_STATUS);
-+		val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
- 	} while (val & DBI_CS2_EN_VAL);
- }
- 
-@@ -360,6 +369,7 @@ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
- 	struct pcie_port *pp = &ks_pcie->pp;
- 	u32 start = pp->mem->start, end = pp->mem->end;
- 	int i, tr_size;
-+	u32 val;
- 
- 	/* Disable BARs for inbound access */
- 	ks_dw_pcie_set_dbi_mode(ks_pcie);
-@@ -368,20 +378,20 @@ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
- 	ks_dw_pcie_clear_dbi_mode(ks_pcie);
- 
- 	/* Set outbound translation size per window division */
--	writel(CFG_PCIM_WIN_SZ_IDX & 0x7, ks_pcie->va_app_base + OB_SIZE);
-+	ks_dw_app_writel(ks_pcie, OB_SIZE, CFG_PCIM_WIN_SZ_IDX & 0x7);
- 
- 	tr_size = (1 << (CFG_PCIM_WIN_SZ_IDX & 0x7)) * SZ_1M;
- 
- 	/* Using Direct 1:1 mapping of RC <-> PCI memory space */
- 	for (i = 0; (i < CFG_PCIM_WIN_CNT) && (start < end); i++) {
--		writel(start | 1, ks_pcie->va_app_base + OB_OFFSET_INDEX(i));
--		writel(0, ks_pcie->va_app_base + OB_OFFSET_HI(i));
-+		ks_dw_app_writel(ks_pcie, OB_OFFSET_INDEX(i), start | 1);
-+		ks_dw_app_writel(ks_pcie, OB_OFFSET_HI(i), 0);
- 		start += tr_size;
- 	}
- 
- 	/* Enable OB translation */
--	writel(OB_XLAT_EN_VAL | readl(ks_pcie->va_app_base + CMD_STATUS),
--	       ks_pcie->va_app_base + CMD_STATUS);
-+	val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
-+	ks_dw_app_writel(ks_pcie, CMD_STATUS, OB_XLAT_EN_VAL | val);
- }
- 
- /**
-@@ -421,7 +431,7 @@ static void __iomem *ks_pcie_cfg_setup(struct keystone_pcie *ks_pcie, u8 bus,
- 	if (bus != 1)
- 		regval |= BIT(24);
- 
--	writel(regval, ks_pcie->va_app_base + CFG_SETUP);
-+	ks_dw_app_writel(ks_pcie, CFG_SETUP, regval);
- 	return pp->va_cfg0_base;
- }
- 
-@@ -490,13 +500,13 @@ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
- 	u32 val;
- 
- 	/* Disable Link training */
--	val = readl(ks_pcie->va_app_base + CMD_STATUS);
-+	val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
- 	val &= ~LTSSM_EN_VAL;
--	writel(LTSSM_EN_VAL | val,  ks_pcie->va_app_base + CMD_STATUS);
-+	ks_dw_app_writel(ks_pcie, CMD_STATUS, LTSSM_EN_VAL | val);
- 
- 	/* Initiate Link Training */
--	val = readl(ks_pcie->va_app_base + CMD_STATUS);
--	writel(LTSSM_EN_VAL | val,  ks_pcie->va_app_base + CMD_STATUS);
-+	val = ks_dw_app_readl(ks_pcie, CMD_STATUS);
-+	ks_dw_app_writel(ks_pcie, CMD_STATUS, LTSSM_EN_VAL | val);
- }
- 
- /**
-
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
