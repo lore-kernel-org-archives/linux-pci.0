@@ -1,52 +1,61 @@
-Return-Path: <flyos@mailoo.org>
-Return-Path: <flyos@mailoo.org>
-From: Pierre de Villemereuil <flyos@mailoo.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Mathias Nyman <mathias.nyman@linux.intel.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-Date: Sat, 15 Oct 2016 10:46:44 +1300
-Message-ID: <18007487.pN64mJfts8@flyosflip>
-In-Reply-To: <Pine.LNX.4.44L0.1610131709160.1822-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1610131709160.1822-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:43954 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751913AbcJEIp7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Oct 2016 04:45:59 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 2/2] PCI: rockchip: Mark RC as common clock architecture
+Date: Wed,  5 Oct 2016 16:50:17 +0800
+Message-Id: <1475657417-29163-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1475657417-29163-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1475657417-29163-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+The default value of common clock configuration is
+zero indicating Rockchip's RC is using asynchronous
+clock architecture but actually we are using common
+clock. This will confuses some EP drivers if they
+need some different settings referring to this value.
+So let's fix it.
 
-I've managed to build the patched kernel on OBS, install the package=20
-and boot! \o/
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-And I can confirm that the patch indeed fix the issue!
+ drivers/pci/host/pcie-rockchip.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-The kernel was booted without the usb.autosuspend=3D-1 option, of=20
-course.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 7d16669..f204f8b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -141,6 +141,7 @@
+ #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
++#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+ #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+ #define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+ #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+@@ -536,6 +537,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 
+ 	rockchip_pcie_set_power_limit(rockchip);
+ 
++	/* Set RC's clock architecture as common clock */
++	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
++	status |= PCIE_RC_CONFIG_LCS_CCC;
++	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++
+ 	/* Enable Gen1 training */
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
+-- 
+2.3.7
 
-Thank you guys!
 
-Cheers,
-Pierre.
-
-Le jeudi 13 octobre 2016, 17:11:46 NZDT Alan Stern a =C3=A9crit :
-> On Fri, 14 Oct 2016, Pierre de Villemereuil wrote:
-> > Hi!
-> >=20
-> > I've branched the kernel package on the OpenSUSE Build Server,=20
-I'll
-> > try to apply the patch there (this ought to be cleanest method).
-> >=20
-> > Starting from the root of the kernel tarball, the patch should=20
-be
-> > applied to drivers/pci/pci.c, am I right?
->=20
-> You just cd to the top directory of the kernel source, and do
->=20
-> 	patch -p1 <filename
->=20
-> where "filename" is the contents of the email message containing=20
-the
-> patch.  Or if you want, since the patch is so small, you can=20
-simply
-> edit the file by hand to add in the new lines.
->=20
-> Alan Stern
