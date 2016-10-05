@@ -1,115 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36174 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965171AbcJFJel (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2016 05:34:41 -0400
-From: Serge Semin <fancer.lancer@gmail.com>
-To: bhelgaas@google.com
-Cc: shawn.lin@rock-chips.com, luto@kernel.org,
-        Sergey.Semin@t-platforms.ru, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Serge Semin <fancer.lancer@gmail.com>
-Subject: [RFC] PCI: Fix kernel panic of root-port-less PCIe enum due to ASPM
-Date: Thu,  6 Oct 2016 12:34:15 +0300
-Message-Id: <1475746455-20665-1-git-send-email-fancer.lancer@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from lucky1.263xmail.com ([211.157.147.135]:57407 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751980AbcJEIAy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Oct 2016 04:00:54 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3] PCI: rockchip: Support property to specify the link capability
+Date: Wed,  5 Oct 2016 16:05:17 +0800
+Message-Id: <1475654717-15159-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello linux folks,
+From: Brian Norris <briannorris@chromium.org>
 
-    Sometime ago I discovered a kernel panic popping up when PCI subsystem was
-trying to enumerate PCI express bus with ASPM service enabled. Here it is:
+rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+ms waiting for training that will never happen, let's add a property
+from devicetree to specify link capability.
 
-[    5.089667] CPU 0 Unable to handle kernel paging request at virtual
-address 00000060, epc == 80317004, ra == 80316ac8
-[    5.120952] Oops[#1]:
-          ...
-[    5.528438] Call Trace:
-[    5.535640] [<80317004>] pcie_aspm_init_link_state+0x6c0/0x814
-[    5.552843] [<80300c44>] pci_scan_slot+0x140/0x148
-[    5.566957] [<80301dcc>] pci_scan_child_bus+0x50/0x1b0
-[    5.582096] [<80301944>] pci_scan_bridge+0x25c/0x694
-[    5.596724] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
-[    5.611862] [<80301944>] pci_scan_bridge+0x25c/0x694
-[    5.626488] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
-[    5.641628] [<8030215c>] pci_scan_root_bus+0x64/0x124
-[    5.656528] [<804ca298>] pcibios_scanbus+0xa8/0x188
-
-    I more than sure you are familiar with the issue, since I've found the
-mailing discussion: "PCI: avoid NULL deref in alloc_pcie_link_state"
-https://patchwork.kernel.org/patch/2751651/
-https://bugzilla.kernel.org/show_bug.cgi?id=60111
-
-    You closed the bugzilla ticket with the next statement:
-"I'm closing this as invalid because the simulated machine where the problem
-occurs has an invalid PCIe topology (an Upstream Port with no Downstream Port
-or Root Port above it).  As far as I know, there is no valid topology, e.g.,
-a real hardware machine in the field, that would cause this failure."
-
-    I'm strongly disagree with it, since I've got at least two hardware with
-PCIe-bus hierarchy as described in the mailing list. One of them is based on
-Cavium Octeon III CN7020. Here is a ASCII-diagram of PCIe-bus:
-
--+-[0000:01]---00.0-[02-06]--+-02.0-[03-05]--+-00.0-[04-05]----00.0-[05]--
- |                           |               \-00.1  Device [111d:808f]
- |                           \-04.0-[06]----00.0  Device [126f:0750]
- \-[0000:00]-
-
-where 01:00.0 is an Upstream port of IDT PCIe-swtich.
-/ # /usr/local/sbin/lspci -v -s 01:00.0
-01:00.0 Class 0604: Device 111d:8061
-        Flags: bus master, fast devsel, latency 0
-        Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Bus: primary=01, secondary=02, subordinate=06, sec-latency=0
-        Memory behind bridge: 08000000-0dffffff
-        Expansion ROM at <unassigned> [disabled] [size=2]
-        Capabilities: [40] Express Upstream Port, MSI 00
-        Capabilities: [c0] Power Management version 3
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [200] Virtual Channel
-        Kernel driver in use: pcieport
-
-As you can see PCI-bus hierarchy doesn't have root port and the very first
-upstream port is directly connected to Host-PCIe bridge of MCU, which of
-course is not listed by the lspci utility.
-
-Despite of Radim Kr?má?, who suggested a fix, which would de-facto just
-turned ASPM off, I found a quick solution, which disabled ASPM only in 
-the first link (Host-PCIe=>Upstream port) of PCIe-bus for such hierarchy.
-ASPM for other PCIe-bus topologies shall work the way it was.
-
-I hope the fix will be helpful.
-Thanks,
-
-=============================
-Serge V. Semin
-Leading Programmer
-Embedded SW development group
-T-platforms
-=============================
-
-Signed-off-by: Serge Semin <fancer.lancer@gmail.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
 ---
- drivers/pci/pcie/aspm.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 0ec649d..a9295f29 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -522,7 +522,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	INIT_LIST_HEAD(&link->children);
- 	INIT_LIST_HEAD(&link->link);
- 	link->pdev = pdev;
--	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) {
-+	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
-+	    (!pci_is_root_bus(pdev->bus->parent))) {
- 		struct pcie_link_state *parent;
- 		parent = pdev->bus->parent->self->link_state;
- 		if (!parent) {
+Changes in v3:
+- Cast a warning for invalid max link speed and use gen1 for it.
+  That looks better than v2. (Suggested by Brian)
+
+Changes in v2:
+- rename the property to rockchip,max-link-speed according to
+  Bjorn's recommendation and take some bits from imx6q-pcie to
+  make this requirement more consisent.
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+ drivers/pci/host/pcie-rockchip.c                   | 62 ++++++++++++++--------
+ 2 files changed, 42 insertions(+), 22 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index ba67b39..7bb730e 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -42,6 +42,8 @@ Required properties:
+ Optional Property:
+ - ep-gpios: contain the entry for pre-reset gpio
+ - num-lanes: number of lanes to use
++- rockchip,max-link-speed: Specify PCI gen for link capability. Must
++	be '2' for gen2, and '1' for gen1, otherwise will default to gen1.
+ - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+ - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+ - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 35591b1..66476ea 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -53,6 +53,7 @@
+ #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+ #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+ #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
++#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+ #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+ #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+ #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+@@ -205,6 +206,7 @@ struct rockchip_pcie {
+ 	struct	gpio_desc *ep_gpio;
+ 	u32	lanes;
+ 	u8	root_bus_nr;
++	int	link_gen;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
+ };
+@@ -443,13 +445,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
++	if (rockchip->link_gen == 2)
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
++				    PCIE_CLIENT_CONFIG);
++	else
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
++				    PCIE_CLIENT_CONFIG);
++
+ 	rockchip_pcie_write(rockchip,
+ 			    PCIE_CLIENT_CONF_ENABLE |
+ 			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+ 			    PCIE_CLIENT_ARI_ENABLE |
+ 			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+-			    PCIE_CLIENT_MODE_RC |
+-			    PCIE_CLIENT_GEN_SEL_2,
++			    PCIE_CLIENT_MODE_RC,
+ 				PCIE_CLIENT_CONFIG);
+ 
+ 	err = phy_power_on(rockchip->phy);
+@@ -550,29 +558,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		msleep(20);
+ 	}
+ 
+-	/*
+-	 * Enable retrain for gen2. This should be configured only after
+-	 * gen1 finished.
+-	 */
+-	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+-	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++	if (rockchip->link_gen == 2) {
++		/*
++		 * Enable retrain for gen2. This should be configured only after
++		 * gen1 finished.
++		 */
++		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
++		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
++		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++
++		timeout = jiffies + msecs_to_jiffies(500);
++		for (;;) {
++			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
++			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
++					PCIE_CORE_PL_CONF_SPEED_5G) {
++				dev_dbg(dev, "PCIe link training gen2 pass!\n");
++				break;
++			}
+ 
+-	timeout = jiffies + msecs_to_jiffies(500);
+-	for (;;) {
+-		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+-		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+-		    PCIE_CORE_PL_CONF_SPEED_5G) {
+-			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+-			break;
+-		}
++			if (time_after(jiffies, timeout)) {
++				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
++				break;
++			}
+ 
+-		if (time_after(jiffies, timeout)) {
+-			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+-			break;
++			msleep(20);
+ 		}
+-
+-		msleep(20);
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
+@@ -781,6 +791,14 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		rockchip->lanes = 1;
+ 	}
+ 
++	rockchip->link_gen = 2;
++	err = of_property_read_u32(node, "rockchip,max-link-speed",
++				   &rockchip->link_gen);
++	if (!err && rockchip->link_gen != 1 && rockchip->link_gen != 2) {
++		dev_warn(dev, "invalid max-link-speed, default to use gen1\n");
++		rockchip->link_gen = 1;
++	}
++
+ 	rockchip->core_rst = devm_reset_control_get(dev, "core");
+ 	if (IS_ERR(rockchip->core_rst)) {
+ 		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
 -- 
-2.6.6
+2.3.7
+
 
