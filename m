@@ -1,103 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:37706 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753294AbcJZN7n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Oct 2016 09:59:43 -0400
-Received: by mail-wm0-f54.google.com with SMTP id 140so20693142wmv.0
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 06:59:42 -0700 (PDT)
-Message-ID: <1477490807.25812.20.camel@nexus-software.ie>
-Subject: Re: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit
- pci_platform_pm_ops ->get_state hook
-From: Bryan O'Donoghue <pure.logic@nexus-software.ie>
-To: Lukas Wunner <lukas@wunner.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Ingo Molnar <mingo@kernel.org>, x86@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 26 Oct 2016 15:06:47 +0100
-In-Reply-To: <20161025061934.GB5630@wunner.de>
-References: <cover.1477221514.git.lukas@wunner.de>
-         <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
-         <1477226275.2932.54.camel@nexus-software.ie>
-         <20161023145757.GA4909@wunner.de>
-         <1477300505.6423.41.camel@linux.intel.com>
-         <20161024100940.GB5144@wunner.de>
-         <1477307145.6423.48.camel@linux.intel.com>
-         <20161025061934.GB5630@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1475713112.3784.183.camel@kernel.crashing.org>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: John Garry <john.garry@huawei.com>, Jon Masters <jcm@jonmasters.org>,
+ Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+Date: Thu, 06 Oct 2016 11:18:32 +1100
+In-Reply-To: <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
+ <5869118.UilSPY9Sai@wuerfel>
+ <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
+ <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
 Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ gabriele.paoloni@huawei.com, minyard@acm.org, gregkh@linuxfoundation.org,
+ zhichang.yuan02@gmail.com, will.deacon@arm.com, linux-kernel@vger.kernel.org,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, linuxarm@huawei.com,
+ xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
+ zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-10-25 at 08:19 +0200, Lukas Wunner wrote:
-> On Mon, Oct 24, 2016 at 02:05:45PM +0300, Andy Shevchenko wrote:
-> > 
-> > On Mon, 2016-10-24 at 12:09 +0200, Lukas Wunner wrote:
-> > > 
-> > > I note that you're exporting intel_mid_pci_set_power_state() even
-> > > though there's currently no module user, so perhaps you're
-> > > intending
-> > > to call the function from somewhere else.
-> > The export there is purely dictated by leaving abstract stuff under
-> > drivers/pci when platform code is kept under arch/x86/platform.
-> > Other
-> > than that there is no plans to call this outside of pci-mid.c.
-> The PCI core, including pci-mid.o, is linked into vmlinux, not a
-> module,
-> and exporting is only needed for module users.  A commit to unexport
-> the
-> symbol has been sitting on my development branch for 2 weeks, I
-> delayed
-> it because I wanted to wait for the regression to be fixed first.
-> Sending out now since the topic has come up.
-> 
-> 
-> > 
-> > > 
-> > > > 
-> > > > > 
-> > > > > The usage of a mutex in mid_pwr_set_power_state() actually
-> > > > > seems
-> > > > > questionable since this is called with interrupts disabled:
-> > > > > 
-> > > > > pci_pm_resume_noirq
-> > > > >   pci_pm_default_resume_early
-> > > > >     pci_power_up
-> > > > >       platform_pci_set_power_state
-> > > > >         mid_pci_set_power_state
-> > > > >           intel_mid_pci_set_power_state
-> > > > >             mid_pwr_set_power_state
-> > > > Hmm... I have to look at this closer. I don't remember why I
-> > > > put
-> > > > mutex
-> > > > in the first place there. Anyway it's another story.
-> > There are two code paths
-> > pci_power_up()
-> > pci_platform_power_transition()
-> > 
-> > Second one can be called in non-atomic context for sure (consider
-> > standard ->resume() callback).
-> > 
-> > First one runs when IRQ disabled on CPU side.
-> > 
-> > In any case we probably need to serialize access in our code to
-> > protect
-> > against several PCI devices being powered up simultaneously.
-> Right, good point, the PM core will indeed parallelize suspend/resume
-> of the devices, so if __update_power_state() cannot be safely called
-> concurrently for different devices (I don't know if that's the case)
-> then indeed you need locking (with spinlocks).  It might be worth
-> pondering if the locking should happen further down in the call stack
-> because I assume the critical section would really just be in
-> __update_power_state().
-> 
-> Best regards,
-> 
-> Lukas
-
-So the conclusion is to apply this patch now and go and look further @
-locking in a separate series right ? There's not much point in leaving
-Edison not booting as is the case with tip-of-tree right now.
-
----
-bod
+T24gVHVlLCAyMDE2LTEwLTA0IGF0IDEzOjAyICswMTAwLCBKb2huIEdhcnJ5IHdyb3RlOgo+IFJp
+Z2h0LCBzbyBJIHRoaW5rIFpoaWNoYW5nIGNhbiBtYWtlIHRoZSBuZWNlc3NhcnkgZ2VuZXJpYyBj
+aGFuZ2VzIHRvwqAKPiA4MjUwIE9GIGRyaXZlciB0byBzdXBwb3J0IElPIHBvcnQgYXMgd2VsbCBh
+cyBNTUlPLWJhc2VkLgo+IAo+IEhvd2V2ZXIgYW4gTFBDLWJhc2VkIGVhcmx5Y29uIGRyaXZlciBp
+cyBzdGlsbCByZXF1aXJlZC4KPiAKPiBBIG5vdGUgb24gaGlwMDctYmFzZWQgRDA1IChmb3IgdGhv
+c2UgdW5hd2FyZSk6IHRoaXMgZG9lcyBub3QgdXNlwqAKPiBMUEMtYmFzZWQgdWFydC4gSXQgdXNl
+cyBQTDAxMS4gVGhlIGhhcmR3YXJlIGd1eXMgaGF2ZSBtYW5hZ2VkIHNvbWXCoAo+IHRyaWNrZXJ5
+IHdoZXJlIHRoZXkgbG9vcGJhY2sgdGhlIHNlcmlhbCBsaW5lIGFyb3VuZCB0aGUgQk1DL0NQTEQu
+IEJ1dCB3ZcKgCj4gc3RpbGwgbmVlZCBpdCBmb3IgaGlwMDYgRDAzIGFuZCBhbnkgb3RoZXIgYm9h
+cmRzIHdoaWNoIHdhbnQgdG8gdXNlIExQQ8KgCj4gYnVzIGZvciB1YXJ0Lgo+IAo+IEEgcXVlc3Rp
+b24gb24gU0JTQTogZG9lcyBpdCBwcm9wb3NlIGhvdyB0byBwcm92aWRlIHNlcmlhbCB2aWEgQk1D
+IGZvciBTT0w/CgpQcm9iYWJseSBhbm90aGVyIHJlYXNvbiB0byBrZWVwIDgyNTAgYXMgYSBsZWdh
+bCBvcHRpb24gLi4uIFRoZSAodmVyeQpwb3B1bGFyKSBBc3BlZWQgQk1DcyB0ZW5kIHRvIGRvIHRo
+aXMgdmlhIGEgODI1MC1sb29raW5nIHZpcnR1YWwgVUFSVCBvbgpMUEMuCgpDaGVlcnMsCkJlbiwK
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1h
+cm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
+cmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0t
+a2VybmVsCg==
