@@ -1,150 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52488 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751039AbcJYSmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Oct 2016 14:42:19 -0400
-Date: Tue, 25 Oct 2016 12:42:18 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Laszlo Ersek <lersek@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Andrei Grigore <andrei.grg@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jayme Howard <g.prime@gmail.com>
-Subject: Re: [PATCH] PCI: pci-stub: accept exceptions to the ID- and
- class-based matching
-Message-ID: <20161025124218.2696e55a@t450s.home>
-In-Reply-To: <20161025182419.22910-1-lersek@redhat.com>
-References: <20161025182419.22910-1-lersek@redhat.com>
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Date: Thu, 6 Oct 2016 10:42:14 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>,
+    Mathias Nyman <mathias.nyman@linux.intel.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    Pierre de Villemereuil <flyos@mailoo.org>,
+    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
+     <linux-pci@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+In-Reply-To: <20161005204119.GA5961@wunner.de>
+Message-ID: <Pine.LNX.4.44L0.1610061029430.1630-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 25 Oct 2016 20:24:19 +0200
-Laszlo Ersek <lersek@redhat.com> wrote:
+On Wed, 5 Oct 2016, Lukas Wunner wrote:
 
-> Some systems have multiple instances of the exact same kind of PCI device
-> installed. When VFIO users intend to assign these devices to VMs, they
-> occasionally don't want to assign all of them; they'd keep a few for
-> host-side use. The current ID- and class-based matching in pci-stub
-> doesn't accommodate this use case, so users are left with either
-> rc.local-style host boot scripts, or QEMU wrapper scripts (which are
-> inferior to a pure libvirt environment).
+> On Wed, Oct 05, 2016 at 01:54:01PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Oct 05, 2016 at 10:45:22AM -0400, Alan Stern wrote:
+> > > In short, Pierre's USB host controller doesn't send wakeup signals from
+> > > runtime suspend, because the firmware limits the runtime-suspend state
+> > > to D0 and the controller can't issue PME# from the D0 state.  In this
+> > > situation we would prefer to avoid suspending the controller at all,
+> > > rather than have it go into runtime suspend and then stop working.
 > 
-> Introduce the "except" module parameter for pci-stub. In addition to
-> "ids", users can specify a list of Domain:Bus:Device.Function tuples. The
-> tuples are parsed and saved before pci_add_dynid() is called. The pci-stub
-> probe function will fail for the listed devices, for the initial and all
-> later (explicit) binding attempts.
+> As Alan has correctly pointed out below, there are PCI devices which
+> do not support PME but should still be runtime suspended, e.g. because
+> they have some non-standard mechanism to sideband signal wakeup or
+> because they can detect when they need to resume even if they're in
+> a low-power state.
 > 
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Andrei Grigore <andrei.grg@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Jayme Howard <g.prime@gmail.com>
-> Reported-by: Andrei Grigore <andrei.grg@gmail.com>
-> Ref: https://www.redhat.com/archives/vfio-users/2016-October/msg00121.html
-> Signed-off-by: Laszlo Ersek <lersek@redhat.com>
-> ---
->  drivers/pci/pci-stub.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
+> AFAIUI, this device should not be runtime suspended at all because it
+> doesn't generate a PME interrupt and thus stays suspended forever.
+
+No, as Oliver said, the device can generate a PME# signal.  It just 
+can't do so from D0, and the firmware doesn't allow it to go into a 
+deeper power-savings state.
+
+> The PCI core doesn't allow runtime PM by default.  Rather it calls
+> pm_runtime_forbid() when the device is added (see pci_pm_init(), called
+> indirectly from pci_device_add()).  PCI drivers need to explicitly call
+> pm_runtime_allow(), typically from their ->probe hook.
+
+No, pm_runtime_allow() is generally called by userspace, via writing 
+to the .../power/control file in sysfs.  Most drivers do not use it; it 
+is a policy mechanism.  And drivers can't use it to _enforce_ anything, 
+since the user can always override the setting.
+
+> If this xHC cannot signal wakeup, it shouldn't allow runtime PM in the
+> first place.  Simple as that.
 > 
-> diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
-> index 886fb3570278..120c29609c44 100644
-> --- a/drivers/pci/pci-stub.c
-> +++ b/drivers/pci/pci-stub.c
-> @@ -26,8 +26,44 @@ MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the stub driver, format is "
->  		 "\"vendor:device[:subvendor[:subdevice[:class[:class_mask]]]]\""
->  		 " and multiple comma separated entries can be specified");
->  
-> +#define MAX_EXCEPT 16
-> +
-> +static unsigned num_except;
-> +static struct except {
-> +	u16 domain;
-> +	u16 devid;
-> +} except[MAX_EXCEPT];
-> +
-> +/*
-> + * Accommodate substrings like "0000:00:1c.4," MAX_EXCEPT times, with the comma
-> + * replaced with '\0' in the last instance
-> + */
-> +static char except_str[13 * MAX_EXCEPT] __initdata;
-> +
-> +module_param_string(except, except_str, sizeof except_str, 0);
-> +MODULE_PARM_DESC(except, "Comma-separated list of PCI addresses to except "
-> +		 "from the ID- and class-based binding. The address format is "
-> +		 "Domain:Bus:Device.Function (all components are required and "
-> +		 "written in hex), for example, 0000:00:1c.4. At most "
-> +		 __stringify(MAX_EXCEPT) " exceptions are supported.");
+> The USB core has a function usb_enable_autosuspend() which does nothing
+> else but call pm_runtime_allow().  This is called in a couple of places,
+> I guess the relevant caller here is drivers/usb/core/hub.c:hub_probe().
+> I'd suggest to amend that function so that runtime PM isn't allowed
+> if the host controller can't signal plug events from pci_target_state().
 
-So a user needs to specify both a set of set of vendor:device ids AND an
-exception list?  Wouldn't it be easier to make a list of _included_
-devices by address, w/o needing an ids= list?  FWIW, I think the reason
-this hasn't been done to date is that PCI bus addresses (except for
-root bus devices) are not stable.  Depending on the system, the address
-of a given device may change, not only based on the slot where the
-device is installed, but whether other devices in other slots are
-populated.  This is why when ACPI needs to describe a PCI device (such
-as in the DMAR tables), it does so via paths.  We don't know the bus
-number that will be assigned to a device, but we do know
-deterministically how to traverse to it, for instance root bus -> root
-dev.fn -> intermediate dev.fn -> target dev.fn.  Thanks,
+usb_enable_autosuspend() is intended mainly for use with USB hubs.  
+There is a policy decision in the USB stack that runtime PM will by 
+default be allowed for hubs but not for other devices.
 
-Alex
+In any case, usb_enable_autosuspend() can't be used for host
+controllers.  A host controller is not a USB device -- in this case it
+is a PCI device.
 
-> +
-> +static inline bool exception_matches(const struct except *ex,
-> +				     const struct pci_dev *dev)
-> +{
-> +	return ex->domain == pci_domain_nr(dev->bus) &&
-> +	       ex->devid == PCI_DEVID(dev->bus->number, dev->devfn);
-> +}
-> +
->  static int pci_stub_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  {
-> +	unsigned i;
-> +
-> +	for (i = 0; i < num_except; i++)
-> +		if (exception_matches(&except[i], dev)) {
-> +			dev_info(&dev->dev, "skipped by stub\n");
-> +			return -EPERM;
-> +		}
-> +
->  	dev_info(&dev->dev, "claimed by stub\n");
->  	return 0;
->  }
-> @@ -47,6 +83,33 @@ static int __init pci_stub_init(void)
->  	if (rc)
->  		return rc;
->  
-> +	/* parse exceptions */
-> +	p = except_str;
-> +	while ((id = strsep(&p, ","))) {
-> +		int fields;
-> +		unsigned domain, bus, dev, fn;
-> +
-> +		if (*id == '\0')
-> +			continue;
-> +
-> +		fields = sscanf(id, "%x:%x:%x.%x", &domain, &bus, &dev, &fn);
-> +		if (fields != 4 || domain > 0xffff || bus > 0xff ||
-> +		    dev > 0x1f || fn > 0x7) {
-> +			printk(KERN_WARNING
-> +			       "pci-stub: invalid exception \"%s\"\n", id);
-> +			continue;
-> +		}
-> +
-> +		if (num_except < MAX_EXCEPT) {
-> +			struct except *ex = &except[num_except++];
-> +
-> +			ex->domain = domain;
-> +			ex->devid = PCI_DEVID(bus, PCI_DEVFN(dev, fn));
-> +		} else
-> +			printk(KERN_WARNING
-> +			       "pci-stub: no room for exception \"%s\"\n", id);
-> +	}
-> +
->  	/* no ids passed actually */
->  	if (ids[0] == '\0')
->  		return 0;
+> This approach is better than returning -EBUSY from the ->runtime_suspend
+> hook because the PM core doesn't waste CPU cycles by repeatedly calling
+> ->runtime_suspend in vain, always getting -EBUSY back.
 
+I still think this belongs in the PCI core -- except for the difficulty
+of determining whether a device can use a non-PME method for wakeup
+signalling.  If that issue has a good solution then the PCI core could 
+call pm_runtime_get_noresume() for devices that are capable of 
+generating wakeup signals but not in any D-state that the firmware will 
+allow for runtime suspend.
+
+Alan Stern
