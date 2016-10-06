@@ -1,436 +1,109 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH 08/12] PCI: iproc: Making outbound mapping code more generic
-Date: Mon, 24 Oct 2016 15:17:08 -0700
-Message-Id: <1477347432-17656-9-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
-References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:51949 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752521AbcJFGY5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2016 02:24:57 -0400
+Message-Id: <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+In-Reply-To: <cover.1475733022.git.lukas@wunner.de>
+References: <cover.1475733022.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Thu, 6 Oct 2016 08:24:29 +0200
+Subject: [PATCH 1/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+ ->get_power hook
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, x86@kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Improve the iProc PCIe outbound mapping code by making it more generic
-and removing redundant device tree properties
-'brcm,pcie-ob-window-size' and 'brcm,pcie-ob-oarr-size'. The driver is
-still backward compatible to device tree binaries with the two
-properties specified
+Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
+state") augmented struct pci_platform_pm_ops with a ->get_power hook and
+implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
+existing till v4.7.
 
-The driver now automatically confgures the correct mapping window size
-and number of mapping windows based on the value of device tree
-property 'ranges' and the capability of of the iProc PCIe controller
+However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
+Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid: Add
+Power Management Unit driver").  It is missing the ->get_power hook,
+which is fatal since pci_set_platform_pm() enforces its presence.
 
-Signed-off-by: Oza Oza <oza.oza@broadcom.com>
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Retrofit mid_pci_platform_pm with the missing callback to fix the
+breakage.
+
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: x86@kernel.org
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pcie-iproc-platform.c |  13 --
- drivers/pci/host/pcie-iproc.c          | 247 +++++++++++++++++++++++----------
- drivers/pci/host/pcie-iproc.h          |  15 +-
- 3 files changed, 186 insertions(+), 89 deletions(-)
+ arch/x86/include/asm/intel-mid.h  |  1 +
+ arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
+ drivers/pci/pci-mid.c             |  6 ++++++
+ 3 files changed, 26 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index f243150..47329d3 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -87,19 +87,6 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 			return ret;
- 		}
- 		pcie->ob.axi_offset = val;
--
--		ret = of_property_read_u32(np, "brcm,pcie-ob-window-size",
--					   &val);
--		if (ret) {
--			dev_err(dev,
--				"missing brcm,pcie-ob-window-size property\n");
--			return ret;
--		}
--		pcie->ob.window_size = (resource_size_t)val * SZ_1M;
--
--		if (of_property_read_bool(np, "brcm,pcie-ob-oarr-size"))
--			pcie->ob.set_oarr_size = true;
--
- 		pcie->need_ob_cfg = true;
- 	}
+diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+index 9d6b097..4511c10 100644
+--- a/arch/x86/include/asm/intel-mid.h
++++ b/arch/x86/include/asm/intel-mid.h
+@@ -17,6 +17,7 @@
  
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 02f3ed3..b466ba6 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -68,17 +68,47 @@
- #define APB_ERR_EN_SHIFT             0
- #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ extern int intel_mid_pci_init(void);
+ extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
++extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
  
-+/* derive the enum index of the outbound/inbound mapping registers */
-+#define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
-+
-+/*
-+ * Maximum number of outbound mapping window sizes that can be supported by any
-+ * OARR/OMAP mapping pair
-+ */
-+#define MAX_NUM_OB_WINDOW_SIZES      4
-+
- #define OARR_VALID_SHIFT             0
- #define OARR_VALID                   BIT(OARR_VALID_SHIFT)
- #define OARR_SIZE_CFG_SHIFT          1
--#define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
- 
- #define PCI_EXP_CAP			0xac
- 
--#define MAX_NUM_OB_WINDOWS           2
--
- #define IPROC_PCIE_REG_INVALID 0xffff
- 
-+/**
-+ * iProc PCIe outbound mapping controller specific parameters
-+ *
-+ * @window_sizes: list of supported outbound mapping window sizes in MB
-+ * @nr_sizes: number of supported outbound mapping window sizes
-+ */
-+struct iproc_pcie_ob_map {
-+	resource_size_t window_sizes[MAX_NUM_OB_WINDOW_SIZES];
-+	unsigned int nr_sizes;
-+};
-+
-+static const struct iproc_pcie_ob_map paxb_ob_map[] = {
-+	{
-+		/* OARR0/OMAP0 */
-+		.window_sizes = { 128, 256 },
-+		.nr_sizes = 2,
-+	},
-+	{
-+		/* OARR1/OMAP1 */
-+		.window_sizes = { 128, 256 },
-+		.nr_sizes = 2,
-+	},
-+};
-+
- /*
-  * iProc PCIe host registers
-  */
-@@ -123,10 +153,14 @@ enum iproc_pcie_reg {
- 	IPROC_PCIE_INTX_EN,
- 
- 	/* outbound address mapping */
--	IPROC_PCIE_OARR_LO,
--	IPROC_PCIE_OARR_HI,
--	IPROC_PCIE_OMAP_LO,
--	IPROC_PCIE_OMAP_HI,
-+	IPROC_PCIE_OARR0,
-+	IPROC_PCIE_OMAP0,
-+	IPROC_PCIE_OARR1,
-+	IPROC_PCIE_OMAP1,
-+	IPROC_PCIE_OARR2,
-+	IPROC_PCIE_OMAP2,
-+	IPROC_PCIE_OARR3,
-+	IPROC_PCIE_OMAP3,
- 
- 	/* link status */
- 	IPROC_PCIE_LINK_STATUS,
-@@ -151,27 +185,27 @@ static const u16 iproc_pcie_reg_paxb_bcma[] = {
- 
- /* iProc PCIe PAXB registers */
- static const u16 iproc_pcie_reg_paxb[] = {
--	[IPROC_PCIE_CLK_CTRL]     = 0x000,
--	[IPROC_PCIE_CFG_IND_ADDR] = 0x120,
--	[IPROC_PCIE_CFG_IND_DATA] = 0x124,
--	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
--	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
--	[IPROC_PCIE_INTX_EN]      = 0x330,
--	[IPROC_PCIE_OARR_LO]      = 0xd20,
--	[IPROC_PCIE_OARR_HI]      = 0xd24,
--	[IPROC_PCIE_OMAP_LO]      = 0xd40,
--	[IPROC_PCIE_OMAP_HI]      = 0xd44,
--	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
--	[IPROC_PCIE_APB_ERR_EN]   = 0xf40,
-+	[IPROC_PCIE_CLK_CTRL]         = 0x000,
-+	[IPROC_PCIE_CFG_IND_ADDR]     = 0x120,
-+	[IPROC_PCIE_CFG_IND_DATA]     = 0x124,
-+	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
-+	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
-+	[IPROC_PCIE_INTX_EN]          = 0x330,
-+	[IPROC_PCIE_OARR0]            = 0xd20,
-+	[IPROC_PCIE_OMAP0]            = 0xd40,
-+	[IPROC_PCIE_OARR1]            = 0xd28,
-+	[IPROC_PCIE_OMAP1]            = 0xd48,
-+	[IPROC_PCIE_LINK_STATUS]      = 0xf0c,
-+	[IPROC_PCIE_APB_ERR_EN]       = 0xf40,
- };
- 
- /* iProc PCIe PAXC v1 registers */
- static const u16 iproc_pcie_reg_paxc[] = {
--	[IPROC_PCIE_CLK_CTRL]     = 0x000,
--	[IPROC_PCIE_CFG_IND_ADDR] = 0x1f0,
--	[IPROC_PCIE_CFG_IND_DATA] = 0x1f4,
--	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
--	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
-+	[IPROC_PCIE_CLK_CTRL]         = 0x000,
-+	[IPROC_PCIE_CFG_IND_ADDR]     = 0x1f0,
-+	[IPROC_PCIE_CFG_IND_DATA]     = 0x1f4,
-+	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
-+	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
- };
- 
- /* iProc PCIe PAXC v2 registers */
-@@ -256,18 +290,6 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
- 	}
+ #define INTEL_MID_PWR_LSS_OFFSET	4
+ #define INTEL_MID_PWR_LSS_TYPE		(1 << 7)
+diff --git a/arch/x86/platform/intel-mid/pwr.c b/arch/x86/platform/intel-mid/pwr.c
+index c901a34..214bc99 100644
+--- a/arch/x86/platform/intel-mid/pwr.c
++++ b/arch/x86/platform/intel-mid/pwr.c
+@@ -260,6 +260,25 @@ int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
  }
+ EXPORT_SYMBOL_GPL(intel_mid_pci_set_power_state);
  
--static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
--				       enum iproc_pcie_reg reg,
--				       unsigned window, u32 val)
--{
--	u16 offset = iproc_pcie_reg_offset(pcie, reg);
--
--	if (iproc_pcie_reg_is_invalid(offset))
--		return;
--
--	writel(val, pcie->base + offset + (window * 8));
--}
--
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -452,6 +474,58 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
- 	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, SYS_RC_INTX_MASK);
- }
- 
-+static inline bool iproc_pcie_ob_is_valid(struct iproc_pcie *pcie,
-+					  int window_idx)
++pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev)
 +{
-+	u32 val;
++	struct mid_pwr *pwr = midpwr;
++	int id, reg, bit;
++	u32 power;
 +
-+	val = iproc_pcie_read_reg(pcie, MAP_REG(IPROC_PCIE_OARR0, window_idx));
++	if (!pwr || !pwr->available)
++		return PCI_UNKNOWN;
 +
-+	return !!(val & OARR_VALID);
++	id = intel_mid_pwr_get_lss_id(pdev);
++	if (id < 0)
++		return PCI_UNKNOWN;
++
++	reg = (id * LSS_PWS_BITS) / 32;
++	bit = (id * LSS_PWS_BITS) % 32;
++	power = mid_pwr_get_state(pwr, reg);
++	return (power >> bit) & 3;
 +}
 +
-+static inline int iproc_pcie_ob_write(struct iproc_pcie *pcie, int window_idx,
-+				      int size_idx, u64 axi_addr, u64 pci_addr)
-+{
-+	struct device *dev = pcie->dev;
-+	u16 oarr_offset, omap_offset;
-+
-+	/*
-+	 * Derive the OARR/OMAP offset from the first pair (OARR0/OMAP0) based
-+	 * on window index
-+	 */
-+	oarr_offset = iproc_pcie_reg_offset(pcie, MAP_REG(IPROC_PCIE_OARR0,
-+							  window_idx));
-+	omap_offset = iproc_pcie_reg_offset(pcie, MAP_REG(IPROC_PCIE_OMAP0,
-+							  window_idx));
-+	if (iproc_pcie_reg_is_invalid(oarr_offset) ||
-+	    iproc_pcie_reg_is_invalid(omap_offset))
-+		return -EINVAL;
-+
-+	/*
-+	 * Program the OARR registers. The upper 32-bit OARR register is
-+	 * always right after the lower 32-bit OARR register
-+	 */
-+	writel(lower_32_bits(axi_addr) | (size_idx << OARR_SIZE_CFG_SHIFT) |
-+	       OARR_VALID, pcie->base + oarr_offset);
-+	writel(upper_32_bits(axi_addr), pcie->base + oarr_offset + 4);
-+
-+	/* now program the OMAP registers */
-+	writel(lower_32_bits(pci_addr), pcie->base + omap_offset);
-+	writel(upper_32_bits(pci_addr), pcie->base + omap_offset + 4);
-+
-+	dev_info(dev, "ob window [%d]: offset 0x%x axi %pap pci %pap\n",
-+		 window_idx, oarr_offset, &axi_addr, &pci_addr);
-+	dev_info(dev, "oarr lo 0x%x oarr hi 0x%x\n",
-+		 readl(pcie->base + oarr_offset),
-+		 readl(pcie->base + oarr_offset + 4));
-+	dev_info(dev, "omap lo 0x%x omap hi 0x%x\n",
-+		 readl(pcie->base + omap_offset),
-+		 readl(pcie->base + omap_offset + 4));
-+
-+	return 0;
-+}
-+
- /**
-  * Some iProc SoCs require the SW to configure the outbound address mapping
-  *
-@@ -468,24 +542,7 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ int intel_mid_pwr_get_lss_id(struct pci_dev *pdev)
  {
- 	struct iproc_pcie_ob *ob = &pcie->ob;
- 	struct device *dev = pcie->dev;
--	unsigned i;
--	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
--	u64 remainder;
--
--	if (size > max_size) {
--		dev_err(dev,
--			"res size %pap exceeds max supported size 0x%llx\n",
--			&size, max_size);
--		return -EINVAL;
--	}
--
--	div64_u64_rem(size, ob->window_size, &remainder);
--	if (remainder) {
--		dev_err(dev,
--			"res size %pap needs to be multiple of window size %pap\n",
--			&size, &ob->window_size);
--		return -EINVAL;
--	}
-+	int ret = -EINVAL, window_idx, size_idx;
- 
- 	if (axi_addr < ob->axi_offset) {
- 		dev_err(dev, "axi address %pap less than offset %pap\n",
-@@ -499,26 +556,70 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 	 */
- 	axi_addr -= ob->axi_offset;
- 
--	for (i = 0; i < MAX_NUM_OB_WINDOWS; i++) {
--		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_LO, i,
--				    lower_32_bits(axi_addr) | OARR_VALID |
--				    (ob->set_oarr_size ? 1 : 0));
--		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_HI, i,
--				    upper_32_bits(axi_addr));
--		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_LO, i,
--				    lower_32_bits(pci_addr));
--		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_HI, i,
--				    upper_32_bits(pci_addr));
--
--		size -= ob->window_size;
--		if (size == 0)
-+	/* iterate through all OARR/OMAP mapping windows */
-+	for (window_idx = ob->nr_windows - 1; window_idx >= 0; window_idx--) {
-+		const struct iproc_pcie_ob_map *ob_map =
-+			&pcie->ob_map[window_idx];
-+
-+		/*
-+		 * If current outbound window is already in use, move on to the
-+		 * next one
-+		 */
-+		if (iproc_pcie_ob_is_valid(pcie, window_idx))
-+			continue;
-+
-+		/*
-+		 * Iterate through all supported window sizes within the
-+		 * OARR/OMAP pair to find a match. Go through the window sizes
-+		 * in a descending order
-+		 */
-+		for (size_idx = ob_map->nr_sizes - 1; size_idx >= 0;
-+		     size_idx--) {
-+			resource_size_t window_size =
-+				ob_map->window_sizes[size_idx] * SZ_1M;
-+
-+			if (size < window_size)
-+				continue;
-+
-+			if (!IS_ALIGNED(axi_addr, window_size) ||
-+			    !IS_ALIGNED(pci_addr, window_size)) {
-+				dev_err(dev,
-+					"axi %pap or pci %pap not aligned\n",
-+					&axi_addr, &pci_addr);
-+				return -EINVAL;
-+			}
-+
-+			/*
-+			 * Match found! Program both OARR and OMAP and mark
-+			 * them as a valid entry
-+			 */
-+			ret = iproc_pcie_ob_write(pcie, window_idx, size_idx,
-+						  axi_addr, pci_addr);
-+			if (ret)
-+				goto err_ob;
-+
-+			size -= window_size;
-+			if (size == 0)
-+				return 0;
-+
-+			/*
-+			 * If we are here, we are done with the current window,
-+			 * but not yet finished all mappings. Need to move on
-+			 * to the next window
-+			 */
-+			axi_addr += window_size;
-+			pci_addr += window_size;
- 			break;
--
--		axi_addr += ob->window_size;
--		pci_addr += ob->window_size;
-+		}
- 	}
- 
--	return 0;
-+err_ob:
-+	dev_err(dev, "unable to configure outbound mapping\n");
-+	dev_err(dev,
-+		"axi %pap, axi offset %pap, pci %pap, res size %pap\n",
-+		&axi_addr, &ob->axi_offset, &pci_addr, &size);
-+
-+	return ret;
+ 	int vndr;
+diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
+index c878aa7..a8b52dc 100644
+--- a/drivers/pci/pci-mid.c
++++ b/drivers/pci/pci-mid.c
+@@ -29,6 +29,11 @@ static int mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
+ 	return intel_mid_pci_set_power_state(pdev, state);
  }
  
- static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
-@@ -703,6 +804,10 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 	case IPROC_PCIE_PAXB:
- 		regs = iproc_pcie_reg_paxb;
- 		pcie->has_apb_err_disable = true;
-+		if (pcie->need_ob_cfg) {
-+			pcie->ob_map = paxb_ob_map;
-+			pcie->ob.nr_windows = ARRAY_SIZE(paxb_ob_map);
-+		}
- 		break;
- 	case IPROC_PCIE_PAXC:
- 		regs = iproc_pcie_reg_paxc;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index c2da140..861b526 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -32,17 +32,16 @@ enum iproc_pcie_type {
- 
- /**
-  * iProc PCIe outbound mapping
-- * @set_oarr_size: indicates the OARR size bit needs to be set
-  * @axi_offset: offset from the AXI address to the internal address used by
-  * the iProc PCIe core
-- * @window_size: outbound window size
-+ * @nr_windows: total number of supported outbound mapping windows
-  */
- struct iproc_pcie_ob {
--	bool set_oarr_size;
- 	resource_size_t axi_offset;
--	resource_size_t window_size;
-+	unsigned int nr_windows;
- };
- 
-+struct iproc_pcie_ob_map;
- struct iproc_msi;
- 
- /**
-@@ -60,8 +59,11 @@ struct iproc_msi;
-  * @ep_is_internal: indicates an internal emulated endpoint device is connected
-  * @has_apb_err_disable: indicates the controller can be configured to prevent
-  * unsupported request from being forwarded as an APB bus error
-+ *
-  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
-- * @ob: outbound mapping parameters
-+ * @ob: outbound mapping related parameters
-+ * @ob_map: outbound mapping related parameters specific to the controller
-+ *
-  * @need_msi_steer: indicates additional configuration of the iProc PCIe
-  * controller is required to steer MSI writes to external interrupt controller
-  * @msi: MSI data
-@@ -80,8 +82,11 @@ struct iproc_pcie {
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	bool ep_is_internal;
- 	bool has_apb_err_disable;
++static pci_power_t mid_pci_get_power_state(struct pci_dev *pdev)
++{
++	return intel_mid_pci_get_power_state(pdev);
++}
 +
- 	bool need_ob_cfg;
- 	struct iproc_pcie_ob ob;
-+	const struct iproc_pcie_ob_map *ob_map;
-+
- 	bool need_msi_steer;
- 	struct iproc_msi *msi;
- };
+ static pci_power_t mid_pci_choose_state(struct pci_dev *pdev)
+ {
+ 	return PCI_D3hot;
+@@ -52,6 +57,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
+ static struct pci_platform_pm_ops mid_pci_platform_pm = {
+ 	.is_manageable	= mid_pci_power_manageable,
+ 	.set_state	= mid_pci_set_power_state,
++	.get_state	= mid_pci_get_power_state,
+ 	.choose_state	= mid_pci_choose_state,
+ 	.sleep_wake	= mid_pci_sleep_wake,
+ 	.run_wake	= mid_pci_run_wake,
 -- 
-2.1.4
+2.9.3
+
