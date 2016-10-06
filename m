@@ -1,63 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59882 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755670AbcJLQEO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:04:14 -0400
-Date: Wed, 12 Oct 2016 11:04:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:50270 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964856AbcJFIp1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2016 04:45:27 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 00/10] PCI: designware: Cleanups
-Message-ID: <20161012160401.GJ4308@localhost>
-References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        devicetree@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v4] PCI: rockchip: Support property to specify the link capability
+Date: Thu,  6 Oct 2016 16:50:00 +0800
+Message-Id: <1475743800-1036-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 08:17:41AM -0500, Bjorn Helgaas wrote:
-> [+cc exynos folks, since pcie_host_ops.readl_rc affects them]
-> 
->   - Add local "dev" pointers to reduce repetition of things like
->     "&pdev->dev".
-> 
->   - Remove platform drvdata because it appears unused (we called
->     platform_set_drvdata() but not platform_get_drvdata()).
-> 
-> Nothing here should change the behavior of the drivers.
-> 
-> Changes from v1:
->   Split uninline of register accessors into a separate patch.
->   Add Kishon's *unroll() fix (v1 broke exynos).
-> 
-> ---
-> 
-> Bjorn Helgaas (9):
->       PCI: designware: Rename dw_pcie_valid_config() to dw_pcie_valid_device()
->       PCI: designware: Simplify pcie_host_ops.readl_rc() and .writel_rc() interfaces
->       PCI: designware: Swap order of dw_pcie_writel_rc() reg/val arguments
->       PCI: designware: Export dw_pcie_readl_rc(), dw_pcie_writel_rc()
->       PCI: designware: Uninline register accessors
->       PCI: designware: Swap order of dw_pcie_writel_unroll() reg/val arguments
->       PCI: designware-plat: Remove redundant dw_plat_pcie.mem_base
->       PCI: designware-plat: Add local struct device pointers
->       PCI: designware-plat: Remove unused platform data
-> 
-> Kishon Vijay Abraham I (1):
->       PCI: designware: Simplify dw_pcie_readl_unroll(), dw_pcie_writel_unroll()
-> 
-> 
->  drivers/pci/host/pci-exynos.c           |   10 +--
->  drivers/pci/host/pcie-designware-plat.c |   25 +++-----
->  drivers/pci/host/pcie-designware.c      |  102 +++++++++++++++----------------
->  drivers/pci/host/pcie-designware.h      |    7 +-
->  4 files changed, 67 insertions(+), 77 deletions(-)
+From: Brian Norris <briannorris@chromium.org>
 
-I applied these to pci/host-designware for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+ms waiting for training that will never happen, let's add a property
+from devicetree to specify link capability.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+---
+
+Changes in v4:
+- define link_gen as u32
+- elaborate more for rockchip,max-link-speed on doc
+
+Changes in v3:
+- Cast a warning for invalid max link speed and use gen1 for it.
+  That looks better than v2. (Suggested by Brian)
+
+Changes in v2:
+- rename the property to rockchip,max-link-speed according to
+  Bjorn's recommendation and take some bits from imx6q-pcie to
+  make this requirement more consisent.
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  4 ++
+ drivers/pci/host/pcie-rockchip.c                   | 63 ++++++++++++++--------
+ 2 files changed, 44 insertions(+), 23 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index ba67b39..9bb29de 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -42,6 +42,10 @@ Required properties:
+ Optional Property:
+ - ep-gpios: contain the entry for pre-reset gpio
+ - num-lanes: number of lanes to use
++- rockchip,max-link-speed: Specify PCI gen for link capability. Must
++	be '2' for gen2, and '1' for gen1, otherwise will default to gen1.
++	For backward compatibility, if this property isn't assigned, we
++	use gen2 by default.
+ - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+ - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+ - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 35591b1..6dde999 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -53,6 +53,7 @@
+ #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+ #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+ #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
++#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+ #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+ #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+ #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+@@ -205,6 +206,7 @@ struct rockchip_pcie {
+ 	struct	gpio_desc *ep_gpio;
+ 	u32	lanes;
+ 	u8	root_bus_nr;
++	u32	link_gen;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
+ };
+@@ -443,14 +445,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
++	if (rockchip->link_gen == 2)
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
++				    PCIE_CLIENT_CONFIG);
++	else
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
++				    PCIE_CLIENT_CONFIG);
++
+ 	rockchip_pcie_write(rockchip,
+ 			    PCIE_CLIENT_CONF_ENABLE |
+ 			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+ 			    PCIE_CLIENT_ARI_ENABLE |
+ 			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+-			    PCIE_CLIENT_MODE_RC |
+-			    PCIE_CLIENT_GEN_SEL_2,
+-				PCIE_CLIENT_CONFIG);
++			    PCIE_CLIENT_MODE_RC, PCIE_CLIENT_CONFIG);
+ 
+ 	err = phy_power_on(rockchip->phy);
+ 	if (err) {
+@@ -550,29 +557,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		msleep(20);
+ 	}
+ 
+-	/*
+-	 * Enable retrain for gen2. This should be configured only after
+-	 * gen1 finished.
+-	 */
+-	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+-	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++	if (rockchip->link_gen == 2) {
++		/*
++		 * Enable retrain for gen2. This should be configured only after
++		 * gen1 finished.
++		 */
++		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
++		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
++		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++
++		timeout = jiffies + msecs_to_jiffies(500);
++		for (;;) {
++			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
++			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
++					PCIE_CORE_PL_CONF_SPEED_5G) {
++				dev_dbg(dev, "PCIe link training gen2 pass!\n");
++				break;
++			}
+ 
+-	timeout = jiffies + msecs_to_jiffies(500);
+-	for (;;) {
+-		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+-		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+-		    PCIE_CORE_PL_CONF_SPEED_5G) {
+-			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+-			break;
+-		}
++			if (time_after(jiffies, timeout)) {
++				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
++				break;
++			}
+ 
+-		if (time_after(jiffies, timeout)) {
+-			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+-			break;
++			msleep(20);
+ 		}
+-
+-		msleep(20);
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
+@@ -781,6 +790,14 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		rockchip->lanes = 1;
+ 	}
+ 
++	rockchip->link_gen = 2;
++	err = of_property_read_u32(node, "rockchip,max-link-speed",
++				   &rockchip->link_gen);
++	if (!err && rockchip->link_gen != 1 && rockchip->link_gen != 2) {
++		dev_warn(dev, "invalid max-link-speed, default to use gen1\n");
++		rockchip->link_gen = 1;
++	}
++
+ 	rockchip->core_rst = devm_reset_control_get(dev, "core");
+ 	if (IS_ERR(rockchip->core_rst)) {
+ 		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-- 
+2.3.7
+
+
