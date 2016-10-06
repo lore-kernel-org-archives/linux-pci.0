@@ -1,95 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936000AbcJVOob (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 22 Oct 2016 10:44:31 -0400
-Date: Sat, 22 Oct 2016 09:44:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH] pci: Don't set power fault if controller not present
-Message-ID: <20161022144425.GH9007@localhost>
-References: <1476214747-10428-1-git-send-email-keith.busch@intel.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36174 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965171AbcJFJel (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2016 05:34:41 -0400
+From: Serge Semin <fancer.lancer@gmail.com>
+To: bhelgaas@google.com
+Cc: shawn.lin@rock-chips.com, luto@kernel.org,
+        Sergey.Semin@t-platforms.ru, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Serge Semin <fancer.lancer@gmail.com>
+Subject: [RFC] PCI: Fix kernel panic of root-port-less PCIe enum due to ASPM
+Date: Thu,  6 Oct 2016 12:34:15 +0300
+Message-Id: <1475746455-20665-1-git-send-email-fancer.lancer@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476214747-10428-1-git-send-email-keith.busch@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+Hello linux folks,
 
-On Tue, Oct 11, 2016 at 03:39:07PM -0400, Keith Busch wrote:
-> The pciehp control only clears the saved power fault detected if power
-> controller control is present, but there is no requirement that the
-> capability exist in order to observe power faults. This means a hot-added
-> device in a slot that had experienced a power fault at some point would
-> never be able to add a new device since the power fault detected would
-> be on permanently.
-> 
-> This patch sets the sticky field only if there is a chance it can
-> be cleared later.
+    Sometime ago I discovered a kernel panic popping up when PCI subsystem was
+trying to enumerate PCI express bus with ASPM service enabled. Here it is:
 
-I agree we should handle power_fault_detected consistently with
-respect to POWER_CTRL().  We currently clear power_fault_detected in
-pciehp_power_on_slot(), but we only call that if we have a power
-controller.  But we set power_fault_detected in pciehp_isr() always,
-resulting in this "sticky" situation.
+[    5.089667] CPU 0 Unable to handle kernel paging request at virtual
+address 00000060, epc == 80317004, ra == 80316ac8
+[    5.120952] Oops[#1]:
+          ...
+[    5.528438] Call Trace:
+[    5.535640] [<80317004>] pcie_aspm_init_link_state+0x6c0/0x814
+[    5.552843] [<80300c44>] pci_scan_slot+0x140/0x148
+[    5.566957] [<80301dcc>] pci_scan_child_bus+0x50/0x1b0
+[    5.582096] [<80301944>] pci_scan_bridge+0x25c/0x694
+[    5.596724] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
+[    5.611862] [<80301944>] pci_scan_bridge+0x25c/0x694
+[    5.626488] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
+[    5.641628] [<8030215c>] pci_scan_root_bus+0x64/0x124
+[    5.656528] [<804ca298>] pcibios_scanbus+0xa8/0x188
 
-I don't think it's 100% clear from the spec whether power faults can
-be detected without a power controller.  All the "power fault"
-references are in the context of a power controller, e.g., r3.0 sec
-6.7.1.8, 7.8.10, 7.8.11.
+    I more than sure you are familiar with the issue, since I've found the
+mailing discussion: "PCI: avoid NULL deref in alloc_pcie_link_state"
+https://patchwork.kernel.org/patch/2751651/
+https://bugzilla.kernel.org/show_bug.cgi?id=60111
 
-But regardless, we're certainly doing the wrong thing right now.  If
-we do have a power controller, it's fairly clear what we should do:
+    You closed the bugzilla ticket with the next statement:
+"I'm closing this as invalid because the simulated machine where the problem
+occurs has an invalid PCIe topology (an Upstream Port with no Downstream Port
+or Root Port above it).  As far as I know, there is no valid topology, e.g.,
+a real hardware machine in the field, that would cause this failure."
 
-  - Power off the slot (even though the hardware is supposed to remove
-    power automatically, sec 6.7.1.8 suggests that software should
-    turn off the power),
+    I'm strongly disagree with it, since I've got at least two hardware with
+PCIe-bus hierarchy as described in the mailing list. One of them is based on
+Cavium Octeon III CN7020. Here is a ASCII-diagram of PCIe-bus:
 
-  - Wait at least one second, per 6.7.1.8 (I think we do the power off
-    and wait in the board_added() path, but not in the INT_POWER_FAULT
-    path where we handle asynchronous events),
+-+-[0000:01]---00.0-[02-06]--+-02.0-[03-05]--+-00.0-[04-05]----00.0-[05]--
+ |                           |               \-00.1  Device [111d:808f]
+ |                           \-04.0-[06]----00.0  Device [126f:0750]
+ \-[0000:00]-
 
-  - It looks like we currently turn on the attention indicator and
-    turn off the power indicator (the INT_POWER_FAULT case in
-    interrupt_event_handler()),
+where 01:00.0 is an Upstream port of IDT PCIe-swtich.
+/ # /usr/local/sbin/lspci -v -s 01:00.0
+01:00.0 Class 0604: Device 111d:8061
+        Flags: bus master, fast devsel, latency 0
+        Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Bus: primary=01, secondary=02, subordinate=06, sec-latency=0
+        Memory behind bridge: 08000000-0dffffff
+        Expansion ROM at <unassigned> [disabled] [size=2]
+        Capabilities: [40] Express Upstream Port, MSI 00
+        Capabilities: [c0] Power Management version 3
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [200] Virtual Channel
+        Kernel driver in use: pcieport
 
-  - Wait for another slot event.
+As you can see PCI-bus hierarchy doesn't have root port and the very first
+upstream port is directly connected to Host-PCIe bridge of MCU, which of
+course is not listed by the lspci utility.
 
-If we *don't* have a power controller, we currently set
-power_fault_detected and log a message, but nothing else.
+Despite of Radim Kr?má?, who suggested a fix, which would de-facto just
+turned ASPM off, I found a quick solution, which disabled ASPM only in 
+the first link (Host-PCIe=>Upstream port) of PCIe-bus for such hierarchy.
+ASPM for other PCIe-bus topologies shall work the way it was.
 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index b57fc6d..b083e1c 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -631,7 +631,8 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  
->  	/* Check Power Fault Detected */
->  	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> -		ctrl->power_fault_detected = 1;
-> +		if (POWER_CTRL(ctrl))
-> +			ctrl->power_fault_detected = 1;
->  		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
->  		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
+I hope the fix will be helpful.
+Thanks,
 
-I think this is correct as far as it goes, but I think we should do a
-little more:
+=============================
+Serge V. Semin
+Leading Programmer
+Embedded SW development group
+T-platforms
+=============================
 
-  - When there's no power controller, we can't do anything to resolve
-    a power fault, so I think the ctrl_err() should be rate-limited,
+Signed-off-by: Serge Semin <fancer.lancer@gmail.com>
 
-  - We can't turn off the power, but we could turn on the attention
-    indicator, e.g., by making the INT_POWER_FAULT case look like
-    this:
+---
+ drivers/pci/pcie/aspm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-      case INT_POWER_FAULT:
-	set_slot_off(ctrl, p_slot);
-	break;
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 0ec649d..a9295f29 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -522,7 +522,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->children);
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+-	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) {
++	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
++	    (!pci_is_root_bus(pdev->bus->parent))) {
+ 		struct pcie_link_state *parent;
+ 		parent = pdev->bus->parent->self->link_state;
+ 		if (!parent) {
+-- 
+2.6.6
+
