@@ -1,62 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55580 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964789AbcJGQhq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:37:46 -0400
-Subject: [PATCH 07/11] PCI: hisi: Swap order of hisi_apb_writel() reg/val
- arguments
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:37:41 -0500
-Message-ID: <20161007163741.25540.5909.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <oneukum@suse.com>
+Return-Path: <oneukum@suse.com>
+Message-ID: <1475738689.12201.2.camel@suse.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+From: Oliver Neukum <oneukum@suse.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mathias Nyman
+ <mathias.nyman@linux.intel.com>, Pierre de Villemereuil <flyos@mailoo.org>,
+ Alan Stern <stern@rowland.harvard.edu>,  linux-pci@vger.kernel.org, USB
+ list <linux-usb@vger.kernel.org>
+Date: Thu, 06 Oct 2016 09:24:49 +0200
+In-Reply-To: <20161005204119.GA5961@wunner.de>
+References: <57F4B9C5.60600@linux.intel.com>
+	 <Pine.LNX.4.44L0.1610051030310.1880-100000@iolanthe.rowland.org>
+	 <20161005185401.GA30607@localhost> <20161005204119.GA5961@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Swap order of hisi_apb_writel() arguments to match the "dev, pos, val"
-order used by pci_write_config_word() and other drivers.  No functional
-change intended.
+On Wed, 2016-10-05 at 22:41 +0200, Lukas Wunner wrote:
+> The PCI core doesn't allow runtime PM by default.  Rather it calls
+> pm_runtime_forbid() when the device is added (see pci_pm_init(),
+> called
+> indirectly from pci_device_add()).  PCI drivers need to explicitly
+> call
+> pm_runtime_allow(), typically from their ->probe hook.
+> 
+> If this xHC cannot signal wakeup, it shouldn't allow runtime PM in the
+> first place.  Simple as that.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-hisi.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Presumably it can generate PME, just not in D0. The XHCI driver
+could, albeit with a slight layering violation, check
+that specific combination. But why put the code for a potentially
+common problem into xhci?
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index e14ce13..c6b0459 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -48,7 +48,7 @@ static u32 hisi_apb_readl(struct hisi_pcie *hisi, u32 reg)
- 	return readl(hisi->pp.dbi_base + reg);
- }
- 
--static void hisi_apb_writel(struct hisi_pcie *hisi, u32 val, u32 reg)
-+static void hisi_apb_writel(struct hisi_pcie *hisi, u32 reg, u32 val)
- {
- 	writel(val, hisi->pp.dbi_base + reg);
- }
-@@ -88,15 +88,15 @@ static int hisi_cfg_write(struct pcie_port *pp, int where, int  size, u32 val)
- 	walker += (where & 0x3);
- 	reg = where & ~0x3;
- 	if (size == 4)
--		hisi_apb_writel(hisi, val, reg);
-+		hisi_apb_writel(hisi, reg, val);
- 	else if (size == 2) {
- 		reg_val = hisi_apb_readl(hisi, reg);
- 		*(u16 __force *) walker = val;
--		hisi_apb_writel(hisi, reg_val, reg);
-+		hisi_apb_writel(hisi, reg, reg_val);
- 	} else if (size == 1) {
- 		reg_val = hisi_apb_readl(hisi, reg);
- 		*(u8 __force *) walker = val;
--		hisi_apb_writel(hisi, reg_val, reg);
-+		hisi_apb_writel(hisi, reg, reg_val);
- 	} else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-
+	Regards
+		Oliver
