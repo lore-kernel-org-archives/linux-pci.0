@@ -1,52 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53432 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:49934 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932928AbcJLM7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:59:04 -0400
-Subject: [PATCH v2 3/5] PCI: rcar: Remove unused rcar_pcie_get_resources()
- platform_device arg
-To: Simon Horman <horms@verge.net.au>
+        id S1753234AbcJGQbI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:08 -0400
+Subject: [PATCH 7/7] PCI: designware-plat: Remove unused platform data
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 07:58:59 -0500
-Message-ID: <20161012125859.24785.41542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:31:04 -0500
+Message-ID: <20161007163104.24388.80181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-rcar_pcie_get_resources() doesn't use the platform_device pointer passed to
-it, so remove it.  No functional change intended.
+The designware-plat driver never uses the platform drvdata pointer, so
+don't bother setting it.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pci/host/pcie-rcar.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/pci/host/pcie-designware-plat.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4f352e8..800a86d 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -903,8 +903,7 @@ err:
- 	return err;
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+index f0a2a60..537f58a 100644
+--- a/drivers/pci/host/pcie-designware-plat.c
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -108,7 +108,6 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	platform_set_drvdata(pdev, dw_plat_pcie);
+ 	return 0;
  }
  
--static int rcar_pcie_get_resources(struct platform_device *pdev,
--				   struct rcar_pcie *pcie)
-+static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct resource res;
-@@ -1141,7 +1140,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 
- 	rcar_pcie_parse_request_of_pci_ranges(pcie);
- 
--	err = rcar_pcie_get_resources(pdev, pcie);
-+	err = rcar_pcie_get_resources(pcie);
- 	if (err < 0) {
- 		dev_err(dev, "failed to request resources: %d\n", err);
- 		return err;
 
