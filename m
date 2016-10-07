@@ -1,115 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51164 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:58672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751537AbcJKNu6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Oct 2016 09:50:58 -0400
-Date: Tue, 11 Oct 2016 08:50:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nsekhar@ti.com,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        linux-samsung-soc@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: designware: Fix compiler warning
-Message-ID: <20161011135050.GA26715@localhost>
-References: <1476190715-16884-1-git-send-email-kishon@ti.com>
- <1476190715-16884-2-git-send-email-kishon@ti.com>
+        id S965197AbcJGQoC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:44:02 -0400
+Subject: [PATCH 3/5] PCI: spear: Pass device-specific struct to internal
+ functions
+To: Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:43:57 -0500
+Message-ID: <20161007164357.26585.48750.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476190715-16884-2-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo, Kukjin, Krzysztof, linux-samsung-soc]
+Only interfaces used from outside the driver, e.g., those called by the
+DesignWare core, need to accept pointers to the generic struct pcie_port.
+Internal interfaces can accept pointers to the device-specific struct,
+which makes them more straightforward.  No functional change intended.
 
-On Tue, Oct 11, 2016 at 06:28:32PM +0530, Kishon Vijay Abraham I wrote:
-> Fix the following compilation warning in dw_pcie_readl_unroll()
-> and dw_pcie_writel_unroll() by just invoking dw_pcie_readl_rc() and
-> dw_pcie_writel_rc() respectively instead of adding redundant code.
-> 
-> pcie-designware.c: In function 'dw_pcie_readl_unroll':
-> pcie-designware.c:165:32: warning: passing argument 2 of
->  'pp->ops->readl_rc' makes integer from pointer without a cast
->  [-Wint-conversion]
->    return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
->                                 ^
-> pcie-designware.c:165:32: note: expected 'u32 {aka unsigned int}' but
->  argument is of type 'void *'
-> pcie-designware.c: In function 'dw_pcie_writel_unroll':
-> pcie-designware.c:176:31: warning: passing argument 3 of
->  'pp->ops->writel_rc' makes integer from pointer without a cast
->  [-Wint-conversion]
->    pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
->                                ^
-> drivers/pci/host/pcie-designware.c:176:31: note: expected 'u32
->  {aka unsigned int}' but argument is of type 'void *'
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/host/pcie-designware.c |   10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 5ee8772..b8feea4 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -161,10 +161,7 @@ static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
->  {
->  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  
-> -	if (pp->ops->readl_rc)
-> -		return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-spear13xx.c |   29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
 
-I think this was worse than just a compiler warning, wasn't it?  I
-think I completely broke exynos (the only implementer of
-pp->ops->readl_rc) because we passed "pp->dbi_base + offset + reg" to
-exynos_pcie_readl_rc(), which then added pp->dbi_base again:
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index d96f5f2..2585fca 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -72,11 +72,11 @@ struct pcie_app_reg {
+ 
+ #define to_spear13xx_pcie(x)	container_of(x, struct spear13xx_pcie, pp)
+ 
+-static int spear13xx_pcie_establish_link(struct pcie_port *pp)
++static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx)
+ {
+-	u32 val;
+-	struct spear13xx_pcie *spear13xx = to_spear13xx_pcie(pp);
++	struct pcie_port *pp = &spear13xx->pp;
+ 	struct pcie_app_reg *app_reg = spear13xx->app_base;
++	u32 val;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+@@ -133,9 +133,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 
+ static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg)
+ {
+-	struct pcie_port *pp = arg;
+-	struct spear13xx_pcie *spear13xx = to_spear13xx_pcie(pp);
++	struct spear13xx_pcie *spear13xx = arg;
+ 	struct pcie_app_reg *app_reg = spear13xx->app_base;
++	struct pcie_port *pp = &spear13xx->pp;
+ 	unsigned int status;
+ 
+ 	status = readl(&app_reg->int_sts);
+@@ -150,9 +150,9 @@ static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void spear13xx_pcie_enable_interrupts(struct pcie_port *pp)
++static void spear13xx_pcie_enable_interrupts(struct spear13xx_pcie *spear13xx)
+ {
+-	struct spear13xx_pcie *spear13xx = to_spear13xx_pcie(pp);
++	struct pcie_port *pp = &spear13xx->pp;
+ 	struct pcie_app_reg *app_reg = spear13xx->app_base;
+ 
+ 	/* Enable MSI interrupt */
+@@ -176,8 +176,10 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
+ 
+ static void spear13xx_pcie_host_init(struct pcie_port *pp)
+ {
+-	spear13xx_pcie_establish_link(pp);
+-	spear13xx_pcie_enable_interrupts(pp);
++	struct spear13xx_pcie *spear13xx = to_spear13xx_pcie(pp);
++
++	spear13xx_pcie_establish_link(spear13xx);
++	spear13xx_pcie_enable_interrupts(spear13xx);
+ }
+ 
+ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+@@ -185,9 +187,10 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+ 	.host_init = spear13xx_pcie_host_init,
+ };
+ 
+-static int spear13xx_add_pcie_port(struct pcie_port *pp,
+-					 struct platform_device *pdev)
++static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx,
++				   struct platform_device *pdev)
+ {
++	struct pcie_port *pp = &spear13xx->pp;
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+@@ -198,7 +201,7 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
+ 	}
+ 	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
+ 			       IRQF_SHARED | IRQF_NO_THREAD,
+-			       "spear1340-pcie", pp);
++			       "spear1340-pcie", spear13xx);
+ 	if (ret) {
+ 		dev_err(dev, "failed to request irq %d\n", pp->irq);
+ 		return ret;
+@@ -268,7 +271,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
+ 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
+ 		spear13xx->is_gen1 = true;
+ 
+-	ret = spear13xx_add_pcie_port(pp, pdev);
++	ret = spear13xx_add_pcie_port(spear13xx, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+ 
 
-  val = readl(pp->dbi_base + reg);
-
-I incorporated your patch to use dw_pcie_readl_rc() directly (thanks a
-lot for noticing that!) into pci/host-designware.
-
-Then I rebased all the branches that were based on pci/host-designware
-and repushed everything:
-
-  pci/host-designware
-  pci/host-armada
-  pci/host-artpec
-  pci/host-dra7xx
-  pci/host-exynos
-  pci/host-hisi
-  pci/host-imx6
-  pci/host-keystone
-  pci/host-layerscape
-  pci/host-qcom
-  pci/host-spear
-
-> -	return readl(pp->dbi_base + offset + reg);
-> +	return dw_pcie_readl_rc(pp, offset + reg);
->  }
->  
->  static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
-> @@ -172,10 +169,7 @@ static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
->  {
->  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  
-> -	if (pp->ops->writel_rc)
-> -		pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
-> -	else
-> -		writel(val, pp->dbi_base + offset + reg);
-> +	dw_pcie_writel_rc(pp, offset + reg, val);
->  }
->  
->  static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
