@@ -1,123 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:44628 "EHLO lekensteyn.nl"
+Received: from mail.kernel.org ([198.145.29.136]:47644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943259AbcJ0PDP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Oct 2016 11:03:15 -0400
-Date: Thu, 27 Oct 2016 11:06:04 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-acpi@vger.kernel.org, nouveau@lists.freedesktop.org,
-        rick.2889@gmail.com, linux-pci@vger.kernel.org
-Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
- via Power Resources
-Message-ID: <20161027090604.GB27017@al>
-References: <bug-98398-8800@http.bugs.freedesktop.org/>
- <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
- <20161026225641.GA27017@al>
- <20161027081748.GX1476@lahna.fi.intel.com>
+        id S940970AbcJGQZ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:25:57 -0400
+Subject: [PATCH 09/10] PCI: rcar-gen2: Add register accessors
+To: Simon Horman <horms@verge.net.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:25:52 -0500
+Message-ID: <20161007162552.23279.2875.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161027081748.GX1476@lahna.fi.intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 27, 2016 at 11:17:48AM +0300, Mika Westerberg wrote:
-> On Thu, Oct 27, 2016 at 12:56:41AM +0200, Peter Wu wrote:
-> > Hi PCI/ACPI PM experts,
-> > 
-> > Since Linux 4.8, nouveau switched to rely on the PCIe port driver to
-> > transition to D3cold. This however does not happen for an Acer Aspire
-> > V7-582PG (Haswell, NVIDIA GTX 750M) from Rick.
-> > 
-> > Any idea why? acpidump, lspci, dmesg and other details can be found in
-> > the linked bug below.
-> 
-> > 
-> > Kind regards,
-> > Peter
-> > 
-> > On Wed, Oct 26, 2016 at 10:42:07PM +0000, bugzilla-daemon@freedesktop.org wrote:
-> > > https://bugs.freedesktop.org/show_bug.cgi?id=98398
-> > > 
-> > > --- Comment #11 from Peter Wu <peter@lekensteyn.nl> ---
-> > > So 4.7 and before used the "DSM" method on runtime-suspend:
-> > > - \_SB.PCI0.RP05.PEGP._DSM would be invoked to enable Optimus
-> > > - \_SB.PCI0.RP05.PEGP._PS3 is then invoked which would enter D3cold
-> > > (note, this method is still used in 4.8 on older laptops or with the
-> > > pcie_pm_port=off kernel option)
-> > > 
-> > > Since 4.8, _DSM is not called anymore by nouveau (when support from the PCI
-> > > core is detected) and this sequence should instead happen:
-> > > - \_SB.PCI0.RP05.PEGP._PS3 (does nothing besides updating _STA)
-> > > - PCIe core removes power for the PCIe port since all its children are in
-> > >   D3 and are willing to transition to D3cold. It does so by invoking
-> > >   \NVP3._OFF (where \NVP3 is the power resource from \_SB.PCI0.RP05._PR3)
-> > > 
-> > > That is how I think it should work in theory, but on Ricks laptop running
-> > > 4.8.4,
-> > > /sys/bus/devices/0000:1c.4/firmware_node/ does not have power_resources_D0
-> > > devices (which I do have on my own laptop for 0000:01:0).
-> > > 
-> > > The SSDT1 of Rick's Acer laptop shows this structure:
-> > > 
-> > >     If (\_OSI ("Windows 2013"))
-> > >     {
-> > >         Scope (\_SB.PCI0.RP05)
-> > >         {
-> > >         //...
-> > >             Name (_PR0, Package (0x01)  // _PR0: Power Resources for D0
-> > >             {
-> > >                 NVP3
-> > >             })
-> > >             Name (_PR2, Package (0x01)  // _PR2: Power Resources for D2
-> > >             {
-> > >                 NVP2
-> > >             })
-> > >             Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
-> > >             {
-> > >                 NVP3
-> > >             })
-> > >             // ...
-> > >             Method (_PS0, 0, NotSerialized)  // _PS0: Power State 0
-> > >             {
-> > >             }
-> > > 
-> > >             Method (_PS3, 0, NotSerialized)  // _PS3: Power State 3
-> > >             {
-> > >             }
-> > >         }
-> > > 
-> > >         Name (MSD3, Zero)
-> > >         PowerResource (NVP3, 0x00, 0x0000)
-> > >         {
-> > >             Name (_STA, One)  // _STA: Status
-> > >             // ...
-> > > 
-> > >             Method (_ON, 0, NotSerialized)  // _ON_: Power On
-> > >             {
-> > >                 // ...
-> > >             }
-> > > 
-> > >             Method (_OFF, 0, NotSerialized)  // _OFF: Power Off
-> > >             {
-> > >                 // ...
-> > >             }
-> > >         }
-> > > 
-> > > The dmesg does show "ACPI: Power Resource [NVP3] (on)", so I guess that the
-> > > methods are found. It is a mystery to me why the "power_resources_Dx" files are
-> > > not created, possibly breaking PM.
-> 
-> The ASL code looks right to me (except for the NVP2 which never set _STA
-> to 0 but should not affect here).
-> 
-> I wonder what does /sys/bus/pci/devices/0000:00:1c.4/firmware_node/path contain?
+Add device-specific register accessors for consistency across host drivers.
+No functional change intended.
 
-The value is as expected, \_SB.PCI0.RP05:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c |   61 ++++++++++++++++++++++----------------
+ 1 file changed, 35 insertions(+), 26 deletions(-)
 
-/sys/bus/pci/devices/0000:00:1c.4/firmware_node/path:\_SB_.PCI0.RP05
-/sys/bus/pci/devices/0000:00:1c.4/firmware_node/power_state:D3hot
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index cba27bc..b210ec0 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -107,6 +107,16 @@ struct rcar_pci {
+ 	unsigned long window_pci;
+ };
+ 
++static u32 rcar_readl(struct rcar_pci *rcar, u32 offset)
++{
++	return ioread32(rcar->reg + offset);
++}
++
++static void rcar_writel(struct rcar_pci *rcar, u32 offset, u32 val)
++{
++	iowrite32(val, rcar->reg + offset);
++}
++
+ /* PCI configuration space operations */
+ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
+ 				       int where)
+@@ -130,7 +140,7 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
+ 	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
+ 		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
+ 
+-	iowrite32(val, rcar->reg + RCAR_AHBPCI_WIN1_CTR_REG);
++	rcar_writel(rcar, RCAR_AHBPCI_WIN1_CTR_REG, val);
+ 	return rcar->reg + (slot >> 1) * 0x100 + where;
+ }
+ 
+@@ -154,14 +164,14 @@ static int rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
+ {
+ 	struct rcar_pci *rcar = pw;
+-	u32 status = ioread32(rcar->reg + RCAR_PCI_INT_STATUS_REG);
++	u32 status = rcar_readl(rcar, RCAR_PCI_INT_STATUS_REG);
+ 
+ 	if (status & RCAR_PCI_INT_ALLERRORS) {
+ 		dev_err(rcar->dev, "error irq: status %08x\n", status);
+ 
+ 		/* clear the error(s) */
+-		iowrite32(status & RCAR_PCI_INT_ALLERRORS,
+-			  rcar->reg + RCAR_PCI_INT_STATUS_REG);
++		rcar_writel(rcar, RCAR_PCI_INT_STATUS_REG,
++			    status & RCAR_PCI_INT_ALLERRORS);
+ 		return IRQ_HANDLED;
+ 	}
+ 
+@@ -180,9 +190,9 @@ static void rcar_pci_setup_errirq(struct rcar_pci *rcar)
+ 		return;
+ 	}
+ 
+-	val = ioread32(rcar->reg + RCAR_PCI_INT_ENABLE_REG);
++	val = rcar_readl(rcar, RCAR_PCI_INT_ENABLE_REG);
+ 	val |= RCAR_PCI_INT_ALLERRORS;
+-	iowrite32(val, rcar->reg + RCAR_PCI_INT_ENABLE_REG);
++	rcar_writel(rcar, RCAR_PCI_INT_ENABLE_REG, val);
+ }
+ #else
+ static inline void rcar_pci_setup_errirq(struct rcar_pci *rcar) { }
+@@ -192,20 +202,19 @@ static inline void rcar_pci_setup_errirq(struct rcar_pci *rcar) { }
+ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct rcar_pci *rcar = sys->private_data;
+-	void __iomem *reg = rcar->reg;
+ 	u32 val;
+ 	int ret;
+ 
+ 	pm_runtime_enable(rcar->dev);
+ 	pm_runtime_get_sync(rcar->dev);
+ 
+-	val = ioread32(reg + RCAR_PCI_UNIT_REV_REG);
++	val = rcar_readl(rcar, RCAR_PCI_UNIT_REV_REG);
+ 	dev_info(rcar->dev, "PCI: bus%u revision %x\n", sys->busnr, val);
+ 
+ 	/* Disable Direct Power Down State and assert reset */
+-	val = ioread32(reg + RCAR_USBCTR_REG) & ~RCAR_USBCTR_DIRPD;
++	val = rcar_readl(rcar, RCAR_USBCTR_REG) & ~RCAR_USBCTR_DIRPD;
+ 	val |= RCAR_USBCTR_USBH_RST | RCAR_USBCTR_PLL_RST;
+-	iowrite32(val, reg + RCAR_USBCTR_REG);
++	rcar_writel(rcar, RCAR_USBCTR_REG, val);
+ 	udelay(4);
+ 
+ 	/* De-assert reset and reset PCIAHB window1 size */
+@@ -232,43 +241,43 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ 		val |= RCAR_USBCTR_PCIAHB_WIN1_256M;
+ 		break;
+ 	}
+-	iowrite32(val, reg + RCAR_USBCTR_REG);
++	rcar_writel(rcar, RCAR_USBCTR_REG, val);
+ 
+ 	/* Configure AHB master and slave modes */
+-	iowrite32(RCAR_AHB_BUS_MODE, reg + RCAR_AHB_BUS_CTR_REG);
++	rcar_writel(rcar, RCAR_AHB_BUS_CTR_REG, RCAR_AHB_BUS_MODE);
+ 
+ 	/* Configure PCI arbiter */
+-	val = ioread32(reg + RCAR_PCI_ARBITER_CTR_REG);
++	val = rcar_readl(rcar, RCAR_PCI_ARBITER_CTR_REG);
+ 	val |= RCAR_PCI_ARBITER_PCIREQ0 | RCAR_PCI_ARBITER_PCIREQ1 |
+ 	       RCAR_PCI_ARBITER_PCIBP_MODE;
+-	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
++	rcar_writel(rcar, RCAR_PCI_ARBITER_CTR_REG, val);
+ 
+ 	/* PCI-AHB mapping */
+-	iowrite32(rcar->window_addr | RCAR_PCIAHB_PREFETCH16,
+-		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
++	rcar_writel(rcar, RCAR_PCIAHB_WIN1_CTR_REG,
++			rcar->window_addr | RCAR_PCIAHB_PREFETCH16);
+ 
+ 	/* AHB-PCI mapping: OHCI/EHCI registers */
+ 	val = rcar->mem_res.start | RCAR_AHBPCI_WIN_CTR_MEM;
+-	iowrite32(val, reg + RCAR_AHBPCI_WIN2_CTR_REG);
++	rcar_writel(rcar, RCAR_AHBPCI_WIN2_CTR_REG, val);
+ 
+ 	/* Enable AHB-PCI bridge PCI configuration access */
+-	iowrite32(RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG,
+-		  reg + RCAR_AHBPCI_WIN1_CTR_REG);
++	rcar_writel(rcar, RCAR_AHBPCI_WIN1_CTR_REG,
++			RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG);
+ 	/* Set PCI-AHB Window1 address */
+-	iowrite32(rcar->window_pci | PCI_BASE_ADDRESS_MEM_PREFETCH,
+-		  reg + PCI_BASE_ADDRESS_1);
++	rcar_writel(rcar, PCI_BASE_ADDRESS_1,
++			rcar->window_pci | PCI_BASE_ADDRESS_MEM_PREFETCH);
+ 	/* Set AHB-PCI bridge PCI communication area address */
+ 	val = rcar->cfg_res->start + RCAR_AHBPCI_PCICOM_OFFSET;
+-	iowrite32(val, reg + PCI_BASE_ADDRESS_0);
++	rcar_writel(rcar, PCI_BASE_ADDRESS_0, val);
+ 
+-	val = ioread32(reg + PCI_COMMAND);
++	val = rcar_readl(rcar, PCI_COMMAND);
+ 	val |= PCI_COMMAND_SERR | PCI_COMMAND_PARITY |
+ 	       PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER;
+-	iowrite32(val, reg + PCI_COMMAND);
++	rcar_writel(rcar, PCI_COMMAND, val);
+ 
+ 	/* Enable PCI interrupts */
+-	iowrite32(RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME,
+-		  reg + RCAR_PCI_INT_ENABLE_REG);
++	rcar_writel(rcar, RCAR_PCI_INT_ENABLE_REG,
++			RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME);
+ 
+ 	if (rcar->irq > 0)
+ 		rcar_pci_setup_errirq(rcar);
+
