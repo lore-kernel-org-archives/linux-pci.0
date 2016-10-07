@@ -1,49 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51678 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755446AbcJLMxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:53:11 -0400
-Subject: [PATCH v2 0/5] PCI: iproc: Cleanups
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Wed, 12 Oct 2016 07:53:03 -0500
-Message-ID: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Date: Fri, 7 Oct 2016 22:21:07 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: pcie-armada8k.c maintainer?
+Message-ID: <20161007222107.2fff4a99@free-electrons.com>
+In-Reply-To: <20161007153900.GA18801@localhost>
+References: <20161007153900.GA18801@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
+Hello,
 
-  - Tidy up drvdata usage.
+On Fri, 7 Oct 2016 10:39:00 -0500, Bjorn Helgaas wrote:
 
-  - Remove some null pointer checking after adding corresponding checking
-    elsewhere.
+> get_maintainer.pl doesn't know who maintains
+> drivers/pci/host/pcie-armada8k.c (actually, it says *I* support it,
+> but that's obviously wrong).  Can you send me a MAINTAINERS patch to
+> fix that?
 
-  - Hard-code the PCIe capability offset instead of searching for it.  This
-    removes a little bit of dependency on struct pci_bus, with an eye
-    toward moving the link maintenance before enumeration.
+Sure, will do!
 
-Changes from v1:
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: iproc: Rename accessors
-    PCI: iproc: Name private struct pointer "iproc" consistently
-
----
-
-Bjorn Helgaas (5):
-      PCI: iproc: Add local struct device pointers
-      PCI: iproc: Set drvdata at end of probe function
-      PCI: iproc: Validate CSR base in BCMA setup code
-      PCI: iproc: Remove redundant null pointer checking
-      PCI: iproc: Hard-code PCIe capability offset instead of searching
-
-
- drivers/pci/host/pcie-iproc-bcma.c     |   14 ++++++---
- drivers/pci/host/pcie-iproc-platform.c |   27 +++++++++--------
- drivers/pci/host/pcie-iproc.c          |   52 ++++++++++++++++----------------
- 3 files changed, 50 insertions(+), 43 deletions(-)
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
