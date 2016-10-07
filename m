@@ -1,68 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:54261 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932504AbcJSOMa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:12:30 -0400
-Message-Id: <cover.1476875113.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 19 Oct 2016 16:07:13 +0200
-Subject: [PATCH 0/9] PCIe port PM: high gloss polish & hotplug support
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:49870 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753234AbcJGQbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:01 -0400
+Subject: [PATCH 6/7] PCI: designware-plat: Add local struct device pointers
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:30:57 -0500
+Message-ID: <20161007163057.24388.93246.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Linux v4.8 added support to runtime suspend PCIe ports to D3hot.
+Use a local "struct device *dev" for brevity and consistency with other
+drivers.  No functional change intended.
 
-Patches 1 to 6 of this series apply high gloss polish to that code to
-speed it up, reduce its size and improve its readability.  None of these
-patches should result in a functional change.  (And they didn't in my
-tests.)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware-plat.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-Patches 7 and 8 are cleanups / refactorings for acpiphp.  They're prep
-work for patch 9 and likewise shouldn't cause a functional change.
-
-Patch 9 extends runtime PM support to hotplug ports.
-
-
-@Keith Busch: I seem to recall you're working with large arrays of NVMe
-drives connected to native PCIe hotplug ports.  Perhaps you could give
-this series a spin, it might save quite a bit of power.
-
-To ease reviewing I've pushed this series to GitHub:
-https://github.com/l1k/linux/commits/pcie_port_pm_v1
-
-Thanks,
-
-Lukas
-
-
-Lukas Wunner (9):
-  PCI: Don't acquire ref on parent in pci_bridge_d3_update()
-  PCI: Autosense device removal in pci_bridge_d3_update()
-  PCI: Speed up algorithm in pci_bridge_d3_update()
-  PCI: Activate runtime PM on a PCIe port only if it can suspend
-  PCI: Consolidate conditions to allow runtime PM on PCIe ports
-  PCI: Unfold conditions to block runtime PM on PCIe ports
-  ACPI / hotplug / PCI: Use cached copy of PCI_EXP_SLTCAP_HPC bit
-  ACPI / hotplug / PCI: Make device_is_managed_by_native_pciehp() public
-  PCI: pciehp: Add runtime PM support for PCIe hotplug ports
-
- drivers/pci/bus.c                  |   2 +-
- drivers/pci/hotplug/acpiphp_glue.c |  31 +-----------
- drivers/pci/hotplug/pciehp_ctrl.c  |   6 +++
- drivers/pci/pci-acpi.c             |  24 +++++++++
- drivers/pci/pci.c                  | 101 ++++++++++++++++++-------------------
- drivers/pci/pci.h                  |   4 +-
- drivers/pci/pcie/portdrv_pci.c     |  13 ++---
- drivers/pci/remove.c               |   2 +-
- include/linux/pci_hotplug.h        |   2 +
- 9 files changed, 89 insertions(+), 96 deletions(-)
-
--- 
-2.9.3
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+index d9d01e7..f0a2a60 100644
+--- a/drivers/pci/host/pcie-designware-plat.c
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -51,6 +51,7 @@ static struct pcie_host_ops dw_plat_pcie_host_ops = {
+ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 				 struct platform_device *pdev)
+ {
++	struct device *dev = pp->dev;
+ 	int ret;
+ 
+ 	pp->irq = platform_get_irq(pdev, 1);
+@@ -62,11 +63,11 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+ 
+-		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++		ret = devm_request_irq(dev, pp->msi_irq,
+ 					dw_plat_pcie_msi_irq_handler,
+ 					IRQF_SHARED, "dw-plat-pcie-msi", pp);
+ 		if (ret) {
+-			dev_err(&pdev->dev, "failed to request MSI IRQ\n");
++			dev_err(dev, "failed to request MSI IRQ\n");
+ 			return ret;
+ 		}
+ 	}
+@@ -76,7 +77,7 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+-		dev_err(&pdev->dev, "failed to initialize host\n");
++		dev_err(dev, "failed to initialize host\n");
+ 		return ret;
+ 	}
+ 
+@@ -85,21 +86,21 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 
+ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct dw_plat_pcie *dw_plat_pcie;
+ 	struct pcie_port *pp;
+ 	struct resource *res;  /* Resource from DT */
+ 	int ret;
+ 
+-	dw_plat_pcie = devm_kzalloc(&pdev->dev, sizeof(*dw_plat_pcie),
+-					GFP_KERNEL);
++	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
+ 	if (!dw_plat_pcie)
+ 		return -ENOMEM;
+ 
+ 	pp = &dw_plat_pcie->pp;
+-	pp->dev = &pdev->dev;
++	pp->dev = dev;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	pp->dbi_base = devm_ioremap_resource(&pdev->dev, res);
++	pp->dbi_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(pp->dbi_base))
+ 		return PTR_ERR(pp->dbi_base);
+ 
 
