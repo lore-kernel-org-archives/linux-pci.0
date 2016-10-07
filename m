@@ -1,38 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35412 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:50276 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754850AbcJLQ0j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:26:39 -0400
-Date: Wed, 12 Oct 2016 11:01:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: mvebu: Cleanups
-Message-ID: <20161012160134.GD4308@localhost>
-References: <20161012125403.24580.74990.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1756788AbcJGQb6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:58 -0400
+Subject: [PATCH 5/8] PCI: armada: Reorder struct armada8k_pcie
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:31:54 -0500
+Message-ID: <20161007163153.24582.18919.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012125403.24580.74990.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 07:55:50AM -0500, Bjorn Helgaas wrote:
->   - Add local "dev" pointers to reduce repetition of things like
->     "&pdev->dev".
-> 
->   - Tidy up usage of of_node pointer
-> 
-> Nothing here should change the behavior of the driver.
-> 
-> Changes from v1:
->   Added of_node cleanup
->   Dropped "PCI: mvebu: Swap order of mvebu_writel() reg/val arguments"
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI: mvebu: Add local struct device pointers
->       PCI: mvebu: Use existing of_node pointer
+Reorder the device-specific struct to put the DesignWare generic struct
+pcie_port first.  No functional change intended.
 
-I applied these to pci/host-mvebu for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-armada8k.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index 16fcb43..276125f 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -29,8 +29,8 @@
+ #include "pcie-designware.h"
+ 
+ struct armada8k_pcie {
++	struct pcie_port pp;		/* pp.dbi_base is DT ctrl */
+ 	struct clk *clk;
+-	struct pcie_port pp;
+ };
+ 
+ #define PCIE_VENDOR_REGS_OFFSET		0x8000
+
