@@ -1,174 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45464 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:50062 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932268AbcJGQV1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:21:27 -0400
-Subject: [PATCH 4/5] PCI: aardvark: Add local struct device pointers
+        id S1753234AbcJGQbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:31 -0400
+Subject: [PATCH 2/8] PCI: armada: Add register accessors
 To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Date: Fri, 07 Oct 2016 11:21:23 -0500
-Message-ID: <20161007162122.22668.25538.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162053.22668.91420.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162053.22668.91420.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:31:26 -0500
+Message-ID: <20161007163126.24582.81756.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+Add device-specific register accessors for consistency across host drivers.
+No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-aardvark.c |   36 ++++++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
+ drivers/pci/host/pcie-armada8k.c |   46 ++++++++++++++++++++++----------------
+ 1 file changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index af6312a..b255a08 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -230,19 +230,20 @@ static int advk_pcie_link_up(struct advk_pcie *advk)
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index f88a790..d0a3ab4 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -70,13 +70,23 @@ struct armada8k_pcie {
  
- static int advk_pcie_wait_for_link(struct advk_pcie *advk)
- {
-+	struct device *dev = &advk->pdev->dev;
- 	int retries;
+ #define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
  
- 	/* check if the link is up or not */
- 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (advk_pcie_link_up(advk)) {
--			dev_info(&advk->pdev->dev, "link up\n");
-+			dev_info(dev, "link up\n");
- 			return 0;
- 		}
- 
- 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
- 	}
- 
--	dev_err(&advk->pdev->dev, "link never came up\n");
-+	dev_err(dev, "link never came up\n");
- 
- 	return -ETIMEDOUT;
- }
-@@ -376,6 +377,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *advk)
- 
- static void advk_pcie_check_pio_status(struct advk_pcie *advk)
- {
-+	struct device *dev = &advk->pdev->dev;
- 	u32 reg;
- 	unsigned int status;
- 	char *strcomp_status, *str_posted;
-@@ -407,12 +409,13 @@ static void advk_pcie_check_pio_status(struct advk_pcie *advk)
- 	else
- 		str_posted = "Posted";
- 
--	dev_err(&advk->pdev->dev, "%s PIO Response Status: %s, %#x @ %#x\n",
-+	dev_err(dev, "%s PIO Response Status: %s, %#x @ %#x\n",
- 		str_posted, strcomp_status, reg, advk_readl(advk, PIO_ADDR_LS));
- }
- 
- static int advk_pcie_wait_pio(struct advk_pcie *advk)
- {
-+	struct device *dev = &advk->pdev->dev;
- 	unsigned long timeout;
- 
- 	timeout = jiffies + msecs_to_jiffies(PIO_TIMEOUT_MS);
-@@ -426,7 +429,7 @@ static int advk_pcie_wait_pio(struct advk_pcie *advk)
- 			return 0;
- 	}
- 
--	dev_err(&advk->pdev->dev, "config read/write timed out\n");
-+	dev_err(dev, "config read/write timed out\n");
- 	return -ETIMEDOUT;
- }
- 
-@@ -560,10 +563,11 @@ static int advk_pcie_alloc_msi(struct advk_pcie *advk)
- 
- static void advk_pcie_free_msi(struct advk_pcie *advk, int hwirq)
- {
-+	struct device *dev = &advk->pdev->dev;
++static u32 armada8k_readl(struct armada8k_pcie *armada8k, u32 offset)
++{
++	return readl(armada8k->base + offset);
++}
 +
- 	mutex_lock(&advk->msi_used_lock);
- 	if (!test_bit(hwirq, advk->msi_irq_in_use))
--		dev_err(&advk->pdev->dev, "trying to free unused MSI#%d\n",
--			hwirq);
-+		dev_err(dev, "trying to free unused MSI#%d\n", hwirq);
- 	else
- 		clear_bit(hwirq, advk->msi_irq_in_use);
- 	mutex_unlock(&advk->msi_used_lock);
-@@ -905,6 +909,7 @@ out_release_res:
- 
- static int advk_pcie_probe(struct platform_device *pdev)
++static void armada8k_writel(struct armada8k_pcie *armada8k, u32 offset, u32 val)
++{
++	writel(val, armada8k->base + offset);
++}
++
+ static int armada8k_pcie_link_up(struct pcie_port *pp)
  {
-+	struct device *dev = &pdev->dev;
- 	struct advk_pcie *advk;
- 	struct resource *res;
- 	struct pci_bus *bus, *child;
-@@ -912,8 +917,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	struct device_node *msi_node;
- 	int ret, irq;
+ 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
+ 	u32 reg;
+ 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
  
--	advk = devm_kzalloc(&pdev->dev, sizeof(struct advk_pcie),
--			    GFP_KERNEL);
-+	advk = devm_kzalloc(dev, sizeof(struct advk_pcie), GFP_KERNEL);
- 	if (!advk)
- 		return -ENOMEM;
+-	reg = readl(armada8k->base + PCIE_GLOBAL_STATUS_REG);
++	reg = armada8k_readl(armada8k, PCIE_GLOBAL_STATUS_REG);
+ 	if ((reg & mask) == mask)
+ 		return 1;
  
-@@ -921,22 +925,22 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	platform_set_drvdata(pdev, advk);
+@@ -87,48 +97,47 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
+-	void __iomem *base = armada8k->base;
+ 	u32 reg;
  
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	advk->base = devm_ioremap_resource(&pdev->dev, res);
-+	advk->base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(advk->base))
- 		return PTR_ERR(advk->base);
- 
- 	irq = platform_get_irq(pdev, 0);
--	ret = devm_request_irq(&pdev->dev, irq, advk_pcie_irq_handler,
-+	ret = devm_request_irq(dev, irq, advk_pcie_irq_handler,
- 			       IRQF_SHARED | IRQF_NO_THREAD, "advk-pcie",
- 			       advk);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to register interrupt\n");
-+		dev_err(dev, "Failed to register interrupt\n");
- 		return ret;
+ 	if (!dw_pcie_link_up(pp)) {
+ 		/* Disable LTSSM state machine to enable configuration */
+-		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
++		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
+ 		reg &= ~(PCIE_APP_LTSSM_EN);
+-		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
++		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
  	}
  
- 	ret = advk_pcie_parse_request_of_pci_ranges(advk);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to parse resources\n");
-+		dev_err(dev, "Failed to parse resources\n");
- 		return ret;
+ 	/* Set the device to root complex mode */
+-	reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
++	reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
+ 	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
+ 	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
+-	writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
++	armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
+ 
+ 	/* Set the PCIe master AxCache attributes */
+-	writel(ARCACHE_DEFAULT_VALUE, base + PCIE_ARCACHE_TRC_REG);
+-	writel(AWCACHE_DEFAULT_VALUE, base + PCIE_AWCACHE_TRC_REG);
++	armada8k_writel(armada8k, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
++	armada8k_writel(armada8k, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
+ 
+ 	/* Set the PCIe master AxDomain attributes */
+-	reg = readl(base + PCIE_ARUSER_REG);
++	reg = armada8k_readl(armada8k, PCIE_ARUSER_REG);
+ 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+ 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	writel(reg, base + PCIE_ARUSER_REG);
++	armada8k_writel(armada8k, PCIE_ARUSER_REG, reg);
+ 
+-	reg = readl(base + PCIE_AWUSER_REG);
++	reg = armada8k_readl(armada8k, PCIE_AWUSER_REG);
+ 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+ 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	writel(reg, base + PCIE_AWUSER_REG);
++	armada8k_writel(armada8k, PCIE_AWUSER_REG, reg);
+ 
+ 	/* Enable INT A-D interrupts */
+-	reg = readl(base + PCIE_GLOBAL_INT_MASK1_REG);
++	reg = armada8k_readl(armada8k, PCIE_GLOBAL_INT_MASK1_REG);
+ 	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
+ 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
+-	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
++	armada8k_writel(armada8k, PCIE_GLOBAL_INT_MASK1_REG, reg);
+ 
+ 	if (!dw_pcie_link_up(pp)) {
+ 		/* Configuration done. Start LTSSM */
+-		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
++		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
+ 		reg |= PCIE_APP_LTSSM_EN;
+-		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
++		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
  	}
  
-@@ -944,24 +948,24 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	/* Wait until the link becomes active again */
+@@ -146,7 +155,6 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ {
+ 	struct pcie_port *pp = arg;
+ 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
+-	void __iomem *base = armada8k->base;
+ 	u32 val;
  
- 	ret = advk_pcie_init_irq_domain(advk);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		dev_err(dev, "Failed to initialize irq\n");
- 		return ret;
- 	}
+ 	/*
+@@ -154,8 +162,8 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ 	 * PCI device. However, they are also latched into the PCIe
+ 	 * controller, so we simply discard them.
+ 	 */
+-	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
+-	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
++	val = armada8k_readl(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG);
++	armada8k_writel(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG, val);
  
- 	ret = advk_pcie_init_msi_irq_domain(advk);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		dev_err(dev, "Failed to initialize irq\n");
- 		advk_pcie_remove_irq_domain(advk);
- 		return ret;
- 	}
- 
--	msi_node = of_parse_phandle(pdev->dev.of_node, "msi-parent", 0);
-+	msi_node = of_parse_phandle(dev->of_node, "msi-parent", 0);
- 	if (msi_node)
- 		msi = of_pci_find_msi_chip_by_node(msi_node);
- 	else
- 		msi = NULL;
- 
--	bus = pci_scan_root_bus_msi(&pdev->dev, 0, &advk_pcie_ops,
-+	bus = pci_scan_root_bus_msi(dev, 0, &advk_pcie_ops,
- 				    advk, &advk->resources, &advk->msi);
- 	if (!bus) {
- 		advk_pcie_remove_msi_irq_domain(advk);
+ 	return IRQ_HANDLED;
+ }
 
