@@ -1,233 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35528 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:58038 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030284AbcJRQEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Oct 2016 12:04:34 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v6 16/16] drivers: acpi: iort: introduce iort_iommu_configure
-Date: Tue, 18 Oct 2016 17:04:14 +0100
-Message-Id: <20161018160414.1228-17-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+        id S965040AbcJGQnF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:43:05 -0400
+Subject: [PATCH 2/5] PCI: qcom: Remove redundant struct qcom_pcie.dbi
+To: Stanimir Varbanov <svarbanov@mm-sol.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:43:00 -0500
+Message-ID: <20161007164300.26464.22576.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007164251.26464.42894.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007164251.26464.42894.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DT based systems have a generic kernel API to configure IOMMUs
-for devices (ie of_iommu_configure()).
+Remove the struct qcom_pcie.dbi member, which is a duplicate of the generic
+pp.dbi_base member.  No functional change intended.
 
-On ARM based ACPI systems, the of_iommu_configure() equivalent can
-be implemented atop ACPI IORT kernel API, with the corresponding
-functions to map device identifiers to IOMMUs and retrieve the
-corresponding IOMMU operations necessary for DMA operations set-up.
-
-By relying on the iommu_fwspec generic kernel infrastructure,
-implement the IORT based IOMMU configuration for ARM ACPI systems
-and hook it up in the ACPI kernel layer that implements DMA
-configuration for a device.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/arm64/iort.c | 99 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/scan.c       |  7 +++-
- include/linux/acpi_iort.h |  6 +++
- 3 files changed, 111 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-qcom.c |   13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index db7b153..5741bfd 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -28,6 +28,8 @@
- 
- #define IORT_TYPE_MASK(type)	(1 << (type))
- #define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
-+				(1 << ACPI_IORT_NODE_SMMU_V3))
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -501,6 +503,103 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
- 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
- }
- 
-+static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	u32 *rid = data;
-+
-+	*rid = alias;
-+	return 0;
-+}
-+
-+static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
-+			       struct fwnode_handle *fwnode,
-+			       const struct iommu_ops *ops)
-+{
-+	int ret = iommu_fwspec_init(dev, fwnode, ops);
-+
-+	if (!ret)
-+		ret = iommu_fwspec_add_ids(dev, &streamid, 1);
-+
-+	return ret;
-+}
-+
-+static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
-+					struct acpi_iort_node *node,
-+					u32 streamid)
-+{
-+	struct fwnode_handle *iort_fwnode = NULL;
-+	const struct iommu_ops *ops = NULL;
-+	int ret = -ENODEV;
-+
-+	if (node) {
-+		iort_fwnode = iort_get_fwnode(node);
-+		if (!iort_fwnode)
-+			return NULL;
-+
-+		ops = fwnode_iommu_get_ops(iort_fwnode);
-+		if (!ops)
-+			return NULL;
-+
-+		ret = arm_smmu_iort_xlate(dev, streamid,
-+					  iort_fwnode, ops);
-+	}
-+
-+	return ret ? NULL : ops;
-+}
-+
-+/**
-+ * iort_iommu_configure - Set-up IOMMU configuration for a device.
-+ *
-+ * @dev: device to configure
-+ *
-+ * Returns: iommu_ops pointer on configuration success
-+ *          NULL on configuration failure
-+ */
-+const struct iommu_ops *iort_iommu_configure(struct device *dev)
-+{
-+	struct acpi_iort_node *node, *parent;
-+	const struct iommu_ops *ops = NULL;
-+	u32 streamid = 0;
-+
-+	if (dev_is_pci(dev)) {
-+		struct pci_bus *bus = to_pci_dev(dev)->bus;
-+		u32 rid;
-+
-+		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
-+				       &rid);
-+
-+		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-+				      iort_match_node_callback, &bus->dev);
-+		if (!node)
-+			return NULL;
-+
-+		parent = iort_node_map_rid(node, rid, &streamid,
-+					   IORT_IOMMU_TYPE);
-+
-+		ops = iort_iommu_xlate(dev, parent, streamid);
-+
-+	} else {
-+		int i = 0;
-+
-+		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-+				      iort_match_node_callback, dev);
-+		if (!node)
-+			return NULL;
-+
-+		parent = iort_node_get_id(node, &streamid,
-+					  IORT_IOMMU_TYPE, i++);
-+
-+		while (parent) {
-+			ops = iort_iommu_xlate(dev, parent, streamid);
-+
-+			parent = iort_node_get_id(node, &streamid,
-+						  IORT_IOMMU_TYPE, i++);
-+		}
-+	}
-+
-+	return ops;
-+}
-+
- static void __init acpi_iort_register_irq(int hwirq, const char *name,
- 					  int trigger,
- 					  struct resource *res)
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 694e0b6..e5f7004 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -7,6 +7,7 @@
- #include <linux/slab.h>
- #include <linux/kernel.h>
- #include <linux/acpi.h>
-+#include <linux/acpi_iort.h>
- #include <linux/signal.h>
- #include <linux/kthread.h>
- #include <linux/dmi.h>
-@@ -1377,6 +1378,8 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-  */
- void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index e72e038..e425fcf 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -90,7 +90,6 @@ struct qcom_pcie {
+ 	struct device *dev;
+ 	union qcom_pcie_resources res;
+ 	void __iomem *parf;
+-	void __iomem *dbi;
+ 	void __iomem *elbi;
+ 	struct phy *phy;
+ 	struct gpio_desc *reset;
+@@ -426,7 +425,7 @@ err_res:
+ static int qcom_pcie_link_up(struct pcie_port *pp)
  {
-+	const struct iommu_ops *iommu;
-+
- 	/*
- 	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
- 	 * setup the correct supported mask.
-@@ -1391,11 +1394,13 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- 	if (!dev->dma_mask)
- 		dev->dma_mask = &dev->coherent_dma_mask;
+ 	struct qcom_pcie *qcom = to_qcom_pcie(pp);
+-	u16 val = readw(qcom->dbi + PCIE20_CAP + PCI_EXP_LNKSTA);
++	u16 val = readw(qcom->pp.dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
  
-+	iommu = iort_iommu_configure(dev);
-+
- 	/*
- 	 * Assume dma valid range starts at 0 and covers the whole
- 	 * coherent_dma_mask.
- 	 */
--	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-+	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
- 			   attr == DEV_DMA_COHERENT);
+ 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
  }
- EXPORT_SYMBOL_GPL(acpi_dma_configure);
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 79ba1bb..dcb2b60 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -34,6 +34,8 @@ void acpi_iort_init(void);
- bool iort_node_match(u8 type);
- u32 iort_msi_map_rid(struct device *dev, u32 req_id);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
-+/* IOMMU interface */
-+const struct iommu_ops *iort_iommu_configure(struct device *dev);
- #else
- static inline void acpi_iort_init(void) { }
- static inline bool iort_node_match(u8 type) { return false; }
-@@ -42,6 +44,10 @@ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- static inline struct irq_domain *iort_get_device_domain(struct device *dev,
- 							u32 req_id)
- { return NULL; }
-+/* IOMMU interface */
-+static inline
-+const struct iommu_ops *iort_iommu_configure(struct device *dev)
-+{ return NULL; }
- #endif
+@@ -509,6 +508,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (!qcom)
+ 		return -ENOMEM;
  
- #define IORT_ACPI_DECLARE(name, table_id, fn)		\
--- 
-2.10.0
++	pp = &qcom->pp;
++
+ 	qcom->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
+ 	qcom->dev = dev;
+ 
+@@ -522,9 +523,9 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(qcom->parf);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	qcom->dbi = devm_ioremap_resource(dev, res);
+-	if (IS_ERR(qcom->dbi))
+-		return PTR_ERR(qcom->dbi);
++	pp->dbi_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pp->dbi_base))
++		return PTR_ERR(pp->dbi_base);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
+ 	qcom->elbi = devm_ioremap_resource(dev, res);
+@@ -539,9 +540,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	pp = &qcom->pp;
+ 	pp->dev = dev;
+-	pp->dbi_base = qcom->dbi;
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &qcom_pcie_dw_ops;
+ 
 
