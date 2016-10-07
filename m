@@ -1,43 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0048.outbound.protection.outlook.com ([104.47.34.48]:42816
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755685AbcJZQ7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 12:59:04 -0400
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <l.stach@pengutronix.de>, <hongxing.zhu@nxp.com>,
-        <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH 2/3] MAINTAINERS: PCI: imx6: Use Richard Zhu's NXP email
-Date: Wed, 26 Oct 2016 14:27:23 -0200
-Message-ID: <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com>
-In-Reply-To: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
-References: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
+Received: from mail.kernel.org ([198.145.29.136]:48860 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756096AbcJGQ3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:29:20 -0400
+Subject: [PATCH 5/5] PCI: xgene: Remove unused platform data
+To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:28:30 -0500
+Message-ID: <20161007162830.24026.7748.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-FSL emails may become invalid soon, so switch to the NXP one.
+The xgene driver never uses the platform drvdata pointer, so don't
+bother setting it.  No functional change intended.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pci-xgene.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8544cd6..cf828f4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9257,7 +9257,7 @@ S:	Maintained
- F:	drivers/pci/host/*layerscape*
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index ec55f12..bc6f93d 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -569,8 +569,6 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+-
+-	platform_set_drvdata(pdev, xgene);
+ 	return 0;
  
- PCI DRIVER FOR IMX6
--M:	Richard Zhu <Richard.Zhu@freescale.com>
-+M:	Richard Zhu <hongxing.zhu@nxp.com>
- M:	Lucas Stach <l.stach@pengutronix.de>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
--- 
-2.7.4
+ error:
 
