@@ -1,106 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
-Subject: [PATCH V3 3/3] ACPI,PCI,IRQ: correct SCI penalty calculation
-Date: Sat, 15 Oct 2016 00:31:07 -0400
-Message-Id: <1476505867-24599-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
-References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
- linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57460 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941258AbcJGQmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:42:06 -0400
+Subject: [PATCH 2/7] PCI: layerscape: Pass device-specific struct to
+ internal functions
+To: Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Fri, 07 Oct 2016 11:42:02 -0500
+Message-ID: <20161007164202.26341.96850.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007164149.26341.87049.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007164149.26341.87049.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It seems like the problem is that we removed acpi_penalize_sci_irq(),
-which told us the polarity and trigger mode.  We tried to get that
-information via irq_get_trigger_type(), but that didn't work in this
-case because we use the acpi_irq_get_penalty() path before the SCI is
-registered.
+Only interfaces used from outside the driver, e.g., those called by the
+DesignWare core, need to accept pointers to the generic struct pcie_port.
+Internal interfaces can accept pointers to the device-specific struct,
+which makes them more straightforward.  No functional change intended.
 
-To fix this problem, we only need to fix the penalty for the SCI interrupt.
-It seems better to add a single "sci_penalty" variable, set it to
-PIRQ_PENALTY_PCI_USING if it's level/low or PIRQ_PENALTY_ISA_ALWAYS
-otherwise, and add "sci_penalty" in when appropriate.  That should fix it
-for *any* SCI IRQ, not just those less than 256, and we don't have to add
-these extra penalty table entries that are all unused (except possibly for
-one entry if we have an SCI in the 16-255 range).
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/pci_link.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-layerscape.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 1934e2a..34bf527 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -87,6 +87,7 @@ struct acpi_pci_link {
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index a1dccb0..85a90f1e 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -212,11 +212,11 @@ static const struct of_device_id ls_pcie_of_match[] = {
+ 	{ },
+ };
  
- static LIST_HEAD(acpi_link_list);
- static DEFINE_MUTEX(acpi_link_lock);
-+static int sci_irq = -1, sci_penalty;
- 
- /* --------------------------------------------------------------------------
-                             PCI Link Device Management
-@@ -494,10 +495,15 @@ static int acpi_irq_pci_sharing_penalty(int irq)
- 
- static int acpi_irq_get_penalty(int irq)
+-static int __init ls_add_pcie_port(struct pcie_port *pp,
++static int __init ls_add_pcie_port(struct ls_pcie *ls,
+ 				   struct platform_device *pdev)
  {
-+	int penalty = 0;
-+
-+	if (irq == sci_irq)
-+		penalty += sci_penalty;
-+
- 	if (irq < ACPI_MAX_ISA_IRQS)
--		return acpi_isa_irq_penalty[irq];
-+		return penalty + acpi_isa_irq_penalty[irq];
++	struct pcie_port *pp = &ls->pp;
+ 	int ret;
+-	struct ls_pcie *ls = to_ls_pcie(pp);
  
--	return acpi_irq_pci_sharing_penalty(irq);
-+	return penalty + acpi_irq_pci_sharing_penalty(irq);
- }
+ 	pp->dev = &pdev->dev;
+ 	pp->dbi_base = ls->dbi;
+@@ -259,7 +259,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (!ls_pcie_is_bridge(ls))
+ 		return -ENODEV;
  
- int __init acpi_irq_penalty_init(void)
-@@ -870,13 +876,13 @@ bool acpi_isa_irq_available(int irq)
+-	ret = ls_add_pcie_port(&ls->pp, pdev);
++	ret = ls_add_pcie_port(ls, pdev);
+ 	if (ret < 0)
+ 		return ret;
  
- void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
- {
--	if (irq >= 0 && irq < ARRAY_SIZE(acpi_isa_irq_penalty)) {
--		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
--		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
--			acpi_isa_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
--		else
--			acpi_isa_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
--	}
-+	sci_irq = irq;
-+
-+	if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
-+	    polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
-+		sci_penalty = PIRQ_PENALTY_PCI_USING;
-+	else
-+		sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
- }
- 
- /*
--- 
-1.9.1
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
