@@ -1,39 +1,36 @@
-Return-Path: <gregkh@linuxfoundation.org>
-Return-Path: <gregkh@linuxfoundation.org>
-Date: Sat, 22 Oct 2016 12:03:44 +0200
-From: Greg KH <greg@kroah.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Pierre de Villemereuil <flyos@mailoo.org>,
-	linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 2/2] USB: UHCI: report non-PME wakeup signalling for
- Intel hardware
-Message-ID: <20161022100344.GB16082@kroah.com>
-References: <Pine.LNX.4.44L0.1610211642420.1898-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1610211642420.1898-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:40765 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753254AbcJGUai (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2016 16:30:38 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 2/2] MAINTAINERS: add DT binding doc to the Aardvark PCIE driver maintainer
+Date: Fri,  7 Oct 2016 22:30:31 +0200
+Message-Id: <1475872231-3199-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1475872231-3199-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1475872231-3199-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 04:49:07PM -0400, Alan Stern wrote:
-> The UHCI controllers in Intel chipsets rely on a platform-specific
-> non-PME mechanism for wakeup signalling.  They can generate wakeup
-> signals even though they don't support PME.
-> 
-> We need to let the USB core know this so that it will enable runtime
-> suspend for UHCI controllers.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: <stable@vger.kernel.org>
-> 
-> ---
-> 
-> Greg:
-> 
-> This patch is somewhat independent of the 1/2 patch I sent to Bjorn.  
-> Still, it will help to keep them together.  Is it okay to have him
-> merge both of them through his tree?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-Fine with me:
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8f6fb8c..c0ac3dc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9019,6 +9019,7 @@ M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
++F:	Documentation/devicetree/bindings/pci/aardvark-pci.txt
+ F:	drivers/pci/host/pci-aardvark.c
+ 
+ PCI DRIVER FOR NVIDIA TEGRA
+-- 
+2.7.4
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
