@@ -1,104 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:36911 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938618AbcJ1Ixo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:53:44 -0400
-Message-Id: <f2fc212d4c75a2e3f3b8162976b15881da57dfb1.1477611126.git.lukas@wunner.de>
-In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
-References: <cover.1477611126.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 28 Oct 2016 10:52:06 +0200
-Subject: [PATCH v2 4/9] PCI: Activate runtime PM on a PCIe port only if it can
- suspend
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:45928 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756646AbcJGQWr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:22:47 -0400
+Subject: [PATCH 07/10] PCI: altera: Swap order of altera_cra_writel()
+ reg/val arguments
+To: Ley Foon Tan <lftan@altera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
+Date: Fri, 07 Oct 2016 11:22:42 -0500
+Message-ID: <20161007162242.22796.78962.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently pcie_portdrv_probe() activates runtime PM on a PCIe port even
-if it will never actually suspend because the BIOS is too old or the
-"pcie_port_pm=off" option was specified on the kernel command line.
+Swap order of altera_cra_writel() arguments to match the "dev, pos, val"
+order used by pci_write_config_word() and other drivers.  No functional
+change intended.
 
-A few CPU cycles can be saved by not activating runtime PM at all in
-these cases, because rpm_idle() and rpm_suspend() will bail out right
-at the beginning when calling rpm_check_suspend_allowed(), instead of
-carrying out various locking and assignments, invoking rpm_callback(),
-getting back -EBUSY and rolling everything back.
-
-The conditions checked in pci_bridge_d3_possible() are all static, they
-never change during uptime of the system, hence it's safe to call this
-to determine if runtime PM should be activated.
-
-No functional change intended.
-
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c              | 2 +-
- drivers/pci/pci.h              | 1 +
- drivers/pci/pcie/portdrv_pci.c | 5 +++--
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/pci/host/pcie-altera.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bc60f2c..854d185 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2226,7 +2226,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  * This function checks if it is possible to move the bridge to D3.
-  * Currently we only allow D3 for recent enough PCIe ports.
-  */
--static bool pci_bridge_d3_possible(struct pci_dev *bridge)
-+bool pci_bridge_d3_possible(struct pci_dev *bridge)
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 06e05e9..bcc056b 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -97,8 +97,8 @@ static u32 altera_cra_readl(struct altera_pcie *altera, const u32 reg)
+ 	return readl_relaxed(altera->cra_base + reg);
+ }
+ 
+-static void altera_cra_writel(struct altera_pcie *altera, const u32 value,
+-			      const u32 reg)
++static void altera_cra_writel(struct altera_pcie *altera, const u32 reg,
++			      const u32 value)
  {
- 	unsigned int year;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 27048bb..ffffef3 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -85,6 +85,7 @@ void pci_pm_init(struct pci_dev *dev);
- void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
-+bool pci_bridge_d3_possible(struct pci_dev *dev);
- void pci_bridge_d3_update(struct pci_dev *dev);
- 
- static inline void pci_wakeup_event(struct pci_dev *dev)
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 79327cc..1ae712c 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -19,6 +19,7 @@
- #include <linux/dmi.h>
- #include <linux/pci-aspm.h>
- 
-+#include "../pci.h"
- #include "portdrv.h"
- #include "aer/aerdrv.h"
- 
-@@ -157,7 +158,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	 * subordinate devices).  We can't be sure for native PCIe hotplug
- 	 * either so prevent that as well.
- 	 */
--	if (!dev->is_hotplug_bridge) {
-+	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
- 		/*
- 		 * Keep the port resumed 100ms to make sure things like
- 		 * config space accesses from userspace (lspci) will not
-@@ -175,7 +176,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
+ 	writel_relaxed(value, altera->cra_base + reg);
+ }
+@@ -130,9 +130,9 @@ static bool altera_pcie_hide_rc_bar(struct pci_bus *bus, unsigned int  devfn,
+ static void tlp_write_tx(struct altera_pcie *altera,
+ 			 struct tlp_rp_regpair_t *tlp_rp_regdata)
  {
--	if (!dev->is_hotplug_bridge) {
-+	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
- 		pm_runtime_forbid(&dev->dev);
- 		pm_runtime_get_noresume(&dev->dev);
- 		pm_runtime_dont_use_autosuspend(&dev->dev);
--- 
-2.9.3
+-	altera_cra_writel(altera, tlp_rp_regdata->reg0, RP_TX_REG0);
+-	altera_cra_writel(altera, tlp_rp_regdata->reg1, RP_TX_REG1);
+-	altera_cra_writel(altera, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
++	altera_cra_writel(altera, RP_TX_REG0, tlp_rp_regdata->reg0);
++	altera_cra_writel(altera, RP_TX_REG1, tlp_rp_regdata->reg1);
++	altera_cra_writel(altera, RP_TX_CNTRL, tlp_rp_regdata->ctrl);
+ }
+ 
+ static bool altera_pcie_valid_config(struct altera_pcie *altera,
+@@ -477,7 +477,7 @@ static void altera_pcie_isr(struct irq_desc *desc)
+ 		& P2A_INT_STS_ALL) != 0) {
+ 		for_each_set_bit(bit, &status, INTX_NUM) {
+ 			/* clear interrupts */
+-			altera_cra_writel(altera, 1 << bit, P2A_INT_STATUS);
++			altera_cra_writel(altera, P2A_INT_STATUS, 1 << bit);
+ 
+ 			virq = irq_find_mapping(altera->irq_domain, bit + 1);
+ 			if (virq)
+@@ -604,9 +604,9 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* clear all interrupts */
+-	altera_cra_writel(altera, P2A_INT_STS_ALL, P2A_INT_STATUS);
++	altera_cra_writel(altera, P2A_INT_STATUS, P2A_INT_STS_ALL);
+ 	/* enable all interrupts */
+-	altera_cra_writel(altera, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
++	altera_cra_writel(altera, P2A_INT_ENABLE, P2A_INT_ENA_ALL);
+ 	altera_pcie_host_init(altera);
+ 
+ 	bus = pci_scan_root_bus(&pdev->dev, altera->root_bus_nr,
 
