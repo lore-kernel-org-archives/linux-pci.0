@@ -1,69 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:29056
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755930AbcJZRBB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 13:01:01 -0400
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <l.stach@pengutronix.de>, <hongxing.zhu@nxp.com>,
-        <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH 1/3] PCI: imx6: Improve binding example
-Date: Wed, 26 Oct 2016 14:27:22 -0200
-Message-ID: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
+Received: from mail.kernel.org ([198.145.29.136]:55580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964789AbcJGQhq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:37:46 -0400
+Subject: [PATCH 07/11] PCI: hisi: Swap order of hisi_apb_writel() reg/val
+ arguments
+To: Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:37:41 -0500
+Message-ID: <20161007163741.25540.5909.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make the binding example to match what is really used in imx6qdl.dtsi.
+Swap order of hisi_apb_writel() arguments to match the "dev, pos, val"
+order used by pci_write_config_word() and other drivers.  No functional
+change intended.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt        | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/pci/host/pcie-hisi.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 83aeb1f..1cc8b74 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -36,7 +36,7 @@ Additional required properties for imx6sx-pcie:
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index e14ce13..c6b0459 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -48,7 +48,7 @@ static u32 hisi_apb_readl(struct hisi_pcie *hisi, u32 reg)
+ 	return readl(hisi->pp.dbi_base + reg);
+ }
  
- Example:
+-static void hisi_apb_writel(struct hisi_pcie *hisi, u32 val, u32 reg)
++static void hisi_apb_writel(struct hisi_pcie *hisi, u32 reg, u32 val)
+ {
+ 	writel(val, hisi->pp.dbi_base + reg);
+ }
+@@ -88,15 +88,15 @@ static int hisi_cfg_write(struct pcie_port *pp, int where, int  size, u32 val)
+ 	walker += (where & 0x3);
+ 	reg = where & ~0x3;
+ 	if (size == 4)
+-		hisi_apb_writel(hisi, val, reg);
++		hisi_apb_writel(hisi, reg, val);
+ 	else if (size == 2) {
+ 		reg_val = hisi_apb_readl(hisi, reg);
+ 		*(u16 __force *) walker = val;
+-		hisi_apb_writel(hisi, reg_val, reg);
++		hisi_apb_writel(hisi, reg, reg_val);
+ 	} else if (size == 1) {
+ 		reg_val = hisi_apb_readl(hisi, reg);
+ 		*(u8 __force *) walker = val;
+-		hisi_apb_writel(hisi, reg_val, reg);
++		hisi_apb_writel(hisi, reg, reg_val);
+ 	} else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
  
--	pcie@0x01000000 {
-+	pcie: pcie@0x01000000 {
- 		compatible = "fsl,imx6q-pcie", "snps,dw-pcie";
- 		reg = <0x01ffc000 0x04000>,
- 		      <0x01f00000 0x80000>;
-@@ -44,18 +44,19 @@ Example:
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		device_type = "pci";
--		ranges = <0x00000800 0 0x01f00000 0x01f00000 0 0x00080000
--			  0x81000000 0 0          0x01f80000 0 0x00010000
--			  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>;
-+		ranges = <0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
-+			  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 		num-lanes = <1>;
- 		interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
- 		interrupt-names = "msi";
- 		#interrupt-cells = <1>;
- 		interrupt-map-mask = <0 0 0 0x7>;
--		interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
--		                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
--		                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
--		                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
--		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
-+		interrupt-map = <0 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 2 &gpc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 3 &gpc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 4 &gpc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&clks IMX6QDL_CLK_PCIE_AXI>,
-+			 <&clks IMX6QDL_CLK_LVDS1_GATE>,
-+			 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
- 	};
--- 
-2.7.4
 
