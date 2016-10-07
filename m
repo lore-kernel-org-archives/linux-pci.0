@@ -1,116 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:36693 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754176AbcJ2T4Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 15:56:24 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-omap@vger.kernel.org,
-        alsa-devel@alsa-project.org, linuxppc-dev@lists.ozlabs.org,
-        linux-mips@linux-mips.org, linux-pm@vger.kernel.org,
-        patches@opensource.wolfsonmicro.com, linux-kernel@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net
-Subject: [PATCH 00/15] use permission-specific DEVICE_ATTR variants
-Date: Sat, 29 Oct 2016 21:36:54 +0200
-Message-Id: <1477769829-22230-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from mail.kernel.org ([198.145.29.136]:49998 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753234AbcJGQbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:22 -0400
+Subject: [PATCH 1/8] PCI: armada: Name private struct pointer "armada8k"
+ consistently
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:31:18 -0500
+Message-ID: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use a device-specific name, "armada8k", for struct armada8k_pcie pointers
+to hint that this is device-specific information.  No functional change
+intended.
 
-Use DEVICE_ATTR_RO etc. for read only attributes etc.  This simplifies the
-source code, improves readbility, and reduces the chance of
-inconsistencies.
-
-The complete semantic patch is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@ro@
-declarer name DEVICE_ATTR;
-identifier x,x_show;
-@@
-
-DEVICE_ATTR(x, \(0444\|S_IRUGO\), x_show, NULL);
-
-@wo@
-declarer name DEVICE_ATTR;
-identifier x,x_store;
-@@
-
-DEVICE_ATTR(x, \(0200\|S_IWUSR\), NULL, x_store);
-
-@rw@
-declarer name DEVICE_ATTR;
-identifier x,x_show,x_store;
-@@
-
-DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-
-@script:ocaml@
-x << ro.x;
-x_show << ro.x_show;
-@@
-
-if not (x^"_show" = x_show) then Coccilib.include_match false
-
-@script:ocaml@
-x << wo.x;
-x_store << wo.x_store;
-@@
-
-if not (x^"_store" = x_store) then Coccilib.include_match false
-
-@script:ocaml@
-x << rw.x;
-x_show << rw.x_show;
-x_store << rw.x_store;
-@@
-
-if not (x^"_show" = x_show && x^"_store" = x_store)
-then Coccilib.include_match false
-
-@@
-declarer name DEVICE_ATTR_RO;
-identifier ro.x,ro.x_show;
-@@
-
-- DEVICE_ATTR(x, \(0444\|S_IRUGO\), x_show, NULL);
-+ DEVICE_ATTR_RO(x);
-
-@@
-declarer name DEVICE_ATTR_WO;
-identifier wo.x,wo.x_store;
-@@
-
-- DEVICE_ATTR(x, \(0200\|S_IWUSR\), NULL, x_store);
-+ DEVICE_ATTR_WO(x);
-
-@@
-declarer name DEVICE_ATTR_RW;
-identifier rw.x,rw.x_show,rw.x_store;
-@@
-
-- DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-+ DEVICE_ATTR_RW(x);
-// </smpl>
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ drivers/pci/host/pcie-armada8k.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
- arch/mips/txx9/generic/7segled.c                  |    4 ++--
- arch/powerpc/kernel/iommu.c                       |    3 +--
- arch/tile/kernel/sysfs.c                          |   14 +++++++-------
- drivers/atm/solos-pci.c                           |    2 +-
- drivers/pci/pcie/aspm.c                           |    4 ++--
- drivers/power/supply/wm8350_power.c               |    2 +-
- drivers/ptp/ptp_sysfs.c                           |    2 +-
- drivers/thermal/int340x_thermal/int3400_thermal.c |    2 +-
- drivers/thermal/thermal_hwmon.c                   |    2 +-
- drivers/tty/nozomi.c                              |    4 ++--
- drivers/usb/wusbcore/dev-sysfs.c                  |    6 +++---
- drivers/usb/wusbcore/wusbhc.c                     |   13 +++++--------
- drivers/video/fbdev/wm8505fb.c                    |    2 +-
- sound/soc/omap/mcbsp.c                            |    4 ++--
- sound/soc/soc-dapm.c                              |    2 +-
- 15 files changed, 31 insertions(+), 35 deletions(-)
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index 0f4f570..f88a790 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -72,12 +72,11 @@ struct armada8k_pcie {
+ 
+ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ {
+-	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
++	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
+ 	u32 reg;
+ 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
+ 
+-	reg = readl(pcie->base + PCIE_GLOBAL_STATUS_REG);
+-
++	reg = readl(armada8k->base + PCIE_GLOBAL_STATUS_REG);
+ 	if ((reg & mask) == mask)
+ 		return 1;
+ 
+@@ -87,8 +86,8 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ 
+ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ {
+-	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+-	void __iomem *base = pcie->base;
++	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
++	void __iomem *base = armada8k->base;
+ 	u32 reg;
+ 
+ 	if (!dw_pcie_link_up(pp)) {
+@@ -146,8 +145,8 @@ static void armada8k_pcie_host_init(struct pcie_port *pp)
+ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ {
+ 	struct pcie_port *pp = arg;
+-	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+-	void __iomem *base = pcie->base;
++	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
++	void __iomem *base = armada8k->base;
+ 	u32 val;
+ 
+ 	/*
+@@ -199,25 +198,25 @@ static int armada8k_add_pcie_port(struct pcie_port *pp,
+ 
+ static int armada8k_pcie_probe(struct platform_device *pdev)
+ {
+-	struct armada8k_pcie *pcie;
++	struct armada8k_pcie *armada8k;
+ 	struct pcie_port *pp;
+ 	struct device *dev = &pdev->dev;
+ 	struct resource *base;
+ 	int ret;
+ 
+-	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+-	if (!pcie)
++	armada8k = devm_kzalloc(dev, sizeof(*armada8k), GFP_KERNEL);
++	if (!armada8k)
+ 		return -ENOMEM;
+ 
+-	pcie->clk = devm_clk_get(dev, NULL);
+-	if (IS_ERR(pcie->clk))
+-		return PTR_ERR(pcie->clk);
++	armada8k->clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(armada8k->clk))
++		return PTR_ERR(armada8k->clk);
+ 
+-	clk_prepare_enable(pcie->clk);
++	clk_prepare_enable(armada8k->clk);
+ 
+-	pp = &pcie->pp;
++	pp = &armada8k->pp;
+ 	pp->dev = dev;
+-	platform_set_drvdata(pdev, pcie);
++	platform_set_drvdata(pdev, armada8k);
+ 
+ 	/* Get the dw-pcie unit configuration/control registers base. */
+ 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
+@@ -228,7 +227,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 		goto fail;
+ 	}
+ 
+-	pcie->base = pp->dbi_base + PCIE_VENDOR_REGS_OFFSET;
++	armada8k->base = pp->dbi_base + PCIE_VENDOR_REGS_OFFSET;
+ 
+ 	ret = armada8k_add_pcie_port(pp, pdev);
+ 	if (ret)
+@@ -237,8 +236,8 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ fail:
+-	if (!IS_ERR(pcie->clk))
+-		clk_disable_unprepare(pcie->clk);
++	if (!IS_ERR(armada8k->clk))
++		clk_disable_unprepare(armada8k->clk);
+ 
+ 	return ret;
+ }
+
