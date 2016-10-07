@@ -1,109 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35508 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:50390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1032348AbcJRQEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Oct 2016 12:04:31 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v6 15/16] drivers: acpi: iort: add single mapping function
-Date: Tue, 18 Oct 2016 17:04:13 +0100
-Message-Id: <20161018160414.1228-16-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+        id S939006AbcJGQcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:32:13 -0400
+Subject: [PATCH 7/8] PCI: armada: Reorder local declaration
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:32:09 -0500
+Message-ID: <20161007163209.24582.85495.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current IORT id mapping API requires components to provide
-an input requester ID (a Bus-Device-Function (BDF) identifier for
-PCI devices) to translate an input identifier to an output
-identifier through an IORT range mapping.
+Move initialized local variable declaration to top and set drvdata pointer
+only when the probe function succeeds.  No functional change intended.
 
-Named components do not have an identifiable source ID therefore
-their respective input/output mapping can only be defined in
-IORT tables through single mappings, that provide a translation
-that does not require any input identifier.
-
-Current IORT interface for requester id mappings (iort_node_map_rid())
-is not suitable for components that do not provide a requester id,
-so it cannot be used for IORT named components.
-
-Add an interface to the IORT API to enable retrieval of id
-by allowing an indexed walk of the single mappings array for
-a given component, therefore completing the IORT mapping API.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/arm64/iort.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/pci/host/pcie-armada8k.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index f205d41..db7b153 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -318,6 +318,45 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 	return 0;
- }
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index 19086a4..36002e4 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -197,9 +197,9 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *armada8k,
  
-+static
-+struct acpi_iort_node *iort_node_get_id(struct acpi_iort_node *node,
-+					u32 *id_out, u8 type_mask,
-+					int index)
-+{
-+	struct acpi_iort_node *parent;
-+	struct acpi_iort_id_mapping *map;
-+
-+	if (!node->mapping_offset || !node->mapping_count ||
-+				     index >= node->mapping_count)
-+		return NULL;
-+
-+	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-+			   node->mapping_offset);
-+
-+	/* Firmware bug! */
-+	if (!map->output_reference) {
-+		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-+		       node, node->type);
-+		return NULL;
-+	}
-+
-+	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+			       map->output_reference);
-+
-+	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
-+		return NULL;
-+
-+	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-+		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
-+		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-+			*id_out = map[index].output_base;
-+			return parent;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
- 						u8 type_mask)
--- 
-2.10.0
+ static int armada8k_pcie_probe(struct platform_device *pdev)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct armada8k_pcie *armada8k;
+ 	struct pcie_port *pp;
+-	struct device *dev = &pdev->dev;
+ 	struct resource *base;
+ 	int ret;
+ 
+@@ -215,7 +215,6 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &armada8k->pp;
+ 	pp->dev = dev;
+-	platform_set_drvdata(pdev, armada8k);
+ 
+ 	/* Get the dw-pcie unit configuration/control registers base. */
+ 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
+@@ -230,6 +229,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto fail;
+ 
++	platform_set_drvdata(pdev, armada8k);
+ 	return 0;
+ 
+ fail:
 
