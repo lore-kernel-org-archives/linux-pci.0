@@ -1,82 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37573 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754316AbcJZGxn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Oct 2016 02:53:43 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9Q6mVNn117074
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 02:53:42 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 26amucrgrt-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 02:53:42 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Wed, 26 Oct 2016 02:53:41 -0400
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [RFC PATCH v7 3/3] PCI: Add a macro to set default alignment for all PCI devices
-Date: Wed, 26 Oct 2016 14:53:33 +0800
-In-Reply-To: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1477464813-2499-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:48558 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751959AbcJGQ3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:29:20 -0400
+Subject: [PATCH 2/5] PCI: xgene: Pass xgene_pcie_port, not address,
+ to setup functions
+To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:28:06 -0500
+Message-ID: <20161007162806.24026.57283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthroughs a PCI device of which MMIO BARs are
-smaller than PAGE_SIZE, guest will not handle the mmio
-accesses to the BARs which leads to mmio emulations in host.
+Instead of passing the register base to setup functions, pass the struct
+xgene_pcie_port.  This will allow them to use register accessors.  No
+functional change intended.
 
-This is because vfio will not allow to passthrough one BAR's
-mmio page which may be shared with other BARs. Otherwise,
-there will be a backdoor that guest can use to access BARs
-of other guest.
-
-This patch adds a macro to set default alignment for all
-PCI devices. Then we could solve this issue on some platforms
-which would easily hit this issue because of their 64K page
-such as PowerNV platform by defining this macro as PAGE_SIZE.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/include/asm/pci.h |    4 ++++
- drivers/pci/pci.c              |    3 +++
- 2 files changed, 7 insertions(+)
+ drivers/pci/host/pci-xgene.c |   32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index e9bd6cf..5e31bc2 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -28,6 +28,10 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index ba26950..5e16905 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -179,9 +179,10 @@ static struct pci_ops xgene_pcie_ops = {
+ 	.write = pci_generic_config_write32,
+ };
  
-+#ifdef CONFIG_PPC_POWERNV
-+#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-+#endif
+-static u64 xgene_pcie_set_ib_mask(void __iomem *csr_base, u32 addr,
++static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *xgene, u32 addr,
+ 				  u32 flags, u64 size)
+ {
++	void __iomem *csr_base = xgene->csr_base;
+ 	u64 mask = (~(size - 1) & PCI_BASE_ADDRESS_MEM_MASK) | flags;
+ 	u32 val32 = 0;
+ 	u32 val;
+@@ -291,8 +292,10 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *xgene,
+ 	writel(upper_32_bits(pci_addr), base + 0x14);
+ }
+ 
+-static void xgene_pcie_setup_cfg_reg(void __iomem *csr_base, u64 addr)
++static void xgene_pcie_setup_cfg_reg(struct xgene_pcie_port *xgene, u64 addr)
+ {
++	void __iomem *csr_base = xgene->csr_base;
 +
- struct pci_dev;
+ 	writel(lower_32_bits(addr), csr_base + CFGBARL);
+ 	writel(upper_32_bits(addr), csr_base + CFGBARH);
+ 	writel(EN_REG, csr_base + CFGCTL);
+@@ -344,12 +347,15 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *xgene,
+ 	return 0;
+ }
  
- /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2933c81..c7d9057 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4999,6 +4999,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align = 0;
- 	char *p;
+-static void xgene_pcie_setup_pims(void *addr, u64 pim, u64 size)
++static void xgene_pcie_setup_pims(struct xgene_pcie_port *xgene, u32 pim_reg,
++				  u64 pim, u64 size)
+ {
+-	writel(lower_32_bits(pim), addr);
+-	writel(upper_32_bits(pim) | EN_COHERENCY, addr + 0x04);
+-	writel(lower_32_bits(size), addr + 0x10);
+-	writel(upper_32_bits(size), addr + 0x14);
++	void __iomem *addr = xgene->csr_base;
++
++	writel(lower_32_bits(pim), addr + pim_reg);
++	writel(upper_32_bits(pim) | EN_COHERENCY, addr + pim_reg + 0x04);
++	writel(lower_32_bits(size), addr + pim_reg + 0x10);
++	writel(upper_32_bits(size), addr + pim_reg + 0x14);
+ }
  
-+#ifdef PCIBIOS_DEFAULT_ALIGNMENT
-+	align = PCIBIOS_DEFAULT_ALIGNMENT;
-+#endif
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
- 	if (!*p)
--- 
-1.7.9.5
+ /*
+@@ -382,7 +388,7 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
+ 	void __iomem *csr_base = xgene->csr_base;
+ 	void __iomem *cfg_base = xgene->cfg_base;
+ 	void *bar_addr;
+-	void *pim_addr;
++	u32 pim_reg;
+ 	u64 cpu_addr = range->cpu_addr;
+ 	u64 pci_addr = range->pci_addr;
+ 	u64 size = range->size;
+@@ -403,17 +409,17 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
+ 	bar_low = pcie_bar_low_val((u32)cpu_addr, flags);
+ 	switch (region) {
+ 	case 0:
+-		xgene_pcie_set_ib_mask(csr_base, BRIDGE_CFG_4, flags, size);
++		xgene_pcie_set_ib_mask(xgene, BRIDGE_CFG_4, flags, size);
+ 		bar_addr = cfg_base + PCI_BASE_ADDRESS_0;
+ 		writel(bar_low, bar_addr);
+ 		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
+-		pim_addr = csr_base + PIM1_1L;
++		pim_reg = PIM1_1L;
+ 		break;
+ 	case 1:
+ 		bar_addr = csr_base + IBAR2;
+ 		writel(bar_low, bar_addr);
+ 		writel(lower_32_bits(mask), csr_base + IR2MSK);
+-		pim_addr = csr_base + PIM2_1L;
++		pim_reg = PIM2_1L;
+ 		break;
+ 	case 2:
+ 		bar_addr = csr_base + IBAR3L;
+@@ -421,11 +427,11 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
+ 		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
+ 		writel(lower_32_bits(mask), csr_base + IR3MSKL);
+ 		writel(upper_32_bits(mask), csr_base + IR3MSKL + 0x4);
+-		pim_addr = csr_base + PIM3_1L;
++		pim_reg = PIM3_1L;
+ 		break;
+ 	}
+ 
+-	xgene_pcie_setup_pims(pim_addr, pci_addr, ~(size - 1));
++	xgene_pcie_setup_pims(xgene, pim_reg, pci_addr, ~(size - 1));
+ }
+ 
+ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
 
