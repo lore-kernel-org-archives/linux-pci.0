@@ -1,59 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51852 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:51620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933073AbcJLMxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:53:44 -0400
-Subject: [PATCH v2 3/5] PCI: iproc: Validate CSR base in BCMA setup code
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
+        id S964798AbcJGQet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:34:49 -0400
+Subject: [PATCH 6/9] PCI: dra7xx: Replace dra7xx_pcie_readl_rc() with
+ dw_pcie_readl_rc()
+To: Kishon Vijay Abraham I <kishon@ti.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Wed, 12 Oct 2016 07:53:34 -0500
-Message-ID: <20161012125334.24076.31257.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-omap@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:34:38 -0500
+Message-ID: <20161007163438.24926.7897.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Validate iproc_pcie->base for BCMA devices just like we already do for
-platform devices in iproc_pcie_pltfm_probe().  No functional change
+The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces do the same as
+dra7xx_pcie_readl_rc() and dra7xx_pcie_writel_rc(), and they also give us a
+clue that we're using the DesignWare-generic functionality.  Use the dw_*()
+interfaces and remove the dra7xx-specific ones.  No functional change
 intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-iproc-bcma.c |    5 +++++
- drivers/pci/host/pcie-iproc.c      |    2 +-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/host/pci-dra7xx.c |   19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index ec6edaf..8ce0890 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -55,6 +55,11 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 	pcie->dev = dev;
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 118b612..5572613 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -82,17 +82,6 @@ static void dra7xx_writel(struct dra7xx_pcie *dra7xx, u32 offset, u32 value)
+ 	writel(value, dra7xx->base + offset);
+ }
  
- 	pcie->base = bdev->io_addr;
-+	if (!pcie->base) {
-+		dev_err(dev, "no controller registers\n");
-+		return -ENOMEM;
-+	}
-+
- 	pcie->base_addr = bdev->addr;
+-static u32 dra7xx_pcie_readl_rc(struct dra7xx_pcie *dra7xx, u32 offset)
+-{
+-	return readl(dra7xx->pp.dbi_base + offset);
+-}
+-
+-static void dra7xx_pcie_writel_rc(struct dra7xx_pcie *dra7xx, u32 offset,
+-				  u32 value)
+-{
+-	writel(value, dra7xx->pp.dbi_base + offset);
+-}
+-
+ static int dra7xx_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+@@ -448,9 +437,9 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ 	u32 val;
  
- 	res_mem.start = bdev->addr_s[0];
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index c41d6bd..12a5156 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -462,7 +462,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 	void *sysdata;
- 	struct pci_bus *bus;
+ 	/* clear MSE */
+-	val = dra7xx_pcie_readl_rc(dra7xx, PCI_COMMAND);
++	val = dw_pcie_readl_rc(&dra7xx->pp, PCI_COMMAND);
+ 	val &= ~PCI_COMMAND_MEMORY;
+-	dra7xx_pcie_writel_rc(dra7xx, PCI_COMMAND, val);
++	dw_pcie_writel_rc(&dra7xx->pp, PCI_COMMAND, val);
  
--	if (!pcie || !pcie->dev || !pcie->base)
-+	if (!pcie || !pcie->dev)
- 		return -EINVAL;
+ 	return 0;
+ }
+@@ -461,9 +450,9 @@ static int dra7xx_pcie_resume(struct device *dev)
+ 	u32 val;
  
- 	dev = pcie->dev;
+ 	/* set MSE */
+-	val = dra7xx_pcie_readl_rc(dra7xx, PCI_COMMAND);
++	val = dw_pcie_readl_rc(&dra7xx->pp, PCI_COMMAND);
+ 	val |= PCI_COMMAND_MEMORY;
+-	dra7xx_pcie_writel_rc(dra7xx, PCI_COMMAND, val);
++	dw_pcie_writel_rc(&dra7xx->pp, PCI_COMMAND, val);
+ 
+ 	return 0;
+ }
 
