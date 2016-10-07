@@ -1,196 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57600 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755721AbcJLNKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:10:44 -0400
-Subject: [PATCH v2 1/5] PCI: xilinx: Add local struct device pointers
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
+        id S941022AbcJGQgI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:36:08 -0400
+Subject: [PATCH 5/8] PCI: exynos: Swap order of exynos_elb_writel() reg/val
+ arguments
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:10:38 -0500
-Message-ID: <20161012131038.25793.18769.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:36:03 -0500
+Message-ID: <20161007163603.25314.16022.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+Swap order of exynos_elb_writel() arguments to match the "dev, pos, val"
+order used by pci_write_config_word() and other drivers.  No functional
+change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-xilinx.c |   55 +++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 26 deletions(-)
+ drivers/pci/host/pci-exynos.c |   40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index be56803..2ef47af 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -140,10 +140,11 @@ static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
-  */
- static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 5f54ab5..eb50b1a 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -107,7 +107,7 @@ static u32 exynos_elb_readl(struct exynos_pcie *exynos, u32 reg)
+ 	return readl(exynos->elbi_base + reg);
+ }
+ 
+-static void exynos_elb_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
++static void exynos_elb_writel(struct exynos_pcie *exynos, u32 reg, u32 val)
  {
-+	struct device *dev = port->dev;
- 	unsigned long val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
+ 	writel(val, exynos->elbi_base + reg);
+ }
+@@ -139,11 +139,11 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos, bool on)
+ 	if (on) {
+ 		val = exynos_elb_readl(exynos, PCIE_ELBI_SLV_AWMISC);
+ 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_elb_writel(exynos, val, PCIE_ELBI_SLV_AWMISC);
++		exynos_elb_writel(exynos, PCIE_ELBI_SLV_AWMISC, val);
+ 	} else {
+ 		val = exynos_elb_readl(exynos, PCIE_ELBI_SLV_AWMISC);
+ 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_elb_writel(exynos, val, PCIE_ELBI_SLV_AWMISC);
++		exynos_elb_writel(exynos, PCIE_ELBI_SLV_AWMISC, val);
+ 	}
+ }
  
- 	if (val & XILINX_PCIE_RPEFR_ERR_VALID) {
--		dev_dbg(port->dev, "Requester ID %lu\n",
-+		dev_dbg(dev, "Requester ID %lu\n",
- 			val & XILINX_PCIE_RPEFR_REQ_ID);
- 		pcie_write(port, XILINX_PCIE_RPEFR_ALL_MASK,
- 			   XILINX_PCIE_REG_RPEFR);
-@@ -383,6 +384,7 @@ static const struct irq_domain_ops intx_domain_ops = {
- static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+@@ -154,11 +154,11 @@ static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *exynos, bool on)
+ 	if (on) {
+ 		val = exynos_elb_readl(exynos, PCIE_ELBI_SLV_ARMISC);
+ 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_elb_writel(exynos, val, PCIE_ELBI_SLV_ARMISC);
++		exynos_elb_writel(exynos, PCIE_ELBI_SLV_ARMISC, val);
+ 	} else {
+ 		val = exynos_elb_readl(exynos, PCIE_ELBI_SLV_ARMISC);
+ 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_elb_writel(exynos, val, PCIE_ELBI_SLV_ARMISC);
++		exynos_elb_writel(exynos, PCIE_ELBI_SLV_ARMISC, val);
+ 	}
+ }
+ 
+@@ -168,10 +168,10 @@ static void exynos_pcie_assert_core_reset(struct exynos_pcie *exynos)
+ 
+ 	val = exynos_elb_readl(exynos, PCIE_CORE_RESET);
+ 	val &= ~PCIE_CORE_RESET_ENABLE;
+-	exynos_elb_writel(exynos, val, PCIE_CORE_RESET);
+-	exynos_elb_writel(exynos, 0, PCIE_PWR_RESET);
+-	exynos_elb_writel(exynos, 0, PCIE_STICKY_RESET);
+-	exynos_elb_writel(exynos, 0, PCIE_NONSTICKY_RESET);
++	exynos_elb_writel(exynos, PCIE_CORE_RESET, val);
++	exynos_elb_writel(exynos, PCIE_PWR_RESET, 0);
++	exynos_elb_writel(exynos, PCIE_STICKY_RESET, 0);
++	exynos_elb_writel(exynos, PCIE_NONSTICKY_RESET, 0);
+ }
+ 
+ static void exynos_pcie_deassert_core_reset(struct exynos_pcie *exynos)
+@@ -181,11 +181,11 @@ static void exynos_pcie_deassert_core_reset(struct exynos_pcie *exynos)
+ 	val = exynos_elb_readl(exynos, PCIE_CORE_RESET);
+ 	val |= PCIE_CORE_RESET_ENABLE;
+ 
+-	exynos_elb_writel(exynos, val, PCIE_CORE_RESET);
+-	exynos_elb_writel(exynos, 1, PCIE_STICKY_RESET);
+-	exynos_elb_writel(exynos, 1, PCIE_NONSTICKY_RESET);
+-	exynos_elb_writel(exynos, 1, PCIE_APP_INIT_RESET);
+-	exynos_elb_writel(exynos, 0, PCIE_APP_INIT_RESET);
++	exynos_elb_writel(exynos, PCIE_CORE_RESET, val);
++	exynos_elb_writel(exynos, PCIE_STICKY_RESET, 1);
++	exynos_elb_writel(exynos, PCIE_NONSTICKY_RESET, 1);
++	exynos_elb_writel(exynos, PCIE_APP_INIT_RESET, 1);
++	exynos_elb_writel(exynos, PCIE_APP_INIT_RESET, 0);
+ 	exynos_blk_writel(exynos, 1, PCIE_PHY_MAC_RESET);
+ }
+ 
+@@ -198,7 +198,7 @@ static void exynos_pcie_assert_phy_reset(struct exynos_pcie *exynos)
+ static void exynos_pcie_deassert_phy_reset(struct exynos_pcie *exynos)
  {
- 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
-+	struct device *dev = port->dev;
- 	u32 val, mask, status, msi_data;
+ 	exynos_blk_writel(exynos, 0, PCIE_PHY_GLOBAL_RESET);
+-	exynos_elb_writel(exynos, 1, PCIE_PWR_RESET);
++	exynos_elb_writel(exynos, PCIE_PWR_RESET, 1);
+ 	exynos_blk_writel(exynos, 0, PCIE_PHY_COMMON_RESET);
+ 	exynos_blk_writel(exynos, 0, PCIE_PHY_CMN_REG);
+ 	exynos_blk_writel(exynos, 0, PCIE_PHY_TRSVREG_RESET);
+@@ -328,8 +328,8 @@ static int exynos_pcie_establish_link(struct exynos_pcie *exynos)
+ 	exynos_pcie_assert_reset(exynos);
  
- 	/* Read interrupt decode and mask registers */
-@@ -394,32 +396,32 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		return IRQ_NONE;
+ 	/* assert LTSSM enable */
+-	exynos_elb_writel(exynos, PCIE_ELBI_LTSSM_ENABLE,
+-			  PCIE_APP_LTSSM_ENABLE);
++	exynos_elb_writel(exynos, PCIE_APP_LTSSM_ENABLE,
++			  PCIE_ELBI_LTSSM_ENABLE);
  
- 	if (status & XILINX_PCIE_INTR_LINK_DOWN)
--		dev_warn(port->dev, "Link Down\n");
-+		dev_warn(dev, "Link Down\n");
+ 	/* check if the link is up or not */
+ 	if (!dw_pcie_wait_for_link(pp))
+@@ -348,7 +348,7 @@ static void exynos_pcie_clear_irq_pulse(struct exynos_pcie *exynos)
+ 	u32 val;
  
- 	if (status & XILINX_PCIE_INTR_ECRC_ERR)
--		dev_warn(port->dev, "ECRC failed\n");
-+		dev_warn(dev, "ECRC failed\n");
+ 	val = exynos_elb_readl(exynos, PCIE_IRQ_PULSE);
+-	exynos_elb_writel(exynos, val, PCIE_IRQ_PULSE);
++	exynos_elb_writel(exynos, PCIE_IRQ_PULSE, val);
+ }
  
- 	if (status & XILINX_PCIE_INTR_STR_ERR)
--		dev_warn(port->dev, "Streaming error\n");
-+		dev_warn(dev, "Streaming error\n");
+ static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *exynos)
+@@ -358,7 +358,7 @@ static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *exynos)
+ 	/* enable INTX interrupt */
+ 	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+ 		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+-	exynos_elb_writel(exynos, val, PCIE_IRQ_EN_PULSE);
++	exynos_elb_writel(exynos, PCIE_IRQ_EN_PULSE, val);
+ }
  
- 	if (status & XILINX_PCIE_INTR_HOT_RESET)
--		dev_info(port->dev, "Hot reset\n");
-+		dev_info(dev, "Hot reset\n");
+ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+@@ -387,7 +387,7 @@ static void exynos_pcie_msi_init(struct exynos_pcie *exynos)
+ 	/* enable MSI interrupt */
+ 	val = exynos_elb_readl(exynos, PCIE_IRQ_EN_LEVEL);
+ 	val |= IRQ_MSI_ENABLE;
+-	exynos_elb_writel(exynos, val, PCIE_IRQ_EN_LEVEL);
++	exynos_elb_writel(exynos, PCIE_IRQ_EN_LEVEL, val);
+ }
  
- 	if (status & XILINX_PCIE_INTR_CFG_TIMEOUT)
--		dev_warn(port->dev, "ECAM access timeout\n");
-+		dev_warn(dev, "ECAM access timeout\n");
- 
- 	if (status & XILINX_PCIE_INTR_CORRECTABLE) {
--		dev_warn(port->dev, "Correctable error message\n");
-+		dev_warn(dev, "Correctable error message\n");
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_NONFATAL) {
--		dev_warn(port->dev, "Non fatal error message\n");
-+		dev_warn(dev, "Non fatal error message\n");
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_FATAL) {
--		dev_warn(port->dev, "Fatal error message\n");
-+		dev_warn(dev, "Fatal error message\n");
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
- 
-@@ -429,7 +431,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 
- 		/* Check whether interrupt valid */
- 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
-+			dev_warn(dev, "RP Intr FIFO1 read error\n");
- 			goto error;
- 		}
- 
-@@ -451,7 +453,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
- 
- 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
-+			dev_warn(dev, "RP Intr FIFO1 read error\n");
- 			goto error;
- 		}
- 
-@@ -471,31 +473,31 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
--		dev_warn(port->dev, "Slave unsupported request\n");
-+		dev_warn(dev, "Slave unsupported request\n");
- 
- 	if (status & XILINX_PCIE_INTR_SLV_UNEXP)
--		dev_warn(port->dev, "Slave unexpected completion\n");
-+		dev_warn(dev, "Slave unexpected completion\n");
- 
- 	if (status & XILINX_PCIE_INTR_SLV_COMPL)
--		dev_warn(port->dev, "Slave completion timeout\n");
-+		dev_warn(dev, "Slave completion timeout\n");
- 
- 	if (status & XILINX_PCIE_INTR_SLV_ERRP)
--		dev_warn(port->dev, "Slave Error Poison\n");
-+		dev_warn(dev, "Slave Error Poison\n");
- 
- 	if (status & XILINX_PCIE_INTR_SLV_CMPABT)
--		dev_warn(port->dev, "Slave Completer Abort\n");
-+		dev_warn(dev, "Slave Completer Abort\n");
- 
- 	if (status & XILINX_PCIE_INTR_SLV_ILLBUR)
--		dev_warn(port->dev, "Slave Illegal Burst\n");
-+		dev_warn(dev, "Slave Illegal Burst\n");
- 
- 	if (status & XILINX_PCIE_INTR_MST_DECERR)
--		dev_warn(port->dev, "Master decode error\n");
-+		dev_warn(dev, "Master decode error\n");
- 
- 	if (status & XILINX_PCIE_INTR_MST_SLVERR)
--		dev_warn(port->dev, "Master slave error\n");
-+		dev_warn(dev, "Master slave error\n");
- 
- 	if (status & XILINX_PCIE_INTR_MST_ERRP)
--		dev_warn(port->dev, "Master error poison\n");
-+		dev_warn(dev, "Master error poison\n");
- 
- error:
- 	/* Clear the Interrupt Decode register */
-@@ -554,10 +556,12 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
-  */
- static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- {
-+	struct device *dev = port->dev;
-+
- 	if (xilinx_pcie_link_is_up(port))
--		dev_info(port->dev, "PCIe Link is UP\n");
-+		dev_info(dev, "PCIe Link is UP\n");
- 	else
--		dev_info(port->dev, "PCIe Link is DOWN\n");
-+		dev_info(dev, "PCIe Link is DOWN\n");
- 
- 	/* Disable all interrupts */
- 	pcie_write(port, ~XILINX_PCIE_IDR_ALL_MASK,
-@@ -627,8 +631,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
-  */
- static int xilinx_pcie_probe(struct platform_device *pdev)
- {
--	struct xilinx_pcie_port *port;
- 	struct device *dev = &pdev->dev;
-+	struct xilinx_pcie_port *port;
- 	struct pci_bus *bus;
- 	int err;
- 	resource_size_t iobase = 0;
-@@ -668,15 +672,14 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		goto error;
- 
--	bus = pci_create_root_bus(&pdev->dev, 0,
--				  &xilinx_pcie_ops, port, &res);
-+	bus = pci_create_root_bus(dev, 0, &xilinx_pcie_ops, port, &res);
- 	if (!bus) {
- 		err = -ENOMEM;
- 		goto error;
- 	}
- 
- #ifdef CONFIG_PCI_MSI
--	xilinx_pcie_msi_chip.dev = port->dev;
-+	xilinx_pcie_msi_chip.dev = dev;
- 	bus->msi = &xilinx_pcie_msi_chip;
- #endif
- 	pci_scan_child_bus(bus);
+ static void exynos_pcie_enable_interrupts(struct exynos_pcie *exynos)
 
