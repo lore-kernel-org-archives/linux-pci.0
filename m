@@ -1,73 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33464 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:46040 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755277AbcJZNxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 09:53:44 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Hannes Reinecke <hare@suse.de>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge hasn't
-Date: Wed, 26 Oct 2016 15:53:34 +0200
-Message-Id: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
+        id S1753234AbcJGQW7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:22:59 -0400
+Subject: [PATCH 08/10] PCI: altera: Rename altera_pcie_valid_config() to
+ altera_pcie_valid_device()
+To: Ley Foon Tan <lftan@altera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
+Date: Fri, 07 Oct 2016 11:22:50 -0500
+Message-ID: <20161007162250.22796.57750.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Read Completion Boundary bit must only be set on a device or endpoint if
-it is set on the upstream bridge.
+Rename altera_pcie_valid_config() to altera_pcie_valid_device().
 
-Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+No functional change intended; for readability only.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/probe.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-altera.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..5007b96 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1439,6 +1439,16 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
- 		dev_warn(&dev->dev, "PCI-X settings not supported\n");
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index bcc056b..90ab581 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -135,7 +135,7 @@ static void tlp_write_tx(struct altera_pcie *altera,
+ 	altera_cra_writel(altera, RP_TX_CNTRL, tlp_rp_regdata->ctrl);
  }
  
-+static bool pcie_get_upstream_rcb(struct pci_dev *dev)
-+{
-+	struct pci_dev *bridge = pci_upstream_bridge(dev);
-+	u16 lnkctl;
-+
-+	pcie_capability_read_word(bridge, PCI_EXP_LNKCTL, &lnkctl);
-+
-+	return lnkctl & PCI_EXP_LNKCTL_RCB;
-+}
-+
- static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+-static bool altera_pcie_valid_config(struct altera_pcie *altera,
++static bool altera_pcie_valid_device(struct altera_pcie *altera,
+ 				     struct pci_bus *bus, int dev)
  {
- 	int pos;
-@@ -1468,9 +1478,21 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+ 	/* If there is no link, then there is no device */
+@@ -336,7 +336,7 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
  
- 	/* Initialize Link Control Register */
--	if (pcie_cap_has_lnkctl(dev))
-+	if (pcie_cap_has_lnkctl(dev)) {
-+		bool us_rcb;
-+		u16 clear;
-+		u16 set;
-+
-+		us_rcb = pcie_get_upstream_rcb(dev);
-+
-+		clear = ~hpp->pci_exp_lnkctl_and;
-+		set = hpp->pci_exp_lnkctl_or;
-+		if (!us_rcb)
-+			set &= ~PCI_EXP_LNKCTL_RCB;
-+
- 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
--			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-+						  clear, set);
-+	}
+-	if (!altera_pcie_valid_config(altera, bus, PCI_SLOT(devfn))) {
++	if (!altera_pcie_valid_device(altera, bus, PCI_SLOT(devfn))) {
+ 		*value = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -353,7 +353,7 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+ 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
  
- 	/* Find Advanced Error Reporting Enhanced Capability */
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
--- 
-1.8.5.6
+-	if (!altera_pcie_valid_config(altera, bus, PCI_SLOT(devfn)))
++	if (!altera_pcie_valid_device(altera, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	return altera_raw_cfg_write(altera, bus->number, devfn, where, size,
 
