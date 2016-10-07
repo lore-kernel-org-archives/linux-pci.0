@@ -1,159 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:37475 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964827AbcJ1IzR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:55:17 -0400
-Message-Id: <be3453a6110c483d0fd3d413ae4c04a3fd44537a.1477611126.git.lukas@wunner.de>
-In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
-References: <cover.1477611126.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 28 Oct 2016 10:52:06 +0200
-Subject: [PATCH v2 8/9] ACPI / hotplug / PCI: Make
- device_is_managed_by_native_pciehp() public
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:48964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938864AbcJGQ3X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:29:23 -0400
+Subject: [PATCH 5/9] PCI: xilinx: Remove unused platform data
+To: Michal Simek <michal.simek@xilinx.com>,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:29:19 -0500
+Message-ID: <20161007162919.24137.9044.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're about to add runtime PM of hotplug ports, but we need to restrict
-it to ports that are handled natively by the OS:  If they're handled by
-the firmware (which is the case for Thunderbolt on non-Macs), things
-would break if the OS put the ports into D3hot behind the firmware's
-back.
+The xilinx driver never uses the platform drvdata pointer, so don't
+bother setting it.  No functional change intended.
 
-To determine if a hotplug port is handled natively, one has to walk up
-from the port to the root bridge and check the cached _OSC Control Field
-for the value of the "PCI Express Native Hot Plug control" bit.  There's
-already a function to do that, device_is_managed_by_native_pciehp(),
-but it's private to drivers/pci/hotplug/acpiphp_glue.c and only compiled
-in if CONFIG_HOTPLUG_PCI_ACPI is enabled.
-
-Make it public and move it to drivers/pci/pci-acpi.c, so that it is
-available in the more general CONFIG_ACPI case.
-
-The function contains a check if the device in question is a hotplug
-port and returns false if it's not.  The caller we're going to add
-doesn't need this as it only calls the function if it actually *is* a
-hotplug port.  Move the check out of the function into the single
-existing caller.
-
-Give the function a shorter name and add some kerneldoc and polish.
-
-No functional change intended.
-
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c | 28 +---------------------------
- drivers/pci/pci-acpi.c             | 24 ++++++++++++++++++++++++
- include/linux/pci_hotplug.h        |  2 ++
- 3 files changed, 27 insertions(+), 27 deletions(-)
+ drivers/pci/host/pcie-xilinx.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index b286a56..5ed2dca 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -222,32 +222,6 @@ static void acpiphp_post_dock_fixup(struct acpi_device *adev)
- 	acpiphp_let_context_go(context);
- }
- 
--/* Check whether the PCI device is managed by native PCIe hotplug driver */
--static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
--{
--	acpi_handle tmp;
--	struct acpi_pci_root *root;
--
--	/* Check whether the PCIe port supports native PCIe hotplug */
--	if (!pdev->is_hotplug_bridge)
--		return false;
--
--	/*
--	 * Check whether native PCIe hotplug has been enabled for
--	 * this PCIe hierarchy.
--	 */
--	tmp = acpi_find_root_bridge_handle(pdev);
--	if (!tmp)
--		return false;
--	root = acpi_pci_find_root(tmp);
--	if (!root)
--		return false;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--		return false;
--
--	return true;
--}
--
- /**
-  * acpiphp_add_context - Add ACPIPHP context to an ACPI device object.
-  * @handle: ACPI handle of the object to add a context to.
-@@ -331,7 +305,7 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	 * expose slots to user space in those cases.
- 	 */
- 	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
--	    && !(pdev && device_is_managed_by_native_pciehp(pdev))) {
-+	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
- 		unsigned long long sun;
- 		int retval;
- 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index d966d47..ed3daa8 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -294,6 +294,30 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
- EXPORT_SYMBOL_GPL(pci_get_hp_params);
- 
- /**
-+ * pciehp_is_native - Check whether a hotplug port is handled by the OS
-+ * @pdev: Hotplug port to check
-+ *
-+ * Walk up from @pdev to the host bridge, obtain its cached _OSC Control Field
-+ * and return the value of the "PCI Express Native Hot Plug control" bit.
-+ * On failure to obtain the _OSC Control Field return %false.
-+ */
-+bool pciehp_is_native(struct pci_dev *pdev)
-+{
-+	struct acpi_pci_root *root;
-+	acpi_handle handle;
-+
-+	handle = acpi_find_root_bridge_handle(pdev);
-+	if (!handle)
-+		return false;
-+
-+	root = acpi_pci_find_root(handle);
-+	if (!root)
-+		return false;
-+
-+	return root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
-+}
-+
-+/**
-  * pci_acpi_wake_bus - Root bus wakeup notification fork function.
-  * @work: Work item to handle.
-  */
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 8c78950..2e855af 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -176,6 +176,7 @@ struct hotplug_params {
- #ifdef CONFIG_ACPI
- #include <linux/acpi.h>
- int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
-+bool pciehp_is_native(struct pci_dev *pdev);
- int acpi_get_hp_hw_control_from_firmware(struct pci_dev *dev, u32 flags);
- int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
- int acpi_pci_detect_ejectable(acpi_handle handle);
-@@ -185,5 +186,6 @@ static inline int pci_get_hp_params(struct pci_dev *dev,
- {
- 	return -ENODEV;
- }
-+static inline bool pciehp_is_native(struct pci_dev *pdev) { return true; }
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 44a2652..08ec61b 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -687,8 +687,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
  #endif
- #endif
--- 
-2.9.3
+ 	pci_bus_add_devices(bus);
+-	platform_set_drvdata(pdev, xilinx);
+-
+ 	return 0;
+ 
+ error:
 
