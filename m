@@ -1,156 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36346 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757231AbcJXEqo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2016 00:46:44 -0400
+Received: from mail.kernel.org ([198.145.29.136]:48056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938941AbcJGQ0h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:26:37 -0400
+Subject: [PATCH 3/5] PCI: tegra: Swap order of pads_writel() reg/val
+ arguments
+To: Alexandre Courbot <gnurou@gmail.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Stephen Warren <swarren@wwwdotorg.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:26:32 -0500
+Message-ID: <20161007162632.23718.27618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162615.23718.84354.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162615.23718.84354.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1477283492-26657-3-git-send-email-okaya@codeaurora.org>
-References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org> <1477283492-26657-3-git-send-email-okaya@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Mon, 24 Oct 2016 15:46:37 +1100
-Message-ID: <CANwerB1JeRptgMdQ2q+7DmH7ivOR_JK4Z637TYjm7UAbXEhHEg@mail.gmail.com>
-Subject: Re: [PATCH V5 2/3] ACPI: pci_link: penalize SCI correctly
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        linux@rainbow-software.org, timur@codeaurora.org,
-        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 October 2016 at 15:31, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Ondrej reported that IRQs stopped working in v4.7 on several
-> platforms.  A typical scenario, from Ondrej's VT82C694X/694X, is:
->
-> ACPI: Using PIC for interrupt routing
-> ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 7 10 *11 12 14 15)
-> ACPI: No IRQ available for PCI Interrupt Link [LNKA]
-> 8139too 0000:00:0f.0: PCI INT A: no GSI
->
-> We're using PIC routing, so acpi_irq_balance == 0, and LNKA is already
-> active at IRQ 11. In that case, acpi_pci_link_allocate() only tries
-> to use the active IRQ (IRQ 11) which also happens to be the SCI.
->
-> We should penalize the SCI by PIRQ_PENALTY_PCI_USING, but
-> irq_get_trigger_type(11) returns something other than
-> IRQ_TYPE_LEVEL_LOW, so we penalize it by PIRQ_PENALTY_ISA_ALWAYS
-> instead, which makes acpi_pci_link_allocate() assume the IRQ isn't
-> available and give up.
->
-> Add acpi_penalize_sci_irq() so platforms can tell us the SCI IRQ,
-> trigger, and polarity directly and we don't have to depend on
-> irq_get_trigger_type().
->
-> Link: http://lkml.kernel.org/r/201609251512.05657.linux@rainbow-software.org
-> Reported-by: Ondrej Zary <linux@rainbow-software.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  arch/x86/kernel/acpi/boot.c |  1 +
->  drivers/acpi/pci_link.c     | 30 +++++++++++++++---------------
->  include/linux/acpi.h        |  1 +
->  3 files changed, 17 insertions(+), 15 deletions(-)
->
-> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-> index 90d84c3..0ffd26e 100644
-> --- a/arch/x86/kernel/acpi/boot.c
-> +++ b/arch/x86/kernel/acpi/boot.c
-> @@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
->                 polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
->
->         mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
-> +       acpi_penalize_sci_irq(bus_irq, trigger, polarity);
->
->         /*
->          * stash over-ride to indicate we've been here
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 6229b02..74bf96e 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -87,6 +87,7 @@ struct acpi_pci_link {
->
->  static LIST_HEAD(acpi_link_list);
->  static DEFINE_MUTEX(acpi_link_lock);
-> +static int sci_irq = -1, sci_penalty;
->
->  /* --------------------------------------------------------------------------
->                              PCI Link Device Management
-> @@ -496,25 +497,13 @@ static int acpi_irq_get_penalty(int irq)
->  {
->         int penalty = 0;
->
-> -       /*
-> -       * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
-> -       * with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
-> -       * use for PCI IRQs.
-> -       */
-> -       if (irq == acpi_gbl_FADT.sci_interrupt) {
-> -               u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
-> -
-> -               if (type != IRQ_TYPE_LEVEL_LOW)
-> -                       penalty += PIRQ_PENALTY_ISA_ALWAYS;
-> -               else
-> -                       penalty += PIRQ_PENALTY_PCI_USING;
-> -       }
-> +       if (irq == sci_irq)
-> +               penalty += sci_penalty;
->
->         if (irq < ACPI_MAX_ISA_IRQS)
->                 return penalty + acpi_isa_irq_penalty[irq];
->
-> -       penalty += acpi_irq_pci_sharing_penalty(irq);
-> -       return penalty;
-> +       return penalty + acpi_irq_pci_sharing_penalty(irq);
->  }
->
->  int __init acpi_irq_penalty_init(void)
-> @@ -881,6 +870,17 @@ bool acpi_isa_irq_available(int irq)
->                     acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
->  }
->
-> +void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
-> +{
-> +       sci_irq = irq;
-> +
-> +       if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
-> +           polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
-> +               sci_penalty = PIRQ_PENALTY_PCI_USING;
-> +       else
-> +               sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
-> +}
-> +
->  /*
->   * Over-ride default table to reserve additional IRQs for use by ISA
->   * e.g. acpi_irq_isa=5
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index c5eaf2f..67d1d3e 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -318,6 +318,7 @@ struct pci_dev;
->  int acpi_pci_irq_enable (struct pci_dev *dev);
->  void acpi_penalize_isa_irq(int irq, int active);
->  bool acpi_isa_irq_available(int irq);
-> +void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
->  void acpi_pci_irq_disable (struct pci_dev *dev);
->
->  extern int ec_read(u8 addr, u8 *val);
-> --
-> 1.9.1
->
+Swap order of pads_writel() arguments to match the "dev, pos, val"
+order used by pci_write_config_word() and other drivers.  No functional
+change intended.
 
-This series fixes one or more network adapters not working in Linux
-32-bit x86 guest running inside VirtualBox if I have 4 network
-adapters enabled.
-The following message no longer appears in the kernel log:
-ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-tegra.c |   30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-Tested-by: Jonathan Liu <net147@gmail.com>
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 146b69f..4b01893 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -337,13 +337,13 @@ static u32 afi_readl(struct tegra_pcie *pcie, unsigned long offset)
+ 	return readl(pcie->afi + offset);
+ }
+ 
+-static inline void pads_writel(struct tegra_pcie *pcie, u32 value,
+-			       unsigned long offset)
++static void pads_writel(struct tegra_pcie *pcie, unsigned long offset,
++			u32 value)
+ {
+ 	writel(value, pcie->pads + offset);
+ }
+ 
+-static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
++static u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+ {
+ 	return readl(pcie->pads + offset);
+ }
+@@ -797,12 +797,12 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
+ 	int err;
+ 
+ 	/* initialize internal PHY, enable up to 16 PCIE lanes */
+-	pads_writel(pcie, 0x0, PADS_CTL_SEL);
++	pads_writel(pcie, PADS_CTL_SEL, 0);
+ 
+ 	/* override IDDQ to 1 on all 4 lanes */
+ 	value = pads_readl(pcie, PADS_CTL);
+ 	value |= PADS_CTL_IDDQ_1L;
+-	pads_writel(pcie, value, PADS_CTL);
++	pads_writel(pcie, PADS_CTL, value);
+ 
+ 	/*
+ 	 * Set up PHY PLL inputs select PLLE output as refclock,
+@@ -811,19 +811,19 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
+ 	value = pads_readl(pcie, soc->pads_pll_ctl);
+ 	value &= ~(PADS_PLL_CTL_REFCLK_MASK | PADS_PLL_CTL_TXCLKREF_MASK);
+ 	value |= PADS_PLL_CTL_REFCLK_INTERNAL_CML | soc->tx_ref_sel;
+-	pads_writel(pcie, value, soc->pads_pll_ctl);
++	pads_writel(pcie, soc->pads_pll_ctl, value);
+ 
+ 	/* reset PLL */
+ 	value = pads_readl(pcie, soc->pads_pll_ctl);
+ 	value &= ~PADS_PLL_CTL_RST_B4SM;
+-	pads_writel(pcie, value, soc->pads_pll_ctl);
++	pads_writel(pcie, soc->pads_pll_ctl, value);
+ 
+ 	usleep_range(20, 100);
+ 
+ 	/* take PLL out of reset  */
+ 	value = pads_readl(pcie, soc->pads_pll_ctl);
+ 	value |= PADS_PLL_CTL_RST_B4SM;
+-	pads_writel(pcie, value, soc->pads_pll_ctl);
++	pads_writel(pcie, soc->pads_pll_ctl, value);
+ 
+ 	/* wait for the PLL to lock */
+ 	err = tegra_pcie_pll_wait(pcie, 500);
+@@ -835,12 +835,12 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
+ 	/* turn off IDDQ override */
+ 	value = pads_readl(pcie, PADS_CTL);
+ 	value &= ~PADS_CTL_IDDQ_1L;
+-	pads_writel(pcie, value, PADS_CTL);
++	pads_writel(pcie, PADS_CTL, value);
+ 
+ 	/* enable TX/RX data */
+ 	value = pads_readl(pcie, PADS_CTL);
+ 	value |= PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L;
+-	pads_writel(pcie, value, PADS_CTL);
++	pads_writel(pcie, PADS_CTL, value);
+ 
+ 	return 0;
+ }
+@@ -853,17 +853,17 @@ static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
+ 	/* disable TX/RX data */
+ 	value = pads_readl(pcie, PADS_CTL);
+ 	value &= ~(PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L);
+-	pads_writel(pcie, value, PADS_CTL);
++	pads_writel(pcie, PADS_CTL, value);
+ 
+ 	/* override IDDQ */
+ 	value = pads_readl(pcie, PADS_CTL);
+ 	value |= PADS_CTL_IDDQ_1L;
+-	pads_writel(pcie, value, PADS_CTL);
++	pads_writel(pcie, PADS_CTL, value);
+ 
+ 	/* reset PLL */
+ 	value = pads_readl(pcie, soc->pads_pll_ctl);
+ 	value &= ~PADS_PLL_CTL_RST_B4SM;
+-	pads_writel(pcie, value, soc->pads_pll_ctl);
++	pads_writel(pcie, soc->pads_pll_ctl, value);
+ 
+ 	usleep_range(20, 100);
+ 
+@@ -935,10 +935,10 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+ 	}
+ 
+ 	/* Configure the reference clock driver */
+-	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
++	pads_writel(pcie, PADS_REFCLK_CFG0, soc->pads_refclk_cfg0);
+ 
+ 	if (soc->num_ports > 2)
+-		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
++		pads_writel(pcie, PADS_REFCLK_CFG1, soc->pads_refclk_cfg1);
+ 
+ 	return 0;
+ }
+
