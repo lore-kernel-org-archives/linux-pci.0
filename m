@@ -1,107 +1,81 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <469134d3-3950-0d89-2599-64f917f09781@codeaurora.org>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
- <1475615720-31047-2-git-send-email-okaya@codeaurora.org> <20161012221357.GB15116@localhost>
- <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org> <20161013181535.GB21529@localhost>
- <498097a5-f75c-d2dd-f134-148b3fb8e1ed@codeaurora.org> <20161013200238.GE21529@localhost>
- <469134d3-3950-0d89-2599-64f917f09781@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 13 Oct 2016 23:01:11 +0200
-Message-ID: <CAJZ5v0jw0KERMXuXcD63GqsfcJmwZ7MbrAx-A_dVqK-xdXBXhw@mail.gmail.com>
-Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size
- to 16"
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-	Ondrej Zary <linux@rainbow-software.org>, Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>, Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>, linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	Len Brown <lenb@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:31337 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753988AbcJGVAM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:00:12 -0400
+Message-ID: <1475873734.11323.324.camel@linux.intel.com>
+Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_power hook
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, x86@kernel.org
+Date: Fri, 07 Oct 2016 23:55:34 +0300
+In-Reply-To: <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+References: <cover.1475733022.git.lukas@wunner.de>
+         <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 13, 2016 at 10:16 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 10/13/2016 4:02 PM, Bjorn Helgaas wrote:
->> On Thu, Oct 13, 2016 at 03:36:11PM -0400, Sinan Kaya wrote:
->>> On 10/13/2016 2:15 PM, Bjorn Helgaas wrote:
->>>> It seems like the problem is that we removed acpi_penalize_sci_irq(),
->>>> which told us the polarity and trigger mode.  We tried to get that
->>>> information via irq_get_trigger_type(), but that didn't work in this
->>>> case because we use the acpi_irq_get_penalty() path before the SCI is
->>>> registered.
->>>>
->>>> It makes sense to me to add acpi_penalize_sci_irq() back in, which is
->>>> what patch [3/3] does.
->>>>
->>>> I don't understand how *this* patch, which basically just increases
->>>> the penalty array size from 16 to 256, helps fix the problem.  It
->>>> seems like this patch should only matter if the SCI were some IRQ
->>>> between 16 and 255.
->>>
->>>
->>> I see your point. The original code supported 256 interrupts.
->>>
->>> The machine where we had the problem had an SCI interrupt of 11. So,
->>> this patch does not necessarily fix anything for this machine alone.
->>> However, to be safe; I wanted to go back to the old behavior to fix
->>> the SCI issue for all existing platforms.
->>
->> I saw a previous email that said the SCI interrupt could not be
->> greater than 256, but I don't know where that restriction is.  I'm
->> pretty sure the FADT field is 2 bytes, which would mean it could be up
->> to 65535.
->>
->> To fix this problem, I think we only need to fix the penalty for the
->> SCI interrupt.  It seems better to add a single "sci_penalty"
->> variable, set it to PIRQ_PENALTY_PCI_USING if it's level/low or
->> PIRQ_PENALTY_ISA_ALWAYS otherwise, and add "sci_penalty" in when
->> appropriate.  That should fix it for *any* SCI IRQ, not just those
->> less than 256, and we don't have to add these extra penalty table
->> entries that are all unused (except possibly for one entry if we have
->> an SCI in the 16-255 range).
->>
->> Something like this:
->>
->>   static int sci_irq, sci_penalty;
->>
->>   void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
->>   {
->>     sci = irq;
->>     if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
->>         polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
->>       sci_penalty = PIRQ_PENALTY_PCI_USING;
->>     else
->>       sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
->>   }
->>
->>   static int acpi_irq_get_penalty(int irq)
->>   {
->>     int penalty = 0;
->>
->>     if (irq == sci_irq)
->>       penalty += sci_penalty;
->>     ...
->>   }
->>
->> One could argue that ACPI devices can use IRQs above 15, and we should
->> handle penalties for them, too.  But the table is the wrong mechanism
->> for that, because it handles penalties for IRQs < 256, but IRQs above
->> that would mysteriously be handled differently.
->>
->> Bjorn
->>
->
-> I agree this is a better approach. I think my math was wrong when figuring
-> out what a max SCI interrupt could be.
+On Thu, 2016-10-06 at 08:24 +0200, Lukas Wunner wrote:
+> Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
+> state") augmented struct pci_platform_pm_ops with a ->get_power hook
+> and
+> implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
+> existing till v4.7.
+> 
+> However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
+> Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid:
+> Add
+> Power Management Unit driver").  It is missing the ->get_power hook,
+> which is fatal since pci_set_platform_pm() enforces its presence.
+> 
+> Retrofit mid_pci_platform_pm with the missing callback to fix the
+> breakage.
 
-OK
+Check comments below.
 
-I will be expecting a new patch (or a new series) then.
+> --- a/arch/x86/platform/intel-mid/pwr.c
+> +++ b/arch/x86/platform/intel-mid/pwr.c
+> @@ -260,6 +260,25 @@ int intel_mid_pci_set_power_state(struct pci_dev
+> *pdev, pci_power_t state)
+>  }
+>  EXPORT_SYMBOL_GPL(intel_mid_pci_set_power_state);
+>  
+> +pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev)
+> +{
+> +	struct mid_pwr *pwr = midpwr;
+> +	int id, reg, bit;
+> +	u32 power;
+> +
+> +	if (!pwr || !pwr->available)
+> +		return PCI_UNKNOWN;
 
-Thanks,
-Rafael
+I'm not sure it's a right value. In arch/x86/pci/intel_mid_pci.c we
+assign D3hot to PMCSR for all devices. I dunno how to proceed here,
+though your case works for me.
+
+> +
+> +	id = intel_mid_pwr_get_lss_id(pdev);
+> +	if (id < 0)
+> +		return PCI_UNKNOWN;
+
+Similar here, not all PCI devices are using PWRMU (or P-Unit, which
+support is absent) and might be AON, or be controllable via PMCSR only.
+
+> +
+> +	reg = (id * LSS_PWS_BITS) / 32;
+> +	bit = (id * LSS_PWS_BITS) % 32;
+> +	power = mid_pwr_get_state(pwr, reg);
+> +	return (power >> bit) & 3;
+
+Don't add sparse warnings:
+
+        return (__force pci_power_t)((power >> bit) & 3);
+
+> +}
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
