@@ -1,61 +1,95 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>,
-	Ray Jui <raj.jui@broadcom.com>
-Subject: [PATCH 02/12] PCI: iproc: Do not reset PAXC when initializing the driver
-Date: Mon, 24 Oct 2016 15:17:02 -0700
-Message-Id: <1477347432-17656-3-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
-References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50166 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753234AbcJGQbu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:31:50 -0400
+Subject: [PATCH 4/8] PCI: armada: Pass device-specific struct to internal
+ functions
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:31:46 -0500
+Message-ID: <20161007163146.24582.28368.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During initialization, the current iProc PCIe host driver resets PAXC
-and the downstream internal endpoint device that PAXC connects to. If
-the endpoint device is already loaded with firmware and has started
-running from the bootloader stage, this downstream reset causes the
-endpoint device to stop working
+Only interfaces used from outside the driver, e.g., those called by the
+DesignWare core, need to accept pointers to the generic struct pcie_port.
+Internal interfaces can accept pointers to the device-specific struct,
+which makes them more straightforward.  No functional change intended.
 
-Signed-off-by: Ray Jui <raj.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-iproc.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/pci/host/pcie-armada8k.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index a9b9cd8..3f4884a 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -243,16 +243,13 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index ed96857..16fcb43 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -93,9 +93,9 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
+-static void armada8k_pcie_establish_link(struct pcie_port *pp)
++static void armada8k_pcie_establish_link(struct armada8k_pcie *armada8k)
  {
+-	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
++	struct pcie_port *pp = &armada8k->pp;
+ 	u32 reg;
+ 
+ 	if (!dw_pcie_link_up(pp)) {
+@@ -146,14 +146,15 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ 
+ static void armada8k_pcie_host_init(struct pcie_port *pp)
+ {
++	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
++
+ 	dw_pcie_setup_rc(pp);
+-	armada8k_pcie_establish_link(pp);
++	armada8k_pcie_establish_link(armada8k);
+ }
+ 
+ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ {
+-	struct pcie_port *pp = arg;
+-	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
++	struct armada8k_pcie *armada8k = arg;
  	u32 val;
  
--	if (pcie->ep_is_internal) {
--		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--		val &= ~PAXC_RESET_MASK;
--		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--		udelay(100);
--		val |= PAXC_RESET_MASK;
--		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--		udelay(100);
-+	/*
-+	 * PAXC and the internal emulated endpoint device downstream should not
-+	 * be reset. If firmware has been loaded on the endpoint device at an
-+	 * earlier boot stage, reset here causes issues
-+	 */
-+	if (pcie->ep_is_internal)
- 		return;
--	}
- 
  	/*
- 	 * Select perst_b signal as reset source. Put the device into reset,
--- 
-2.1.4
+@@ -172,9 +173,10 @@ static struct pcie_host_ops armada8k_pcie_host_ops = {
+ 	.host_init = armada8k_pcie_host_init,
+ };
+ 
+-static int armada8k_add_pcie_port(struct pcie_port *pp,
++static int armada8k_add_pcie_port(struct armada8k_pcie *armada8k,
+ 				  struct platform_device *pdev)
+ {
++	struct pcie_port *pp = &armada8k->pp;
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+@@ -188,7 +190,7 @@ static int armada8k_add_pcie_port(struct pcie_port *pp,
+ 	}
+ 
+ 	ret = devm_request_irq(dev, pp->irq, armada8k_pcie_irq_handler,
+-			       IRQF_SHARED, "armada8k-pcie", pp);
++			       IRQF_SHARED, "armada8k-pcie", armada8k);
+ 	if (ret) {
+ 		dev_err(dev, "failed to request irq %d\n", pp->irq);
+ 		return ret;
+@@ -234,7 +236,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 		goto fail;
+ 	}
+ 
+-	ret = armada8k_add_pcie_port(pp, pdev);
++	ret = armada8k_add_pcie_port(armada8k, pdev);
+ 	if (ret)
+ 		goto fail;
+ 
+
