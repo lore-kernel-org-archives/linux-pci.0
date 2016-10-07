@@ -1,145 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:58683 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753334AbcJSOKx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:10:53 -0400
-Message-Id: <1f66f01ec1406ca76f578c02b218003fad3853e5.1476875113.git.lukas@wunner.de>
-In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
-References: <cover.1476875113.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 19 Oct 2016 16:07:13 +0200
-Subject: [PATCH 9/9] PCI: pciehp: Add runtime PM support for PCIe hotplug
- ports
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:51056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757217AbcJGQe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:34:26 -0400
+Subject: [PATCH 1/9] PCI: dra7xx: Rename accessors
+To: Kishon Vijay Abraham I <kishon@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-omap@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:33:50 -0500
+Message-ID: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Linux 4.8 added support for runtime suspending PCIe ports to D3hot with
-commit 006d44e49a25 ("PCI: Add runtime PM support for PCIe ports"), but
-excluded hotplug ports.  Those are now afforded runtime PM by the
-present commit.
+Rename dra7xx_pcie_readl() to dra7xx_readl() and dra7xx_pcie_writel() to
+dra7xx_writel() for consistency with other drivers.  Uninline them; there's
+no performance issue here, and the compiler can inline them if it's
+worthwhile.  No functional change intended.
 
-Hotplug ports require a few extra considerations:
-
-- The configuration space of the port remains accessible in D3hot, so
-  all the functions to read or modify the Slot Status and Slot Control
-  registers need not be modified.  Even turning on slot power doesn't
-  seem to require the port to be in D0, at least the PCIe spec doesn't
-  say so and I confirmed that by testing with a Thunderbolt controller.
-
-- However D0 is required to access devices on the subordinate bus.  This
-  happens in pciehp_check_link_status() and pciehp_configure_device()
-  (both called from board_added()) and in pciehp_unconfigure_device()
-  (called from remove_board()), so acquire a runtime PM ref for their
-  invocation.
-
-- The hotplug port stays active as long as it has active children.  If
-  all hotplugged devices below the port runtime suspend, the port is
-  allowed to runtime suspend as well.  Plug and unplug detection
-  continues to work in D3hot.
-
-- Hotplug interrupts are delivered in-band, so while the hotplug port
-  itself is allowed to go to D3hot, its parent ports must stay in D0 for
-  interrupts to come through.  Add a corresponding restriction to
-  pci_dev_check_d3cold().
-
-- Runtime PM may only be allowed if the hotplug port is handled natively
-  by the OS.  On ACPI systems, the port may alternatively be handled by
-  the firmware and things break if the OS puts the port into D3 behind
-  the firmware's back:  E.g. Thunderbolt hotplug ports on non-Macs are
-  handled by Intel's firmware in System Management Mode and the firmware
-  is known to access devices on the port's subordinate bus without
-  checking first if the port is in D0:
-  https://bugzilla.kernel.org/show_bug.cgi?id=53811
-
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp_ctrl.c | 6 ++++++
- drivers/pci/pci.c                 | 9 +++++----
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-dra7xx.c |   45 ++++++++++++++++++++---------------------
+ 1 file changed, 22 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index efe69e8..ffd3fe6 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/slab.h>
-+#include <linux/pm_runtime.h>
- #include <linux/pci.h>
- #include "../pci.h"
- #include "pciehp.h"
-@@ -98,6 +99,7 @@ static int board_added(struct slot *p_slot)
- 	pciehp_green_led_blink(p_slot);
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 19223ed..765f48b 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -73,13 +73,12 @@ struct dra7xx_pcie {
  
- 	/* Check link training status */
-+	pm_runtime_get_sync(&ctrl->pcie->port->dev);
- 	retval = pciehp_check_link_status(ctrl);
- 	if (retval) {
- 		ctrl_err(ctrl, "Failed to check link status\n");
-@@ -118,12 +120,14 @@ static int board_added(struct slot *p_slot)
- 		if (retval != -EEXIST)
- 			goto err_exit;
+ #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+ 
+-static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
++static u32 dra7xx_readl(struct dra7xx_pcie *pcie, u32 offset)
+ {
+ 	return readl(pcie->base + offset);
+ }
+ 
+-static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+-				      u32 value)
++static void dra7xx_writel(struct dra7xx_pcie *pcie, u32 offset, u32 value)
+ {
+ 	writel(value, pcie->base + offset);
+ }
+@@ -98,7 +97,7 @@ static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
+ static int dra7xx_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+-	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
++	u32 reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
+ 
+ 	return !!(reg & LINK_UP);
+ }
+@@ -113,9 +112,9 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ 		return 0;
  	}
-+	pm_runtime_put(&ctrl->pcie->port->dev);
  
- 	pciehp_green_led_on(p_slot);
- 	pciehp_set_attention_status(p_slot, 0);
- 	return 0;
+-	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+ 	reg |= LTSSM_EN;
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
  
- err_exit:
-+	pm_runtime_put(&ctrl->pcie->port->dev);
- 	set_slot_off(ctrl, p_slot);
- 	return retval;
+ 	return dw_pcie_wait_for_link(pp);
  }
-@@ -137,7 +141,9 @@ static int remove_board(struct slot *p_slot)
- 	int retval;
- 	struct controller *ctrl = p_slot->ctrl;
+@@ -124,20 +123,20 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
  
-+	pm_runtime_get_sync(&ctrl->pcie->port->dev);
- 	retval = pciehp_unconfigure_device(p_slot);
-+	pm_runtime_put(&ctrl->pcie->port->dev);
- 	if (retval)
- 		return retval;
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   ~INTERRUPTS);
+-	dra7xx_pcie_writel(dra7xx,
+-			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+-			   ~LEG_EP_INTERRUPTS & ~MSI);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
++		      ~INTERRUPTS);
++	dra7xx_writel(dra7xx,
++		      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
++		      ~LEG_EP_INTERRUPTS & ~MSI);
  
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f1ddb6b..b10bcca 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2241,13 +2241,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 			return false;
- 
- 		/*
--		 * Hotplug interrupts cannot be delivered if the link is down,
--		 * so parents of a hotplug port must stay awake. In addition,
- 		 * Hotplug ports handled by firmware in System Management Mode
- 		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
--		 * For simplicity, disallow in general for now.
- 		 */
--		if (bridge->is_hotplug_bridge)
-+		if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
- 			return false;
- 
- 		if (pci_bridge_d3_force)
-@@ -2283,6 +2280,10 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- 	if (!pci_power_manageable(dev))
- 		*d3cold_ok = false;
- 
-+	/* Hotplug interrupts cannot be delivered if the link is down. */
-+	if (dev->is_hotplug_bridge)
-+		*d3cold_ok = false;
-+
- 	return !*d3cold_ok;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dra7xx_pcie_writel(dra7xx,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
++		dra7xx_writel(dra7xx,
++			      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+ 	else
+-		dra7xx_pcie_writel(dra7xx,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+-				   LEG_EP_INTERRUPTS);
++		dra7xx_writel(dra7xx,
++			      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++			      LEG_EP_INTERRUPTS);
  }
  
--- 
-2.9.3
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+@@ -200,7 +199,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+ 	u32 reg;
+ 
+-	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
++	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+ 
+ 	switch (reg) {
+ 	case MSI:
+@@ -214,7 +213,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 		break;
+ 	}
+ 
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -225,7 +224,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	struct dra7xx_pcie *dra7xx = arg;
+ 	u32 reg;
+ 
+-	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
++	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
+ 
+ 	if (reg & ERR_SYS)
+ 		dev_dbg(dra7xx->dev, "System Error\n");
+@@ -269,7 +268,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	if (reg & CFG_MSE_EVT)
+ 		dev_dbg(dra7xx->dev, "CFG 'Memory Space Enable' change\n");
+ 
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -416,9 +415,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		goto err_gpio;
+ 	}
+ 
+-	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+ 	reg &= ~LTSSM_EN;
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
++	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
+ 	platform_set_drvdata(pdev, dra7xx);
+ 
 
