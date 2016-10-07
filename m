@@ -1,56 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:38964 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754835AbcJRBjZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:39:25 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v8 1/3] Documentation/devicetree: Add new property to specify the max link speed
-Date: Tue, 18 Oct 2016 09:45:08 +0800
-Message-Id: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:46396 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936334AbcJGQYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:24:00 -0400
+Subject: [PATCH 3/7] PCI: iproc: Hard-code PCIe capability offset instead of
+ searching
+To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Date: Fri, 07 Oct 2016 11:23:28 -0500
+Message-ID: <20161007162328.23015.62896.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some of the host drivers have the requirement of knowing whether the
-EP would never train at some link speed at all. For instance, on some
-boards, the link won't train at 5 GT/s but the host driver still sacrifice
-some cycle to wait for the resule of training at 5 GT/s as the host could
-actually support 5 GT/s. So we could parse this new property and make the
-host drivers be aware of these cases.
+We know where the PCIe capability lives in the host bridge's config space;
+in fact, we already hard-coded the offset of the Link Control 2 register.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+The hard-coded Link Control 2 offset was 0xdc.  Link Control 2 is at offset
+0x30 into the PCIe capability, so the capability itself must be at
+0xdc - 0x30 = 0xac.
+
+Hard-code the PCIe capability offset, which means we don't have to search
+for it and we can use the standard definitions for registers within the
+capability.
+
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ drivers/pci/host/pcie-iproc.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Changes in v8: None
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 08dcfad..e7d97a3 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -18,3 +18,9 @@ driver implementation may support the following properties:
-    host bridges in the system, otherwise potentially conflicting domain numbers
-    may be assigned to root buses behind different host bridges.  The domain
-    number for each host bridge in the system must be unique.
-+- max-link-speed:
-+   If present this property specifies PCI gen for link capability. The host drivers
-+   could add this as a strategy to avoid unnecessary operation for unsupported
-+   link speed, for instance, trying to do training for unsupported link speed, etc.
-+   Must be '4' for gen4, '3' for gen3, '2' for gen2, and '1' for gen1. Any other
-+   values are invalid.
--- 
-2.3.7
-
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 408e99d..38f5ee0 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -63,6 +63,8 @@
+ #define OARR_SIZE_CFG_SHIFT          1
+ #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+ 
++#define PCI_EXP_CAP			0xac
++
+ #define MAX_NUM_OB_WINDOWS           2
+ 
+ #define IPROC_PCIE_REG_INVALID 0xffff
+@@ -259,7 +261,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *iproc, struct pci_bus *bus)
+ {
+ 	u8 hdr_type;
+ 	u32 link_ctrl, class, val;
+-	u16 pos, link_status;
++	u16 pos = PCI_EXP_CAP, link_status;
+ 	bool link_is_active = false;
+ 
+ 	/*
+@@ -292,30 +294,27 @@ static int iproc_pcie_check_link(struct iproc_pcie *iproc, struct pci_bus *bus)
+ 	pci_bus_write_config_dword(bus, 0, PCI_BRIDGE_CTRL_REG_OFFSET, class);
+ 
+ 	/* check link status to see if link is active */
+-	pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
+ 	pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA, &link_status);
+ 	if (link_status & PCI_EXP_LNKSTA_NLW)
+ 		link_is_active = true;
+ 
+ 	if (!link_is_active) {
+ 		/* try GEN 1 link speed */
+-#define PCI_LINK_STATUS_CTRL_2_OFFSET 0x0dc
+ #define PCI_TARGET_LINK_SPEED_MASK    0xf
+ #define PCI_TARGET_LINK_SPEED_GEN2    0x2
+ #define PCI_TARGET_LINK_SPEED_GEN1    0x1
+ 		pci_bus_read_config_dword(bus, 0,
+-					  PCI_LINK_STATUS_CTRL_2_OFFSET,
++					  pos + PCI_EXP_LNKCTL2,
+ 					  &link_ctrl);
+ 		if ((link_ctrl & PCI_TARGET_LINK_SPEED_MASK) ==
+ 		    PCI_TARGET_LINK_SPEED_GEN2) {
+ 			link_ctrl &= ~PCI_TARGET_LINK_SPEED_MASK;
+ 			link_ctrl |= PCI_TARGET_LINK_SPEED_GEN1;
+ 			pci_bus_write_config_dword(bus, 0,
+-					   PCI_LINK_STATUS_CTRL_2_OFFSET,
++					   pos + PCI_EXP_LNKCTL2,
+ 					   link_ctrl);
+ 			msleep(100);
+ 
+-			pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
+ 			pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA,
+ 						 &link_status);
+ 			if (link_status & PCI_EXP_LNKSTA_NLW)
 
