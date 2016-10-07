@@ -1,43 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58698 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:55914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965223AbcJGQoO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:44:14 -0400
-Subject: [PATCH 4/5] PCI: spear: Reorder struct spear13xx_pcie
-To: Pratyush Anand <pratyush.anand@gmail.com>
+        id S964851AbcJGQiU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:38:20 -0400
+Subject: [PATCH 11/11] PCI: hisi: Remove unused platform data
+To: Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:44:05 -0500
-Message-ID: <20161007164405.26585.40728.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Fri, 07 Oct 2016 11:38:16 -0500
+Message-ID: <20161007163816.25540.17480.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct spear13xx_pcie to put generic fields first.  No functional
-change intended.
+The hisi driver never uses the platform drvdata pointer, so don't bother
+setting it.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-spear13xx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-hisi.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 2585fca..61bb8d7 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -25,10 +25,10 @@
- #include "pcie-designware.h"
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 3fd6757..eef91a4 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -189,8 +189,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
- struct spear13xx_pcie {
-+	struct pcie_port	pp;		/* DT dbi is pp.dbi_base */
- 	void __iomem		*app_base;
- 	struct phy		*phy;
- 	struct clk		*clk;
--	struct pcie_port	pp;
- 	bool			is_gen1;
- };
+-	platform_set_drvdata(pdev, hisi);
+-
+ 	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
  
+ 	return 0;
 
