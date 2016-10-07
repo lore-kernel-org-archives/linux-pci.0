@@ -1,47 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47378 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938860AbcJGQZc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:25:32 -0400
+Subject: [PATCH 06/10] PCI: rcar: Remove unused platform data
+To: Simon Horman <horms@verge.net.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:25:28 -0500
+Message-ID: <20161007162528.23279.37638.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <fae460e4-d838-22c0-8984-52d6d2b6c099@codeaurora.org>
-References: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
- <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com> <fae460e4-d838-22c0-8984-52d6d2b6c099@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Mon, 24 Oct 2016 15:21:45 +1100
-Message-ID: <CANwerB0GO_-Z4DRxt=xJ1SmrS6jDajxkfDZdVV1b=hjL4NreqQ@mail.gmail.com>
-Subject: Re: [V4, 1/3] ACPI, PCI, IRQ: assign ISA IRQ directly during early
- boot stages
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        linux@rainbow-software.org, timur@codeaurora.org,
-        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 October 2016 at 15:17, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Thanks,
->
-> On 10/22/2016 11:48 PM, Jonathan Liu wrote:
->> This series fixes one or more network adapters not working in Linux
->> 32-bit x86 guest running inside VirtualBox if I have 4 network
->> adapters enabled. The following message no longer appears in the
->> kernel log:
->> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
->>
->> Tested-by: Jonathan Liu <net147@gmail.com>
->
-> I'm hoping that you can retest V5 so that Rafael can pull in your tested-by into
-> the commit message.
->
-> --
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+The rcar driver never uses the platform drvdata pointer, so don't bother
+setting it.  No functional change intended.
 
-Sure. Please CC me when you submit V5.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-rcar.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Regards,
-Jonathan
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 5a8969f..02a90f4 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1126,7 +1126,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	rcar->dev = dev;
+-	platform_set_drvdata(pdev, rcar);
+ 
+ 	INIT_LIST_HEAD(&rcar->resources);
+ 
+
