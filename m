@@ -1,38 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:45845 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751662AbcJCTuU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Oct 2016 15:50:20 -0400
-Date: Mon, 3 Oct 2016 21:50:16 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        David Box <david.e.box@linux.intel.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Brian Norris <briannorris@google.com>
-Subject: Re: [PATCH v2] lspci: Parse all the L1 PM substate capability regs
-Message-ID: <mj+md-20161003.194946.80628.nikam@ucw.cz>
-References: <1472747248-60993-1-git-send-email-rajatja@google.com>
- <1473379530-70905-1-git-send-email-rajatja@google.com>
- <CACK8Z6HKhduwFj7LBoN52WBJaZB01LojNaA6J4u0cUx5RZzdpg@mail.gmail.com>
- <mj+md-20160926.182229.10984.albireo@ucw.cz>
- <CACK8Z6EFzB8VzGP7jqZJkKfO3_wS=K0XB7Q30ym0M=tkwtWuqA@mail.gmail.com>
- <CACK8Z6EChX9d99-=z=6HZYuKwusuVcZDHx4wkGY-_aO=yvUsOQ@mail.gmail.com>
- <mj+md-20160926.182825.94359.nikam@ucw.cz>
- <CACK8Z6EbxJqFcmek_nEabZhfa9Ct7yCjghrqOYhRtWx2UOEi=w@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:49550 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753234AbcJGQaN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:30:13 -0400
+Subject: [PATCH 1/7] PCI: designware: Rename dw_pcie_valid_config() to
+ dw_pcie_valid_device()
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:30:09 -0500
+Message-ID: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6EbxJqFcmek_nEabZhfa9Ct7yCjghrqOYhRtWx2UOEi=w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rajat!
+Rename dw_pcie_valid_config() to dw_pcie_valid_device() and use the result
+directly as a boolean value instead of testing against 0.  No functional
+change intended.
 
-> Sorry, it took me a while to respond. I've just sent out a patch for
-> tests/cap-l1-pm that has the data for tests.
-> 
-> Yes, your new patch worked fine.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Thanks, I have just merged it to master. Expect a new release soon.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 74da71e..b58f078 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -760,8 +760,8 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	return ret;
+ }
+ 
+-static int dw_pcie_valid_config(struct pcie_port *pp,
+-				struct pci_bus *bus, int dev)
++static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
++				int dev)
+ {
+ 	/* If there is no link, then there is no device */
+ 	if (bus->number != pp->root_bus_nr) {
+@@ -781,7 +781,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+-	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
++	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -797,7 +797,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+-	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
++	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (bus->number == pp->root_bus_nr)
 
-				Martin
