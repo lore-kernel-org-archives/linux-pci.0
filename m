@@ -1,53 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH -next] PCI: rockchip: Add missing of_node_put() in
- rockchip_pcie_init_irq_domain()
-To: Wei Yongjun <weiyj.lk@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>,
- Wenrui Li <wenrui.li@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Heiko Stuebner <heiko@sntech.de>
-References: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <87c39739-c9d0-b307-5256-591ef7324ffa@rock-chips.com>
-Date: Tue, 18 Oct 2016 08:50:28 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55474 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964789AbcJGQhi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:37:38 -0400
+Subject: [PATCH 06/11] PCI: hisi: Reorder struct hisi_pcie
+To: Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:37:34 -0500
+Message-ID: <20161007163734.25540.45525.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- Wei Yongjun <weiyongjun1@huawei.com>, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-5ZyoIDIwMTYvMTAvMTcgMjI6NTcsIFdlaSBZb25nanVuIOWGmemBkzoKPiBGcm9tOiBXZWkgWW9u
-Z2p1biA8d2VpeW9uZ2p1bjFAaHVhd2VpLmNvbT4KPgo+IFRoaXMgbm9kZSBwb2ludGVyIGlzIHJl
-dHVybmVkIGJ5IG9mX2dldF9uZXh0X2NoaWxkKCkgd2l0aCByZWZjb3VudAo+IGluY3JlbWVudGVk
-IGluIHRoaXMgZnVuY3Rpb24uIG9mX25vZGVfcHV0KCkgb24gaXQgYmVmb3JlIGV4aXR0aW5nCj4g
-dGhpcyBmdW5jdGlvbiBvbiBlcnJvci4KPgo+IFRoaXMgaXMgZGV0ZWN0ZWQgYnkgQ29jY2luZWxs
-ZSBzZW1hbnRpYyBwYXRjaC4KClRoYW5rcyBmb3IgZml4aW5nIHRoaXMuCgpBY2tlZC1ieTogU2hh
-d24gTGluIDxzaGF3bi5saW5Acm9jay1jaGlwcy5jb20+Cgo+Cj4gU2lnbmVkLW9mZi1ieTogV2Vp
-IFlvbmdqdW4gPHdlaXlvbmdqdW4xQGh1YXdlaS5jb20+Cj4gLS0tCj4gIGRyaXZlcnMvcGNpL2hv
-c3QvcGNpZS1yb2NrY2hpcC5jIHwgMSArCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
-KQo+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jIGIvZHJp
-dmVycy9wY2kvaG9zdC9wY2llLXJvY2tjaGlwLmMKPiBpbmRleCBlMGIyMmRhLi5hYjg4ODU5IDEw
-MDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gKysrIGIvZHJp
-dmVycy9wY2kvaG9zdC9wY2llLXJvY2tjaGlwLmMKPiBAQCAtOTQ5LDYgKzk0OSw3IEBAIHN0YXRp
-YyBpbnQgcm9ja2NoaXBfcGNpZV9pbml0X2lycV9kb21haW4oc3RydWN0IHJvY2tjaGlwX3BjaWUg
-KnJvY2tjaGlwKQo+ICAJCQkJCQkgICAgJmludHhfZG9tYWluX29wcywgcm9ja2NoaXApOwo+ICAJ
-aWYgKCFyb2NrY2hpcC0+aXJxX2RvbWFpbikgewo+ICAJCWRldl9lcnIoZGV2LCAiZmFpbGVkIHRv
-IGdldCBhIElOVHggSVJRIGRvbWFpblxuIik7Cj4gKwkJb2Zfbm9kZV9wdXQoaW50Yyk7Cj4gIAkJ
-cmV0dXJuIC1FSU5WQUw7Cj4gIAl9Cj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
-aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluCj4gdGhlIGJvZHkg
-b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiBNb3JlIG1ham9yZG9t
-byBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPgoK
-Ci0tIApCZXN0IFJlZ2FyZHMKU2hhd24gTGluCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgt
-YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
-L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Reorder struct hisi_pcie to put generic fields first.  No functional change
+intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-hisi.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index e6bbe94..e14ce13 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -37,9 +37,9 @@ struct pcie_soc_ops {
+ };
+ 
+ struct hisi_pcie {
++	struct pcie_port pp;		/* pp.dbi_base is DT rc_dbi */
+ 	struct regmap *subctrl;
+ 	u32 port_id;
+-	struct pcie_port pp;
+ 	struct pcie_soc_ops *soc_ops;
+ };
+ 
+@@ -109,7 +109,6 @@ static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi)
+ 
+ 	regmap_read(hisi->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+ 		    0x100 * hisi->port_id, &val);
+-
+ 	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+ }
+ 
+@@ -178,13 +177,13 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &hisi->pp;
+ 	pp->dev = &pdev->dev;
+-	driver = (pdev->dev).driver;
+ 
++	driver = (pdev->dev).driver;
+ 	match = of_match_device(driver->of_match_table, &pdev->dev);
+ 	hisi->soc_ops = (struct pcie_soc_ops *) match->data;
+ 
+ 	hisi->subctrl =
+-	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
++	    syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
+ 	if (IS_ERR(hisi->subctrl)) {
+ 		dev_err(pp->dev, "cannot get subctrl base\n");
+ 		return PTR_ERR(hisi->subctrl);
+
