@@ -1,54 +1,51 @@
-Return-Path: <scott.branden@broadcom.com>
-Return-Path: <scott.branden@broadcom.com>
-Subject: Re: [PATCH 00/12] Additional iProc PCIe host support/fixes
-To: Ray Jui <ray.jui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Alex Barba <alex.barba@broadcom.com>,
- Oza Oza <oza.oza@broadcom.com>, Ray Jui <rjui@broadcom.com>
-From: Scott Branden <scott.branden@broadcom.com>
-Message-ID: <14e60111-270b-39e0-6836-54b1a5422338@broadcom.com>
-Date: Mon, 24 Oct 2016 15:30:16 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757395AbcJGQfv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:35:51 -0400
+Subject: [PATCH 3/8] PCI: exynos: Reorder struct exynos_pcie
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:35:43 -0500
+Message-ID: <20161007163543.25314.71306.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks fine other than spelling mistakes in some commit messages.
+Reorder struct exynos_pcie to put generic fields first.  No functional
+change intended.
 
-Acked-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-exynos.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-On 16-10-24 03:17 PM, Ray Jui wrote:
-> This patch series contains various changes and fixes to the iProc PCIe
-> host driver. It also adds support for the next generation of PAXB and
-> PAXC based host controllers
->
-> This patch series was developed based on v4.9-rc1 and tested on both NS2
-> SVK and Cygnus wireless audio platform
->
-> repo: https://github.com/Broadcom/arm64-linux.git
-> branch: iproc-pcie-v1
->
-> Ray Jui (12):
->   PCI: iproc: Improve core register population
->   PCI: iproc: Do not reset PAXC when initializing the driver
->   PCI: iproc: Add BCMA type
->   PCI: iproc: Fix exception with multi-function devices
->   PCI: iproc: Update iProc PCIe DT binding
->   PCI: iproc: Add PAXC v2 support
->   PCI: iproc: Update iProc PCIe DT binding
->   PCI: iproc: Making outbound mapping code more generic
->   PCI: iproc: Update iProc PCIe DT binding
->   PCI: iproc: Add inbound DMA mapping support
->   PCI: iproc: Update iProc PCIe DT binding
->   PCI: iproc: Add support for the next-gen PAXB controller
->
->  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  43 +-
->  drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
->  drivers/pci/host/pcie-iproc-msi.c                  |   1 +
->  drivers/pci/host/pcie-iproc-platform.c             |  19 +-
->  drivers/pci/host/pcie-iproc.c                      | 942 ++++++++++++++++++---
->  drivers/pci/host/pcie-iproc.h                      |  45 +-
->  6 files changed, 916 insertions(+), 135 deletions(-)
->
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index fa0784d..c7b0809 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -29,13 +29,13 @@
+ #define to_exynos_pcie(x)	container_of(x, struct exynos_pcie, pp)
+ 
+ struct exynos_pcie {
+-	void __iomem		*elbi_base;
+-	void __iomem		*phy_base;
+-	void __iomem		*block_base;
++	struct pcie_port	pp;
++	void __iomem		*elbi_base;	/* DT 0th resource */
++	void __iomem		*phy_base;	/* DT 1st resource */
++	void __iomem		*block_base;	/* DT 2nd resource */
+ 	int			reset_gpio;
+ 	struct clk		*clk;
+ 	struct clk		*bus_clk;
+-	struct pcie_port	pp;
+ };
+ 
+ /* PCIe ELBI registers */
+
