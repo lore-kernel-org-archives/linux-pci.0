@@ -1,76 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49974 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:49032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752488AbcJYTk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Oct 2016 15:40:57 -0400
-Subject: Re: [PATCH] PCI: pci-stub: accept exceptions to the ID- and
- class-based matching
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <20161025182419.22910-1-lersek@redhat.com>
- <20161025124218.2696e55a@t450s.home>
- <fdce64d5-1610-5d68-81c2-58ed61c398f4@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Andrei Grigore <andrei.grg@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jayme Howard <g.prime@gmail.com>
-From: Laszlo Ersek <lersek@redhat.com>
-Message-ID: <d777a8f1-4936-eb65-e392-c815bdf6d7e9@redhat.com>
-Date: Tue, 25 Oct 2016 21:40:54 +0200
+        id S938813AbcJGQ3V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:29:21 -0400
+Subject: [PATCH 4/9] PCI: xilinx: Add local struct device pointers
+To: Michal Simek <michal.simek@xilinx.com>,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:29:11 -0500
+Message-ID: <20161007162911.24137.26152.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <fdce64d5-1610-5d68-81c2-58ed61c398f4@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/25/16 21:24, Laszlo Ersek wrote:
-> On 10/25/16 20:42, Alex Williamson wrote:
+Use a local "struct device *dev" for brevity and consistency with other
+drivers.  No functional change intended.
 
->> FWIW, I think the reason
->> this hasn't been done to date is that PCI bus addresses (except for
->> root bus devices) are not stable.  Depending on the system, the address
->> of a given device may change, not only based on the slot where the
->> device is installed, but whether other devices in other slots are
->> populated.
-> 
-> I agree.
-> 
-> However, while the addresses are not stable in the face of hardware
-> changes, I think the addresses don't change haphazardly (that is,
-> without hardware changes).
-> 
-> So, if you plug in another card, your current pci-stub.except=...
-> parameter might become invalid; but that's not very different from the
-> case when you plug in the second instance of a preexistent card right
-> now -- then the pci-stub.ids=... filter won't match uniquely anymore,
-> and assignment vs. host-side use might not work as intented.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx.c |   47 +++++++++++++++++++++-------------------
+ 1 file changed, 25 insertions(+), 22 deletions(-)
 
-Sorry about the self-followup; I just wanted to add -- although it might
-not carry a lot of weight for the host kernel -- that the libvirt domain
-XML hard-codes the host-side PCI BDF anyway, for assigned devices:
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index b840737..44a2652 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -384,6 +384,7 @@ static const struct irq_domain_ops intx_domain_ops = {
+ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ {
+ 	struct xilinx_pcie_port *xilinx = (struct xilinx_pcie_port *)data;
++	struct device *dev = xilinx->dev;
+ 	u32 val, mask, status, msi_data;
+ 
+ 	/* Read interrupt decode and mask registers */
+@@ -395,32 +396,32 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		return IRQ_NONE;
+ 
+ 	if (status & XILINX_PCIE_INTR_LINK_DOWN)
+-		dev_warn(xilinx->dev, "Link Down\n");
++		dev_warn(dev, "Link Down\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_ECRC_ERR)
+-		dev_warn(xilinx->dev, "ECRC failed\n");
++		dev_warn(dev, "ECRC failed\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_STR_ERR)
+-		dev_warn(xilinx->dev, "Streaming error\n");
++		dev_warn(dev, "Streaming error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_HOT_RESET)
+-		dev_info(xilinx->dev, "Hot reset\n");
++		dev_info(dev, "Hot reset\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_CFG_TIMEOUT)
+-		dev_warn(xilinx->dev, "ECAM access timeout\n");
++		dev_warn(dev, "ECAM access timeout\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_CORRECTABLE) {
+-		dev_warn(xilinx->dev, "Correctable error message\n");
++		dev_warn(dev, "Correctable error message\n");
+ 		xilinx_pcie_clear_err_interrupts(xilinx);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_NONFATAL) {
+-		dev_warn(xilinx->dev, "Non fatal error message\n");
++		dev_warn(dev, "Non fatal error message\n");
+ 		xilinx_pcie_clear_err_interrupts(xilinx);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_FATAL) {
+-		dev_warn(xilinx->dev, "Fatal error message\n");
++		dev_warn(dev, "Fatal error message\n");
+ 		xilinx_pcie_clear_err_interrupts(xilinx);
+ 	}
+ 
+@@ -430,7 +431,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 
+ 		/* Check whether interrupt valid */
+ 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(xilinx->dev, "RP Intr FIFO1 read error\n");
++			dev_warn(dev, "RP Intr FIFO1 read error\n");
+ 			goto error;
+ 		}
+ 
+@@ -452,7 +453,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		val = xilinx_readl(xilinx, XILINX_PCIE_REG_RPIFR1);
+ 
+ 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(xilinx->dev, "RP Intr FIFO1 read error\n");
++			dev_warn(dev, "RP Intr FIFO1 read error\n");
+ 			goto error;
+ 		}
+ 
+@@ -472,31 +473,31 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+-		dev_warn(xilinx->dev, "Slave unsupported request\n");
++		dev_warn(dev, "Slave unsupported request\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNEXP)
+-		dev_warn(xilinx->dev, "Slave unexpected completion\n");
++		dev_warn(dev, "Slave unexpected completion\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_COMPL)
+-		dev_warn(xilinx->dev, "Slave completion timeout\n");
++		dev_warn(dev, "Slave completion timeout\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_ERRP)
+-		dev_warn(xilinx->dev, "Slave Error Poison\n");
++		dev_warn(dev, "Slave Error Poison\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_CMPABT)
+-		dev_warn(xilinx->dev, "Slave Completer Abort\n");
++		dev_warn(dev, "Slave Completer Abort\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_ILLBUR)
+-		dev_warn(xilinx->dev, "Slave Illegal Burst\n");
++		dev_warn(dev, "Slave Illegal Burst\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_DECERR)
+-		dev_warn(xilinx->dev, "Master decode error\n");
++		dev_warn(dev, "Master decode error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_SLVERR)
+-		dev_warn(xilinx->dev, "Master slave error\n");
++		dev_warn(dev, "Master slave error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_ERRP)
+-		dev_warn(xilinx->dev, "Master error poison\n");
++		dev_warn(dev, "Master error poison\n");
+ 
+ error:
+ 	/* Clear the Interrupt Decode register */
+@@ -554,10 +555,12 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *xilinx)
+  */
+ static void xilinx_pcie_init_port(struct xilinx_pcie_port *xilinx)
+ {
++	struct device *dev = xilinx->dev;
++
+ 	if (xilinx_pcie_link_is_up(xilinx))
+-		dev_info(xilinx->dev, "PCIe Link is UP\n");
++		dev_info(dev, "PCIe Link is UP\n");
+ 	else
+-		dev_info(xilinx->dev, "PCIe Link is DOWN\n");
++		dev_info(dev, "PCIe Link is DOWN\n");
+ 
+ 	/* Disable all interrupts */
+ 	xilinx_writel(xilinx, XILINX_PCIE_REG_IMR, ~XILINX_PCIE_IDR_ALL_MASK);
+@@ -626,8 +629,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *xilinx)
+  */
+ static int xilinx_pcie_probe(struct platform_device *pdev)
+ {
+-	struct xilinx_pcie_port *xilinx;
+ 	struct device *dev = &pdev->dev;
++	struct xilinx_pcie_port *xilinx;
+ 	struct pci_bus *bus;
+ 	int err;
+ 	resource_size_t iobase = 0;
 
-http://libvirt.org/formatdomain.html#elementsHostDev
-
-"""
-  <devices>
-    <hostdev mode='subsystem' type='pci' managed='yes'>
-      <source>
-        <address domain='0x0000' bus='0x06' slot='0x02' function='0x0'/>
-      </source>
-      ...
-    </hostdev>
-  </devices>
-
-  ...
-
-  source
-    The source element describes the device as seen from the host using
-    the following mechanism to describe:
-
-    ...
-
-    pci
-      PCI devices can only be described by their address.
-"""
-
-Thanks
-Laszlo
