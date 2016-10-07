@@ -1,157 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46138 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:51228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936461AbcJGQXC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:23:02 -0400
-Subject: [PATCH 09/10] PCI: altera: Add local struct device pointers
-To: Ley Foon Tan <lftan@altera.com>
+        id S941180AbcJGQeq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:34:46 -0400
+Subject: [PATCH 4/9] PCI: dra7xx: Remove redundant struct device pointer
+ from dra7xx_pcie
+To: Kishon Vijay Abraham I <kishon@ti.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
-Date: Fri, 07 Oct 2016 11:22:58 -0500
-Message-ID: <20161007162258.22796.5577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-omap@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:34:18 -0500
+Message-ID: <20161007163418.24926.97909.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+The DesignWare core already stores the struct device pointer in struct
+pcie_port.  Remove the redundant copy from struct dra7xx_pcie.dev.  No
+functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-altera.c |   30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+ drivers/pci/host/pci-dra7xx.c |   31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 90ab581..92749e9 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -388,6 +388,7 @@ static int altera_write_cap_word(struct altera_pcie *altera, u8 busno,
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 942c95c..73d4948 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -67,7 +67,6 @@ struct dra7xx_pcie {
+ 	void __iomem		*base;
+ 	struct phy		**phy;
+ 	int			phy_count;
+-	struct device		*dev;
+ 	struct pcie_port	pp;
+ };
  
- static void altera_wait_link_retrain(struct altera_pcie *altera)
+@@ -223,50 +222,51 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
  {
-+	struct device *dev = &altera->pdev->dev;
- 	u16 reg16;
- 	unsigned long start_jiffies;
+ 	struct dra7xx_pcie *dra7xx = arg;
+ 	u32 reg;
++	struct device *dev = dra7xx->pp.dev;
  
-@@ -400,7 +401,7 @@ static void altera_wait_link_retrain(struct altera_pcie *altera)
- 			break;
+ 	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
  
- 		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
--			dev_err(&altera->pdev->dev, "link retrain timeout\n");
-+			dev_err(dev, "link retrain timeout\n");
- 			break;
- 		}
- 		udelay(100);
-@@ -413,7 +414,7 @@ static void altera_wait_link_retrain(struct altera_pcie *altera)
- 			break;
+ 	if (reg & ERR_SYS)
+-		dev_dbg(dra7xx->dev, "System Error\n");
++		dev_dbg(dev, "System Error\n");
  
- 		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
--			dev_err(&altera->pdev->dev, "link up timeout\n");
-+			dev_err(dev, "link up timeout\n");
- 			break;
- 		}
- 		udelay(100);
-@@ -466,12 +467,14 @@ static void altera_pcie_isr(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct altera_pcie *altera;
-+	struct device *dev;
- 	unsigned long status;
- 	u32 bit;
- 	u32 virq;
+ 	if (reg & ERR_FATAL)
+-		dev_dbg(dra7xx->dev, "Fatal Error\n");
++		dev_dbg(dev, "Fatal Error\n");
  
- 	chained_irq_enter(chip, desc);
- 	altera = irq_desc_get_handler_data(desc);
-+	dev = &altera->pdev->dev;
+ 	if (reg & ERR_NONFATAL)
+-		dev_dbg(dra7xx->dev, "Non Fatal Error\n");
++		dev_dbg(dev, "Non Fatal Error\n");
  
- 	while ((status = altera_cra_readl(altera, P2A_INT_STATUS)
- 		& P2A_INT_STS_ALL) != 0) {
-@@ -483,8 +486,7 @@ static void altera_pcie_isr(struct irq_desc *desc)
- 			if (virq)
- 				generic_handle_irq(virq);
- 			else
--				dev_err(&altera->pdev->dev,
--					"unexpected IRQ, INT%d\n", bit);
-+				dev_err(dev, "unexpected IRQ, INT%d\n", bit);
- 		}
- 	}
+ 	if (reg & ERR_COR)
+-		dev_dbg(dra7xx->dev, "Correctable Error\n");
++		dev_dbg(dev, "Correctable Error\n");
  
-@@ -543,20 +545,21 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *altera)
+ 	if (reg & ERR_AXI)
+-		dev_dbg(dra7xx->dev, "AXI tag lookup fatal Error\n");
++		dev_dbg(dev, "AXI tag lookup fatal Error\n");
  
- static int altera_pcie_parse_dt(struct altera_pcie *altera)
- {
--	struct resource *cra;
- 	struct platform_device *pdev = altera->pdev;
-+	struct device *dev = &pdev->dev;
-+	struct resource *cra;
+ 	if (reg & ERR_ECRC)
+-		dev_dbg(dra7xx->dev, "ECRC Error\n");
++		dev_dbg(dev, "ECRC Error\n");
  
- 	cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
--	altera->cra_base = devm_ioremap_resource(&pdev->dev, cra);
-+	altera->cra_base = devm_ioremap_resource(dev, cra);
- 	if (IS_ERR(altera->cra_base)) {
--		dev_err(&pdev->dev, "failed to map cra memory\n");
-+		dev_err(dev, "failed to map cra memory\n");
- 		return PTR_ERR(altera->cra_base);
- 	}
+ 	if (reg & PME_TURN_OFF)
+-		dev_dbg(dra7xx->dev,
++		dev_dbg(dev,
+ 			"Power Management Event Turn-Off message received\n");
  
- 	/* setup IRQ */
- 	altera->irq = platform_get_irq(pdev, 0);
- 	if (altera->irq <= 0) {
--		dev_err(&pdev->dev, "failed to get IRQ: %d\n", altera->irq);
-+		dev_err(dev, "failed to get IRQ: %d\n", altera->irq);
- 		return -EINVAL;
- 	}
+ 	if (reg & PME_TO_ACK)
+-		dev_dbg(dra7xx->dev,
++		dev_dbg(dev,
+ 			"Power Management Turn-Off Ack message received\n");
  
-@@ -572,12 +575,13 @@ static void altera_pcie_host_init(struct altera_pcie *altera)
+ 	if (reg & PM_PME)
+-		dev_dbg(dra7xx->dev,
++		dev_dbg(dev,
+ 			"PM Power Management Event message received\n");
  
- static int altera_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct altera_pcie *altera;
- 	struct pci_bus *bus;
- 	struct pci_bus *child;
- 	int ret;
+ 	if (reg & LINK_REQ_RST)
+-		dev_dbg(dra7xx->dev, "Link Request Reset\n");
++		dev_dbg(dev, "Link Request Reset\n");
  
--	altera = devm_kzalloc(&pdev->dev, sizeof(*altera), GFP_KERNEL);
-+	altera = devm_kzalloc(dev, sizeof(*altera), GFP_KERNEL);
- 	if (!altera)
- 		return -ENOMEM;
+ 	if (reg & LINK_UP_EVT)
+-		dev_dbg(dra7xx->dev, "Link-up state change\n");
++		dev_dbg(dev, "Link-up state change\n");
  
-@@ -585,7 +589,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	if (reg & CFG_BME_EVT)
+-		dev_dbg(dra7xx->dev, "CFG 'Bus Master Enable' change\n");
++		dev_dbg(dev, "CFG 'Bus Master Enable' change\n");
  
- 	ret = altera_pcie_parse_dt(altera);
+ 	if (reg & CFG_MSE_EVT)
+-		dev_dbg(dra7xx->dev, "CFG 'Memory Space Enable' change\n");
++		dev_dbg(dev, "CFG 'Memory Space Enable' change\n");
+ 
+ 	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
+ 
+@@ -313,7 +313,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 
+ 	ret = dw_pcie_host_init(pp);
  	if (ret) {
--		dev_err(&pdev->dev, "Parsing DT failed\n");
-+		dev_err(dev, "Parsing DT failed\n");
+-		dev_err(dra7xx->dev, "failed to initialize host\n");
++		dev_err(dev, "failed to initialize host\n");
  		return ret;
  	}
  
-@@ -593,13 +597,13 @@ static int altera_pcie_probe(struct platform_device *pdev)
+@@ -389,7 +389,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
  
- 	ret = altera_pcie_parse_request_of_pci_ranges(altera);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed add resources\n");
-+		dev_err(dev, "Failed add resources\n");
- 		return ret;
- 	}
+ 	dra7xx->base = base;
+ 	dra7xx->phy = phy;
+-	dra7xx->dev = dev;
+ 	dra7xx->phy_count = phy_count;
  
- 	ret = altera_pcie_init_irq_domain(altera);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
-+		dev_err(dev, "Failed creating IRQ Domain\n");
- 		return ret;
- 	}
- 
-@@ -609,7 +613,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 	altera_cra_writel(altera, P2A_INT_ENABLE, P2A_INT_ENA_ALL);
- 	altera_pcie_host_init(altera);
- 
--	bus = pci_scan_root_bus(&pdev->dev, altera->root_bus_nr,
-+	bus = pci_scan_root_bus(dev, altera->root_bus_nr,
- 				&altera_pcie_ops, altera, &altera->resources);
- 	if (!bus)
- 		return -ENOMEM;
+ 	pm_runtime_enable(dev);
 
