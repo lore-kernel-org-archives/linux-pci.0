@@ -1,48 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37828 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932845AbcJYNnQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 09:43:16 -0400
-Received: by mail-wm0-f51.google.com with SMTP id c78so25315307wme.0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Oct 2016 06:43:15 -0700 (PDT)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: svarbanov@mm-sol.com, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        srinivas.kandagatla@linaro.org
-Subject: [PATCH] PCI: qcom: fix NULL pointer dereference in get_resources()
-Date: Tue, 25 Oct 2016 14:42:51 +0100
-Message-Id: <1477402971-22146-1-git-send-email-srinivas.kandagatla@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:49596 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753234AbcJGQaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Oct 2016 12:30:21 -0400
+Subject: [PATCH 2/7] PCI: designware: Simplify pcie_host_ops.readl_rc() and
+ .writel_rc() interfaces
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 07 Oct 2016 11:30:17 -0500
+Message-ID: <20161007163017.24388.75972.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-get_resources() will dereference dev as NULL pointer when called from probe(),
-as pp.dev is only assigned after get_resources() is called.
+The struct pcie_host_ops.readl_rc() and .writel_rc() function pointers
+allow a driver to override the default DesignWare register accessors.
 
-Fix this by moving dev pointer assignment before get_resources() call.
+Make the signature of the override functions the same as the default
+accessors.  This makes the default dw_pcie_readl_rc() and the corresponding
+override more structurally similar: both will compute the final register
+address with "pp->dbi_base + reg".  Previously dw_pcie_readl_rc() computed
+the address and passed it to the override.
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Fixes: e6a087eeaf91 ("PCI: qcom: Remove redundant struct qcom_pcie.dev")
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pci-exynos.c      |   10 ++++------
+ drivers/pci/host/pcie-designware.c |    4 ++--
+ drivers/pci/host/pcie-designware.h |    5 ++---
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index ef0a84c..3593640 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -533,11 +533,11 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(pcie->phy))
- 		return PTR_ERR(pcie->phy);
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 2e2d7f0..b29e9d6 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -425,22 +425,20 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+ 		exynos_pcie_msi_init(pp);
+ }
  
-+	pp->dev = dev;
- 	ret = pcie->ops->get_resources(pcie);
- 	if (ret)
- 		return ret;
+-static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp,
+-				       void __iomem *dbi_base)
++static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ {
+ 	u32 val;
  
--	pp->dev = dev;
- 	pp->root_bus_nr = -1;
- 	pp->ops = &qcom_pcie_dw_ops;
+ 	exynos_pcie_sideband_dbi_r_mode(pp, true);
+-	val = readl(dbi_base);
++	val = readl(pp->dbi_base + reg);
+ 	exynos_pcie_sideband_dbi_r_mode(pp, false);
+ 	return val;
+ }
  
--- 
-2.10.1
+-static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+-					u32 val, void __iomem *dbi_base)
++static inline void exynos_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+ {
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+-	writel(val, dbi_base);
++	writel(val, pp->dbi_base + reg);
+ 	exynos_pcie_sideband_dbi_w_mode(pp, false);
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index b58f078..c5b54a3 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -144,7 +144,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ {
+ 	if (pp->ops->readl_rc)
+-		return pp->ops->readl_rc(pp, pp->dbi_base + reg);
++		return pp->ops->readl_rc(pp, reg);
+ 
+ 	return readl(pp->dbi_base + reg);
+ }
+@@ -152,7 +152,7 @@ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+ {
+ 	if (pp->ops->writel_rc)
+-		pp->ops->writel_rc(pp, val, pp->dbi_base + reg);
++		pp->ops->writel_rc(pp, val, reg);
+ 	else
+ 		writel(val, pp->dbi_base + reg);
+ }
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index c8e5bc6..60cbc68 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -54,9 +54,8 @@ struct pcie_port {
+ };
+ 
+ struct pcie_host_ops {
+-	u32 (*readl_rc)(struct pcie_port *pp, void __iomem *dbi_base);
+-	void (*writel_rc)(struct pcie_port *pp,
+-			u32 val, void __iomem *dbi_base);
++	u32 (*readl_rc)(struct pcie_port *pp, u32 reg);
++	void (*writel_rc)(struct pcie_port *pp, u32 val, u32 reg);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
+ 	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
 
