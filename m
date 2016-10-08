@@ -1,71 +1,260 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-To: Jon Masters <jcm@jonmasters.org>, Arnd Bergmann <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
- <5869118.UilSPY9Sai@wuerfel>
- <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
-CC: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        <devicetree@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
-        <gabriele.paoloni@huawei.com>, <minyard@acm.org>,
-        <gregkh@linuxfoundation.org>, <benh@kernel.crashing.org>,
-        <will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
-        <xuwei5@hisilicon.com>, <linuxarm@huawei.com>,
-        <linux-serial@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <zourongrong@gmail.com>, <liviu.dudau@arm.com>, <kantyzc@163.com>,
-        <zhichang.yuan02@gmail.com>
-Message-ID: <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
-Date: Tue, 4 Oct 2016 13:02:25 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:55404 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751882AbcJHCwx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2016 22:52:53 -0400
+Subject: Re: [PATCH 2/3] PCI: rockchip: Swap order of rockchip_writel()
+ reg/val arguments
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>
+References: <20161007162706.23835.10081.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161007162714.23835.9272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: shawn.lin@rock-chips.com, linux-rockchip@lists.infradead.org,
+        linux-pci@vger.kernel.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <be840daa-6602-eb04-e6ee-babf6d4c2aac@rock-chips.com>
+Date: Sat, 8 Oct 2016 10:52:41 +0800
 MIME-Version: 1.0
-In-Reply-To: <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161007162714.23835.9272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/10/2016 23:03, Jon Masters wrote:
-> On 09/14/2016 02:32 PM, Arnd Bergmann wrote:
->> On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
->
->>> And there are probably multiple child devices under LPC, the global arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi driver can not support I/O
->>> operation registering, serial driver has serial_in/serial_out to
->>> be registered. So, only the PIO range for ipmi device is stored
->>> in arm64_extio_ops and the indirect-IO
->>> works well for ipmi device.
->>
->> You should not do that in the serial driver, please just use the
->> normal 8250 driver that works fine once you handle the entire
->> port range.
->
-> Just for the record, Arnd has the right idea. There is only one type of
-> UART permitted by SBSA (PL011). We carved out an exception for a design
-> that was already in flight and allowed it to be 16550. That other design
-> was then corrected in future generations to be PL011 as we required it
-> to be. Then there's the Hip06. I've given feedback elsewhere about the
-> need for there to be (at most) two types of UART in the wild. This "LPC"
-> stuff needs cleaning up (feedback given elsewhere already on that), but
-> we won't be adding a third serial driver into the mix in order to make
-> it work. There will be standard ARM servers. There will not be the
-> kinda-sorta-standard. Thanks.
+在 2016/10/8 0:27, Bjorn Helgaas 写道:
+> Swap order of rockchip_writel() arguments to match the "dev, pos, val"
+> order used by pci_write_config_word() and other drivers.  No functional
+> change intended.
 >
 
-Right, so I think Zhichang can make the necessary generic changes to 
-8250 OF driver to support IO port as well as MMIO-based.
+okay, i saw the pci-tree cleanup for all the host drivers there, so
 
-However an LPC-based earlycon driver is still required.
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-A note on hip07-based D05 (for those unaware): this does not use 
-LPC-based uart. It uses PL011. The hardware guys have managed some 
-trickery where they loopback the serial line around the BMC/CPLD. But we 
-still need it for hip06 D03 and any other boards which want to use LPC 
-bus for uart.
-
-A question on SBSA: does it propose how to provide serial via BMC for SOL?
-
-
-> Jon.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pcie-rockchip.c |   95 ++++++++++++++++++--------------------
+>  1 file changed, 44 insertions(+), 51 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 0ef2f9f..0a89d02 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -209,8 +209,7 @@ static u32 rockchip_readl(struct rockchip_pcie *rockchip, u32 reg)
+>  	return readl(rockchip->apb_base + reg);
+>  }
+>
+> -static void rockchip_writel(struct rockchip_pcie *rockchip, u32 val,
+> -				u32 reg)
+> +static void rockchip_writel(struct rockchip_pcie *rockchip, u32 reg, u32 val)
+>  {
+>  	writel(val, rockchip->apb_base + reg);
+>  }
+> @@ -221,7 +220,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+>
+>  	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
+>  	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
+> -	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_LCS, status);
+>  }
+>
+>  static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+> @@ -230,7 +229,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+>
+>  	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
+>  	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
+> -	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_LCS, status);
+>  }
+>
+>  static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+> @@ -241,7 +240,7 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+>  	val = rockchip_readl(rockchip, PCIE_CORE_TXCREDIT_CFG1);
+>  	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
+>  	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
+> -	rockchip_writel(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
+> +	rockchip_writel(rockchip, PCIE_CORE_TXCREDIT_CFG1, val);
+>  }
+>
+>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+> @@ -438,14 +437,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
+>
+> -	rockchip_writel(rockchip,
+> +	rockchip_writel(rockchip, PCIE_CLIENT_CONFIG,
+>  			    PCIE_CLIENT_CONF_ENABLE |
+>  			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+>  			    PCIE_CLIENT_ARI_ENABLE |
+>  			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+>  			    PCIE_CLIENT_MODE_RC |
+> -			    PCIE_CLIENT_GEN_SEL_2,
+> -				PCIE_CLIENT_CONFIG);
+> +			    PCIE_CLIENT_GEN_SEL_2);
+>
+>  	err = phy_power_on(rockchip->phy);
+>  	if (err) {
+> @@ -488,17 +486,17 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  	 * bug we need to work around.
+>  	 */
+>  	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+> -	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2, status);
+>
+>  	/* Fix the transmitted FTS count desired to exit from L0s. */
+>  	status = rockchip_readl(rockchip, PCIE_CORE_CTRL_PLC1);
+>  	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
+>  		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
+> -	rockchip_writel(rockchip, status, PCIE_CORE_CTRL_PLC1);
+> +	rockchip_writel(rockchip, PCIE_CORE_CTRL_PLC1, status);
+>
+>  	/* Enable Gen1 training */
+> -	rockchip_writel(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+> -			    PCIE_CLIENT_CONFIG);
+> +	rockchip_writel(rockchip, PCIE_CLIENT_CONFIG,
+> +			PCIE_CLIENT_LINK_TRAIN_ENABLE);
+>
+>  	gpiod_set_value(rockchip->ep_gpio, 1);
+>
+> @@ -527,7 +525,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  	 */
+>  	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
+>  	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> -	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_LCS, status);
+>
+>  	timeout = jiffies + msecs_to_jiffies(500);
+>  	for (;;) {
+> @@ -552,20 +550,17 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  			  PCIE_CORE_PL_CONF_LANE_MASK);
+>  	dev_dbg(dev, "current link width is x%d\n", status);
+>
+> -	rockchip_writel(rockchip, ROCKCHIP_VENDOR_ID,
+> -			    PCIE_RC_CONFIG_VENDOR);
+> -	rockchip_writel(rockchip,
+> -			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
+> -			    PCIE_RC_CONFIG_RID_CCR);
+> -	rockchip_writel(rockchip, 0x0, PCIE_RC_BAR_CONF);
+> -
+> -	rockchip_writel(rockchip,
+> -			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
+> -			    PCIE_CORE_OB_REGION_ADDR0);
+> -	rockchip_writel(rockchip, RC_REGION_0_ADDR_TRANS_H,
+> -			    PCIE_CORE_OB_REGION_ADDR1);
+> -	rockchip_writel(rockchip, 0x0080000a, PCIE_CORE_OB_REGION_DESC0);
+> -	rockchip_writel(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_VENDOR, ROCKCHIP_VENDOR_ID);
+> +	rockchip_writel(rockchip, PCIE_RC_CONFIG_RID_CCR,
+> +			PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT);
+> +	rockchip_writel(rockchip, PCIE_RC_BAR_CONF, 0);
+> +
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_ADDR0,
+> +			RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_ADDR1,
+> +			RC_REGION_0_ADDR_TRANS_H);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_DESC0, 0x0080000a);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_DESC1, 0);
+>
+>  	return 0;
+>  }
+> @@ -623,15 +618,15 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+>  		if (sub_reg & PCIE_CORE_INT_MMVC)
+>  			dev_dbg(dev, "MSI mask register changes\n");
+>
+> -		rockchip_writel(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+> +		rockchip_writel(rockchip, PCIE_CORE_INT_STATUS, sub_reg);
+>  	} else if (reg & PCIE_CLIENT_INT_PHY) {
+>  		dev_dbg(dev, "phy link changes\n");
+>  		rockchip_pcie_update_txcredit_mui(rockchip);
+>  		rockchip_pcie_clr_bw_int(rockchip);
+>  	}
+>
+> -	rockchip_writel(rockchip, reg & PCIE_CLIENT_INT_LOCAL,
+> -			PCIE_CLIENT_INT_STATUS);
+> +	rockchip_writel(rockchip, PCIE_CLIENT_INT_STATUS,
+> +			reg & PCIE_CLIENT_INT_LOCAL);
+>
+>  	return IRQ_HANDLED;
+>  }
+> @@ -667,13 +662,13 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+>  	if (reg & PCIE_CLIENT_INT_PHY)
+>  		dev_dbg(dev, "phy interrupt received\n");
+>
+> -	rockchip_writel(rockchip, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
+> -			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+> -			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+> -			      PCIE_CLIENT_INT_NFATAL_ERR |
+> -			      PCIE_CLIENT_INT_CORR_ERR |
+> -			      PCIE_CLIENT_INT_PHY),
+> -		   PCIE_CLIENT_INT_STATUS);
+> +	rockchip_writel(rockchip, PCIE_CLIENT_INT_STATUS,
+> +			reg & (PCIE_CLIENT_INT_LEGACY_DONE |
+> +			       PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+> +			       PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+> +			       PCIE_CLIENT_INT_NFATAL_ERR |
+> +			       PCIE_CLIENT_INT_CORR_ERR |
+> +			       PCIE_CLIENT_INT_PHY));
+>
+>  	return IRQ_HANDLED;
+>  }
+> @@ -913,10 +908,9 @@ err_out:
+>
+>  static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
+>  {
+> -	rockchip_writel(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
+> -			    (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
+> -	rockchip_writel(rockchip, (u32)(~PCIE_CORE_INT),
+> -			    PCIE_CORE_INT_MASK);
+> +	rockchip_writel(rockchip, PCIE_CLIENT_INT_MASK,
+> +			(PCIE_CLIENT_INT_CLI << 16) & (~PCIE_CLIENT_INT_CLI));
+> +	rockchip_writel(rockchip, PCIE_CORE_INT_MASK, (u32)(~PCIE_CORE_INT));
+>
+>  	rockchip_pcie_enable_bw_int(rockchip);
+>  }
+> @@ -985,14 +979,13 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+>  	ob_addr_1 = upper_addr;
+>  	ob_desc_0 = (1 << 23 | type);
+>
+> -	rockchip_writel(rockchip, ob_addr_0,
+> -			    PCIE_CORE_OB_REGION_ADDR0 + aw_offset);
+> -	rockchip_writel(rockchip, ob_addr_1,
+> -			    PCIE_CORE_OB_REGION_ADDR1 + aw_offset);
+> -	rockchip_writel(rockchip, ob_desc_0,
+> -			    PCIE_CORE_OB_REGION_DESC0 + aw_offset);
+> -	rockchip_writel(rockchip, 0,
+> -			    PCIE_CORE_OB_REGION_DESC1 + aw_offset);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_ADDR0 + aw_offset,
+> +			ob_addr_0);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_ADDR1 + aw_offset,
+> +			ob_addr_1);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_DESC0 + aw_offset,
+> +			ob_desc_0);
+> +	rockchip_writel(rockchip, PCIE_CORE_OB_REGION_DESC1 + aw_offset, 0);
+>
+>  	return 0;
+>  }
+> @@ -1018,8 +1011,8 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+>  	ib_addr_0 |= (lower_addr << 8) & PCIE_CORE_IB_REGION_ADDR0_LO_ADDR;
+>  	ib_addr_1 = upper_addr;
+>
+> -	rockchip_writel(rockchip, ib_addr_0, PCIE_RP_IB_ADDR0 + aw_offset);
+> -	rockchip_writel(rockchip, ib_addr_1, PCIE_RP_IB_ADDR1 + aw_offset);
+> +	rockchip_writel(rockchip, PCIE_RP_IB_ADDR0 + aw_offset, ib_addr_0);
+> +	rockchip_writel(rockchip, PCIE_RP_IB_ADDR1 + aw_offset, ib_addr_1);
+>
+>  	return 0;
+>  }
 >
 >
-> .
+> _______________________________________________
+> Linux-rockchip mailing list
+> Linux-rockchip@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-rockchip
 >
+
+
+-- 
+Best Regards
+Shawn Lin
+
