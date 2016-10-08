@@ -1,75 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:36277 "EHLO lekensteyn.nl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750878AbcJ1LJk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 28 Oct 2016 07:09:40 -0400
-Date: Fri, 28 Oct 2016 13:09:30 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rick Kerkhof <rick.2889@gmail.com>, linux-acpi@vger.kernel.org,
-        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        Robert Moore <Robert.Moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>
-Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
- via Power Resources
-Message-ID: <20161028110930.GA1521@al>
-References: <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
- <20161026225641.GA27017@al>
- <20161027081748.GX1476@lahna.fi.intel.com>
- <20161027090604.GB27017@al>
- <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
- <20161027093011.GZ1476@lahna.fi.intel.com>
- <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
- <20161027095508.GA1476@lahna.fi.intel.com>
- <20161027160648.GF27017@al>
- <20161028085630.GD1476@lahna.fi.intel.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:38132 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbcJHHmW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Oct 2016 03:42:22 -0400
+Date: Sat, 8 Oct 2016 09:42:20 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesper Nilsson <jespern@axis.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: Re: [PATCH 4/8] PCI: artpec6: Add resource name comments
+Message-ID: <20161008074220.GT30704@axis.com>
+References: <20161007163233.24751.17505.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161007163300.24751.76570.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161028085630.GD1476@lahna.fi.intel.com>
+In-Reply-To: <20161007163300.24751.76570.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 28, 2016 at 11:56:30AM +0300, Mika Westerberg wrote:
-> On Thu, Oct 27, 2016 at 06:06:48PM +0200, Peter Wu wrote:
-> > On Thu, Oct 27, 2016 at 12:55:08PM +0300, Mika Westerberg wrote:
-> > > On Thu, Oct 27, 2016 at 09:42:28AM +0000, Rick Kerkhof wrote:
-> > > >    No, there are not. Here is the recursive directory listing:
-> > > 
-> > > Are you able to try the following patch and send me dmesg (or attach it
-> > > to that bug)? It should show if the ACPI core even tries to add those
-> > > power resources.
-> > 
-> > So Rick has tested this patch now on top of 4.8.4 (mainline fails to
-> > boot due to a kbuild issue which I reported elsewhere), but the output
-> > is empty. That seems to indicate that flags.power_resources is unset.
-> 
-> Is it completely empty or is it empty just for RP05? It should print out
-> all devices with power resources.
+On Fri, Oct 07, 2016 at 11:33:00AM -0500, Bjorn Helgaas wrote:
+> Add comments about the Device Tree source of resources.  No functional
+> change.
 
-\NVP2 and \NVP3 are the only power resources under RP05 and defined in
-SSDT1, there are no others.
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
-Kind regards,
-Peter
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> > Given that _PS3 exists and is indeed a package with some elements, it
-> > seems that acpi_extract_power_resources is failing. Note that in the
-> > SSDT, the power resource NVP3 was referenced before it was defined,
-> > could that result in this enumeration failure? Relevant SSDT excerpt:
-> > 
-> >     Scope (\_SB.PCI0.RP05)
-> >     {
-> >         Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
-> >         {
-> >             NVP3
-> >         })
-> >         // ...
-> >     }
-> > 
-> >     PowerResource (NVP3, 0x00, 0x0000)
-> 
-> That and the fact that they come from an SSDT instead of DSDT may cause
-> this. However, I'm not expert in ACPICA so adding Bob and Lv if they
-> have ideas.
-> 
-> Bob, Lv, the bug in question is: https://bugs.freedesktop.org/show_bug.cgi?id=98398
+/^JN - Jesper Nilsson
+-- 
+               Jesper Nilsson -- jesper.nilsson@axis.com
