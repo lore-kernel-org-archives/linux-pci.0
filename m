@@ -1,40 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56482 "EHLO mail.kernel.org"
+Received: from bes.se.axis.com ([195.60.68.10]:48228 "EHLO bes.se.axis.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941018AbcJGQjT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:39:19 -0400
-Subject: [PATCH 05/10] PCI: imx6: Removed unused struct imx6_pcie.mem_base
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:39:15 -0500
-Message-ID: <20161007163915.25776.6005.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1751314AbcJHHlu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Oct 2016 03:41:50 -0400
+Date: Sat, 8 Oct 2016 09:41:48 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesper Nilsson <jespern@axis.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: Re: [PATCH 3/8] PCI: artpec6: Pass device-specific struct to
+ internal functions
+Message-ID: <20161008074148.GS30704@axis.com>
+References: <20161007163233.24751.17505.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161007163252.24751.99826.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161007163252.24751.99826.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removed the unused struct imx6_pcie.mem_base member.  No functional change
-intended.
+On Fri, Oct 07, 2016 at 11:32:52AM -0500, Bjorn Helgaas wrote:
+> Only interfaces used from outside the driver, e.g., those called by the
+> DesignWare core, need to accept pointers to the generic struct pcie_port.
+> Internal interfaces can accept pointers to the device-specific struct,
+> which makes them more straightforward.  No functional change intended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-imx6.c |    1 -
- 1 file changed, 1 deletion(-)
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 82195cc..3b2fb41 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -48,7 +48,6 @@ struct imx6_pcie {
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	enum imx6_pcie_variants variant;
--	void __iomem		*mem_base;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
- 	u32			tx_deemph_gen2_6db;
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+/^JN - Jesper Nilsson
+-- 
+               Jesper Nilsson -- jesper.nilsson@axis.com
