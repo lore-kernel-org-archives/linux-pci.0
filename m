@@ -1,44 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54574 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755249AbcJLNCR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:02:17 -0400
-Subject: [PATCH v2 0/3] PCI: tegra: Cleanups
-To: Alexandre Courbot <gnurou@gmail.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Stephen Warren <swarren@wwwdotorg.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:02:12 -0500
-Message-ID: <20161012125946.24960.54201.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout2.hostsharing.net ([83.223.90.233]:42235 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750801AbcJILM7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 07:12:59 -0400
+Message-Id: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 9 Oct 2016 13:12:55 +0200
+Subject: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
+To: linux-pci@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Fix argument order bug for pads_writel() call.
+-.data          56
++.data           0
+-.rodata        32
++.rodata        88
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
-
-  - Remove platform drvdata because it appears unused (we called
-    platform_set_drvdata() but not platform_get_drvdata()).
-
-The first patch fixes a bug.  The others shouldn't change the behavior.
-
-Changes from v1:
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: tegra: Swap order of afi_writel() reg/val arguments
-    PCI: tegra: Swap order of pads_writel() reg/val arguments
-
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
+ drivers/pci/pci-mid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn Helgaas (3):
-      PCI: tegra: Fix argument order in tegra_pcie_phy_disable()
-      PCI: tegra: Add local struct device pointers
-      PCI: tegra: Remove unused platform data
+diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
+index a8b52dc..566ded1 100644
+--- a/drivers/pci/pci-mid.c
++++ b/drivers/pci/pci-mid.c
+@@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
+ 	return false;
+ }
+ 
+-static struct pci_platform_pm_ops mid_pci_platform_pm = {
++static const struct pci_platform_pm_ops mid_pci_platform_pm = {
+ 	.is_manageable	= mid_pci_power_manageable,
+ 	.set_state	= mid_pci_set_power_state,
+ 	.get_state	= mid_pci_get_power_state,
+-- 
+2.9.3
 
-
- drivers/pci/host/pci-tegra.c |  237 ++++++++++++++++++++++--------------------
- 1 file changed, 123 insertions(+), 114 deletions(-)
