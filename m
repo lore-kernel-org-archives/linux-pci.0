@@ -1,58 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46454 "EHLO mail.kernel.org"
+Received: from mga14.intel.com ([192.55.52.115]:14578 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938811AbcJGQYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:24:00 -0400
-Subject: [PATCH 4/7] PCI: iproc: Validate CSR base in BCMA setup code
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Fri, 07 Oct 2016 11:23:36 -0500
-Message-ID: <20161007162336.23015.7099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S1750701AbcJIL6q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 9 Oct 2016 07:58:46 -0400
+Message-ID: <1476014249.11323.329.camel@linux.intel.com>
+Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_power hook
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        x86@kernel.org
+Date: Sun, 09 Oct 2016 14:57:29 +0300
+In-Reply-To: <20161009104626.GA8299@wunner.de>
+References: <cover.1475733022.git.lukas@wunner.de>
+         <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+         <1475873734.11323.324.camel@linux.intel.com>
+         <20161009104626.GA8299@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Validate iproc->base for BCMA devices just like we already do for platform
-devices in iproc_pcie_pltfm_probe().  No functional change intended.
+On Sun, 2016-10-09 at 12:46 +0200, Lukas Wunner wrote:
+> On Fri, Oct 07, 2016 at 11:55:34PM +0300, Andy Shevchenko wrote:
+> > 
+> > On Thu, 2016-10-06 at 08:24 +0200, Lukas Wunner wrote:
+> > > 
+> > > +
+> > > +	reg = (id * LSS_PWS_BITS) / 32;
+> > > +	bit = (id * LSS_PWS_BITS) % 32;
+> > > +	power = mid_pwr_get_state(pwr, reg);
+> > > +	return (power >> bit) & 3;
+> > 
+> > Don't add sparse warnings:
+> > 
+> >         return (__force pci_power_t)((power >> bit) & 3);
+> 
+> I do not get any different sparse warnings with or without the cast
+> despite using -Wsparse-all.  This is with sparse 0.5.0 as included in
+> Debian stretch.
+> 
+> With which options and sparse version did you manage to get new
+> warnings?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-iproc-bcma.c |    5 +++++
- drivers/pci/host/pcie-iproc.c      |    2 +-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+$ sparse --version
+v0.5.0
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index 72273ff..5377328 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -55,6 +55,11 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 	bcma_set_drvdata(bdev, iproc);
- 
- 	iproc->base = bdev->io_addr;
-+	if (!iproc->base) {
-+		dev_err(&bdev->dev, "no controller registers\n");
-+		return -ENOMEM;
-+	}
-+
- 	iproc->base_addr = bdev->addr;
- 
- 	res_mem.start = bdev->addr_s[0];
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 38f5ee0..3de157a 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -457,7 +457,7 @@ int iproc_pcie_setup(struct iproc_pcie *iproc, struct list_head *res)
- 	void *sysdata;
- 	struct pci_bus *bus;
- 
--	if (!iproc || !iproc->dev || !iproc->base)
-+	if (!iproc || !iproc->dev)
- 		return -EINVAL;
- 
- 	ret = devm_request_pci_bus_resources(iproc->dev, res);
+$ make C=1 CF=-D__CHECK_ENDIAN__ W=1 -j64 
 
+Warning itself:
+
+arch/x86/platform/intel-mid/pwr.c:305:31: warning: incorrect type in
+return expression (different base types)
+arch/x86/platform/intel-mid/pwr.c:305:31:    expected restricted
+pci_power_t
+arch/x86/platform/intel-mid/pwr.c:305:31:    got unsigned int
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
