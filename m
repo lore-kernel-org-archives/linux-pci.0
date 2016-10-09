@@ -1,51 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38880 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754829AbcJLNh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:37:57 -0400
-Subject: [PATCH v2 5/5] PCI: exynos: Reorder struct exynos_pcie
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:37:53 -0500
-Message-ID: <20161012133753.28194.44548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:51499 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbcJIMtU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 08:49:20 -0400
+Date: Sun, 9 Oct 2016 14:49:31 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        x86@kernel.org
+Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+ ->get_power hook
+Message-ID: <20161009124931.GA8446@wunner.de>
+References: <cover.1475733022.git.lukas@wunner.de>
+ <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+ <1475873734.11323.324.camel@linux.intel.com>
+ <20161009104626.GA8299@wunner.de>
+ <1476014249.11323.329.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1476014249.11323.329.camel@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct exynos_pcie to put generic fields first.  No functional
-change intended.
+On Sun, Oct 09, 2016 at 02:57:29PM +0300, Andy Shevchenko wrote:
+> On Sun, 2016-10-09 at 12:46 +0200, Lukas Wunner wrote:
+> > On Fri, Oct 07, 2016 at 11:55:34PM +0300, Andy Shevchenko wrote:
+> > > 
+> > > On Thu, 2016-10-06 at 08:24 +0200, Lukas Wunner wrote:
+> > > > 
+> > > > +
+> > > > +	reg = (id * LSS_PWS_BITS) / 32;
+> > > > +	bit = (id * LSS_PWS_BITS) % 32;
+> > > > +	power = mid_pwr_get_state(pwr, reg);
+> > > > +	return (power >> bit) & 3;
+> > > 
+> > > Don't add sparse warnings:
+> > > 
+> > >         return (__force pci_power_t)((power >> bit) & 3);
+> > 
+> > I do not get any different sparse warnings with or without the cast
+> > despite using -Wsparse-all.  This is with sparse 0.5.0 as included in
+> > Debian stretch.
+> > 
+> > With which options and sparse version did you manage to get new
+> > warnings?
+> 
+> $ sparse --version
+> v0.5.0
+> 
+> $ make C=1 CF=-D__CHECK_ENDIAN__ W=1 -j64 
+> 
+> Warning itself:
+> 
+> arch/x86/platform/intel-mid/pwr.c:305:31: warning: incorrect type in
+> return expression (different base types)
+> arch/x86/platform/intel-mid/pwr.c:305:31:    expected restricted
+> pci_power_t
+> arch/x86/platform/intel-mid/pwr.c:305:31:    got unsigned int
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-exynos.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Okay, -D__CHECK_ENDIAN__ was necessary to reproduce the warning.
+Thanks for replying so quickly, much appreciated.
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 829aa6b..f1c544b 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -29,13 +29,13 @@
- #define to_exynos_pcie(x)	container_of(x, struct exynos_pcie, pp)
- 
- struct exynos_pcie {
--	void __iomem		*elbi_base;
--	void __iomem		*phy_base;
--	void __iomem		*block_base;
-+	struct pcie_port	pp;
-+	void __iomem		*elbi_base;	/* DT 0th resource */
-+	void __iomem		*phy_base;	/* DT 1st resource */
-+	void __iomem		*block_base;	/* DT 2nd resource */
- 	int			reset_gpio;
- 	struct clk		*clk;
- 	struct clk		*bus_clk;
--	struct pcie_port	pp;
- };
- 
- /* PCIe ELBI registers */
-
+Lukas
