@@ -1,40 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56792 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755201AbcJLNH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:07:56 -0400
-Subject: [PATCH v2 2/4] PCI: xgene: Remove unused platform data
-To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:07:51 -0500
-Message-ID: <20161012130751.25368.87882.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Po Liu <po.liu@nxp.com>
+To: Rob Herring <robh@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+        Stuart Yoder <stuart.yoder@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+        "M.H. Lian" <minghuan.lian@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>
+Subject: RE: [PATCH v6 3/3] pci:add support aer/pme interrupts with none
+ MSI/MSI-X/INTx mode
+Date: Sun, 9 Oct 2016 02:47:36 +0000
+Message-ID: <VI1PR0401MB170914050D7ADE4E8FC96A0A92D80@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1473741659-17618-3-git-send-email-po.liu@nxp.com>
+ <1475226697-7709-1-git-send-email-po.liu@nxp.com>
+ <1475226697-7709-3-git-send-email-po.liu@nxp.com>
+ <20161008204959.GA17455@rob-hp-laptop>
+In-Reply-To: <20161008204959.GA17455@rob-hp-laptop>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The xgene driver never uses the platform drvdata pointer, so don't
-bother setting it.  No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-xgene.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 03d24e7..7da3b09 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -563,8 +563,6 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
- 	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
- 	pci_bus_add_devices(bus);
--
--	platform_set_drvdata(pdev, port);
- 	return 0;
- 
- error:
-
+SGkgUm9iLA0KDQpCZXN0IHJlZ2FyZHMsDQpMaXUgUG8NCg0KPiAgLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCj4gIEZyb206IFJvYiBIZXJyaW5nIFttYWlsdG86cm9iaEBrZXJuZWwub3JnXQ0K
+PiAgU2VudDogU3VuZGF5LCBPY3RvYmVyIDA5LCAyMDE2IDQ6NTAgQU0NCj4gIFRvOiBQbyBMaXUN
+Cj4gIENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3Rz
+LmluZnJhZGVhZC5vcmc7DQo+ICBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZpY2V0
+cmVlQHZnZXIua2VybmVsLm9yZzsgQmpvcm4gSGVsZ2FhczsNCj4gIFNoYXduIEd1bzsgTWFyYyBa
+eW5naWVyOyBSb3kgWmFuZzsgTWluZ2thaSBIdTsgU3R1YXJ0IFlvZGVyOyBMZW8gTGk7DQo+ICBB
+cm5kIEJlcmdtYW5uOyBNLkguIExpYW47IE11cmFsaSBLYXJpY2hlcmkNCj4gIFN1YmplY3Q6IFJl
+OiBbUEFUQ0ggdjYgMy8zXSBwY2k6YWRkIHN1cHBvcnQgYWVyL3BtZSBpbnRlcnJ1cHRzIHdpdGgg
+bm9uZQ0KPiAgTVNJL01TSS1YL0lOVHggbW9kZQ0KPiAgDQo+ICBPbiBGcmksIFNlcCAzMCwgMjAx
+NiBhdCAwNToxMTozN1BNICswODAwLCBQbyBMaXUgd3JvdGU6DQo+ICA+IE9uIHNvbWUgcGxhdGZv
+cm1zLCByb290IHBvcnQgZG9lc24ndCBzdXBwb3J0IE1TSS9NU0ktWC9JTlR4IGluIFJDIG1vZGUu
+DQo+ICA+IFdoZW4gY2hpcCBzdXBwb3J0IHRoZSBhZXIvcG1lIGludGVycnVwdHMgd2l0aCBub25l
+IE1TSS9NU0ktWC9JTlR4DQo+ICA+IG1vZGUsIG1heWJlIHRoZXJlIGlzIGludGVycnVwdCBsaW5l
+IGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZQ0KPiAgPiBpbnRlcnJ1cHQgbnVtYmVyIGluIHRo
+ZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5pcnEgd2l0aCBpdC4NCj4gIA0KPiAgQWdh
+aW4sIGV4cGxhaW4gd2h5IHlvdSBhcmUgYnJlYWtpbmcgY29tcGF0aWJpbGl0eS4gV2lsbCBhbiBv
+bGQgZHRiIHVzaW5nDQo+ICAiaW50ciIgc3RpbGwgd29yayB3aXRoIHRoaXMgY2hhbmdlPyBJdCBz
+aG91bGQgbm9ybWFsbHkuIFRoZXJlIGFyZSBzb21lDQo+ICBleGNlcHRpb25zLCBidXQgeW91IG5l
+ZWQgdG8gc2F5IHdoYXQgdGhleSBhcmUuDQo+ICANCk9rLCB1bmRlcnN0YW5kLg0KDQo+ICA+DQo+
+ICA+IFNpZ25lZC1vZmYtYnk6IFBvIExpdSA8cG8ubGl1QG54cC5jb20+DQo+ICA+IC0tLQ0KPiAg
+PiBjaGFuZ2VzIGZvciB2NjoNCj4gID4gCS0gbW9kaWZ5IGJpbmRpbmdzIGZvciAiYWVyIiJwbWUi
+Ow0KPiAgPiAJLSBjaGFuZ2luZyB0byB0aGUgaG9vZCBtZXRob2QgdG8gaW1wbGVtZW50IHRoZSBh
+ZXIgcG1lIGludGVycnVwdDsNCj4gID4gCS0gYWRkIHBtZSBpbnRlcnJ1cHQgaW4gdGhlIHNhbWUg
+d2F5Ow0KPiAgPg0KPiAgPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUt
+cGNpLnR4dCAgICAgfCAxMyArKysrKy0tDQo+ICA+ICBhcmNoL2FybS9rZXJuZWwvYmlvczMyLmMg
+ICAgICAgICAgICAgICAgICAgICAgICAgICB8IDQzDQo+ICArKysrKysrKysrKysrKysrKysrKysr
+DQo+ICA+ICBhcmNoL2FybTY0L2tlcm5lbC9wY2kuYyAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICB8IDQzDQo+ICArKysrKysrKysrKysrKysrKysrKysrDQo+ICA+ICBkcml2ZXJzL3BjaS9wY2ll
+L3BvcnRkcnZfY29yZS5jICAgICAgICAgICAgICAgICAgICB8IDMxDQo+ICArKysrKysrKysrKysr
+KystDQo+ICA+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8ICAxICsNCj4gID4gIDUgZmlsZXMgY2hhbmdlZCwgMTI2IGluc2VydGlvbnMoKyksIDUg
+ZGVsZXRpb25zKC0pDQo+ICA+DQo+ICA+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiAgPiBiL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+IGluZGV4
+IDQxZTlmNTUuLjUxZWQ0OWUgMTAwNjQ0DQo+ICA+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNl
+dHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+ICsrKyBiL0RvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+IEBA
+IC0xOCw4ICsxOCwxMiBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAgPiAgLSByZWc6IGJhc2Ug
+YWRkcmVzc2VzIGFuZCBsZW5ndGhzIG9mIHRoZSBQQ0llIGNvbnRyb2xsZXINCj4gID4gIC0gaW50
+ZXJydXB0czogQSBsaXN0IG9mIGludGVycnVwdCBvdXRwdXRzIG9mIHRoZSBjb250cm9sbGVyLiBN
+dXN0DQo+ICBjb250YWluIGFuDQo+ICA+ICAgIGVudHJ5IGZvciBlYWNoIGVudHJ5IGluIHRoZSBp
+bnRlcnJ1cHQtbmFtZXMgcHJvcGVydHkuDQo+ICA+IC0tIGludGVycnVwdC1uYW1lczogTXVzdCBp
+bmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4gID4gLSAgImludHIiOiBUaGUgaW50ZXJy
+dXB0IHRoYXQgaXMgYXNzZXJ0ZWQgZm9yIGNvbnRyb2xsZXIgaW50ZXJydXB0cw0KPiAgPiArLSBp
+bnRlcnJ1cHQtbmFtZXM6IEl0IGNvdWxkIGluY2x1ZGUgdGhlIGZvbGxvd2luZyBlbnRyaWVzOg0K
+PiAgDQo+ICAiQ291bGQiIGlzIG5vdCBzdHJvbmcgZW5vdWdoLiBFdmVyeSB2YWxpZCBjb21iaW5h
+dGlvbiBvZiBpbnRlcnJ1cHRzDQo+ICBzaG91bGQgY29ycmVzcG9uZCB0byBhIHNwZWNpZmljIGNv
+bXBhdGlibGUgc3RyaW5nLiBBIGdpdmVuIHZlcnNpb24gb2YNCj4gIGgvdyBlaXRoZXIgaGFzIHRo
+ZXNlIGludGVycnVwdHMgb3Igbm90Lg0KDQpPaywgd2lsbCBjaGFuZ2UgdG8gJ211c3QnLg0KDQo+
+ICANCj4gID4gKyAgImFlciI6IEFzc2VydGVkIGZvciBhZXIgaW50ZXJydXB0IHdoZW4gY2hpcCBz
+dXBwb3J0IHRoZSBhZXINCj4gIGludGVycnVwdCB3aXRoDQo+ICA+ICsJCSBub25lIE1TSS9NU0kt
+WC9JTlR4IG1vZGUsYnV0IHRoZXJlIGlzIGludGVycnVwdCBsaW5lIGZvcg0KPiAgYWVyLg0KPiAg
+PiArICAicG1lIjogQXNzZXJ0ZWQgZm9yIHBtZSBpbnRlcnJ1cHQgd2hlbiBjaGlwIHN1cHBvcnQg
+dGhlIHBtZQ0KPiAgaW50ZXJydXB0IHdpdGgNCj4gID4gKwkJIG5vbmUgTVNJL01TSS1YL0lOVHgg
+bW9kZSxidXQgdGhlcmUgaXMgaW50ZXJydXB0IGxpbmUgZm9yDQo+ICBwbWUuDQo+ICA+ICsgIC4u
+Li4uLg0KPiAgPiAgLSBmc2wscGNpZS1zY2ZnOiBNdXN0IGluY2x1ZGUgdHdvIGVudHJpZXMuDQo+
+ICA+ICAgIFRoZSBmaXJzdCBlbnRyeSBtdXN0IGJlIGEgbGluayB0byB0aGUgU0NGRyBkZXZpY2Ug
+bm9kZQ0KPiAgPiAgICBUaGUgc2Vjb25kIGVudHJ5IG11c3QgYmUgJzAnIG9yICcxJyBiYXNlZCBv
+biBwaHlzaWNhbCBQQ0llDQo+ICBjb250cm9sbGVyIGluZGV4Lg0K
