@@ -1,43 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44502 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932959AbcJLOEt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:04:49 -0400
-Subject: [PATCH v2 3/4] PCI: spear: Reorder struct spear13xx_pcie
-To: Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 09:04:44 -0500
-Message-ID: <20161012140444.30368.62006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012140058.30368.94283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012140058.30368.94283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.133]:52319 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751713AbcJJKcI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Oct 2016 06:32:08 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 3/3] PCI: rockchip: add COMPILE_TEST for Kconfig
+Date: Mon, 10 Oct 2016 18:26:20 +0800
+Message-Id: <1476095180-15984-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1476095180-15984-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1476095180-15984-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct spear13xx_pcie to put generic fields first.  No functional
-change intended.
+Add this could help build the driver if we enable
+CONFIG_COMPILE_TEST.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/host/pcie-spear13xx.c |    2 +-
+
+Changes in v2: None
+
+ drivers/pci/host/Kconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 26e905d..ecfb49e 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -25,10 +25,10 @@
- #include "pcie-designware.h"
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d7e7c0a..096440e 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -276,7 +276,7 @@ config PCIE_ARTPEC6
  
- struct spear13xx_pcie {
-+	struct pcie_port	pp;		/* DT dbi is pp.dbi_base */
- 	void __iomem		*app_base;
- 	struct phy		*phy;
- 	struct clk		*clk;
--	struct pcie_port	pp;
- 	bool			is_gen1;
- };
- 
+ config PCIE_ROCKCHIP
+ 	bool "Rockchip PCIe controller"
+-	depends on ARCH_ROCKCHIP
++	depends on ARCH_ROCKCHIP || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+-- 
+2.3.7
+
 
