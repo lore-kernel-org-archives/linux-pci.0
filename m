@@ -1,61 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36608 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932987AbcJZUOa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 16:14:30 -0400
-Date: Wed, 26 Oct 2016 15:07:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: bhelgaas@google.com, Thomas Gleixner <tglx@linutronix.de>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] doc: add missing parameter for msi_setup
-Message-ID: <20161026200701.GF17507@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161023093234.41f2d1fb@xeon-e3>
+Return-Path: <flyos@mailoo.org>
+Return-Path: <flyos@mailoo.org>
+From: Pierre de Villemereuil <flyos@mailoo.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Bjorn Helgaas <helgaas@kernel.org>, Mathias Nyman <mathias.nyman@linux.intel.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+Date: Tue, 11 Oct 2016 10:06:47 +1300
+Message-ID: <1758161.mMDqyN5NJP@flyosflip>
+In-Reply-To: <20161008103140.GA7725@wunner.de>
+References: <20161005204119.GA5961@wunner.de> <Pine.LNX.4.44L0.1610061029430.1630-100000@iolanthe.rowland.org> <20161008103140.GA7725@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161023093234.41f2d1fb@xeon-e3>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 23, 2016 at 09:32:34AM -0700, Stephen Hemminger wrote:
-> From: Stephen Hemminger <sthemmin@microsoft.com>
-> 
-> commit 92ca8d20dee2 ("genirq/msi: Switch to new irq spreading")
-> introduced new parameter to msi_init_setup and but did not update
-> docbook comments. Fixes 'make htmldocs' warning.
-> 
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+Hi guys!
 
-Applied to pci/misc for v4.10, thanks, Stephen!
+Thanks for your efforts for fixing this bug! (The workaround of 
+loading the kernel with "usbcore.autosuspend=-1" works very fine for 
+me now).
 
-> ---
->  drivers/pci/msi.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index bfdd074..ad70507 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -610,6 +610,7 @@ static int msi_verify_entries(struct pci_dev *dev)
->   * msi_capability_init - configure device's MSI capability structure
->   * @dev: pointer to the pci_dev data structure of MSI device function
->   * @nvec: number of interrupts to allocate
-> + * @affinity: flag to indicate cpu irq affinity mask should be set
->   *
->   * Setup the MSI capability structure of the device with the requested
->   * number of interrupts.  A return value of zero indicates the successful
-> @@ -752,6 +753,7 @@ static void msix_program_entries(struct pci_dev *dev,
->   * @dev: pointer to the pci_dev data structure of MSI-X device function
->   * @entries: pointer to an array of struct msix_entry entries
->   * @nvec: number of @entries
-> + * @affinity: flag to indicate cpu irq affinity mask should be set
->   *
->   * Setup the MSI-X capability structure of device function with a
->   * single MSI-X irq. A return of zero indicates the successful setup of
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Meanwhile, Asus gave me the expected response:
+
+"Hello Mr. De Villemereuil,
+
+Thank you for having solicited the ASUS Technical Support.
+
+A reading your email I understand that your PC has a problem with 
+the firmware bios from linux report.
+
+Unfortunately, Linux is not part of our areas and we are not trained 
+on.
+
+So we have no confirmation on the Linux of the report.
+
+Thank you for your understanding and wish you a good day."
+
+I attached the explanation from Mathias about what is going on, but 
+apparently if a bug of THEIR firmware is discovered on Linux, they 
+simply freak out and say they don't do Linux (kinda expected...). 
+
+So, I guess they won't release a fix for that... Makes your effort 
+even more relevant since they sell quite a lot of computers and 
+motherboards.
+
+Cheers,
+Pierre.
