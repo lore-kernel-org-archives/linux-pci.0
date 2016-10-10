@@ -1,64 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:51499 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751252AbcJIMtU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 08:49:20 -0400
-Date: Sun, 9 Oct 2016 14:49:31 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        x86@kernel.org
-Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_power hook
-Message-ID: <20161009124931.GA8446@wunner.de>
-References: <cover.1475733022.git.lukas@wunner.de>
- <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
- <1475873734.11323.324.camel@linux.intel.com>
- <20161009104626.GA8299@wunner.de>
- <1476014249.11323.329.camel@linux.intel.com>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:35146 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbcJJBS5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 21:18:57 -0400
+Received: by mail-io0-f193.google.com with SMTP id p26so6323912ioo.2
+        for <linux-pci@vger.kernel.org>; Sun, 09 Oct 2016 18:18:56 -0700 (PDT)
+Subject: Re: [PATCH kernel v2] PCI: Enable access to custom VPD for Chelsio
+ devices (cxgb3)
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1475126512-10722-1-git-send-email-aik@ozlabs.ru>
+Cc: Netdev <netdev@vger.kernel.org>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        Santosh Raspatur <santosh@chelsio.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <1b80cbe3-ccdb-d56b-ce2d-6f5b2b88609f@ozlabs.ru>
+Date: Mon, 10 Oct 2016 12:18:50 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1476014249.11323.329.camel@linux.intel.com>
+In-Reply-To: <1475126512-10722-1-git-send-email-aik@ozlabs.ru>
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 09, 2016 at 02:57:29PM +0300, Andy Shevchenko wrote:
-> On Sun, 2016-10-09 at 12:46 +0200, Lukas Wunner wrote:
-> > On Fri, Oct 07, 2016 at 11:55:34PM +0300, Andy Shevchenko wrote:
-> > > 
-> > > On Thu, 2016-10-06 at 08:24 +0200, Lukas Wunner wrote:
-> > > > 
-> > > > +
-> > > > +	reg = (id * LSS_PWS_BITS) / 32;
-> > > > +	bit = (id * LSS_PWS_BITS) % 32;
-> > > > +	power = mid_pwr_get_state(pwr, reg);
-> > > > +	return (power >> bit) & 3;
-> > > 
-> > > Don't add sparse warnings:
-> > > 
-> > >         return (__force pci_power_t)((power >> bit) & 3);
-> > 
-> > I do not get any different sparse warnings with or without the cast
-> > despite using -Wsparse-all.  This is with sparse 0.5.0 as included in
-> > Debian stretch.
-> > 
-> > With which options and sparse version did you manage to get new
-> > warnings?
-> 
-> $ sparse --version
-> v0.5.0
-> 
-> $ make C=1 CF=-D__CHECK_ENDIAN__ W=1 -j64 
-> 
-> Warning itself:
-> 
-> arch/x86/platform/intel-mid/pwr.c:305:31: warning: incorrect type in
-> return expression (different base types)
-> arch/x86/platform/intel-mid/pwr.c:305:31:    expected restricted
-> pci_power_t
-> arch/x86/platform/intel-mid/pwr.c:305:31:    got unsigned int
+Anyone, ping?
 
-Okay, -D__CHECK_ENDIAN__ was necessary to reproduce the warning.
-Thanks for replying so quickly, much appreciated.
+On 29/09/16 15:21, Alexey Kardashevskiy wrote:
+> There is at least one Chelsio 10Gb card which uses VPD area to store
+> some custom blocks (example below). However pci_vpd_size() returns
+> the length of the first block only assuming that there can be only
+> one VPD "End Tag" and VFIO blocks access beyond that offset
+> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
+> driver fails to probe the device. The host system does not have this
+> problem as the drives accesses the config space directly without
+> pci_read_vpd()/...
+> 
+> This adds a quirk to override the VPD size to a bigger value.
+> The maximum size is taken from EEPROMSIZE in
+> drivers/net/ethernet/chelsio/cxgb3/common.h. We do not read the tag
+> as the cxgb3 driver does as the driver supports writing to EEPROM/VPD
+> and when it writes, it only checks for 8192 bytes boundary. The quirk
+> is registerted for all devices supported by the cxgb3 driver.
+> 
+> This adds a quirk to the PCI layer (not to the cxgb3 driver) as
+> the cxgb3 driver itself accesses VPD directly and the problem only exists
+> with the vfio-pci driver (when cxgb3 is not running on the host and
+> may not be even loaded) which blocks accesses beyond the first block
+> of VPD data. However vfio-pci itself does not have quirks mechanism so
+> we add it to PCI.
+> 
+> Tested on:
+> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
+> 
+> This is its VPD:
+> 0000 Large item 42 bytes; name 0x2 Identifier String
+> 	b'10 Gigabit Ethernet-SR PCI Express Adapter'
+> 	#00 [EC] len=7: b'D76809 '
+> 	#0a [FN] len=7: b'46K7897'
+> 	#14 [PN] len=7: b'46K7897'
+> 	#1e [MN] len=4: b'1037'
+> 	#25 [FC] len=4: b'5769'
+> 	#2c [SN] len=12: b'YL102035603V'
+> 	#3b [NA] len=12: b'00145E992ED1'
+> 
+> 0c00 Large item 16 bytes; name 0x2 Identifier String
+>         b'S310E-SR-X      '
+> 0c13 Large item 234 bytes; name 0x10
+>         #00 [PN] len=16: b'TBD             '
+>         #13 [EC] len=16: b'110107730D2     '
+>         #26 [SN] len=16: b'97YL102035603V  '
+>         #39 [NA] len=12: b'00145E992ED1'
+>         #48 [V0] len=6: b'175000'
+>         #51 [V1] len=6: b'266666'
+>         #5a [V2] len=6: b'266666'
+>         #63 [V3] len=6: b'2000  '
+>         #6c [V4] len=2: b'1 '
+>         #71 [V5] len=6: b'c2    '
+>         #7a [V6] len=6: b'0     '
+>         #83 [V7] len=2: b'1 '
+>         #88 [V8] len=2: b'0 '
+>         #8d [V9] len=2: b'0 '
+>         #92 [VA] len=2: b'0 '
+>         #97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+> 0d00 Large item 252 bytes; name 0x11
+>         #00 [VC] len=16: b'122310_1222 dp  '
+>         #13 [VD] len=16: b'610-0001-00 H1\x00\x00'
+>         #26 [VE] len=16: b'122310_1353 fp  '
+>         #39 [VF] len=16: b'610-0001-00 H1\x00\x00'
+>         #4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+> 0dff Small item 0 bytes; name 0xf End Tag
+> 
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
+> Changes:
+> v2:
+> * used pci_set_vpd_size() helper
+> * added explicit list of IDs from cxgb3 driver
+> * added a note in the commit log why the quirk is not in cxgb3
+> ---
+>  drivers/pci/quirks.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 44e0ff3..b22fce5 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3243,6 +3243,28 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+>  			quirk_thunderbolt_hotplug_msi);
+>  
+> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+> +{
+> +	if (!dev->vpd)
+> +		return;
+> +
+> +	pci_set_vpd_size(dev, max_t(unsigned int, dev->vpd->len, 8192));
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x20, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x21, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x22, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x23, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x24, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x25, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x26, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x30, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x31, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x32, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x35, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x36, quirk_chelsio_extend_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x37, quirk_chelsio_extend_vpd);
+> +
+>  #ifdef CONFIG_ACPI
+>  /*
+>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+> 
 
-Lukas
+
+-- 
+Alexey
