@@ -1,70 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
-References: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Sun, 23 Oct 2016 14:48:58 +1100
-Message-ID: <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com>
-Subject: Re: [V4, 1/3] ACPI, PCI, IRQ: assign ISA IRQ directly during early
- boot stages
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        linux@rainbow-software.org, timur@codeaurora.org,
-        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:40866 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751518AbcJJKU3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Oct 2016 06:20:29 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/3] PCI: rockchip: Provide captured slot power limit and scale
+Date: Mon, 10 Oct 2016 18:26:18 +0800
+Message-Id: <1476095180-15984-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 October 2016 at 09:21, Sinan Kaya <okaya@codeaurora.org> wrote:
-> The penalty determination of ISA IRQ goes through 4 paths.
-> 1. assign PCI_USING during power up via acpi_irq_penalty_init.
-> 2. update the penalty with acpi_penalize_isa_irq function based on the
-> active parameter.
-> 3. kernel command line penalty update via acpi_irq_penalty_update function.
-> 4. increment the penalty as USING right after the IRQ is assign to PCI.
->
-> acpi_penalize_isa_irq and acpi_irq_penalty_update functions get called
-> before the ACPI subsystem is started.
->
-> These API need to bypass the acpi_irq_get_penalty function.
->
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index c983bf7..4f37938 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -849,7 +849,7 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->                         continue;
->
->                 if (used)
-> -                       new_penalty = acpi_irq_get_penalty(irq) +
-> +                       new_penalty = acpi_isa_irq_penalty[irq] +
->                                         PIRQ_PENALTY_ISA_USED;
->                 else
->                         new_penalty = 0;
-> @@ -871,7 +871,7 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->  void acpi_penalize_isa_irq(int irq, int active)
->  {
->         if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-> -               acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> +               acpi_isa_irq_penalty[irq] = acpi_isa_irq_penalty[irq] +
->                   (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->  }
->
+If vpcie3v3 is available, we could provide these information
+via RC's configure register to make EP able to know the power
+limit.
 
-This series fixes one or more network adapters not working in Linux
-32-bit x86 guest running inside VirtualBox if I have 4 network
-adapters enabled. The following message no longer appears in the
-kernel log:
-ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Tested-by: Jonathan Liu <net147@gmail.com>
+---
+
+Changes in v2:
+- rebase the code since it isn't cleanly applied after Bjorn's cleanup
+
+ drivers/pci/host/pcie-rockchip.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index b3548d0..75b6bbf 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -135,6 +135,10 @@
+ #define PCIE_RC_CONFIG_VENDOR		(PCIE_RC_CONFIG_BASE + 0x00)
+ #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+ #define   PCIE_RC_CONFIG_SCC_SHIFT		16
++#define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
++#define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
++#define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
++#define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+ #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+@@ -394,6 +398,40 @@ static struct pci_ops rockchip_pcie_ops = {
+ 	.write = rockchip_pcie_wr_conf,
+ };
+ 
++static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
++{
++	u32 status, curr, scale, power;
++
++	if (IS_ERR(rockchip->vpcie3v3))
++		return;
++
++	/*
++	 * Set RC's captured slot power limit and scale if
++	 * vpcie3v3 available. The default values are both zero
++	 * which means the software should set these two according
++	 * to the actual power supply.
++	 */
++	curr = regulator_get_current_limit(rockchip->vpcie3v3);
++	if (curr > 0) {
++		scale = 3; /* 0.001x */
++		curr = curr / 1000; /* convert to mA */
++		power = (curr * 3300) / 1000; /* milliwatt */
++		while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
++			if (!scale) {
++				dev_warn(rockchip->dev, "invalid power supply\n");
++				return;
++			}
++			scale--;
++			power = power / 10;
++		}
++
++		status = rockchip_readl(rockchip, PCIE_RC_CONFIG_DCR);
++		status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
++			  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
++		rockchip_writel(rockchip, PCIE_RC_CONFIG_DCR, status);
++	}
++}
++
+ /**
+  * rockchip_pcie_init_port - Initialize hardware
+  * @rockchip: PCIe port information
+@@ -494,6 +532,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
+ 	rockchip_writel(rockchip, PCIE_CORE_CTRL_PLC1, status);
+ 
++	rockchip_pcie_set_power_limit(rockchip);
++
+ 	/* Enable Gen1 training */
+ 	rockchip_writel(rockchip, PCIE_CLIENT_CONFIG,
+ 			PCIE_CLIENT_LINK_TRAIN_ENABLE);
+-- 
+2.3.7
+
+
