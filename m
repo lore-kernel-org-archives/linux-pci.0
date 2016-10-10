@@ -1,70 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:46836 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934965AbcJQOem (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 10:34:42 -0400
-Subject: Re: [PATCH] PCI: designware: check for iATU unroll support after
- initializing host
-To: Niklas Cassel <niklas.cassel@axis.com>, <jingoohan1@gmail.com>,
-        <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
-        <Joao.Pinto@synopsys.com>
-References: <1476482095-26289-1-git-send-email-niklass@axis.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Niklas Cassel <niklass@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <74f25cf5-b307-9799-87a7-e359b3698304@synopsys.com>
-Date: Mon, 17 Oct 2016 15:34:19 +0100
+Received: from mail.kernel.org ([198.145.29.136]:46148 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751028AbcJJTef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Oct 2016 15:34:35 -0400
 MIME-Version: 1.0
-In-Reply-To: <1476482095-26289-1-git-send-email-niklass@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20161010172046.GA30803@localhost>
+References: <1475743800-1036-1-git-send-email-shawn.lin@rock-chips.com>
+ <20161010141639.GA22113@rob-hp-laptop> <20161010172046.GA30803@localhost>
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 10 Oct 2016 14:34:10 -0500
+Message-ID: <CAL_Jsq+p3Vnw0U4ja09HRbfJ_ECzZjHCGmajAoVRdpPZrM6KTA@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI: rockchip: Support property to specify the link capability
+To: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Oct 10, 2016 at 12:20 PM, Brian Norris <briannorris@chromium.org> wrote:
+> Hi Rob,
+>
+> On Mon, Oct 10, 2016 at 09:16:39AM -0500, Rob Herring wrote:
+>> On Thu, Oct 06, 2016 at 04:50:00PM +0800, Shawn Lin wrote:
+>> > From: Brian Norris <briannorris@chromium.org>
+>> >
+>> > rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+>> > boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+>> > ms waiting for training that will never happen, let's add a property
+>> > from devicetree to specify link capability.
+>> >
+>> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+>> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> >
+>> > ---
+>> >
+>> > Changes in v4:
+>> > - define link_gen as u32
+>> > - elaborate more for rockchip,max-link-speed on doc
+>> >
+>> > Changes in v3:
+>> > - Cast a warning for invalid max link speed and use gen1 for it.
+>> >   That looks better than v2. (Suggested by Brian)
+>> >
+>> > Changes in v2:
+>> > - rename the property to rockchip,max-link-speed according to
+>> >   Bjorn's recommendation and take some bits from imx6q-pcie to
+>> >   make this requirement more consisent.
+>> >
+>> >  .../devicetree/bindings/pci/rockchip-pcie.txt      |  4 ++
+>> >  drivers/pci/host/pcie-rockchip.c                   | 63 ++++++++++++++--------
+>> >  2 files changed, 44 insertions(+), 23 deletions(-)
+>> >
+>> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > index ba67b39..9bb29de 100644
+>> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > @@ -42,6 +42,10 @@ Required properties:
+>> >  Optional Property:
+>> >  - ep-gpios: contain the entry for pre-reset gpio
+>> >  - num-lanes: number of lanes to use
+>> > +- rockchip,max-link-speed: Specify PCI gen for link capability. Must
+>> > +   be '2' for gen2, and '1' for gen1, otherwise will default to gen1.
+>> > +   For backward compatibility, if this property isn't assigned, we
+>> > +   use gen2 by default.
+>>
+>> Defaults to gen1 or gen2?
+>
+> The wording is a bit confusing, but I think Shawn intended for:
+> (a) if no property is provided, default to the maximum supported (i.e.,
+>     gen2), to keep backward compatibility
+> (b) if a property is provided, but it doesn't contain 1 or 2, just
+>     default to 1
+>
+> I already disagreed with (b) (and suggested we make this an error
+> instead; we have no business accepting malformed device trees here IMO).
+> Alternatives to clear up the confusion Rob pointed out might include:
+> (1) explaining this better (i.e., what does "otherwise" mean in the
+>     original sentence?)
+> (2) changing this to uniformly default to 2 (if someone used an
+>     unsupported value, treat it as if the property wasn't there at all)
+> (3) reject incorrect values outright (so we don't have this fuzzy middle
+>     ground at all)
 
-On 10/14/2016 10:54 PM, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> dw_pcie_iatu_unroll_enabled reads a dbi_base register.
-> Reading any dbi_base register before pp->ops->host_init has been called
-> causes "imprecise external abort" on platforms like ARTPEC-6, where the
-> PCIe module is disabled at boot and first enabled in pp->ops->host_init.
-> Move dw_pcie_iatu_unroll_enabled to dw_pcie_setup_rc, since it is after
-> pp->ops->host_init, but before pp->iatu_unroll_enabled is actually used.
-> 
-> Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 035f50c03281..bed19994c1e9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -637,8 +637,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -
->  	if (pp->ops->host_init)
->  		pp->ops->host_init(pp);
->  
-> @@ -809,6 +807,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
->  
-> +	/* get iATU unroll support */
-> +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +	dev_dbg(pp->dev, "iATU unroll: %s\n",
-> +		pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> +
->  	/* set the number of lanes */
->  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->  	val &= ~PORT_LINK_MODE_MASK;
-> 
+Sounds good.
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+>> Let's drop rockchip and make this a common property.
+>
+> As in, handle this in some generic/common way? AFAICT, there's really
+> no way to do that given the current structure of PCIe handling (and the
+> nature of these kinds of limitations).
+>
+> Or, do you just mean make the name common? (i.e,. "max-link-speed"
+> instead of "rockchip,max-link-speed")
 
-Thanks
-Joao
+Right, just the name and document in a common spot. Could be a simple
+helper function that drivers can call as well.
+
+Rob
