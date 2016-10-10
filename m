@@ -1,76 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:35656 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942726AbcJSRmI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 13:42:08 -0400
-Received: by mail-pf0-f179.google.com with SMTP id s8so19632927pfj.2
-        for <linux-pci@vger.kernel.org>; Wed, 19 Oct 2016 10:42:08 -0700 (PDT)
-Date: Wed, 19 Oct 2016 10:42:05 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
+Received: from mga05.intel.com ([192.55.52.43]:51514 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752422AbcJJKyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Oct 2016 06:54:15 -0400
+Message-ID: <1476096851.11323.371.camel@linux.intel.com>
+Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_power hook
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: remove the pointer to L1 substate cap
-Message-ID: <20161019174205.GA78840@google.com>
-References: <1476868234-15135-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476868234-15135-1-git-send-email-shawn.lin@rock-chips.com>
+        x86@kernel.org
+Date: Mon, 10 Oct 2016 13:54:11 +0300
+In-Reply-To: <20161009150312.GA8487@wunner.de>
+References: <cover.1475733022.git.lukas@wunner.de>
+         <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
+         <1475873734.11323.324.camel@linux.intel.com>
+         <20161008134945.GA7828@wunner.de>
+         <1476015997.11323.347.camel@linux.intel.com>
+         <20161009150312.GA8487@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Wed, Oct 19, 2016 at 05:10:34PM +0800, Shawn Lin wrote:
-> Per the errata of TRM, the RC can't support L1 substate, so we
-> need to remove the L1 substate cap.
+On Sun, 2016-10-09 at 17:03 +0200, Lukas Wunner wrote:
+> On Sun, Oct 09, 2016 at 03:26:37PM +0300, Andy Shevchenko wrote:
+> > 
+> > On Sat, 2016-10-08 at 15:49 +0200, Lukas Wunner wrote:
+> > > 
+> > >   I'm not familiar at all with Intel MID devices, do
+> > > you have a way to clearly identify if a PCI device is power
+> > > managed
+> > > by the PWRMU versus PMCSR?  My guess is that at the very least,
+> > > intel_mid_pwr_get_lss_id() needs to be called and false needs to
+> > > be returned by mid_pci_power_manageable() if the return value is
+> > > negative.
+> > 
+> > PCI bus is kinda fake on those platforms (which implement SFI) and
+> > don't
+> > always follow [PCI] specification. The vendor register represents so
+> > called Logical Subsystem ID of the device in question. Some of them
+> > are
+> > related to PWRMU, some to P-Unit, some just has no such register.
+> > 
+> > In PWRMU/P-Unit cases PMCSR is present and writing to it is needed.
+> > For the rest I don't remember what is actual state, perhaps writing
+> > is
+> > just ignored and OS reads D0 all the time from it.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index e0b22da..8370a85 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -142,6 +142,8 @@
->  #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
->  #define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
->  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
-> +#define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
-> +#define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
->  
->  #define PCIE_CORE_AXI_CONF_BASE		0xc00000
->  #define PCIE_CORE_OB_REGION_ADDR0	(PCIE_CORE_AXI_CONF_BASE + 0x0)
-> @@ -558,6 +560,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	rockchip_pcie_write(rockchip,
->  			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
->  			    PCIE_RC_CONFIG_RID_CCR);
-> +
-> +	/* Clear THP cap's next cap pointer to remove L1 substate cap */
-> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_THP_CAP);
-> +	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
-> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
-> +
+> For devices with PM mechanisms not covered by the standard PCI code
+> (or ACPI platform code), a common pattern is to assign them a struct
+> dev_pm_domain using dev_pm_domain_set().  Then on suspend you'd
+> invoke the PCI bus suspend hook and afterwards ask the PWRMU to
+> power down.  On resume you'd first power up using the PWRMU, then
+> call the PCI bus resume hook.  See drivers/gpu/vga/vga_switcheroo.c:
+> vga_switcheroo_init_domain_pm_ops() for an example.  This would have
+> been an alternative approach to introducing a new PCI platform for
+> these devices.  I'm not sure which approach is more suitable, it's
+> just something that crossed my mind when looking at this.
 
-Tested-by: Brian Norris <briannorris@chromium.org>
+Looks like individual drivers shall decide how to behave, right? We
+would actually like to avoid to touch any of the device driver in
+question.
 
->  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
->  
->  	rockchip_pcie_write(rockchip,
-
-You could also probably do away with the handling of L1 substates here,
-since they're officially declared broken:
-
-        /*
-         * We need to read/write PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 before
-         * enabling ASPM.  Otherwise L1PwrOnSc and L1PwrOnVal isn't
-         * reliable and enabling ASPM doesn't work.  This is a controller
-         * bug we need to work around.
-         */
-        status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
-        rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
