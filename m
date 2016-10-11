@@ -1,58 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S939006AbcJGQcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:32:13 -0400
-Subject: [PATCH 7/8] PCI: armada: Reorder local declaration
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:32:09 -0500
-Message-ID: <20161007163209.24582.85495.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Date: Tue, 11 Oct 2016 11:18:28 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>,
+    Mathias Nyman <mathias.nyman@linux.intel.com>,
+    Pierre de Villemereuil <flyos@mailoo.org>,
+    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
+     <linux-pci@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+In-Reply-To: <20161008103140.GA7725@wunner.de>
+Message-ID: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Move initialized local variable declaration to top and set drvdata pointer
-only when the probe function succeeds.  No functional change intended.
+On Sat, 8 Oct 2016, Lukas Wunner wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-armada8k.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> The PCI core already calls pm_runtime_get_sync() before invoking the
+> ->probe hook of a driver (see local_pci_probe()).  Drivers need to
+> explicitly release a runtime ref to allow their device to suspend.
+> For xhci-pci, this seems to happen in usb_hcd_pci_probe():
+> 
+> 	if (pci_dev_run_wake(dev))
+> 		pm_runtime_put_noidle(&dev->dev);
+> 
+> So you could either modify the if-condition if you want to change the
+> behaviour for XHCI devices only, or if you want to change it in general,
+> add something like this to pci_dev_run_wake():
+> 
+> 	/* PME capable in principle, but not from the intended sleep state */
+> 	if (dev->pme_support && !pci_pme_capable(dev, pci_target_state(dev)))
+> 		return false;
+> 
+> I've briefly looked over the callers of pci_dev_run_wake() and the above
+> seems safe but you should double-check them.
 
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index 19086a4..36002e4 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -197,9 +197,9 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *armada8k,
- 
- static int armada8k_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct armada8k_pcie *armada8k;
- 	struct pcie_port *pp;
--	struct device *dev = &pdev->dev;
- 	struct resource *base;
- 	int ret;
- 
-@@ -215,7 +215,6 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 
- 	pp = &armada8k->pp;
- 	pp->dev = dev;
--	platform_set_drvdata(pdev, armada8k);
- 
- 	/* Get the dw-pcie unit configuration/control registers base. */
- 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
-@@ -230,6 +229,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto fail;
- 
-+	platform_set_drvdata(pdev, armada8k);
- 	return 0;
- 
- fail:
+That seems like a good suggestion.  The patch is below; Pierre, can you 
+test it?  This should remove the need to set the USB autosuspend module 
+parameter to -1.
 
+Alan Stern
+
+
+
+Index: usb-4.x/drivers/pci/pci.c
+===================================================================
+--- usb-4.x.orig/drivers/pci/pci.c
++++ usb-4.x/drivers/pci/pci.c
+@@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
+ 	if (!dev->pme_support)
+ 		return false;
+ 
++	/* PME-capable in principle, but not from the intended sleep state */
++	if (!pci_pme_capable(dev, pci_target_state(dev)))
++		return false;
++
+ 	while (bus->parent) {
+ 		struct pci_dev *bridge = bus->self;
+ 
