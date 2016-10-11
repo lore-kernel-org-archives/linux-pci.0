@@ -1,761 +1,644 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49174 "EHLO mail.kernel.org"
+Received: from mga02.intel.com ([134.134.136.20]:23574 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S940962AbcJGQ3e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:29:34 -0400
-Subject: [PATCH 6/9] PCI: xilinx-nwl: Name private struct pointer "nwl"
- consistently
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:29:27 -0500
-Message-ID: <20161007162927.24137.78281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1752824AbcJKAWK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Oct 2016 20:22:10 -0400
+Date: Tue, 11 Oct 2016 08:21:25 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: kbuild-all@01.org, linux-pci@vger.kernel.org
+Subject: [pci:pci/host-xgene 16/17] drivers/pci/host/pci-xgene.c:125:2:
+ error: implicit declaration of function 'xgene_pcie_write'
+Message-ID: <201610110820.TTDDm9eZ%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/mixed; boundary="+HP7ph2BbKc20aGI"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a device-specific name, "nwl", for struct nwl_pcie pointers
-to hint that this is device-specific information.  No functional change
-intended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+--+HP7ph2BbKc20aGI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-xgene
+head:   d7f085ebc16657a04a39c1c35ce41fb287fe3124
+commit: 966d0acb5184ada52e4e6d7da0f600fdf8a63524 [16/17] PCI: xgene: Add register accessors
+config: arm64-defconfig (attached as .config)
+compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+reproduce:
+        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        git checkout 966d0acb5184ada52e4e6d7da0f600fdf8a63524
+        # save the attached .config to linux build tree
+        make.cross ARCH=arm64 
+
+All errors (new ones prefixed by >>):
+
+   drivers/pci/host/pci-xgene.c: In function 'xgene_pcie_set_rtdid_reg':
+>> drivers/pci/host/pci-xgene.c:125:2: error: implicit declaration of function 'xgene_pcie_write' [-Werror=implicit-function-declaration]
+     xgene_pcie_write(xgene_pcie, RTDID, rtdid_val);
+     ^~~~~~~~~~~~~~~~
+   drivers/pci/host/pci-xgene.c: In function 'xgene_pcie_setup':
+   drivers/pci/host/pci-xgene.c:498:23: error: 'port' undeclared (first use in this function)
+     struct device *dev = port->dev;
+                          ^~~~
+   drivers/pci/host/pci-xgene.c:498:23: note: each undeclared identifier is reported only once for each function it appears in
+   At top level:
+   drivers/pci/host/pci-xgene.c:84:13: warning: 'xgene_pcie_writel' defined but not used [-Wunused-function]
+    static void xgene_pcie_writel(struct xgene_pcie *xgene_pcie, u32 reg, u32 val)
+                ^~~~~~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
+
+vim +/xgene_pcie_write +125 drivers/pci/host/pci-xgene.c
+
+   119		d = PCI_SLOT(devfn);
+   120		f = PCI_FUNC(devfn);
+   121	
+   122		if (!pci_is_root_bus(bus))
+   123			rtdid_val = (b << 8) | (d << 3) | f;
+   124	
+ > 125		xgene_pcie_write(xgene_pcie, RTDID, rtdid_val);
+   126		/* read the register back to ensure flush */
+   127		xgene_pcie_readl(xgene_pcie, RTDID);
+   128	}
+
 ---
- drivers/pci/host/pcie-xilinx-nwl.c |  318 ++++++++++++++++++------------------
- 1 file changed, 159 insertions(+), 159 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 67eae41..2c72c73 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -186,57 +186,57 @@ struct nwl_pcie {
- 	struct irq_domain *legacy_irq_domain;
- };
- 
--static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
-+static inline u32 nwl_bridge_readl(struct nwl_pcie *nwl, u32 off)
- {
--	return readl(pcie->breg_base + off);
-+	return readl(nwl->breg_base + off);
- }
- 
--static inline void nwl_bridge_writel(struct nwl_pcie *pcie, u32 val, u32 off)
-+static inline void nwl_bridge_writel(struct nwl_pcie *nwl, u32 val, u32 off)
- {
--	writel(val, pcie->breg_base + off);
-+	writel(val, nwl->breg_base + off);
- }
- 
--static bool nwl_pcie_link_up(struct nwl_pcie *pcie)
-+static bool nwl_pcie_link_up(struct nwl_pcie *nwl)
- {
--	if (readl(pcie->pcireg_base + PS_LINKUP_OFFSET) & PCIE_PHY_LINKUP_BIT)
-+	if (readl(nwl->pcireg_base + PS_LINKUP_OFFSET) & PCIE_PHY_LINKUP_BIT)
- 		return true;
- 	return false;
- }
- 
--static bool nwl_phy_link_up(struct nwl_pcie *pcie)
-+static bool nwl_phy_link_up(struct nwl_pcie *nwl)
- {
--	if (readl(pcie->pcireg_base + PS_LINKUP_OFFSET) & PHY_RDY_LINKUP_BIT)
-+	if (readl(nwl->pcireg_base + PS_LINKUP_OFFSET) & PHY_RDY_LINKUP_BIT)
- 		return true;
- 	return false;
- }
- 
--static int nwl_wait_for_link(struct nwl_pcie *pcie)
-+static int nwl_wait_for_link(struct nwl_pcie *nwl)
- {
- 	int retries;
- 
- 	/* check if the link is up or not */
- 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
--		if (nwl_phy_link_up(pcie))
-+		if (nwl_phy_link_up(nwl))
- 			return 0;
- 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
- 	}
- 
--	dev_err(pcie->dev, "PHY link never came up\n");
-+	dev_err(nwl->dev, "PHY link never came up\n");
- 	return -ETIMEDOUT;
- }
- 
- static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- {
--	struct nwl_pcie *pcie = bus->sysdata;
-+	struct nwl_pcie *nwl = bus->sysdata;
- 
- 	/* Check link before accessing downstream ports */
--	if (bus->number != pcie->root_busno) {
--		if (!nwl_pcie_link_up(pcie))
-+	if (bus->number != nwl->root_busno) {
-+		if (!nwl_pcie_link_up(nwl))
- 			return false;
- 	}
- 
- 	/* Only one device down on each root port */
--	if (bus->number == pcie->root_busno && devfn > 0)
-+	if (bus->number == nwl->root_busno && devfn > 0)
- 		return false;
- 
- 	return true;
-@@ -255,7 +255,7 @@ static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- static void __iomem *nwl_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
- 				      int where)
- {
--	struct nwl_pcie *pcie = bus->sysdata;
-+	struct nwl_pcie *nwl = bus->sysdata;
- 	int relbus;
- 
- 	if (!nwl_pcie_valid_device(bus, devfn))
-@@ -264,7 +264,7 @@ static void __iomem *nwl_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	relbus = (bus->number << ECAM_BUS_LOC_SHIFT) |
- 			(devfn << ECAM_DEV_LOC_SHIFT);
- 
--	return pcie->ecam_base + relbus + where;
-+	return nwl->ecam_base + relbus + where;
- }
- 
- /* PCIe operations */
-@@ -276,58 +276,58 @@ static struct pci_ops nwl_pcie_ops = {
- 
- static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
- {
--	struct nwl_pcie *pcie = data;
-+	struct nwl_pcie *nwl = data;
- 	u32 misc_stat;
- 
- 	/* Checking for misc interrupts */
--	misc_stat = nwl_bridge_readl(pcie, MSGF_MISC_STATUS) &
-+	misc_stat = nwl_bridge_readl(nwl, MSGF_MISC_STATUS) &
- 				     MSGF_MISC_SR_MASKALL;
- 	if (!misc_stat)
- 		return IRQ_NONE;
- 
- 	if (misc_stat & MSGF_MISC_SR_RXMSG_OVER)
--		dev_err(pcie->dev, "Received Message FIFO Overflow\n");
-+		dev_err(nwl->dev, "Received Message FIFO Overflow\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_SLAVE_ERR)
--		dev_err(pcie->dev, "Slave error\n");
-+		dev_err(nwl->dev, "Slave error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_MASTER_ERR)
--		dev_err(pcie->dev, "Master error\n");
-+		dev_err(nwl->dev, "Master error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_I_ADDR_ERR)
--		dev_err(pcie->dev,
-+		dev_err(nwl->dev,
- 			"In Misc Ingress address translation error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_E_ADDR_ERR)
--		dev_err(pcie->dev,
-+		dev_err(nwl->dev,
- 			"In Misc Egress address translation error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_FATAL_AER)
--		dev_err(pcie->dev, "Fatal Error in AER Capability\n");
-+		dev_err(nwl->dev, "Fatal Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_NON_FATAL_AER)
--		dev_err(pcie->dev, "Non-Fatal Error in AER Capability\n");
-+		dev_err(nwl->dev, "Non-Fatal Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_CORR_AER)
--		dev_err(pcie->dev, "Correctable Error in AER Capability\n");
-+		dev_err(nwl->dev, "Correctable Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_UR_DETECT)
--		dev_err(pcie->dev, "Unsupported request Detected\n");
-+		dev_err(nwl->dev, "Unsupported request Detected\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_NON_FATAL_DEV)
--		dev_err(pcie->dev, "Non-Fatal Error Detected\n");
-+		dev_err(nwl->dev, "Non-Fatal Error Detected\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_FATAL_DEV)
--		dev_err(pcie->dev, "Fatal Error Detected\n");
-+		dev_err(nwl->dev, "Fatal Error Detected\n");
- 
- 	if (misc_stat & MSGF_MSIC_SR_LINK_AUTO_BWIDTH)
--		dev_info(pcie->dev, "Link Autonomous Bandwidth Management Status bit set\n");
-+		dev_info(nwl->dev, "Link Autonomous Bandwidth Management Status bit set\n");
- 
- 	if (misc_stat & MSGF_MSIC_SR_LINK_BWIDTH)
--		dev_info(pcie->dev, "Link Bandwidth Management Status bit set\n");
-+		dev_info(nwl->dev, "Link Bandwidth Management Status bit set\n");
- 
- 	/* Clear misc interrupt status */
--	nwl_bridge_writel(pcie, misc_stat, MSGF_MISC_STATUS);
-+	nwl_bridge_writel(nwl, misc_stat, MSGF_MISC_STATUS);
- 
- 	return IRQ_HANDLED;
- }
-@@ -335,18 +335,18 @@ static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
- static void nwl_pcie_leg_handler(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct nwl_pcie *pcie;
-+	struct nwl_pcie *nwl;
- 	unsigned long status;
- 	u32 bit;
- 	u32 virq;
- 
- 	chained_irq_enter(chip, desc);
--	pcie = irq_desc_get_handler_data(desc);
-+	nwl = irq_desc_get_handler_data(desc);
- 
--	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-+	while ((status = nwl_bridge_readl(nwl, MSGF_LEG_STATUS) &
- 				MSGF_LEG_SR_MASKALL) != 0) {
- 		for_each_set_bit(bit, &status, INTX_NUM) {
--			virq = irq_find_mapping(pcie->legacy_irq_domain,
-+			virq = irq_find_mapping(nwl->legacy_irq_domain,
- 						bit + 1);
- 			if (virq)
- 				generic_handle_irq(virq);
-@@ -356,18 +356,18 @@ static void nwl_pcie_leg_handler(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
--static void nwl_pcie_handle_msi_irq(struct nwl_pcie *pcie, u32 status_reg)
-+static void nwl_pcie_handle_msi_irq(struct nwl_pcie *nwl, u32 status_reg)
- {
- 	struct nwl_msi *msi;
- 	unsigned long status;
- 	u32 bit;
- 	u32 virq;
- 
--	msi = &pcie->msi;
-+	msi = &nwl->msi;
- 
--	while ((status = nwl_bridge_readl(pcie, status_reg)) != 0) {
-+	while ((status = nwl_bridge_readl(nwl, status_reg)) != 0) {
- 		for_each_set_bit(bit, &status, 32) {
--			nwl_bridge_writel(pcie, 1 << bit, status_reg);
-+			nwl_bridge_writel(nwl, 1 << bit, status_reg);
- 			virq = irq_find_mapping(msi->dev_domain, bit);
- 			if (virq)
- 				generic_handle_irq(virq);
-@@ -378,20 +378,20 @@ static void nwl_pcie_handle_msi_irq(struct nwl_pcie *pcie, u32 status_reg)
- static void nwl_pcie_msi_handler_high(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct nwl_pcie *pcie = irq_desc_get_handler_data(desc);
-+	struct nwl_pcie *nwl = irq_desc_get_handler_data(desc);
- 
- 	chained_irq_enter(chip, desc);
--	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_HI);
-+	nwl_pcie_handle_msi_irq(nwl, MSGF_MSI_STATUS_HI);
- 	chained_irq_exit(chip, desc);
- }
- 
- static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct nwl_pcie *pcie = irq_desc_get_handler_data(desc);
-+	struct nwl_pcie *nwl = irq_desc_get_handler_data(desc);
- 
- 	chained_irq_enter(chip, desc);
--	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_LO);
-+	nwl_pcie_handle_msi_irq(nwl, MSGF_MSI_STATUS_LO);
- 	chained_irq_exit(chip, desc);
- }
- 
-@@ -427,8 +427,8 @@ static struct msi_domain_info nwl_msi_domain_info = {
- 
- static void nwl_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
--	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
--	phys_addr_t msi_addr = pcie->phys_pcie_reg_base;
-+	struct nwl_pcie *nwl = irq_data_get_irq_chip_data(data);
-+	phys_addr_t msi_addr = nwl->phys_pcie_reg_base;
- 
- 	msg->address_lo = lower_32_bits(msi_addr);
- 	msg->address_hi = upper_32_bits(msi_addr);
-@@ -450,8 +450,8 @@ static struct irq_chip nwl_irq_chip = {
- static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 				unsigned int nr_irqs, void *args)
- {
--	struct nwl_pcie *pcie = domain->host_data;
--	struct nwl_msi *msi = &pcie->msi;
-+	struct nwl_pcie *nwl = domain->host_data;
-+	struct nwl_msi *msi = &nwl->msi;
- 	int bit;
- 	int i;
- 
-@@ -478,8 +478,8 @@ static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
- 					unsigned int nr_irqs)
- {
- 	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
--	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
--	struct nwl_msi *msi = &pcie->msi;
-+	struct nwl_pcie *nwl = irq_data_get_irq_chip_data(data);
-+	struct nwl_msi *msi = &nwl->msi;
- 
- 	mutex_lock(&msi->lock);
- 	bitmap_clear(msi->bitmap, data->hwirq, nr_irqs);
-@@ -491,23 +491,23 @@ static const struct irq_domain_ops dev_msi_domain_ops = {
- 	.free   = nwl_irq_domain_free,
- };
- 
--static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
-+static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *nwl)
- {
- #ifdef CONFIG_PCI_MSI
--	struct fwnode_handle *fwnode = of_node_to_fwnode(pcie->dev->of_node);
--	struct nwl_msi *msi = &pcie->msi;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(nwl->dev->of_node);
-+	struct nwl_msi *msi = &nwl->msi;
- 
- 	msi->dev_domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
--						&dev_msi_domain_ops, pcie);
-+						&dev_msi_domain_ops, nwl);
- 	if (!msi->dev_domain) {
--		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
-+		dev_err(nwl->dev, "failed to create dev IRQ domain\n");
- 		return -ENOMEM;
- 	}
- 	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
- 						    &nwl_msi_domain_info,
- 						    msi->dev_domain);
- 	if (!msi->msi_domain) {
--		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
-+		dev_err(nwl->dev, "failed to create msi IRQ domain\n");
- 		irq_domain_remove(msi->dev_domain);
- 		return -ENOMEM;
- 	}
-@@ -515,35 +515,35 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
- 	return 0;
- }
- 
--static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
-+static int nwl_pcie_init_irq_domain(struct nwl_pcie *nwl)
- {
--	struct device_node *node = pcie->dev->of_node;
-+	struct device_node *node = nwl->dev->of_node;
- 	struct device_node *legacy_intc_node;
- 
- 	legacy_intc_node = of_get_next_child(node, NULL);
- 	if (!legacy_intc_node) {
--		dev_err(pcie->dev, "No legacy intc node found\n");
-+		dev_err(nwl->dev, "No legacy intc node found\n");
- 		return -EINVAL;
- 	}
- 
--	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
-+	nwl->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
- 							INTX_NUM,
- 							&legacy_domain_ops,
--							pcie);
-+							nwl);
- 
--	if (!pcie->legacy_irq_domain) {
--		dev_err(pcie->dev, "failed to create IRQ domain\n");
-+	if (!nwl->legacy_irq_domain) {
-+		dev_err(nwl->dev, "failed to create IRQ domain\n");
- 		return -ENOMEM;
- 	}
- 
--	nwl_pcie_init_msi_irq_domain(pcie);
-+	nwl_pcie_init_msi_irq_domain(nwl);
- 	return 0;
- }
- 
--static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
-+static int nwl_pcie_enable_msi(struct nwl_pcie *nwl, struct pci_bus *bus)
- {
--	struct platform_device *pdev = to_platform_device(pcie->dev);
--	struct nwl_msi *msi = &pcie->msi;
-+	struct platform_device *pdev = to_platform_device(nwl->dev);
-+	struct nwl_msi *msi = &nwl->msi;
- 	unsigned long base;
- 	int ret;
- 	int size = BITS_TO_LONGS(INT_PCI_MSI_NR) * sizeof(long);
-@@ -563,7 +563,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
- 	}
- 
- 	irq_set_chained_handler_and_data(msi->irq_msi1,
--					 nwl_pcie_msi_handler_high, pcie);
-+					 nwl_pcie_msi_handler_high, nwl);
- 
- 	/* Get msi_0 IRQ number */
- 	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
-@@ -574,50 +574,50 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
- 	}
- 
- 	irq_set_chained_handler_and_data(msi->irq_msi0,
--					 nwl_pcie_msi_handler_low, pcie);
-+					 nwl_pcie_msi_handler_low, nwl);
- 
- 	/* Check for msii_present bit */
--	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
-+	ret = nwl_bridge_readl(nwl, I_MSII_CAPABILITIES) & MSII_PRESENT;
- 	if (!ret) {
--		dev_err(pcie->dev, "MSI not present\n");
-+		dev_err(nwl->dev, "MSI not present\n");
- 		ret = -EIO;
- 		goto err;
- 	}
- 
- 	/* Enable MSII */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, I_MSII_CONTROL) |
- 			  MSII_ENABLE, I_MSII_CONTROL);
- 
- 	/* Enable MSII status */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, I_MSII_CONTROL) |
- 			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
- 
- 	/* setup AFI/FPCI range */
--	base = pcie->phys_pcie_reg_base;
--	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
--	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
-+	base = nwl->phys_pcie_reg_base;
-+	nwl_bridge_writel(nwl, lower_32_bits(base), I_MSII_BASE_LO);
-+	nwl_bridge_writel(nwl, upper_32_bits(base), I_MSII_BASE_HI);
- 
- 	/*
- 	 * For high range MSI interrupts: disable, clear any pending,
- 	 * and enable
- 	 */
--	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-+	nwl_bridge_writel(nwl, (u32)~MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
- 
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,  MSGF_MSI_STATUS_HI) &
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl,  MSGF_MSI_STATUS_HI) &
- 			  MSGF_MSI_SR_HI_MASK, MSGF_MSI_STATUS_HI);
- 
--	nwl_bridge_writel(pcie, MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-+	nwl_bridge_writel(nwl, MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
- 
- 	/*
- 	 * For low range MSI interrupts: disable, clear any pending,
- 	 * and enable
- 	 */
--	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-+	nwl_bridge_writel(nwl, (u32)~MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
- 
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MSI_STATUS_LO) &
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, MSGF_MSI_STATUS_LO) &
- 			  MSGF_MSI_SR_LO_MASK, MSGF_MSI_STATUS_LO);
- 
--	nwl_bridge_writel(pcie, MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-+	nwl_bridge_writel(nwl, MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
- 
- 	return 0;
- err:
-@@ -626,163 +626,163 @@ err:
- 	return ret;
- }
- 
--static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
-+static int nwl_pcie_bridge_init(struct nwl_pcie *nwl)
- {
--	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct platform_device *pdev = to_platform_device(nwl->dev);
- 	u32 breg_val, ecam_val, first_busno = 0;
- 	int err;
- 
--	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
-+	breg_val = nwl_bridge_readl(nwl, E_BREG_CAPABILITIES) & BREG_PRESENT;
- 	if (!breg_val) {
--		dev_err(pcie->dev, "BREG is not present\n");
-+		dev_err(nwl->dev, "BREG is not present\n");
- 		return breg_val;
- 	}
- 
- 	/* Write bridge_off to breg base */
--	nwl_bridge_writel(pcie, lower_32_bits(pcie->phys_breg_base),
-+	nwl_bridge_writel(nwl, lower_32_bits(nwl->phys_breg_base),
- 			  E_BREG_BASE_LO);
--	nwl_bridge_writel(pcie, upper_32_bits(pcie->phys_breg_base),
-+	nwl_bridge_writel(nwl, upper_32_bits(nwl->phys_breg_base),
- 			  E_BREG_BASE_HI);
- 
- 	/* Enable BREG */
--	nwl_bridge_writel(pcie, ~BREG_ENABLE_FORCE & BREG_ENABLE,
-+	nwl_bridge_writel(nwl, ~BREG_ENABLE_FORCE & BREG_ENABLE,
- 			  E_BREG_CONTROL);
- 
- 	/* Disable DMA channel registers */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_PCIE_RX0) |
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, BRCFG_PCIE_RX0) |
- 			  CFG_DMA_REG_BAR, BRCFG_PCIE_RX0);
- 
- 	/* Enable Ingress subtractive decode translation */
--	nwl_bridge_writel(pcie, SET_ISUB_CONTROL, I_ISUB_CONTROL);
-+	nwl_bridge_writel(nwl, SET_ISUB_CONTROL, I_ISUB_CONTROL);
- 
- 	/* Enable msg filtering details */
--	nwl_bridge_writel(pcie, CFG_ENABLE_MSG_FILTER_MASK,
-+	nwl_bridge_writel(nwl, CFG_ENABLE_MSG_FILTER_MASK,
- 			  BRCFG_PCIE_RX_MSG_FILTER);
- 
--	err = nwl_wait_for_link(pcie);
-+	err = nwl_wait_for_link(nwl);
- 	if (err)
- 		return err;
- 
--	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
-+	ecam_val = nwl_bridge_readl(nwl, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
- 	if (!ecam_val) {
--		dev_err(pcie->dev, "ECAM is not present\n");
-+		dev_err(nwl->dev, "ECAM is not present\n");
- 		return ecam_val;
- 	}
- 
- 	/* Enable ECAM */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, E_ECAM_CONTROL) |
- 			  E_ECAM_CR_ENABLE, E_ECAM_CONTROL);
- 
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
--			  (pcie->ecam_value << E_ECAM_SIZE_SHIFT),
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, E_ECAM_CONTROL) |
-+			  (nwl->ecam_value << E_ECAM_SIZE_SHIFT),
- 			  E_ECAM_CONTROL);
- 
--	nwl_bridge_writel(pcie, lower_32_bits(pcie->phys_ecam_base),
-+	nwl_bridge_writel(nwl, lower_32_bits(nwl->phys_ecam_base),
- 			  E_ECAM_BASE_LO);
--	nwl_bridge_writel(pcie, upper_32_bits(pcie->phys_ecam_base),
-+	nwl_bridge_writel(nwl, upper_32_bits(nwl->phys_ecam_base),
- 			  E_ECAM_BASE_HI);
- 
- 	/* Get bus range */
--	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CONTROL);
--	pcie->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
-+	ecam_val = nwl_bridge_readl(nwl, E_ECAM_CONTROL);
-+	nwl->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
- 	/* Write primary, secondary and subordinate bus numbers */
- 	ecam_val = first_busno;
- 	ecam_val |= (first_busno + 1) << 8;
--	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
--	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
-+	ecam_val |= (nwl->last_busno << E_ECAM_SIZE_SHIFT);
-+	writel(ecam_val, (nwl->ecam_base + PCI_PRIMARY_BUS));
- 
--	if (nwl_pcie_link_up(pcie))
--		dev_info(pcie->dev, "Link is UP\n");
-+	if (nwl_pcie_link_up(nwl))
-+		dev_info(nwl->dev, "Link is UP\n");
- 	else
--		dev_info(pcie->dev, "Link is DOWN\n");
-+		dev_info(nwl->dev, "Link is DOWN\n");
- 
- 	/* Get misc IRQ number */
--	pcie->irq_misc = platform_get_irq_byname(pdev, "misc");
--	if (pcie->irq_misc < 0) {
-+	nwl->irq_misc = platform_get_irq_byname(pdev, "misc");
-+	if (nwl->irq_misc < 0) {
- 		dev_err(&pdev->dev, "failed to get misc IRQ %d\n",
--			pcie->irq_misc);
-+			nwl->irq_misc);
- 		return -EINVAL;
- 	}
- 
--	err = devm_request_irq(pcie->dev, pcie->irq_misc,
-+	err = devm_request_irq(nwl->dev, nwl->irq_misc,
- 			       nwl_pcie_misc_handler, IRQF_SHARED,
--			       "nwl_pcie:misc", pcie);
-+			       "nwl_pcie:misc", nwl);
- 	if (err) {
--		dev_err(pcie->dev, "fail to register misc IRQ#%d\n",
--			pcie->irq_misc);
-+		dev_err(nwl->dev, "fail to register misc IRQ#%d\n",
-+			nwl->irq_misc);
- 		return err;
- 	}
- 
- 	/* Disable all misc interrupts */
--	nwl_bridge_writel(pcie, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-+	nwl_bridge_writel(nwl, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
- 
- 	/* Clear pending misc interrupts */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MISC_STATUS) &
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, MSGF_MISC_STATUS) &
- 			  MSGF_MISC_SR_MASKALL, MSGF_MISC_STATUS);
- 
- 	/* Enable all misc interrupts */
--	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-+	nwl_bridge_writel(nwl, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
- 
- 
- 	/* Disable all legacy interrupts */
--	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-+	nwl_bridge_writel(nwl, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
- 
- 	/* Clear pending legacy interrupts */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, MSGF_LEG_STATUS) &
- 			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
- 
- 	/* Enable all legacy interrupts */
--	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-+	nwl_bridge_writel(nwl, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
- 
- 	/* Enable the bridge config interrupt */
--	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_INTERRUPT) |
-+	nwl_bridge_writel(nwl, nwl_bridge_readl(nwl, BRCFG_INTERRUPT) |
- 			  BRCFG_INTERRUPT_MASK, BRCFG_INTERRUPT);
- 
- 	return 0;
- }
- 
--static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
-+static int nwl_pcie_parse_dt(struct nwl_pcie *nwl,
- 			     struct platform_device *pdev)
- {
--	struct device_node *node = pcie->dev->of_node;
-+	struct device_node *node = nwl->dev->of_node;
- 	struct resource *res;
- 	const char *type;
- 
- 	/* Check for device type */
- 	type = of_get_property(node, "device_type", NULL);
- 	if (!type || strcmp(type, "pci")) {
--		dev_err(pcie->dev, "invalid \"device_type\" %s\n", type);
-+		dev_err(nwl->dev, "invalid \"device_type\" %s\n", type);
- 		return -EINVAL;
- 	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
--	pcie->breg_base = devm_ioremap_resource(pcie->dev, res);
--	if (IS_ERR(pcie->breg_base))
--		return PTR_ERR(pcie->breg_base);
--	pcie->phys_breg_base = res->start;
-+	nwl->breg_base = devm_ioremap_resource(nwl->dev, res);
-+	if (IS_ERR(nwl->breg_base))
-+		return PTR_ERR(nwl->breg_base);
-+	nwl->phys_breg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pcireg");
--	pcie->pcireg_base = devm_ioremap_resource(pcie->dev, res);
--	if (IS_ERR(pcie->pcireg_base))
--		return PTR_ERR(pcie->pcireg_base);
--	pcie->phys_pcie_reg_base = res->start;
-+	nwl->pcireg_base = devm_ioremap_resource(nwl->dev, res);
-+	if (IS_ERR(nwl->pcireg_base))
-+		return PTR_ERR(nwl->pcireg_base);
-+	nwl->phys_pcie_reg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
--	pcie->ecam_base = devm_ioremap_resource(pcie->dev, res);
--	if (IS_ERR(pcie->ecam_base))
--		return PTR_ERR(pcie->ecam_base);
--	pcie->phys_ecam_base = res->start;
-+	nwl->ecam_base = devm_ioremap_resource(nwl->dev, res);
-+	if (IS_ERR(nwl->ecam_base))
-+		return PTR_ERR(nwl->ecam_base);
-+	nwl->phys_ecam_base = res->start;
- 
- 	/* Get intx IRQ number */
--	pcie->irq_intx = platform_get_irq_byname(pdev, "intx");
--	if (pcie->irq_intx < 0) {
-+	nwl->irq_intx = platform_get_irq_byname(pdev, "intx");
-+	if (nwl->irq_intx < 0) {
- 		dev_err(&pdev->dev, "failed to get intx IRQ %d\n",
--			pcie->irq_intx);
-+			nwl->irq_intx);
- 		return -EINVAL;
- 	}
- 
--	irq_set_chained_handler_and_data(pcie->irq_intx,
--					 nwl_pcie_leg_handler, pcie);
-+	irq_set_chained_handler_and_data(nwl->irq_intx,
-+					 nwl_pcie_leg_handler, nwl);
- 
- 	return 0;
- }
-@@ -795,57 +795,57 @@ static const struct of_device_id nwl_pcie_of_match[] = {
- static int nwl_pcie_probe(struct platform_device *pdev)
- {
- 	struct device_node *node = pdev->dev.of_node;
--	struct nwl_pcie *pcie;
-+	struct nwl_pcie *nwl;
- 	struct pci_bus *bus;
- 	struct pci_bus *child;
- 	int err;
- 	resource_size_t iobase = 0;
- 	LIST_HEAD(res);
- 
--	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
--	if (!pcie)
-+	nwl = devm_kzalloc(&pdev->dev, sizeof(*nwl), GFP_KERNEL);
-+	if (!nwl)
- 		return -ENOMEM;
- 
--	pcie->dev = &pdev->dev;
--	pcie->ecam_value = NWL_ECAM_VALUE_DEFAULT;
-+	nwl->dev = &pdev->dev;
-+	nwl->ecam_value = NWL_ECAM_VALUE_DEFAULT;
- 
--	err = nwl_pcie_parse_dt(pcie, pdev);
-+	err = nwl_pcie_parse_dt(nwl, pdev);
- 	if (err) {
--		dev_err(pcie->dev, "Parsing DT failed\n");
-+		dev_err(nwl->dev, "Parsing DT failed\n");
- 		return err;
- 	}
- 
--	err = nwl_pcie_bridge_init(pcie);
-+	err = nwl_pcie_bridge_init(nwl);
- 	if (err) {
--		dev_err(pcie->dev, "HW Initialization failed\n");
-+		dev_err(nwl->dev, "HW Initialization failed\n");
- 		return err;
- 	}
- 
- 	err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
- 	if (err) {
--		dev_err(pcie->dev, "Getting bridge resources failed\n");
-+		dev_err(nwl->dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
- 
--	err = devm_request_pci_bus_resources(pcie->dev, &res);
-+	err = devm_request_pci_bus_resources(nwl->dev, &res);
- 	if (err)
- 		goto error;
- 
--	err = nwl_pcie_init_irq_domain(pcie);
-+	err = nwl_pcie_init_irq_domain(nwl);
- 	if (err) {
--		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
-+		dev_err(nwl->dev, "Failed creating IRQ Domain\n");
- 		goto error;
- 	}
- 
--	bus = pci_create_root_bus(&pdev->dev, pcie->root_busno,
--				  &nwl_pcie_ops, pcie, &res);
-+	bus = pci_create_root_bus(&pdev->dev, nwl->root_busno,
-+				  &nwl_pcie_ops, nwl, &res);
- 	if (!bus) {
- 		err = -ENOMEM;
- 		goto error;
- 	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		err = nwl_pcie_enable_msi(pcie, bus);
-+		err = nwl_pcie_enable_msi(nwl, bus);
- 		if (err < 0) {
- 			dev_err(&pdev->dev,
- 				"failed to enable MSI support: %d\n", err);
-@@ -857,7 +857,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	list_for_each_entry(child, &bus->children, node)
- 		pcie_bus_configure_settings(child);
- 	pci_bus_add_devices(bus);
--	platform_set_drvdata(pdev, pcie);
-+	platform_set_drvdata(pdev, nwl);
- 	return 0;
- 
- error:
+--+HP7ph2BbKc20aGI
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+H4sICKIv/FcAAy5jb25maWcAlFxLd9u4kt73r9BJz2JmcTt+RUnPHC8gEpJwxVcAUJa94VEc
+pdun/ci15b43/36qAFIEwAKt9CJtVn0A8ag3QP36y68T9rp/etju72639/c/Jn/sHnfP2/3u
+6+Tb3f3u/yZpOSlKPeGp0L8BOLt7fP3P++3zw/RicvHbp99O/vF8ezpZ7Z4fd/eT5Onx290f
+r9D87unxl19/ScpiLhYNk/n04vJH9zi9mAndPzKZLJtqea0alqay0SE/z2sXDF01FVvwRi3F
+XF+envkseNAt68J7Q56zqpFF2kDnqslFcXn6aQzANpfn5zQgKfOKaaej0yNw0N/ptMMpzZKV
+liyBadRVVUpnviLL+IJlTVWKQnPZrFlW88uT/3zdbb+eOP91+KxMVimvhh3Z/oX8PM/YQg35
+8krxvNkkywUsfMOyRSmFXuY9YMELLkXSzOoFSWwkz5gWa96NVQ1hyysuFks9ZCSqJl6VsEzM
+JNO8SaHv6x5wUxZAy1lPWTJ4cddOJnWzqKtAqgAfEaqC89Swca9gNzQPeGph2BkvFnrZ81Tu
+vENdiVJnM2frShDWZsmzisueuuKy4FmTlymHvsui58zFpuFMZtfw3OTcWY9qodks4/D+Nc9U
+L8opn3fbLpS+fPf+/u7L+4enr6/3u5f3/1UXLOe4K5wp/v63W6OO7w6jk5+bq1Ku+rfMapGl
+WkAbvrHvU1ZCQHd/nSyMJbifvOz2r997bRaF0A0v1rDEOIoclvX8oISJLJUygi8yfvnuHXTT
+cSyt0Vzpyd3L5PFpjz07UsyyNYiQgAV6944iN6zWZT94WApWZ7pZlkrjvC/f/ffj0+Puf971
+28PczbpWa1ElAwL+P9GZs/Slgm3JP9e85jR10MTOGjawlNcN06DcjsjMl6xIM+zqsBa14iDm
+xCqwOnWl1Ii4kWTDwNeyzHnvCLW5YtodhSVqyXm3vSAOk5fXLy8/Xva7h357O41CaalkOeND
+JUWWWpZXcY6VW5qfiwUouHD1YMlkCiywUVcgvYoXKd00WQpnR5GSljkTBUVrloJLXLvrYV+5
+EoiMMgbd2i3serZND7vpvDPlYBaJfUXIvJQJGBa9lJylonBMqqqYVJwekdHO9WCPD/YSrT+s
+daEd22skZskUNE5WzUyWLE2Yomxw39qDGfnQdw+75xdKREy3YI9hp12TWjbLG1Tz3GztYXmA
+COZQlKlIiJWxrUSgIJY6r7PMbeKzic6W4GpQgMyqGW9kZpJU9Xu9fflrsocpTbaPXycv++3+
+ZbK9vX16fdzfPf4RzA0aNCxJyrrQdqMOb14LqQM2riY5Stx0s309lhjzTKWoZwkHCwJAZ0FD
+TrM+d5w7Uyv0W8onWbcZdGQYG4ImSn+aZrXAlU7UcNMrMB15pdHTuguCjpdvYIMpo64CsBk0
+NiGw2BFMKMsIEUKzZQAmpCEXuxsHWDnezMqSGo5xdxCOFWeOGxAr+8eQYha/J2cl9jDv4s4L
+l44SARGeyz8LlU0lS1B/o3KBqraRmWqKGkKOGctYkXgGIlnIsq6crTYBsNk4N9AAB5QsgsfA
+C/Y0cOHo8R1LO8tW7ZvctTcmzeER62oZzRWEj3zG3Om1HDN1xyMyIRuf04cJczBFYG2vRKqX
+9E5rt218OJVIldezJc9Blm64jLdb1gvuRXWwuYq7ioZygd23nMF0U74WCSfeDXjUwpExczkn
+2g3cSg9Y8mRlom+0e7qUnLKxEB2BjwFD0g+1RnFznjEScp9hYtIj4Hzd54Jr79mKN4ZoAxEC
+7wW7CjmK5AlE2im9rWi4KKXN0KitTdgpHSEyzyyHjlVZg2d1gkaZNosbN1IAwgwIZx4lu3Gz
+CSBsbgJ+GTw7OWySNGUFxl3ccHTsZuNKmYPi+vsewBT8QdnJIJ5kBUS7ooCEwVlgEwzWIj2d
+ejEsNATDl/AKQyprIB2VrjxxihrqoNsc4mqBEuDtIqhFjl6jDUboeeB+HIIVVwJwnPGWKyCr
+69yZbkdpgq56+kyVWQ3WHuYEijXSKRgUxQ/JqqvHoDdeOuRYT57NwcJKdzGxF4xJHEsG7984
+barS5SqxKFg2d4TWxCUuwQRfc88Cwp6NLfHSyxOZcISUpWuheNfYM364mSZdmlMWs0pE87kW
+cuWsP7xmxqQUvhAAkacpaXaNfKIeNGE8aogwgmadw7iMTzWRRls1qnbP356eH7aPt7sJ/3v3
+CJEZgxgtwdgMIlAnBPE6DzxU+BJihOvctu48p2u9snpmO/LUty3gyBVpslTGqCQO+/KEH2DG
+7WDK3khwbmUeaWYCCcgGtGCh/mieNynTrIFsWMxFYlIoai9lOReZFz6s+IYnnTD3imSyO0V0
+8c86rxoYNPfHANEmhDErfg0qDtoRJvK9rA077pMBFBJTiwG9BvVAl5FghBsTKD6HuQrctLrw
+WwSWsZ1OSJVckwwTeBlruSzLVcDEyg88a7Goy5ooailYH0xZ2mSOSFaRicYAVkq7ZSnTveQL
+MF9FasuA7XQaVokAl2TUwAB3kFSXt7wCQeXMRgMBzygHvpaiG1dvh5LWeThYs1CeRHhTwaDc
+VI7mtrTgNW33S2lZQ/qCQWs4w7zC+qMt80R4aVnPMqehGdAVM2ps1BNDF5tBd/UjYgaKJwhv
+QDe8mDlGt9VF8N9VVi9E4RkchxwTW0CYFQXZ0zyBuCyICnwmFRCGGEh6izC2CBCwwXXGJB0o
+DtCwKyWZkdoJgPjzjTYqsvKsiWFH8uAARWTAETUssAaCWo7RNyEotqQBPDTvbj5TpnUGCT8a
+fvTY6OSJQohhGcMLARjVtVf8Dzrwef2pAdHaqfjHOnEhp6eBZewGTGc+QkF2WBtLQUlMhiVy
+zL+umEyd95eQ9EIoompV8SJ1agjtUFo+S9qiXC8zsL9F6Zjg+dwTeFslTsr1P75sX3ZfJ39Z
+f/79+enb3b2tqjg6U67bSjhV9+w2ysCsC+ONV/Hyyv3WQC85iozrxBkk93M3bNcQy4Icu+bf
+hHEKg4TLk0CM3Mlbkq3agX1iVMjTYuoC+dHGlk3uKOBam0W7y7YfJZNDDTxSEuuQgs4TWzbu
+uAy8rVNlETkMFlQpbVYYN0dnrGxFJgPP6Tq3WVvb6EPZNnebKXpUDj+ohw8geL60kEJfj6LA
+H5daZ0GlzYMleQp8bj2GHIhztX3e3+Hx5UT/+L57cUXYxGUmy4JAGzM9UiRUWqoe6kT6c0GR
+zZq1mtjFxaKcqNs/d3io44a/orQ5dlGWXnrd0VMIRXBqVP25hSRzr3INj20tpQUQTbtjlqBp
+R8bBjLRq+718d/vtX4f8vCslFqWGSNaLw+tCFGZ7VCUKoznxahnTYM6TRubOQYTRdtsY9qm8
+Klyfbg88I0yzDxFeWzPq9qe63+4xY4EJ3+9uw7NuM8RiI4Jhswz69hy4Ic+S/OzT+YeYTQQ2
+xDdeHdLSuczcAwpD5JvrogwdT8auYYUTVoUhVLY4DZd2KVQ47JyngmkeInOuyvD1+Rqi0oD2
+GSQ7IMFkVv5BThugMdDccJCQ7pYzMSCD3eeKhVOVn9jHj79/IKnTsGONh1Cb05OAjlYmjCBU
+5RaeLGxZF6krIoYK0lstxYC85htjdUNynSUsXMQNuriAdnNdfDZxuZG+2Sseynz//vS8d1Lj
+xNk4TOftgZQiiZ0b9ZmDMyYgctS0We13w5lfE0BSwxOZkDa3bQAG/J+cLH0agKrysEukRQ/U
+HIAxNGTjqrwC0Ye4IT4wA+trd5E3NVXOBzNOq/iEm0pTKT4uswngyDsJyM2VGBD8E0n3PSOF
+YeRCNoiVkLbSb2qzUazSNVXLQJZ3yIQEnrDcp4hyHQ6tkiL6soopEatDDeoOy1JjsoXMobcG
+2p9PL/vJ7dPj/vnpHhzm5Ovz3d/Wb3rvZBAUr1mkkmP2bINlk01TXNERlt30K8j8WEyMge1r
+CuTHTPpLhdcV+iOukEFqZmATDqShtFDG3owj8CE9zUwHxZ9kDl7gewiDbE28t9hmLq2NBP3K
+o5LgAVGuYivLQEFT1nxaDfSw8ycD4WjLi/Pddv/6bEI5Q4aeJrvn5+1+O/n30/Nf2+en18ev
+L5O/77aT/Z+7yfZ+D+22exCil8m35+3DDlHBZbaGS3Afdd58Opuen/7u2muf+3GUe3EyjXNP
+f7/4eBblnp+dfPwQ516cnZ1EuRcfPo6M6uL8wuUmbC2A3LHPzs7d94bc89MPF3Hux4sP0/C9
+FytTGPJyL8s5nbYsUnosZnrxNmbN7BW889/JKMuFXHwKh9dyLi8++XnxDEP6AmIjqgZrg+08
+8cqnhqZyynYU0hwlXk4Ph8qd0QOy2wkeENO6dAipi4i3awHrMqsLzSR11NZiHP1uG5nijWeT
+b5rTkxOqdnTTnH04CaDnPjTohe7mErrxl3Mp8W5GLBloDwFAFLojBi+wZQqWFBNXe0kL7+Jl
+YVcmIwR+6y+j7D7k8OPXDOKb7hJY8IK+uFPNC7zRKZyAcnlFH5uoa9XPrz2VnodBpCmEmsJY
+lYN4LZkMB45zTxgsYWMTK68CNjrqfsoQHNWM4gRTbPupzCUuTfXEN1rynFOsNfyTHy4mjCCG
+L535eWJRmisg3vjaoQlVZiwsdJlu2hYNVpAaPHulFLvKhIbgzibtqLIXQf8zFD8vwbcEm+In
+fvJP0YjrcSOXo2egme6BL94/7dLqnrpSzkJ0qblZ61wUpufLi5PfD7eTx+uxFBey2yt27dlw
+EpbbI0piZUO4UWUjtl7BIuMQpiOVNChzWYIGXTHykoo57e97ytnYtYqOO6eKYMiFkUL++bFv
+clOVJR043sxquvp3o6JHlV2h09wOhvAadIb5RR9zwoRr2lXoKXG1hxuOJDHJsHTvBVEt7Yi7
+auYgse9twwvMS048ilM1MdVPvBaFl7dLifmyW/EGB7v+FLkW0kVqf3/67XSyfb79826/u4Uw
+bns/+dbHc56nBjPK5unMKzfYjwU8XbfETPG2fkRtcOv6l4e7snYkZ0eOpGZlOIiu/mosLITp
+cuHJ9eFswlSnBwsxe4Knp+9YafLyGts3SypTWkQhwNq5LpOSKrK3lU//VnZbDTV7RbTBqiWm
+hv18gOLYklx0S1S/QNL1fXu7m3y5e9w+/5iYM/29szhYm881nsUEFlCTLHgIj6zx2ZxRHowY
+HuwsOQPRovax7VYlUlR6YPBZWdMH2G2zXChKNXEQ/jnpoXrbO25zs9yv6lZP/4bs9GH7uP1j
+97B7dDe0a2dPaJyOLMGpP/YzEDMui+glgLxRGeeu5reU9guGXvtzUxcwPDpwzCHGWHH0eNQS
+B3WbkYpN3pSVPyDvfBueD6c7h9rVoeOrz7aa4xxGtSJAvyroiliNEFG6Uom3MMK6pbPi+DWA
+EkSM2O6Xw+4uILfbnx+2v0tHkSe+3u96McC3hxeiO1qzKNdgPtKUvsHoonJeONXYVFuO+dZF
+OXbtMIBJeiic9OYFuwzHYqaKH8mo/oXgNKqMMOHY+fx596/X3ePtj8nL7fbeu22N7UG4P4dT
+RZoZamSSht/ZAJxs7P4diR0tC5JN8IqEuUF5fJOySMFnF7TnJ1sAD16zNpfUjm9lkqNaC9Li
+dw2OWaKfWJqfWJLjl+LnliA69YPYfQvFjqoMAtCuKCVpKP+Y50PMr1HGLTYIJlCzZlnHjJUh
+mpWQq6uyTN8E5vrT6cdzCuaAFLr8fjwOx5xfnJ2Qg7WN0DFFOy+495EcGI1i0R5dmGUrdnss
+h+FqDtwXCMOKB6ElUppUMMoj1IXYuGh8jmE3c+k5Gnw2Ikiuo+GqeoZXsERCHxkbjE22aFGz
+neClN6WDMLGvx8DsVpyqpQhvJUVl79S239f0UXx1OEtuJIQjpFUHUFVUXmfw3KTLZEjEJLYK
+3oB0ySTt3s0eV2KMucCgi+f1hpYXfIWui4Jnlw/ee3MzI/rm5DUmxOVKRAp3ttu1po8QkFun
+3VujkHlZj/H6cdNjwB1sWOQmDvK4oldN2NFj9BfnG+kaTsCFHBZ10M58SmozZv/T4QBhO4ix
+Z5yHbVH7ApJOqo7szwB3INRWH4FckBy8aEbrIPYNfy7GLlQcMEk9cw9GOh/Y8S/f3b5+ubt9
+5/eepx+CKzEH+VxPfXldT1sVxPLVnJ4VguyFfrQJTRq51oOzn47JznRUeKaj0oNjyEU1jXNF
+RheJbd8RyQtQo6I5JcXwIQohBHkaCuIDOU7DN9vSfkcxyHj8qQcmw2UpoQcbDrRmKimxM+wi
+hRTQ1AL1dcV9s7qm1sjnxwxQx3yzA+MzKrxnjBXRiJkywLiphbU0R6oxJn4RjoWiPDgbdYxl
+pUHFMgY5zfzaO41oW1fLa1M8AmeZV3TlCKCHG7Zue0uMJo09orMQTulTinTBnZ4f2tjv6XmH
+ccq3OzzJi/0mRd9zH+EQA8PVE4W5o03XCoZQ84n4kdisJGeNX54UhSns9VoDVPOpoT06diTZ
+hTexbXQxeLTrHiR4zOH3FR4b9zlWNxkAjUBEodoWq5o0Sd4GqUS/DQKXBLF6ZPHdwTFMR2gj
+6eHmIy89gJbnZ+dvo0TkfowHArmYiRK/zHsbq4qRte33ujpmCopFjg19VCxM9PZ9bM10J/lv
+IyhJ63EF055mwLMpSfgfk7aM8d1GxMiYkT2yd8geWRdkj60I8iVPheQx+zInjP/Anthf71Cd
+Cdzst1/udy+T26eHL3ePu6+T9hdC3MzXbTywGjQKNzlEeu/bb5//2O3jr9FY99b2tyjemE+H
+NR+44k/FPIz32fmnt2fRNSAmM9ogVTEzRYCXUX87hP7UKLDaZr4iPLpFRobVJLJcvLXM8Sih
+h1rdHO2mwE9Jj1/NYh44yjfQx7jgHo8VgNi3bCR+VF+JBtD98VjwZJvjpRhynDxynT8Chzga
+EjLiulSnxA/b/e2f7qFWYCk0XmZOU2lC4tg+W9isovMoAjr8cYFRdFYrfYwOtHCImSCqOR5e
+FLNrHa9NUA1Gg2yyAf500s80OEb3enQXPY72WkUrJCE0HqQRWL7+qd08zrJaLE/o7I+CRlJs
+AoqfXP3Uftjf+DoafbRgjCT+JBqS78URxsXCs7NYIEJgzQ+fHY3+mbXLWSSaoqDHuMYWa5Ll
+Uh49jmJ+RFZ3QJtPQo4Fj9SdKfTyWoHOHA1fabS9x8I/16WOBL9D8NG+sIVzltGXe0lw8hNG
+OJ7wEVj8Gavje9axkn8EbIp9xzeQsc/PCPSx/rtFQ+B3LLY+P4vUi/Cb9BhrPfzAU1T/e0Q5
+ZY4FWclMPerCS82cFDjOMrfND/cl3Ownxa/ToGEsO8KaSHC44TMHb5Ucv0QZ0k2mRxFzpiCi
+lCzlHT9M4caybOSHJYJ+wQEgqkP25m4FcNpgK1JHdiAxr+hiZGVF5E2g1mTd1yAOpTaPegiM
+cWGH02jZ6roYBLcezkvqvab9DkR7H0kpgkEOo/dgEYpFFn9PG3pGUn4POr4rXUiuYwVgI6vs
+aoSreFJHv4m1EFCNYf2g1eu/pz+r2dO4Zk8DtWj1dkorZq+D00GFc0BsFXNI9BVz6grPNK5Z
+0yNUy8HwWkxp6+PBcIneRmH29TYqEi96GJywvfn2NjY/YppvmAcXGfMeU0esl7QNmdJGZPqG
+FZkea0amMQ2ejmvTNKZOPiKwUO6wYibKxRRV5MJhe5Qxb/hs9KgnnoahW49FTDKNfPAvIp8w
+Mk0HdWEC0ZKVrvpVWYDF6Z9y98FOM3xuxCKHweOH5N7vg7TcdcaKVmKGPx9iTpmV872uQX86
+OTv93L+mpzWLtawocJNbxmGmKdhuTvmILEvc/YXHWJi1iSwty+iUZnP2gV50VtE/jVAtyyIS
+yU2z8qpiEe/DOcdJf4iEVKhi4W8B9OuSUF+JpsX/M3Z1z43buv5f8fThTjtzOmvJ33emD7Qk
+x9zoK6Jsy/uiSbPp2czJbnaS7Gl7//oLkJJFSoDch/0wAZEUSZEACPygEH4wQ6RmexS3sJCE
+hksgK8vyKD2qk4RNhaQfjVzPisf6moB1QUhyxrFjr1g9rja9GVHG6niGn7q5tKS57oqSbyAN
+FHVDXdjonsVOA77arhtV7lzJKR1/0oBDCka9a+j6BreQdOivxWMs6IytuC4Q3FSdaxfhbntn
+/8h39UfZ8x/bxYgGrVHCXReyyfvj23sPJEZ39bbkAHX3IoH9lXsTbrkXzNXPlv50BBwTVcFt
+jLv6NqBiVE8SUdftEP9gd4NfmeeIRbEu0hjoSS/CqHuR5kFcX1EM30hRn0SRwuZHxqJ03MYf
+xl0oFnkQzTJk0iD+qYgRSSqkPvQLZwCjamUUGFZ1iip6fGO51RxE7YkI2iHrleggtsLy/rkQ
+igBjmEDptr8WilrvnY6SLMc9teXbrJfgqdE22wjBn74+fXt7f318rr+8/0S0nUQu0lOfHkcu
+hO2FMDabdu2qDRDiTBJujdpnfKxDqhTaVqqjenQk4bSr6yShlNrbdrcyttx/zO/25dxCmeYH
+Z56acgNt1oNK6zPd5O7eYO0qm9zdlja5hjDT6JnO9rMZRdsVkr7QCKIcjaD0OZ3u6M0kPrFO
+ViFiBPSD37SwEx371+eXOTprFLSGoycoRd3mrDfc8PG/Tw+My79ItpZEpR2KQVHa/manhXh6
+aJ6dZH034IPB2OxnwXCK61yU+99++vD2+9O3D19e3r8//+jyVMAblEluO6i0JXXSBCJfBE+8
+2I8zBx2hMA3tZJHAvhkZ1G8rKu2k0bwceJ+WVaYNRJkVhVTB53PhcGKnLjUZBMXmzXYijhGE
+jZgiDPY7aZwqK4bIEjnxCwwLeWSUsIYhOhakNwCGC+/P0IWjVC7e4AXuPz802NTU8zYXhgT1
+kj/AF+iE3prftbSx1JsyZSNZXsqSYWGS2PC1bY12GgQEetNBzSFiq+9c8XIXpUE0xIS3HjVB
+n82K/+P+x7NBCnn694+XH2+Tr49fX17/nty/Pt5P3p7+7/F/rcAUbBfj8RJ9EWil7rlQFOZ0
+MdReXOmFjMjEsBYFc0XjViVp+cVlIjdYHY+KWJt4yfnbuoMJ+qy/8n7IYB0Ecj6d1nlC3/41
+LIu//rrCQndYyQRdFvMEBUaaA+Gx6kLR22Wz4cCvlDbTtShLLSqug0/UYi3V5rcbPahrJOE2
+k9LF7ytDLaQxJyxQYUWir72GdOO5LLC5ES6xU0MOi57tDLnfQ1Gshs9dgjEniXH60WDK5ev9
+t7dnbdqbxPd/96JgsDIdQs920cDUFbTovWNMmClHkCyl2IVsdUrtQvokVQn7kB6/LOcHvx8u
+7hAvgH0I5yH6LgcmXYZIPhRZ8mH3fP/2ZfLw5ek7FWekF8OODmdA2scojAK94zJrAHfGrQB9
+VydGqD1L8BxS/VHqvL+OevQ128t+J2gfdILTvYtyx6SWvZfRZX6/k7qUNllcyHzPC0FbtDQt
+42liq3p3lnpWk/vv362IMox1NlN//wD77XDmM9wSKxyVvK/HOYyogIEagmC/tAygFyUIwr33
+0Q2qx+c/fsXj7V77/AFrcwBwCzJPgsXCY9tBw8IuFrSKgnPsL/L1tD9PSpX+gv8WVTw2Ffl+
+jAp/xsh6j/LxtfsjEz69/efX7NuvAU7RQPR1XzoLbmhvXqSmXBSj3mbSqE/Xtcd5GBaT/zH/
++pM8SFrJg5kX8wA96CBb4eIYfMLl2oPzOuUOt/Y5rSLMtcM/HISuTQk4diqu7w4iVDm9VSEP
+QoDVitFpsKnDlrJwhaUlKGZOWgo43+BML5nMcECFVViWDr44FBpoDJKE7mmOMaYrc5ESodwR
+N+F3agdFwe8ktGVUPIp7FWj8u14lRpzofiMeTnHEQyRKem+egbjfy3zSWXhF0XdoaSl2QKCO
+Bmz0d63yX8I189eX95eHl2c7SjPNMRDUMtsZ7FzHbtvA6aYH0Kq3jL26ZUIQNqVwCcp85le0
+2Vsj7+Z3dSBhCjiDXFNhKILNkkaMalkOCYMp1zIEoGiZSAli8Fqm2ADpEqUaF8egXq2Jyotz
+XmZxD/l2+B7FlrKmXgZ3G9q2wbZY3dI7zIVe0adcS+d2yCCEcw6tq0F4pFvA5BK4GuuopLZ8
+RHuBRrANjbNjkCq664uOjOpvlFLvbmwuyEctt954DelqZHXpIT1y/jFAaC7hhmf509sDpSnB
+wQ96tMJEm7P4OPWZQQsX/qKqwzyjzZ2g5Sdn3B+YKxyRloz4oW4QVzOgRZ5S7hJtRaDl60Bt
+Zr6aT+nDHdTmOFOHAnXKYmAO6MztoIvHtMSPmI/QvAT9m8EjF3moNuupL7joWhX7m+mUPmoN
+0af3gHZeSmBaLMZ5tntvtb7Oshpn0e+ymdJrb58Ey9mCvgQMlbdc06RS4j63Wng0eZvk0/UC
+rStjZO6YPqhtc5MFJ7rYzJkhwKMTZr8GzWPW6MuUXamw0V4v+jXCBe9c/drvH1b6c4qiHCXs
+DrK4W4eaAvuOTy/yjk7fjDZ0TJfMOFs2HImoluvVaCWbWVDR6syFoarmNEewXXnTwddokmg+
+/nX/NpF4C/Djq05t9Pbl/hWk83dUyHFAJs8grU8+wyb09B3/aw9QieBLo0sTN6f+KjHILujT
+cz/Z5Tdi8sfT69c/odXJ55c/vz2/3LfxQI5dCC/YBVpU8yGchvz2/vg8SWSgrUpGcm7xa1Qg
+d0TxEQ7HYWlX0R5RezlicP/6mWqG5X/5/vqCiheoYer9/v3RwtmZ/BxkKvnFkvcv/btUZ1tK
+T3f0nhoFe+bisYoHqF0OUewOjVm37hkimjdTslXUBrjeSMQgaOdKRMgQswyTkFf4gGUgx8dD
+F/lOl42F4Zk2LygzPI922iRSgug3al5l8v7398fJz7C+//Ovyfv998d/TYLwV/igfrGAwVrR
+xs0EuS9MKd2DlpwphuFSK5MQp62eS6zYkBnfBD0A8H+8gmBMe5olzm5uuMs3zaAC9JBQ53T4
+DetxLNuNwhVO9KO5HK4Dl2UXXOOQ+u8rTEqof8ISyy38M8JT5NeqibOTzh19nQMUjySQtCph
+1v3IzGUq1BkkZf9OsT3VdXYslIiH+NhQ6sDqAFNqFkIoSCyBJmvbNsMkRUWRFU5ddaOOdR3E
+wk95FlJ1aWLeZQMILsDnb5M/n96/AP+3X9VuNzEQ1pMnzKH3x/2DhS+mqxB7W429FFGvi8VB
+dBS9ojbdQzcQWKpt+7REiGRt3KeGaD/EOddld1kh7wajY5oyGSPoSUYumODAW/q03GbqCWDG
+dG3cUCsZ+3N3vmB029HHgX7oz8DDj7f3l6+TEKGardHvhP4QPsqQAXLWjd4p7qbb9KmaM6ts
+m4TdjRfy0j3UbM7pj4tKypGRCk+M6R2JCe0IpWnpCA0FKxoOVpMb8Pzey0tmbzBEZmvRxCPt
+/amJh5ixeOmPl9tmDLEEeXgo+uX/fPj1RiOYHhhiQqufhliUjCnCkEuY2VF6vl6u6LnXDEES
+Ludj9DOfVEozgCBBL2dN3eflbElL1hf6WPeQXvn0ZWTHQGuami7Lte9do4904CPIoAWDSqMZ
+ElEcOUVZM4A4xmrShkGmHwUT0WMY1Ho192gVRzNkcch+4YYhLyW3K5mTMAz8qT82E7izQTs8
+A7rvgeI4wsDc8GkiJ4sZIhpYC8SjGakeNo8lowznY/uHJpaZ2svtyACVhdzF0cj4cPuIJp5k
+us2I64NcZr++fHv+u7+XDDYQ/ZlO+3lSeitxfA2YVTQyQLhIiO2akZTMIzub0pvuT/0EAI6L
+0R/3z8+/3z/8Z/Jh8vz47/sH8sYkb2Uo1qjZeLbwbzViQWD23QuIBGOB2x1UD6fKqKxRFE28
+2WY++Xn39Pp4gj+/UJaRnSwidCml626IIHUqKlYBNpPGy8e6V5WWtJc2PXdssLD0OD1F2zBp
+pfjuAMfWJz4wtmbuiTSyXESme0lEgI75jhPosRR5D7wrZvx9jxVHgXpUxHYHdbmMkSaBjH7P
+7JvoTL/wuyzgPySGY3lwQMjhZ33U01CA/lrHlAh0jMq9FcRgLOepC7CZxglz7oiiH8Bg1hd6
+MHa2p8+uUSR8ent/ffr9x/vj54kCUeXhy0R0iOf2PXI7/+Ue/eV6Pt/HKA2zop71EgMds6Jk
+dsfynO8z8q7Gqk+EIi8jJ6lKU4Rmq2LX+16ICm4id9FHpTfzOFjL9qE4hp05dT3PQMuZyzrq
+RbJTD5eRm2pCBFHKbEWNCa4kBWK70sSxk8DPted5/VubbofDhUA6YMCToHPZTn7YSk8Lsxsu
+3MEvgsEQdEMLBDI1E1EtLqLMTQBUxrSsAwT6TgMJ9MeLFG7A6dVo9+0A6jqlsOqPV4SRm31D
+BFty5LZFJsLe57Cd01bvbZDgDDBGrbSiBybgVlUpb7KUFm6xMmr1b2/gRayLUfxJnuHGAY/F
+XID6GZgna1xwEJ1hSbnhbp4xSaWc3bTJHwZDUDOIMzbL8TrL9oZeGbG8O8iQ9TJve7iPYuW6
+ljdFdUmv3guZnqgLmV4xHdl9NaJnUgVOv9jNKKTD36y6Qncr1ic6aNFXPvawcU7vGop9xgwN
+08HkZLTqi5IDiNzOAor8q32PPjUZSLuB0CV1misMH4WTAn1p6/53SNRU9WwUPhOfdKxurrwK
+ZnnAFJzO54AeOfmd9kKhhUGgV/oDZVlupEh7CviwcfTqiWXQy4skq8U+9OsbbpfXvkA79hCA
+EZ3O2YNpz6AcQjkGddJfKRKvz8remdt9Ticrsx7QjnfOevCYpGURk7JMl1tngbzZOj/q/clJ
++QhFR8cLSsJRTLaIBOaeHynMdibnU+YhIDDP7BJvyoHAtgO19heV8719TK6s68b64bisHdnV
+mqBcjJZMWpiphLdcs0tK3ZIfmbo9O/6k+HskzMfue5P++MobwuuJNHOGJYkrWPqMJoI0VncE
+6mKUqk4DMtEnGRTukr5V6/Wclh6QxHiCGhI0S6s/t+oT1Fr1rQ50f7LBrpsG/voj4+wFxMqf
+A/XKt5ucC+f+BH97UybmYheJOL0i8qcCZPDEqbMpopeLWs/W/pVOwn+LLM3cPMLpTofeXju1
+17PN1D1q/dvrA54eQVJxbqp0kqeQ9u6yHsxunVcHfjJFmVZ8TYKHKL3p5TbfCzgT9vR4nSOM
+g9rJK+reXZzdSEfEuIvFrGJcwO5iVgK+i3mINPRaY5/jgDMvPTyIGJ0MnT4GYkUfENaDCJtl
+cqpfnlt7sw0D7YCkMqN3y2LtLam0pk5jba70bv/bMz5+hTjSCkwROjNRLKfza++IsfsFWZkS
+CQh3ju+QwpOM6ZT9ZGTnO7EJMnbTvKlg409nVJSx85Q7LFJtmFMfSN6GIe2uGAFUoixtSiXB
+xnNOiiiXAS2g4JMbz+Vuy5qkVFnG2Ls13/zatqRKvS9b3SsTFCYd21NTdtEAL4TwhOVtzupe
+sczv1tNl1S9OIpWl/cLWUNAv17fJtuGv7cq1zU8degk+8/ycwFfHaRo3jD9xgJgIKbPvSypW
+2u7EOc1y5abFbMvwQhVHub7LGGjntpYy2h9KZ0c2JVeecp/AxD8gNgjGwFnGZB5jq76je5TA
+z7rYSwY1HKmIXRDQYDpWtSf5qWfSNCX1acEJ4BcGLq3wLgzpCYMFxtwSaOiPLSPZ5/tzLK1t
+UZ2gpL1kT6ScwM+RSBsBx0RawoggG22gWk9nFU9OQpbWiNYsPRRHia66HP0OhRqWGlclSwtk
+gPnYOXJzKc7S0dIJgy4DxbLgBsYSW4MazxAkK5AVxujr1QhdBnl8GHSuPf7M+Y1UB95DJycR
+/HSoErRE5io+Bk06Kr2p5w3eup1sLdHXZvF1U5yD9Dlf80sA6csVv4RauZxpdSerKGwabR8J
+0YdfllvhHuK6vA/C4FKzAA3iPL0xwvEM2vJODY7uE8xYcqgGfWrKr/St5cKo9CKiXKEdNlhB
+CMCbBcPmgHJIJWcVufDop+nVp+MAq5M48/OGtdD2F5ujteY78w11g1q32Sy46/6cXqOKNu+h
+u7kGp9BOrs5xh6RAlPRbIvFWnGipD4l5dCPUQXVSARYWZbz2FlOq0Le/RiyGY221rih1D6nw
+J41KtyJ8D1Gt196q4gib2lutxZAahIG+D+t3oqHVUURdd9ocaZBQD+8PMEiy5WCHsq0l2cqx
+hsJks5x6VDuq2KzIE9BiWE+nwzfHrXqFZiGSsjGUQXM38dKfUsb+liHF/XBNtIdb83ZYnARq
+tZ5NqbYKTOUE0jIZYWgPnjpsldZodQ56ao4bln4rIpZ1slgyPjqaI/VXpDyOxG0U30rLPKgf
+KJJYpu5+huVRDiK0v17TgWD6qwr8nrrSe49P4lAcFLlSq7U/86asia3luxVxwriztCx3IFuc
+TsxtPDLtFb0dtxXANrjwKtouhTwy3491U8moKLRzFctyjJeMFHkZjz0oktRQnozGaf3qLqqT
+nnYPJWsa88p5DpQu5xJ0P2KkBOqCvjjRFNYNCKgb9rnNbb1nNutAFPHGYyKl4NHlLRMIViwW
+TH6kk4QdgPE2ghp7tujusSCdLclN3R3MxDV/6gKmrdUyWEwrnPMrtdIXucz16nw24li0LYJE
+cSICEnf0qW73pr3OI0iDCw2Zn3xOpUKaz9FO8XyzpB0LgTbbzFnaSe4oUa3fzUJJp6e4SzOY
+HHC6Jky0Yr6YExG/HbmQKllQftN2d4irihjTfpdMVENLBLlVpggSRYtqOBCM50tyitfU7YLT
+q+YSwhHjYM1OPcoAYT9ZiP51a1H6FbudjdgntYDFuE4a2opSlMoYN47QOWk0+8ZnMkc3VCae
+qqEy0IlIXfkzMUpl7tLMS6yZVD1NuyNU2N9H2sX3paGUkAqK6tWZVI5BB37WG9J1yX7ITTYc
+nDz+JKPtRqfY85l7ISQxm7C3tkXBU6x9Db/aj2JJP3q1R0TYha4OqbFeWwukhiah971P51AM
+NJBPIbw5/RpI8ryCjgzo4CdPSo4L3kbAPPXsaCYA9hsmVpqcnhC96+dhBu1fJu8vwP04ef/S
+chFmpBNpodP3F9rfkw3Kb8hEUH5nrUkq9BGjrWmHj7JUh5rDpFYhk5DnOESokd++/3hnYx1b
+7Ef75wAC05TudoikEXNBB4YJvTI5jF7DoXJRqOiWzRugmRJRFrLqM11gtp7vv33u4nzeeq+D
+iIUqMvAaZHmdK6ElfJqqQFmHOax+86b+fJzn/Ntque53/mN27g2BQ46OPeSPtrgndVqzxyFH
+midvo/M2gw3fuXduykAKzhcLRmvpMVF3Wh1LebulW7gDhZERUS0e32NunC888e0tid1xYUBL
+EtkDJOiVxwBoXxjLQCznDIKWzbSee1dGzCzQKy+UrLkspQ7P7AoPbE6r2WJzhSmgP8uOIS9g
+1x3nSaNTychy3fD0owmHLIgxjgfKlR41V5JXmMrsJE4MVk/HdUhvGSCTjmeP/1e08G/XNJd1
+XAgmKKZ7SdicaNfAC0tVXu0U+qLXjIN8xyRyz2Pu4C9MWxIj29q2LFsy/oRN0CeKahHbsOhd
++fYcUsXoMAD/5jlFVOdU5HjhQBGbCDaKpBOc5JlMXfjoCz2CI7+MmMgkq/kIFTLJWIS71rJD
+sL8ls6N2TLssQPk82A97pKJCMrechkHkeRzpVkaYYP4WmxUDtqc5grPI6S/P0HFUWPQSw3JU
+IPaKsUp4c71513ZGrzTU8R0YyNHLWYmJvmijg2HRyTmY9CeGAUfWHMj8FyBVMDxzRbjymCDL
+hgHtF/j98bNnGLeJ8BhcnOZ4n1XTensoSzLiohGekvVm7tX5qYCvetjbJIGDabSRJD/MpqMc
+N7lPz35LxmuSKOLyLFpcpYzLsUO3HUAJmm2SlRGTsqOVYEAsTBvOMcaq/EgfhK34eYqKhEs1
+Z3jOkWBhOAxHkHjTsVYuwOjo48ClqTOsB/3PWI+D3XrBfPYNxyn5h1NSZKUozujDl7Epipp1
+X8Wz0YUvE0Tto7XndpDEjL67N3RUg+D447SkRhnIguajqEVRMKe8YQ2Lo7+cVs2Qj+kgmnO5
++Mecq3/AqS/99OqCtUrbFBI59C/VMvz+/vWzhgKSH7JJiyrSPIVnhyPU6gL8mwEhNHSEi791
+vSUNIQ/wNGafi+XWHPu9x7gkTU1rJkiqV3G/ZeUnLHKNqaYIrtQh8u04g5HOOJ6DZiJJNyKJ
+SKSs4Mv96/0D5mLr4OiaZ8rSun8/WlpyYMIWUUxJVawdEGw07LJloMpqFcO3/P+MXUlz5Day
+/is6zhzmDZfiUgcfWCSriha3JlhVVF8YsiS3FdPd6lDbEfa/f0iAC0BmgjrYrUJ+BLERSCQS
+X86S8w1Fz8n9IRO3RJVjqjLr9mFftw/KW6XVm0wciBVtX2/RKKdoVGabQvW5opxw+xPDLTSC
+H75neNQEPiVISs75971MGCh1318fv67vPQ7lFRSkserVPwhCx7PQRP4CrmnGfFVIxF1qrbdU
+nCT4XDaQEB3BaI5VRgWtOlIrRBERb9VIYRRB2fQXQUG+w6QN78+sSCcIWuy0g3kX9anVasdy
+otA3qkGa1glDzBSpgorW94IAz3pklKdeUFQddk49QPQL7jLG0dv3/8CTHC0GkLhsi9zzHnKA
+KZTnYdmoE+gCY6/qMIuUbl++Yxyrgrsf3L6Iw/ABLt00l28SqeTYmv160XQ5PPqdWb4aYaOU
+eqswAiAVLqLOpQ68NAjBeiMhUKY8a9FbJUP5IFbx+rORyfOHY9s4gO6xATB2nKmUA3RB36Fj
+hhv/60RDEX5l2EZ+bD1WrAcIK0w1iuOScH+bELafsYAwMIzjXeoAv7bRCdr2A9AtWHbs/M43
+fH0dHEB0fLUXWa2qrYsNLcD1DlM5mprWOLgYLvvl9VZl+K+0i0quUmanLK5yikpqaPEa5Swb
++xNIvvA6SxH1VRZx2+SjmXTUL67x4COmp2ns2ZDA9fVVAqq5ixxj7Jh84EtAeiKri4xr2WWS
+E/sSru9wZSohaHkbd0+EgwXTCnjbrvS6gajuCVHv5myjmyn2z7kmzA5tzP+rsa+UqzLL6Gx8
+mOYPi6gs0rTvxMh5jBraBwhWIIVrLXzLmWk3GXmqsPtl5bHSk6eI3mramUO1AxGeKL02pUf1
+X1//fP3x9eVv3lBQLkHaj6yd8FjUHOR2k2fKd/8lcdFneANtUBoBdRztvR3mp6Mj/tYG1CjK
+Shj0xhcs/Eo1eZISuSiYIcgUxGfSGzDKT9Vhju8FDTft9YCHdW7AYUjesQLS/wAe1plVCDt5
+lNlntucSnh6j3CfYnEc5wcEl5EUSePhhyCAGjgtSnoXE8a4QUrxRIAQ+JMLiwaWluDJHmIu4
+nGXM8/Z0s3C57xI2MCne+4Tpg4spuqhBVuvheCTtL/AgEX3IYn3vNH/5//z88+Xb3W8QMWoI
+aPKvb3xcfP3n7uXbby/Pzy/Pd/8dUP/hmi1EOvm3Nk/gztDia5ccGWQ9YnCnJgL3yY+CZadS
+RGfTFZiFEKOnWEIIjziApUV6xUwVQtY9lBXzljkbCp0V3WqCAM2Znhr45gR1phDCq7/rulWO
+ZVVESUbYDmGipo+9xMCPZ8YuGtRFxF0rkH661MtCNRllggThvUsPdggqyWcw4oKS/FqKNsXW
+ehCudgGQOO7riGemQGLH5YPgxh61psJIjY8W5/We7NCB11I6h/zNFYLvfIvIBf+VU/Lj8+OP
+P+mpOMkqOFy5EGceottk3JA+z05nwuALxagOVXu8fP7cV4yIaylaNoJjwSs9SNqsfFgerYhC
+V3/+IdfwoWLKBKPPHsPJYy/jYS47Q1xhgLsHRU0EIBOjo71gzptClEfXdJmrSBzI3Q1LMkRV
+oeMsTBBYfjcgC71rVJcX3L9cy1r5/CoyGYRsMk/xyb54/AmDZeYBxiIbCaZosRXCtwIg7iSh
+tLzLTcKGaz+k3DTfy8qN8zEJIbW0MUKRKToRyI3hi6QJg/9FMNMJzGo61sSVHPNEF1WNph1D
+Up1bjrPsZj63UtFyZjG5aAEEo9fSAbiLHYjk3K0kMDeGZWZZSr4hD7kSYxH7UkDwiZtlFT6B
+DICzqUdWV7qWUp+WimnftnENbgI4Vs9WkcxwGM2Kz1EdOBjTUnpJEOKc7qjPD+Wnou5Pnxbt
+NH3lYyCn4XNXTdG1+G5hR/VNzxQCFIHXX78MrKXXPE99p0NNH1rIVvglzDv8X7Hx0vbhbF3s
+umbrPWWthyfnP008LG0NCDTnp6+vMpzGemMImcZ5BvxN92CWJqiHZ1SeZIQrjgJazkpTSb4A
+Wenjn2/v601WW/Nyvj39D2kHXjXbC0OeO/+IJ2VAeorKC8d34FhYpi1Q2sItwB7qwtqogBCC
+qsvo4/PzKziSciVCvO3n/ynvkbvJ8QX16/cFheyMK1Q3RHiO/zUnjNGBZ8HUSHJ5M+1+B9mS
+xXohXZicx+SJG2AlYbwhVNPTlFHUBYHvWGuJ2KIsrFKjrGTO8vLoKDqkDf+0+8OJIGBewWKC
+A3kFJMJCLXG7GP+AJ2D00DYRwYw+guJz2jQP1yzFz1envJqqozzvppa/lE3GUuEWZepRVmDN
+GQlmCHzO1jChGZPVn3aWjXtHKJjNd/Fihj7hEqpiqKh0EwauVlIc3Eo+XYDdQ9HeZPvIsAbB
+3sda9FNydDp0vzEh4LK8mMNh/kbzEAh2kAhDVqtjnlEgN8rId3ru62O8TueJfRNGQbD3sALJ
+A/aIoqOeUZ5AEdeCFjCC5n1G+Rzl4sakFWrzlRLWEyvQjAs4jgh3pqBCQG1WAFCEG+8CFbrm
+WWV65XYFOO78kXeeP5DXHoq22RgS1WN7+xE12gSwZFuN6qFJHBtZOGRQ8g6uHa9k2OnxUsZ1
+DPMcNAH5CvVBJMsT3DMcy9M8K83IjvBnQSrkY/ttBKeeWCNibJ0u2nusNYvWCQhD7wzhK795
+JEKsXMKUrUIc7EKbCghcvIy+u8ceFXxNNziXk44fkTwe06hlBKZJP12A3n0lRRPgnKdJ9Vi3
+uoIjUHrM1yEnOHlbUvJJbY4wboqs2AM7skX2IwfUeIYj4xt/e/zx4+X5TmSGWLPEkwHfdArK
+DbRDZNlpy4WUF0mNqSGyeW5RvWyySZlFjMYS0JBGCCEv6jjE11t5/yO3fHvxzmUwm7EpY9QJ
+V7q1Lm2aIvXahZ5HPbKi+5hTe8L5WSLovauUE5tXIYTdq0GqZTsdOogGfvn7B9/lYMPCdFdo
+AJSGIol7KoTzxwxA2a9lD8Ixn9st+nBIHQ6s9Qyl86yhCVlne4SvieztOoudUNd25Md0TNat
+tazLsN8ZDveyzeY1HKhJx+s2JIxT8pVcs65wc4oc7UnsLmLmTLaMjaLxCcEmFHalaw1FL2LX
+DQkFQnZVxio9KuBUtrf3jwzOIq4dl1nhKguwgtPP3rCDZeHIyxWaus41P3s13WAjqYGEC6B4
+dYeJLkpivkds+TRK0XGx1pDN8GifMIcKp6tB8M7RIETY2wHCDpitfJQePjmBPBDDBYPnwipX
+PnLsYEFcSYEIlv0zxH1p+ozVADJieEbhnghwPGLyOgx0PWMFIRei+T1AV04FuZQYubcrDvgK
+MKJ48+1sD//qNQzBhKliHM9cLcAEhBamYLxw4128Uu4Of9XYo6fockr7vI2d/Y6i35eZNe1+
+h66t8mPkapbOVagk0/20BMGfLeXCpYLBz99clpWBRRGJ+hJxqVUcUhoENYZ9VlR1RboIGaKK
+pIZDFVJKZVJ1JI4QJKZJD1UF1wcJ7geZbXTFJo6Ren22V0NCf81wM52UDmd/i/MV6d4rY2si
+Ku0UMjwJXOpUYobsPgLBdaAZUtgWcZdWx+Dfmo7BPXB0DG5v0zCE/UTB7B1iGp4xLW/BbQwV
+rUzHbJWHY3zK81LBbMWJF5iNdmYxV9UwRWBCgH/2MiTsKGu72lyXhPmEIWlG2P7GgMm8e3Aq
+N2KOgR1aHvHJKpjQORKnxRPIcwOPIDEeMS1r00sbtYRDy4g75Z4dEvdAFIxjbWEC3yKOymeE
+ecCIqf5IkJ+NoHN29m3CQWzqDOB5vFG8RhOqDfFVcAT8GhM6zQjgE2hjOxuDh+8S04jwspww
+YqU1fwYCQxFqzxiujphHKmAcwuSuYRxz5QVmu8w7hzgC0DHmMoOGSe29VIxvEbRbGog4/9Aw
+vnkNAczePHrETYlgoxE5yPfdzfL4/sZIFBji6rCG+VChN0YZ38u52wtoTN5IGPq9IJxfZ8DG
+4sEBmzlsjM8iMLcHB5gHQl4QuzsFsFXIcKuQKFHYLN5r/J1K+sYHXOy3Ssa1YdesbwkMsUfQ
+MeZK1nEYuBszBWB2xN5vxJRt3AOjbJHRAcFHaNzyz9zcBIAJNgYRx/AtvrmtAbMndr9z9Y6h
+tyds9cXCF2799K3YXDvZud2Y+Dli48PmCPfvLUS8kYfBB3zSuYrUDlxzZ6dFbO8Ie4GCcext
+jH+j6M6mQhcs3gXFx0Abn56EHdyN2ZjFZ8/vOhNJowbd+DYExjVvWFhR+BtrKJ/abSdMws1t
+FrOtjeHGMUHobOYThMHGasM7MNzS0MvIsTCSLBWg0y4rEtfZyL6NCRqICXAu4o0Vui1qe2Mi
+ERDzaOaQ3cZYBshGfUbzhRmURX7om9X+a2s7G6rbtQUCZSPkFrpBaOPGBxWz/wjG+QDG3MYC
+Yh7bHJIHodeaW1CifMo9eEbxj/ts3jpKUKqjjFdcps8HbqqtbNkDSKymkXLDfEhYRucbkyvN
+021MvTWZYAKCiO81ZnAagUl6jC5525+qKwR/qPtbxlIsRxV4jLKGrzsR4SKNPQJsE8BmSDhe
+Y48M9rI8r+KIUi7G5+hSIUBjPQEA/uM96USuIj9YrY9WJ64v4zO4HHwxMcTifRBzVDBtqDUc
+3RSNb4BDYCMg4pIkwiDz2M/K1t1ZHfh+vn/D2CmK9l4Z6PJs6/Hbz7++f6Gfkb5by8dkDLm7
+9uXL+yPy7NwTwj2GVbF4Hq3Z7IAGIYN5T0UEUD2zovviFrXxOakUL7QxZRXafhKU1S16qAgK
+pAkl3BtWLX97/PPpj+e3L2v+y3kCqo7tlA1eNbAJGRHDRXIj5nOWNXB3xQgSVsQ6tLwPwA4s
+MqOGSx0oaICcoUTMjfn2yUI6B5FMuSc389tFEDAzBKwBbrfRbuMxuRmVFZ3T3xLitrUY58bn
+xTinnpeXT07d4bBRVIHbgEhScFOnDKH/oDhqg0d5VgRcnSWLmfmuZaXsYKhH2UcOnQHc11/I
+Rs+E//z2+PPlef6e4sf3Z+0zAtqo2Fh1nvPiWsx4+L6ZOcfgmY9jDaLOVIxlB+FYLufOt++v
+Tz/v2OvX16e373eHx6f//fj6+P1F+/bRyAGHuIhW2R3e3x6fn96+3f388fL0+vvr0x3wt6iZ
+wWOr2olr8b//9f0JXP3X4cbGjjkmq/kP0qK4Dfc7j2BbBABzA0KxHcWE9U/eBwF3HcJ2LJ6P
+WicMLENYWwAJhsNjnnYxcSdvRp3zmGBFBYwgsLQIm53IpKsdq1sSR6qNKK8kzjOYkrj0L1BF
+1EUn0UpJtLeIK7CQB4g9h8xCgZCElyME1+ZHMXF0MYnx7cIgprglhTgv6ayL2Ibwrcb6jRhT
+Bc+Zz/d7lJf6gPC8buXpfm7haizLYrx+IObvrXN8Q5XXXEwwCYCMZBkQsbyAXXBZYq1Wv0bl
+5z4uKjIuNsfcc82JKB2Iw7AuQsLpbZbTQ0PIfcJHTfRO1Nk7L8AMuIN49ENbPsbTQ9xWMwOI
+XeoECIk4KwMg3Fu4xWiSE0fgk5wwYM1y3LYj5CuvX12clkfHPhR496efBa8I7s4Ij1+zOm0E
+xQoJadIWZ8gEYR0fPf5V080nlJYGpZEBMXpvRLx17eany1tGX2GVAM8ylEs8T7H2CkDstR5h
+9hby+9Cie60pvdbXLX9qrdMYXUtZtgv8zryUscIjrFZCev8Q8g+JnirBpIrr64fOszaWUdYW
+tUEqbqXUDUrRLQArjx1IbbM+KlyXz6otiylCcgDmtbs3fKjg8Ua49YqRGuUFEWunrZlvW4R7
+Ggg9i/AFkULCN1dUTgAME5QEECeJE8Cx6RlgANA1F4CQYIOZAHuiigrArB1MINMqzEF8HSGM
+mO0t31muYQxyAIQHNw9SCB8TuGZMXrieYXJoY9cL94YGoy4ViCl16UWvq4dN9rkqI2NLjhhT
+Q96KcGdYkLnYtc3KzgDZeInrWVu57PfYpUPRFINxHL78JlU27RO3tGbnmginKZ6KGSFjx16r
+vI1OKZ4J8LRdJGkdu1B3tWc4WASFQfCjD8DGJyTOgBRU4rnE6q6ASv4PvkgrjRLtqZB2CxD+
+dSmNF5We6xGDdIYRN3UUXnChDOOtn7F87xIaoYbyncDGN48zDGZ+4mhrAcIXPhUUBg7+Yeug
+zdbJ5SSxgQK91tOnfwyzUm41aejvPvAe8qKxjqI8dxcowmVEQXG9dHOk1cfL55SiSlVg1zC0
+NksvUFSgOB2FRihVMLcCmYtGX/YE9FVaXuuM5LOYOUUdWZgDpo5h4toiloFXhIGPr/Qzii+h
+nk1Fg9VgvkO5iugwzyLuNS5hhKKzgDkE574yNZsOTYX5UVxPwZjMT++PP/4Ao9mK+OJ6igby
+ED0BxjOfyy4MeMFHRUJYW4Gn2FbiyampfIVp0luUKwd6SVPMWP6jLzKgHdLD50F6UvfRpRvp
+KJHxAKD7gg2ci3qmkH48jCL15TwZ4gygZ0Qgzqso6XnjJVD2YkmEpADbFioy3Zd7+f709vzy
+DjeU/nj5+oP/BTR8iukPnpH8moFl+XpxJX1abvs71SNglJRd3bd8TdqH+JAQpUmOtPCc5ATj
+hegACI2cZKzOiaAKAGpswnNCCKOEihoP4qhI+MhZDcIoru/+Ff31/Pp2F7/V729PLz9/vr3/
+G6iyfn/98tf7I1hS9fYrq8s1jS5z4w0JSuTBBX/tCBDK0C8emjyeu/7iIu8SgfkEUdtypBQn
+fMUFGUUNCTIWXSkXXfHoKcWNqyCUx4Ck+JLgx5aiFwiSoaEqJyrALMjjrGkurP/Evxp6EMDZ
+aULLP3V02Q5VfKZrNXAFL8aQWnxWLL8bYEICIlygY4PAU6esxHThEXpOgHQ4iWt9rgCRnJrW
+iXzM5bjACcsCGIEIqWWUwrPAZLKGyOvGi3rK2ZZS9QFRR5KzT3xzyevPH18f/7mrH7+/fF1M
+TgIILI51ni5fM8gGqvc82VPX9GZwznGnnUeoQDOO/z9iVZnF/fXa2dbRcnelYSjqJWF+GkbR
+JpqvIXWff7Itu7FZR1h+Vnhm7dzWzlNUGxHDtsmSU7ps22wMNnl3eH99/qLzSIsvsYwgFFrH
+/+gC6hqvmIL4xF+3pbsjFBBZYph9+5qFPnEAJOacLNtbhMouhlHFztkhknt2Snsa16MouQYe
+obWK+jVxfaInAhEf5z5rMnrFGA9PV2vG8f3x28vdb3/9/jsQKS6jsBw10rNx/RarOdKDXD+I
+iwRuTMzfGU8rqzY7ald9eWJCWNS4SFx7u6YM1baUV/H/jlmeN2ncau8DQVzVD7yk0UqQFXyp
+OORZuygPyBqITsp38Dn4DPaHBzQIAsexB4a/GQTom0FAvZmvsml2Kvu05F2EUSOMb6zU2IDQ
+hOkxbZo06fUgRgDnOiYQqhENXERw7JJiflzQ/MryrDzDHxi0P7Z4G9DGQr3axYqwHl9/jATd
+iEcN9IFYFKlS1wXGV8wFUVPEXB1bdujDIW0ci5j44DGuH/IGx9dwMVJYSwrTI26e4iJzAE7o
+HTsRZ36UfPBBIqRcHSNlWUAsIqLT26Yi32lQOKGp2gdKW5VSsqpEiOWDSWcDaUa2XplW/EPK
+yNnj/oHgzOUyl9LpuexaVUlV4XMwiNuQotmBT4CvWyk9lKIGp9gUo5rMlKt/BcVMC2008kf3
+pGeA6AFaVLD4QjcIpfrCODsU/alrdx79dQ1mTuSLFaEtDlRoOhipKR+pZVWQNS8OvC/o7+fQ
+8B0nO6dEAAnoj0vV39t74uBXjD/Q2VDp4DfIv9GUHGdz1xRpE+GbD4AxPhEQZ7iifwIbm/Km
+CRo6flwj58kaEuM8YkA0es1iTfMEWb47Wpazc1rCEV1gCuaE7ulIWEoFpL26nvUJjzYOAD67
+7h1CQxrlLuFBA/I2qZwd3nYgvp5Ozs51ItxtHxBGsnfRdH7quwVdAoNWDmKuMbv+/niy8GO0
+oR09y74/Gpr63IWuhzkYzN2s9eY/a/nIRaV09Cysb3gDKAgZ+fRGBROdkVFShyGhOi9QxOU/
+ZewWru8Sd44XKOzahwKpQzD3o5UnOSqUx6+eYwUE29MMOyS+TXyqXNlibYQqi2KWWKhOgwg2
+yONGJ377/vPtK1eLhg2PVI/WtsTkUhQP6whEWjL/N78UJfsltHB5U93YL85kuDnyCYpvdo9c
+l1znjAj5OGy53tvXDVdoG12tR9AQFhWsgkjj8C2bprjCb7hvfen47Fni/aZgeLPb2AmGAonz
+S+uovIesuujLjUjoK8ZWB7MjoFQib/MfgpS40ZPquFgl9GmerBOzNN57oZ6eFJGkoF/n82sk
+qJIXKWP8VBFSaK5JCQ4cny7gt0zcnOSIgm9vGqgviYBiLuQL6dgC2mPnhmaeFrV8KCPwCOQa
+TdVQuQ9rWV/lfHZV6fvEq4HJWOXhg8QruAlBlHAuPLJloWZpVrYEyzmUjSSbAmkT3QqukEPj
+kpiqzl2I77oF2m2C2CG6pUZE+v+MXVlz4zYS/iuqfUoeUiuKOncrDxBJiYh5maAOzwvL8SgT
+V2zLK3tqN/9+0Q1eINHgVCVjG/0RBIFGowH0ER+c6Z3Tx3S/B49sB72BYoCslkH0dJpvioyZ
+l3rFdyp1oLNcUD5yUEd2mBtPfhRj8X57me+siZtM1WBBBbxTZL6YU8EUgF5wTqXma8i47SUi
+ZwDosF5T4VgqMhVeoiJToTCAfCJ8CYH2pXBdyvNS0rfFmrgUA6rHpg6htCA55mQSBmDj88M+
+INxZ4WkxnxHx0CrykgotAOTiTOyskYNZHlFhg4G+Ry9RkhyxB+vjqnrCD7Suniar6mm6XNQI
+X0sUzDQt8MLUpQUUpCgmkrG0ZCrDSAPwfxutgR62ugoaUUmtMbqlgkQ4LhVSoqFbXiCcjUvP
+GCBTUUMkeRdTCddw8fMFLUmASIsQqdI7vW3ekG5hKjS2Xp/pfqkBdBPu0nzvzCxtiNKIZs7o
+vJwv51SYIuBsFgi5oSc8cpVOQib4lOQknhGJ8tS6cQ5prSPnWcGJ+GlIjwPCYqGibug3I5Ww
+WlGLImHbiES4nznyraXfbGdKqNxwtibz6bT0kSUMz2lSQUuH45kMJSSpD/HO5JkU+r/gPbTm
+MYRzgSmGtMwWpq7gCD0B6FkeoN9rKfiX4NflXFMh+2qjimCuvUMWycWX8juoEQfmWKY8IDzG
+Ga2nAWIJ5hpWRMh3lLcvLuSeT55h11VkKeEQ39JDO6JIk6B/0TIAHZlU8oxJx5GfPb3bwf2j
+dmzt73B6MwGzXYIXu0UZi5VHiUWFb7Ie8tnQmVVcvYkyjPjjepvsbpfLx9Oj3HB72eGjTl7j
+XV9fr28d6PUd7CU+DI/8q8/XArcmUckEle64AxKM1nAajPgBTOYTWey6qGDsdTw+w2yID7Qo
+ueP53SlNfesQqLpoNQXolnj2LQQCzVsh95S3XA0w5QnrQdqcHoOnm6vw2L8zGBLb8eOD0qkW
+5oMdm6Tm3DXNzMkTn8ExS7FYuo7c9Hjw08L/1ZkSMrX4/n65hSZeFuFcMo8xlVrdxb3o7k25
+nAFwc+EP2sBeXv77/PZ2uQ1bM2gCJkLx5MJlYTfE9Ca7ATE+IIPlZoA4F7tsz/ov6/M+XOQ3
+K1D1SfAFptAd9fB5m9XYdwLMZwdnbOIAaDWlAtDUoLu5QwWyaiGLhcl0vgNYOq5RjksKFequ
+gSxcwu+kgQATE3dtNWZblMKj12+AeMJdRBbtrsXYXwUb2mjhkO4GOm7sfYCxfz5iRiQgYKg4
+Tx2IZbvUQH7swySMzGjYgZ3P6x+pziUMx1vIwo30o5EeAs3LcOJoEZ8qaiDWttMR1E2KeDky
+oXiSpJDCd0oF3apXLHberBcjswpBVIS8CiNXA2dpOTupMasN7ULTx42NmsS58qW0588A+AM1
+LpzZ/36kQsSN1QdLm2MfAbX6jUJWq9GXiX0RLWwKN4J4vlMbiB+Q3T+gEIh4tpzSDmp93FjH
+Stx8QVicNZiCucTdbBdiOc1VELm+Et6LzerKxGwxIhYlhvRG7GJWlvOhBmM54EPMjm3WK7v8
+KaKjO5sy7s3c0d7uYsdGsMG6jmXjriNHcMJls9mK3kACSCqbC8sxdQ0ZWXIBQkVLbSFUTI0u
+ZEQ0A2RkNiPEzuEAoSKbdiAjHI6Q0X5ZjSy0CLGzt4Ssp/NRbqtgY4wG2wsqzmAHMrIeIcQ+
+cwFCRU7sQkZHfEOF0a0ZPWMQOJyZDGIQgxY7uPMoDwWPeveEHfLw+heusrUZpM6wuD+8gZeF
+WoAN7rcpXIo8SPaFOSaGBObMvJU7hEZjWqi6l2RMQPycxxds2SAQDuDZvAi8sN9A5uUH07kN
+0rIsCgYPQCE3n6oi/QAHcESN2yC648mgk4IizUo94UWHrDK1dowjsIzLvx76NXlpLpilcVme
++vwueDCvSlgDGkPT5GzmGO2ukPhQZwXRnpGDu08xQyxZbQAOVGZFAMlRQJ1qKLLJ5xUpX+TH
+9tuzD+ItJ4JnIH1HmEUBMUyjnqW4/myxXLt0/8vWFOmBCA2DgAe6kw4e2PGbRSDQTyyiPJKx
+aQ/5wNhEA3AI7EZSixNPQqMJtvqwBPIvF+mAuSOPziSFdMKwStGS9EiNLXSGaUbX5fBHZu6O
+BkLwHNDzQ7yNgoz5Mxtqv5lPbfRTGIDFvIW30V43Tg/CZGCDAA7RpNJdoUuAOE2kZB1yd3yI
+Cm5nsqTIufkoEqhpbmPwjCUQhjFKLRMoCxL5QYn5xFwBChY9EBkGESClG+VEiPRINiOHayJa
+kqENFv2KPPU8RjdRilFbN1THmjRdCmeamAUBeIJYqi+AbeTyRlyBIeaQZBHhEYAfGJvVIJQF
+eRAkTFgEvYhZXvyWPlhfUfCj+ZgJiWkmAsvkLkIpMGhBW4T5QRQxA5c6i8izrQsnzuO0oEXa
+mUs+Jalfgjy1fv2XB19qDxaBqmIQl+HB7GyC2kKUDS9kIMSRUcFSd2IDJSsjMldV8J4/c+ND
+rL+ieQqOas1aF9SXhh4vwZ9FKozKKacVS0AfWFzjXSAGedfLMLltyEQZer5G6X4dApNEChMv
+KJPgVNn5Drssfv54urxAHMbr9w/swOqCSu+8OuQxWJtyUfRfNWqHhz1Q7PvPyaLyFEqBEXHC
+7bVGbSM0mhUFyRU1ckckJcLb1yjjJZU1AQBUSH2gnXBEtmwYSxv57vrxCSa3n7frywt4vQ3P
+5/H55eo8ncLYEb10Bj7pD60qVdZsg1JD9t2GGBMGii3gGGxN/roNoLqS6Rf3koJDeWBsOZbm
+4HwnB64sCgO1KIBFhVTXTc8OvhpLeyn72rqIW/4GoDwtzC0n+zI9H2bONMz646aBIJulszyP
+YtzlzIrZSS6Wb7NiICcPRG+k+Sg1jkbafGm/V1Oqc9KxzjlUALKxIlo7g6ZqiHzNlsvFZmUF
+QRswwyqZvBCrqoL1yt9D8wpRhZ72Xh4/PkzXaCg7iStUtHwAu19ibUU54dPPFnrsQhUdXC61
+/5pgRxVpDv5rXy/vl7evHxMwHPAEn/z+/XOyje5AiJfCn7w+/l2bFzy+fFwnv18mb5fL18vX
+f8tKL1pN4eXlHW9lX6+3y+T57Y+rLtcrXH9Iq2KLDXMXBft2SufTamMF2zFaete4nVSyKPWk
+i+PCp6IhdGHyd0Jf7aKE7+dT8wFuH0aES+rCfjvEmQjT8deyiB18szbZhaVJQG9NusA7CH0/
+iqoOHEo5IN74eEDW88N2OSNONZVZk3mu8dfHb89v36pAy4NpFvseFWkVybCDs3AWz+jId/g8
+ig0/NwW4RbXl5LkDVUaWYVgcslZE7Jm/D0w+5A3Ch3hsedpGrM5eHj/lVHyd7F++15HvwVpi
+qKri8yZZjISB6MbSdFfHhOjTZoZPnA0+UQUcevz67fL5T//748svN/Ader1+vUxul/98f75d
+lHqoII3FxyeKn8vb4+8vl6/94cUXSZWRZ3Lnazzba1Dd3jLUQViOt49bBRVCihy8XGIuRADb
+zB2lpoKJD/eDnnJTl6pUJibCwfcICnS1TsLE18upsXC4aCuCU71hoE/gM/IV2H1WzQOQinEH
+WANywMAw/DjoxKKpHDaMckDfZhDPBzEnLgYqKpFYFxds/1AQtmaqaUcR0AyS85TyOgZyFOzT
+gjyMQ4RFb6mFrfew8oiY4ApGZ/3AYfEHh1262lj4UoGLiHRv2EdwAm+LIIU9xYX8cSSCJuG3
+0p8q55jccB75Niezx+CnpCeWyz6nEaDn0ZwQQtJrVAV3/FwcLCsAF+BnuSPuSCTgQT5Ns03w
+BXv2bDq4x7VFyE2v/MVdTAcLCZxTgfdGkFu+xhPGBAyT7M+/P56fHl8m0ePfcpUY3MugHhpq
+Z5hJmqntmRdws1MVUDF3ytG2BcYtitGjCpdUEZs28hgtcH12ltAq4lHYfOuCDbfjRx6chicf
+Skz1X1MJL7u074IgogpxFDiEUitChYJegzuZ068zA7VWlpJDXCpvVSFx7YBebs/vf15uckjb
+Q4K+AKx3fgci8gK+LreS653Uj+yPaFmUndmMcPVCJjha2wBk17J3hQbScn7re9baWewvFu7S
+BpHK8mxGhEdt6ITVAfZxemeOi4QyYT+b0rKp4gaVgIhWSNB32rbZVb/uaNaFU1a6j0g/BPwC
+4joZ218mlq2v+jpLq3aHxIO7MgskhrAD9f6UbsZQmehtDeRqN1TCe5WMbdU9H2LTx1kqOHHc
+rephHoR+swDw8shCDy0nzfvS3+7N921K+UCvHULenUwJc+JYTzEQe2ToueyUi+BeKldxR3ut
+Cpv9hDopjr1/Cl/+JzkLEgJ1Tjg779lC8re2pqaoOhr+1Z0NSVs8ptYsKMAK7kD5b8GT/SV1
+0ET6PLZTi9wsyx9cby+uZX4c6aXCD/tALJLKjGQPTyp4qe4c3SLIzA0NAhPSGcexriIqdrG5
+drnxYzkThN6n44qNaV3XMAH8ZvrO+sTX9IFndiQCzDeYHfw0Wt92uhIc7k3v7p32IgPwXQyH
+YUR9GTc0lR4Gb7uiUgJI6hFi9PpxbDpHwMl10hvtn5oB00v7e/qq+M4dTNeTlWsk2eSNon9v
+CD8IK1H8qsOWcnUH8kGERCR8JMreXMrNITmgkG1uMGZV+ELbp1E3FnEQi4J7d4b3wf2WlJKd
+foW/VIAbLRRIU1ru5L/hQH6ASYVhb4rPbb14SZl/t4CFBYB5GIjAPxWd8nNAeuaxzcI1bUWQ
+DJr94GsxjQgRzKimE2a0FX2xIJICt3QiDFFNJ/b0FX1NZXip6ZR9e9snRDKTBrAkzF0R4DPP
+mc3FlLAUVJUQ0Y6Q2ET6trCGP6OSwauvLNwFkbYJ6YXHICC5BRB5iw1l/dsw38Kcox3pXLjO
+LnJ7rr+9WYE3Cb+/PL/99ZPzM25r8v12UhkifX+DuNoGa8LJT63Vws/DeQX7ZFMSHaQ2WXSa
+lhS352/ftIVc9YDUkPa98CRdQkkHktFgqdwdUef2GtDnwiyoNFRcmFYoDRIGUs/ZBqwgm97E
+ixqryssOZCVk0Cr9q6p7fv0aHDv/+f0TDnk/Jp9qBNoxTy6ffzy/fEIsdYwJPvkJBurz8fbt
+8jkc8GZAcpYITvmi69/FIOLdOC5jCScSPqGGxrdyW0bEleTy30QuTolpwAIpJToWGs1DUG6A
+54UHIXna9QgK6uWoUxR6ckV8MBfWkdn+cft8mv6jC5DEIu3qaJ3C3lNNQwEy2ALg0EjK5LkO
+hdyZVfCE3DztVCJf/WVYrutqTXEvgFS3vDzwACP6GwcAm5gfzZo9mN1ASw2rc/0c224XXwIi
+NmgLOq+JAI01xBdk+MQuhLBP70CWVIKWChI+xOsFcSBcYyAj72ZqUrI6CMwK2O90oOVi4bkj
+reAicmZEcjcdQwRs0EELe8+dAWJFZN6OdBrRMFR+TQ30Ixgi713TwXOnoBKxVJDtvTszLwY1
+QkjVb0PEJawxu9h1CP2wGVDJvVRapBayILz9urUQSRxrSBC705l9KHPIPeNaOFMs4sbHQG5v
+R6YvdDOhA2mQ0WnnEpqWBrF/PUCI5HsaZFxKELnutOlNuCE2/byhfLTb8ZyPD/nSGWMcEBZz
+uyBQ4sjev3JOzZyRCRx72WqzIHjH4PIO/PP49tWwDAz63J25M5MsVM0aY2nJPBtP+z796n6E
+ieWQzwiPww6ECsrfhRDuYd3lZb0odyzmkVmf6SBXxK6yhczmU5NvfiMNdtzUpaK4c1YFG2GZ
++boY6RKAuPYZCZAFkReshoh4ORv50u39nNqINTyQLbyR+QZcYp9LXx6S+zgbsNH17Repops5
+OGTHAOJqQx26WqXWD8/I1NHUeKTWpTuG2iB5qam+2Hxx2GhPecx85hL5jZqXxuteHPqBhtc7
+SWzalRxNd3CN8gCea7VIgA2muLx9yB3pyKTsWJQXPZe8CunLz1L20d1WtaWE6iwBw+QWsrBU
+cYnafoeyJkNjyJIk6HoSAhUOgPUStDNp9y8xHJtFU6LrMSSPTxh+qczZXJKX5sUzll1LHF8o
+Unk0nTplketOoa1tw3FkZ9OSZduK0NSkSI6kUe3E4S1JKt6ojZHVxOujKgwe7G9Z3G8alofQ
+QWW8j8370RZjJPsnqNS896xo/VPPmkur+1itH0WI4a1kY4V+L6LKTdVgWif5Gm1etXe9dPPE
+oU9qmNt7eb68fWqTiomHxCsLeiBkuXEHJ8u3h13Hu6BtANQI9/TmnfvhbDVZMabtPO54WvI0
+jg9l8ZAFHRGIFDkX73e+XtjtNwQlKVZA1a5Z4dUlZRyzzFAsp+B58AJTJPl6yub35fYhg5Pq
+mCVsr0dGBlFSh+M1NQ/zcNVy8vh8kz0+XG+qbF36ZzRlYPLEvIcBaQsh8nRfxYqC4aPJ1siO
+6XVxW1yn97H4qDzdrh/XPz4n4d/vl9svx8m375ePz44PDsLOlzcyxjmkh2jb3ikUXn7Ylpns
+YqETMPvgsfDC3gNwGBd0w3fLwl3vWbhSZoWJAgc7oeTI/MhFmus0+T9YmHTyV3SI+6RQJyvd
+spwlGLG7xMCFHfFx4mkRbQGkP5FJppG9rRcq7a5TwA5FWp4ld+qyp2D97GwNbZ9G/o7rNyoV
+yQvzNA4aZtdWWPDPLCE9PJk8skZkeVqkg0fvtugGaz0g9aI76CE58neHztREdUvSIOxjxvLO
+Yq18roD2axNIH2P4eS/Xp79U6qH/Xm9/tczVPgGxwQWD1EWd+iKI37Z2pnpRky46FZ7p5ZIz
+9TvMLokvXCIItY5yzAu+DiLCTHRAnu8FKyK2cw+2mZm2dV2QgNCTZTeFX7c5TcrYTlfdpzm/
+N8JrjdDUmoSIw92BUPc6XcjZvMx1Idwz3sp1IL2L7Q4l5HIkNwRpOZt1uEZyS1BgWjZ9Wkr5
+1cLt7WAxesIbX7c/bzsn1krVl4rcerpsb2F0opc5Up/rE1FT2vsEVwNVU2yz+3LveeV6ujbz
+KgDi2IbgVRXzqWPeIfLmHUTsXABENgBYPWINvbTTffLG0c5h23LiDhMA0RhAfb0Nod5BnEh3
+qliZNvltBZtlxzKhfapbDENYa5VeBjCRmydyEwmzolUZjiTrLOe6jO0BDj7YSoOk6HIV2hOU
+nqddcMnCNS9DF8oNXxaeRMaTyiBJbRrrVHHi/fkNxflwH948VPOqWgMQLa7fb0+X4UOyuRCh
+susbUBXpG7uqUEqDbTAorVSkerZX9h391CBMZW4M7eWgukDoGBbrCEWUy9F0rs1CDIWbcdMC
+Ghd3huQc9Xs8Yr/UAOLiQAT7qREFka02aJpbmDZOVa8ZVtyY8WibnvUvj0ONdeTmVe5T4y0R
+fr7pfRKRecRNY1QEORs8V3MXCmmkaoJCtZg2FFd7YxHxWPIOVfnWi8vM9+raa+GG2yAt8Ykq
+au8zle/P5e1ye36aqF1P9vjtgve9Qw8l9TTsE/YF23Y7vk8po4xpy7MRUIog2pFfPnhEDuZx
+Zdr31MhjZyOd7lRxv429E4BK9lAbPuAfoWppx7kqKynLNzltBvWpG9fL6/Xz8n67PhmDuBaB
+Cq5e5qA00IcR98vjQk7Zob9N/v768a1TtTpBl1X9JP7++Ly8TlKpy/75/P7z5AOMNf6QY+7r
+4O3t+vj16fqKMXUHwg6/LNnlzNtpfgBQnkEUgFPOTEGSgS6VWnXhrX/LXmxNUxxpIg46Qqwq
+8oclsr/iQcUizmZmNbAiE8ECkHryEliKipy4sK5lRBaXfiqncGIM5KuFhdZWM5Hr4hmEN+aJ
+dtyZHvu8Q4MjNEVrWQYimZkt6qBpwXGXG7P6BOfCa41rgv99PsldTuUdbQhfoOAlkxIGEkaZ
+ZbbCkMYmFR3c113CjbaC5IXUV1yz8l1BRLxYTE2ad0Wv/V00Jg3iNDd5qHAdx+GwA904zFIJ
+o3TCr4SlOwAqsxSSLuqwHDaEoRIV+Prp6fJyuV1fL5+9cdrGzCEurCVpRlxdbGPPWUzRUMbM
+7tieQgFKl52JZKp3Z+Gb1fC7s/fbnTN1KEthtpovFmSswppOBSkE+pLSkWO2nhNmjpK2WRCb
+aUUj2nv25lPiHlnSljOCvUVxt3ad4RUje3t8uX4Df9qvz9+ePx9fwJhKTsH+6DJ/NVuat+JA
+2pi/BEnmizpJmhNhJCVpRVe4Iq7rJWm9Nl+0StKGuBoG0sasaoFegztokD1mRJBHPJmRdM9z
+ptOp06f3dh66e23I13PiVhIyNp3P5NukdHMo6wmguYRVSuxlUikldqCSNicscBJ2WFHXmmqZ
+k8tyyanmtpAjBWmWOgFp7M2YgkOHTNeOnUzETldkZ7YWU2KiIkJI+WEeE0VeL9dmLj/ulnj3
+NLzoYK/vL1IJGkyztatPM0X98/KKfpnq6lF/pIjkrjgLq8tGM+ewezJiwfHL+v+NXV1z27jO
+/iuevdozc3Ybfza56IUs0bZqfUWUHCc3mmzqTTy7iTuOM2/7/voDkJTML8id2Z3UxCOKIkEQ
+JEDgxvW+Xe2/tXbOGG/eiLPITqvjRUvsCKbA5oVqjhU2SdpklKQBofMoxQ8lc6ZXhO0QSGNC
+6iKJWIeANCHcypE0ocQRkPxrC5CmNyN/nwsaEVsSaUSMdSDNRpOSXHCQTjg2AOkzIf6RNCO/
+/DPdyz2CeEwE5U1nozEx3UAMTYekhJpeE4MDUmjymXAdQ9oNIaHk7Is8Zkbk6W8fr69tetqW
+sxcYdGL39vRzwH++nV527/v/R1fyKOKfiiTpsuuIUxmxc308HY6fov376bj/6wNtjCYD31g+
+hdKt5+XxffdHAnXsvg2Sw+H74Heo/D+Dv7uXv2svNytcTKw45saMev55PLw/Hb7vgOQKiijm
+w9kVOTeQSnkCtlSK8ZA6IifktuQTIorLPF0OieeU5re8L/MexS+ulmMrHI8UYLvHf08vmsBs
+S4+nQfl42g3Sw9v+ZHfRgk0mBFtLGnHYCRuLq6GvFR+v+2/700/veKSjMbGqRKuKcNZaRahT
+EGEyq5qYQDz+TCmNSBq5DY+Bt094o+J19/j+cdy97t5Ogw/oMQ9LTYjrXIpKbgpiGHlS8VZk
+Sgyu0y0hz+Jsg9lZZ1dTunIdY71B3vjYP7+cvGMWFjEmayW+92vU8DExckEyxij4floR8Rvq
+VpwgUufw89WQCvuOJKLvw3Q8GhK+m0gjxDeQxoQeDaTZjNjPLItRUACTBVdX/muBMU9gB0EI
++K88IBM6lkV5RV4Uq0rqjhdMV5jKRHfnRQUj4X+wgKaMrkgybLLGY8LftQr5eEIYRgWNcJiX
+ahRvKugjyq8caJMpkWWg5tPh9ch/DXwTZgnZDxuWJrOrz65oSB+f33YneQLgnSPr65vPhBqy
+vrq5IeaHOglIg2XWIxTOGHJHHizHlNNxmobj6WjSu96Iyun1ph2PVRpOYadGJzmwcD4xE789
+/bt/c3rSWNK/H04geveeAxfYlVxTKhgoUxNiM4wK05BgFqRRjFQVCSxxHifl4+4dVwgfK8zT
+ggp4sSqothfJcNhzICPJ5OgXCYw+oSry6YxgPiQROTgUWwivCX/HTCmVYVWMrmau8ilWlzeM
+T+ebPXx8Y+7/VS8ffuxfCU0iiaOgxCi/zHKZPHPj9mbqUU+q3et31GGJ4UuT7c3VjBJaaXFF
+OGdU/J4TIlKQCHGUVf6ggJuU2dFzW3l8p51kw4/u1thZYkNhd5Djl+mIEAc5JFm5A5F09INd
+VP4jfaSjCQK9CUmAuC5MXAVGOrpZ0kRlGK8Kv0FTYOgkkqLb3ASSohiTDhKPSG/qV811EOs3
+jZ+Gz4cqQNnUZOWXoV2+GaUueDP2lYHSrzm4BUmBbnwp112Z74QzcBxWWjwN9GFJMA+HcHRM
+5/FSd1RruxG/RDPqYqDiJo9SrfKENzxcLM03FkFZxRiDBiMPWjdi4wJjAPpZuIurLf1soLQq
+8yTRbewein7+JD1hJMrzAuX00LrxKOeeroKFJzQsBtPiH3+9C7vd2QLXpsC1IoDBTzHFMuHx
+65c/AiMmGWIuQXhQ+RypEaEOTdNYhPCKWG63pNgGzeg6S0WQNPJFHaq3xcK7Gb7a64au0cei
+Go0Xzg2NCreZ2FnrPAvEU3bkMqMBaTWbbrdO0CwNoSz7tRmHHSkyY2hfbwPixkHodJULVn2c
+8az8vIkIG9bXhQq3HY5+BTcdTd36XBRCIjP5EVLFiXJQ3F5fzSYOD7nIWCC3/cjuCLqvIzsQ
+s4K1+FGRVwwDwvEr7Npae6PEiSlThqn4BJP9pNV2K/lCK8+4CGtqvgVjTIaBf3lKQ/cAt9gd
+8Vra49sThmoVxyiu7zOK60J3gSgDY2WuVnUWsXKeJ67XfvD27XjYG4FdgywqcyKcVRLPs00U
+p/4VGP1wIyKzSAa6BZG1mFjP5bWWyo3igll1MfLT3/vnD1Cp9hhF283WIFDOo/vjq/APc6JF
+iU7kGMfozlwI0U1XuieHeeIj4Zgq/wBD3MdlKjKLw3enXn8JWOrMlBWYnVToVd7+WNw1uBY6
+AEWWVp7QcaUApp1NLL9o6dsShl2OMLaIB7+zH7ABet+jT1DXT3EbOeA/vj6GxzDBu685SGJc
+j/qIJbB2B6lwgQddLrKIZZ2hP5hwLylkqA+NCm1GV1jDqweKYTbxGh2N8iAyrejtQBkOeuJY
+qV1el9ymhGEA6/dtHZfMGBlBFJfEKHu/QDAVhME7QAIxr6vK8LTFwkWQuS/LvaGQAsWNMh5Z
+E0e6e5YgptJrx4u3ylc5bDXrpQorolNEpNogcVoV1rzC4Gk88ilAnYYl6xDeXHUB4jGyG2nT
+PB1N9zJeX+FJ7m2BaCTobzAZTfVNfjCRdUf/tpRVq9wXI0SAgC/qkEUNXmgQszvPElNHQwep
+HPawSyqjWNvGhe1boiQUTD+pD+qXDsMgXMHMyMtIhTrR/WqrUWPuxVRRsw2qyjcngD52H8Gi
+BkMlbuEdfh+RFsVZWJdWpJUzZNIszPZNjJqt106oCk0Qy8LyviDztAkMFQTx6zwy9Cr8TYKh
+Nelc9Lf+SMlizkqgEdL5K03a0iTggBFFy0OX2Oq1lWzJeVfYlvh7uaPCR4VrsbIuyd7uwCCP
+Qd/JACf8Vv2tlGh6xkp6wKHz/P6fWZz0dMJiRHcevjfw+cla3dBxCHrD2lwvy1Sgyrzw9TZe
+XWyQHusufinoSRgV7N6m6+3zM21Hz/IqXmiX8CK7IJYFoBPr21RYLyxcW6KEA+6MMRA+vFeb
+iLd1Xpn3YrEAg+WKUNYikuoiCH23T0WcVYUHsZdZXyoJNBPcLtKq2fjPqSTNtw8RtRrnCnhx
+bcFN8bKAvjGmAshxdv6Vb2CnG9xLhNRdHp9ezEwVCy6muyOLw+gPUFQ+RZtIiOWzVD7rqDy/
+mc2uKA6to0XjkfFRzj8tgupTVln1dqNZWdI55fCMXxZsOrT2dBvmCxON493HL5PxZx89zvFq
+HmfVl9/274fr6+nNH0MtqpQOrauF3/Mmq5wpKvcu77uPb4fB374vFM5e1vkhFq1t5xmdiMcv
+OjeIQvw6zOoVV3npVAebwCQqmW/yrVlpXN60omBVaWE2TxRcWB0lhlp0V/USZtpcf4sqEh+h
+37KRuoG5ii5i0LSNIpjh8l41xgZj5s3LvAyyJaNlZxD10BY0jQl5RlFX9INAwpyBFHne09Z5
+T3P6FuSeZSXJKb/eEDYo3nnGb+uArwyWUSVyAXA0BpMcwZYi9KmsHSzCnEhFg9liE39FCkHH
+ovYi1TFp/wMU03aABxnvzn0yeSASeZ8Bflfx87sf+ukTkRhrLi6zPhA561ssS+csiphPfz+P
+RxksUwbrmVSqsdIvY80I0qOvpXEG859S2NIe9i9o2m22nfRSZzS17HtpgVHYiQ675xty1XJq
+bCU9q2AHsrZkTku0BBb+3oys30YcZFliS1OdOLHh/M57kiLBzdB626TRj4qzdiqCOpDXlU1J
+2Fanvtp1NyJYOvKNSBbdYP5ueejz2z+749vu3z8Px+ffrK/D59J46eaXNkHt7gdePmfaCifS
+KmbmQoSPoMojAziAyugdKQXCVY4lCLKq8E0QaGbIRDqnXLt+g4qt/VOOjPYuO48pr7OyCO3f
+zVLft6oyvNuvYuYY8kVSaZ0yZMWK4uAwJghZWJDP5FFAr4jEjLgpLC1GFFxQEySmZwud6dGD
+4EergxlKmkZutbwGtDxjnHXaZ8LqboIIdxIDdE24QVkgwpfdBP3S636h4VQQaQvk34JYoF9p
+OOEfZIH8K6MF+pUuIC6EWCC/67QBuiEcS03QrwzwDeG6ZoIId26z4cTFdgTBBgsZviG2Hno1
+Qyp/oY2imSDgYewzw+stGdozrCXQ3dEiaJ5pEZc7guaWFkEPcIug51OLoEet64bLH0O4sxgQ
++nPWeXzd+M/aO7JfqUUyxuMC3YhImtEiQgb6sd+OeIZkFauJVDwdqMxhhb/0svsyTpILr1sG
+7CKkZETGzBYRh5gmjnD9aTFZHRMHcnr3Xfqoqi7XVlwgA0OeGkSJLy6WsE6tN6nr5aJT9NBe
+ejk0ua6MQ7qOyjYwjvpzWGgGZOiwhrdJVwpbqKaEft3KgzJQPyqzNhVkzH5OXu2FTf4Ctr8r
+jORkPtYao2CDWN3DvhSz7UbC4Aj7RRMqw06dy1TIwfhBqJcmFk18G9uxBwguysxe2ZYW5m34
+jUhAmRHJmCQVnbfwyDMCplHqqXMotBaq8uDl8emf/dtz64L5/bh/O/0jIsB+e929P7s56sUB
+pIxToR2AMM5RpkOvJTDASacnTbTDA1Sh1dMRo6LMtfnt/XEgw8Pr9/2/uz9O+9fd4Oll9/TP
+u2jrkyw/us2VCefibGG4o5xLWzuSvzFnGC8SYpZqIDRELfyydhnNMQJaXFQ+7ZVlwgyHB7pQ
+X1GyMKj0FO2KntY4uGg50A4ZyyCVT34ZXU2uNb29grfBQooegkRGLWRwGemBuJxfZ7XI4Xqf
+znPiBoBYy/O7zGvybdP9abORoXWYd19hdSPo4mJPl8Y8DarQF+bMhsheU9a/dptQivKsUt1T
+5EJUcLvbVLnbjkUOcqW5Y8Eat2GNdWrTcn2A0xr236UWM0sr7E5s5fB9ufoxNDtGbgpb03+6
+ez0cfw6i3V8fz89yTpq9zLYVyzhld5NVIlDEqKMHCz6a5xkVYE5Wk8+/QjcT7uBJPW9h/qYI
+BIftuY/XhTxW35+yNIE+dvu/pfQ0EeoP17C3ppLbSdTGt7hJkgxQADM3rtwGqFGH4fRaopTz
+BnDZGhOC6c+v7QxhOk+iTX4d5kbiBvzd950rWFBdywVyyQAv1H18lzJw9fj2rOdqycN1XUAd
+uHqZJ/IoiYX/ByZnrhSwsDN6XAQ3myCpgavPvYqvalboP1cFXJNR7TzoSGL5wMOd4ejK164z
+8HKzLGzXqq7au1sQBSAootzP8fIxkCi53+po0O2PlsT2c7S3cpBwEWnallR7WRKlzryxqpR8
+D4u7lKE9nIOtWjNWUFO9jflEvU/NBNBy08J1WEPeOwurwe/vKtDX+38Hrx+n3Y8d/GN3evrz
+zz+NzDSy0rKCxaxiWyJjrOJ8FR6sB3K5krs7CUJHlTtQ2vwassQK03OP9CzzTWdfJqwZUAF2
+aM9LgipHBYcnMDIX2gKvwXBSXdgmyoQCL4UpjumZ6bhWgm0wM3uftFxLud8vteH/DToxcj3u
+tkuxvycmGqa4LL6E4H3rlTC6x1aUXgsTgqoHe4/YussoIzmFNbHwijEvQ8JqU6DNFsmtKuGf
+aJcGR1TAykU/gqpGg+CSBSOdJJ1IGg2tSkgWQCq77XMhUTPqVqlHpaMYWUjpywFqC5qN/N+F
+DW6933DisNbp37+RVcPcsLJEp7vsq1QGvWBlWO/FYOjdLLyvcp8xQ/B8m2dXdlxp7Ss76rIM
+ipUf025pFoJqVyAKmzTMa9BWQfHPS3tPjdZ2MaKIFGzGLUSoHpS1aLZzeAJliCef1sLhAzkP
+Pt7E3qravZ+smZCsI8I/WOSHx9kLKgLhWzRvhY+QZT1sPq9guaHpYo7BEtz0w6ShlaZLGYwu
+830B8cR3rdg2qlO/pBYA3GdluLFJCkr+CNwagBUR4lAAxN7Yf1tY0OdxlRIe64Je14SvuKCW
+oHquhLdnz7cG3sDS8zpO0MYW8tKI2yPSKfR6iUrOWPewDfpTwZQv/KcB8ruLnk5pnbt73uAc
+NnSHFikCDN8SOaBBBdN1ze4JNSxA++OFXQHs9w0dH3737QnqOWwapI9f/MDU2dR5Gz6/sKUA
+8Qpf08RcaC93pss0MmhYKYx/OohQsUVFMnoRo7IqRDNI8zgiPK9FNWWQRTC7HnB6guTPFwv/
+Ja12w19hEEZ0HC/zbGtrFGUeBaarnFKikniZKap/XclLxu1A5TKSz+7p44i3Sp2zIhxxw3MJ
+5jNINXRQABLOcsItRj3rJSrHQ1DcSQgQmmjV5PA+cX5I3cJWpukoZVzckBPj6j8hEUiDCVQZ
+YVftKleeBf0gUo3uEDyl4hZ2EBDB+T3hkNJiggIUrJSI8HS21edBVBB3WTvQfeDNVNJ54Oqd
+1RU2wEJZgEpX36MYSdk8Q4iJlB2MOI6Qqsp5hIPQ3Tx3o/pbZ3LGhDFCx9KdLpHbupwU4fHn
+99Nh8HQ47gaH4+Bl9+93EfnHAMNsWhpRa43ikVvOgshb6ELnyTqMi5WuE9kU9yFchryFLrTU
+bQznMi+wO5R2mk62ZF0Uhrt6WxknhI4kR/7JoagsjLzZGyT1nITEW+5rDS6hFyvEy9jiqFfs
+I53ql4vh6DqtE5uPmqzWzSRaoa8lhfhLtwUly23NaubUKP5EnipTSenr0KCuViBl+yDEjqmt
+AD3apP7Wzpvg4/SCMSieHk+7bwP29oTzCO+3/d/+9DII3t8PT3tBih5Pj858CsPU6cilKLMb
+Fq4C+G90VeTJvZ0s0URydhtvnFoZPB1n8aZt91yE6Xo9fDP9qtu3zX1HaS2xKn0NJA4duvf7
+r4gqclLe9ZELq0E2fdv/clg37QDIKvb8+wvdB6k3kXArZay8Tm1DLjR0483rtH+GXZTLHGU4
+HvleIgh9bwFANbyK4gXd/qWQne4w+vjLmWoRkcOkJfc/HQMrsgT/9sHKNAJJcwlB+BCdEaMp
+kSOlQ4yJ6LvtdFoFw57JBnNyOvOMERCmRGCmM4IIF6VE0bIc3vTWcFdMPVFrw/33FzMTQrvu
+ck87g6yex74tSksvw4mHTUCZuLOzCzlcGKQsSeLeFTAMeNXLLQjoHcGIONRV5IWz0jjCYRU8
+BL3rBg8SHvRzSSuee6thhPW4o5cFlXu9W556exM0cntQOms4RiKyQjB2PbjA061e8Uw4hCvy
+NZHjs3u6V14AeeUKxfLx7dvhdZB9vP61O7bxJOUH2BzM4yYsfApeVM5x957VfgohwyUt6Gdu
+AQq9Dvgawnnv17iqWMnw4LK4J1Q0cVRy6f0dkCud9JfAJWGOsHGoo/esfXe+XmOYi7jcwJRv
+QnZB72UbERcoDAIi29MZx6dEzqgzJAwvQm6Jo2wN4gsDdD6x4PdpynAfLTbhmMHQnWUYFfJv
+oQm+D/7GsA/75zcZP0p4oMhj0rZCmXSn3YO5a06LcFVgXHNoqljYaTKsAr9GFLppL2CerH0L
+SgfJWJ4hqEeTREVGog2zc5wF5b3nmFNFCPvr+Hj8OTgePk77Nz3PaxnE0awpbrU7tnFVMkxH
+Y5+miwMxH1UerATaVqb19uJVmYXFvYyEYN7u1CEJywhqxvBKXqx7indRgzAhZW4kqmxJuoea
+aDVeEgjTYhuupEWvZAtzGEIYOhAz3m4PhzMb3KMpwturujH2weHY2s/hCPoOx01AEodsfn/t
+eVRSqAVCQILyjl6fEDH3ZkkCmuFbn8RzqVJTNV17KhEnNu1gaCMhisV4qMySBMShni0Y4viz
+v/fwChca/1XiR71UrdpnXoc1WrytNEINYKm8WmaXT7zl2wcstn832+uZUybCqBQuNg706CWq
+ECa5r6xa1encIaC11K13Hn7V+0+VEj13/rZm+aB7pWqEORBGXkryoKf+1QjbBwKfE+UTd0YL
+v4Gg0mN7lEEUb6WpSlwAzMvISCTGeR7GIJmE5CoDzYEND/VBcuj5eGQR2vEaQ6Ks7JTGwj/W
+gES3uuBLcsM0gb/7mDVL8EaiJa1EbJHWiCa4YyHu2uC3GNIAPpnYEEaEFQHdh2G76ruKBhPE
+iFWTx1GD8T1AQGt9V4d8pKxymr9fnlVeOyiUe0MNIP76x7VVw/UPU9LypesZeiYVuRmoSHUc
+UMSxDZD+B34dm3rPCgIA
+
+--+HP7ph2BbKc20aGI--
