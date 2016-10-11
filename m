@@ -1,49 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753528AbcJLNhL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:37:11 -0400
-Subject: [PATCH v2 0/5] PCI: exynos: Cleanups
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:37:07 -0500
-Message-ID: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <flyos@mailoo.org>
+Return-Path: <flyos@mailoo.org>
+From: Pierre de Villemereuil <flyos@mailoo.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Mathias Nyman <mathias.nyman@linux.intel.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+Date: Wed, 12 Oct 2016 09:27:06 +1300
+Message-ID: <1592720.zmCgj0tZJa@flyosflip>
+In-Reply-To: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
+Hi!
 
-  - Name private struct pointer consistently within driver.
+I'm sorry, I'm not savvy enough to know what to do with this (I know=20
+basics on how to code and compile, but I'm no dev). Could someone=20
+guide me through it?
 
-  - Pass device-specific struct to internal functions for consistency.
+I gather this patch needs to be applied to some kernel module code=20
+which needs to be compiled and reloaded into my current kernel,=20
+right?
 
-Nothing here should change the behavior of the driver.
+Sorry to let you down...
 
-Changes from v1:
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: exynos: Name private struct pointer "exynos" consistently
-      (Instead of renaming *all* the pointers, I only renamed enough to
-      make them consistent within this file.)
-    PCI: exynos: Swap order of exynos_elb_writel() reg/val arguments
-    PCI: exynos: Swap order of exynos_phy_writel() reg/val arguments
-    PCI: exynos: Swap order of exynos_blk_writel() reg/val arguments
+Cheers,
+Pierre.
 
----
-
-Bjorn Helgaas (5):
-      PCI: exynos: Add local struct device pointers
-      PCI: exynos: Uninline register accessors
-      PCI: exynos: Name private struct pointer "exynos_pcie" consistently
-      PCI: exynos: Pass device-specific struct to internal functions
-      PCI: exynos: Reorder struct exynos_pcie
-
-
- drivers/pci/host/pci-exynos.c |  214 +++++++++++++++++++----------------------
- 1 file changed, 100 insertions(+), 114 deletions(-)
+Le mardi 11 octobre 2016, 11:18:28 NZDT Alan Stern a =C3=A9crit :
+> On Sat, 8 Oct 2016, Lukas Wunner wrote:
+> > The PCI core already calls pm_runtime_get_sync() before invoking=20
+the
+> > ->probe hook of a driver (see local_pci_probe()).  Drivers need=20
+to
+> > explicitly release a runtime ref to allow their device to=20
+suspend.
+> >=20
+> > For xhci-pci, this seems to happen in usb_hcd_pci_probe():
+> > 	if (pci_dev_run_wake(dev))
+> > =09
+> > 		pm_runtime_put_noidle(&dev->dev);
+> >=20
+> > So you could either modify the if-condition if you want to=20
+change the
+> > behaviour for XHCI devices only, or if you want to change it in=20
+general,
+> >=20
+> > add something like this to pci_dev_run_wake():
+> > 	/* PME capable in principle, but not from the intended sleep=20
+state */
+> > 	if (dev->pme_support && !pci_pme_capable(dev,=20
+pci_target_state(dev)))
+> > =09
+> > 		return false;
+> >=20
+> > I've briefly looked over the callers of pci_dev_run_wake() and=20
+the above
+> > seems safe but you should double-check them.
+>=20
+> That seems like a good suggestion.  The patch is below; Pierre,=20
+can you
+> test it?  This should remove the need to set the USB autosuspend=20
+module
+> parameter to -1.
+>=20
+> Alan Stern
+>=20
+>=20
+>=20
+> Index: usb-4.x/drivers/pci/pci.c
+>=20
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- usb-4.x.orig/drivers/pci/pci.c
+> +++ usb-4.x/drivers/pci/pci.c
+> @@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
+>  	if (!dev->pme_support)
+>  		return false;
+>=20
+> +	/* PME-capable in principle, but not from the intended sleep=20
+state */
+> +	if (!pci_pme_capable(dev, pci_target_state(dev)))
+> +		return false;
+> +
+>  	while (bus->parent) {
+>  		struct pci_dev *bridge =3D bus->self;
