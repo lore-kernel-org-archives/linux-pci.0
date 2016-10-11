@@ -1,122 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48558 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751959AbcJGQ3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:29:20 -0400
-Subject: [PATCH 2/5] PCI: xgene: Pass xgene_pcie_port, not address,
- to setup functions
-To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:28:06 -0500
-Message-ID: <20161007162806.24026.57283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162758.24026.43622.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58331 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751098AbcJKFdT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 01:33:19 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9B5TJhm042037
+        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 01:33:18 -0400
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 260s28j8v0-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 01:33:17 -0400
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 11 Oct 2016 15:33:15 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 29FF32BB0057
+        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 16:33:12 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u9B5XC9f10289362
+        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 16:33:12 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u9B5XBDl006553
+        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 16:33:11 +1100
+Date: Tue, 11 Oct 2016 16:33:53 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bhelgaas@google.com, benh@au1.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH v2 1/2] pci: Call pcibios_sriov_enable() before IOV BARs
+ are enabled
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-Id: <20161011053353.GA5123@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of passing the register base to setup functions, pass the struct
-xgene_pcie_port.  This will allow them to use register accessors.  No
-functional change intended.
+On Fri, Sep 30, 2016 at 09:47:49AM +1000, Gavin Shan wrote:
+>In current implementation, pcibios_sriov_enable() is used by PPC
+>PowerNV platform only. In PowerNV specific pcibios_sriov_enable(),
+>PF's IOV BARs might be updated (shifted) by pci_update_resource().
+>It means the IOV BARs aren't ready for decoding incoming memory
+>address until pcibios_sriov_enable() returns.
+>
+>This calls pcibios_sriov_enable() earlier before the IOV BARs are
+>enabled. As the result, the IOV BARs have been configured correctly
+>when they are enabled.
+>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Tested-by: Carol Soto <clsoto@us.ibm.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-xgene.c |   32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+Bjorn, is there any chance to put those two patches to 4.9? :)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index ba26950..5e16905 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -179,9 +179,10 @@ static struct pci_ops xgene_pcie_ops = {
- 	.write = pci_generic_config_write32,
- };
- 
--static u64 xgene_pcie_set_ib_mask(void __iomem *csr_base, u32 addr,
-+static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *xgene, u32 addr,
- 				  u32 flags, u64 size)
- {
-+	void __iomem *csr_base = xgene->csr_base;
- 	u64 mask = (~(size - 1) & PCI_BASE_ADDRESS_MEM_MASK) | flags;
- 	u32 val32 = 0;
- 	u32 val;
-@@ -291,8 +292,10 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *xgene,
- 	writel(upper_32_bits(pci_addr), base + 0x14);
- }
- 
--static void xgene_pcie_setup_cfg_reg(void __iomem *csr_base, u64 addr)
-+static void xgene_pcie_setup_cfg_reg(struct xgene_pcie_port *xgene, u64 addr)
- {
-+	void __iomem *csr_base = xgene->csr_base;
-+
- 	writel(lower_32_bits(addr), csr_base + CFGBARL);
- 	writel(upper_32_bits(addr), csr_base + CFGBARH);
- 	writel(EN_REG, csr_base + CFGCTL);
-@@ -344,12 +347,15 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *xgene,
- 	return 0;
- }
- 
--static void xgene_pcie_setup_pims(void *addr, u64 pim, u64 size)
-+static void xgene_pcie_setup_pims(struct xgene_pcie_port *xgene, u32 pim_reg,
-+				  u64 pim, u64 size)
- {
--	writel(lower_32_bits(pim), addr);
--	writel(upper_32_bits(pim) | EN_COHERENCY, addr + 0x04);
--	writel(lower_32_bits(size), addr + 0x10);
--	writel(upper_32_bits(size), addr + 0x14);
-+	void __iomem *addr = xgene->csr_base;
-+
-+	writel(lower_32_bits(pim), addr + pim_reg);
-+	writel(upper_32_bits(pim) | EN_COHERENCY, addr + pim_reg + 0x04);
-+	writel(lower_32_bits(size), addr + pim_reg + 0x10);
-+	writel(upper_32_bits(size), addr + pim_reg + 0x14);
- }
- 
- /*
-@@ -382,7 +388,7 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
- 	void __iomem *csr_base = xgene->csr_base;
- 	void __iomem *cfg_base = xgene->cfg_base;
- 	void *bar_addr;
--	void *pim_addr;
-+	u32 pim_reg;
- 	u64 cpu_addr = range->cpu_addr;
- 	u64 pci_addr = range->pci_addr;
- 	u64 size = range->size;
-@@ -403,17 +409,17 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
- 	bar_low = pcie_bar_low_val((u32)cpu_addr, flags);
- 	switch (region) {
- 	case 0:
--		xgene_pcie_set_ib_mask(csr_base, BRIDGE_CFG_4, flags, size);
-+		xgene_pcie_set_ib_mask(xgene, BRIDGE_CFG_4, flags, size);
- 		bar_addr = cfg_base + PCI_BASE_ADDRESS_0;
- 		writel(bar_low, bar_addr);
- 		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
--		pim_addr = csr_base + PIM1_1L;
-+		pim_reg = PIM1_1L;
- 		break;
- 	case 1:
- 		bar_addr = csr_base + IBAR2;
- 		writel(bar_low, bar_addr);
- 		writel(lower_32_bits(mask), csr_base + IR2MSK);
--		pim_addr = csr_base + PIM2_1L;
-+		pim_reg = PIM2_1L;
- 		break;
- 	case 2:
- 		bar_addr = csr_base + IBAR3L;
-@@ -421,11 +427,11 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *xgene,
- 		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
- 		writel(lower_32_bits(mask), csr_base + IR3MSKL);
- 		writel(upper_32_bits(mask), csr_base + IR3MSKL + 0x4);
--		pim_addr = csr_base + PIM3_1L;
-+		pim_reg = PIM3_1L;
- 		break;
- 	}
- 
--	xgene_pcie_setup_pims(pim_addr, pci_addr, ~(size - 1));
-+	xgene_pcie_setup_pims(xgene, pim_reg, pci_addr, ~(size - 1));
- }
- 
- static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+Thanks,
+Gavin
+
+>---
+> drivers/pci/iov.c | 14 +++++++-------
+> 1 file changed, 7 insertions(+), 7 deletions(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index 2194b44..f1343f0 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -303,13 +303,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 			return rc;
+> 	}
+>
+>-	pci_iov_set_numvfs(dev, nr_virtfn);
+>-	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>-	pci_cfg_access_lock(dev);
+>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>-	msleep(100);
+>-	pci_cfg_access_unlock(dev);
+>-
+> 	iov->initial_VFs = initial;
+> 	if (nr_virtfn < initial)
+> 		initial = nr_virtfn;
+>@@ -320,6 +313,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 		goto err_pcibios;
+> 	}
+>
+>+	pci_iov_set_numvfs(dev, nr_virtfn);
+>+	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>+	pci_cfg_access_lock(dev);
+>+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>+	msleep(100);
+>+	pci_cfg_access_unlock(dev);
+>+
+> 	for (i = 0; i < initial; i++) {
+> 		rc = pci_iov_add_virtfn(dev, i, 0);
+> 		if (rc)
+>-- 
+>2.1.0
+>
 
