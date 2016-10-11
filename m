@@ -1,145 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:64940 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932267AbcJYR6V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Oct 2016 13:58:21 -0400
-Date: Tue, 25 Oct 2016 14:08:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Arcari <darcari@redhat.com>,
-        Myron Stowe <mstowe@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFE PATCH] pci: Do not enable intx on MSI-capable devices on
- shutdown
-Message-ID: <20161025180858.GA22422@localhost.localdomain>
-References: <1477052083-13815-1-git-send-email-prarit@redhat.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:49670 "EHLO
+        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbcJKNHD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 09:07:03 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH 4/4] PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
+Date: Tue, 11 Oct 2016 18:28:35 +0530
+Message-ID: <1476190715-16884-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1476190715-16884-1-git-send-email-kishon@ti.com>
+References: <1476190715-16884-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477052083-13815-1-git-send-email-prarit@redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 08:14:43AM -0400, Prarit Bhargava wrote:
-> We have seen this at Red Hat on various drivers: nouveau, ahci, and pcieport
-> (so far).  Google search for "unhandled irq 16" yields many results reporting
-> similar behavior during shutdown indicating that this problem is widespread.
-> I can cause this to happen on a "stable" system by adding a 3 second delay in
-> pci_device_shutdown() which causes the number of spurious interrupts to exceed
-> the 100000 limit and display the warning above.  Also note that by adding the
-> 3 second delay, NVIDIA devices with device ID 0x0FF* hit this problem 100% of
-> the time.
-> 
-> darcari noticed that removing the pci_intx_for_msi() call resulted in a
-> stable system.  After further discussions with Myron and Alex, Alex came up
-> idea of keeping the intx disabled during shutdown implemented below.
-> 
-> ----8<----
-> 
-> The following unhandled IRQ warning is seen during shutdown:
-> 
-> irq 16: nobody cared (try booting with the "irqpoll" option)
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
-> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
->  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
->  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
->  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
-> Call Trace:
->  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
->  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
->  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
->  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
->  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
->  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
->  [<ffffffff8102edfb>] handle_irq+0xab/0x130
->  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
->  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
->  [<ffffffff81704502>] common_interrupt+0x82/0x82
->  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
->  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
->  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
->  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
->  [<ffffffff816f6da7>] rest_init+0x77/0x80
->  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
->  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
->  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
->  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
->  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
-> 
-> This occurs because the pci_msi_shutdown() and pci_msix_shutdown() functions
-> enable the legacy intx interrupt even though the device and driver were not
-> configured for legacy intx.
-> 
-> This patch blocks the enabling of intx during system shutdown or reboot.
+dra7xx driver had a bug in that if CONFIG_PCI_MSI config is enabled,
+it doesn't support legacy interrupt. Fix it here so that both MSI and
+legacy interrupts can be enabled simultaneously and one of them will
+be used based on the connected device.
 
-
-I am feeling a bit cautious to tie this behavior to the system_state. Is
-there better criteria to know we shouldn't enable INTx after disabling
-MSI/MSI-x? It sounds like we would never want to enable INTx if a driver
-still has IRQ actions tied to the MSI/MSI-x. Does this alternate proposal
-look okay?
-
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index bfdd074..90a4e84 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -357,19 +357,30 @@ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
+ drivers/pci/host/pci-dra7xx.c |   32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 2a669cb..1a68759 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -71,6 +71,7 @@ struct dra7xx_pcie {
+ 	int			phy_count;	/* DT phy-names count */
+ 	struct phy		**phy;
+ 	bool			is_gen1;
++	struct irq_domain	*irq_domain;
+ };
+ 
+ #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+@@ -142,13 +143,9 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx_pcie)
+ 	dra7xx_pcie_writel(dra7xx_pcie, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+ 			   ~LEG_EP_INTERRUPTS & ~MSI);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dra7xx_pcie_writel(dra7xx_pcie,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+-	else
+-		dra7xx_pcie_writel(dra7xx_pcie,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+-				   LEG_EP_INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx_pcie,
++			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++			   MSI | LEG_EP_INTERRUPTS);
  }
- EXPORT_SYMBOL_GPL(pci_write_msi_msg);
  
-+static bool msi_has_action(struct pci_dev *dev)
-+{
-+	struct msi_desc *entry;
-+	int i;
-+
-+	for_each_pci_msi_entry(entry, dev) {
-+		if (entry->irq) {
-+			for (i = 0; i < entry->nvec_used; i++)
-+				if (irq_has_action(entry->irq + i))
-+					return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static void free_msi_irqs(struct pci_dev *dev)
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+@@ -163,8 +160,7 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	dra7xx_pcie_establish_link(dra7xx_pcie);
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
++	dw_pcie_msi_init(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx_pcie);
+ }
+ 
+@@ -189,6 +185,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
  {
- 	struct list_head *msi_list = dev_to_msi_list(&dev->dev);
- 	struct msi_desc *entry, *tmp;
- 	struct attribute **msi_attrs;
- 	struct device_attribute *dev_attr;
--	int i, count = 0;
--
--	for_each_pci_msi_entry(entry, dev)
--		if (entry->irq)
--			for (i = 0; i < entry->nvec_used; i++)
--				BUG_ON(irq_has_action(entry->irq + i));
-+	int count = 0;
+ 	struct device *dev = pp->dev;
++	struct dra7xx_pcie *dra7xx_pcie = to_dra7xx_pcie(pp);
+ 	struct device_node *node = dev->of_node;
+ 	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
  
-+	BUG_ON(msi_has_action(dev));
- 	pci_msi_teardown_msi_irqs(dev);
- 
- 	list_for_each_entry_safe(entry, tmp, msi_list, list) {
-@@ -910,7 +921,8 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	desc = first_pci_msi_entry(dev);
- 
- 	pci_msi_set_enable(dev, 0);
--	pci_intx_for_msi(dev, 1);
-+	if (!msi_has_action(dev))
-+		pci_intx_for_msi(dev, 1);
- 	dev->msi_enabled = 0;
- 
- 	/* Return the device with MSI unmasked as initial states */
-@@ -1024,7 +1036,8 @@ void pci_msix_shutdown(struct pci_dev *dev)
+@@ -197,9 +194,9 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+ 		return -ENODEV;
  	}
  
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
--	pci_intx_for_msi(dev, 1);
-+	if (!msi_has_action(dev))
-+		pci_intx_for_msi(dev, 1);
- 	dev->msix_enabled = 0;
- 	pcibios_alloc_irq(dev);
- }
---
+-	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+-					       &intx_domain_ops, pp);
+-	if (!pp->irq_domain) {
++	dra7xx_pcie->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
++							&intx_domain_ops, pp);
++	if (!dra7xx_pcie->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+ 		return -ENODEV;
+ 	}
+@@ -224,7 +221,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	case INTB:
+ 	case INTC:
+ 	case INTD:
+-		generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
++		generic_handle_irq(irq_find_mapping(dra7xx_pcie->irq_domain,
++				   ffs(reg)));
+ 		break;
+ 	}
+ 
+@@ -314,11 +312,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx_pcie,
+ 		return ret;
+ 	}
+ 
+-	if (!IS_ENABLED(CONFIG_PCI_MSI)) {
+-		ret = dra7xx_pcie_init_irq_domain(pp);
+-		if (ret < 0)
+-			return ret;
+-	}
++	ret = dra7xx_pcie_init_irq_domain(pp);
++	if (ret < 0)
++		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+ 	pp->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-- 
+1.7.9.5
+
