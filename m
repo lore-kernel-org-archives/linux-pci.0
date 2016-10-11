@@ -1,108 +1,115 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Minghuan Lian <Minghuan.Lian@nxp.com>
-To: <linux-pci@vger.kernel.org>
-Subject: [PATCH] pci: layerscape: add LS1046a support
-Date: Tue, 25 Oct 2016 20:36:56 +0800
-Message-ID: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751537AbcJKNu6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Oct 2016 09:50:58 -0400
+Date: Tue, 11 Oct 2016 08:50:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nsekhar@ti.com,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        linux-samsung-soc@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: designware: Fix compiler warning
+Message-ID: <20161011135050.GA26715@localhost>
+References: <1476190715-16884-1-git-send-email-kishon@ti.com>
+ <1476190715-16884-2-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Minghuan Lian <Minghuan.Lian@nxp.com>, linux-arm-kernel@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476190715-16884-2-git-send-email-kishon@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "mingkai.hu@nxp.com" <mingkai.hu@nxp.com>
+[+cc Jingoo, Kukjin, Krzysztof, linux-samsung-soc]
 
-1. LS1046a PCIe controller has a different LUT_DBG offset.
-Available "lut_dbg" is added to ls_pcie_drvdata to describe
-this difference.
-2. Match LS1046 PCIe compatible
+On Tue, Oct 11, 2016 at 06:28:32PM +0530, Kishon Vijay Abraham I wrote:
+> Fix the following compilation warning in dw_pcie_readl_unroll()
+> and dw_pcie_writel_unroll() by just invoking dw_pcie_readl_rc() and
+> dw_pcie_writel_rc() respectively instead of adding redundant code.
+> 
+> pcie-designware.c: In function 'dw_pcie_readl_unroll':
+> pcie-designware.c:165:32: warning: passing argument 2 of
+>  'pp->ops->readl_rc' makes integer from pointer without a cast
+>  [-Wint-conversion]
+>    return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
+>                                 ^
+> pcie-designware.c:165:32: note: expected 'u32 {aka unsigned int}' but
+>  argument is of type 'void *'
+> pcie-designware.c: In function 'dw_pcie_writel_unroll':
+> pcie-designware.c:176:31: warning: passing argument 3 of
+>  'pp->ops->writel_rc' makes integer from pointer without a cast
+>  [-Wint-conversion]
+>    pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
+>                                ^
+> drivers/pci/host/pcie-designware.c:176:31: note: expected 'u32
+>  {aka unsigned int}' but argument is of type 'void *'
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/host/pcie-designware.c |   10 ++--------
+>  1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 5ee8772..b8feea4 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -161,10 +161,7 @@ static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
+>  {
+>  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  
+> -	if (pp->ops->readl_rc)
+> -		return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-Signed-off-by: Mingkai Hu <mingkai.hu@nxp.com>
----
- Documentation/devicetree/bindings/pci/layerscape-pci.txt |  1 +
- drivers/pci/host/pci-layerscape.c                        | 13 ++++++++++++-
- 2 files changed, 13 insertions(+), 1 deletion(-)
+I think this was worse than just a compiler warning, wasn't it?  I
+think I completely broke exynos (the only implementer of
+pp->ops->readl_rc) because we passed "pp->dbi_base + offset + reg" to
+exynos_pcie_readl_rc(), which then added pp->dbi_base again:
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index 41e9f55..ee1c72d5 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -15,6 +15,7 @@ Required properties:
- - compatible: should contain the platform identifier such as:
-         "fsl,ls1021a-pcie", "snps,dw-pcie"
-         "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
-+        "fsl,ls1046a-pcie"
- - reg: base addresses and lengths of the PCIe controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 958187f..8cebf9a 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -41,6 +41,7 @@
- struct ls_pcie_drvdata {
- 	u32 lut_offset;
- 	u32 ltssm_shift;
-+	u32 lut_dbg;
- 	struct pcie_host_ops *ops;
- };
- 
-@@ -134,7 +135,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 	u32 state;
- 
--	state = (ioread32(pcie->lut + PCIE_LUT_DBG) >>
-+	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
- 		 pcie->drvdata->ltssm_shift) &
- 		 LTSSM_STATE_MASK;
- 
-@@ -196,18 +197,28 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
- static struct ls_pcie_drvdata ls1043_drvdata = {
- 	.lut_offset = 0x10000,
- 	.ltssm_shift = 24,
-+	.lut_dbg = 0x7fc,
-+	.ops = &ls_pcie_host_ops,
-+};
-+
-+static struct ls_pcie_drvdata ls1046_drvdata = {
-+	.lut_offset = 0x80000,
-+	.ltssm_shift = 24,
-+	.lut_dbg = 0x407fc,
- 	.ops = &ls_pcie_host_ops,
- };
- 
- static struct ls_pcie_drvdata ls2080_drvdata = {
- 	.lut_offset = 0x80000,
- 	.ltssm_shift = 0,
-+	.lut_dbg = 0x7fc,
- 	.ops = &ls_pcie_host_ops,
- };
- 
- static const struct of_device_id ls_pcie_of_match[] = {
- 	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
- 	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
-+	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
- 	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
- 	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
- 	{ },
--- 
-1.9.1
+  val = readl(pp->dbi_base + reg);
 
+I incorporated your patch to use dw_pcie_readl_rc() directly (thanks a
+lot for noticing that!) into pci/host-designware.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Then I rebased all the branches that were based on pci/host-designware
+and repushed everything:
+
+  pci/host-designware
+  pci/host-armada
+  pci/host-artpec
+  pci/host-dra7xx
+  pci/host-exynos
+  pci/host-hisi
+  pci/host-imx6
+  pci/host-keystone
+  pci/host-layerscape
+  pci/host-qcom
+  pci/host-spear
+
+> -	return readl(pp->dbi_base + offset + reg);
+> +	return dw_pcie_readl_rc(pp, offset + reg);
+>  }
+>  
+>  static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
+> @@ -172,10 +169,7 @@ static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
+>  {
+>  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  
+> -	if (pp->ops->writel_rc)
+> -		pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
+> -	else
+> -		writel(val, pp->dbi_base + offset + reg);
+> +	dw_pcie_writel_rc(pp, offset + reg, val);
+>  }
+>  
+>  static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
