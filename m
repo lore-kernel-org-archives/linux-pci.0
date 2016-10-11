@@ -1,59 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49406 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:55354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755356AbcJLMrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:47:35 -0400
-Subject: [PATCH v2 4/6] PCI: altera: Rename altera_pcie_valid_config() to
- altera_pcie_valid_device()
-To: Ley Foon Tan <lftan@altera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
-Date: Wed, 12 Oct 2016 07:47:31 -0500
-Message-ID: <20161012124731.23240.70876.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1752666AbcJKO0z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Oct 2016 10:26:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1476159987-31372-2-git-send-email-shawn.lin@rock-chips.com>
+References: <1476159987-31372-1-git-send-email-shawn.lin@rock-chips.com> <1476159987-31372-2-git-send-email-shawn.lin@rock-chips.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 11 Oct 2016 09:02:51 -0500
+Message-ID: <CAL_JsqLkQ_q9rKmZ8pX4btWD8V5qTeYmgDncVuoXi_sAO9kGTA@mail.gmail.com>
+Subject: Re: [PATCH v6 2/3] of/pci: Add helper function to parse
+ max-link-speed from dt
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename altera_pcie_valid_config() to altera_pcie_valid_device().
-No functional change intended.
+On Mon, Oct 10, 2016 at 11:26 PM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> This new helper function could be used by host drivers to
+> get the limitaion of max link speed provided by dt. If the
+> property isn't assigned or is invalid, it will return -EINVAL
+> to the caller.
+>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>
+> Changes in v6: None
+> Changes in v5: None
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
+>
+>  drivers/of/of_pci.c    | 27 +++++++++++++++++++++++++++
+>  include/linux/of_pci.h |  7 +++++++
+>  2 files changed, 34 insertions(+)
+>
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 589b30c..91fd465 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -120,6 +120,33 @@ int of_get_pci_domain_nr(struct device_node *node)
+>  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+>
+>  /**
+> + * This function will try to find the limitation of link speed by finding
+> + * a property called "max-link-speed" of the given device node.
+> + *
+> + * @node: device tree node with the max link speed information
+> + *
+> + * Returns the associated max link speed from DT, or a negative value if the
+> + * required property is not found or is invalid.
+> + */
+> +int of_get_pci_max_link_speed(struct device_node *node)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-altera.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+of_pci_get_max_link_speed
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 931c51e..a99765a 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -131,7 +131,7 @@ static void tlp_write_tx(struct altera_pcie *pcie,
- 	cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
- }
- 
--static bool altera_pcie_valid_config(struct altera_pcie *pcie,
-+static bool altera_pcie_valid_device(struct altera_pcie *pcie,
- 				     struct pci_bus *bus, int dev)
- {
- 	/* If there is no link, then there is no device */
-@@ -342,7 +342,7 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
- 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
--	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
-+	if (!altera_pcie_valid_device(pcie, bus, PCI_SLOT(devfn))) {
- 		*value = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -359,7 +359,7 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
- 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
--	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
-+	if (!altera_pcie_valid_device(pcie, bus, PCI_SLOT(devfn)))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	return _altera_pcie_cfg_write(pcie, bus->number, devfn, where, size,
+> +{
+> +       const __be32 *value;
+> +       int len;
+> +       u16 max_link_speed;
+> +
+> +       value = of_get_property(node, "max-link-speed", &len);
 
+Use of_property_read_u32 instead.
+
+> +       if (!value || len < sizeof(*value))
+> +               return -EINVAL;
+> +
+> +       max_link_speed = (u16)be32_to_cpup(value);
+
+There's no point in making this a u16.
+
+> +       if (max_link_speed > 4)
+> +               return -EINVAL;
+> +
+> +       return max_link_speed;
+> +}
+> +EXPORT_SYMBOL_GPL(of_get_pci_max_link_speed);
+> +
+> +/**
+>   * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+>   *                           is present and valid
+>   */
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index b969e94..a8946d7 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
+>  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>  int of_get_pci_domain_nr(struct device_node *node);
+> +int of_get_pci_max_link_speed(struct device_node *node);
+>  void of_pci_check_probe_only(void);
+>  #else
+>  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+> @@ -52,6 +53,12 @@ of_get_pci_domain_nr(struct device_node *node)
+>         return -1;
+>  }
+>
+> +static inline int
+> +of_get_pci_max_link_speed(struct device_node *node)
+> +{
+> +       return -EINVAL;
+> +}
+> +
+>  static inline void of_pci_check_probe_only(void) { }
+>  #endif
+>
+> --
+> 2.3.7
+>
+>
