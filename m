@@ -1,101 +1,171 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Wed, 19 Oct 2016 20:04:02 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_state hook
-Message-ID: <20161019180402.GA3220@wunner.de>
-References: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
- <20161019151055.GA16147@localhost>
- <1476892081.11323.503.camel@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36799 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752238AbcJKEIb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 00:08:31 -0400
+Received: by mail-pf0-f195.google.com with SMTP id r16so540912pfg.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Oct 2016 21:08:30 -0700 (PDT)
+Subject: Re: [PATCH kernel v2] PCI: Enable access to custom VPD for Chelsio
+ devices (cxgb3)
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1475126512-10722-1-git-send-email-aik@ozlabs.ru>
+ <CAKgT0Ue6VNb1Fko_OmFAn=3kOhesNVH+NsROiabR-NpKmwWvww@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Netdev <netdev@vger.kernel.org>,
+        Santosh Raspatur <santosh@chelsio.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <6c5b40df-700f-bc6f-998c-9ac0106f3165@ozlabs.ru>
+Date: Tue, 11 Oct 2016 15:08:25 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1476892081.11323.503.camel@linux.intel.com>
+In-Reply-To: <CAKgT0Ue6VNb1Fko_OmFAn=3kOhesNVH+NsROiabR-NpKmwWvww@mail.gmail.com>
+Content-Type: text/plain; charset=koi8-r
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 19, 2016 at 06:48:01PM +0300, Andy Shevchenko wrote:
-> On Wed, 2016-10-19 at 10:10 -0500, Bjorn Helgaas wrote:
-> > On Sun, Oct 09, 2016 at 02:46:29PM +0200, Lukas Wunner wrote:
-> > > Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
-> > > state") augmented struct pci_platform_pm_ops with a ->get_state hook
-> > > and
-> > > implemented it for acpi_pci_platform_pm, the only
-> > > pci_platform_pm_ops
-> > > existing till v4.7.
-> > > 
-> > > However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
-> > > Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid:
-> > > Add
-> > > Power Management Unit driver").  It is missing the ->get_state hook,
-> > > which is fatal since pci_set_platform_pm() enforces its presence.
-> > 
-> > I assume Andy tested 5823d0893ec2, so apparently "fatal" here doesn't
-> > mean a panic on the MIDs?  I'm wondering (1) exactly what the user-
-> > visible failure mode is, 
+On 11/10/16 02:23, Alexander Duyck wrote:
+> On Wed, Sep 28, 2016 at 10:21 PM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+>> There is at least one Chelsio 10Gb card which uses VPD area to store
+>> some custom blocks (example below). However pci_vpd_size() returns
+>> the length of the first block only assuming that there can be only
+>> one VPD "End Tag" and VFIO blocks access beyond that offset
+>> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
+>> driver fails to probe the device. The host system does not have this
+>> problem as the drives accesses the config space directly without
+>> pci_read_vpd()/...
+>>
+>> This adds a quirk to override the VPD size to a bigger value.
+>> The maximum size is taken from EEPROMSIZE in
+>> drivers/net/ethernet/chelsio/cxgb3/common.h. We do not read the tag
+>> as the cxgb3 driver does as the driver supports writing to EEPROM/VPD
+>> and when it writes, it only checks for 8192 bytes boundary. The quirk
+>> is registerted for all devices supported by the cxgb3 driver.
+>>
+>> This adds a quirk to the PCI layer (not to the cxgb3 driver) as
+>> the cxgb3 driver itself accesses VPD directly and the problem only exists
+>> with the vfio-pci driver (when cxgb3 is not running on the host and
+>> may not be even loaded) which blocks accesses beyond the first block
+>> of VPD data. However vfio-pci itself does not have quirks mechanism so
+>> we add it to PCI.
+>>
+>> Tested on:
+>> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
+>>
+>> This is its VPD:
+>> 0000 Large item 42 bytes; name 0x2 Identifier String
+>>         b'10 Gigabit Ethernet-SR PCI Express Adapter'
+>>         #00 [EC] len=7: b'D76809 '
+>>         #0a [FN] len=7: b'46K7897'
+>>         #14 [PN] len=7: b'46K7897'
+>>         #1e [MN] len=4: b'1037'
+>>         #25 [FC] len=4: b'5769'
+>>         #2c [SN] len=12: b'YL102035603V'
+>>         #3b [NA] len=12: b'00145E992ED1'
+>>
+>> 0c00 Large item 16 bytes; name 0x2 Identifier String
+>>         b'S310E-SR-X      '
+>> 0c13 Large item 234 bytes; name 0x10
+>>         #00 [PN] len=16: b'TBD             '
+>>         #13 [EC] len=16: b'110107730D2     '
+>>         #26 [SN] len=16: b'97YL102035603V  '
+>>         #39 [NA] len=12: b'00145E992ED1'
+>>         #48 [V0] len=6: b'175000'
+>>         #51 [V1] len=6: b'266666'
+>>         #5a [V2] len=6: b'266666'
+>>         #63 [V3] len=6: b'2000  '
+>>         #6c [V4] len=2: b'1 '
+>>         #71 [V5] len=6: b'c2    '
+>>         #7a [V6] len=6: b'0     '
+>>         #83 [V7] len=2: b'1 '
+>>         #88 [V8] len=2: b'0 '
+>>         #8d [V9] len=2: b'0 '
+>>         #92 [VA] len=2: b'0 '
+>>         #97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+>> 0d00 Large item 252 bytes; name 0x11
+>>         #00 [VC] len=16: b'122310_1222 dp  '
+>>         #13 [VD] len=16: b'610-0001-00 H1\x00\x00'
+>>         #26 [VE] len=16: b'122310_1353 fp  '
+>>         #39 [VF] len=16: b'610-0001-00 H1\x00\x00'
+>>         #4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+>> 0dff Small item 0 bytes; name 0xf End Tag
+>>
+>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>> ---
+>> Changes:
+>> v2:
+>> * used pci_set_vpd_size() helper
+>> * added explicit list of IDs from cxgb3 driver
+>> * added a note in the commit log why the quirk is not in cxgb3
+>> ---
+>>  drivers/pci/quirks.c | 22 ++++++++++++++++++++++
+>>  1 file changed, 22 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 44e0ff3..b22fce5 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3243,6 +3243,28 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+>>                         quirk_thunderbolt_hotplug_msi);
+>>
+>> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+>> +{
+>> +       if (!dev->vpd)
+>> +               return;
+>> +
+>> +       pci_set_vpd_size(dev, max_t(unsigned int, dev->vpd->len, 8192));
 > 
-> Fatal means it crashes without even a character printed out on serial
-> console and reboot (since watchdog).
+> What is the point of the max_t?  From what I can tell you aren't
+> writing 8192, you will always end up writing 32K since that is the
+> starting value for dev->vpd->len assuming there have yet to be any
+> reads.
+
+At this stage dev->vpd->len is always 32k? I thought here VPD was scanned
+already, I'll double check.
+
+
 > 
-> > and (2) whether there's anything we can do to
-> > avoid omissions like this in the future.
+> What you may want to do instead is just modify the pci_vpd_size
+> function you can use that in your quirk, and modify it so that you can
+> pass an offset  Then you could just start it with an offset of 0x0c00
+> and have it read to get the exact size of the region covered in this
+> second block of the VPD.
+
+Sorry, I am totally missing the point. The device allows writing to it, the
+driver claims it is 8192, we can be pretty sure that accessing anything
+between 0 and 8191 won't break the device (which was the initial point of
+limiting VPD access), why do this scan? The format can be actually not
+exactly as PCI VPD and probably there is some extension which I failed to
+parse without knowing it (there are non zero bytes after the end of the
+second block).
+
+
+
 > 
-> It happened because the feature was developed in PCI subsystem namespace
-> (mailing lists, etc.) without knowing anything about new coming users. I
-> have no idea how to avoid this except browsing / grepping linux-next on
-> regular basis when developing either "feature" or "user" of the API in
-> question.
+>> +}
+>> +
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x20, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x21, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x22, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x23, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x24, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x25, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x26, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x30, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x31, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x32, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x35, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x36, quirk_chelsio_extend_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x37, quirk_chelsio_extend_vpd);
+>> +
+>>  #ifdef CONFIG_ACPI
+>>  /*
+>>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+>> --
+>> 2.5.0.rc3
+>>
 
-Basically it was my fault because my development tree lags behind
-mainline for technical reasons.  I use ZFS for my root partition
-and every new kernel release requires adjustments to the out-of-tree
-ZoL.  So before I can upgrade I have to either wait until the ZoL
-folks make those adjustments or I have to make them myself (usually
-I'm too lazy).
 
-In this case I didn't rebase my tree on 4.8 until the merge window
-for 4.9 had already opened, so I noticed the breakage fairly late.
-
-However so far only 4.9-rc1 is broken and we still have like 7 weeks
-to get the fix in.
-
-
-> > 
-> > pci_set_platform_pm() does indeed return -EINVAL if it receives a
-> > pci_platform_pm_ops with a NULL ops->get_state pointer, but
-> > unfortunately neither of the callers checks that return code.
-
-At least in the case of intel-mid it wouldn't matter if the return code
-would be checked and passed up the call chain because the ultimate
-callee, do_initcall_level(), doesn't check the return value of
-do_one_initcall().
-
-Perhaps the solution would be to not return -EINVAL but to throw a WARN
-and limp on.  That way the user or developer at least gets an error
-message and knows what's wrong.
-
-> > Fixes: 5823d0893ec2 ("x86/platform/intel-mid: Add Power Management
-> > Unit driver")
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > Sounds like this should be marked for stable, since v4.8 contains
-> > 5823d0893ec2 and is apparently broken?
-> 
-> At that point there was no "feature" commit in the tree. Perhaps the
-> Fixes tag should point to the "feature" commit instead. Am I right,
-> Lukas?
-
-Right, the Fixes tag should be:
-
-Fixes: cc7cc02bada8 ("PCI: Query platform firmware for device power state")
-
-And this shouldn't get backported to 4.8, the issue is only present
-in 4.9-rc1 so far.
-
-@Ingo: Do you want me to repost with Bjorn's ack and the correct Fixes: tag?
-
-Thanks!
-
-Lukas
+-- 
+Alexey
