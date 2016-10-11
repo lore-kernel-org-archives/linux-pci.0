@@ -1,46 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60950 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932125AbcJLQG7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:06:59 -0400
-Date: Wed, 12 Oct 2016 11:06:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] PCI: qcom: Cleanups
-Message-ID: <20161012160654.GS4308@localhost>
-References: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH 2/4] PCI: dra7xx: simplify the probe code
+Date: Tue, 11 Oct 2016 18:28:33 +0530
+Message-ID: <1476190715-16884-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1476190715-16884-1-git-send-email-kishon@ti.com>
+References: <1476190715-16884-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 08:59:54AM -0500, Bjorn Helgaas wrote:
->   - Remove platform drvdata because it appears unused (we called
->     platform_set_drvdata() but not platform_get_drvdata()).
-> 
->   - Remove redundant struct members.
-> 
-> Nothing here should change the behavior of the driver.
-> 
-> Changes from v1:
->   I dropped the following patch because it was a lot of churn for
->   questionable benefit:
->     PCI: qcom: Name private struct pointer "qcom" consistently
-> 
-> ---
-> 
-> Bjorn Helgaas (4):
->       PCI: qcom: Remove unused platform data
->       PCI: qcom: Remove redundant struct qcom_pcie.dbi
->       PCI: qcom: Remove redundant struct qcom_pcie.dev
->       PCI: qcom: Reorder struct qcom_pcie
-> 
-> 
->  drivers/pci/host/pcie-qcom.c |   30 ++++++++++++------------------
->  1 file changed, 12 insertions(+), 18 deletions(-)
+No functional change. Use the new devm_gpiod_get_optional() to
+simplify the probe code.
 
-I applied these to pci/host-qcom for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |   21 +++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 45eb833..4ccba6d 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -325,9 +325,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	void __iomem *base;
+ 	struct resource *res;
+ 	char name[10];
+-	int gpio_sel;
+-	enum of_gpio_flags flags;
+-	unsigned long gpio_flags;
++	struct gpio_desc *reset;
+ 
+ 	dra7xx_pcie = devm_kzalloc(dev, sizeof(*dra7xx_pcie), GFP_KERNEL);
+ 	if (!dra7xx_pcie)
+@@ -393,19 +391,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		goto err_get_sync;
+ 	}
+ 
+-	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
+-	if (gpio_is_valid(gpio_sel)) {
+-		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
+-				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
+-		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
+-					    "pcie_reset");
+-		if (ret) {
+-			dev_err(dev, "gpio%d request failed, ret %d\n",
+-				gpio_sel, ret);
+-			goto err_gpio;
+-		}
+-	} else if (gpio_sel == -EPROBE_DEFER) {
+-		ret = -EPROBE_DEFER;
++	reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
++	if (IS_ERR(reset)) {
++		ret = PTR_ERR(reset);
++		dev_err(&pdev->dev, "gpio request failed, ret %d\n", ret);
+ 		goto err_gpio;
+ 	}
+ 
+-- 
+1.7.9.5
