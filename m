@@ -1,47 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56564 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938859AbcJGQj1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:39:27 -0400
-Subject: [PATCH 06/10] PCI: imx6: Reorder struct imx6_pcie
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:39:23 -0500
-Message-ID: <20161007163923.25776.89146.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161012160300.GH4308@localhost>
+References: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012160300.GH4308@localhost>
+From: Duc Dang <dhdang@apm.com>
+Date: Wed, 12 Oct 2016 16:20:41 -0700
+Message-ID: <CADaLNDnHPZR2nn-Rqt7Vm_SjJKv-aJnt32sg0N4pcCa0cqg93Q@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] PCI: xgene: Cleanups
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Tanmay Inamdar <tinamdar@apm.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct imx6_pcie to put generic fields first.  No functional change
-intended.
+On Wed, Oct 12, 2016 at 9:03 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Oct 12, 2016 at 08:07:35AM -0500, Bjorn Helgaas wrote:
+>>   - Add local "dev" pointers to reduce repetition of things like
+>>     "&pdev->dev".
+>>
+>>   - Remove platform drvdata because it appears unused (we called
+>>     platform_set_drvdata() but not platform_get_drvdata()).
+>>
+>>   - Pass the struct xgene_pcie_port pointer, not addresses, to setup
+>>     functions to enable simplifications.
+>>
+>>   - Add register accessors to encapsulate usage of port->csr_base a bit.
+>>
+>> Nothing here should change the behavior of the driver.
+>>
+>> Changes from v1:
+>>   I dropped the following patch because it was a lot of churn for
+>>   questionable benefit:
+>>     PCI: xgene: Name private struct pointer "xgene" consistently
+>>
+>> ---
+>>
+>> Bjorn Helgaas (4):
+>>       PCI: xgene: Add local struct device pointers
+>>       PCI: xgene: Remove unused platform data
+>>       PCI: xgene: Pass struct xgene_pcie_port to setup functions
+>>       PCI: xgene: Add register accessors
+>
+> I applied these to pci/host-xgene for v4.9.  I hope to ask Linus to
+> pull them tomorrow, so if you see any issues, let me know soon.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-imx6.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Bjorn,
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 3b2fb41..1a89165 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -39,13 +39,13 @@ enum imx6_pcie_variants {
- };
- 
- struct imx6_pcie {
-+	struct pcie_port	pp;	/* pp.dbi_base is DT 0th resource */
- 	int			reset_gpio;
- 	bool			gpio_active_high;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
- 	struct clk		*pcie_inbound_axi;
- 	struct clk		*pcie;
--	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	enum imx6_pcie_variants variant;
- 	u32			tx_deemph_gen1;
+I tested the v2 series on X-Gene 1 and X-Gene 2 and no surprise
+happens. Please feel free to add my Acked-by/Tested-by.
 
+Regards,
+Duc Dang.
