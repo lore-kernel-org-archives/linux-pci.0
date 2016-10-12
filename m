@@ -1,108 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35466 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:38664 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031988AbcJRQE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Oct 2016 12:04:28 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v6 14/16] drivers: acpi: iort: replace rid map type with type mask
-Date: Tue, 18 Oct 2016 17:04:12 +0100
-Message-Id: <20161018160414.1228-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+        id S932765AbcJLNhd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:37:33 -0400
+Subject: [PATCH v2 2/5] PCI: exynos: Uninline register accessors
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:37:28 -0500
+Message-ID: <20161012133728.28194.11799.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORT tables provide data that allow the kernel to carry out
-device ID mappings between endpoints and system components
-(eg interrupt controllers, IOMMUs). When the mapping for a
-given device ID is carried out, the translation mechanism
-is done on a per-subsystem basis rather than a component
-subtype (ie the IOMMU kernel layer will look for mappings
-from a device to all IORT node types corresponding to IOMMU
-components), therefore the corresponding mapping API should
-work on a range (ie mask) of IORT node types corresponding
-to a common set of components (eg IOMMUs) rather than a
-specific node type.
+The register accessors are not performance critical and are small enough
+that the compiler can inline them itself if it makes sense.
 
-Upgrade the IORT iort_node_map_rid() API to work with a
-type mask instead of a single node type so that it can
-be used for mappings that span multiple components types
-(ie IOMMUs).
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/arm64/iort.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-exynos.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 04cc5f7..f205d41 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -26,6 +26,9 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index e633817..8e841f8 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -102,32 +102,32 @@ struct exynos_pcie {
+ #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
+ #define PCIE_PHY_TRSV3_LVCC		0x31c
  
-+#define IORT_TYPE_MASK(type)	(1 << (type))
-+#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+
- struct iort_its_msi_chip {
- 	struct list_head	list;
- 	struct fwnode_handle	*fw_node;
-@@ -317,7 +320,7 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
--						u8 type)
-+						u8 type_mask)
+-static inline void exynos_elb_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
++static void exynos_elb_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
  {
- 	u32 rid = rid_in;
- 
-@@ -326,7 +329,7 @@ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 		struct acpi_iort_id_mapping *map;
- 		int i;
- 
--		if (node->type == type) {
-+		if (IORT_TYPE_MASK(node->type) & type_mask) {
- 			if (rid_out)
- 				*rid_out = rid;
- 			return node;
-@@ -399,7 +402,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- 	if (!node)
- 		return req_id;
- 
--	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
- 	return dev_id;
+ 	writel(val, pcie->elbi_base + reg);
  }
  
-@@ -421,7 +424,7 @@ static int iort_dev_find_its_id(struct device *dev, u32 req_id,
- 	if (!node)
- 		return -ENXIO;
+-static inline u32 exynos_elb_readl(struct exynos_pcie *pcie, u32 reg)
++static u32 exynos_elb_readl(struct exynos_pcie *pcie, u32 reg)
+ {
+ 	return readl(pcie->elbi_base + reg);
+ }
  
--	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
- 	if (!node)
- 		return -ENXIO;
+-static inline void exynos_phy_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
++static void exynos_phy_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
+ {
+ 	writel(val, pcie->phy_base + reg);
+ }
  
--- 
-2.10.0
+-static inline u32 exynos_phy_readl(struct exynos_pcie *pcie, u32 reg)
++static u32 exynos_phy_readl(struct exynos_pcie *pcie, u32 reg)
+ {
+ 	return readl(pcie->phy_base + reg);
+ }
+ 
+-static inline void exynos_blk_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
++static void exynos_blk_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
+ {
+ 	writel(val, pcie->block_base + reg);
+ }
+ 
+-static inline u32 exynos_blk_readl(struct exynos_pcie *pcie, u32 reg)
++static u32 exynos_blk_readl(struct exynos_pcie *pcie, u32 reg)
+ {
+ 	return readl(pcie->block_base + reg);
+ }
+@@ -427,7 +427,7 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+ 		exynos_pcie_msi_init(pp);
+ }
+ 
+-static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
++static u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ {
+ 	u32 val;
+ 
+@@ -437,7 +437,7 @@ static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ 	return val;
+ }
+ 
+-static inline void exynos_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
++static void exynos_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
+ {
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+ 	writel(val, pp->dbi_base + reg);
 
