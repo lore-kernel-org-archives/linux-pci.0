@@ -1,95 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:35095 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757365AbcJYF1y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 01:27:54 -0400
-Date: Tue, 25 Oct 2016 07:28:32 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 6/9] PCI: Unfold conditions to block runtime PM on PCIe
- ports
-Message-ID: <20161025052832.GA5630@wunner.de>
-References: <cover.1476875113.git.lukas@wunner.de>
- <ba2f9f322b4aeea1aeb01f98a2eda8efe055494f.1476875113.git.lukas@wunner.de>
- <20161020141810.GM24289@lahna.fi.intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:60276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753645AbcJLQFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:05:01 -0400
+Date: Wed, 12 Oct 2016 11:04:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, linux-pci@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH v2 0/7] PCI: dra7xx: Cleanups
+Message-ID: <20161012160457.GM4308@localhost>
+References: <20161012133112.27714.93244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161020141810.GM24289@lahna.fi.intel.com>
+In-Reply-To: <20161012133112.27714.93244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 20, 2016 at 05:18:10PM +0300, Mika Westerberg wrote:
-> On Wed, Oct 19, 2016 at 04:07:13PM +0200, Lukas Wunner wrote:
-> > The conditions to block D3 on parent ports are currently condensed into
-> > a single expression in pci_dev_check_d3cold().  Upcoming commits will
-> > add further conditions for hotplug ports, making this expression fairly
-> > large and impenetrable.  Unfold the conditions to maintain readability
-> > when they are amended.
-> > 
-> > No functional change intended.
+On Wed, Oct 12, 2016 at 08:32:31AM -0500, Bjorn Helgaas wrote:
+>   - Add local "dev" pointers to reduce repetition of things like
+>     "&pdev->dev".
 > 
-> This actually results a functional change because now all the conditions
-> are evaluated whereas previosly it bailed out immediately when the
-> condition was true ;-)
-
-You're right. That's a step backward, good catch.
-
-I've reworked this commit to restore the old behaviour and will respin
-after some more testing and comparing disassembler output.
-
-Thanks!
-
-Lukas
-
+>   - Remove redundant struct members.
 > 
-> Not that it matters here.
+>   - Use generic DesignWare accessors when possible.
 > 
-> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > ---
-> >  drivers/pci/pci.c | 21 +++++++++++----------
-> >  1 file changed, 11 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index a19056e..f1ddb6b 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2270,19 +2270,20 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
-> >  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-> >  {
-> >  	bool *d3cold_ok = data;
-> > -	bool no_d3cold;
-> >  
-> > -	/*
-> > -	 * The device needs to be allowed to go D3cold and if it is wake
-> > -	 * capable to do so from D3cold.
-> > -	 */
-> > -	no_d3cold = dev->no_d3cold || !dev->d3cold_allowed ||
-> > -		(device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold)) ||
-> > -		!pci_power_manageable(dev);
-> > +	/* The device needs to be allowed to go D3cold. */
-> > +	if (dev->no_d3cold || !dev->d3cold_allowed)
-> > +		*d3cold_ok = false;
-> > +
-> > +	/* If it is wakeup capable it must be able to do so from D3cold. */
-> > +	if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
-> > +		*d3cold_ok = false;
-> >  
-> > -	*d3cold_ok = !no_d3cold;
-> > +	/* If it is a bridge it must be allowed to go to D3. */
-> > +	if (!pci_power_manageable(dev))
-> > +		*d3cold_ok = false;
-> >  
-> > -	return no_d3cold;
-> > +	return !*d3cold_ok;
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 2.9.3
+>   - Pass device-specific struct to internal functions for consistency.
+> 
+>   - Move struct pcie_port setup to probe function for consistency.
+> 
+> Nothing here should change the behavior of the driver.
+> 
+> Changes from v1:
+>   I dropped the following patches because they were a lot of churn for
+>   questionable benefit:
+>     PCI: dra7xx: Rename accessors
+>     PCI: dra7xx: Name private struct pointer "dra7xx" consistently
+> 
+> ---
+> 
+> Bjorn Helgaas (7):
+>       PCI: dra7xx: Add local struct device pointers
+>       PCI: dra7xx: Remove redundant struct device pointer from dra7xx_pcie
+>       PCI: dra7xx: Set drvdata at end of probe function
+>       PCI: dra7xx: Use generic DesignWare accessors
+>       PCI: dra7xx: Pass device-specific struct to internal functions
+>       PCI: dra7xx: Move struct pcie_port setup to probe function
+>       PCI: dra7xx: Reorder struct dra7xx_pcie
+> 
+> 
+>  drivers/pci/host/pci-dra7xx.c |  103 ++++++++++++++++++-----------------------
+>  1 file changed, 45 insertions(+), 58 deletions(-)
+
+I applied these to pci/host-dra7xx for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
