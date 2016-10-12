@@ -1,82 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize function"
-To: Thomas Gleixner <tglx@linutronix.de>
-References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
- <1475343976-20744-3-git-send-email-okaya@codeaurora.org>
- <alpine.DEB.2.20.1610040919110.5278@nanos>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <babdb433-2be5-2c04-cbdd-c2af443447cb@codeaurora.org>
-Date: Tue, 4 Oct 2016 10:10:12 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60950 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932125AbcJLQG7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:06:59 -0400
+Date: Wed, 12 Oct 2016 11:06:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] PCI: qcom: Cleanups
+Message-ID: <20161012160654.GS4308@localhost>
+References: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1610040919110.5278@nanos>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/4/2016 3:23 AM, Thomas Gleixner wrote:
-> On Sat, 1 Oct 2016, Sinan Kaya wrote:
+On Wed, Oct 12, 2016 at 08:59:54AM -0500, Bjorn Helgaas wrote:
+>   - Remove platform drvdata because it appears unused (we called
+>     platform_set_drvdata() but not platform_get_drvdata()).
 > 
->> This reverts commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize
->> function"). SCI penalty API was replaced by the runtime penalty calculation
->> based on the value of acpi_gbl_FADT.sci_interrupt.
+>   - Remove redundant struct members.
 > 
-> This does more than only reverting said commit ....
-
-The SCI function was removed in two steps (first refactor and then remove). 
-I was trying to do the revert at one step. I can divide into two if it makes
-it better.
-
->  
->> acpi_gbl_FADT.sci_interrupt type does not get updated at the right time
->> for some platforms and results in incorrect penalty assignment for PCI
->> IRQs as irq_get_trigger_type returns the wrong type.
+> Nothing here should change the behavior of the driver.
 > 
-> And the obvious question is: Why does irq_get_trigger_type() return the
-> wrong type?
-
-Here is some history:
-
-I now remember that Bjorn indicated the race condition possibility in this thread
-here.
-
-https://lkml.org/lkml/2016/3/8/640
-
-My understanding is that register_gsi function delivers the IRQ found in the ACPI table
-to the interrupt controller driver.
-
-Penalties are calculated before a link object is enabled to find out which interrupt
-has the least number of users. By the time penalties are calculated, the IRQ is not
-registered yet and it returns the wrong type.
-
+> Changes from v1:
+>   I dropped the following patch because it was a lot of churn for
+>   questionable benefit:
+>     PCI: qcom: Name private struct pointer "qcom" consistently
 > 
-> What's the root cause of this problem? Your changelog does not tell
-> anything.
-
-If you are OK with the above description, I can add this to the commit message.
-
-
+> ---
 > 
-> Thanks,
+> Bjorn Helgaas (4):
+>       PCI: qcom: Remove unused platform data
+>       PCI: qcom: Remove redundant struct qcom_pcie.dbi
+>       PCI: qcom: Remove redundant struct qcom_pcie.dev
+>       PCI: qcom: Reorder struct qcom_pcie
 > 
-> 	tglx
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+>  drivers/pci/host/pcie-qcom.c |   30 ++++++++++++------------------
+>  1 file changed, 12 insertions(+), 18 deletions(-)
 
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I applied these to pci/host-qcom for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
