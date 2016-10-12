@@ -1,79 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54262 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:49832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757322AbcJGQf7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:35:59 -0400
-Subject: [PATCH 4/8] PCI: exynos: Reorder accessor functions
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>
+        id S1755359AbcJLMrn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:47:43 -0400
+Subject: [PATCH v2 5/6] PCI: altera: Simplify TLB_CFG_DW0 usage
+To: Ley Foon Tan <lftan@altera.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:35:54 -0500
-Message-ID: <20161007163554.25314.62435.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
+Date: Wed, 12 Oct 2016 07:47:39 -0500
+Message-ID: <20161012124739.23240.41668.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder the accessors so the reader is first, as most other drivers do.  No
+All TLP_CFG_DW0() uses follow the same pattern based on the root bus
+number, so pull that into the macro itself to declutter the users.  No
 functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-exynos.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/pci/host/pcie-altera.c |   17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index c7b0809..5f54ab5 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -102,19 +102,14 @@ struct exynos_pcie {
- #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
- #define PCIE_PHY_TRSV3_LVCC		0x31c
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index a99765a..8240130 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -55,7 +55,10 @@
+ #define TLP_PAYLOAD_SIZE		0x01
+ #define TLP_READ_TAG			0x1d
+ #define TLP_WRITE_TAG			0x10
+-#define TLP_CFG_DW0(fmttype)		(((fmttype) << 24) | TLP_PAYLOAD_SIZE)
++#define TLP_CFG_DW0(pcie, bus)						\
++    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0			\
++				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
++     TLP_PAYLOAD_SIZE)
+ #define TLP_CFG_DW1(reqid, tag, be)	(((reqid) << 16) | (tag << 8) | (be))
+ #define TLP_CFG_DW2(bus, devfn, offset)	\
+ 				(((bus) << 24) | ((devfn) << 16) | (offset))
+@@ -218,11 +221,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ {
+ 	u32 headers[TLP_HDR_SIZE];
  
--static void exynos_elb_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
--{
--	writel(val, exynos->elbi_base + reg);
--}
+-	if (bus == pcie->root_bus_nr)
+-		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD0);
+-	else
+-		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
 -
- static u32 exynos_elb_readl(struct exynos_pcie *exynos, u32 reg)
- {
- 	return readl(exynos->elbi_base + reg);
- }
++	headers[0] = TLP_CFG_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+@@ -238,11 +237,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	u32 headers[TLP_HDR_SIZE];
+ 	int ret;
  
--static void exynos_phy_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
-+static void exynos_elb_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
- {
--	writel(val, exynos->phy_base + reg);
-+	writel(val, exynos->elbi_base + reg);
- }
- 
- static u32 exynos_phy_readl(struct exynos_pcie *exynos, u32 reg)
-@@ -122,9 +117,9 @@ static u32 exynos_phy_readl(struct exynos_pcie *exynos, u32 reg)
- 	return readl(exynos->phy_base + reg);
- }
- 
--static void exynos_blk_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
-+static void exynos_phy_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
- {
--	writel(val, exynos->block_base + reg);
-+	writel(val, exynos->phy_base + reg);
- }
- 
- static u32 exynos_blk_readl(struct exynos_pcie *exynos, u32 reg)
-@@ -132,6 +127,11 @@ static u32 exynos_blk_readl(struct exynos_pcie *exynos, u32 reg)
- 	return readl(exynos->block_base + reg);
- }
- 
-+static void exynos_blk_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
-+{
-+	writel(val, exynos->block_base + reg);
-+}
-+
- static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos, bool on)
- {
- 	u32 val;
+-	if (bus == pcie->root_bus_nr)
+-		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR0);
+-	else
+-		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
+-
++	headers[0] = TLP_CFG_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
 
