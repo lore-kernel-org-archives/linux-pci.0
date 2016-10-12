@@ -1,94 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52000 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:40800 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932939AbcJLMx7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:53:59 -0400
-Subject: [PATCH v2 5/5] PCI: iproc: Hard-code PCIe capability offset instead
- of searching
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
+        id S1755068AbcJLNsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:14 -0400
+Subject: [PATCH v2 4/8] PCI: imx6: Pass struct imx6_pcie to PHY accessors
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Wed, 12 Oct 2016 07:53:50 -0500
-Message-ID: <20161012125350.24076.68204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:48:04 -0500
+Message-ID: <20161012134804.28919.79193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We know where the PCIe capability lives in the host bridge's config space;
-in fact, we already hard-coded the offset of the Link Control 2 register.
-
-The hard-coded Link Control 2 offset was 0xdc.  Link Control 2 is at offset
-0x30 into the PCIe capability, so the capability itself must be at
-0xdc - 0x30 = 0xac.
-
-Hard-code the PCIe capability offset, which means we don't have to search
-for it and we can use the standard definitions for registers within the
-capability.
-
-No functional change intended.
+Pass the struct imx6_pcie pointer, not dbi_base address, to PHY accessors.
+This enables future simplifications.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-iproc.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/pci/host/pci-imx6.c |   41 +++++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index e9210f6..0b999a9 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -63,6 +63,8 @@
- #define OARR_SIZE_CFG_SHIFT          1
- #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 7af64b2..8a6a8d5 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -95,8 +95,9 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
  
-+#define PCI_EXP_CAP			0xac
-+
- #define MAX_NUM_OB_WINDOWS           2
+-static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
++static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, int exp_val)
+ {
++	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
+ 	u32 val;
+ 	u32 max_iterations = 10;
+ 	u32 wait_counter = 0;
+@@ -115,8 +116,9 @@ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ 	return -ETIMEDOUT;
+ }
  
- #define IPROC_PCIE_REG_INVALID 0xffff
-@@ -261,7 +263,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- 	struct device *dev = pcie->dev;
- 	u8 hdr_type;
- 	u32 link_ctrl, class, val;
--	u16 pos, link_status;
-+	u16 pos = PCI_EXP_CAP, link_status;
- 	bool link_is_active = false;
+-static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
++static int pcie_phy_wait_ack(struct imx6_pcie *imx6_pcie, int addr)
+ {
++	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
+ 	u32 val;
+ 	int ret;
  
- 	/*
-@@ -294,30 +296,27 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- 	pci_bus_write_config_dword(bus, 0, PCI_BRIDGE_CTRL_REG_OFFSET, class);
+@@ -126,23 +128,24 @@ static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
+ 	val |= (0x1 << PCIE_PHY_CTRL_CAP_ADR_LOC);
+ 	writel(val, dbi_base + PCIE_PHY_CTRL);
  
- 	/* check link status to see if link is active */
--	pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
- 	pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA, &link_status);
- 	if (link_status & PCI_EXP_LNKSTA_NLW)
- 		link_is_active = true;
+-	ret = pcie_phy_poll_ack(dbi_base, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
  
- 	if (!link_is_active) {
- 		/* try GEN 1 link speed */
--#define PCI_LINK_STATUS_CTRL_2_OFFSET 0x0dc
- #define PCI_TARGET_LINK_SPEED_MASK    0xf
- #define PCI_TARGET_LINK_SPEED_GEN2    0x2
- #define PCI_TARGET_LINK_SPEED_GEN1    0x1
- 		pci_bus_read_config_dword(bus, 0,
--					  PCI_LINK_STATUS_CTRL_2_OFFSET,
-+					  pos + PCI_EXP_LNKCTL2,
- 					  &link_ctrl);
- 		if ((link_ctrl & PCI_TARGET_LINK_SPEED_MASK) ==
- 		    PCI_TARGET_LINK_SPEED_GEN2) {
- 			link_ctrl &= ~PCI_TARGET_LINK_SPEED_MASK;
- 			link_ctrl |= PCI_TARGET_LINK_SPEED_GEN1;
- 			pci_bus_write_config_dword(bus, 0,
--					   PCI_LINK_STATUS_CTRL_2_OFFSET,
-+					   pos + PCI_EXP_LNKCTL2,
- 					   link_ctrl);
- 			msleep(100);
+ 	val = addr << PCIE_PHY_CTRL_DATA_LOC;
+ 	writel(val, dbi_base + PCIE_PHY_CTRL);
  
--			pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
- 			pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA,
- 						 &link_status);
- 			if (link_status & PCI_EXP_LNKSTA_NLW)
+-	return pcie_phy_poll_ack(dbi_base, 0);
++	return pcie_phy_poll_ack(imx6_pcie, 0);
+ }
+ 
+ /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+-static int pcie_phy_read(void __iomem *dbi_base, int addr, int *data)
++static int pcie_phy_read(struct imx6_pcie *imx6_pcie, int addr, int *data)
+ {
++	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
+ 	u32 val, phy_ctl;
+ 	int ret;
+ 
+-	ret = pcie_phy_wait_ack(dbi_base, addr);
++	ret = pcie_phy_wait_ack(imx6_pcie, addr);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -150,7 +153,7 @@ static int pcie_phy_read(void __iomem *dbi_base, int addr, int *data)
+ 	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
+ 	writel(phy_ctl, dbi_base + PCIE_PHY_CTRL);
+ 
+-	ret = pcie_phy_poll_ack(dbi_base, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -160,17 +163,18 @@ static int pcie_phy_read(void __iomem *dbi_base, int addr, int *data)
+ 	/* deassert Read signal */
+ 	writel(0x00, dbi_base + PCIE_PHY_CTRL);
+ 
+-	return pcie_phy_poll_ack(dbi_base, 0);
++	return pcie_phy_poll_ack(imx6_pcie, 0);
+ }
+ 
+-static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
++static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ {
++	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
+ 	u32 var;
+ 	int ret;
+ 
+ 	/* write addr */
+ 	/* cap addr */
+-	ret = pcie_phy_wait_ack(dbi_base, addr);
++	ret = pcie_phy_wait_ack(imx6_pcie, addr);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -181,7 +185,7 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ 	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
+ 	writel(var, dbi_base + PCIE_PHY_CTRL);
+ 
+-	ret = pcie_phy_poll_ack(dbi_base, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -190,7 +194,7 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ 	writel(var, dbi_base + PCIE_PHY_CTRL);
+ 
+ 	/* wait for ack de-assertion */
+-	ret = pcie_phy_poll_ack(dbi_base, 0);
++	ret = pcie_phy_poll_ack(imx6_pcie, 0);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -199,7 +203,7 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ 	writel(var, dbi_base + PCIE_PHY_CTRL);
+ 
+ 	/* wait for ack */
+-	ret = pcie_phy_poll_ack(dbi_base, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -208,7 +212,7 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ 	writel(var, dbi_base + PCIE_PHY_CTRL);
+ 
+ 	/* wait for ack de-assertion */
+-	ret = pcie_phy_poll_ack(dbi_base, 0);
++	ret = pcie_phy_poll_ack(imx6_pcie, 0);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -219,19 +223,20 @@ static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+ 
+ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+ {
++	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 tmp;
+ 
+-	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &tmp);
++	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+ 	tmp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+ 		PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, tmp);
++	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
+ 
+ 	usleep_range(2000, 3000);
+ 
+-	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &tmp);
++	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+ 	tmp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+ 		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, tmp);
++	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
+ }
+ 
+ /*  Added for PCI abort handling */
 
