@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
-Subject: [PATCH V4 1/3] ACPI, PCI,
- IRQ: assign ISA IRQ directly during early boot stages
-Date: Wed, 19 Oct 2016 18:21:02 -0400
-Message-Id: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
-References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+Date: Wed, 12 Oct 2016 05:38:43 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [RFC PATCH 01/11] pci: endpoint: add EP core layer to enable EP
+ controller and EP functions
+Message-ID: <20161012123843.GA942@infradead.org>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+ <1473829927-20466-2-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+In-Reply-To: <1473829927-20466-2-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,58 +17,72 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
- linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>
-MIME-Version: 1.0
+Cc: devicetree@vger.kernel.org, Joao.Pinto@synopsys.com,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Joao Pinto <jpinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ hch@infradead.org, m-karicheri2@ti.com, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-omap@vger.kernel.org, mingkai.hu@nxp.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The penalty determination of ISA IRQ goes through 4 paths.
-1. assign PCI_USING during power up via acpi_irq_penalty_init.
-2. update the penalty with acpi_penalize_isa_irq function based on the
-active parameter.
-3. kernel command line penalty update via acpi_irq_penalty_update function.
-4. increment the penalty as USING right after the IRQ is assign to PCI.
+> +/**
+> + * pci_epc_stop() - stop the PCI link
+> + * @epc: the link of the EPC device that has to be stopped
+> + *
+> + * Invoke to stop the PCI link
+> + */
+> +void pci_epc_stop(struct pci_epc *epc)
+> +{
+> +	if (IS_ERR(epc) || !epc->ops->stop)
+> +		return;
+> +
+> +	spin_lock_irq(&epc->irq_lock);
+> +	epc->ops->stop(epc);
+> +	spin_unlock_irq(&epc->irq_lock);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_stop);
 
-acpi_penalize_isa_irq and acpi_irq_penalty_update functions get called
-before the ACPI subsystem is started.
+Can you elaborate on the synchronization strategy here?  It seems
+like irq_lock is generally taken irq save and just around method
+calls.  Wou;dn't it be better to leave locking to the methods
+themselves?
 
-These API need to bypass the acpi_irq_get_penalty function.
+> +/**
+> + * struct pci_epc - represents the PCI EPC device
+> + * @dev: PCI EPC device
+> + * @ops: function pointers for performing endpoint operations
+> + * @mutex: mutex to protect pci_epc ops
+> + */
+> +struct pci_epc {
+> +	struct device			dev;
+> +	/* support only single function PCI device for now */
+> +	struct pci_epf			*epf;
+> +	const struct pci_epc_ops	*ops;
+> +	spinlock_t			irq_lock;
+> +};
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+And this still documentes a mutex instead of the irq save spinlock,
+while we're at it..
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index c983bf7..4f37938 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -849,7 +849,7 @@ static int __init acpi_irq_penalty_update(char *str, int used)
- 			continue;
- 
- 		if (used)
--			new_penalty = acpi_irq_get_penalty(irq) +
-+			new_penalty = acpi_isa_irq_penalty[irq] +
- 					PIRQ_PENALTY_ISA_USED;
- 		else
- 			new_penalty = 0;
-@@ -871,7 +871,7 @@ static int __init acpi_irq_penalty_update(char *str, int used)
- void acpi_penalize_isa_irq(int irq, int active)
- {
- 	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
--		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-+		acpi_isa_irq_penalty[irq] = acpi_isa_irq_penalty[irq] +
- 		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
- }
- 
--- 
-1.9.1
+> +/**
+> + * struct pci_epf_bar - represents the BAR of EPF device
+> + * @phys_addr: physical address that should be mapped to the BAR
+> + * @size: the size of the address space present in BAR
+> + */
+> +struct pci_epf_bar {
+> +	dma_addr_t	phys_addr;
+> +	size_t		size;
+> +};
 
+Just curious: shouldn't this be a phys_addr_t instead of a dma_addr_t?
+
+
+Otherwise this looks like a nice little framework to get started!
 
 _______________________________________________
 linux-arm-kernel mailing list
