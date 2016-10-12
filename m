@@ -1,57 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49666 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:40712 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753953AbcJUQEr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 12:04:47 -0400
-Date: Fri, 21 Oct 2016 12:15:16 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
-Message-ID: <20161021161515.GA8596@localhost.localdomain>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
- <1475007815-28354-3-git-send-email-keith.busch@intel.com>
- <20161021153714.GA4221@wunner.de>
+        id S1754998AbcJLNsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:14 -0400
+Subject: [PATCH v2 2/8] PCI: imx6: Remove redundant of_node pointer
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:47:48 -0500
+Message-ID: <20161012134748.28919.61148.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021153714.GA4221@wunner.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 05:37:14PM +0200, Lukas Wunner wrote:
-> On Tue, Sep 27, 2016 at 04:23:32PM -0400, Keith Busch wrote:
-> > --- a/drivers/pci/hotplug/pciehp_pci.c
-> > +++ b/drivers/pci/hotplug/pciehp_pci.c
-> > @@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >  				break;
-> >  			}
-> >  		}
-> > +		if (!presence)
-> > +			dev->is_removed = 1;
-> >  		pci_stop_and_remove_bus_device(dev);
-> >  		/*
-> >  		 * Ensure that no new Requests will be generated from
-> 
-> Sorry for the delay Keith, I finally got around to test v3 of your
-> series with hot-removed Thunderbolt devices on Apple Macs.
-> 
-> I've found that the above isn't sufficient, it's necessary to also
-> set the is_removed bit on any child devices.  E.g. on my system
-> when an Apple Gigabit Ethernet adapter is plugged in, the topology
-> looks like this:
+"np" and "node" are redundant copies of the of_node pointer.  Remove "np"
+and use "node" instead.  Replace the "fsl,max-link-speed" use with "node"
+as well.  No functional change intended.
 
-Thanks for the catch. Your proposal looks good to me. I'll send a new
-revision incorporating something like this that the dpc driver can
-also use.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 0838176..e20e9e8 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -618,7 +618,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+-	struct device_node *np = dev->of_node;
+ 	struct resource *dbi_base;
+ 	struct device_node *node = dev->of_node;
+ 	int ret;
+@@ -643,8 +642,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
  
-> With your patch above, the is_removed bit is only set on 0000:09:00.0
-> but not on its children.  Consequently the "tg3" driver tries to
-> access the hot-removed Broadcom 57762 Ethernet chip as before,
-> causing a soft lockup.
+ 	/* Fetch GPIOs */
+-	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	imx6_pcie->gpio_active_high = of_property_read_bool(np,
++	imx6_pcie->reset_gpio = of_get_named_gpio(node, "reset-gpio", 0);
++	imx6_pcie->gpio_active_high = of_property_read_bool(node,
+ 						"reset-gpio-active-high");
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		ret = devm_gpio_request_one(dev, imx6_pcie->reset_gpio,
+@@ -717,7 +716,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		imx6_pcie->tx_swing_low = 127;
+ 
+ 	/* Limit link speed */
+-	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
++	ret = of_property_read_u32(node, "fsl,max-link-speed",
+ 				   &imx6_pcie->link_gen);
+ 	if (ret)
+ 		imx6_pcie->link_gen = 1;
 
-Is that something that can be fixed in the tg3 driver? I don't think
-drivers can rely on this patch to fense off their unintended access since
-we can't stop tg3 from accesses a removed device before 'is_removed'
-is set.
