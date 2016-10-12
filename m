@@ -1,77 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
-Subject: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-Date: Sat, 15 Oct 2016 00:31:05 -0400
-Message-Id: <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
-References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
- linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([198.47.19.11]:60292 "EHLO bear.ext.ti.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755880AbcJLT6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 15:58:22 -0400
+Subject: Re: [PATCH v2 6/7] PCI: dra7xx: Move struct pcie_port setup to probe
+ function
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+References: <20161012133112.27714.93244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012133322.27714.21257.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>
+From: "Andrew F. Davis" <afd@ti.com>
+Message-ID: <844ae443-f1ca-0c77-11fb-df0434d6cd0c@ti.com>
+Date: Wed, 12 Oct 2016 14:58:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20161012133322.27714.21257.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
-resource requirements") removed PCI_USING penalty from
-acpi_pci_link_allocate function as there is no longer a fixed size penalty
-array for both PCI interrupts greater than 16.
+On 10/12/2016 08:33 AM, Bjorn Helgaas wrote:
+> Do the basic pcie_port setup in the probe function for consistency with
+> other drivers.  No functional change intended.
 
-The array size has been reduced to 16 and array name got prefixed as ISA
-since it only is accountable for the ISA interrupts.
+Other drivers may do this, but it is really logical? All the pcie_port
+work and variables are isolated to the add_pcie_port function, now it
+they are mixed into probe as well, I don't see any benefit to this
+style, perhaps the other drivers should become more like this.
 
-The original change in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
-resource requirements") removed penalty assignment in the code for PCI
-thinking that we will add the penalty later in acpi_irq_pci_sharing_penalty
-function.
-
-However, this function only gets called if the IRQ number is greater than
-16 and acpi_irq_get_penalty function gets called before ACPI start in
-acpi_isa_irq_available and acpi_penalize_isa_irq functions. We can't rely
-on iterating the link list.
-
-We need to add the PCI_USING penalty for ISA interrupts too if the link is
-in use and matches our ISA IRQ number.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index c983bf7..a212709 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -619,6 +619,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 			    acpi_device_bid(link->device));
- 		return -ENODEV;
- 	} else {
-+		if (link->irq.active < ACPI_MAX_ISA_IRQS)
-+			acpi_isa_irq_penalty[link->irq.active] +=
-+				PIRQ_PENALTY_PCI_USING;
-+
- 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
- 		       acpi_device_name(link->device),
- 		       acpi_device_bid(link->device), link->irq.active);
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-dra7xx.c |   13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index efb24b8..bb77c35 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -267,13 +267,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  				       struct platform_device *pdev)
+>  {
+>  	int ret;
+> -	struct pcie_port *pp;
+> +	struct pcie_port *pp = &dra7xx->pp;
+> +	struct device *dev = pp->dev;
+>  	struct resource *res;
+> -	struct device *dev = &pdev->dev;
+> -
+> -	pp = &dra7xx->pp;
+> -	pp->dev = dev;
+> -	pp->ops = &dra7xx_pcie_host_ops;
+>  
+>  	pp->irq = platform_get_irq(pdev, 1);
+>  	if (pp->irq < 0) {
+> @@ -320,6 +316,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  	void __iomem *base;
+>  	struct resource *res;
+>  	struct dra7xx_pcie *dra7xx;
+> +	struct pcie_port *pp;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+>  	char name[10];
+> @@ -331,6 +328,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  	if (!dra7xx)
+>  		return -ENOMEM;
+>  
+> +	pp = &dra7xx->pp;
+> +	pp->dev = dev;
+> +	pp->ops = &dra7xx_pcie_host_ops;
+> +
+>  	irq = platform_get_irq(pdev, 0);
+>  	if (irq < 0) {
+>  		dev_err(dev, "missing IRQ resource\n");
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
