@@ -1,144 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:36199 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965199AbcJWDt3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Oct 2016 23:49:29 -0400
+Received: from mail.kernel.org ([198.145.29.136]:57600 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755721AbcJLNKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:10:44 -0400
+Subject: [PATCH v2 1/5] PCI: xilinx: Add local struct device pointers
+To: Michal Simek <michal.simek@xilinx.com>,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:10:38 -0500
+Message-ID: <20161012131038.25793.18769.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1476915664-27231-4-git-send-email-okaya@codeaurora.org>
-References: <1476915664-27231-4-git-send-email-okaya@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Sun, 23 Oct 2016 14:49:27 +1100
-Message-ID: <CANwerB1LDgFFKDVBVf1eAo5713niEDchqQDHHxet-SuAPNPq7Q@mail.gmail.com>
-Subject: Re: [V4,3/3] Revert "ACPI,PCI,IRQ: separate ISA penalty calculation"
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        linux@rainbow-software.org, timur@codeaurora.org,
-        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Len Brown <lenb@kernel.org>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
-        devel@acpica.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 October 2016 at 09:21, Sinan Kaya <okaya@codeaurora.org> wrote:
-> This reverts commit f7eca374f000 ("ACPI,PCI,IRQ: separate ISA penalty
-> calculation") and commit 487cf917ed0d ("revert "ACPI, PCI, IRQ: remove
-> redundant code in acpi_irq_penalty_init()"").
->
-> Now that we understand the real issue (SCI and ISA penalty getting
-> calculated before ACPI start), there is no need for special handling
-> for ISA interrupts.
->
-> Let's try to simplify the code one more time to share code.
->
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  arch/x86/pci/acpi.c         |  1 -
->  drivers/acpi/pci_link.c     | 44 +++++---------------------------------------
->  include/acpi/acpi_drivers.h |  1 -
->  3 files changed, 5 insertions(+), 41 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 3cd6983..b2a4e2a 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
->                 return -ENODEV;
->
->         printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
-> -       acpi_irq_penalty_init();
->         pcibios_enable_irq = acpi_pci_irq_enable;
->         pcibios_disable_irq = acpi_pci_irq_disable;
->         x86_init.pci.init_irq = x86_init_noop;
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 294b190..dd14d78 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -478,7 +478,8 @@ static int acpi_irq_pci_sharing_penalty(int irq)
->                  * If a link is active, penalize its IRQ heavily
->                  * so we try to choose a different IRQ.
->                  */
-> -               if (link->irq.active && link->irq.active == irq)
-> +               if ((link->irq.active && link->irq.active == irq) &&
-> +                               (link->irq.initialized == 1))
->                         penalty += PIRQ_PENALTY_PCI_USING;
->
->                 /*
-> @@ -501,45 +502,10 @@ static int acpi_irq_get_penalty(int irq)
->                 penalty += sci_penalty;
->
->         if (irq < ACPI_MAX_ISA_IRQS)
-> -               return penalty + acpi_isa_irq_penalty[irq];
-> +               penalty += acpi_isa_irq_penalty[irq];
->
-> -       return penalty + acpi_irq_pci_sharing_penalty(irq);
-> -}
-> -
-> -int __init acpi_irq_penalty_init(void)
-> -{
-> -       struct acpi_pci_link *link;
-> -       int i;
-> -
-> -       /*
-> -        * Update penalties to facilitate IRQ balancing.
-> -        */
-> -       list_for_each_entry(link, &acpi_link_list, list) {
-> -
-> -               /*
-> -                * reflect the possible and active irqs in the penalty table --
-> -                * useful for breaking ties.
-> -                */
-> -               if (link->irq.possible_count) {
-> -                       int penalty =
-> -                           PIRQ_PENALTY_PCI_POSSIBLE /
-> -                           link->irq.possible_count;
-> -
-> -                       for (i = 0; i < link->irq.possible_count; i++) {
-> -                               if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
-> -                                       acpi_isa_irq_penalty[link->irq.
-> -                                                        possible[i]] +=
-> -                                           penalty;
-> -                       }
-> -
-> -               } else if (link->irq.active &&
-> -                               (link->irq.active < ACPI_MAX_ISA_IRQS)) {
-> -                       acpi_isa_irq_penalty[link->irq.active] +=
-> -                           PIRQ_PENALTY_PCI_POSSIBLE;
-> -               }
-> -       }
-> -
-> -       return 0;
-> +       penalty += acpi_irq_pci_sharing_penalty(irq);
-> +       return penalty;
->  }
->
->  static int acpi_irq_balance = -1;      /* 0: static, 1: balance */
-> diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-> index 29c6912..797ae2e 100644
-> --- a/include/acpi/acpi_drivers.h
-> +++ b/include/acpi/acpi_drivers.h
-> @@ -78,7 +78,6 @@
->
->  /* ACPI PCI Interrupt Link (pci_link.c) */
->
-> -int acpi_irq_penalty_init(void);
->  int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
->                                int *polarity, char **name);
->  int acpi_pci_link_free_irq(acpi_handle handle);
+Use a local "struct device *dev" for brevity and consistency with other
+drivers.  No functional change intended.
 
-This series fixes one or more network adapters not working in Linux
-32-bit x86 guest running inside VirtualBox if I have 4 network
-adapters enabled. The following message no longer appears in the
-kernel log:
-ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx.c |   55 +++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 26 deletions(-)
 
-Tested-by: Jonathan Liu <net147@gmail.com>
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index be56803..2ef47af 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -140,10 +140,11 @@ static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
+  */
+ static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
+ {
++	struct device *dev = port->dev;
+ 	unsigned long val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
+ 
+ 	if (val & XILINX_PCIE_RPEFR_ERR_VALID) {
+-		dev_dbg(port->dev, "Requester ID %lu\n",
++		dev_dbg(dev, "Requester ID %lu\n",
+ 			val & XILINX_PCIE_RPEFR_REQ_ID);
+ 		pcie_write(port, XILINX_PCIE_RPEFR_ALL_MASK,
+ 			   XILINX_PCIE_REG_RPEFR);
+@@ -383,6 +384,7 @@ static const struct irq_domain_ops intx_domain_ops = {
+ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ {
+ 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
++	struct device *dev = port->dev;
+ 	u32 val, mask, status, msi_data;
+ 
+ 	/* Read interrupt decode and mask registers */
+@@ -394,32 +396,32 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		return IRQ_NONE;
+ 
+ 	if (status & XILINX_PCIE_INTR_LINK_DOWN)
+-		dev_warn(port->dev, "Link Down\n");
++		dev_warn(dev, "Link Down\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_ECRC_ERR)
+-		dev_warn(port->dev, "ECRC failed\n");
++		dev_warn(dev, "ECRC failed\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_STR_ERR)
+-		dev_warn(port->dev, "Streaming error\n");
++		dev_warn(dev, "Streaming error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_HOT_RESET)
+-		dev_info(port->dev, "Hot reset\n");
++		dev_info(dev, "Hot reset\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_CFG_TIMEOUT)
+-		dev_warn(port->dev, "ECAM access timeout\n");
++		dev_warn(dev, "ECAM access timeout\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_CORRECTABLE) {
+-		dev_warn(port->dev, "Correctable error message\n");
++		dev_warn(dev, "Correctable error message\n");
+ 		xilinx_pcie_clear_err_interrupts(port);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_NONFATAL) {
+-		dev_warn(port->dev, "Non fatal error message\n");
++		dev_warn(dev, "Non fatal error message\n");
+ 		xilinx_pcie_clear_err_interrupts(port);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_FATAL) {
+-		dev_warn(port->dev, "Fatal error message\n");
++		dev_warn(dev, "Fatal error message\n");
+ 		xilinx_pcie_clear_err_interrupts(port);
+ 	}
+ 
+@@ -429,7 +431,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 
+ 		/* Check whether interrupt valid */
+ 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
++			dev_warn(dev, "RP Intr FIFO1 read error\n");
+ 			goto error;
+ 		}
+ 
+@@ -451,7 +453,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
+ 
+ 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
++			dev_warn(dev, "RP Intr FIFO1 read error\n");
+ 			goto error;
+ 		}
+ 
+@@ -471,31 +473,31 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+-		dev_warn(port->dev, "Slave unsupported request\n");
++		dev_warn(dev, "Slave unsupported request\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNEXP)
+-		dev_warn(port->dev, "Slave unexpected completion\n");
++		dev_warn(dev, "Slave unexpected completion\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_COMPL)
+-		dev_warn(port->dev, "Slave completion timeout\n");
++		dev_warn(dev, "Slave completion timeout\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_ERRP)
+-		dev_warn(port->dev, "Slave Error Poison\n");
++		dev_warn(dev, "Slave Error Poison\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_CMPABT)
+-		dev_warn(port->dev, "Slave Completer Abort\n");
++		dev_warn(dev, "Slave Completer Abort\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_ILLBUR)
+-		dev_warn(port->dev, "Slave Illegal Burst\n");
++		dev_warn(dev, "Slave Illegal Burst\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_DECERR)
+-		dev_warn(port->dev, "Master decode error\n");
++		dev_warn(dev, "Master decode error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_SLVERR)
+-		dev_warn(port->dev, "Master slave error\n");
++		dev_warn(dev, "Master slave error\n");
+ 
+ 	if (status & XILINX_PCIE_INTR_MST_ERRP)
+-		dev_warn(port->dev, "Master error poison\n");
++		dev_warn(dev, "Master error poison\n");
+ 
+ error:
+ 	/* Clear the Interrupt Decode register */
+@@ -554,10 +556,12 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+  */
+ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+ {
++	struct device *dev = port->dev;
++
+ 	if (xilinx_pcie_link_is_up(port))
+-		dev_info(port->dev, "PCIe Link is UP\n");
++		dev_info(dev, "PCIe Link is UP\n");
+ 	else
+-		dev_info(port->dev, "PCIe Link is DOWN\n");
++		dev_info(dev, "PCIe Link is DOWN\n");
+ 
+ 	/* Disable all interrupts */
+ 	pcie_write(port, ~XILINX_PCIE_IDR_ALL_MASK,
+@@ -627,8 +631,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+  */
+ static int xilinx_pcie_probe(struct platform_device *pdev)
+ {
+-	struct xilinx_pcie_port *port;
+ 	struct device *dev = &pdev->dev;
++	struct xilinx_pcie_port *port;
+ 	struct pci_bus *bus;
+ 	int err;
+ 	resource_size_t iobase = 0;
+@@ -668,15 +672,14 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		goto error;
+ 
+-	bus = pci_create_root_bus(&pdev->dev, 0,
+-				  &xilinx_pcie_ops, port, &res);
++	bus = pci_create_root_bus(dev, 0, &xilinx_pcie_ops, port, &res);
+ 	if (!bus) {
+ 		err = -ENOMEM;
+ 		goto error;
+ 	}
+ 
+ #ifdef CONFIG_PCI_MSI
+-	xilinx_pcie_msi_chip.dev = port->dev;
++	xilinx_pcie_msi_chip.dev = dev;
+ 	bus->msi = &xilinx_pcie_msi_chip;
+ #endif
+ 	pci_scan_child_bus(bus);
+
