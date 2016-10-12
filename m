@@ -1,41 +1,40 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Fri, 7 Oct 2016 13:45:49 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI/VMD: Use the more reliable method for setting
- the AER
-Message-ID: <20161007174548.GA4746@localhost.localdomain>
-References: <1475861189-10794-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40776 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755039AbcJLNsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:14 -0400
+Subject: [PATCH v2 3/8] PCI: imx6: Removed unused struct imx6_pcie.mem_base
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:47:56 -0500
+Message-ID: <20161012134756.28919.52613.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475861189-10794-1-git-send-email-jonathan.derrick@intel.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 07, 2016 at 11:26:28AM -0600, Jon Derrick wrote:
-> Instead of relying on the domain being >= 0x10000, use the member of the
-> pci sysdata that identifies a VMD root port bus.
+Removed the unused struct imx6_pcie.mem_base member.  No functional change
+intended.
 
-'is_vmd' is only defined for x86. You'll need a '#define is_vmd' to
-false in some arch generic place.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |    1 -
+ 1 file changed, 1 deletion(-)
 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index e20e9e8..7af64b2 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -48,7 +48,6 @@ struct imx6_pcie {
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	enum imx6_pcie_variants variant;
+-	void __iomem		*mem_base;
+ 	u32			tx_deemph_gen1;
+ 	u32			tx_deemph_gen2_3p5db;
+ 	u32			tx_deemph_gen2_6db;
 
-> ---
->  drivers/pci/quirks.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index edc7f96..713035f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4438,8 +4438,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
->   */
->  static void quirk_no_aersid(struct pci_dev *pdev)
->  {
-> -	/* VMD Domain */
-> -	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
-> +	if (is_vmd(pdev->bus))
->  		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
