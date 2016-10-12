@@ -1,45 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60627 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.136]:60778 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965005AbcJQT3A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Oct 2016 15:29:00 -0400
-Date: Mon, 17 Oct 2016 21:28:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Emmanuel Benisty <benisty.e@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, tj@kernel.org,
-        linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: use pci_alloc_irq_vectors issues
-Message-ID: <20161017192858.GA25429@lst.de>
-References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com> <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com> <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com> <20161017103442.GA12240@lst.de> <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com> <20161017120234.GA14105@lst.de> <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com>
+        id S1753068AbcJLQG0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:06:26 -0400
+Date: Wed, 12 Oct 2016 11:06:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] PCI: keystone: Cleanups
+Message-ID: <20161012160622.GQ4308@localhost>
+References: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com>
+In-Reply-To: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Emmanuel,
+On Wed, Oct 12, 2016 at 08:53:00AM -0500, Bjorn Helgaas wrote:
+>   - Add local "dev" pointers to reduce repetition of things like
+>     "&pdev->dev".
+> 
+>   - Use generic DesignWare accessors when possible.
+> 
+>   - Pass device-specific struct instead of register addresses to IRQ and
+>     DBI functions.
+> 
+>   - Add app register accessors to encapsulate usage of va_app_base.
+> 
+> Nothing here should change the behavior of the driver.
+> 
+> Changes from v1:
+>   Added local struct device pointers.
+>   I dropped the following patch because it was a lot of churn for
+>   questionable benefit:
+>     PCI: keystone: Name private struct pointer "keystone" consistently
+> 
+> ---
+> 
+> Bjorn Helgaas (6):
+>       PCI: keystone: Add local struct device pointers
+>       PCI: keystone: Use generic DesignWare accessors
+>       PCI: keystone: Pass keystone_pcie, not address, to IRQ functions
+>       PCI: keystone: Pass keystone_pcie, not va_app_base, to DBI functions
+>       PCI: keystone: Add app register accessors
+>       PCI: keystone: Reorder struct keystone_pcie
+> 
+> 
+>  drivers/pci/host/pci-keystone-dw.c |  123 ++++++++++++++++++++----------------
+>  drivers/pci/host/pci-keystone.c    |   28 ++++----
+>  drivers/pci/host/pci-keystone.h    |    9 +--
+>  3 files changed, 88 insertions(+), 72 deletions(-)
 
-I think I have an idea now - we are accidentally hitting the per-port
-MSI vector case because your SSD only has one AHCI "port".  Can you
-try the below patch:
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ba5f11c..3c2f92b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1413,6 +1413,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
- 		return -ENODEV;
- 
-+	if (n_ports > 1) {
- 	/*
- 	 * If number of MSIs is less than number of ports then Sharing Last
- 	 * Message mode could be enforced. In this case assume that advantage
-@@ -1434,6 +1435,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
- 		pci_free_irq_vectors(pdev);
- 	}
-+	}
- 
- 	/*
- 	 * -ENOSPC indicated we don't have enough vectors.  Don't bother trying
+I applied these to pci/host-keystone for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
