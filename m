@@ -1,88 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54766 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:59932 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941018AbcJGQgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:36:33 -0400
-Subject: [PATCH 7/8] PCI: exynos: Swap order of exynos_blk_writel() reg/val
- arguments
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>
+        id S932266AbcJLNS1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:18:27 -0400
+Subject: [PATCH v2 05/10] PCI: designware: Export dw_pcie_readl_rc(),
+ dw_pcie_writel_rc()
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:36:24 -0500
-Message-ID: <20161007163623.25314.27460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163526.25314.29033.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:18:23 -0500
+Message-ID: <20161012131823.26443.73009.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Swap order of exynos_blk_writel() arguments to match the "dev, pos, val"
-order used by pci_write_config_word() and other drivers.  No functional
-change intended.
+Export dw_pcie_readl_rc() and dw_pcie_writel_rc().  Many other drivers can
+use these instead of implementing their own versions.  No functional change
+intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-exynos.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/pci/host/pcie-designware.c |    4 ++--
+ drivers/pci/host/pcie-designware.h |    2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 463cbd6..4fb3ce7 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -127,7 +127,7 @@ static u32 exynos_blk_readl(struct exynos_pcie *exynos, u32 reg)
- 	return readl(exynos->block_base + reg);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index f91c7b3..b8feea4 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -141,7 +141,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ 	return PCIBIOS_SUCCESSFUL;
  }
  
--static void exynos_blk_writel(struct exynos_pcie *exynos, u32 val, u32 reg)
-+static void exynos_blk_writel(struct exynos_pcie *exynos, u32 reg, u32 val)
+-static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
++u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
  {
- 	writel(val, exynos->block_base + reg);
- }
-@@ -186,23 +186,23 @@ static void exynos_pcie_deassert_core_reset(struct exynos_pcie *exynos)
- 	exynos_elb_writel(exynos, PCIE_NONSTICKY_RESET, 1);
- 	exynos_elb_writel(exynos, PCIE_APP_INIT_RESET, 1);
- 	exynos_elb_writel(exynos, PCIE_APP_INIT_RESET, 0);
--	exynos_blk_writel(exynos, 1, PCIE_PHY_MAC_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_MAC_RESET, 1);
+ 	if (pp->ops->readl_rc)
+ 		return pp->ops->readl_rc(pp, reg);
+@@ -149,7 +149,7 @@ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ 	return readl(pp->dbi_base + reg);
  }
  
- static void exynos_pcie_assert_phy_reset(struct exynos_pcie *exynos)
+-static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
++void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
  {
--	exynos_blk_writel(exynos, 0, PCIE_PHY_MAC_RESET);
--	exynos_blk_writel(exynos, 1, PCIE_PHY_GLOBAL_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_MAC_RESET, 0);
-+	exynos_blk_writel(exynos, PCIE_PHY_GLOBAL_RESET, 1);
- }
+ 	if (pp->ops->writel_rc)
+ 		pp->ops->writel_rc(pp, reg, val);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index c413848..a567ea2 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -72,6 +72,8 @@ struct pcie_host_ops {
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
+ };
  
- static void exynos_pcie_deassert_phy_reset(struct exynos_pcie *exynos)
- {
--	exynos_blk_writel(exynos, 0, PCIE_PHY_GLOBAL_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_GLOBAL_RESET, 0);
- 	exynos_elb_writel(exynos, PCIE_PWR_RESET, 1);
--	exynos_blk_writel(exynos, 0, PCIE_PHY_COMMON_RESET);
--	exynos_blk_writel(exynos, 0, PCIE_PHY_CMN_REG);
--	exynos_blk_writel(exynos, 0, PCIE_PHY_TRSVREG_RESET);
--	exynos_blk_writel(exynos, 0, PCIE_PHY_TRSV_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_COMMON_RESET, 0);
-+	exynos_blk_writel(exynos, PCIE_PHY_CMN_REG, 0);
-+	exynos_blk_writel(exynos, PCIE_PHY_TRSVREG_RESET, 0);
-+	exynos_blk_writel(exynos, PCIE_PHY_TRSV_RESET, 0);
- }
- 
- static void exynos_pcie_power_on_phy(struct exynos_pcie *exynos)
-@@ -319,9 +319,9 @@ static int exynos_pcie_establish_link(struct exynos_pcie *exynos)
- 	exynos_pcie_init_phy(exynos);
- 
- 	/* pulse for common reset */
--	exynos_blk_writel(exynos, 1, PCIE_PHY_COMMON_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_COMMON_RESET, 1);
- 	udelay(500);
--	exynos_blk_writel(exynos, 0, PCIE_PHY_COMMON_RESET);
-+	exynos_blk_writel(exynos, PCIE_PHY_COMMON_RESET, 0);
- 
- 	exynos_pcie_deassert_core_reset(exynos);
- 	dw_pcie_setup_rc(pp);
++u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg);
++void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val);
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
 
