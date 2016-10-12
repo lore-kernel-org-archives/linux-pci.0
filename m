@@ -1,51 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V4 1/3] ACPI, PCI, IRQ: assign ISA IRQ directly during
- early boot stages
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
- <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
- <CAJZ5v0jm-n8hbS_GFUY4EVKHiRaNPrkNcWDY+6c3SRxWhy4VAg@mail.gmail.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        Ondrej Zary <linux@rainbow-software.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Jon Masters <jcm@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <22ad2e6b-e4da-1eba-0d2c-b7b86b2a4dbc@codeaurora.org>
-Date: Sun, 23 Oct 2016 23:48:32 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51826 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932981AbcJLMxb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:53:31 -0400
+Subject: [PATCH v2 2/5] PCI: iproc: Set drvdata at end of probe function
+To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Date: Wed, 12 Oct 2016 07:53:23 -0500
+Message-ID: <20161012125323.24076.85229.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0jm-n8hbS_GFUY4EVKHiRaNPrkNcWDY+6c3SRxWhy4VAg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/20/2016 5:39 PM, Rafael J. Wysocki wrote:
->> @@ -871,7 +871,7 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->> >  void acpi_penalize_isa_irq(int irq, int active)
->> >  {
->> >         if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
->> > -               acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> > +               acpi_isa_irq_penalty[irq] = acpi_isa_irq_penalty[irq] +
-> This looks slightly odd.  What about
-> 
-> +               acpi_isa_irq_penalty[irq] +=
-> 
->> >                   (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->> >  }
+Set the drvdata pointer at the end of probe function for consistency with
+other drivers.  We don't need the drvdata until after the probe completes,
+and we don't need it at all if the probe fails.  No functional change
+intended.
 
-Makes sense.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-iproc-bcma.c     |    2 +-
+ drivers/pci/host/pcie-iproc-platform.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
+index 94d1101..ec6edaf 100644
+--- a/drivers/pci/host/pcie-iproc-bcma.c
++++ b/drivers/pci/host/pcie-iproc-bcma.c
+@@ -53,7 +53,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+ 		return -ENOMEM;
+ 
+ 	pcie->dev = dev;
+-	bcma_set_drvdata(bdev, pcie);
+ 
+ 	pcie->base = bdev->io_addr;
+ 	pcie->base_addr = bdev->addr;
+@@ -72,6 +71,7 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+ 
+ 	pci_free_resource_list(&res);
+ 
++	bcma_set_drvdata(bdev, pcie);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 6030dc1..a3de087 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -59,7 +59,6 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 
+ 	pcie->dev = dev;
+ 	pcie->type = (enum iproc_pcie_type)of_id->data;
+-	platform_set_drvdata(pdev, pcie);
+ 
+ 	ret = of_address_to_resource(np, 0, &reg);
+ 	if (ret < 0) {
+@@ -124,6 +123,7 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 
+ 	pci_free_resource_list(&res);
+ 
++	platform_set_drvdata(pdev, pcie);
+ 	return ret;
+ }
+ 
+
