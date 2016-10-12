@@ -1,70 +1,44 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Thu, 20 Oct 2016 12:01:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Mathias Nyman <mathias.nyman@linux.intel.com>,
-	Pierre de Villemereuil <flyos@mailoo.org>,
-	Oliver Neukum <oneukum@suse.com>,
-	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-Message-ID: <20161020100146.GA3319@wunner.de>
-References: <20161008103140.GA7725@wunner.de>
- <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43028 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754964AbcJLN6q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:58:46 -0400
+Subject: [PATCH v2 7/7] PCI: layerscape: Reorder struct ls_pcie
+To: Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Wed, 12 Oct 2016 08:58:18 -0500
+Message-ID: <20161012135818.29815.61642.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 11, 2016 at 11:18:28AM -0400, Alan Stern wrote:
-> On Sat, 8 Oct 2016, Lukas Wunner wrote:
-> > The PCI core already calls pm_runtime_get_sync() before invoking the
-> > ->probe hook of a driver (see local_pci_probe()).  Drivers need to
-> > explicitly release a runtime ref to allow their device to suspend.
-> > For xhci-pci, this seems to happen in usb_hcd_pci_probe():
-> > 
-> > 	if (pci_dev_run_wake(dev))
-> > 		pm_runtime_put_noidle(&dev->dev);
-> > 
-> > So you could either modify the if-condition if you want to change the
-> > behaviour for XHCI devices only, or if you want to change it in general,
-> > add something like this to pci_dev_run_wake():
-> > 
-> > 	/* PME capable in principle, but not from the intended sleep state */
-> > 	if (dev->pme_support && !pci_pme_capable(dev, pci_target_state(dev)))
-> > 		return false;
-> > 
-> > I've briefly looked over the callers of pci_dev_run_wake() and the above
-> > seems safe but you should double-check them.
-> 
-> That seems like a good suggestion.  The patch is below; Pierre, can you 
-> test it?  This should remove the need to set the USB autosuspend module 
-> parameter to -1.
+Reorder struct ls_pcie to put generic fields first.  No functional change
+intended.
 
-Alan, how do we proceed with this?  Are you going to submit a patch
-(with commit message, tags and all) to linux-pci@ or would you prefer
-me to do that?  I just went over the callers of pci_dev_run_wake()
-once more and the patch still looks safe to me.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-layerscape.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 3a86c1a..2cb7315 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -45,9 +45,9 @@ struct ls_pcie_drvdata {
+ };
+ 
+ struct ls_pcie {
++	struct pcie_port pp;		/* pp.dbi_base is DT regs */
+ 	void __iomem *lut;
+ 	struct regmap *scfg;
+-	struct pcie_port pp;
+ 	const struct ls_pcie_drvdata *drvdata;
+ 	int index;
+ };
 
-Lukas
-
-> 
-> Index: usb-4.x/drivers/pci/pci.c
-> ===================================================================
-> --- usb-4.x.orig/drivers/pci/pci.c
-> +++ usb-4.x/drivers/pci/pci.c
-> @@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
->  	if (!dev->pme_support)
->  		return false;
->  
-> +	/* PME-capable in principle, but not from the intended sleep state */
-> +	if (!pci_pme_capable(dev, pci_target_state(dev)))
-> +		return false;
-> +
->  	while (bus->parent) {
->  		struct pci_dev *bridge = bus->self;
->  
