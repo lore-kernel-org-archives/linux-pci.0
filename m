@@ -1,61 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55796 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:57764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964789AbcJGQiF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:38:05 -0400
-Subject: [PATCH 09/11] PCI: hisi: Include register block base in
- PCIE_SYS_STATE4 register address
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+        id S1755325AbcJLNM2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:12:28 -0400
+Subject: [PATCH v2 3/5] PCI: xilinx: Removed unused xilinx_pcie_assign_msi()
+ argument
+To: Michal Simek <michal.simek@xilinx.com>,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:38:01 -0500
-Message-ID: <20161007163801.25540.80597.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163654.25540.29741.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Wed, 12 Oct 2016 08:10:55 -0500
+Message-ID: <20161012131055.25793.89053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include the PCIE_HIP06_CTRL_OFF block base in the PCIE_SYS_STATE4 register
-address so reads of PCIE_SYS_STATE4 don't have to mention both.  No
-functional change intended.
+xilinx_pcie_assign_msi() doesn't use the struct xilinx_pcie_port pointer
+passed to it, so remove the argument completely.  No functional change
+intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-hisi.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/pci/host/pcie-xilinx.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 707dafd..405a7f7 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -22,11 +22,11 @@
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 8a0eb03..c8616fa 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -229,11 +229,10 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
  
- #include "pcie-designware.h"
- 
--#define PCIE_LTSSM_LINKUP_STATE				0x11
--#define PCIE_LTSSM_STATE_MASK				0x3F
--#define PCIE_SUBCTRL_SYS_STATE4_REG			0x6818
--#define PCIE_SYS_STATE4						0x31c
--#define PCIE_HIP06_CTRL_OFF					0x1000
-+#define PCIE_SUBCTRL_SYS_STATE4_REG		0x6818
-+#define PCIE_HIP06_CTRL_OFF			0x1000
-+#define PCIE_SYS_STATE4				(PCIE_HIP06_CTRL_OFF + 0x31c)
-+#define PCIE_LTSSM_LINKUP_STATE			0x11
-+#define PCIE_LTSSM_STATE_MASK			0x3F
- 
- #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
- 
-@@ -104,8 +104,7 @@ static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi)
+ /**
+  * xilinx_pcie_assign_msi - Allocate MSI number
+- * @port: PCIe port structure
+  *
+  * Return: A valid IRQ on success and error value on failure.
+  */
+-static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
++static int xilinx_pcie_assign_msi(void)
  {
- 	u32 val;
+ 	int pos;
  
--	val = dw_pcie_readl_rc(&hisi->pp, PCIE_HIP06_CTRL_OFF + PCIE_SYS_STATE4);
--
-+	val = dw_pcie_readl_rc(&hisi->pp, PCIE_SYS_STATE4);
- 	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
- }
+@@ -276,7 +275,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+ 	struct msi_msg msg;
+ 	phys_addr_t msg_addr;
+ 
+-	hwirq = xilinx_pcie_assign_msi(port);
++	hwirq = xilinx_pcie_assign_msi();
+ 	if (hwirq < 0)
+ 		return hwirq;
  
 
