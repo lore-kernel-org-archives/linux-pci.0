@@ -1,115 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
- <bhelgaas@google.com>, <mark.rutland@arm.com>, <arnd@arndb.de>,
- <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH V4 0/3] ARM64 LPC: legacy ISA I/O support
-Date: Thu, 20 Oct 2016 17:15:37 +0800
-Message-ID: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932282AbcJLNse (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:34 -0400
+Subject: [PATCH v2 7/8] PCI: imx6: Reorder struct imx6_pcie
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:48:29 -0500
+Message-ID: <20161012134829.28919.85694.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, linux-pci@vger.kernel.org,
- john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-serial@vger.kernel.org,
- benh@kernel.crashing.org, zourongrong@gmail.com, kantyzc@163.com,
- zhichang.yuan02@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch supports the IPMI-bt device attached to the Low-Pin-Count interface
-implemented on Hisilicon Hip06 SoC.
-	                -----------
-			| LPC host|
-	                |         |
-	                -----------
-	                     |
- 	        _____________V_______________LPC
-                  |			  |
-                  V	                  V
-			             ------------
-			             |  BT(ipmi)|
-			             ------------
+Reorder struct imx6_pcie to put generic fields first.  No functional change
+intended.
 
-When master accesses those periperals beneath the Hip06 LPC, a specific LPC
-driver is needed to make LPC host generate the standard LPC I/O cycles with
-the target periperals'I/O port addresses. But on curent arm64 world, there is
-no real I/O accesses. All the I/O operations through in/out pair are based on
-MMIO which is not satisfied the I/O mechanism on Hip06 LPC.
-To solve this issue and keep the relevant existing peripherals' driver
-unchanged, this patch set redefines the in/out pair to support both the IO
-operations for Hip06 LPC and the original MMIO. The way specific to Hip06 is
-named as indirect-IO in this patchset.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes from V3:
-  - UART support deferred to a separate patchset; This patchset only support
-  ipmi device under LPC;
-  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
-  from PCI/PCIE PIO space;
-  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
-  added a new fixup function, of_isa_indirect_io(), to get the I/O address
-  directly from LPC dts configurations;
-  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
-  - Decouple the header file dependency on the gerenic io.h by defining in/out
-  as normal functions in c file;
-  - removed unused macro definitions in the LPC driver;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index bedd436..79becd7 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -39,13 +39,13 @@ enum imx6_pcie_variants {
+ };
+ 
+ struct imx6_pcie {
++	struct pcie_port	pp;	/* pp.dbi_base is DT 0th resource */
+ 	int			reset_gpio;
+ 	bool			gpio_active_high;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+-	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	enum imx6_pcie_variants variant;
+ 	u32			tx_deemph_gen1;
 
-Changes from V2:
-  - Support the PIO retrieval from the linux PIO generated by
-  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
-  - Support the flat-tree earlycon;
-  - Some revises based on Arnd's remarks;
-  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
-  from non-ZERO;
-
-Changes from V1:
-  - Support the ACPI LPC device;
-  - Optimize the dts LPC driver in ISA compatible mode;
-  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
-  IO ranges;
-  - Support the LPC uart and relevant earlycon;
-
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-
-zhichang.yuan (3):
-  ARM64 LPC: Indirect ISA port IO introduced
-  ARM64 LPC: Add missing range exception for special ISA
-  ARM64 LPC: LPC driver implementation on Hip06
-
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  31 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/Kconfig                                 |   6 +
- arch/arm64/include/asm/extio.h                     |  94 ++++
- arch/arm64/include/asm/io.h                        |  36 ++
- arch/arm64/kernel/Makefile                         |   1 +
- arch/arm64/kernel/extio.c                          |  53 +++
- drivers/bus/Kconfig                                |   8 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 501 +++++++++++++++++++++
- drivers/of/address.c                               |  47 +-
- drivers/pci/pci.c                                  |   6 +-
- include/linux/of_address.h                         |  17 +
- 13 files changed, 804 insertions(+), 5 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 arch/arm64/include/asm/extio.h
- create mode 100644 arch/arm64/kernel/extio.c
- create mode 100644 drivers/bus/hisi_lpc.c
-
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
