@@ -1,176 +1,295 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gloria.sntech.de ([95.129.55.99]:51232 "EHLO gloria.sntech.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751441AbcJUH4z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 03:56:55 -0400
-From: Heiko Stuebner <heiko@sntech.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: rockchip: Add three new resets as required properties
-Date: Fri, 21 Oct 2016 09:56:26 +0200
-Message-ID: <2683489.TXdAHLhj84@phil>
-In-Reply-To: <1477017836-19317-2-git-send-email-shawn.lin@rock-chips.com>
-References: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com> <1477017836-19317-2-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size
+ to 16"
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+ <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
+ <20161012221357.GB15116@localhost>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+ linux-pci@vger.kernel.org, agross@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ wim@djo.tudelft.nl, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
+Date: Wed, 12 Oct 2016 18:46:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161012221357.GB15116@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, 21. Oktober 2016, 10:43:55 CEST schrieb Shawn Lin:
-> pm_rst, aclk_rst, pclk_rst was controlled by rom code so the
-> software wasn't needed to control it again in theory. But it
-> didn't work properly, so we do need to do it again and add a
-> enough delay between the assert of pm_rst and the deassert of
-> pm_rst. The Soc intergrated with this controller, rk3399 is still
-> under MP test internally, so the backward compatibility won't be
-> a big deal.
+Hi Bjorn,
+
+On 10/12/2016 6:13 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> I have to apologize because I haven't followed all the discussion and
+> now I'm trying to figure it out from the patches and changelogs.  But
+> I guess that's not all bad, because future interested folks *should*
+> be able to figure things out from that :)
 
-looks good from my side.
-Reviewed-by: Heiko Stuebner <heiko@sntech.de>
+Sure, np. I figured you are busy with the new baseline. Then, I saw a
+series of patches coming from you.
 
-As Shawn wrote the soc in question (first one at all with a pcie controller) 
-has not yet found its way into any device, so no existing one can abviously be 
-affected by this change. So doing it this way will hopefully be ok.
-
-Obviously it would probably be nice, to have this in 4.9-rc to keep the gap 
-small.
-
-
-Heiko
-
->  .../devicetree/bindings/pci/rockchip-pcie.txt      | 11 ++--
->  drivers/pci/host/pcie-rockchip.c                   | 62
-> ++++++++++++++++++++++ 2 files changed, 70 insertions(+), 3 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt index
-> ba67b39..71aeda1 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -26,13 +26,16 @@ Required properties:
->  	- "sys"
->  	- "legacy"
->  	- "client"
-> -- resets: Must contain five entries for each entry in reset-names.
-> +- resets: Must contain seven entries for each entry in reset-names.
->  	   See ../reset/reset.txt for details.
->  - reset-names: Must include the following names
->  	- "core"
->  	- "mgmt"
->  	- "mgmt-sticky"
->  	- "pipe"
-> +	- "pm"
-> +	- "aclk"
-> +	- "pclk"
->  - pinctrl-names : The pin control state names
->  - pinctrl-0: The "default" pinctrl state
->  - #interrupt-cells: specifies the number of cells needed to encode an
-> @@ -86,8 +89,10 @@ pcie0: pcie@f8000000 {
->  	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
->  	reg-names = "axi-base", "apb-base";
->  	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-> -		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-> -	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-> +		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-> +		      "pm", "pclk", "aclk";
->  	phys = <&pcie_phy>;
->  	phy-names = "pcie-phy";
->  	pinctrl-names = "default";
-> diff --git a/drivers/pci/host/pcie-rockchip.c
-> b/drivers/pci/host/pcie-rockchip.c index e0b22da..e04f69b 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -190,6 +190,9 @@ struct rockchip_pcie {
->  	struct	reset_control *mgmt_rst;
->  	struct	reset_control *mgmt_sticky_rst;
->  	struct	reset_control *pipe_rst;
-> +	struct	reset_control *pm_rst;
-> +	struct	reset_control *aclk_rst;
-> +	struct	reset_control *pclk_rst;
->  	struct	clk *aclk_pcie;
->  	struct	clk *aclk_perf_pcie;
->  	struct	clk *hclk_pcie;
-> @@ -408,6 +411,44 @@ static int rockchip_pcie_init_port(struct rockchip_pcie
-> *rockchip)
+> On Tue, Oct 04, 2016 at 05:15:17PM -0400, Sinan Kaya wrote:
+>> This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
+>> size to 16").
+>>
+>> The code maintains a fixed size array for IRQ penalties. The array
+>> gets updated by external calls such as acpi_penalize_sci_irq,
+>> acpi_penalize_isa_irq to reflect the actual interrupt usage of the
+>> system. Since the IRQ distribution is platform specific, this is
+>> not known ahead of time. The IRQs get updated based on the SCI
+>> interrupt number BIOS has chosen or the ISA IRQs that were assigned
+>> to existing peripherals.
+>>
+>> By the time ACPI gets initialized, this code tries to determine an
+>> IRQ number based on penalty values in this array. It will try to locate
+>> the IRQ with the least penalty assignment so that interrupt sharing is
+>> avoided if possible.
+>>
+>> A couple of notes about the external APIs:
+>> 1. These API can be called before the ACPI is started. Therefore, one
+>> cannot assume that the PCI link objects are initialized for calculating
+>> penalties.
 > 
->  	gpiod_set_value(rockchip->ep_gpio, 0);
+> Which API are you thinking about here?  pcibios_penalize_isa_irq() is
+> called by ACPI and PNP, which should both be after ACPI is started.
+
+Correct, I was talking about acpi_penalize_sci_irq function here.
+
 > 
-> +	err = reset_control_assert(rockchip->aclk_rst);
-> +	if (err) {
-> +		dev_err(dev, "assert aclk_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(rockchip->pclk_rst);
-> +	if (err) {
-> +		dev_err(dev, "assert pclk_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(rockchip->pm_rst);
-> +	if (err) {
-> +		dev_err(dev, "assert pm_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	udelay(10);
-> +
-> +	err = reset_control_deassert(rockchip->pm_rst);
-> +	if (err) {
-> +		dev_err(dev, "deassert pm_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(rockchip->aclk_rst);
-> +	if (err) {
-> +		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(rockchip->pclk_rst);
-> +	if (err) {
-> +		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
->  	err = phy_init(rockchip->phy);
->  	if (err < 0) {
->  		dev_err(dev, "fail to init phy, err %d\n", err);
-> @@ -781,6 +822,27 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie
-> *rockchip) return PTR_ERR(rockchip->pipe_rst);
->  	}
+> My guess is you're thinking about acpi_penalize_sci_irq() (added back
+> later in this series), which is called here, which is definitely
+> before ACPI objects are available:
 > 
-> +	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
-> +	if (IS_ERR(rockchip->pm_rst)) {
-> +		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing pm reset property in node\n");
-> +		return PTR_ERR(rockchip->pm_rst);
-> +	}
-> +
-> +	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
-> +	if (IS_ERR(rockchip->pclk_rst)) {
-> +		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing pclk reset property in node\n");
-> +		return PTR_ERR(rockchip->pclk_rst);
-> +	}
-> +
-> +	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
-> +	if (IS_ERR(rockchip->aclk_rst)) {
-> +		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing aclk reset property in node\n");
-> +		return PTR_ERR(rockchip->aclk_rst);
-> +	}
-> +
->  	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
->  	if (IS_ERR(rockchip->ep_gpio)) {
->  		dev_err(dev, "missing ep-gpios property in node\n");
+>   setup_arch
+>     acpi_boot_init
+>       acpi_process_madt
+> 	acpi_parse_madt_ioapic_entries
+> 	  acpi_table_parse_madt
+> 	    acpi_parse_int_src_ovr
+> 	      acpi_sci_ioapic_setup
+> 	        acpi_penalize_sci_irq       # <---
+> 
+>> 2. The polarity and trigger information passed via the
+>> acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
+>> is reporting as the call might have been placed before the IRQ is
+>> registered by the interrupt subsystem.
+>>
+>> The previous change was in the direction to remove these external API and
+>> try to calculate the penalties at runtime for the ISA path as well. This
+>> didn't work out well with the existing platforms.
+>>
+>> Restoring the old behavior for IRQ < 256 and the new behavior will remain
+>> effective for IRQ >= 256.
+> 
+> IIRC, this all started because we needed more than 256 IRQs, but we
+> didn't know how to size a static table to be large enough without
+> being wasteful.
+
+Correct. We only need 1024 for ARM/ARM64. But, we wanted to remove this
+restriction altogether to be arch proof. One of my earlier proposal was
+to just resize the array to 1024. I was asked if I was wasting resources
+by resizing to 1024.
+
+> 
+> Prior to 5c5087a55390, we tracked penalties for IRQs 0-255.  After it,
+> we only tracked penalties for IRQs 0-15.  I think this patch basically
+> makes it so we track 0-255 again.
+
+Yes, we went back to 256 interrupts after the revert. 
+
+> 
+> *This* patch only increases the range for pcibios_penalize_isa_irq()
+> (and command-line hints, but hopefully nobody cares about those).  A
+> subsequent patch increases it for SCI as well.
+> 
+> The name "ACPI_MAX_IRQS" is now slightly misleading (because we do
+> support more than 256 IRQs) and the 256 value is sort of an
+> unjustified magic number.  16 is explainable as the number of ISA
+> IRQs, but I don't know what 256 is based on (other than historical
+> practice, of course).  ACPI device IRQs can be much larger, and I
+> think the SCI IRQ can be, too (the FADT SCI_INT field is 16 bits).
+> 
+> Can you tie this back to the specific problem on the broken machine
+> somehow?  Do we need a penalty for an IRQ in the 16-255 range?
+
+The problem on the broken machine was SCI IRQ and PCI IRQ happened to be
+same. It was IRQ 11. When SCI IRQ heavily penalized IRQ 11 due to
+wrong interrupt type detection, PCI IRQs no longer worked as this line
+prohibits using the IRQ.
 
 
+	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
+		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+			    "Try pci=noacpi or acpi=off\n",
+			    acpi_device_name(link->device),
+			    acpi_device_bid(link->device));
+		return -ENODEV;
+	} 
+
+
+> 
+> In a subsequent patch, I see something about the IRQ type not being
+> updated at the right time, but I can't quite connect the dots.
+
+The reason why PCI IRQ 11 didn't work is above. 
+
+When we detected a problem with the SCI IRQ type, we were penalizing
+the IRQ below.
+
+static int acpi_irq_get_penalty(int irq) 
+{
+...
+	if (irq == acpi_gbl_FADT.sci_interrupt) {
+		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+
+		if (type != IRQ_TYPE_LEVEL_LOW)
+			penalty += PIRQ_PENALTY_ISA_ALWAYS;	<---- here
+		else
+			penalty += PIRQ_PENALTY_PCI_USING;
+	} 
+
+
+
+> 
+> To be clear, I'm not asking for any changes in the patch; I'm just
+> trying to understand what's going on.
+
+Sure, I hope this makes it clear now.
+
+> 
+>> Tested-by: Jonathan Liu <net147@gmail.com>
+>> Tested-by: Ondrej Zary <linux@rainbow-software.org>
+>> Link: http://www.gossamer-threads.com/lists/linux/kernel/2537016#2537016
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
+>>  1 file changed, 18 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+>> index c983bf7..f3792f4 100644
+>> --- a/drivers/acpi/pci_link.c
+>> +++ b/drivers/acpi/pci_link.c
+>> @@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>>   * enabled system.
+>>   */
+>>  
+>> +#define ACPI_MAX_IRQS		256
+>>  #define ACPI_MAX_ISA_IRQS	16
+>>  
+>>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+>> @@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>>  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
+>>  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
+>>  
+>> -static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
+>> +static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+>>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
+>>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
+>>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
+>> @@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
+>>  	}
+>>  
+>>  	if (irq < ACPI_MAX_ISA_IRQS)
+>> -		return penalty + acpi_isa_irq_penalty[irq];
+>> +		return penalty + acpi_irq_penalty[irq];
+>>  
+>>  	penalty += acpi_irq_pci_sharing_penalty(irq);
+>>  	return penalty;
+>> @@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
+>>  
+>>  			for (i = 0; i < link->irq.possible_count; i++) {
+>>  				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
+>> -					acpi_isa_irq_penalty[link->irq.
+>> +					acpi_irq_penalty[link->irq.
+>>  							 possible[i]] +=
+>>  					    penalty;
+>>  			}
+>>  
+>>  		} else if (link->irq.active &&
+>> -				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
+>> -			acpi_isa_irq_penalty[link->irq.active] +=
+>> +				(link->irq.active < ACPI_MAX_IRQS)) {
+>> +			acpi_irq_penalty[link->irq.active] +=
+>>  			    PIRQ_PENALTY_PCI_POSSIBLE;
+>>  		}
+>>  	}
+>> @@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
+>>  }
+>>  
+>>  /*
+>> - * modify acpi_isa_irq_penalty[] from cmdline
+>> + * modify acpi_irq_penalty[] from cmdline
+>>   */
+>>  static int __init acpi_irq_penalty_update(char *str, int used)
+>>  {
+>> @@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>>  	for (i = 0; i < 16; i++) {
+>>  		int retval;
+>>  		int irq;
+>> -		int new_penalty;
+>>  
+>>  		retval = get_option(&str, &irq);
+>>  
+>>  		if (!retval)
+>>  			break;	/* no number found */
+>>  
+>> -		/* see if this is a ISA IRQ */
+>> -		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
+>> +		if (irq < 0)
+>> +			continue;
+>> +
+>> +		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
+>>  			continue;
+>>  
+>>  		if (used)
+>> -			new_penalty = acpi_irq_get_penalty(irq) +
+>> -					PIRQ_PENALTY_ISA_USED;
+>> +			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+>> +				PIRQ_PENALTY_ISA_USED;
+>>  		else
+>> -			new_penalty = 0;
+>> +			acpi_irq_penalty[irq] = 0;
+>>  
+>> -		acpi_isa_irq_penalty[irq] = new_penalty;
+>>  		if (retval != 2)	/* no next number */
+>>  			break;
+>>  	}
+>> @@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>>   */
+>>  void acpi_penalize_isa_irq(int irq, int active)
+>>  {
+>> -	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
+>> -		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+>> -		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
+>> +	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
+>> +		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+>> +		    (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
+>>  }
+>>  
+>>  bool acpi_isa_irq_available(int irq)
+>>  {
+>> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
+>> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+>>  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+>>  }
+>>  
+>> -- 
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
