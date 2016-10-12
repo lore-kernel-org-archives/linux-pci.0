@@ -1,53 +1,50 @@
-Return-Path: <marc.zyngier@arm.com>
-Return-Path: <marc.zyngier@arm.com>
-Date: Sat, 15 Oct 2016 14:14:01 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bjorn
- Helgaas <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>
-Subject: Re: Why MSI is limited to 32 interrupts maximum
-Message-ID: <20161015141401.70d95035@why.wild-wind.fr.eu.org>
-In-Reply-To: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v2 2/2] PCI: aardvark: Remove unused platform data
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Oct 2016 07:36:43 -0500
+Message-ID: <20161012123643.22186.96942.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012123001.22186.4053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012123001.22186.4053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 15 Oct 2016 12:37:55 +0000
-Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+The aardvark driver never uses the platform drvdata pointer, so don't
+bother setting it.  No functional change intended.
 
-Hi Bharat,
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-> Can anyone tell why MSI interrupts are limited to maximum 32
-> interrupts, even though we have 16bit message data register ?
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 16421d1..4fce494 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -926,7 +926,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pcie->pdev = pdev;
+-	platform_set_drvdata(pdev, pcie);
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	pcie->base = devm_ioremap_resource(dev, res);
 
-That's the very definition of the original PCI MSI: Up to 32
-consecutive interrupts per function, and a single doorbell address.
-MSI-X lifts that restriction and offers up to 2048 interrupts that do
-not have to be contiguous can target individual doorbells. Assuming
-your MSI controller advertises MSI-X support and that your devices do
-support it as well, you'll be able to enjoy those.
 
-> 
-> Regards,
-> Bharat
-> 
-> 
-> This email and any attachments are intended for the sole use of the
-> named recipient(s) and contain(s) confidential information that may
-> be proprietary, privileged or copyrighted under applicable law. If
-> you are not the intended recipient, do not read, copy, or forward
-> this email message or any attachments. Delete this email message and
-> any attachments immediately.
-> 
-
-Please fix your email not to carry such disclaimer (or use a private
-email address if you can't work around your company policy). Posting
-confidential information on a public mailing list feels a bit silly.
-
-Thanks,
-
-	M.
--- 
-Without deviation from the norm, progress is not possible.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
