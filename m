@@ -1,93 +1,74 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH 05/12] PCI: iproc: Update iProc PCIe DT binding
-Date: Mon, 24 Oct 2016 15:17:05 -0700
-Message-Id: <1477347432-17656-6-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
-References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42074 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755138AbcJLNxU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:53:20 -0400
+Subject: [PATCH v2 2/6] PCI: keystone: Use generic DesignWare accessors
+To: Murali Karicheri <m-karicheri2@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:53:16 -0500
+Message-ID: <20161012135316.29306.38656.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add new compatible string "brcm,iproc-pcie-paxc-v2" to the iProc
-PCIe device tree binding document. "brcm,iproc-pcie-paxc-v2" is for the
-second generation of the Broadcom iProc PCIe PAXC host controller
+The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces already add in
+pp->dbi_base, so use those instead of doing it ourselves in the keystone
+driver.  No functional change intended.
 
-Also updated the binding document with more detailed description of
-each compatible string and compatible SoCs
-
-Finally, added description of optional property "msi-map", for use with
-MSI controllers with sideband data
-
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 31 ++++++++++++++++------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+ drivers/pci/host/pci-keystone-dw.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 01b88f4..071bbc2 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -1,10 +1,15 @@
- * Broadcom iProc PCIe controller with the platform bus interface
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e2c04d1..ce97816 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -362,8 +362,8 @@ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
  
- Required properties:
--- compatible: Must be "brcm,iproc-pcie" for PAXB, or "brcm,iproc-pcie-paxc"
--  for PAXC.  PAXB-based root complex is used for external endpoint devices.
--  PAXC-based root complex is connected to emulated endpoint devices
--  internal to the ASIC
-+- compatible:
-+      "brcm,iproc-pcie" for the first generation of PAXB based controller,
-+used in SoCs including NSP, Cygnus, NS2, and Pegasus
-+      "brcm,iproc-pcie-paxc" for the first generation of PAXC based
-+controller, used in NS2
-+      "brcm,iproc-pcie-paxc-v2" for the second generation of PAXC based
-+controller, used in Stingray
-+  PAXB-based root complex is used for external endpoint devices. PAXC-based
-+root complex is connected to emulated endpoint devices internal to the ASIC
- - reg: base address and length of the PCIe controller I/O register space
- - #interrupt-cells: set to <1>
- - interrupt-map-mask and interrupt-map, standard PCI properties to define the
-@@ -19,6 +24,7 @@ Required properties:
- Optional properties:
- - phys: phandle of the PCIe PHY device
- - phy-names: must be "pcie-phy"
-+- dma-coherent: present if DMA operations are coherent
+ 	/* Disable BARs for inbound access */
+ 	ks_dw_pcie_set_dbi_mode(ks_pcie->va_app_base);
+-	writel(0, pp->dbi_base + PCI_BASE_ADDRESS_0);
+-	writel(0, pp->dbi_base + PCI_BASE_ADDRESS_1);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, 0);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_1, 0);
+ 	ks_dw_pcie_clear_dbi_mode(ks_pcie->va_app_base);
  
- - brcm,pcie-ob: Some iProc SoCs do not have the outbound address mapping done
- by the ASIC after power on reset. In this case, SW needs to configure it
-@@ -41,10 +47,19 @@ For older platforms without MSI integrated in the GIC, iProc PCIe core provides
- an event queue based MSI support.  The iProc MSI uses host memories to store
- MSI posted writes in the event queues
+ 	/* Set outbound translation size per window division */
+@@ -461,8 +461,8 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
+ 	ks_dw_pcie_set_dbi_mode(ks_pcie->va_app_base);
  
--- msi-parent: Link to the device node of the MSI controller.  On newer iProc
--platforms, the MSI controller may be gicv2m or gicv3-its.  On older iProc
--platforms without MSI support in its interrupt controller, one may use the
--event queue based MSI support integrated within the iProc PCIe core.
-+On newer iProc platforms, gicv2m or gicv3-its based MSI support should be used
-+
-+- msi-map: Maps a Requester ID to an MSI controller and associated MSI
-+sideband data
-+
-+- msi-parent: Link to the device node of the MSI controller, used when no MSI
-+sideband data is passed between the iProc PCIe controller and the MSI
-+controller
-+
-+Refer to the following binding documents for more detailed description on
-+the use of 'msi-map' and 'msi-parent':
-+  Documentation/devicetree/bindings/pci/pci-msi.txt
-+  Documentation/devicetree/bindings/interrupt-controller/msi.txt
+ 	/* Enable BAR0 */
+-	writel(1, pp->dbi_base + PCI_BASE_ADDRESS_0);
+-	writel(SZ_4K - 1, pp->dbi_base + PCI_BASE_ADDRESS_0);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, 1);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, SZ_4K - 1);
  
- When the iProc event queue based MSI is used, one needs to define the
- following properties in the MSI device node:
--- 
-2.1.4
+ 	ks_dw_pcie_clear_dbi_mode(ks_pcie->va_app_base);
+ 
+@@ -470,7 +470,7 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
+ 	  * For BAR0, just setting bus address for inbound writes (MSI) should
+ 	  * be sufficient.  Use physical address to avoid any conflicts.
+ 	  */
+-	writel(ks_pcie->app.start, pp->dbi_base + PCI_BASE_ADDRESS_0);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, ks_pcie->app.start);
+ }
+ 
+ /**
+@@ -478,8 +478,9 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
+  */
+ int ks_dw_pcie_link_up(struct pcie_port *pp)
+ {
+-	u32 val = readl(pp->dbi_base + DEBUG0);
++	u32 val;
+ 
++	val = dw_pcie_readl_rc(pp, DEBUG0);
+ 	return (val & LTSSM_STATE_MASK) == LTSSM_STATE_L0;
+ }
+ 
+
