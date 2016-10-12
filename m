@@ -1,45 +1,59 @@
-Return-Path: <mingo.kernel.org@gmail.com>
-Return-Path: <mingo.kernel.org@gmail.com>
-Sender: Ingo Molnar <mingo.kernel.org@gmail.com>
-Date: Thu, 27 Oct 2016 08:23:28 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	Borislav Petkov <bp@suse.de>, Tony Luck <tony.luck@intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86: quirks: hide maybe-uninitialized warning
-Message-ID: <20161027062328.GA2564@gmail.com>
-References: <20161024153325.2752428-1-arnd@arndb.de>
- <20161026195653.GE17507@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49406 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755356AbcJLMrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:47:35 -0400
+Subject: [PATCH v2 4/6] PCI: altera: Rename altera_pcie_valid_config() to
+ altera_pcie_valid_device()
+To: Ley Foon Tan <lftan@altera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
+Date: Wed, 12 Oct 2016 07:47:31 -0500
+Message-ID: <20161012124731.23240.70876.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161026195653.GE17507@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Rename altera_pcie_valid_config() to altera_pcie_valid_device().
+No functional change intended.
 
-* Bjorn Helgaas <helgaas@kernel.org> wrote:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-altera.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> On Mon, Oct 24, 2016 at 05:33:18PM +0200, Arnd Bergmann wrote:
-> > gcc -Wmaybe-uninitialized detects that quirk_intel_brickland_xeon_ras_cap
-> > uses uninitialized data when CONFIG_PCI is not set:
-> > 
-> > arch/x86/kernel/quirks.c: In function ‘quirk_intel_brickland_xeon_ras_cap’:
-> > arch/x86/kernel/quirks.c:641:13: error: ‘capid0’ is used uninitialized in this function [-Werror=uninitialized]
-> > 
-> > However, the function is also not called in this configuration, so we
-> > can avoid the warning by moving the existing #ifdef to cover it as well.
-> > 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> This fixes 3637efb00864 ("x86/mce: Add PCI quirks to identify Xeons with
-> machine check recovery"), which appeared in v4.9-rc1.  I assume it will be
-> merged for v4.9 via the x86 tree, as 3637efb00864 was.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 931c51e..a99765a 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -131,7 +131,7 @@ static void tlp_write_tx(struct altera_pcie *pcie,
+ 	cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
+ }
+ 
+-static bool altera_pcie_valid_config(struct altera_pcie *pcie,
++static bool altera_pcie_valid_device(struct altera_pcie *pcie,
+ 				     struct pci_bus *bus, int dev)
+ {
+ 	/* If there is no link, then there is no device */
+@@ -342,7 +342,7 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
++	if (!altera_pcie_valid_device(pcie, bus, PCI_SLOT(devfn))) {
+ 		*value = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -359,7 +359,7 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+ 	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
++	if (!altera_pcie_valid_device(pcie, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	return _altera_pcie_cfg_write(pcie, bus->number, devfn, where, size,
 
-Yeah, that's the plan - thanks!
-
-	Ingo
