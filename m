@@ -1,64 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gloria.sntech.de ([95.129.55.99]:51249 "EHLO gloria.sntech.de"
+Received: from mail.kernel.org ([198.145.29.136]:38434 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751465AbcJUH62 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 03:58:28 -0400
-From: Heiko Stuebner <heiko@sntech.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] arm64: dts: rockchip: add three new resets for rk3399 PCIe controller
-Date: Fri, 21 Oct 2016 09:58:11 +0200
-Message-ID: <7351283.vgsyxVQ7sJ@phil>
-In-Reply-To: <1477017836-19317-3-git-send-email-shawn.lin@rock-chips.com>
-References: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com> <1477017836-19317-3-git-send-email-shawn.lin@rock-chips.com>
+        id S1753528AbcJLNhL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:37:11 -0400
+Subject: [PATCH v2 0/5] PCI: exynos: Cleanups
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:37:07 -0500
+Message-ID: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+  - Add local "dev" pointers to reduce repetition of things like
+    "&pdev->dev".
 
-Am Freitag, 21. Oktober 2016, 10:43:56 CEST schrieb Shawn Lin:
-> pm_rst, aclk_rst and pclk_rst should be controlled by driver, so we
-> need to add these three resets for PCIe controller.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+  - Name private struct pointer consistently within driver.
 
-If patch1 is ok and you want to take both patches at once,
-that is fine by me, so
-Acked-by: Heiko Stuebner <heiko@sntech.de>
+  - Pass device-specific struct to internal functions for consistency.
 
-Otherwise I can also pick this one up after (and if) your ok with patch1.
+Nothing here should change the behavior of the driver.
 
+Changes from v1:
+  I dropped the following patches because they were a lot of churn for
+  questionable benefit:
+    PCI: exynos: Name private struct pointer "exynos" consistently
+      (Instead of renaming *all* the pointers, I only renamed enough to
+      make them consistent within this file.)
+    PCI: exynos: Swap order of exynos_elb_writel() reg/val arguments
+    PCI: exynos: Swap order of exynos_phy_writel() reg/val arguments
+    PCI: exynos: Swap order of exynos_blk_writel() reg/val arguments
 
-Heiko
+---
 
-> ---
-> 
->  arch/arm64/boot/dts/rockchip/rk3399.dtsi | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-> b/arch/arm64/boot/dts/rockchip/rk3399.dtsi index 76b2864..5191cfd 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-> @@ -300,8 +300,11 @@
->  		ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
->  			  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
->  		resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-> -			 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-> -		reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> +			 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>,
-> +			 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>,
-> +			 <&cru SRST_A_PCIE>;
-> +		reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-> +			      "pm", "pclk", "aclk";
->  		status = "disabled";
-> 
->  		pcie0_intc: interrupt-controller {
+Bjorn Helgaas (5):
+      PCI: exynos: Add local struct device pointers
+      PCI: exynos: Uninline register accessors
+      PCI: exynos: Name private struct pointer "exynos_pcie" consistently
+      PCI: exynos: Pass device-specific struct to internal functions
+      PCI: exynos: Reorder struct exynos_pcie
 
 
+ drivers/pci/host/pci-exynos.c |  214 +++++++++++++++++++----------------------
+ 1 file changed, 100 insertions(+), 114 deletions(-)
