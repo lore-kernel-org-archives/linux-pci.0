@@ -1,81 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57734 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:60046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941341AbcJGQmm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:42:42 -0400
-Subject: [PATCH 6/7] PCI: layerscape: Move struct pcie_port setup to probe
- function
-To: Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Fri, 07 Oct 2016 11:42:33 -0500
-Message-ID: <20161007164233.26341.56205.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007164149.26341.87049.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007164149.26341.87049.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1755725AbcJLQE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:04:28 -0400
+Date: Wed, 12 Oct 2016 11:04:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] PCI: armada: Cleanups
+Message-ID: <20161012160424.GK4308@localhost>
+References: <20161012131957.26736.14194.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161012131957.26736.14194.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do the basic pcie_port setup in the probe function for consistency with
-other drivers.  No functional change intended.
+On Wed, Oct 12, 2016 at 08:25:11AM -0500, Bjorn Helgaas wrote:
+>   - Remove platform drvdata because it appears unused (we called
+>     platform_set_drvdata() but not platform_get_drvdata()).
+> 
+>   - Remove redundant struct members.
+> 
+>   - Use generic DesignWare accessors when possible.
+> 
+>   - Pass device-specific struct to internal functions for consistency.
+> 
+> Nothing here should change the behavior of the driver.
+> 
+> Changes from v1:
+>   I dropped the following patches because they were a lot of churn for
+>   questionable benefit:
+>     PCI: armada: Name private struct pointer "armada8k" consistently
+>     PCI: armada: Add register accessors
+> 
+> ---
+> 
+> Bjorn Helgaas (6):
+>       PCI: armada: Remove unused platform data
+>       PCI: armada: Add local base pointer
+>       PCI: armada: Remove redundant struct armada8k_pcie.base
+>       PCI: armada: Use generic DesignWare accessors
+>       PCI: armada: Pass device-specific struct to internal functions
+>       PCI: armada: Reorder struct armada8k_pcie
+> 
+> 
+>  drivers/pci/host/pcie-armada8k.c |   78 ++++++++++++++++++--------------------
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-layerscape.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index bf1ce11..9b74485 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -218,9 +218,6 @@ static int __init ls_add_pcie_port(struct ls_pcie *ls,
- 	struct pcie_port *pp = &ls->pp;
- 	int ret;
- 
--	pp->dev = &pdev->dev;
--	pp->ops = ls->drvdata->ops;
--
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(pp->dev, "failed to initialize host\n");
-@@ -235,6 +232,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	const struct of_device_id *match;
- 	struct ls_pcie *ls;
-+	struct pcie_port *pp;
- 	struct resource *dbi_base;
- 	int ret;
- 
-@@ -246,6 +244,12 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (!ls)
- 		return -ENOMEM;
- 
-+	ls->drvdata = match->data;
-+
-+	pp = &ls->pp;
-+	pp->dev = dev;
-+	pp->ops = ls->drvdata->ops;
-+
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
- 	ls->pp.dbi_base = devm_ioremap_resource(dev, dbi_base);
- 	if (IS_ERR(ls->pp.dbi_base)) {
-@@ -253,7 +257,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(ls->pp.dbi_base);
- 	}
- 
--	ls->drvdata = match->data;
- 	ls->lut = ls->pp.dbi_base + ls->drvdata->lut_offset;
- 
- 	if (!ls_pcie_is_bridge(ls))
-@@ -264,7 +267,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 
- 	platform_set_drvdata(pdev, ls);
--
- 	return 0;
- }
- 
-
+I applied these to pci/host-armada for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
