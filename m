@@ -1,67 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42904 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932768AbcJ0P3a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Oct 2016 11:29:30 -0400
-Date: Thu, 27 Oct 2016 06:51:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge
- hasn't
-Message-ID: <20161027115152.GG17507@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
- <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
- <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:40922 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932614AbcJLKzM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Oct 2016 06:55:12 -0400
+Date: Wed, 12 Oct 2016 13:54:34 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [bug report] PCI: rockchip: Add Rockchip PCIe controller support
+Message-ID: <20161012105434.GA21452@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 27, 2016 at 07:42:27AM +0200, Hannes Reinecke wrote:
-> On 10/26/2016 09:43 PM, Bjorn Helgaas wrote:
-> > Hi Johannes,
-> > 
-> > On Wed, Oct 26, 2016 at 03:53:34PM +0200, Johannes Thumshirn wrote:
-> >> The Read Completion Boundary bit must only be set on a device or endpoint if
-> >> it is set on the upstream bridge.
-> >>
-> >> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
-> > 
-> > Can you please include a spec citation and a pointer to the bug report?
-> > 
-> PCI Express Base Specification 1.1,
-> section 2.3.1.1. Data Return for Read Requests:
-> 
-> The Read Completion Boundary (RCB) parameter determines the naturally
-> aligned address boundaries on which a Read Request may be serviced with
-> multiple Completions
-> o For a Root Complex, RCB is 64 bytes or 128 bytes
->   o This value is reported through a configuration register
->     (see Section 7.8)
->   Note: Bridges and Endpoints may implement a corresponding command
->   bit which may be set by system software to indicate the RCB value
->   for the Root Complex, allowing the Bridge/Endpoint to optimize its
->   behavior when the Root Complex’s RCB is 128 bytes.
-> o For all other system elements, RCB is 128 bytes
-> 
-> In this particular case the _HPX method was causing the RCB for all PCI
-> devices to be set to 128 bytes, while the root bridge remained at 64 bytes.
-> While this is arguably a BIOS bug, earlier linux version (ie without the
-> mentioned patch) were running fine, so this is actually a regression.
+Hello Shawn Lin,
 
-Thanks!  I can fold this into the changelog.
+The patch e77f847df54c: "PCI: rockchip: Add Rockchip PCIe controller
+support" from Sep 3, 2016, leads to the following static checker
+warning:
 
-I assume you didn't mention a bugzilla or similar URL because this was
-found internally?  I'd still like a clue about what this issue looks
-like to a user, because that helps connect future problem reports with
-this fix.
+	drivers/pci/host/pcie-rockchip.c:552 rockchip_pcie_init_port()
+	warn: mask and shift to zero
 
-And I suppose that since 7a1562d4f2d0 appeared in v3.18, we maybe
-should consider marking the fix for stable?
+drivers/pci/host/pcie-rockchip.c
+   549  
+   550          /* Check the final link width from negotiated lane counter from MGMT */
+   551          status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+   552          status =  0x1 << ((status & PCIE_CORE_PL_CONF_LANE_MASK) >>
+   553                            PCIE_CORE_PL_CONF_LANE_MASK);
 
-Bjorn
+Presumably we should be shifting by PCIE_CORE_PL_CONF_LANE_SHIFT but
+this still looks all kind of jumbled up.
+
+   554          dev_dbg(dev, "current link width is x%d\n", status);
+   555  
+
+regards,
+dan carpenter
