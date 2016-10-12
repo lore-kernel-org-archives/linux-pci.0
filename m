@@ -1,36 +1,51 @@
-Return-Path: <stern+57e13f40@rowland.harvard.edu>
-Return-Path: <stern+57e13f40@rowland.harvard.edu>
-Date: Thu, 13 Oct 2016 17:11:46 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Pierre de Villemereuil <flyos@mailoo.org>
-cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-    Mathias Nyman <mathias.nyman@linux.intel.com>,
-    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
-     <linux-pci@vger.kernel.org>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-In-Reply-To: <1492262.TFAeDeKh1k@flyosflip>
-Message-ID: <Pine.LNX.4.44L0.1610131709160.1822-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38880 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754829AbcJLNh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:37:57 -0400
+Subject: [PATCH v2 5/5] PCI: exynos: Reorder struct exynos_pcie
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:37:53 -0500
+Message-ID: <20161012133753.28194.44548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 14 Oct 2016, Pierre de Villemereuil wrote:
+Reorder struct exynos_pcie to put generic fields first.  No functional
+change intended.
 
-> Hi!
-> 
-> I've branched the kernel package on the OpenSUSE Build Server, I'll 
-> try to apply the patch there (this ought to be cleanest method).
-> 
-> Starting from the root of the kernel tarball, the patch should be 
-> applied to drivers/pci/pci.c, am I right?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-exynos.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-You just cd to the top directory of the kernel source, and do
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 829aa6b..f1c544b 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -29,13 +29,13 @@
+ #define to_exynos_pcie(x)	container_of(x, struct exynos_pcie, pp)
+ 
+ struct exynos_pcie {
+-	void __iomem		*elbi_base;
+-	void __iomem		*phy_base;
+-	void __iomem		*block_base;
++	struct pcie_port	pp;
++	void __iomem		*elbi_base;	/* DT 0th resource */
++	void __iomem		*phy_base;	/* DT 1st resource */
++	void __iomem		*block_base;	/* DT 2nd resource */
+ 	int			reset_gpio;
+ 	struct clk		*clk;
+ 	struct clk		*bus_clk;
+-	struct pcie_port	pp;
+ };
+ 
+ /* PCIe ELBI registers */
 
-	patch -p1 <filename
-
-where "filename" is the contents of the email message containing the 
-patch.  Or if you want, since the patch is so small, you can simply 
-edit the file by hand to add in the new lines.
-
-Alan Stern
