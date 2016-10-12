@@ -1,70 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45612 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:59882 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932268AbcJGQWH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:22:07 -0400
-Subject: [PATCH 02/10] PCI: altera: Simplify TLB_CFG_DW0 usage
-To: Ley Foon Tan <lftan@altera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
-Date: Fri, 07 Oct 2016 11:22:02 -0500
-Message-ID: <20161007162202.22796.80479.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1755670AbcJLQEO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:04:14 -0400
+Date: Wed, 12 Oct 2016 11:04:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 00/10] PCI: designware: Cleanups
+Message-ID: <20161012160401.GJ4308@localhost>
+References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All TLP_CFG_DW0() uses follow the same pattern based on the root bus
-number, so pull that into the macro itself to declutter the users.  No
-functional change intended.
+On Wed, Oct 12, 2016 at 08:17:41AM -0500, Bjorn Helgaas wrote:
+> [+cc exynos folks, since pcie_host_ops.readl_rc affects them]
+> 
+>   - Add local "dev" pointers to reduce repetition of things like
+>     "&pdev->dev".
+> 
+>   - Remove platform drvdata because it appears unused (we called
+>     platform_set_drvdata() but not platform_get_drvdata()).
+> 
+> Nothing here should change the behavior of the drivers.
+> 
+> Changes from v1:
+>   Split uninline of register accessors into a separate patch.
+>   Add Kishon's *unroll() fix (v1 broke exynos).
+> 
+> ---
+> 
+> Bjorn Helgaas (9):
+>       PCI: designware: Rename dw_pcie_valid_config() to dw_pcie_valid_device()
+>       PCI: designware: Simplify pcie_host_ops.readl_rc() and .writel_rc() interfaces
+>       PCI: designware: Swap order of dw_pcie_writel_rc() reg/val arguments
+>       PCI: designware: Export dw_pcie_readl_rc(), dw_pcie_writel_rc()
+>       PCI: designware: Uninline register accessors
+>       PCI: designware: Swap order of dw_pcie_writel_unroll() reg/val arguments
+>       PCI: designware-plat: Remove redundant dw_plat_pcie.mem_base
+>       PCI: designware-plat: Add local struct device pointers
+>       PCI: designware-plat: Remove unused platform data
+> 
+> Kishon Vijay Abraham I (1):
+>       PCI: designware: Simplify dw_pcie_readl_unroll(), dw_pcie_writel_unroll()
+> 
+> 
+>  drivers/pci/host/pci-exynos.c           |   10 +--
+>  drivers/pci/host/pcie-designware-plat.c |   25 +++-----
+>  drivers/pci/host/pcie-designware.c      |  102 +++++++++++++++----------------
+>  drivers/pci/host/pcie-designware.h      |    7 +-
+>  4 files changed, 67 insertions(+), 77 deletions(-)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-altera.c |   17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index faf6e1f..1398d92 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -55,7 +55,10 @@
- #define TLP_PAYLOAD_SIZE		0x01
- #define TLP_READ_TAG			0x1d
- #define TLP_WRITE_TAG			0x10
--#define TLP_CFG_DW0(fmttype)		(((fmttype) << 24) | TLP_PAYLOAD_SIZE)
-+#define TLP_CFG_DW0(altera, bus)					\
-+    ((((bus == altera->root_bus_nr) ? TLP_FMTTYPE_CFGRD0		\
-+				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
-+     TLP_PAYLOAD_SIZE)
- #define TLP_CFG_DW1(reqid, tag, be)	(((reqid) << 16) | (tag << 8) | (be))
- #define TLP_CFG_DW2(bus, devfn, offset)	\
- 				(((bus) << 24) | ((devfn) << 16) | (offset))
-@@ -218,11 +221,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *altera, u8 bus, u32 devfn,
- {
- 	u32 headers[TLP_HDR_SIZE];
- 
--	if (bus == altera->root_bus_nr)
--		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD0);
--	else
--		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
--
-+	headers[0] = TLP_CFG_DW0(altera, bus);
- 	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(altera->root_bus_nr, RP_DEVFN),
- 					TLP_READ_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
-@@ -238,11 +237,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *altera, u8 bus, u32 devfn,
- 	u32 headers[TLP_HDR_SIZE];
- 	int ret;
- 
--	if (bus == altera->root_bus_nr)
--		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR0);
--	else
--		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
--
-+	headers[0] = TLP_CFG_DW0(altera, bus);
- 	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(altera->root_bus_nr, RP_DEVFN),
- 					TLP_WRITE_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
-
+I applied these to pci/host-designware for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
