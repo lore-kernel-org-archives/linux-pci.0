@@ -1,172 +1,264 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:33157 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936515AbcJXJoL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2016 05:44:11 -0400
-Date: Mon, 24 Oct 2016 11:44:45 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Arcari <darcari@redhat.com>,
-        Myron Stowe <mstowe@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFE PATCH] pci: Do not enable intx on MSI-capable devices on
- shutdown
-Message-ID: <20161024094445.GA5144@wunner.de>
-References: <1477052083-13815-1-git-send-email-prarit@redhat.com>
+Received: from mail.kernel.org ([198.145.29.136]:41000 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755189AbcJLNs0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:26 -0400
+Subject: [PATCH v2 6/8] PCI: imx6: Use generic DesignWare accessors
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:48:20 -0500
+Message-ID: <20161012134820.28919.82110.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477052083-13815-1-git-send-email-prarit@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 08:14:43AM -0400, Prarit Bhargava wrote:
-> The following unhandled IRQ warning is seen during shutdown:
-> 
-> irq 16: nobody cared (try booting with the "irqpoll" option)
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
-> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
->  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
->  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
->  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
-> Call Trace:
->  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
->  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
->  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
->  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
->  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
->  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
->  [<ffffffff8102edfb>] handle_irq+0xab/0x130
->  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
->  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
->  [<ffffffff81704502>] common_interrupt+0x82/0x82
->  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
->  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
->  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
->  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
->  [<ffffffff816f6da7>] rest_init+0x77/0x80
->  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
->  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
->  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
->  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
->  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
-> 
-> pci_device_shutdown() is called on each PCI device, and does
-> 
->         if (drv && drv->shutdown)
->                 drv->shutdown(pci_dev);
->         pci_msi_shutdown(pci_dev);
->         pci_msix_shutdown(pci_dev);
-> 
-> The pci_msi_shutdown() and pci_msix_shutdown() functions both call
-> pci_intx_for_msi() which enables the intx interrupt independent of the driver.
-> The driver still thinks it is using MSI/X and the result is the above stack
-> trace.
-> 
-> We have seen this at Red Hat on various drivers: nouveau, ahci, and pcieport
-> (so far).  Google search for "unhandled irq 16" yields many results reporting
-> similar behavior during shutdown indicating that this problem is widespread.
+The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces already add in
+pp->dbi_base, so use those instead of doing it ourselves in the imx6
+driver.  No functional change intended.
 
-I've occasionally seen this on an Ivy Bridge MacBook Pro as well,
-also on IRQ 16.  It's been a major annoyance, so thanks for looking
-into this.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |   67 +++++++++++++++++++++----------------------
+ 1 file changed, 33 insertions(+), 34 deletions(-)
 
-Why is this always occurring on IRQ 16, not on any others?  On my
-MacBook Pro IRQ 16 is used by a root port (00:1c.0, pcieport),
-an Ethernet controller below that root port (02:00.0, tg3) and
-a Thunderbolt hotplug bridge (06:03.0, pcieport).  I've never seen
-these spurious interrupts on any other IRQ.
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 7dfe400..bedd436 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -97,13 +97,13 @@ struct imx6_pcie {
+ 
+ static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, int exp_val)
+ {
+-	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	u32 val;
+ 	u32 max_iterations = 10;
+ 	u32 wait_counter = 0;
+ 
+ 	do {
+-		val = readl(dbi_base + PCIE_PHY_STAT);
++		val = dw_pcie_readl_rc(pp, PCIE_PHY_STAT);
+ 		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+ 		wait_counter++;
+ 
+@@ -118,22 +118,22 @@ static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, int exp_val)
+ 
+ static int pcie_phy_wait_ack(struct imx6_pcie *imx6_pcie, int addr)
+ {
+-	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	u32 val;
+ 	int ret;
+ 
+ 	val = addr << PCIE_PHY_CTRL_DATA_LOC;
+-	writel(val, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, val);
+ 
+ 	val |= (0x1 << PCIE_PHY_CTRL_CAP_ADR_LOC);
+-	writel(val, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, val);
+ 
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
+ 
+ 	val = addr << PCIE_PHY_CTRL_DATA_LOC;
+-	writel(val, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, val);
+ 
+ 	return pcie_phy_poll_ack(imx6_pcie, 0);
+ }
+@@ -141,7 +141,7 @@ static int pcie_phy_wait_ack(struct imx6_pcie *imx6_pcie, int addr)
+ /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+ static int pcie_phy_read(struct imx6_pcie *imx6_pcie, int addr, int *data)
+ {
+-	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	u32 val, phy_ctl;
+ 	int ret;
+ 
+@@ -151,24 +151,24 @@ static int pcie_phy_read(struct imx6_pcie *imx6_pcie, int addr, int *data)
+ 
+ 	/* assert Read signal */
+ 	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
+-	writel(phy_ctl, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, phy_ctl);
+ 
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+ 		return ret;
+ 
+-	val = readl(dbi_base + PCIE_PHY_STAT);
++	val = dw_pcie_readl_rc(pp, PCIE_PHY_STAT);
+ 	*data = val & 0xffff;
+ 
+ 	/* deassert Read signal */
+-	writel(0x00, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, 0x00);
+ 
+ 	return pcie_phy_poll_ack(imx6_pcie, 0);
+ }
+ 
+ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ {
+-	void __iomem *dbi_base = imx6_pcie->pp.dbi_base;
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	u32 var;
+ 	int ret;
+ 
+@@ -179,11 +179,11 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 		return ret;
+ 
+ 	var = data << PCIE_PHY_CTRL_DATA_LOC;
+-	writel(var, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, var);
+ 
+ 	/* capture data */
+ 	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
+-	writel(var, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, var);
+ 
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+ 	if (ret)
+@@ -191,7 +191,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 
+ 	/* deassert cap data */
+ 	var = data << PCIE_PHY_CTRL_DATA_LOC;
+-	writel(var, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack de-assertion */
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 0);
+@@ -200,7 +200,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 
+ 	/* assert wr signal */
+ 	var = 0x1 << PCIE_PHY_CTRL_WR_LOC;
+-	writel(var, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack */
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 1);
+@@ -209,14 +209,14 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 
+ 	/* deassert wr signal */
+ 	var = data << PCIE_PHY_CTRL_DATA_LOC;
+-	writel(var, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack de-assertion */
+ 	ret = pcie_phy_poll_ack(imx6_pcie, 0);
+ 	if (ret)
+ 		return ret;
+ 
+-	writel(0x0, dbi_base + PCIE_PHY_CTRL);
++	dw_pcie_writel_rc(pp, PCIE_PHY_CTRL, 0x0);
+ 
+ 	return 0;
+ }
+@@ -284,10 +284,10 @@ static int imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 
+ 		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+ 		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val = dw_pcie_readl_rc(pp, PCIE_PL_PFLR);
+ 			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+ 			val |= PCIE_PL_PFLR_FORCE_LINK;
+-			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++			dw_pcie_writel_rc(pp, PCIE_PL_PFLR, val);
+ 
+ 			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -452,8 +452,8 @@ static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
+ 		return 0;
+ 
+ 	dev_dbg(dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
+ 	return -ETIMEDOUT;
+ }
+ 
+@@ -465,7 +465,7 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 	unsigned int retries;
+ 
+ 	for (retries = 0; retries < 200; retries++) {
+-		tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
++		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 		/* Test if the speed change finished. */
+ 		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
+ 			return 0;
+@@ -496,10 +496,10 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	 * started in Gen2 mode, there is a possibility the devices on the
+ 	 * bus will not be detected at all.  This happens with PCIe switches.
+ 	 */
+-	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
++	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCR);
+ 	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+-	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
+ 
+ 	/* Start LTSSM. */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+@@ -513,10 +513,10 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 
+ 	if (imx6_pcie->link_gen == 2) {
+ 		/* Allow Gen2 mode after the link is up. */
+-		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
++		tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCR);
+ 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+-		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++		dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
+ 	} else {
+ 		dev_info(dev, "Link: Gen2 disabled\n");
+ 	}
+@@ -525,9 +525,9 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	 * Start Directed Speed Change so the best possible speed both link
+ 	 * partners support can be negotiated.
+ 	 */
+-	tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
++	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 	tmp |= PORT_LOGIC_SPEED_CHANGE;
+-	writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
++	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 
+ 	ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
+ 	if (ret) {
+@@ -542,16 +542,15 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 		goto err_reset_phy;
+ 	}
+ 
+-	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
++	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
+ 	dev_info(dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+ 	return 0;
+ 
+ err_reset_phy:
+ 	dev_dbg(dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+-	imx6_pcie_reset_phy(pp);
+-
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
++	imx6_pcie_reset_phy(imx6_pcie);
+ 	return ret;
+ }
+ 
+@@ -571,7 +570,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ static int imx6_pcie_link_up(struct pcie_port *pp)
+ {
+-	return readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) &
++	return dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1) &
+ 			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
+ }
+ 
 
-The patch looks good, I'm wondering though if it works correctly
-with PCI devices passed through to a VM:  When the VM is shut down,
-it won't enable INTx any longer.  Not sure if this can cause problems
-for the host.
-
-Thanks,
-
-Lukas
-
-> I can cause this to happen on a "stable" system by adding a 3 second delay in
-> pci_device_shutdown() which causes the number of spurious interrupts to exceed
-> the 100000 limit and display the warning above.  Also note that by adding the
-> 3 second delay, NVIDIA devices with device ID 0x0FF* hit this problem 100% of
-> the time.
-> 
-> darcari noticed that removing the pci_intx_for_msi() call resulted in a
-> stable system.  After further discussions with Myron and Alex, Alex came up
-> idea of keeping the intx disabled during shutdown implemented below.
-> 
-> ----8<----
-> 
-> The following unhandled IRQ warning is seen during shutdown:
-> 
-> irq 16: nobody cared (try booting with the "irqpoll" option)
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
-> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
->  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
->  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
->  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
-> Call Trace:
->  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
->  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
->  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
->  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
->  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
->  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
->  [<ffffffff8102edfb>] handle_irq+0xab/0x130
->  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
->  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
->  [<ffffffff81704502>] common_interrupt+0x82/0x82
->  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
->  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
->  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
->  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
->  [<ffffffff816f6da7>] rest_init+0x77/0x80
->  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
->  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
->  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
->  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
->  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
-> 
-> This occurs because the pci_msi_shutdown() and pci_msix_shutdown() functions
-> enable the legacy intx interrupt even though the device and driver were not
-> configured for legacy intx.
-> 
-> This patch blocks the enabling of intx during system shutdown or reboot.
-> 
-> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: David Arcari <darcari@redhat.com>
-> Cc: Myron Stowe <mstowe@redhat.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/msi.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index bfdd0744b686..915cc29797f9 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -910,7 +910,8 @@ void pci_msi_shutdown(struct pci_dev *dev)
->  	desc = first_pci_msi_entry(dev);
->  
->  	pci_msi_set_enable(dev, 0);
-> -	pci_intx_for_msi(dev, 1);
-> +	if (system_state == SYSTEM_RUNNING || system_state == SYSTEM_BOOTING)
-> +		pci_intx_for_msi(dev, 1);
->  	dev->msi_enabled = 0;
->  
->  	/* Return the device with MSI unmasked as initial states */
-> @@ -1024,7 +1025,8 @@ void pci_msix_shutdown(struct pci_dev *dev)
->  	}
->  
->  	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> -	pci_intx_for_msi(dev, 1);
-> +	if (system_state == SYSTEM_RUNNING || system_state == SYSTEM_BOOTING)
-> +		pci_intx_for_msi(dev, 1);
->  	dev->msix_enabled = 0;
->  	pcibios_alloc_irq(dev);
->  }
-> -- 
-> 1.7.9.3
