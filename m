@@ -1,110 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 3/5] PCI: Extract link retraining from
- pcie_aspm_configure_common_clock()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 26 Oct 2016 12:01:28 -0600
-Message-ID: <20161026180128.23495.19403.stgit@gimli.home>
-In-Reply-To: <20161026175156.23495.12980.stgit@gimli.home>
-References: <20161026175156.23495.12980.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39634 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755069AbcJLNmk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:42:40 -0400
+Subject: [PATCH v2 1/8] PCI: hisi: Add local struct device pointers
+To: Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:42:36 -0500
+Message-ID: <20161012134236.28562.45140.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c       |   29 +++++++++++++++++++++++++++++
- drivers/pci/pcie/aspm.c |   17 +----------------
- include/linux/pci.h     |    1 +
- 3 files changed, 31 insertions(+), 16 deletions(-)
+Use a local "struct device *dev" for brevity and consistency with other
+drivers.  No functional change intended.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6d6cf89..4d327d4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4729,6 +4729,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-hisi.c |   26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 7ee9dfc..1c08028 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -143,16 +143,17 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
+ static int hisi_add_pcie_port(struct pcie_port *pp,
+ 				     struct platform_device *pdev)
+ {
++	struct device *dev = pp->dev;
+ 	int ret;
+ 	u32 port_id;
+ 	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+ 
+-	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
+-		dev_err(&pdev->dev, "failed to read port-id\n");
++	if (of_property_read_u32(dev->of_node, "port-id", &port_id)) {
++		dev_err(dev, "failed to read port-id\n");
+ 		return -EINVAL;
+ 	}
+ 	if (port_id > 3) {
+-		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
++		dev_err(dev, "Invalid port-id: %d\n", port_id);
+ 		return -EINVAL;
+ 	}
+ 	hisi_pcie->port_id = port_id;
+@@ -161,7 +162,7 @@ static int hisi_add_pcie_port(struct pcie_port *pp,
+ 
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+-		dev_err(&pdev->dev, "failed to initialize host\n");
++		dev_err(dev, "failed to initialize host\n");
+ 		return ret;
+ 	}
+ 
+@@ -170,6 +171,7 @@ static int hisi_add_pcie_port(struct pcie_port *pp,
+ 
+ static int hisi_pcie_probe(struct platform_device *pdev)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct hisi_pcie *hisi_pcie;
+ 	struct pcie_port *pp;
+ 	const struct of_device_id *match;
+@@ -177,28 +179,28 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	struct device_driver *driver;
+ 	int ret;
+ 
+-	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
++	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
+ 	if (!hisi_pcie)
+ 		return -ENOMEM;
+ 
+ 	pp = &hisi_pcie->pp;
+-	pp->dev = &pdev->dev;
+-	driver = (pdev->dev).driver;
++	pp->dev = dev;
++	driver = dev->driver;
+ 
+-	match = of_match_device(driver->of_match_table, &pdev->dev);
++	match = of_match_device(driver->of_match_table, dev);
+ 	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
+ 
+ 	hisi_pcie->subctrl =
+ 	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
+ 	if (IS_ERR(hisi_pcie->subctrl)) {
+-		dev_err(pp->dev, "cannot get subctrl base\n");
++		dev_err(dev, "cannot get subctrl base\n");
+ 		return PTR_ERR(hisi_pcie->subctrl);
+ 	}
+ 
+ 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+-	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
++	hisi_pcie->reg_base = devm_ioremap_resource(dev, reg);
+ 	if (IS_ERR(hisi_pcie->reg_base)) {
+-		dev_err(pp->dev, "cannot get rc_dbi base\n");
++		dev_err(dev, "cannot get rc_dbi base\n");
+ 		return PTR_ERR(hisi_pcie->reg_base);
+ 	}
+ 
+@@ -210,7 +212,7 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, hisi_pcie);
+ 
+-	dev_warn(pp->dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
++	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL(pcie_set_mps);
- 
-+int pcie_retrain_link(struct pci_dev *dev)
-+{
-+	int ret;
-+	u16 lnksta;
-+	unsigned long timeout;
-+
-+	/* Can only retrain from downstream ports */
-+	if (!pci_is_pcie(dev) ||
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM &&
-+	     pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
-+		return -EINVAL;
-+
-+	ret = pcie_capability_set_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RL);
-+	if (ret)
-+		return ret;
-+
-+	timeout = jiffies + HZ; /* Retraining timeout */
-+	for (;;) {
-+		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		if (!(lnksta & PCI_EXP_LNKSTA_LT) ||
-+		    time_after(jiffies, timeout))
-+			break;
-+		msleep(1);
-+	}
-+
-+	return (lnksta & PCI_EXP_LNKSTA_LT) ? -EBUSY : 0;
-+}
-+EXPORT_SYMBOL(pcie_retrain_link);
-+
- int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 		  enum pcie_link_width *width)
- {
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 0ec649d..482d60c 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -91,8 +91,6 @@ struct pcie_link_state {
- 	[POLICY_POWERSAVE] = "powersave"
- };
- 
--#define LINK_RETRAIN_TIMEOUT HZ
--
- static int policy_to_aspm_state(struct pcie_link_state *link)
- {
- 	switch (aspm_policy) {
-@@ -222,20 +220,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
- 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
- 
- 	/* Retrain link */
--	reg16 |= PCI_EXP_LNKCTL_RL;
--	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
--
--	/* Wait for link training end. Break out after waiting for timeout */
--	start_jiffies = jiffies;
--	for (;;) {
--		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
--		if (!(reg16 & PCI_EXP_LNKSTA_LT))
--			break;
--		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
--			break;
--		msleep(1);
--	}
--	if (!(reg16 & PCI_EXP_LNKSTA_LT))
-+	if (!pcie_retrain_link(parent))
- 		return;
- 
- 	/* Training failed. Restore common clock configurations */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fbfbb40..eb0e9be 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1024,6 +1024,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- int pcie_set_readrq(struct pci_dev *dev, int rq);
- int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
-+int pcie_retrain_link(struct pci_dev *dev);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+
