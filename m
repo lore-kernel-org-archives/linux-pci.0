@@ -1,194 +1,168 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v2 1/2] PCI: aardvark: Add local struct device pointers
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59848 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932266AbcJLNSU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:18:20 -0400
+Subject: [PATCH v2 04/10] PCI: designware: Swap order of dw_pcie_writel_rc()
+ reg/val arguments
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Oct 2016 07:36:35 -0500
-Message-ID: <20161012123635.22186.83708.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012123001.22186.4053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012123001.22186.4053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:18:15 -0500
+Message-ID: <20161012131815.26443.11696.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+Swap order of dw_pcie_writel_rc() arguments to match the "dev, pos, val"
+order used by pci_write_config_word() and other drivers.  No functional
+change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/host/pci-aardvark.c |   38 ++++++++++++++++++++------------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+ drivers/pci/host/pci-exynos.c      |    2 +-
+ drivers/pci/host/pcie-designware.c |   48 ++++++++++++++++++------------------
+ drivers/pci/host/pcie-designware.h |    2 +-
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index e4a5b7e..16421d1 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -230,20 +230,20 @@ static int advk_pcie_link_up(struct advk_pcie *pcie)
- 
- static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- {
-+	struct device *dev = &pcie->pdev->dev;
- 	int retries;
- 
- 	/* check if the link is up or not */
- 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (advk_pcie_link_up(pcie)) {
--			dev_info(&pcie->pdev->dev, "link up\n");
-+			dev_info(dev, "link up\n");
- 			return 0;
- 		}
- 
- 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
- 	}
- 
--	dev_err(&pcie->pdev->dev, "link never came up\n");
--
-+	dev_err(dev, "link never came up\n");
- 	return -ETIMEDOUT;
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index b29e9d6..f559b49 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -435,7 +435,7 @@ static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ 	return val;
  }
  
-@@ -376,6 +376,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
+-static inline void exynos_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
++static inline void exynos_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
  {
-+	struct device *dev = &pcie->pdev->dev;
- 	u32 reg;
- 	unsigned int status;
- 	char *strcomp_status, *str_posted;
-@@ -407,12 +408,13 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+ 	writel(val, pp->dbi_base + reg);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 6a28eb1..f91c7b3 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -149,10 +149,10 @@ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+ 	return readl(pp->dbi_base + reg);
+ }
+ 
+-static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
++static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
+ {
+ 	if (pp->ops->writel_rc)
+-		pp->ops->writel_rc(pp, val, reg);
++		pp->ops->writel_rc(pp, reg, val);
  	else
- 		str_posted = "Posted";
+ 		writel(val, pp->dbi_base + reg);
+ }
+@@ -169,7 +169,7 @@ static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
+ {
+ 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
  
--	dev_err(&pcie->pdev->dev, "%s PIO Response Status: %s, %#x @ %#x\n",
-+	dev_err(dev, "%s PIO Response Status: %s, %#x @ %#x\n",
- 		str_posted, strcomp_status, reg, advk_readl(pcie, PIO_ADDR_LS));
+-	dw_pcie_writel_rc(pp, val, offset + reg);
++	dw_pcie_writel_rc(pp, offset + reg, val);
  }
  
- static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- {
-+	struct device *dev = &pcie->pdev->dev;
- 	unsigned long timeout;
- 
- 	timeout = jiffies + msecs_to_jiffies(PIO_TIMEOUT_MS);
-@@ -426,7 +428,7 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 			return 0;
+ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+@@ -211,20 +211,20 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ 		dw_pcie_writel_unroll(pp, index,
+ 			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
+ 	} else {
+-		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+-						PCIE_ATU_VIEWPORT);
+-		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
+-						PCIE_ATU_LOWER_BASE);
+-		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
+-						PCIE_ATU_UPPER_BASE);
+-		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+-						PCIE_ATU_LIMIT);
+-		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
+-						PCIE_ATU_LOWER_TARGET);
+-		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
+-						PCIE_ATU_UPPER_TARGET);
+-		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+-		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++		dw_pcie_writel_rc(pp, PCIE_ATU_VIEWPORT,
++				  PCIE_ATU_REGION_OUTBOUND | index);
++		dw_pcie_writel_rc(pp, PCIE_ATU_LOWER_BASE,
++				  lower_32_bits(cpu_addr));
++		dw_pcie_writel_rc(pp, PCIE_ATU_UPPER_BASE,
++				  upper_32_bits(cpu_addr));
++		dw_pcie_writel_rc(pp, PCIE_ATU_LIMIT,
++				  lower_32_bits(cpu_addr + size - 1));
++		dw_pcie_writel_rc(pp, PCIE_ATU_LOWER_TARGET,
++				  lower_32_bits(pci_addr));
++		dw_pcie_writel_rc(pp, PCIE_ATU_UPPER_TARGET,
++				  upper_32_bits(pci_addr));
++		dw_pcie_writel_rc(pp, PCIE_ATU_CR1, type);
++		dw_pcie_writel_rc(pp, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
  	}
  
--	dev_err(&pcie->pdev->dev, "config read/write timed out\n");
-+	dev_err(dev, "config read/write timed out\n");
- 	return -ETIMEDOUT;
- }
- 
-@@ -560,10 +562,11 @@ static int advk_pcie_alloc_msi(struct advk_pcie *pcie)
- 
- static void advk_pcie_free_msi(struct advk_pcie *pcie, int hwirq)
- {
-+	struct device *dev = &pcie->pdev->dev;
-+
- 	mutex_lock(&pcie->msi_used_lock);
- 	if (!test_bit(hwirq, pcie->msi_irq_in_use))
--		dev_err(&pcie->pdev->dev, "trying to free unused MSI#%d\n",
--			hwirq);
-+		dev_err(dev, "trying to free unused MSI#%d\n", hwirq);
- 	else
- 		clear_bit(hwirq, pcie->msi_irq_in_use);
- 	mutex_unlock(&pcie->msi_used_lock);
-@@ -910,6 +913,7 @@ out_release_res:
- 
- static int advk_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct advk_pcie *pcie;
- 	struct resource *res;
- 	struct pci_bus *bus, *child;
-@@ -917,8 +921,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	struct device_node *msi_node;
- 	int ret, irq;
- 
--	pcie = devm_kzalloc(&pdev->dev, sizeof(struct advk_pcie),
--			    GFP_KERNEL);
-+	pcie = devm_kzalloc(dev, sizeof(struct advk_pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
- 
-@@ -926,22 +929,22 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	platform_set_drvdata(pdev, pcie);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pcie->base = devm_ioremap_resource(&pdev->dev, res);
-+	pcie->base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pcie->base))
- 		return PTR_ERR(pcie->base);
- 
- 	irq = platform_get_irq(pdev, 0);
--	ret = devm_request_irq(&pdev->dev, irq, advk_pcie_irq_handler,
-+	ret = devm_request_irq(dev, irq, advk_pcie_irq_handler,
- 			       IRQF_SHARED | IRQF_NO_THREAD, "advk-pcie",
- 			       pcie);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to register interrupt\n");
-+		dev_err(dev, "Failed to register interrupt\n");
- 		return ret;
+ 	/*
+@@ -829,7 +829,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		dev_err(pp->dev, "num-lanes %u: invalid value\n", pp->lanes);
+ 		return;
  	}
+-	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
++	dw_pcie_writel_rc(pp, PCIE_PORT_LINK_CONTROL, val);
  
- 	ret = advk_pcie_parse_request_of_pci_ranges(pcie);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to parse resources\n");
-+		dev_err(dev, "Failed to parse resources\n");
- 		return ret;
+ 	/* set link width speed control register */
+ 	val = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
+@@ -848,30 +848,30 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
+ 		break;
  	}
+-	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
  
-@@ -949,24 +952,24 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	/* setup RC BARs */
+-	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+-	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, 0x00000004);
++	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_1, 0x00000000);
  
- 	ret = advk_pcie_init_irq_domain(pcie);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		dev_err(dev, "Failed to initialize irq\n");
- 		return ret;
- 	}
+ 	/* setup interrupt pins */
+ 	val = dw_pcie_readl_rc(pp, PCI_INTERRUPT_LINE);
+ 	val &= 0xffff00ff;
+ 	val |= 0x00000100;
+-	dw_pcie_writel_rc(pp, val, PCI_INTERRUPT_LINE);
++	dw_pcie_writel_rc(pp, PCI_INTERRUPT_LINE, val);
  
- 	ret = advk_pcie_init_msi_irq_domain(pcie);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		dev_err(dev, "Failed to initialize irq\n");
- 		advk_pcie_remove_irq_domain(pcie);
- 		return ret;
- 	}
+ 	/* setup bus numbers */
+ 	val = dw_pcie_readl_rc(pp, PCI_PRIMARY_BUS);
+ 	val &= 0xff000000;
+ 	val |= 0x00010100;
+-	dw_pcie_writel_rc(pp, val, PCI_PRIMARY_BUS);
++	dw_pcie_writel_rc(pp, PCI_PRIMARY_BUS, val);
  
--	msi_node = of_parse_phandle(pdev->dev.of_node, "msi-parent", 0);
-+	msi_node = of_parse_phandle(dev->of_node, "msi-parent", 0);
- 	if (msi_node)
- 		msi = of_pci_find_msi_chip_by_node(msi_node);
- 	else
- 		msi = NULL;
+ 	/* setup command register */
+ 	val = dw_pcie_readl_rc(pp, PCI_COMMAND);
+ 	val &= 0xffff0000;
+ 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+-	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
++	dw_pcie_writel_rc(pp, PCI_COMMAND, val);
  
--	bus = pci_scan_root_bus_msi(&pdev->dev, 0, &advk_pcie_ops,
-+	bus = pci_scan_root_bus_msi(dev, 0, &advk_pcie_ops,
- 				    pcie, &pcie->resources, &pcie->msi);
- 	if (!bus) {
- 		advk_pcie_remove_msi_irq_domain(pcie);
-@@ -980,7 +983,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 		pcie_bus_configure_settings(child);
+ 	/*
+ 	 * If the platform provides ->rd_other_conf, it means the platform
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 60cbc68..c413848 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -55,7 +55,7 @@ struct pcie_port {
  
- 	pci_bus_add_devices(bus);
--
- 	return 0;
- }
- 
+ struct pcie_host_ops {
+ 	u32 (*readl_rc)(struct pcie_port *pp, u32 reg);
+-	void (*writel_rc)(struct pcie_port *pp, u32 val, u32 reg);
++	void (*writel_rc)(struct pcie_port *pp, u32 reg, u32 val);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
+ 	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
