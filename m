@@ -1,117 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:34463 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941135AbcJSOQ6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:16:58 -0400
-Message-Id: <a859eaee9f0188db46990e8003afcb6b714f99e4.1476875113.git.lukas@wunner.de>
-In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
-References: <cover.1476875113.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 19 Oct 2016 16:07:13 +0200
-Subject: [PATCH 3/9] PCI: Speed up algorithm in pci_bridge_d3_update()
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:54012 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754926AbcJLTHw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 15:07:52 -0400
+Date: Wed, 12 Oct 2016 14:07:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
+ interrupts
+Message-ID: <20161012190729.GA15116@localhost>
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+ <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After a device has been added, removed or had its D3cold attributes
-changed, we recheck whether its parent bridge may runtime suspend to
-D3hot with pci_bridge_d3_update().
+On Tue, Oct 04, 2016 at 05:15:18PM -0400, Sinan Kaya wrote:
+> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+> resource requirements") removed PCI_USING penalty from
+> acpi_pci_link_allocate function as there is no longer a fixed size penalty
+> array for both PCI and IRQ interrupts.
+> 
+> We need to add the PCI_USING penalty for ISA interrupts too if the link is
+> in use and matches our ISA IRQ number.
+> 
+> Tested-by: Jonathan Liu <net147@gmail.com>
+> Tested-by: Ondrej Zary <linux@rainbow-software.org>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index f3792f4..06c2a11 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -620,6 +620,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>  			    acpi_device_bid(link->device));
+>  		return -ENODEV;
+>  	} else {
+> +		if (link->irq.active < ACPI_MAX_IRQS)
+> +			acpi_irq_penalty[link->irq.active] +=
+> +				PIRQ_PENALTY_PCI_USING;
 
-The most naive algorithm would be to iterate over the bridge's
-children and check if any of them are blocking D3.
+Nit: elsewhere you use ARRAY_SIZE(acpi_irq_penalty), so it'd be nice
+to be consistent, e.g.,
 
-The function already tries to be a bit smarter than that by first
-checking the device that was changed.  If this device already blocks D3
-on the bridge, then walking over all the other children can be skipped.
-A drawback of this approach is that if the device is *not* blocking D3,
-it will be checked a second time by pci_walk_bus().  But that's cheap
-and is outweighed by the performance gain of potentially skipping
-pci_walk_bus() altogether.
+  if (link->irq.active < ARRAY_SIZE(acpi_irq_penalty))
+    acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
 
-The algorithm can be optimized further by taking into account if D3 is
-currently allowed for the bridge, as shown in the following truth table:
+There are a couple other similar uses in acpi_irq_get_penalty() and
+acpi_irq_penalty_init().
 
-(a)  remove &&  bridge_d3:  D3 is currently allowed for the bridge and
-                            removing one of its children won't change
-                            that.  No action necessary.
-(b)  remove && !bridge_d3:  D3 may now be allowed for the bridge if the
-                            removed child was the only one blocking it.
-                            Check all its siblings to verify that.
-(c) !remove &&  bridge_d3:  D3 may now be disallowed but this can only
-                            be caused by the added/changed child, not
-                            any of its siblings.  Check only that single
-                            device.
-(d) !remove && !bridge_d3:  D3 may now be allowed for the bridge if the
-                            changed child was the only one blocking it.
-                            Check all its siblings to verify that.
-                            By checking beforehand if the changed child
-                            is blocking D3, we may be able to skip
-                            checking its siblings.
-
-Currently we do not special-case option (a) and in case of option (c) we
-gratuitously call pci_walk_bus().  Speed up the algorithm by adding
-these optimizations.  Reword the comments a bit in an attempt to improve
-clarity.
-
-No functional change intended.
-
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 28 ++++++++++++++++++++--------
- 1 file changed, 20 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c12fae7..bc60f2c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2293,20 +2293,32 @@ void pci_bridge_d3_update(struct pci_dev *dev)
- 		return;
- 
- 	/*
--	 * If the device is removed we do not care about its D3cold
--	 * capabilities.
-+	 * If D3 is currently allowed for the bridge, removing one of its
-+	 * children won't change that.
-+	 */
-+	if (remove && bridge->bridge_d3)
-+		return;
-+
-+	/*
-+	 * If D3 is currently allowed for the bridge and a child is added or
-+	 * changed, disallowance of D3 can only be caused by that child, so
-+	 * we only need to check that single device, not any of its siblings.
-+	 *
-+	 * If D3 is currently not allowed for the bridge, checking the device
-+	 * first may allow us to skip checking its siblings.
- 	 */
- 	if (!remove)
- 		pci_dev_check_d3cold(dev, &d3cold_ok);
- 
--	if (d3cold_ok) {
--		/*
--		 * We need to go through all children to find out if all of
--		 * them can still go to D3cold.
--		 */
-+	/*
-+	 * If D3 is currently not allowed for the bridge, this may be caused
-+	 * either by the device being changed/removed or any of its siblings,
-+	 * so we need to go through all children to find out if one of them
-+	 * continues to block D3.
-+	 */
-+	if (d3cold_ok && !bridge->bridge_d3)
- 		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
- 			     &d3cold_ok);
--	}
- 
- 	if (bridge->bridge_d3 != d3cold_ok) {
- 		bridge->bridge_d3 = d3cold_ok;
--- 
-2.9.3
-
+>  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>  		       acpi_device_name(link->device),
+>  		       acpi_device_bid(link->device), link->irq.active);
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
