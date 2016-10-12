@@ -1,124 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 26 Oct 2016 14:42:46 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: Extract link retraining from
- pcie_aspm_configure_common_clock()
-Message-ID: <20161026144246.5bfdf25c@t450s.home>
-In-Reply-To: <20161026180128.23495.19403.stgit@gimli.home>
-References: <20161026175156.23495.12980.stgit@gimli.home>
-        <20161026180128.23495.19403.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40346 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754770AbcJLMSv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:18:51 -0400
+Date: Wed, 12 Oct 2016 07:18:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI: rockchip: Indent an if statement
+Message-ID: <20161012121845.GA21211@localhost>
+References: <20161012105409.GA19070@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161012105409.GA19070@mwanda>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 26 Oct 2016 12:01:28 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
-
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/pci.c       |   29 +++++++++++++++++++++++++++++
->  drivers/pci/pcie/aspm.c |   17 +----------------
->  include/linux/pci.h     |    1 +
->  3 files changed, 31 insertions(+), 16 deletions(-)
+On Wed, Oct 12, 2016 at 01:54:09PM +0300, Dan Carpenter wrote:
+> The if statement wasn't intended.  Add a tab.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 6d6cf89..4d327d4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4729,6 +4729,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->  }
->  EXPORT_SYMBOL(pcie_set_mps);
->  
-> +int pcie_retrain_link(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +	u16 lnksta;
-> +	unsigned long timeout;
-> +
-> +	/* Can only retrain from downstream ports */
-> +	if (!pci_is_pcie(dev) ||
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM &&
-> +	     pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
-> +		return -EINVAL;
-> +
-> +	ret = pcie_capability_set_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RL);
-> +	if (ret)
-> +		return ret;
-> +
-> +	timeout = jiffies + HZ; /* Retraining timeout */
-> +	for (;;) {
-> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-> +		if (!(lnksta & PCI_EXP_LNKSTA_LT) ||
-> +		    time_after(jiffies, timeout))
-> +			break;
-> +		msleep(1);
-> +	}
-> +
-> +	return (lnksta & PCI_EXP_LNKSTA_LT) ? -EBUSY : 0;
-> +}
-> +EXPORT_SYMBOL(pcie_retrain_link);
-> +
->  int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->  		  enum pcie_link_width *width)
->  {
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 0ec649d..482d60c 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -91,8 +91,6 @@ struct pcie_link_state {
->  	[POLICY_POWERSAVE] = "powersave"
->  };
->  
-> -#define LINK_RETRAIN_TIMEOUT HZ
-> -
->  static int policy_to_aspm_state(struct pcie_link_state *link)
->  {
->  	switch (aspm_policy) {
-> @@ -222,20 +220,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
->  	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
->  
->  	/* Retrain link */
-> -	reg16 |= PCI_EXP_LNKCTL_RL;
-> -	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
-> -
-> -	/* Wait for link training end. Break out after waiting for timeout */
-> -	start_jiffies = jiffies;
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Zero day builders remind me that I forgot to remove the declaration of
-start_jiffies from this function and that it's now unused.  I'll refrain
-from immediately spamming the list with a v2 for that minor change, but
-note that this patch will need a respin or fixup on commit, whichever
-is preferred.  Thanks,
+Applied to pci/host-rockchip for v4.9, thanks, Dan.
 
-Alex
-
-> -	for (;;) {
-> -		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
-> -		if (!(reg16 & PCI_EXP_LNKSTA_LT))
-> -			break;
-> -		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
-> -			break;
-> -		msleep(1);
-> -	}
-> -	if (!(reg16 & PCI_EXP_LNKSTA_LT))
-> +	if (!pcie_retrain_link(parent))
->  		return;
->  
->  	/* Training failed. Restore common clock configurations */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index fbfbb40..eb0e9be 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1024,6 +1024,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
->  int pcie_set_readrq(struct pci_dev *dev, int rq);
->  int pcie_get_mps(struct pci_dev *dev);
->  int pcie_set_mps(struct pci_dev *dev, int mps);
-> +int pcie_retrain_link(struct pci_dev *dev);
->  int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->  			  enum pcie_link_width *width);
->  int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index b8c82fc..f54ef1e 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -972,7 +972,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+>  		return -EINVAL;
+>  	if (region_no == 0) {
+>  		if (AXI_REGION_0_SIZE < (2ULL << num_pass_bits))
+> -		return -EINVAL;
+> +			return -EINVAL;
+>  	}
+>  	if (region_no != 0) {
+>  		if (AXI_REGION_SIZE < (2ULL << num_pass_bits))
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
