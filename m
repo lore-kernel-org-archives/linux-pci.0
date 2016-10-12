@@ -1,79 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53742 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:42758 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935930AbcJUUXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 16:23:14 -0400
-Date: Fri, 21 Oct 2016 15:23:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bhelgaas@google.com, benh@au1.ibm.com, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, clsoto@us.ibm.com
-Subject: Re: [PATCH v2 1/2] pci: Call pcibios_sriov_enable() before IOV BARs
- are enabled
-Message-ID: <20161021202309.GF9007@localhost>
-References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+        id S1754538AbcJLN6q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:58:46 -0400
+Subject: [PATCH v2 2/7] PCI: layerscape: Remove unused platform data
+To: Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Wed, 12 Oct 2016 08:57:38 -0500
+Message-ID: <20161012135738.29815.19822.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 09:47:49AM +1000, Gavin Shan wrote:
-> In current implementation, pcibios_sriov_enable() is used by PPC
-> PowerNV platform only. In PowerNV specific pcibios_sriov_enable(),
-> PF's IOV BARs might be updated (shifted) by pci_update_resource().
-> It means the IOV BARs aren't ready for decoding incoming memory
-> address until pcibios_sriov_enable() returns.
-> 
-> This calls pcibios_sriov_enable() earlier before the IOV BARs are
-> enabled. As the result, the IOV BARs have been configured correctly
-> when they are enabled.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Tested-by: Carol Soto <clsoto@us.ibm.com>
-> ---
->  drivers/pci/iov.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 2194b44..f1343f0 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -303,13 +303,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  			return rc;
->  	}
->  
-> -	pci_iov_set_numvfs(dev, nr_virtfn);
-> -	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-> -	pci_cfg_access_lock(dev);
-> -	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> -	msleep(100);
-> -	pci_cfg_access_unlock(dev);
-> -
->  	iov->initial_VFs = initial;
->  	if (nr_virtfn < initial)
->  		initial = nr_virtfn;
-> @@ -320,6 +313,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  		goto err_pcibios;
->  	}
->  
-> +	pci_iov_set_numvfs(dev, nr_virtfn);
-> +	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-> +	pci_cfg_access_lock(dev);
-> +	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> +	msleep(100);
-> +	pci_cfg_access_unlock(dev);
+The layerscape driver never uses the platform drvdata pointer, so don't
+bother setting it.  No functional change intended.
 
-This one looks fine to me.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-layerscape.c |    2 --
+ 1 file changed, 2 deletions(-)
 
->  	for (i = 0; i < initial; i++) {
->  		rc = pci_iov_add_virtfn(dev, i, 0);
->  		if (rc)
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 08b511e..ebed415 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -267,8 +267,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	platform_set_drvdata(pdev, pcie);
+-
+ 	return 0;
+ }
+ 
+
