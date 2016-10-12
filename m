@@ -1,78 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com
-Cc: net147@gmail.com, linux-pci@vger.kernel.org, agross@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V5 0/3] ACPI,PCI,IRQ: revert penalty calculation for ISA and SCI interrupts
-Date: Mon, 24 Oct 2016 00:31:29 -0400
-Message-Id: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60266 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932853AbcJLNSv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:18:51 -0400
+Subject: [PATCH v2 08/10] PCI: designware-plat: Remove redundant
+ dw_plat_pcie.mem_base
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:18:47 -0500
+Message-ID: <20161012131847.26443.52325.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Remove the struct dw_plat_pcie.mem_base member, which is only used as a
+temporary.  No functional change intended.
 
-By the time ACPI gets initialized, this code tries to determine an
-IRQ number based on penalty values in this array. It will try to locate
-the IRQ with the least penalty assignment so that interrupt sharing is
-avoided if possible.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware-plat.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-A couple of notes about the external APIs:
-1. These API can be called before the ACPI is started. Therefore, one
-cannot assume that the PCI link objects are initialized for calculating
-penalties.
-2. The polarity and trigger information passed via the
-acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-is reporting as the call might have been placed before the IRQ is
-registered by the interrupt subsystem.
-
-The reverted changes were in the direction to remove these external API and
-try to calculate the penalties at runtime for the ISA, SCI as well as PCI
-IRQS.
-This didn't work out well with the existing platforms.
-
-V5:
-* clean up the commit message for 1/3 and 2/3
-* drop 3/3
-* bring back ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts as 3/3
-
-V4:
-https://www.spinics.net/lists/arm-kernel/msg537158.html
-* Drop ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-* A new patch to isolate early boot ISA penalty calculations from dynamic
-penalty calculation by directly modifying the array members in
-("ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages")
-* Now that we isolated both SCI and ISA interrupts, revert commit ("Revert
-"ACPI,PCI,IRQ: separate ISA penalty calculation"") and commit
-("487cf917ed0d
-(Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()")
-to share code between ISA and PCI penalties as originally intended.
-
-V3:
-http://www.spinics.net/lists/arm-kernel/msg536208.html
-* drop patch #1 as discussed with Bjorn
-* add patch #3 to track SCI irq and penalty separately
-
-V2: https://lkml.org/lkml/2016/10/1/106
-* Commit message updates
-
-V1:
-http://lists-archives.com/linux-kernel/28673954-revert-acpi-pci-irq-reduce-static-irq-array-size-to-16.html
-* initial implementation
-
-Sinan Kaya (3):
-  ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages
-  ACPI: pci_link: penalize SCI correctly
-  ACPI: pci_link: Include PIRQ_PENALTY_PCI_USING for ISA IRQs
-
- arch/x86/kernel/acpi/boot.c |  1 +
- drivers/acpi/pci_link.c     | 38 +++++++++++++++++++++-----------------
- include/linux/acpi.h        |  1 +
- 3 files changed, 23 insertions(+), 17 deletions(-)
-
--- 
-1.9.1
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+index 17da005..d9d01e7 100644
+--- a/drivers/pci/host/pcie-designware-plat.c
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -25,8 +25,7 @@
+ #include "pcie-designware.h"
+ 
+ struct dw_plat_pcie {
+-	void __iomem		*mem_base;
+-	struct pcie_port	pp;
++	struct pcie_port	pp;	/* pp.dbi_base is DT 0th resource */
+ };
+ 
+ static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+@@ -100,11 +99,9 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 	pp->dev = &pdev->dev;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	dw_plat_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(dw_plat_pcie->mem_base))
+-		return PTR_ERR(dw_plat_pcie->mem_base);
+-
+-	pp->dbi_base = dw_plat_pcie->mem_base;
++	pp->dbi_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(pp->dbi_base))
++		return PTR_ERR(pp->dbi_base);
+ 
+ 	ret = dw_plat_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
 
