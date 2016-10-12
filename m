@@ -1,73 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39788 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:42262 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754995AbcJLNnE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:43:04 -0400
-Subject: [PATCH v2 4/8] PCI: hisi: Remove redundant struct hisi_pcie.reg_base
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+        id S1754881AbcJLNxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:53:52 -0400
+Subject: [PATCH v2 6/6] PCI: keystone: Reorder struct keystone_pcie
+To: Murali Karicheri <m-karicheri2@ti.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:42:59 -0500
-Message-ID: <20161012134259.28562.94100.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Wed, 12 Oct 2016 08:53:48 -0500
+Message-ID: <20161012135348.29306.55245.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the struct hisi_pcie.reg_base member, which is a duplicate of the
-generic pp.dbi_base member.  No functional change intended.
+Reorder struct keystone_pcie to put generic fields first.  No functional
+change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-hisi.c |   13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ drivers/pci/host/pci-keystone.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 28c95b8..f2bb206 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -38,7 +38,6 @@ struct pcie_soc_ops {
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index fe2f741..bc54baf 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -17,8 +17,8 @@
+ #define MAX_LEGACY_HOST_IRQS		4
  
- struct hisi_pcie {
- 	struct regmap *subctrl;
--	void __iomem *reg_base;
- 	u32 port_id;
- 	struct pcie_port pp;
- 	struct pcie_soc_ops *soc_ops;
-@@ -47,12 +46,12 @@ struct hisi_pcie {
- static inline void hisi_pcie_apb_writel(struct hisi_pcie *hisi_pcie,
- 					u32 val, u32 reg)
- {
--	writel(val, hisi_pcie->reg_base + reg);
-+	writel(val, hisi_pcie->pp.dbi_base + reg);
- }
+ struct keystone_pcie {
++	struct	pcie_port	pp;		/* pp.dbi_base is DT 0th res */
+ 	struct	clk		*clk;
+-	struct	pcie_port	pp;
+ 	/* PCI Device ID */
+ 	u32			device_id;
+ 	int			num_legacy_host_irqs;
+@@ -34,7 +34,7 @@ struct keystone_pcie {
+ 	int error_irq;
  
- static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *hisi_pcie, u32 reg)
- {
--	return readl(hisi_pcie->reg_base + reg);
-+	return readl(hisi_pcie->pp.dbi_base + reg);
- }
+ 	/* Application register space */
+-	void __iomem		*va_app_base;
++	void __iomem		*va_app_base;	/* DT 1st resource */
+ 	struct resource		app;
+ };
  
- /* HipXX PCIe host only supports 32-bit config access */
-@@ -198,14 +197,12 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
--	hisi_pcie->reg_base = devm_ioremap_resource(dev, reg);
--	if (IS_ERR(hisi_pcie->reg_base)) {
-+	pp->dbi_base = devm_ioremap_resource(dev, reg);
-+	if (IS_ERR(pp->dbi_base)) {
- 		dev_err(dev, "cannot get rc_dbi base\n");
--		return PTR_ERR(hisi_pcie->reg_base);
-+		return PTR_ERR(pp->dbi_base);
- 	}
- 
--	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
--
- 	ret = hisi_add_pcie_port(pp, pdev);
- 	if (ret)
- 		return ret;
 
