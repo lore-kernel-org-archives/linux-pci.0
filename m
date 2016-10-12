@@ -1,39 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39484 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:44420 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932626AbcJURTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 13:19:35 -0400
-Date: Fri, 21 Oct 2016 13:30:04 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
-Message-ID: <20161021173004.GB8633@localhost.localdomain>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
- <1475007815-28354-3-git-send-email-keith.busch@intel.com>
- <20161021165810.GD4221@wunner.de>
+        id S1755054AbcJLOEh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 10:04:37 -0400
+Subject: [PATCH v2 1/4] PCI: spear: Remove unused constants
+To: Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 09:04:27 -0500
+Message-ID: <20161012140427.30368.4087.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012140058.30368.94283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012140058.30368.94283.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021165810.GD4221@wunner.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 06:58:10PM +0200, Lukas Wunner wrote:
-> On Tue, Sep 27, 2016 at 04:23:32PM -0400, Keith Busch wrote:
-> I note that you've removed the change to pci_device_is_present()
-> completely from v3 of this patch, however only a portion of the
-> change was problematic.  This portion would have been okay:
-> 
-> 
-> +	if (pdev->is_removed)
-> +		return false;
->  
-> 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
-> 
-> 
-> Up to you if you want to include this in the next iteration or not.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-spear13xx.c |   70 -------------------------------------
+ 1 file changed, 70 deletions(-)
 
-I was thinking it didn't matter since patch 3/5 has config access return
--ENODEV on a removed pci_dev, but pci_bus_read_dev_vendor_id doesn't use
-the pci_dev. I'll add it back in.
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 09aed85..73f17da 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -57,87 +57,17 @@ struct pcie_app_reg {
+ };
+ 
+ /* CR0 ID */
+-#define RX_LANE_FLIP_EN_ID			0
+-#define TX_LANE_FLIP_EN_ID			1
+-#define SYS_AUX_PWR_DET_ID			2
+ #define APP_LTSSM_ENABLE_ID			3
+-#define SYS_ATTEN_BUTTON_PRESSED_ID		4
+-#define SYS_MRL_SENSOR_STATE_ID			5
+-#define SYS_PWR_FAULT_DET_ID			6
+-#define SYS_MRL_SENSOR_CHGED_ID			7
+-#define SYS_PRE_DET_CHGED_ID			8
+-#define SYS_CMD_CPLED_INT_ID			9
+-#define APP_INIT_RST_0_ID			11
+-#define APP_REQ_ENTR_L1_ID			12
+-#define APP_READY_ENTR_L23_ID			13
+-#define APP_REQ_EXIT_L1_ID			14
+-#define DEVICE_TYPE_EP				(0 << 25)
+-#define DEVICE_TYPE_LEP				(1 << 25)
+ #define DEVICE_TYPE_RC				(4 << 25)
+-#define SYS_INT_ID				29
+ #define MISCTRL_EN_ID				30
+ #define REG_TRANSLATION_ENABLE			31
+ 
+-/* CR1 ID */
+-#define APPS_PM_XMT_TURNOFF_ID			2
+-#define APPS_PM_XMT_PME_ID			5
+-
+ /* CR3 ID */
+-#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
+-#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
+-#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
+-#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
+-#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
+-#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
+-#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
+-#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
+-#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
+-#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
+-#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
+-#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
+-#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
+-#define XMLH_LTSSM_STATE_L0			0x11
+-#define XMLH_LTSSM_STATE_L0S			0x12
+-#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
+-#define XMLH_LTSSM_STATE_L1_IDLE		0x14
+-#define XMLH_LTSSM_STATE_L2_IDLE		0x15
+-#define XMLH_LTSSM_STATE_L2_WAKE		0x16
+-#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
+-#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
+-#define XMLH_LTSSM_STATE_DISABLED		0x19
+-#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
+-#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
+-#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
+-#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
+-#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
+-#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
+-#define XMLH_LTSSM_STATE_MASK			0x3F
+ #define XMLH_LINK_UP				(1 << 6)
+ 
+-/* CR4 ID */
+-#define CFG_MSI_EN_ID				18
+-
+ /* CR6 */
+-#define INTA_CTRL_INT				(1 << 7)
+-#define INTB_CTRL_INT				(1 << 8)
+-#define INTC_CTRL_INT				(1 << 9)
+-#define INTD_CTRL_INT				(1 << 10)
+ #define MSI_CTRL_INT				(1 << 26)
+ 
+-/* CR19 ID */
+-#define VEN_MSI_REQ_ID				11
+-#define VEN_MSI_FUN_NUM_ID			8
+-#define VEN_MSI_TC_ID				5
+-#define VEN_MSI_VECTOR_ID			0
+-#define VEN_MSI_REQ_EN		((u32)0x1 << VEN_MSI_REQ_ID)
+-#define VEN_MSI_FUN_NUM_MASK	((u32)0x7 << VEN_MSI_FUN_NUM_ID)
+-#define VEN_MSI_TC_MASK		((u32)0x7 << VEN_MSI_TC_ID)
+-#define VEN_MSI_VECTOR_MASK	((u32)0x1F << VEN_MSI_VECTOR_ID)
+-
+ #define EXP_CAP_ID_OFFSET			0x70
+ 
+ #define to_spear13xx_pcie(x)	container_of(x, struct spear13xx_pcie, pp)
+
