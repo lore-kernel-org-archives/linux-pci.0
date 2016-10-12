@@ -1,62 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
- <5869118.UilSPY9Sai@wuerfel>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
-Date: Sun, 2 Oct 2016 15:03:58 -0700
-MIME-Version: 1.0
-In-Reply-To: <5869118.UilSPY9Sai@wuerfel>
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org, john.garry@huawei.com, will.deacon@arm.com,
- linux-kernel@vger.kernel.org, "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- linuxarm@huawei.com, xuwei5@hisilicon.com, linux-serial@vger.kernel.org,
- benh@kernel.crashing.org, zourongrong@gmail.com, liviu.dudau@arm.com,
- kantyzc@163.com, zhichang.yuan02@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:39654 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754805AbcJLBzZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 21:55:25 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v7 2/3] of/pci: Add helper function to parse max-link-speed from dt
+Date: Wed, 12 Oct 2016 10:01:24 +0800
+Message-Id: <1476237685-14539-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1476237685-14539-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1476237685-14539-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2016 02:32 PM, Arnd Bergmann wrote:
-> On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
+This new helper function could be used by host drivers to
+get the limitaion of max link speed provided by dt. If the
+property isn't assigned or is invalid, it will return -EINVAL
+to the caller.
 
->> And there are probably multiple child devices under LPC, the global arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi driver can not support I/O
->> operation registering, serial driver has serial_in/serial_out to
->> be registered. So, only the PIO range for ipmi device is stored
->> in arm64_extio_ops and the indirect-IO
->> works well for ipmi device.
-> 
-> You should not do that in the serial driver, please just use the
-> normal 8250 driver that works fine once you handle the entire
-> port range.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Just for the record, Arnd has the right idea. There is only one type of
-UART permitted by SBSA (PL011). We carved out an exception for a design
-that was already in flight and allowed it to be 16550. That other design
-was then corrected in future generations to be PL011 as we required it
-to be. Then there's the Hip06. I've given feedback elsewhere about the
-need for there to be (at most) two types of UART in the wild. This "LPC"
-stuff needs cleaning up (feedback given elsewhere already on that), but
-we won't be adding a third serial driver into the mix in order to make
-it work. There will be standard ARM servers. There will not be the
-kinda-sorta-standard. Thanks.
+---
 
-Jon.
+Changes in v7:
+- rename the function name and using of_property_read_u32
+  suggested by Rob
+
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/of/of_pci.c    | 21 +++++++++++++++++++++
+ include/linux/of_pci.h |  7 +++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 589b30c..0c566ca 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -120,6 +120,27 @@ int of_get_pci_domain_nr(struct device_node *node)
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+ 
+ /**
++ * This function will try to find the limitation of link speed by finding
++ * a property called "max-link-speed" of the given device node.
++ *
++ * @node: device tree node with the max link speed information
++ *
++ * Returns the associated max link speed from DT, or a negative value if the
++ * required property is not found or is invalid.
++ */
++int of_pci_get_max_link_speed(struct device_node *node)
++{
++	u32 max_link_speed;
++
++	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
++	    max_link_speed > 4)
++		return -EINVAL;
++
++	return max_link_speed;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
++
++/**
+  * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+  *                           is present and valid
+  */
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index b969e94..2e668e3 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
++int of_pci_get_max_link_speed(struct device_node *node);
+ void of_pci_check_probe_only(void);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+@@ -52,6 +53,12 @@ of_get_pci_domain_nr(struct device_node *node)
+ 	return -1;
+ }
+ 
++static inline int
++of_pci_get_max_link_speed(struct device_node *node)
++{
++	return -EINVAL;
++}
++
+ static inline void of_pci_check_probe_only(void) { }
+ #endif
+ 
+-- 
+2.3.7
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
