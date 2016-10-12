@@ -1,36 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
-        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
-        alex.williamson@redhat.com, kvm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/6] arcmsr: use pci_alloc_irq_vectors
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-        <1473600688-24043-2-git-send-email-hch@lst.de>
-Date: Tue, 11 Oct 2016 16:16:46 -0400
-In-Reply-To: <1473600688-24043-2-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Sun, 11 Sep 2016 15:31:23 +0200")
-Message-ID: <yq1y41uod3l.fsf@sermon.lab.mkp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755195AbcJLNEs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:04:48 -0400
+Subject: [PATCH v2 2/2] PCI: rockchip: Indent "if" statement body
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:04:37 -0500
+Message-ID: <20161012130437.25212.34359.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012130256.25212.33689.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012130256.25212.33689.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Christoph> Switch the arcmsr driver to use pci_alloc_irq_vectors.  We
-Christoph> need to two calls to pci_alloc_irq_vectors as arcmsr only
-Christoph> supports multiple MSI-X vectors, but not multiple MSI
-Christoph> vectors.
+Body of an "if" statement wasn't indented.  Add a tab.
 
-Christoph> Otherwise this cleans up a lot of cruft and allows to use a
-Christoph> common request_irq loop for irq types, which happens to only
-Christoph> iterate over a single line in the non MSI-X case.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-rockchip.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied to 4.10/scsi-queue.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 59bf0db..e0b22da 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -972,7 +972,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+ 		return -EINVAL;
+ 	if (region_no == 0) {
+ 		if (AXI_REGION_0_SIZE < (2ULL << num_pass_bits))
+-		return -EINVAL;
++			return -EINVAL;
+ 	}
+ 	if (region_no != 0) {
+ 		if (AXI_REGION_SIZE < (2ULL << num_pass_bits))
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
