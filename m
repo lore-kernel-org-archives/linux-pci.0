@@ -1,148 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51056 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:38172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757217AbcJGQe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:34:26 -0400
-Subject: [PATCH 1/9] PCI: dra7xx: Rename accessors
-To: Kishon Vijay Abraham I <kishon@ti.com>
+        id S1754043AbcJLNga (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:36:30 -0400
+Subject: [PATCH v2 4/7] PCI: artpec6: Use generic DesignWare accessors
+To: Jesper Nilsson <jesper.nilsson@axis.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-omap@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:33:50 -0500
-Message-ID: <20161007163350.24926.17545.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
+Date: Wed, 12 Oct 2016 08:29:28 -0500
+Message-ID: <20161012132928.27228.81029.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012132616.27228.4618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012132616.27228.4618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename dra7xx_pcie_readl() to dra7xx_readl() and dra7xx_pcie_writel() to
-dra7xx_writel() for consistency with other drivers.  Uninline them; there's
-no performance issue here, and the compiler can inline them if it's
-worthwhile.  No functional change intended.
+The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces already add in
+pp->dbi_base, so use those instead of doing it ourselves in the armada8k
+driver.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 ---
- drivers/pci/host/pci-dra7xx.c |   45 ++++++++++++++++++++---------------------
- 1 file changed, 22 insertions(+), 23 deletions(-)
+ drivers/pci/host/pcie-artpec6.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 19223ed..765f48b 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -73,13 +73,12 @@ struct dra7xx_pcie {
+diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
+index d9121c3..b3829d0 100644
+--- a/drivers/pci/host/pcie-artpec6.c
++++ b/drivers/pci/host/pcie-artpec6.c
+@@ -139,7 +139,7 @@ static int artpec6_pcie_establish_link(struct pcie_port *pp)
+ 	 * Enable writing to config regs. This is required as the Synopsys
+ 	 * driver changes the class code. That register needs DBI write enable.
+ 	 */
+-	writel(DBI_RO_WR_EN, pp->dbi_base + MISC_CONTROL_1_OFF);
++	dw_pcie_writel_rc(pp, MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
  
- #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
- 
--static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
-+static u32 dra7xx_readl(struct dra7xx_pcie *pcie, u32 offset)
- {
- 	return readl(pcie->base + offset);
- }
- 
--static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
--				      u32 value)
-+static void dra7xx_writel(struct dra7xx_pcie *pcie, u32 offset, u32 value)
- {
- 	writel(value, pcie->base + offset);
- }
-@@ -98,7 +97,7 @@ static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
- static int dra7xx_pcie_link_up(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
--	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-+	u32 reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
- 
- 	return !!(reg & LINK_UP);
- }
-@@ -113,9 +112,9 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ 	pp->io_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+ 	pp->mem_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+@@ -159,8 +159,8 @@ static int artpec6_pcie_establish_link(struct pcie_port *pp)
  		return 0;
- 	}
  
--	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
- 	reg |= LTSSM_EN;
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+-		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
++		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
  
- 	return dw_pcie_wait_for_link(pp);
+ 	return -ETIMEDOUT;
  }
-@@ -124,20 +123,20 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
- 
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
--			   ~INTERRUPTS);
--	dra7xx_pcie_writel(dra7xx,
--			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
--			   ~LEG_EP_INTERRUPTS & ~MSI);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-+		      ~INTERRUPTS);
-+	dra7xx_writel(dra7xx,
-+		      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-+		      ~LEG_EP_INTERRUPTS & ~MSI);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
--		dra7xx_pcie_writel(dra7xx,
--				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
-+		dra7xx_writel(dra7xx,
-+			      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
- 	else
--		dra7xx_pcie_writel(dra7xx,
--				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
--				   LEG_EP_INTERRUPTS);
-+		dra7xx_writel(dra7xx,
-+			      PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
-+			      LEG_EP_INTERRUPTS);
- }
- 
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
-@@ -200,7 +199,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
- 	u32 reg;
- 
--	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-+	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
- 
- 	switch (reg) {
- 	case MSI:
-@@ -214,7 +213,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 		break;
- 	}
- 
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
- 
- 	return IRQ_HANDLED;
- }
-@@ -225,7 +224,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	u32 reg;
- 
--	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
-+	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
- 
- 	if (reg & ERR_SYS)
- 		dev_dbg(dra7xx->dev, "System Error\n");
-@@ -269,7 +268,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	if (reg & CFG_MSE_EVT)
- 		dev_dbg(dra7xx->dev, "CFG 'Memory Space Enable' change\n");
- 
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
- 
- 	return IRQ_HANDLED;
- }
-@@ -416,9 +415,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		goto err_gpio;
- 	}
- 
--	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg = dra7xx_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
- 	reg &= ~LTSSM_EN;
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+	dra7xx_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
- 	platform_set_drvdata(pdev, dra7xx);
- 
 
