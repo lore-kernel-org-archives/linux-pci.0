@@ -1,71 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46692 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:35410 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938999AbcJGQYE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:24:04 -0400
-Subject: [PATCH 7/7] PCI: iproc: Set drvdata at end of probe function
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Fri, 07 Oct 2016 11:24:00 -0500
-Message-ID: <20161007162400.23015.76859.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1754910AbcJLQ0j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:26:39 -0400
+Date: Wed, 12 Oct 2016 11:18:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [PATCH v2 0/5] PCI: iproc: Cleanups
+Message-ID: <20161012161842.GW4308@localhost>
+References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012160114.GC4308@localhost>
+ <4e1e4df1-15b0-7deb-eaa9-4ac683812be9@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4e1e4df1-15b0-7deb-eaa9-4ac683812be9@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set the drvdata pointer at the end of probe function for consistency with
-other drivers.  We don't need the drvdata until after the probe completes,
-and we don't need it at all if the probe fails.  No functional change
-intended.
+On Wed, Oct 12, 2016 at 09:04:26AM -0700, Ray Jui wrote:
+> Hi Bjorn,
+> 
+> On 10/12/2016 9:01 AM, Bjorn Helgaas wrote:
+> >On Wed, Oct 12, 2016 at 07:53:03AM -0500, Bjorn Helgaas wrote:
+> >>  - Add local "dev" pointers to reduce repetition of things like
+> >>    "&pdev->dev".
+> >>
+> >>  - Tidy up drvdata usage.
+> >>
+> >>  - Remove some null pointer checking after adding corresponding checking
+> >>    elsewhere.
+> >>
+> >>  - Hard-code the PCIe capability offset instead of searching for it.  This
+> >>    removes a little bit of dependency on struct pci_bus, with an eye
+> >>    toward moving the link maintenance before enumeration.
+> >>
+> >>Changes from v1:
+> >>  I dropped the following patches because they were a lot of churn for
+> >>  questionable benefit:
+> >>    PCI: iproc: Rename accessors
+> >>    PCI: iproc: Name private struct pointer "iproc" consistently
+> >>
+> >>---
+> >>
+> >>Bjorn Helgaas (5):
+> >>      PCI: iproc: Add local struct device pointers
+> >>      PCI: iproc: Set drvdata at end of probe function
+> >>      PCI: iproc: Validate CSR base in BCMA setup code
+> >>      PCI: iproc: Remove redundant null pointer checking
+> >>      PCI: iproc: Hard-code PCIe capability offset instead of searching
+> >
+> >I applied these to pci/host-iproc for v4.9.  I hope to ask Linus to
+> >pull them tomorrow, so if you see any issues, let me know soon.
+> >
+> 
+> That sounds good. Are these patches in the git repo:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git at
+> branch pci/host-iproc?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-iproc-bcma.c     |    2 +-
- drivers/pci/host/pcie-iproc-platform.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+They should be there.  I also just merged everything into my "next"
+branch.
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index bc364a7..800bc84 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -53,7 +53,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 		return -ENOMEM;
- 
- 	iproc->dev = dev;
--	bcma_set_drvdata(bdev, iproc);
- 
- 	iproc->base = bdev->io_addr;
- 	if (!iproc->base) {
-@@ -77,6 +76,7 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 
- 	pci_free_resource_list(&res);
- 
-+	bcma_set_drvdata(bdev, iproc);
- 	return ret;
- }
- 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 6baaae1..31c0fb9 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -59,7 +59,6 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 
- 	iproc->dev = dev;
- 	iproc->type = (enum iproc_pcie_type)of_id->data;
--	platform_set_drvdata(pdev, iproc);
- 
- 	ret = of_address_to_resource(np, 0, &reg);
- 	if (ret < 0) {
-@@ -124,6 +123,7 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 
- 	pci_free_resource_list(&res);
- 
-+	platform_set_drvdata(pdev, iproc);
- 	return ret;
- }
- 
+> I plan to sanity test them on various iProc based SoCs.
 
+Great, thanks!
