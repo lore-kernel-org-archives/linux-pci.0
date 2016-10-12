@@ -1,79 +1,66 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59598 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932266AbcJLNRz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:17:55 -0400
+Subject: [PATCH v2 01/10] PCI: designware: Rename dw_pcie_valid_config() to
+ dw_pcie_valid_device()
+To: Joao Pinto <jpinto@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:17:50 -0500
+Message-ID: <20161012131750.26443.65705.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sat, 15 Oct 2016 09:39:24 -0700
-From: okaya@codeaurora.org
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
- arnd@arndb.de, linux-pci-owner@vger.kernel.org
-Subject: Re: Why MSI is limited to 32 interrupts maximum
-In-Reply-To: <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20161015141401.70d95035@why.wild-wind.fr.eu.org>
- <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
-Message-ID: <304288d1efe5014b24d600be4438651a@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-10-15 06:30, Bharat Kumar Gogada wrote:
->> On Sat, 15 Oct 2016 12:37:55 +0000
->> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
->> 
->> Hi Bharat,
->> 
->> > Can anyone tell why MSI interrupts are limited to maximum 32
->> > interrupts, even though we have 16bit message data register ?
->> 
->> That's the very definition of the original PCI MSI: Up to 32 
->> consecutive interrupts
->> per function, and a single doorbell address.
->> MSI-X lifts that restriction and offers up to 2048 interrupts that do 
->> not have to
->> be contiguous can target individual doorbells. Assuming your MSI 
->> controller
->> advertises MSI-X support and that your devices do support it as well, 
->> you'll be
->> able to enjoy those.
->> 
-> 
-> Thanks Marc, so then only 5 bits of message data register will be
-> used, so what is the purpose rest of the bits ?
-> 
+Rename dw_pcie_valid_config() to dw_pcie_valid_device() and use the result
+directly as a boolean value instead of testing against 0.  No functional
+change intended.
 
-Data field is used to indicate which interrupt number is used. It does 
-not need to start at 0.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 74da71e..b58f078 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -760,8 +760,8 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	return ret;
+ }
+ 
+-static int dw_pcie_valid_config(struct pcie_port *pp,
+-				struct pci_bus *bus, int dev)
++static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
++				int dev)
+ {
+ 	/* If there is no link, then there is no device */
+ 	if (bus->number != pp->root_bus_nr) {
+@@ -781,7 +781,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+-	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
++	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -797,7 +797,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+-	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
++	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (bus->number == pp->root_bus_nr)
 
-You have 32 consecutive interrupts starting from some arbitrary base.
-
-
->> >
->> > Regards,
->> > Bharat
->> >
->> >
->> > This email and any attachments are intended for the sole use of the
->> > named recipient(s) and contain(s) confidential information that may be
->> > proprietary, privileged or copyrighted under applicable law. If you
->> > are not the intended recipient, do not read, copy, or forward this
->> > email message or any attachments. Delete this email message and any
->> > attachments immediately.
->> >
->> 
->> Please fix your email not to carry such disclaimer (or use a private 
->> email address
->> if you can't work around your company policy). Posting confidential 
->> information
->> on a public mailing list feels a bit silly.
->> 
->> Thanks,
->> 
->> 	M.
->> --
->> Without deviation from the norm, progress is not possible.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
