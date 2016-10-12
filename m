@@ -1,90 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46230 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:35396 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933999AbcJZSBX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 14:01:23 -0400
-Subject: [PATCH 2/5] PCI: Extract link speed & width retrieval from
- pcie_get_minimum_link()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 26 Oct 2016 12:01:22 -0600
-Message-ID: <20161026180122.23495.26258.stgit@gimli.home>
-In-Reply-To: <20161026175156.23495.12980.stgit@gimli.home>
-References: <20161026175156.23495.12980.stgit@gimli.home>
+        id S1754868AbcJLQ0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:26:38 -0400
+Date: Wed, 12 Oct 2016 11:01:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [PATCH v2 0/5] PCI: iproc: Cleanups
+Message-ID: <20161012160114.GC4308@localhost>
+References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |   26 ++++++++++++++++++++------
- include/linux/pci.h |    2 ++
- 2 files changed, 22 insertions(+), 6 deletions(-)
+On Wed, Oct 12, 2016 at 07:53:03AM -0500, Bjorn Helgaas wrote:
+>   - Add local "dev" pointers to reduce repetition of things like
+>     "&pdev->dev".
+> 
+>   - Tidy up drvdata usage.
+> 
+>   - Remove some null pointer checking after adding corresponding checking
+>     elsewhere.
+> 
+>   - Hard-code the PCIe capability offset instead of searching for it.  This
+>     removes a little bit of dependency on struct pci_bus, with an eye
+>     toward moving the link maintenance before enumeration.
+> 
+> Changes from v1:
+>   I dropped the following patches because they were a lot of churn for
+>   questionable benefit:
+>     PCI: iproc: Rename accessors
+>     PCI: iproc: Name private struct pointer "iproc" consistently
+> 
+> ---
+> 
+> Bjorn Helgaas (5):
+>       PCI: iproc: Add local struct device pointers
+>       PCI: iproc: Set drvdata at end of probe function
+>       PCI: iproc: Validate CSR base in BCMA setup code
+>       PCI: iproc: Remove redundant null pointer checking
+>       PCI: iproc: Hard-code PCIe capability offset instead of searching
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b901ee7..6d6cf89 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4729,6 +4729,25 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
- }
- EXPORT_SYMBOL(pcie_set_mps);
- 
-+int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+		  enum pcie_link_width *width)
-+{
-+	int ret;
-+	u16 lnksta;
-+
-+	ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+	if (ret)
-+		return ret;
-+
-+	if (speed)
-+		*speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
-+	if (width)
-+		*width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
-+					PCI_EXP_LNKSTA_NLW_SHIFT;
-+
-+	return 0;
-+}
-+
- /**
-  * pcie_get_minimum_link - determine minimum link settings of a PCI device
-  * @dev: PCI device to query
-@@ -4747,18 +4766,13 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 	*width = PCIE_LNK_WIDTH_UNKNOWN;
- 
- 	while (dev) {
--		u16 lnksta;
- 		enum pci_bus_speed next_speed;
- 		enum pcie_link_width next_width;
- 
--		ret = pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-+		ret = pcie_get_link(dev, &next_speed, &next_width);
- 		if (ret)
- 			return ret;
- 
--		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
--		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
--			PCI_EXP_LNKSTA_NLW_SHIFT;
--
- 		if (next_speed < *speed)
- 			*speed = next_speed;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c3248d5..fbfbb40 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1026,6 +1026,8 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
-+int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-+		  enum pcie_link_width *width);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-
+I applied these to pci/host-iproc for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
