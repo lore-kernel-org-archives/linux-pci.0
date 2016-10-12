@@ -1,323 +1,187 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Oct 2016 13:15:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array
- size to 16"
-Message-ID: <20161013181535.GB21529@localhost>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
- <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
- <20161012221357.GB15116@localhost>
- <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56762 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755160AbcJLNH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:07:56 -0400
+Subject: [PATCH v2 1/4] PCI: xgene: Add local struct device pointers
+To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:07:43 -0500
+Message-ID: <20161012130743.25368.76586.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux@rainbow-software.org,
- ravikanth.nalla@hpe.com, jcm@redhat.com, timur@codeaurora.org,
- agross@codeaurora.org, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, alex.williamson@redhat.com, cov@codeaurora.org,
- linux-pci@vger.kernel.org, bhelgaas@google.com, wim@djo.tudelft.nl,
- linux-arm-msm@vger.kernel.org, Len Brown <lenb@kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 06:46:11PM -0400, Sinan Kaya wrote:
-> Hi Bjorn,
-> 
-> On 10/12/2016 6:13 PM, Bjorn Helgaas wrote:
-> > Hi Sinan,
-> > 
-> > I have to apologize because I haven't followed all the discussion and
-> > now I'm trying to figure it out from the patches and changelogs.  But
-> > I guess that's not all bad, because future interested folks *should*
-> > be able to figure things out from that :)
-> 
-> Sure, np. I figured you are busy with the new baseline. Then, I saw a
-> series of patches coming from you.
-> 
-> > 
-> > On Tue, Oct 04, 2016 at 05:15:17PM -0400, Sinan Kaya wrote:
-> >> This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
-> >> size to 16").
-> >>
-> >> The code maintains a fixed size array for IRQ penalties. The array
-> >> gets updated by external calls such as acpi_penalize_sci_irq,
-> >> acpi_penalize_isa_irq to reflect the actual interrupt usage of the
-> >> system. Since the IRQ distribution is platform specific, this is
-> >> not known ahead of time. The IRQs get updated based on the SCI
-> >> interrupt number BIOS has chosen or the ISA IRQs that were assigned
-> >> to existing peripherals.
-> >>
-> >> By the time ACPI gets initialized, this code tries to determine an
-> >> IRQ number based on penalty values in this array. It will try to locate
-> >> the IRQ with the least penalty assignment so that interrupt sharing is
-> >> avoided if possible.
-> >>
-> >> A couple of notes about the external APIs:
-> >> 1. These API can be called before the ACPI is started. Therefore, one
-> >> cannot assume that the PCI link objects are initialized for calculating
-> >> penalties.
-> > 
-> > Which API are you thinking about here?  pcibios_penalize_isa_irq() is
-> > called by ACPI and PNP, which should both be after ACPI is started.
-> 
-> Correct, I was talking about acpi_penalize_sci_irq function here.
-> 
-> > 
-> > My guess is you're thinking about acpi_penalize_sci_irq() (added back
-> > later in this series), which is called here, which is definitely
-> > before ACPI objects are available:
-> > 
-> >   setup_arch
-> >     acpi_boot_init
-> >       acpi_process_madt
-> > 	acpi_parse_madt_ioapic_entries
-> > 	  acpi_table_parse_madt
-> > 	    acpi_parse_int_src_ovr
-> > 	      acpi_sci_ioapic_setup
-> > 	        acpi_penalize_sci_irq       # <---
-> > 
-> >> 2. The polarity and trigger information passed via the
-> >> acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-> >> is reporting as the call might have been placed before the IRQ is
-> >> registered by the interrupt subsystem.
-> >>
-> >> The previous change was in the direction to remove these external API and
-> >> try to calculate the penalties at runtime for the ISA path as well. This
-> >> didn't work out well with the existing platforms.
-> >>
-> >> Restoring the old behavior for IRQ < 256 and the new behavior will remain
-> >> effective for IRQ >= 256.
-> > 
-> > IIRC, this all started because we needed more than 256 IRQs, but we
-> > didn't know how to size a static table to be large enough without
-> > being wasteful.
-> 
-> Correct. We only need 1024 for ARM/ARM64. But, we wanted to remove this
-> restriction altogether to be arch proof. One of my earlier proposal was
-> to just resize the array to 1024. I was asked if I was wasting resources
-> by resizing to 1024.
-> 
-> > 
-> > Prior to 5c5087a55390, we tracked penalties for IRQs 0-255.  After it,
-> > we only tracked penalties for IRQs 0-15.  I think this patch basically
-> > makes it so we track 0-255 again.
-> 
-> Yes, we went back to 256 interrupts after the revert. 
-> 
-> > 
-> > *This* patch only increases the range for pcibios_penalize_isa_irq()
-> > (and command-line hints, but hopefully nobody cares about those).  A
-> > subsequent patch increases it for SCI as well.
-> > 
-> > The name "ACPI_MAX_IRQS" is now slightly misleading (because we do
-> > support more than 256 IRQs) and the 256 value is sort of an
-> > unjustified magic number.  16 is explainable as the number of ISA
-> > IRQs, but I don't know what 256 is based on (other than historical
-> > practice, of course).  ACPI device IRQs can be much larger, and I
-> > think the SCI IRQ can be, too (the FADT SCI_INT field is 16 bits).
-> > 
-> > Can you tie this back to the specific problem on the broken machine
-> > somehow?  Do we need a penalty for an IRQ in the 16-255 range?
-> 
-> The problem on the broken machine was SCI IRQ and PCI IRQ happened to be
-> same. It was IRQ 11. When SCI IRQ heavily penalized IRQ 11 due to
-> wrong interrupt type detection, PCI IRQs no longer worked as this line
-> prohibits using the IRQ.
-> 
-> 
-> 	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
-> 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
-> 			    "Try pci=noacpi or acpi=off\n",
-> 			    acpi_device_name(link->device),
-> 			    acpi_device_bid(link->device));
-> 		return -ENODEV;
-> 	} 
+Use a local "struct device *dev" for brevity and consistency with other
+drivers.  No functional change intended.
 
-It seems like the problem is that we removed acpi_penalize_sci_irq(),
-which told us the polarity and trigger mode.  We tried to get that
-information via irq_get_trigger_type(), but that didn't work in this
-case because we use the acpi_irq_get_penalty() path before the SCI is
-registered.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-xgene.c |   43 +++++++++++++++++++++++-------------------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
 
-It makes sense to me to add acpi_penalize_sci_irq() back in, which is
-what patch [3/3] does.
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index a81273c..03d24e7 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -223,17 +223,18 @@ static void xgene_pcie_linkup(struct xgene_pcie_port *port,
+ 
+ static int xgene_pcie_init_port(struct xgene_pcie_port *port)
+ {
++	struct device *dev = port->dev;
+ 	int rc;
+ 
+-	port->clk = clk_get(port->dev, NULL);
++	port->clk = clk_get(dev, NULL);
+ 	if (IS_ERR(port->clk)) {
+-		dev_err(port->dev, "clock not available\n");
++		dev_err(dev, "clock not available\n");
+ 		return -ENODEV;
+ 	}
+ 
+ 	rc = clk_prepare_enable(port->clk);
+ 	if (rc) {
+-		dev_err(port->dev, "clock enable failed\n");
++		dev_err(dev, "clock enable failed\n");
+ 		return rc;
+ 	}
+ 
+@@ -243,15 +244,16 @@ static int xgene_pcie_init_port(struct xgene_pcie_port *port)
+ static int xgene_pcie_map_reg(struct xgene_pcie_port *port,
+ 			      struct platform_device *pdev)
+ {
++	struct device *dev = port->dev;
+ 	struct resource *res;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
+-	port->csr_base = devm_ioremap_resource(port->dev, res);
++	port->csr_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(port->csr_base))
+ 		return PTR_ERR(port->csr_base);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
+-	port->cfg_base = devm_ioremap_resource(port->dev, res);
++	port->cfg_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(port->cfg_base))
+ 		return PTR_ERR(port->cfg_base);
+ 	port->cfg_addr = res->start;
+@@ -264,6 +266,7 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
+ 				    u64 cpu_addr, u64 pci_addr)
+ {
+ 	void __iomem *base = port->csr_base + offset;
++	struct device *dev = port->dev;
+ 	resource_size_t size = resource_size(res);
+ 	u64 restype = resource_type(res);
+ 	u64 mask = 0;
+@@ -280,7 +283,7 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
+ 	if (size >= min_size)
+ 		mask = ~(size - 1) | flag;
+ 	else
+-		dev_warn(port->dev, "res size 0x%llx less than minimum 0x%x\n",
++		dev_warn(dev, "res size 0x%llx less than minimum 0x%x\n",
+ 			 (u64)size, min_size);
+ 
+ 	writel(lower_32_bits(cpu_addr), base);
+@@ -310,7 +313,7 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+ 		struct resource *res = window->res;
+ 		u64 restype = resource_type(res);
+ 
+-		dev_dbg(port->dev, "%pR\n", res);
++		dev_dbg(dev, "%pR\n", res);
+ 
+ 		switch (restype) {
+ 		case IORESOURCE_IO:
+@@ -381,6 +384,7 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
+ {
+ 	void __iomem *csr_base = port->csr_base;
+ 	void __iomem *cfg_base = port->cfg_base;
++	struct device *dev = port->dev;
+ 	void *bar_addr;
+ 	void *pim_addr;
+ 	u64 cpu_addr = range->cpu_addr;
+@@ -393,7 +397,7 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
+ 
+ 	region = xgene_pcie_select_ib_reg(ib_reg_mask, range->size);
+ 	if (region < 0) {
+-		dev_warn(port->dev, "invalid pcie dma-range config\n");
++		dev_warn(dev, "invalid pcie dma-range config\n");
+ 		return;
+ 	}
+ 
+@@ -463,7 +467,7 @@ static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
+ 	for_each_of_pci_range(&parser, &range) {
+ 		u64 end = range.cpu_addr + range.size - 1;
+ 
+-		dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
++		dev_dbg(dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
+ 			range.flags, range.cpu_addr, end, range.pci_addr);
+ 		xgene_pcie_setup_ib_reg(port, &range, &ib_reg_mask);
+ 	}
+@@ -483,6 +487,7 @@ static int xgene_pcie_setup(struct xgene_pcie_port *port,
+ 			    struct list_head *res,
+ 			    resource_size_t io_base)
+ {
++	struct device *dev = port->dev;
+ 	u32 val, lanes = 0, speed = 0;
+ 	int ret;
+ 
+@@ -502,27 +507,28 @@ static int xgene_pcie_setup(struct xgene_pcie_port *port,
+ 
+ 	xgene_pcie_linkup(port, &lanes, &speed);
+ 	if (!port->link_up)
+-		dev_info(port->dev, "(rc) link down\n");
++		dev_info(dev, "(rc) link down\n");
+ 	else
+-		dev_info(port->dev, "(rc) x%d gen-%d link up\n",
+-				lanes, speed + 1);
++		dev_info(dev, "(rc) x%d gen-%d link up\n", lanes, speed + 1);
+ 	return 0;
+ }
+ 
+ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ {
+-	struct device_node *dn = pdev->dev.of_node;
++	struct device *dev = &pdev->dev;
++	struct device_node *dn = dev->of_node;
+ 	struct xgene_pcie_port *port;
+ 	resource_size_t iobase = 0;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 	LIST_HEAD(res);
+ 
+-	port = devm_kzalloc(&pdev->dev, sizeof(*port), GFP_KERNEL);
++	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+ 	if (!port)
+ 		return -ENOMEM;
+-	port->node = of_node_get(pdev->dev.of_node);
+-	port->dev = &pdev->dev;
++
++	port->node = of_node_get(dn);
++	port->dev = dev;
+ 
+ 	port->version = XGENE_PCIE_IP_VER_UNKN;
+ 	if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
+@@ -540,7 +546,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = devm_request_pci_bus_resources(&pdev->dev, &res);
++	ret = devm_request_pci_bus_resources(dev, &res);
+ 	if (ret)
+ 		goto error;
+ 
+@@ -548,8 +554,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	if (ret)
+ 		goto error;
+ 
+-	bus = pci_create_root_bus(&pdev->dev, 0,
+-					&xgene_pcie_ops, port, &res);
++	bus = pci_create_root_bus(dev, 0, &xgene_pcie_ops, port, &res);
+ 	if (!bus) {
+ 		ret = -ENOMEM;
+ 		goto error;
 
-I don't understand how *this* patch, which basically just increases
-the penalty array size from 16 to 256, helps fix the problem.  It
-seems like this patch should only matter if the SCI were some IRQ
-between 16 and 255.
-
-> > In a subsequent patch, I see something about the IRQ type not being
-> > updated at the right time, but I can't quite connect the dots.
-> 
-> The reason why PCI IRQ 11 didn't work is above. 
-> 
-> When we detected a problem with the SCI IRQ type, we were penalizing
-> the IRQ below.
-> 
-> static int acpi_irq_get_penalty(int irq) 
-> {
-> ...
-> 	if (irq == acpi_gbl_FADT.sci_interrupt) {
-> 		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
-> 
-> 		if (type != IRQ_TYPE_LEVEL_LOW)
-> 			penalty += PIRQ_PENALTY_ISA_ALWAYS;	<---- here
-> 		else
-> 			penalty += PIRQ_PENALTY_PCI_USING;
-> 	} 
-> 
-> 
-> 
-> > 
-> > To be clear, I'm not asking for any changes in the patch; I'm just
-> > trying to understand what's going on.
-> 
-> Sure, I hope this makes it clear now.
-> 
-> > 
-> >> Tested-by: Jonathan Liu <net147@gmail.com>
-> >> Tested-by: Ondrej Zary <linux@rainbow-software.org>
-> >> Link: http://www.gossamer-threads.com/lists/linux/kernel/2537016#2537016
-> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> >> ---
-> >>  drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
-> >>  1 file changed, 18 insertions(+), 17 deletions(-)
-> >>
-> >> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> >> index c983bf7..f3792f4 100644
-> >> --- a/drivers/acpi/pci_link.c
-> >> +++ b/drivers/acpi/pci_link.c
-> >> @@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
-> >>   * enabled system.
-> >>   */
-> >>  
-> >> +#define ACPI_MAX_IRQS		256
-> >>  #define ACPI_MAX_ISA_IRQS	16
-> >>  
-> >>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
-> >> @@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
-> >>  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
-> >>  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
-> >>  
-> >> -static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
-> >> +static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
-> >>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
-> >>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
-> >>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
-> >> @@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
-> >>  	}
-> >>  
-> >>  	if (irq < ACPI_MAX_ISA_IRQS)
-> >> -		return penalty + acpi_isa_irq_penalty[irq];
-> >> +		return penalty + acpi_irq_penalty[irq];
-> >>  
-> >>  	penalty += acpi_irq_pci_sharing_penalty(irq);
-> >>  	return penalty;
-> >> @@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
-> >>  
-> >>  			for (i = 0; i < link->irq.possible_count; i++) {
-> >>  				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
-> >> -					acpi_isa_irq_penalty[link->irq.
-> >> +					acpi_irq_penalty[link->irq.
-> >>  							 possible[i]] +=
-> >>  					    penalty;
-> >>  			}
-> >>  
-> >>  		} else if (link->irq.active &&
-> >> -				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
-> >> -			acpi_isa_irq_penalty[link->irq.active] +=
-> >> +				(link->irq.active < ACPI_MAX_IRQS)) {
-> >> +			acpi_irq_penalty[link->irq.active] +=
-> >>  			    PIRQ_PENALTY_PCI_POSSIBLE;
-> >>  		}
-> >>  	}
-> >> @@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
-> >>  }
-> >>  
-> >>  /*
-> >> - * modify acpi_isa_irq_penalty[] from cmdline
-> >> + * modify acpi_irq_penalty[] from cmdline
-> >>   */
-> >>  static int __init acpi_irq_penalty_update(char *str, int used)
-> >>  {
-> >> @@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
-> >>  	for (i = 0; i < 16; i++) {
-> >>  		int retval;
-> >>  		int irq;
-> >> -		int new_penalty;
-> >>  
-> >>  		retval = get_option(&str, &irq);
-> >>  
-> >>  		if (!retval)
-> >>  			break;	/* no number found */
-> >>  
-> >> -		/* see if this is a ISA IRQ */
-> >> -		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
-> >> +		if (irq < 0)
-> >> +			continue;
-> >> +
-> >> +		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
-> >>  			continue;
-> >>  
-> >>  		if (used)
-> >> -			new_penalty = acpi_irq_get_penalty(irq) +
-> >> -					PIRQ_PENALTY_ISA_USED;
-> >> +			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> >> +				PIRQ_PENALTY_ISA_USED;
-> >>  		else
-> >> -			new_penalty = 0;
-> >> +			acpi_irq_penalty[irq] = 0;
-> >>  
-> >> -		acpi_isa_irq_penalty[irq] = new_penalty;
-> >>  		if (retval != 2)	/* no next number */
-> >>  			break;
-> >>  	}
-> >> @@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
-> >>   */
-> >>  void acpi_penalize_isa_irq(int irq, int active)
-> >>  {
-> >> -	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-> >> -		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> >> -		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-> >> +	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
-> >> +		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> >> +		    (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-> >>  }
-> >>  
-> >>  bool acpi_isa_irq_available(int irq)
-> >>  {
-> >> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
-> >> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
-> >>  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
-> >>  }
-> >>  
-> >> -- 
-> >> 1.9.1
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
