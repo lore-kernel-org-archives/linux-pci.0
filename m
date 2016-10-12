@@ -1,57 +1,52 @@
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Date: Fri, 21 Oct 2016 16:45:38 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Lukas Wunner <lukas@wunner.de>, Pierre de Villemereuil <flyos@mailoo.org>,
-     <linux-pci@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
-Subject: [PATCH 1/2] PCI: check for PME in targeted sleep state
-Message-ID: <Pine.LNX.4.44L0.1610211640150.1898-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53432 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932928AbcJLM7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:59:04 -0400
+Subject: [PATCH v2 3/5] PCI: rcar: Remove unused rcar_pcie_get_resources()
+ platform_device arg
+To: Simon Horman <horms@verge.net.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 07:58:59 -0500
+Message-ID: <20161012125859.24785.41542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-One some systems, the firmware does not allow certain PCI devices to
-be put in deep D-states.  This can cause problems for wakeup
-signalling, if the device does not support PME# in the deepest allowed
-suspend state.  For example, Pierre reports that on his system, ACPI
-does not permit his xHCI host controller to go into D3 during runtime
-suspend -- but D3 is the only state in which the controller can generate
-PME# signals.  As a result, the controller goes into runtime suspend
-but never wakes up, so it doesn't work properly.  USB devices plugged
-into the controller are never detected.
+rcar_pcie_get_resources() doesn't use the platform_device pointer passed to
+it, so remove it.  No functional change intended.
 
-If the device relies on PME# for wakeup signals but is not capable of
-generating PME# in the target state, the PCI core should accurately
-report that it cannot do wakeup from runtime suspend.  This patch
-modifies the pci_dev_run_wake() routine to add this check.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: Lukas Wunner <lukas@wunner.de>
-Reported-by: Pierre de Villemereuil <flyos@mailoo.org>
-Tested-by: Pierre de Villemereuil <flyos@mailoo.org>
-CC: <stable@vger.kernel.org>
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 ---
+ drivers/pci/host/pcie-rcar.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-[as1814]
-
-
- drivers/pci/pci.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-Index: usb-4.x/drivers/pci/pci.c
-===================================================================
---- usb-4.x.orig/drivers/pci/pci.c
-+++ usb-4.x/drivers/pci/pci.c
-@@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
- 	if (!dev->pme_support)
- 		return false;
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 4f352e8..800a86d 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -903,8 +903,7 @@ err:
+ 	return err;
+ }
  
-+	/* PME-capable in principle, but not from the intended sleep state */
-+	if (!pci_pme_capable(dev, pci_target_state(dev)))
-+		return false;
-+
- 	while (bus->parent) {
- 		struct pci_dev *bridge = bus->self;
+-static int rcar_pcie_get_resources(struct platform_device *pdev,
+-				   struct rcar_pcie *pcie)
++static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct resource res;
+@@ -1141,7 +1140,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
  
+ 	rcar_pcie_parse_request_of_pci_ranges(pcie);
+ 
+-	err = rcar_pcie_get_resources(pdev, pcie);
++	err = rcar_pcie_get_resources(pcie);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to request resources: %d\n", err);
+ 		return err;
+
