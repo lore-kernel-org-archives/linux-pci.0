@@ -1,111 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938966AbcJGQWX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:22:23 -0400
-Subject: [PATCH 04/10] PCI: altera: Rename _altera_pcie_cfg_read() to
- altera_raw_cfg_read()
-To: Ley Foon Tan <lftan@altera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
-Date: Fri, 07 Oct 2016 11:22:19 -0500
-Message-ID: <20161007162218.22796.11928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.133]:55486 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932424AbcJLCKt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 22:10:49 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 2/3] PCI: rockchip: Mark RC as common clock architecture
+Date: Wed, 12 Oct 2016 10:05:02 +0800
+Message-Id: <1476237903-15076-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1476237903-15076-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1476237903-15076-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename _altera_pcie_cfg_read() and _altera_pcie_cfg_write() to
-altera_raw_cfg_read() and altera_raw_cfg_write() to convey a little
-more information than an underline does.
+The default value of common clock configuration is
+zero indicating Rockchip's RC is using asynchronous
+clock architecture but actually we are using common
+clock. This will confuses some EP drivers if they
+need some different settings referring to this value.
+So let's fix it.
 
-The difference is that altera_pcie_cfg_read() requires a pointer to a
-struct pci_bus, while altera_raw_cfg_read() needs only a pointer to a
-struct altera_pcie, so it can be used before enumerating the bus.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-altera.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 243e6bc..5362ac1 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -261,9 +261,9 @@ static int tlp_cfg_dword_write(struct altera_pcie *altera, u8 bus, u32 devfn,
- 	return PCIBIOS_SUCCESSFUL;
- }
+Changes in v3:
+- rebase the code since it isn't cleanly applied again
+
+Changes in v2:
+- rebase the code since it isn't cleanly applied after Bjorn's cleanup
+
+ drivers/pci/host/pcie-rockchip.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index a67ff9e..d51afe6 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -141,6 +141,7 @@
+ #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
++#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+ #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+ #define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+ #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+@@ -540,6 +541,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip_pcie)
  
--static int _altera_pcie_cfg_read(struct altera_pcie *altera, u8 busno,
--				 unsigned int devfn, int where, int size,
--				 u32 *value)
-+static int altera_raw_cfg_read(struct altera_pcie *altera, u8 busno,
-+			       unsigned int devfn, int where, int size,
-+			       u32 *value)
- {
- 	int ret;
- 	u32 data;
-@@ -301,9 +301,9 @@ static int _altera_pcie_cfg_read(struct altera_pcie *altera, u8 busno,
- 	return PCIBIOS_SUCCESSFUL;
- }
+ 	rockchip_pcie_set_power_limit(rockchip_pcie);
  
--static int _altera_pcie_cfg_write(struct altera_pcie *altera, u8 busno,
--				  unsigned int devfn, int where, int size,
--				  u32 value)
-+static int altera_raw_cfg_write(struct altera_pcie *altera, u8 busno,
-+				unsigned int devfn, int where, int size,
-+				u32 value)
- {
- 	u32 data32;
- 	u32 shift = 8 * (where & 3);
-@@ -341,8 +341,8 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
- 
--	return _altera_pcie_cfg_read(altera, bus->number, devfn, where, size,
--				     value);
-+	return altera_raw_cfg_read(altera, bus->number, devfn, where, size,
-+				   value);
- }
- 
- static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
-@@ -356,8 +356,8 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
- 	if (!altera_pcie_valid_config(altera, bus, PCI_SLOT(devfn)))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	return _altera_pcie_cfg_write(altera, bus->number, devfn, where, size,
--				     value);
-+	return altera_raw_cfg_write(altera, bus->number, devfn, where, size,
-+				    value);
- }
- 
- static struct pci_ops altera_pcie_ops = {
-@@ -371,9 +371,9 @@ static int altera_read_cap_word(struct altera_pcie *altera, u8 busno,
- 	u32 data;
- 	int ret;
- 
--	ret = _altera_pcie_cfg_read(altera, busno, devfn,
--				    PCIE_CAP_OFFSET + offset, sizeof(*value),
--				    &data);
-+	ret = altera_raw_cfg_read(altera, busno, devfn,
-+				  PCIE_CAP_OFFSET + offset, sizeof(*value),
-+				  &data);
- 	*value = data;
- 	return ret;
- }
-@@ -381,9 +381,9 @@ static int altera_read_cap_word(struct altera_pcie *altera, u8 busno,
- static int altera_write_cap_word(struct altera_pcie *altera, u8 busno,
- 				 unsigned int devfn, int offset, u16 value)
- {
--	return _altera_pcie_cfg_write(altera, busno, devfn,
--				      PCIE_CAP_OFFSET + offset, sizeof(value),
--				      value);
-+	return altera_raw_cfg_write(altera, busno, devfn,
-+				    PCIE_CAP_OFFSET + offset, sizeof(value),
-+				    value);
- }
- 
- static void altera_wait_link_retrain(struct altera_pcie *altera)
++	/* Set RC's clock architecture as common clock */
++	status = rockchip_pcie_readl(rockchip_pcie, PCIE_RC_CONFIG_LCS);
++	status |= PCIE_RC_CONFIG_LCS_CCC;
++	rockchip_pcie_writel(rockchip_pcie, PCIE_RC_CONFIG_LCS, status);
++
+ 	/* Enable Gen1 training */
+ 	rockchip_pcie_writel(rockchip_pcie, PCIE_CLIENT_CONFIG,
+ 			PCIE_CLIENT_LINK_TRAIN_ENABLE);
+-- 
+2.3.7
+
 
