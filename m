@@ -1,40 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:54390 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbcJCUBw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Oct 2016 16:01:52 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-        by jabberwock.ucw.cz (Postfix) with ESMTPS id C38491C0106
-        for <linux-pci@vger.kernel.org>; Mon,  3 Oct 2016 22:01:49 +0200 (CEST)
-Date: Mon, 3 Oct 2016 22:01:48 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
-Subject: pciutils 3.5.2 released
-Message-ID: <mj+md-20161003.200043.6028.albireo@ucw.cz>
+Received: from mail.kernel.org ([198.145.29.136]:49656 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754978AbcJLMrT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:47:19 -0400
+Subject: [PATCH v2 2/6] PCI: altera: Remove unused platform data
+To: Ley Foon Tan <lftan@altera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
+Date: Wed, 12 Oct 2016 07:47:15 -0500
+Message-ID: <20161012124715.23240.87726.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, world!\n
+The altera driver never uses the platform drvdata pointer, so don't bother
+setting it.  No functional change intended.
 
-The pciutils version 3.5.2 has just hit kernel.org.
->From the changelog:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-altera.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-2016-10-03  Martin Mares <mj@ucw.cz>
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index eac548b..b26695c 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -635,8 +635,6 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		pcie_bus_configure_settings(child);
+ 
+ 	pci_bus_add_devices(bus);
+-
+-	platform_set_drvdata(pdev, pcie);
+ 	return ret;
+ }
+ 
 
-	* Released as 3.5.2.
-
-	* The L1 power management capability is now decoded more
-	  thoroughly. Thanks to Rajat Jain for the patch.
-
-	* The table of configuration registers used by setpci
-	  had a bug in the definition of SUBSYSTEM_VENDOR_ID.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Q: How many Prolog programmers does it take to change a light bulb?  A: No.
