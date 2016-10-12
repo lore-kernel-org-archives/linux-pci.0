@@ -1,167 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45642 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:40836 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753871AbcJYTI4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Oct 2016 15:08:56 -0400
-Message-ID: <580FADC6.1020407@redhat.com>
-Date: Tue, 25 Oct 2016 15:08:54 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+        id S1755101AbcJLNsR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:48:17 -0400
+Subject: [PATCH v2 5/8] PCI: imx6: Pass device-specific struct to internal
+ functions
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Wed, 12 Oct 2016 08:48:12 -0500
+Message-ID: <20161012134812.28919.58209.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: Keith Busch <keith.busch@intel.com>
-CC: linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Arcari <darcari@redhat.com>,
-        Myron Stowe <mstowe@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFE PATCH] pci: Do not enable intx on MSI-capable devices on
- shutdown
-References: <1477052083-13815-1-git-send-email-prarit@redhat.com> <20161025180858.GA22422@localhost.localdomain>
-In-Reply-To: <20161025180858.GA22422@localhost.localdomain>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/25/2016 02:08 PM, Keith Busch wrote:
-> On Fri, Oct 21, 2016 at 08:14:43AM -0400, Prarit Bhargava wrote:
->> We have seen this at Red Hat on various drivers: nouveau, ahci, and pcieport
->> (so far).  Google search for "unhandled irq 16" yields many results reporting
->> similar behavior during shutdown indicating that this problem is widespread.
->> I can cause this to happen on a "stable" system by adding a 3 second delay in
->> pci_device_shutdown() which causes the number of spurious interrupts to exceed
->> the 100000 limit and display the warning above.  Also note that by adding the
->> 3 second delay, NVIDIA devices with device ID 0x0FF* hit this problem 100% of
->> the time.
->>
->> darcari noticed that removing the pci_intx_for_msi() call resulted in a
->> stable system.  After further discussions with Myron and Alex, Alex came up
->> idea of keeping the intx disabled during shutdown implemented below.
->>
->> ----8<----
->>
->> The following unhandled IRQ warning is seen during shutdown:
->>
->> irq 16: nobody cared (try booting with the "irqpoll" option)
->> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
->> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
->>  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
->>  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
->>  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
->> Call Trace:
->>  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
->>  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
->>  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
->>  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
->>  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
->>  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
->>  [<ffffffff8102edfb>] handle_irq+0xab/0x130
->>  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
->>  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
->>  [<ffffffff81704502>] common_interrupt+0x82/0x82
->>  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
->>  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
->>  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
->>  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
->>  [<ffffffff816f6da7>] rest_init+0x77/0x80
->>  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
->>  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
->>  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
->>  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
->>  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
->>
->> This occurs because the pci_msi_shutdown() and pci_msix_shutdown() functions
->> enable the legacy intx interrupt even though the device and driver were not
->> configured for legacy intx.
->>
->> This patch blocks the enabling of intx during system shutdown or reboot.
-> 
-> 
-> I am feeling a bit cautious to tie this behavior to the system_state. Is
-> there better criteria to know we shouldn't enable INTx after disabling
-> MSI/MSI-x? It sounds like we would never want to enable INTx if a driver
-> still has IRQ actions tied to the MSI/MSI-x. Does this alternate proposal
-> look okay?
-> 
-> ---
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index bfdd074..90a4e84 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -357,19 +357,30 @@ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
->  }
->  EXPORT_SYMBOL_GPL(pci_write_msi_msg);
->  
-> +static bool msi_has_action(struct pci_dev *dev)
-> +{
-> +	struct msi_desc *entry;
-> +	int i;
-> +
-> +	for_each_pci_msi_entry(entry, dev) {
-> +		if (entry->irq) {
-> +			for (i = 0; i < entry->nvec_used; i++)
-> +				if (irq_has_action(entry->irq + i))
-> +					return true;
-> +		}
-> +	}
-> +	return false;
-> +}
-> +
->  static void free_msi_irqs(struct pci_dev *dev)
->  {
->  	struct list_head *msi_list = dev_to_msi_list(&dev->dev);
->  	struct msi_desc *entry, *tmp;
->  	struct attribute **msi_attrs;
->  	struct device_attribute *dev_attr;
-> -	int i, count = 0;
-> -
-> -	for_each_pci_msi_entry(entry, dev)
-> -		if (entry->irq)
-> -			for (i = 0; i < entry->nvec_used; i++)
-> -				BUG_ON(irq_has_action(entry->irq + i));
-> +	int count = 0;
->  
-> +	BUG_ON(msi_has_action(dev));
->  	pci_msi_teardown_msi_irqs(dev);
->  
->  	list_for_each_entry_safe(entry, tmp, msi_list, list) {
-> @@ -910,7 +921,8 @@ void pci_msi_shutdown(struct pci_dev *dev)
->  	desc = first_pci_msi_entry(dev);
->  
->  	pci_msi_set_enable(dev, 0);
-> -	pci_intx_for_msi(dev, 1);
-> +	if (!msi_has_action(dev))
-> +		pci_intx_for_msi(dev, 1);
+Only interfaces used from outside the driver, e.g., those called by the
+DesignWare core, need to accept pointers to the generic struct pcie_port.
+Internal interfaces can accept pointers to the device-specific struct,
+which makes them more straightforward.  No functional change intended.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |   57 +++++++++++++++++++++----------------------
+ 1 file changed, 28 insertions(+), 29 deletions(-)
 
-When pci_disable_msi() is currently called the result is that device is
-switched back to intx and then the MSI IRQs are free'd.  This patch would
-modify that behavior, and intx would not be reenabled when pci_disable_msix()
-was called during runtime.  With the system_state patch we're only affecting
-shutdown, which is seen as less risky than doing
-
-https://patchwork.kernel.org/patch/5990701/
-
-I still can't get around the idea that we're modifying device behaviour without
-verifying the driver supports the new behaviour.  I think that is the wrong
-thing to do and think we should reconsider the patch in the above link.  I'd
-much rather live with the risk of the patch in the link than dealing with kvm,
-runtime module unloads, etc.
-
-P.
-
->  	dev->msi_enabled = 0;
->  
->  	/* Return the device with MSI unmasked as initial states */
-> @@ -1024,7 +1036,8 @@ void pci_msix_shutdown(struct pci_dev *dev)
->  	}
->  
->  	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> -	pci_intx_for_msi(dev, 1);
-> +	if (!msi_has_action(dev))
-> +		pci_intx_for_msi(dev, 1);
->  	dev->msix_enabled = 0;
->  	pcibios_alloc_irq(dev);
->  }
-> --
-> 
-> 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 8a6a8d5..7dfe400 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -221,9 +221,8 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 	return 0;
+ }
+ 
+-static void imx6_pcie_reset_phy(struct pcie_port *pp)
++static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
+ {
+-	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 tmp;
+ 
+ 	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+@@ -246,9 +245,9 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+ 	return 0;
+ }
+ 
+-static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
++static int imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ {
+-	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	u32 val, gpr1, gpr12;
+ 
+ 	switch (imx6_pcie->variant) {
+@@ -341,9 +340,9 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 	return ret;
+ }
+ 
+-static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
++static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ {
+-	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	struct device *dev = pp->dev;
+ 	int ret;
+ 
+@@ -410,10 +409,8 @@ err_pcie_phy:
+ 	return ret;
+ }
+ 
+-static void imx6_pcie_init_phy(struct pcie_port *pp)
++static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ {
+-	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+-
+ 	if (imx6_pcie->variant == IMX6SX)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
+@@ -445,8 +442,9 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 			   imx6_pcie->tx_swing_low << 25);
+ }
+ 
+-static int imx6_pcie_wait_for_link(struct pcie_port *pp)
++static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
+ {
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	struct device *dev = pp->dev;
+ 
+ 	/* check if the link is up or not */
+@@ -459,8 +457,9 @@ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ 	return -ETIMEDOUT;
+ }
+ 
+-static int imx6_pcie_wait_for_speed_change(struct pcie_port *pp)
++static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ {
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	struct device *dev = pp->dev;
+ 	u32 tmp;
+ 	unsigned int retries;
+@@ -479,14 +478,15 @@ static int imx6_pcie_wait_for_speed_change(struct pcie_port *pp)
+ 
+ static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+ {
+-	struct pcie_port *pp = arg;
++	struct imx6_pcie *imx6_pcie = arg;
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 
+ 	return dw_handle_msi_irq(pp);
+ }
+ 
+-static int imx6_pcie_establish_link(struct pcie_port *pp)
++static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+-	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	struct device *dev = pp->dev;
+ 	u32 tmp;
+ 	int ret;
+@@ -505,7 +505,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+ 
+-	ret = imx6_pcie_wait_for_link(pp);
++	ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 	if (ret) {
+ 		dev_info(dev, "Link never came up\n");
+ 		goto err_reset_phy;
+@@ -529,14 +529,14 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	tmp |= PORT_LOGIC_SPEED_CHANGE;
+ 	writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 
+-	ret = imx6_pcie_wait_for_speed_change(pp);
++	ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to bring link up!\n");
+ 		goto err_reset_phy;
+ 	}
+ 
+ 	/* Make sure link training is finished as well! */
+-	ret = imx6_pcie_wait_for_link(pp);
++	ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to bring link up!\n");
+ 		goto err_reset_phy;
+@@ -557,15 +557,13 @@ err_reset_phy:
+ 
+ static void imx6_pcie_host_init(struct pcie_port *pp)
+ {
+-	imx6_pcie_assert_core_reset(pp);
+-
+-	imx6_pcie_init_phy(pp);
+-
+-	imx6_pcie_deassert_core_reset(pp);
++	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 
++	imx6_pcie_assert_core_reset(imx6_pcie);
++	imx6_pcie_init_phy(imx6_pcie);
++	imx6_pcie_deassert_core_reset(imx6_pcie);
+ 	dw_pcie_setup_rc(pp);
+-
+-	imx6_pcie_establish_link(pp);
++	imx6_pcie_establish_link(imx6_pcie);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+@@ -582,9 +580,10 @@ static struct pcie_host_ops imx6_pcie_host_ops = {
+ 	.host_init = imx6_pcie_host_init,
+ };
+ 
+-static int __init imx6_add_pcie_port(struct pcie_port *pp,
+-			struct platform_device *pdev)
++static int __init imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
++				     struct platform_device *pdev)
+ {
++	struct pcie_port *pp = &imx6_pcie->pp;
+ 	struct device *dev = pp->dev;
+ 	int ret;
+ 
+@@ -598,7 +597,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 		ret = devm_request_irq(dev, pp->msi_irq,
+ 				       imx6_pcie_msi_handler,
+ 				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", pp);
++				       "mx6-pcie-msi", imx6_pcie);
+ 		if (ret) {
+ 			dev_err(dev, "failed to request MSI irq\n");
+ 			return ret;
+@@ -725,7 +724,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		imx6_pcie->link_gen = 1;
+ 
+-	ret = imx6_add_pcie_port(pp, pdev);
++	ret = imx6_add_pcie_port(imx6_pcie, pdev);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -738,7 +737,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
+ 
+ 	/* bring down link, so bootloader gets clean state in case of reboot */
+-	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
++	imx6_pcie_assert_core_reset(imx6_pcie);
+ }
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
 
