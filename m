@@ -1,73 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
-Subject: [PATCH V3 0/3] ACPI, PCI,
- IRQ: revert penalty calculation for ISA and SCI interrupts
-Date: Sat, 15 Oct 2016 00:31:04 -0400
-Message-Id: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
- Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35408 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754879AbcJLQ0j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:26:39 -0400
+Date: Wed, 12 Oct 2016 11:16:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] MAINTAINERS: add DT binding doc to the Aardvark PCIE
+ driver maintainer
+Message-ID: <20161012161618.GV4308@localhost>
+References: <1475872231-3199-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1475872231-3199-2-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475872231-3199-2-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By the time ACPI gets initialized, this code tries to determine an
-IRQ number based on penalty values in this array. It will try to locate
-the IRQ with the least penalty assignment so that interrupt sharing is
-avoided if possible.
+On Fri, Oct 07, 2016 at 10:30:31PM +0200, Thomas Petazzoni wrote:
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-A couple of notes about the external APIs:
-1. These API can be called before the ACPI is started. Therefore, one
-cannot assume that the PCI link objects are initialized for calculating
-penalties.
-2. The polarity and trigger information passed via the
-acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-is reporting as the call might have been placed before the IRQ is
-registered by the interrupt subsystem.
+Applied to pci/host-aardvark for v4.9, thanks, Thomas!
 
-The reverted changes were in the direction to remove these external API and
-try to calculate the penalties at runtime for the ISA, SCI as well as PCI
-IRQS. This didn't work out well with the existing platforms.
-
-V3: 
-* drop patch #1 as discussed with Bjorn
-* add patch #3 to track SCI irq and penalty separately
-
-V2: https://lkml.org/lkml/2016/10/1/106
-* Commit message updates
-
-V1:
-http://lists-archives.com/linux-kernel/28673954-revert-acpi-pci-irq-reduce-static-irq-array-size-to-16.html
-* initial implementation
-
-Sinan Kaya (3):
-  ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-  Revert "ACPI,PCI,IRQ: remove SCI penalize function"
-  ACPI,PCI,IRQ: correct SCI penalty calculation
-
- arch/x86/kernel/acpi/boot.c |  1 +
- drivers/acpi/pci_link.c     | 34 +++++++++++++++++++---------------
- include/linux/acpi.h        |  1 +
- 3 files changed, 21 insertions(+), 15 deletions(-)
-
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  MAINTAINERS | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8f6fb8c..c0ac3dc 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9019,6 +9019,7 @@ M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+> +F:	Documentation/devicetree/bindings/pci/aardvark-pci.txt
+>  F:	drivers/pci/host/pci-aardvark.c
+>  
+>  PCI DRIVER FOR NVIDIA TEGRA
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
