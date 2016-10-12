@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:17385 "EHLO mga07.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:59532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943100AbcJaNnv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Oct 2016 09:43:51 -0400
-Date: Mon, 31 Oct 2016 09:54:41 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv4 next 3/3] pci/msix: Skip disabling removed devices
-Message-ID: <20161031135440.GA10069@localhost.localdomain>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <1477695497-6207-4-git-send-email-keith.busch@intel.com>
- <20161031110040.GA9693@wunner.de>
+        id S1754567AbcJLQDn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Oct 2016 12:03:43 -0400
+Date: Wed, 12 Oct 2016 11:03:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>,
+        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] PCI: xilinx: Cleanups
+Message-ID: <20161012160334.GI4308@localhost>
+References: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161031110040.GA9693@wunner.de>
+In-Reply-To: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 31, 2016 at 12:00:40PM +0100, Lukas Wunner wrote:
-> On Fri, Oct 28, 2016 at 06:58:17PM -0400, Keith Busch wrote:
-> > There is no need to disable MSIx interrupts or write message data on a
-> > device that isn't present. This patch checks the device removed state
-> > prior to executing device shutdown operations so that tear down on
-> > removed devices completes quicker.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > Cc: Lukas Wunner <lukas@wunner.de>
-> > ---
-> >  drivers/pci/msi.c | 7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index bfdd074..9249ec1 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -317,7 +317,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-> >  {
-> >  	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
-> >  
-> > -	if (dev->current_state != PCI_D0) {
-> > +	if (dev->current_state != PCI_D0 || dev->is_removed) {
-> >  		/* Don't touch the hardware now */
-> >  	} else if (entry->msi_attrib.is_msix) {
-> >  		void __iomem *base = pci_msix_desc_addr(entry);
+On Wed, Oct 12, 2016 at 08:10:30AM -0500, Bjorn Helgaas wrote:
+>   - Add local "dev" pointers to reduce repetition of things like
+>     "&pdev->dev".
 > 
-> Hm, I don't see __pci_write_msi_msg() being called anywhere on device
-> removal.  Am I missing something?  Rest of the patch LGTM.
+>   - Remove platform drvdata because it appears unused (we called
+>     platform_set_drvdata() but not platform_get_drvdata()).
+> 
+>   - Remove unused xilinx_pcie_assign_msi() argument.
+> 
+> Nothing here should change the behavior of the driver.
+> 
+> Changes from v1:
+>   Added "PCI: xilinx: Removed unused xilinx_pcie_assign_msi() argument"
+>   I dropped the following patches because they were a lot of churn for
+>   questionable benefit:
+>     PCI: xilinx: Name private struct pointer "xilinx" consistently
+>     PCI: xilinx: Rename accessors
+>     PCI: xilinx: Swap order of xilinx_writel() reg/val arguments
+>     PCI: xilinx-nwl: Name private struct pointer "nwl" consistently
+>     PCI: xilinx-nwl: Swap order of nwl_bridge_writel() reg/val arguments
+> 
+> ---
+> 
+> Bjorn Helgaas (5):
+>       PCI: xilinx: Add local struct device pointers
+>       PCI: xilinx: Remove unused platform data
+>       PCI: xilinx: Removed unused xilinx_pcie_assign_msi() argument
+>       PCI: xilinx-nwl: Add local struct device pointers
+>       PCI: xilinx-nwl: Remove unused platform data
 
-Prior to calling pci_disable_msix as part of typical driver unbinding,
-the driver needs to call free_irq for every registerded action. That
-will get to this __pci_write_msi_msg when it tries to mask the vector.
+I applied these to pci/host-xilinx for v4.9.  I hope to ask Linus to
+pull them tomorrow, so if you see any issues, let me know soon.
