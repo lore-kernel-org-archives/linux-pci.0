@@ -1,39 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47378 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938860AbcJGQZc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:25:32 -0400
-Subject: [PATCH 06/10] PCI: rcar: Remove unused platform data
-To: Simon Horman <horms@verge.net.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:25:28 -0500
-Message-ID: <20161007162528.23279.37638.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <m-karicheri2@ti.com>
+Return-Path: <m-karicheri2@ti.com>
+Subject: Re: [PATCH v2 0/6] PCI: keystone: Cleanups
+To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+References: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012160622.GQ4308@localhost>
+CC: <linux-pci@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <57FFCADE.7040300@ti.com>
+Date: Thu, 13 Oct 2016 13:56:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161012160622.GQ4308@localhost>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar driver never uses the platform drvdata pointer, so don't bother
-setting it.  No functional change intended.
+On 10/12/2016 12:06 PM, Bjorn Helgaas wrote:
+> On Wed, Oct 12, 2016 at 08:53:00AM -0500, Bjorn Helgaas wrote:
+>>   - Add local "dev" pointers to reduce repetition of things like
+>>     "&pdev->dev".
+>>
+>>   - Use generic DesignWare accessors when possible.
+>>
+>>   - Pass device-specific struct instead of register addresses to IRQ and
+>>     DBI functions.
+>>
+>>   - Add app register accessors to encapsulate usage of va_app_base.
+>>
+>> Nothing here should change the behavior of the driver.
+>>
+>> Changes from v1:
+>>   Added local struct device pointers.
+>>   I dropped the following patch because it was a lot of churn for
+>>   questionable benefit:
+>>     PCI: keystone: Name private struct pointer "keystone" consistently
+>>
+>> ---
+>>
+>> Bjorn Helgaas (6):
+>>       PCI: keystone: Add local struct device pointers
+>>       PCI: keystone: Use generic DesignWare accessors
+>>       PCI: keystone: Pass keystone_pcie, not address, to IRQ functions
+>>       PCI: keystone: Pass keystone_pcie, not va_app_base, to DBI functions
+>>       PCI: keystone: Add app register accessors
+>>       PCI: keystone: Reorder struct keystone_pcie
+>>
+>>
+>>  drivers/pci/host/pci-keystone-dw.c |  123 ++++++++++++++++++++----------------
+>>  drivers/pci/host/pci-keystone.c    |   28 ++++----
+>>  drivers/pci/host/pci-keystone.h    |    9 +--
+>>  3 files changed, 88 insertions(+), 72 deletions(-)
+> 
+> I applied these to pci/host-keystone for v4.9.  I hope to ask Linus to
+> pull them tomorrow, so if you see any issues, let me know soon.
+> 
+Bjorn,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-rcar.c |    1 -
- 1 file changed, 1 deletion(-)
+I have reviewed them and they look good to me. For testing, I am in the
+middle of a high visibility debug and it will be a while before I can test
+these.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 5a8969f..02a90f4 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1126,7 +1126,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	rcar->dev = dev;
--	platform_set_drvdata(pdev, rcar);
- 
- 	INIT_LIST_HEAD(&rcar->resources);
- 
-
+Thanks 
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
