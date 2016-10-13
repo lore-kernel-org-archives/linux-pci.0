@@ -1,37 +1,105 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size
+ to 16"
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: alex.barba@broadcom.com,
- BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-From: Ray Jui <ray.jui@broadcom.com>
-Subject: About configuring the PCIe device MPS
-Message-ID: <3d7bc589-76ca-f557-c18b-2c5a47969d68@broadcom.com>
-Date: Thu, 20 Oct 2016 15:54:04 -0700
+References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
+ <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
+ <20161012221357.GB15116@localhost>
+ <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
+ <20161013181535.GB21529@localhost>
+ <498097a5-f75c-d2dd-f134-148b3fb8e1ed@codeaurora.org>
+ <20161013200238.GE21529@localhost>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+ linux-pci@vger.kernel.org, agross@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ wim@djo.tudelft.nl, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <469134d3-3950-0d89-2599-64f917f09781@codeaurora.org>
+Date: Thu, 13 Oct 2016 16:16:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20161013200238.GE21529@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 10/13/2016 4:02 PM, Bjorn Helgaas wrote:
+> On Thu, Oct 13, 2016 at 03:36:11PM -0400, Sinan Kaya wrote:
+>> On 10/13/2016 2:15 PM, Bjorn Helgaas wrote:
+>>> It seems like the problem is that we removed acpi_penalize_sci_irq(),
+>>> which told us the polarity and trigger mode.  We tried to get that
+>>> information via irq_get_trigger_type(), but that didn't work in this
+>>> case because we use the acpi_irq_get_penalty() path before the SCI is
+>>> registered.
+>>>
+>>> It makes sense to me to add acpi_penalize_sci_irq() back in, which is
+>>> what patch [3/3] does.
+>>>
+>>> I don't understand how *this* patch, which basically just increases
+>>> the penalty array size from 16 to 256, helps fix the problem.  It
+>>> seems like this patch should only matter if the SCI were some IRQ
+>>> between 16 and 255.
+>>
+>>
+>> I see your point. The original code supported 256 interrupts. 
+>>
+>> The machine where we had the problem had an SCI interrupt of 11. So,
+>> this patch does not necessarily fix anything for this machine alone.
+>> However, to be safe; I wanted to go back to the old behavior to fix
+>> the SCI issue for all existing platforms.
+> 
+> I saw a previous email that said the SCI interrupt could not be
+> greater than 256, but I don't know where that restriction is.  I'm
+> pretty sure the FADT field is 2 bytes, which would mean it could be up
+> to 65535.
+> 
+> To fix this problem, I think we only need to fix the penalty for the
+> SCI interrupt.  It seems better to add a single "sci_penalty"
+> variable, set it to PIRQ_PENALTY_PCI_USING if it's level/low or
+> PIRQ_PENALTY_ISA_ALWAYS otherwise, and add "sci_penalty" in when
+> appropriate.  That should fix it for *any* SCI IRQ, not just those
+> less than 256, and we don't have to add these extra penalty table
+> entries that are all unused (except possibly for one entry if we have
+> an SCI in the 16-255 range).
+> 
+> Something like this:
+> 
+>   static int sci_irq, sci_penalty;
+> 
+>   void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+>   {
+>     sci = irq;
+>     if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
+>         polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
+>       sci_penalty = PIRQ_PENALTY_PCI_USING;
+>     else
+>       sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
+>   }
+> 
+>   static int acpi_irq_get_penalty(int irq)
+>   {
+>     int penalty = 0;
+> 
+>     if (irq == sci_irq)
+>       penalty += sci_penalty;
+>     ...
+>   }
+> 
+> One could argue that ACPI devices can use IRQs above 15, and we should
+> handle penalties for them, too.  But the table is the wrong mechanism
+> for that, because it handles penalties for IRQs < 256, but IRQs above
+> that would mysteriously be handled differently.
+> 
+> Bjorn
+> 
 
-Alex Barba (CCed in the email thread) from Broadcom discovered that PCIe 
-endpoint devices attached to our ARM64 based iProc platforms are not 
-configured to their optimal MPS size. Through some digging in the PCIe 
-stack of the kernel, I found that:
+I agree this is a better approach. I think my math was wrong when figuring
+out what a max SCI interrupt could be.
 
-1. For ARM32 based PCIe core code, 'pcie_bus_configure_settings' is 
-called from 'pci_common_init_dev' before the devices are added to be bus
 
-2. For ARM64 based PCIe core code, 'pcie_bus_configure_settings' is 
-called similarly in 'pci_acpi_scan_root' for ACPI based ARM64 platform
 
-3. But for ARM64 platforms that have not yet supported ACPI, there does 
-not appear to be a common place for this configuration. Obviously, we 
-have the option of calling it in our iProc PCIe host driver (right 
-before devices are added to the bus). I'd like to check with you if 
-that's the expected way of handling it. We do see a couple PCIe host 
-drivers already handle it this way.
-
-Thanks,
-
-Ray
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
