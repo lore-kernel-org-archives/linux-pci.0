@@ -1,162 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:58332 "EHLO
+Received: from lucky1.263xmail.com ([211.157.147.136]:34998 "EHLO
         lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbcJUCjF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2016 22:39:05 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Heiko Stuebner <heiko@sntech.de>,
+        with ESMTP id S933510AbcJMBcX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Oct 2016 21:32:23 -0400
+Subject: Re: [PATCH v2 0/2] PCI: rockchip: Cleanup
+To: Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/2] PCI: rockchip: Add three new resets as required properties
-Date: Fri, 21 Oct 2016 10:43:55 +0800
-Message-Id: <1477017836-19317-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com>
+References: <20161012130256.25212.33689.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012160240.GG4308@localhost>
+Cc: shawn.lin@rock-chips.com, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <8b4f18cd-bced-6779-7988-574b14a42dce@rock-chips.com>
+Date: Thu, 13 Oct 2016 09:32:10 +0800
+MIME-Version: 1.0
+In-Reply-To: <20161012160240.GG4308@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pm_rst, aclk_rst, pclk_rst was controlled by rom code so the
-software wasn't needed to control it again in theory. But it
-didn't work properly, so we do need to do it again and add a
-enough delay between the assert of pm_rst and the deassert of
-pm_rst. The Soc intergrated with this controller, rk3399 is still
-under MP test internally, so the backward compatibility won't be
-a big deal.
+Hi Bjorn,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On 2016/10/13 0:02, Bjorn Helgaas wrote:
+> On Wed, Oct 12, 2016 at 08:04:16AM -0500, Bjorn Helgaas wrote:
+>>   - Remove platform drvdata because it appears unused (we called
+>>     platform_set_drvdata() but not platform_get_drvdata()).
+>>
+>> Nothing here should change the behavior of the driver.
+>>
+>> Changes from v1:
+>>   Added Dan's indentation fix.
+>>   I dropped the following patches because they were a lot of churn for
+>>   questionable benefit:
+>>     PCI: rockchip: Rename accessors
+>>     PCI: rockchip: Swap order of rockchip_writel() reg/val arguments
+>>
+>> ---
+>>
+>> Bjorn Helgaas (1):
+>>       PCI: rockchip: Remove unused platform data
+>>
+>> Dan Carpenter (1):
+>>       PCI: rockchip: Indent "if" statement body
+>
+> I applied these to pci/host-rockchip for v4.9.  I hope to ask Linus to
+> pull them tomorrow, so if you see any issues, let me know soon.
 
----
+Seems the first round of cleanup for host-rockchip again v10 when this
+driver got merged was incorrectly changed. The issue wasn't exposed as
+it's just a debug log which was easily overlooked.
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 11 ++--
- drivers/pci/host/pcie-rockchip.c                   | 62 ++++++++++++++++++++++
- 2 files changed, 70 insertions(+), 3 deletions(-)
+So could you pick the  patch[0] to fix this problem ? :)
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index ba67b39..71aeda1 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -26,13 +26,16 @@ Required properties:
- 	- "sys"
- 	- "legacy"
- 	- "client"
--- resets: Must contain five entries for each entry in reset-names.
-+- resets: Must contain seven entries for each entry in reset-names.
- 	   See ../reset/reset.txt for details.
- - reset-names: Must include the following names
- 	- "core"
- 	- "mgmt"
- 	- "mgmt-sticky"
- 	- "pipe"
-+	- "pm"
-+	- "aclk"
-+	- "pclk"
- - pinctrl-names : The pin control state names
- - pinctrl-0: The "default" pinctrl state
- - #interrupt-cells: specifies the number of cells needed to encode an
-@@ -86,8 +89,10 @@ pcie0: pcie@f8000000 {
- 	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
- 	reg-names = "axi-base", "apb-base";
- 	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
--		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
--	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-+		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-+		      "pm", "pclk", "aclk";
- 	phys = <&pcie_phy>;
- 	phy-names = "pcie-phy";
- 	pinctrl-names = "default";
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index e0b22da..e04f69b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -190,6 +190,9 @@ struct rockchip_pcie {
- 	struct	reset_control *mgmt_rst;
- 	struct	reset_control *mgmt_sticky_rst;
- 	struct	reset_control *pipe_rst;
-+	struct	reset_control *pm_rst;
-+	struct	reset_control *aclk_rst;
-+	struct	reset_control *pclk_rst;
- 	struct	clk *aclk_pcie;
- 	struct	clk *aclk_perf_pcie;
- 	struct	clk *hclk_pcie;
-@@ -408,6 +411,44 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 
- 	gpiod_set_value(rockchip->ep_gpio, 0);
- 
-+	err = reset_control_assert(rockchip->aclk_rst);
-+	if (err) {
-+		dev_err(dev, "assert aclk_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_assert(rockchip->pclk_rst);
-+	if (err) {
-+		dev_err(dev, "assert pclk_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_assert(rockchip->pm_rst);
-+	if (err) {
-+		dev_err(dev, "assert pm_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	udelay(10);
-+
-+	err = reset_control_deassert(rockchip->pm_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pm_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_deassert(rockchip->aclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_deassert(rockchip->pclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-+		return err;
-+	}
-+
- 	err = phy_init(rockchip->phy);
- 	if (err < 0) {
- 		dev_err(dev, "fail to init phy, err %d\n", err);
-@@ -781,6 +822,27 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		return PTR_ERR(rockchip->pipe_rst);
- 	}
- 
-+	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
-+	if (IS_ERR(rockchip->pm_rst)) {
-+		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing pm reset property in node\n");
-+		return PTR_ERR(rockchip->pm_rst);
-+	}
-+
-+	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
-+	if (IS_ERR(rockchip->pclk_rst)) {
-+		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing pclk reset property in node\n");
-+		return PTR_ERR(rockchip->pclk_rst);
-+	}
-+
-+	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
-+	if (IS_ERR(rockchip->aclk_rst)) {
-+		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing aclk reset property in node\n");
-+		return PTR_ERR(rockchip->aclk_rst);
-+	}
-+
- 	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
- 	if (IS_ERR(rockchip->ep_gpio)) {
- 		dev_err(dev, "missing ep-gpios property in node\n");
+[0]: https://patchwork.kernel.org/patch/9374129/
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 -- 
-2.3.7
-
+Best Regards
+Shawn Lin
 
