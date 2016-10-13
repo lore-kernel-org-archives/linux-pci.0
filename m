@@ -1,43 +1,37 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH v2 11/12] PCI: iproc: Add PAXBv2 binding info
-Date: Mon, 31 Oct 2016 17:38:40 -0700
-Message-Id: <1477960721-17649-12-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
-References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46524 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934641AbcJMSGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Oct 2016 14:06:37 -0400
+Date: Thu, 13 Oct 2016 12:55:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: ying.huang@intel.com, linux-pci@vger.kernel.org
+Subject: Re: [bug report] ACPI, APEI, Add PCIe AER error information printing
+ support
+Message-ID: <20161013175513.GA21529@localhost>
+References: <20161013065847.GA30382@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161013065847.GA30382@mwanda>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add new compatible string 'brcm,iproc-pcie-paxb-v2', for the next
-generation of the iProc PAXB PCIe host controller
+On Thu, Oct 13, 2016 at 09:58:47AM +0300, Dan Carpenter wrote:
+> Hello Huang Ying,
+> 
+> The patch c413d7682020: "ACPI, APEI, Add PCIe AER error information
+> printing support" from Feb 21, 2011, leads to the following static
+> checker warning:
+> 
+> 	drivers/pci/pcie/aer/aerdrv_errprint.c:229 cper_print_aer()
+> 	warn: bool comparison is always 'false'
 
-Signed-off-by: Oza Oza <oza.oza@broadcom.com>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
----
- Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 2 ++
- 1 file changed, 2 insertions(+)
+Hi Dan,
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 62a0ab9..c8d8c1c 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -4,6 +4,8 @@ Required properties:
- - compatible:
-       "brcm,iproc-pcie" for the first generation of PAXB based controller,
- used in SoCs including NSP, Cygnus, NS2, and Pegasus
-+      "brcm,iproc-pcie-paxb-v2" for the second generation of PAXB based
-+controller, used in Stingray
-       "brcm,iproc-pcie-paxc" for the first generation of PAXC based
- controller, used in NS2
-       "brcm,iproc-pcie-paxc-v2" for the second generation of PAXC based
--- 
-2.1.4
+Thanks a lot for the report.  Do you have any plans for integrating
+smatch into the kernel build process like sparse is?  I think I did
+figure out how to run smatch myself, but it wasn't quite as easy as
+"apt-get install sparse; make C=2".
+
+Bjorn
