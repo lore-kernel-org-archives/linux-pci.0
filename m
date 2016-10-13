@@ -1,43 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:53035 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753307AbcJWLzj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Oct 2016 07:55:39 -0400
-Message-Id: <cover.1477221514.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 23 Oct 2016 13:55:34 +0200
-Subject: [PATCH v3 0/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
-To: Ingo Molnar <mingo@kernel.org>
-Cc: x86@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Return-Path: <stern+57e13f40@rowland.harvard.edu>
+Date: Thu, 13 Oct 2016 17:11:46 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Pierre de Villemereuil <flyos@mailoo.org>
+cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+    Mathias Nyman <mathias.nyman@linux.intel.com>,
+    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
+     <linux-pci@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+In-Reply-To: <1492262.TFAeDeKh1k@flyosflip>
+Message-ID: <Pine.LNX.4.44L0.1610131709160.1822-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ingo,
+On Fri, 14 Oct 2016, Pierre de Villemereuil wrote:
 
-please consider merging the following patch to x86/urgent for v4.9-rc3,
-it fixes a regression (boot failure) of Intel Mobile Internet Devices
-due to a change in the PCI subsystem that appeared in v4.9-rc1.
+> Hi!
+> 
+> I've branched the kernel package on the OpenSUSE Build Server, I'll 
+> try to apply the patch there (this ought to be cleanest method).
+> 
+> Starting from the root of the kernel tarball, the patch should be 
+> applied to drivers/pci/pci.c, am I right?
 
-The patch is marked v3 but in fact it's identical to v2 except now it's
-rebased on today's tip.git master branch, has acks by Bjorn and Andy
-plus a Fixes tag.  I also polished the commit message a bit.
+You just cd to the top directory of the kernel source, and do
 
-Thanks!
+	patch -p1 <filename
 
-Lukas
+where "filename" is the contents of the email message containing the 
+patch.  Or if you want, since the patch is so small, you can simply 
+edit the file by hand to add in the new lines.
 
-
-Lukas Wunner (1):
-  x86/platform/intel-mid: Retrofit pci_platform_pm_ops ->get_state hook
-
- arch/x86/include/asm/intel-mid.h  |  1 +
- arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
- drivers/pci/pci-mid.c             |  6 ++++++
- 3 files changed, 26 insertions(+)
-
--- 
-2.9.3
-
+Alan Stern
