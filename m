@@ -1,44 +1,35 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 27 Oct 2016 12:55:08 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Rick Kerkhof <rick.2889@gmail.com>
-Cc: Peter Wu <peter@lekensteyn.nl>, linux-acpi@vger.kernel.org,
-        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org
-Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
- via Power Resources
-Message-ID: <20161027095508.GA1476@lahna.fi.intel.com>
-References: <bug-98398-8800@http.bugs.freedesktop.org/>
- <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
- <20161026225641.GA27017@al>
- <20161027081748.GX1476@lahna.fi.intel.com>
- <20161027090604.GB27017@al>
- <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
- <20161027093011.GZ1476@lahna.fi.intel.com>
- <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	helgaas@kernel.org
+Cc: jose.abreu@synopsys.com, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] pci: pcie-designware-plat: changing maintainer
+Date: Fri, 14 Oct 2016 17:01:21 +0100
+Message-Id: <0c901c49ad655165e5f72245e9d260f43968cf9e.1476460342.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 27, 2016 at 09:42:28AM +0000, Rick Kerkhof wrote:
->    No, there are not. Here is the recursive directory listing:
+I am going to leave Synopsys and so this patch changes the Maintainer
+for PCIe Designware Platform driver to my colleague Jose Abreu.
 
-Are you able to try the following patch and send me dmesg (or attach it
-to that bug)? It should show if the ACPI core even tries to add those
-power resources.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
-index fcd4ce6f78d5..af9c3e15dd74 100644
---- a/drivers/acpi/power.c
-+++ b/drivers/acpi/power.c
-@@ -444,6 +444,9 @@ void acpi_power_add_remove_device(struct acpi_device *adev, bool add)
- 	if (!adev->power.flags.power_resources)
- 		return;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 01bff8e..5ac91d8a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9052,7 +9052,7 @@ S:	Maintained
+ F:	drivers/pci/host/*designware*
  
-+	acpi_handle_info(adev->handle, "Adding power resources for %s\n",
-+			 dev_name(&adev->dev));
-+
- 	for (state = ACPI_STATE_D0; state <= ACPI_STATE_D3_HOT; state++)
- 		acpi_power_expose_hide(adev,
- 				       &adev->power.states[state].resources,
+ PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
+-M:	Joao Pinto <jpinto@synopsys.com>
++M:	Jose Abreu <Jose.Abreu@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+-- 
+1.8.1.5
