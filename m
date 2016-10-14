@@ -1,174 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linus971@gmail.com>
+Return-Path: <linus971@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
-References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Sun, 2 Oct 2016 22:40:05 +1100
-Message-ID: <CANwerB2bhMbkQrGG55Bq-yrFk_DC3Pz2tF0CRrt4ccmrzTmrzQ@mail.gmail.com>
-Subject: Re: [1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Sender: linus971@gmail.com
+In-Reply-To: <CA+55aFxxsn1kBZDtjbvgnaDQe7LJuHg2WL049dCxRxwWnncoFg@mail.gmail.com>
+References: <20161013140746.GA14174@localhost> <CA+55aFxxsn1kBZDtjbvgnaDQe7LJuHg2WL049dCxRxwWnncoFg@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 13 Oct 2016 17:21:40 -0700
+Message-ID: <CA+55aFw2pJ71SxFZXCKix8uVOJcZUu4YeMq+aubGa9+Op_yRXA@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v4.9
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>, Kishon Vijay Abraham I <kishon@ti.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2 October 2016 at 04:46, Sinan Kaya <okaya@codeaurora.org> wrote:
-> This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
-> size to 16").
+On Thu, Oct 13, 2016 at 4:48 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> The code maintains a fixed size array for IRQ penalties. The array
-> gets updated by external calls such as acpi_penalize_sci_irq,
-> acpi_penalize_isa_irq to reflect the actual interrupt usage of the
-> system. Since the IRQ distribution is platform specific, this is
-> not known ahead of time. The IRQs get updated based on the SCI
-> interrupt number BIOS has chosen or the ISA IRQs that were assigned
-> to existing peripherals.
+> Ugh:
 >
-> By the time ACPI gets initialized, this code tries to determine an
-> IRQ number based on penalty values in this array. It will try to locate
-> the IRQ with the least penalty assignment so that interrupt sharing is
-> avoided if possible.
+> Your "summary" is actually less legible than the shortlog, and looks
+> entirely auto-generated.
 >
-> A couple of notes about the external APIs:
-> 1. These API can be called before the ACPI is started. Therefore, one
-> cannot assume that the PCI link objects are initialized for calculating
-> penalties.
-> 2. The polarity and trigger information passed via the
-> acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-> is reporting as the call might have been placed before the IRQ is
-> registered by the interrupt subsystem.
+> That's against the whole point of having a summary for a pull request.
 >
-> The previous change was in the direction to remove these external API and
-> try to calculate the penalties at runtime for the ISA path as well. This
-> didn't work out well with the existing platforms.
->
-> Restoring the old behavior for IRQ < 256 and the new behavior will remain
-> effective for IRQ >= 256.
->
-> Link: http://www.spinics.net/lists/linux-pci/msg54599.html
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
->  1 file changed, 18 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index c983bf7..f3792f4 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->   * enabled system.
->   */
->
-> +#define ACPI_MAX_IRQS          256
->  #define ACPI_MAX_ISA_IRQS      16
->
->  #define PIRQ_PENALTY_PCI_POSSIBLE      (16*16)
-> @@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->  #define PIRQ_PENALTY_ISA_USED          (16*16*16*16*16)
->  #define PIRQ_PENALTY_ISA_ALWAYS                (16*16*16*16*16*16)
->
-> -static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
-> +static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->         PIRQ_PENALTY_ISA_ALWAYS,        /* IRQ0 timer */
->         PIRQ_PENALTY_ISA_ALWAYS,        /* IRQ1 keyboard */
->         PIRQ_PENALTY_ISA_ALWAYS,        /* IRQ2 cascade */
-> @@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
->         }
->
->         if (irq < ACPI_MAX_ISA_IRQS)
-> -               return penalty + acpi_isa_irq_penalty[irq];
-> +               return penalty + acpi_irq_penalty[irq];
->
->         penalty += acpi_irq_pci_sharing_penalty(irq);
->         return penalty;
-> @@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
->
->                         for (i = 0; i < link->irq.possible_count; i++) {
->                                 if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
-> -                                       acpi_isa_irq_penalty[link->irq.
-> +                                       acpi_irq_penalty[link->irq.
->                                                          possible[i]] +=
->                                             penalty;
->                         }
->
->                 } else if (link->irq.active &&
-> -                               (link->irq.active < ACPI_MAX_ISA_IRQS)) {
-> -                       acpi_isa_irq_penalty[link->irq.active] +=
-> +                               (link->irq.active < ACPI_MAX_IRQS)) {
-> +                       acpi_irq_penalty[link->irq.active] +=
->                             PIRQ_PENALTY_PCI_POSSIBLE;
->                 }
->         }
-> @@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
->  }
->
->  /*
-> - * modify acpi_isa_irq_penalty[] from cmdline
-> + * modify acpi_irq_penalty[] from cmdline
->   */
->  static int __init acpi_irq_penalty_update(char *str, int used)
->  {
-> @@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->         for (i = 0; i < 16; i++) {
->                 int retval;
->                 int irq;
-> -               int new_penalty;
->
->                 retval = get_option(&str, &irq);
->
->                 if (!retval)
->                         break;  /* no number found */
->
-> -               /* see if this is a ISA IRQ */
-> -               if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
-> +               if (irq < 0)
-> +                       continue;
-> +
-> +               if (irq >= ARRAY_SIZE(acpi_irq_penalty))
->                         continue;
->
->                 if (used)
-> -                       new_penalty = acpi_irq_get_penalty(irq) +
-> -                                       PIRQ_PENALTY_ISA_USED;
-> +                       acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> +                               PIRQ_PENALTY_ISA_USED;
->                 else
-> -                       new_penalty = 0;
-> +                       acpi_irq_penalty[irq] = 0;
->
-> -               acpi_isa_irq_penalty[irq] = new_penalty;
->                 if (retval != 2)        /* no next number */
->                         break;
->         }
-> @@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->   */
->  void acpi_penalize_isa_irq(int irq, int active)
->  {
-> -       if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-> -               acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> -                 (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-> +       if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
-> +               acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> +                   (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->  }
->
->  bool acpi_isa_irq_available(int irq)
->  {
-> -       return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
-> +       return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
->                     acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
->  }
->
+> Please tell me what changed, don't auto-generate pointless unreadable crud. Ok?
 
-This series fixes one or more network adapters in VirtualBox not
-working with Linux 32-bit x86 guest if I have 4 network adapters
-enabled. The following message no longer appears in the kernel log:
-ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+I wrote some kind of summary based on actually (hopefully) intelligent
+culling of relevant information instead of just bunching up together
+automated data.
 
-Tested-by: Jonathan Liu <net147@gmail.com>
+It may not be complete, but it's the kind of "what does this merge
+actually _merge_" information that is useful. Please do something like
+this in the future rather than the automated illegible mush:
+
+ "Summary:
+
+   - use local struct device pointers in many host bridge drivers for
+     clarity
+
+   - remove unused platform data
+
+   - use generic DesignWare accessors
+
+   - misc cleanups: remove redundant structure entries and re-order
+     structure members to put comon generic fields first etc"
+
+See? Humans can read that and get an idea of what is going on. It
+would be even better if it had a few more lines about why those things
+matter, but as is, it's much better than that that tag contained.
+
+But the reason I want the maintainer to write this is that I'm lazy.
+
+No, wait, it's really because you are supposed to know the high-level
+detail and be able to really notice what is relevant. I just went by
+looking for patterns in the shortlog, doing silly things like
+
+   git shortlog ..FETCH_HEAD --no-merges | cut -d: -f3- | sort | uniq
+-c | sort -n
+
+to get a feel for what you had done. But because I don't know the
+code, maybe I missed some really important change, or
+mis-characterized it somehow, or whatever.
+
+Which is why I want the pull requests to contain the kind of relevant
+information on what the hell is going on. Not just a "this is all that
+happened" munged shortlog in a slightly different format.
+
+                Linus
