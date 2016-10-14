@@ -1,52 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Sinan Kaya <okaya@codeaurora.org>, Len Brown <lenb@kernel.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V2 2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-Date: Tue,  4 Oct 2016 17:15:18 -0400
-Message-Id: <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3823 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753269AbcJNCSc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2016 22:18:32 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 0/8] PCI: hisi: Cleanups
+Date: Fri, 14 Oct 2016 02:17:56 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8A38D8@lhreml507-mbx>
+References: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
-resource requirements") removed PCI_USING penalty from
-acpi_pci_link_allocate function as there is no longer a fixed size penalty
-array for both PCI and IRQ interrupts.
-
-We need to add the PCI_USING penalty for ISA interrupts too if the link is
-in use and matches our ISA IRQ number.
-
-Tested-by: Jonathan Liu <net147@gmail.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index f3792f4..06c2a11 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -620,6 +620,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 			    acpi_device_bid(link->device));
- 		return -ENODEV;
- 	} else {
-+		if (link->irq.active < ACPI_MAX_IRQS)
-+			acpi_irq_penalty[link->irq.active] +=
-+				PIRQ_PENALTY_PCI_USING;
-+
- 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
- 		       acpi_device_name(link->device),
- 		       acpi_device_bid(link->device), link->irq.active);
--- 
-1.9.1
-
+SGkgQmpvcm4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1w
+Y2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25lckB2Z2Vy
+Lmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+IFNlbnQ6IDEyIE9jdG9i
+ZXIgMjAxNiAyMTo0Mg0KPiBUbzogV2FuZ3pob3UgKEIpOyBHYWJyaWVsZSBQYW9sb25pDQo+IENj
+OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFtQQVRDSCB2MiAwLzhdIFBD
+STogaGlzaTogQ2xlYW51cHMNCj4gDQo+ICAgLSBBZGQgbG9jYWwgImRldiIgcG9pbnRlcnMgdG8g
+cmVkdWNlIHJlcGV0aXRpb24gb2YgdGhpbmdzIGxpa2UNCj4gICAgICImcGRldi0+ZGV2Ii4NCj4g
+DQo+ICAgLSBSZW1vdmUgcGxhdGZvcm0gZHJ2ZGF0YSBiZWNhdXNlIGl0IGFwcGVhcnMgdW51c2Vk
+ICh3ZSBjYWxsZWQNCj4gICAgIHBsYXRmb3JtX3NldF9kcnZkYXRhKCkgYnV0IG5vdCBwbGF0Zm9y
+bV9nZXRfZHJ2ZGF0YSgpKS4NCj4gDQo+ICAgLSBOYW1lIHByaXZhdGUgc3RydWN0IHBvaW50ZXIg
+Y29uc2lzdGVudGx5IHdpdGhpbiBkcml2ZXIuDQo+IA0KPiAgIC0gUmVtb3ZlIHJlZHVuZGFudCBz
+dHJ1Y3QgbWVtYmVycy4NCj4gDQo+ICAgLSBVc2UgZ2VuZXJpYyBEZXNpZ25XYXJlIGFjY2Vzc29y
+cyB3aGVuIHBvc3NpYmxlLg0KPiANCj4gICAtIFBhc3MgZGV2aWNlLXNwZWNpZmljIHN0cnVjdCB0
+byBpbnRlcm5hbCBmdW5jdGlvbnMgZm9yIGNvbnNpc3RlbmN5Lg0KPiANCj4gICAtIEluY2x1ZGUg
+cmVnaXN0ZXIgYmxvY2sgYmFzZSBpbiBQQ0lFX1NZU19TVEFURTQgYWRkcmVzcyB0byBzaW1wbGlm
+eQ0KPiAgICAgdXNlcnMuDQo+IA0KPiBOb3RoaW5nIGhlcmUgc2hvdWxkIGNoYW5nZSB0aGUgYmVo
+YXZpb3Igb2YgdGhlIGRyaXZlci4NCj4gDQo+IENoYW5nZXMgZnJvbSB2MToNCj4gICBJIGRyb3Bw
+ZWQgdGhlIGZvbGxvd2luZyBwYXRjaGVzIGJlY2F1c2UgdGhleSB3ZXJlIGEgbG90IG9mIGNodXJu
+IGZvcg0KPiAgIHF1ZXN0aW9uYWJsZSBiZW5lZml0Og0KPiAgICAgUENJOiBoaXNpOiBSZW5hbWUg
+QVBCIGFjY2Vzc29ycw0KPiAgICAgUENJOiBoaXNpOiBSZW5hbWUgY29uZmlnIGFjY2Vzc29ycw0K
+PiAgICAgUENJOiBoaXNpOiBOYW1lIHByaXZhdGUgc3RydWN0IHBvaW50ZXIgImhpc2kiIGNvbnNp
+c3RlbnRseQ0KPiAgICAgICAoSW5zdGVhZCBvZiByZW5hbWluZyAqYWxsKiB0aGUgcG9pbnRlcnMs
+IEkgb25seSByZW5hbWVkIGVub3VnaCB0bw0KPiAgICAgICBtYWtlIHRoZW0gY29uc2lzdGVudCB3
+aXRoaW4gdGhpcyBmaWxlLikNCj4gICAgIFBDSTogaGlzaTogU3dhcCBvcmRlciBvZiBoaXNpX2Fw
+Yl93cml0ZWwoKSByZWcvdmFsIGFyZ3VtZW50cw0KPiANCj4gLS0tDQo+IA0KPiBCam9ybiBIZWxn
+YWFzICg4KToNCj4gICAgICAgUENJOiBoaXNpOiBBZGQgbG9jYWwgc3RydWN0IGRldmljZSBwb2lu
+dGVycw0KPiAgICAgICBQQ0k6IGhpc2k6IFJlbW92ZSB1bnVzZWQgcGxhdGZvcm0gZGF0YQ0KPiAg
+ICAgICBQQ0k6IGhpc2k6IE5hbWUgcHJpdmF0ZSBzdHJ1Y3QgcG9pbnRlciAiaGlzaV9wY2llIiBj
+b25zaXN0ZW50bHkNCj4gICAgICAgUENJOiBoaXNpOiBSZW1vdmUgcmVkdW5kYW50IHN0cnVjdCBo
+aXNpX3BjaWUucmVnX2Jhc2UNCj4gICAgICAgUENJOiBoaXNpOiBVc2UgZ2VuZXJpYyBEZXNpZ25X
+YXJlIGFjY2Vzc29ycw0KPiAgICAgICBQQ0k6IGhpc2k6IEluY2x1ZGUgcmVnaXN0ZXIgYmxvY2sg
+YmFzZSBpbiBQQ0lFX1NZU19TVEFURTQgYWRkcmVzcw0KPiAgICAgICBQQ0k6IGhpc2k6IFBhc3Mg
+ZGV2aWNlLXNwZWNpZmljIHN0cnVjdCB0byBpbnRlcm5hbCBmdW5jdGlvbnMNCj4gICAgICAgUENJ
+OiBoaXNpOiBSZW9yZGVyIHN0cnVjdCBoaXNpX3BjaWUNCj4gDQo+IA0KPiAgZHJpdmVycy9wY2kv
+aG9zdC9wY2llLWhpc2kuYyB8ICAgODYgKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0t
+LQ0KPiAtLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDM1IGluc2VydGlvbnMoKyksIDUxIGRl
+bGV0aW9ucygtKQ0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0
+aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3Nh
+Z2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0
+ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg0KRm9yIHRoZSB3
+aG9sZSBwYXRjaHNldA0KDQpBY2tlZC1ieTogR2FicmllbGUgUGFvbG9uaSA8Z2FicmllbGUucGFv
+bG9uaUBodWF3ZWkuY29tPg0K
