@@ -1,114 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58500 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:53700 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965036AbcJGQnm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:43:42 -0400
-Subject: [PATCH 1/5] PCI: spear: Remove unused constants
-To: Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:43:36 -0500
-Message-ID: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1752657AbcJNInE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Oct 2016 04:43:04 -0400
+From: "Huang\, Ying" <ying.huang@intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: <ying.huang@intel.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [bug report] ACPI, APEI, Add PCIe AER error information printing support
+References: <20161013065847.GA30382@mwanda>
+Date: Fri, 14 Oct 2016 16:43:01 +0800
+In-Reply-To: <20161013065847.GA30382@mwanda> (Dan Carpenter's message of "Thu,
+        13 Oct 2016 09:58:47 +0300")
+Message-ID: <87wphbuxre.fsf@yhuang-dev.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-spear13xx.c |   70 -------------------------------------
- 1 file changed, 70 deletions(-)
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 09aed85..73f17da 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -57,87 +57,17 @@ struct pcie_app_reg {
- };
- 
- /* CR0 ID */
--#define RX_LANE_FLIP_EN_ID			0
--#define TX_LANE_FLIP_EN_ID			1
--#define SYS_AUX_PWR_DET_ID			2
- #define APP_LTSSM_ENABLE_ID			3
--#define SYS_ATTEN_BUTTON_PRESSED_ID		4
--#define SYS_MRL_SENSOR_STATE_ID			5
--#define SYS_PWR_FAULT_DET_ID			6
--#define SYS_MRL_SENSOR_CHGED_ID			7
--#define SYS_PRE_DET_CHGED_ID			8
--#define SYS_CMD_CPLED_INT_ID			9
--#define APP_INIT_RST_0_ID			11
--#define APP_REQ_ENTR_L1_ID			12
--#define APP_READY_ENTR_L23_ID			13
--#define APP_REQ_EXIT_L1_ID			14
--#define DEVICE_TYPE_EP				(0 << 25)
--#define DEVICE_TYPE_LEP				(1 << 25)
- #define DEVICE_TYPE_RC				(4 << 25)
--#define SYS_INT_ID				29
- #define MISCTRL_EN_ID				30
- #define REG_TRANSLATION_ENABLE			31
- 
--/* CR1 ID */
--#define APPS_PM_XMT_TURNOFF_ID			2
--#define APPS_PM_XMT_PME_ID			5
--
- /* CR3 ID */
--#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
--#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
--#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
--#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
--#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
--#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
--#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
--#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
--#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
--#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
--#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
--#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
--#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
--#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
--#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
--#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
--#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
--#define XMLH_LTSSM_STATE_L0			0x11
--#define XMLH_LTSSM_STATE_L0S			0x12
--#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
--#define XMLH_LTSSM_STATE_L1_IDLE		0x14
--#define XMLH_LTSSM_STATE_L2_IDLE		0x15
--#define XMLH_LTSSM_STATE_L2_WAKE		0x16
--#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
--#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
--#define XMLH_LTSSM_STATE_DISABLED		0x19
--#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
--#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
--#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
--#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
--#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
--#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
--#define XMLH_LTSSM_STATE_MASK			0x3F
- #define XMLH_LINK_UP				(1 << 6)
- 
--/* CR4 ID */
--#define CFG_MSI_EN_ID				18
--
- /* CR6 */
--#define INTA_CTRL_INT				(1 << 7)
--#define INTB_CTRL_INT				(1 << 8)
--#define INTC_CTRL_INT				(1 << 9)
--#define INTD_CTRL_INT				(1 << 10)
- #define MSI_CTRL_INT				(1 << 26)
- 
--/* CR19 ID */
--#define VEN_MSI_REQ_ID				11
--#define VEN_MSI_FUN_NUM_ID			8
--#define VEN_MSI_TC_ID				5
--#define VEN_MSI_VECTOR_ID			0
--#define VEN_MSI_REQ_EN		((u32)0x1 << VEN_MSI_REQ_ID)
--#define VEN_MSI_FUN_NUM_MASK	((u32)0x7 << VEN_MSI_FUN_NUM_ID)
--#define VEN_MSI_TC_MASK		((u32)0x7 << VEN_MSI_TC_ID)
--#define VEN_MSI_VECTOR_MASK	((u32)0x1F << VEN_MSI_VECTOR_ID)
--
- #define EXP_CAP_ID_OFFSET			0x70
- 
- #define to_spear13xx_pcie(x)	container_of(x, struct spear13xx_pcie, pp)
+> Hello Huang Ying,
+>
+> The patch c413d7682020: "ACPI, APEI, Add PCIe AER error information
+> printing support" from Feb 21, 2011, leads to the following static
+> checker warning:
+>
+> 	drivers/pci/pcie/aer/aerdrv_errprint.c:229 cper_print_aer()
+> 	warn: bool comparison is always 'false'
+>
+> drivers/pci/pcie/aer/aerdrv_errprint.c
+>    222  void cper_print_aer(struct pci_dev *dev, int aer_severity,
+>    223                      struct aer_capability_regs *aer)
+>    224  {
+>    225          int layer, agent, status_strs_size, tlp_header_valid = 0;
+>    226          u32 status, mask;
+>    227          const char **status_strs;
+>    228  
+>    229          if (aer_severity == AER_CORRECTABLE) {
+>                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> In the current code, aer_severity can only be AER_NONFATAL or AER_FATAL
+> so this condition can never be true.  This seems like it a confusing
+> thing.
 
+For now, there is no AER_CORRECTABLE usage for cper_print_aer(), but I
+think we will need it sometime.
+
+But your tool is very smart! :)
+
+Best Regards,
+Huang, Ying
+
+>    230                  status = aer->cor_status;
+>    231                  mask = aer->cor_mask;
+>    232                  status_strs = aer_correctable_error_string;
+>    233                  status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
+>    234          } else {
+>    235                  status = aer->uncor_status;
+>    236                  mask = aer->uncor_mask;
+>    237                  status_strs = aer_uncorrectable_error_string;
+>    238                  status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
+>    239                  tlp_header_valid = status & AER_LOG_TLP_MASKS;
+>    240          }
+>    241  
+>    242          layer = AER_GET_LAYER_ERROR(aer_severity, status);
+>    243          agent = AER_GET_AGENT(aer_severity, status);
+>    244  
+>
+> regards,
+> dan carpenter
