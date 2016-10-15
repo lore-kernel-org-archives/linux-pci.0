@@ -1,78 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:34073 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756127AbcJ1Iwe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:52:34 -0400
-Message-Id: <f77a60b00b35103587335b06f4791135426e0bcb.1477611126.git.lukas@wunner.de>
-In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
-References: <cover.1477611126.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 28 Oct 2016 10:52:06 +0200
-Subject: [PATCH v2 1/9] PCI: Don't acquire ref on parent in
- pci_bridge_d3_update()
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
+References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org> <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 15 Oct 2016 14:39:59 +0200
+Message-ID: <CAJZ5v0iiU-1JwAows+WbE9v3pjYi9cRHDwtDEDBuCUjWk=o=KA@mail.gmail.com>
+Subject: Re: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
+        Ondrej Zary <linux@rainbow-software.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Jon Masters <jcm@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Andy Gross <agross@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function is always called with an existing pci_dev struct, which
-holds a reference on the pci_bus struct it resides on, which in turn
-holds a reference on pci_bus->bridge, which is the pci_dev's parent.
+On Sat, Oct 15, 2016 at 6:31 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+> resource requirements") removed PCI_USING penalty from
+> acpi_pci_link_allocate function as there is no longer a fixed size penalty
+> array for both PCI interrupts greater than 16.
+>
+> The array size has been reduced to 16 and array name got prefixed as ISA
+> since it only is accountable for the ISA interrupts.
+>
+> The original change in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+> resource requirements") removed penalty assignment in the code for PCI
+> thinking that we will add the penalty later in acpi_irq_pci_sharing_penalty
+> function.
 
-Hence there's no need to acquire an additional ref on the parent.
+I'd write the above this way:
 
-More specifically, the pci_dev exists until pci_destroy_dev() drops the
-final reference on it, so all calls to pci_bridge_d3_update() must be
-finished before that.  It is arguably the caller's responsibility to
-ensure that it doesn't call pci_bridge_d3_update() with a pci_dev that
-might suddenly disappear, but in any case the existing callers are all
-safe:
+"Commit 103544d86976 (ACPI,PCI,IRQ: reduce resource requirements)
+dropped the PCI_USING penalty from acpi_pci_link_allocate() with the
+assumption that the penalty will be added later in
+acpi_irq_pci_sharing_penalty()."
 
-- The call in pci_destroy_dev() happens before the call to put_device().
-- The call in pci_bus_add_device() is synchronized with pci_destroy_dev()
-  using pci_lock_rescan_remove().
-- The calls to pci_d3cold_disable() from the xhci and nouveau drivers
-  are safe because a ref on the pci_dev is held as long as it's bound to
-  a driver.
-- The calls to pci_d3cold_enable() / pci_d3cold_disable() when modifying
-  the sysfs "d3cold_allowed" entry are also safe because kernfs_drain()
-  waits for existing sysfs users to finish before removing the entry,
-  and pci_destroy_dev() is called way after that.
+This conveys essentially the same information (up to some irrelevant
+bits), but in a clearer way IMO.
 
-No functional change intended.
+>
+> However, this function only gets called if the IRQ number is greater than
+> 16 and acpi_irq_get_penalty function gets called before ACPI start in
+> acpi_isa_irq_available and acpi_penalize_isa_irq functions. We can't rely
+> on iterating the link list.
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 3 ---
- 1 file changed, 3 deletions(-)
+"However, acpi_irq_pci_sharing_penalty() is only called for IRQ
+numbers above 15.  Moreover, acpi_irq_get_penalty() is invoked by
+acpi_isa_irq_available() and acpi_penalize_isa_irq() before the ACPI
+initialization and the PCI interrupt links list is not ready at that
+point, so it cannot be relied on when computing the penalty."
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba34907..6e0c399 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2292,7 +2292,6 @@ static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
- 	if (!bridge || !pci_bridge_d3_possible(bridge))
- 		return;
- 
--	pci_dev_get(bridge);
- 	/*
- 	 * If the device is removed we do not care about its D3cold
- 	 * capabilities.
-@@ -2314,8 +2313,6 @@ static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
- 		/* Propagate change to upstream bridges */
- 		pci_bridge_d3_update(bridge, false);
- 	}
--
--	pci_dev_put(bridge);
- }
- 
- /**
--- 
-2.9.3
+>
+> We need to add the PCI_USING penalty for ISA interrupts too if the link is
+> in use and matches our ISA IRQ number.
 
+"For this reason, the PCI_USING penalty has to be added in
+acpi_pci_link_allocate() directly if the link has been enabled
+successfully and the IRQ number is within the ISA range."
+
+IIUC
+
+>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index c983bf7..a212709 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -619,6 +619,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>                             acpi_device_bid(link->device));
+>                 return -ENODEV;
+>         } else {
+> +               if (link->irq.active < ACPI_MAX_ISA_IRQS)
+> +                       acpi_isa_irq_penalty[link->irq.active] +=
+> +                               PIRQ_PENALTY_PCI_USING;
+> +
+
+There's no need to break the line here and I would put the above after
+the printk().
+
+Or even after the whole "else" branch (which is unnecessary, but let's
+limit changes in this patch).
+
+>                 printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>                        acpi_device_name(link->device),
+>                        acpi_device_bid(link->device), link->irq.active);
+> --
+
+Thanks,
+Rafael
