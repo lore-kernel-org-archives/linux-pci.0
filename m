@@ -1,48 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35327 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752246AbcJCFhP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Oct 2016 01:37:15 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org
-Cc: Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V3 2/2] PCI: handle CRS returned by device after FLR
-Date: Mon,  3 Oct 2016 01:37:00 -0400
-Message-Id: <1475473021-14251-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
-References: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
+Received: from mail-cys01nam02on0074.outbound.protection.outlook.com ([104.47.37.74]:27712
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754251AbcJONql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 15 Oct 2016 09:46:41 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>
+Subject: RE: Why MSI is limited to 32 interrupts maximum
+Date: Sat, 15 Oct 2016 13:30:13 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20161015141401.70d95035@why.wild-wind.fr.eu.org>
+In-Reply-To: <20161015141401.70d95035@why.wild-wind.fr.eu.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An endpoint is allowed to issue CRS following an FLR request to indicate
-that it is not ready to accept new requests. Changing the polling mechanism
-in FLR wait function to go read the vendor ID instead of the command/status
-register. A CRS indication will only be given if the address to be read is
-vendor ID.
+ > On Sat, 15 Oct 2016 12:37:55 +0000
+> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+>=20
+> Hi Bharat,
+>=20
+> > Can anyone tell why MSI interrupts are limited to maximum 32
+> > interrupts, even though we have 16bit message data register ?
+>=20
+> That's the very definition of the original PCI MSI: Up to 32 consecutive =
+interrupts
+> per function, and a single doorbell address.
+> MSI-X lifts that restriction and offers up to 2048 interrupts that do not=
+ have to
+> be contiguous can target individual doorbells. Assuming your MSI controll=
+er
+> advertises MSI-X support and that your devices do support it as well, you=
+'ll be
+> able to enjoy those.
+>=20
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks Marc, so then only 5 bits of message data register will be used, so =
+what is the purpose rest of the bits ?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c8749b9..7580b00 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3725,7 +3725,8 @@ static void pci_flr_wait(struct pci_dev *dev)
- 
- 	do {
- 		msleep(100);
--		pci_read_config_dword(dev, PCI_COMMAND, &id);
-+		pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-+					   60 * 1000);
- 	} while (i++ < 10 && id == ~0);
- 
- 	if (id == ~0)
--- 
-1.9.1
-
+> >
+> > Regards,
+> > Bharat
+> >
+> >
+> > This email and any attachments are intended for the sole use of the
+> > named recipient(s) and contain(s) confidential information that may be
+> > proprietary, privileged or copyrighted under applicable law. If you
+> > are not the intended recipient, do not read, copy, or forward this
+> > email message or any attachments. Delete this email message and any
+> > attachments immediately.
+> >
+>=20
+> Please fix your email not to carry such disclaimer (or use a private emai=
+l address
+> if you can't work around your company policy). Posting confidential infor=
+mation
+> on a public mailing list feels a bit silly.
+>=20
+> Thanks,
+>=20
+> 	M.
+> --
+> Without deviation from the norm, progress is not possible.
