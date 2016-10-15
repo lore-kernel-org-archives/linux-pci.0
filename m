@@ -1,50 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57516 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755711AbcJLNKf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:10:35 -0400
-Subject: [PATCH v2 0/5] PCI: xilinx: Cleanups
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:10:30 -0500
-Message-ID: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sat, 15 Oct 2016 09:39:24 -0700
+From: okaya@codeaurora.org
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+ arnd@arndb.de, linux-pci-owner@vger.kernel.org
+Subject: Re: Why MSI is limited to 32 interrupts maximum
+In-Reply-To: <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20161015141401.70d95035@why.wild-wind.fr.eu.org>
+ <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
+Message-ID: <304288d1efe5014b24d600be4438651a@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
+On 2016-10-15 06:30, Bharat Kumar Gogada wrote:
+>> On Sat, 15 Oct 2016 12:37:55 +0000
+>> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+>> 
+>> Hi Bharat,
+>> 
+>> > Can anyone tell why MSI interrupts are limited to maximum 32
+>> > interrupts, even though we have 16bit message data register ?
+>> 
+>> That's the very definition of the original PCI MSI: Up to 32 
+>> consecutive interrupts
+>> per function, and a single doorbell address.
+>> MSI-X lifts that restriction and offers up to 2048 interrupts that do 
+>> not have to
+>> be contiguous can target individual doorbells. Assuming your MSI 
+>> controller
+>> advertises MSI-X support and that your devices do support it as well, 
+>> you'll be
+>> able to enjoy those.
+>> 
+> 
+> Thanks Marc, so then only 5 bits of message data register will be
+> used, so what is the purpose rest of the bits ?
+> 
 
-  - Remove platform drvdata because it appears unused (we called
-    platform_set_drvdata() but not platform_get_drvdata()).
-
-  - Remove unused xilinx_pcie_assign_msi() argument.
-
-Nothing here should change the behavior of the driver.
-
-Changes from v1:
-  Added "PCI: xilinx: Removed unused xilinx_pcie_assign_msi() argument"
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: xilinx: Name private struct pointer "xilinx" consistently
-    PCI: xilinx: Rename accessors
-    PCI: xilinx: Swap order of xilinx_writel() reg/val arguments
-    PCI: xilinx-nwl: Name private struct pointer "nwl" consistently
-    PCI: xilinx-nwl: Swap order of nwl_bridge_writel() reg/val arguments
-
----
-
-Bjorn Helgaas (5):
-      PCI: xilinx: Add local struct device pointers
-      PCI: xilinx: Remove unused platform data
-      PCI: xilinx: Removed unused xilinx_pcie_assign_msi() argument
-      PCI: xilinx-nwl: Add local struct device pointers
-      PCI: xilinx-nwl: Remove unused platform data
+Data field is used to indicate which interrupt number is used. It does 
+not need to start at 0.
 
 
- drivers/pci/host/pcie-xilinx-nwl.c |  109 ++++++++++++++++++------------------
- drivers/pci/host/pcie-xilinx.c     |   62 ++++++++++----------
- 2 files changed, 87 insertions(+), 84 deletions(-)
+You have 32 consecutive interrupts starting from some arbitrary base.
+
+
+>> >
+>> > Regards,
+>> > Bharat
+>> >
+>> >
+>> > This email and any attachments are intended for the sole use of the
+>> > named recipient(s) and contain(s) confidential information that may be
+>> > proprietary, privileged or copyrighted under applicable law. If you
+>> > are not the intended recipient, do not read, copy, or forward this
+>> > email message or any attachments. Delete this email message and any
+>> > attachments immediately.
+>> >
+>> 
+>> Please fix your email not to carry such disclaimer (or use a private 
+>> email address
+>> if you can't work around your company policy). Posting confidential 
+>> information
+>> on a public mailing list feels a bit silly.
+>> 
+>> Thanks,
+>> 
+>> 	M.
+>> --
+>> Without deviation from the norm, progress is not possible.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
