@@ -1,302 +1,157 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-Subject: [PATCH V3 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Thu, 20 Oct 2016 11:10:34 +0800
-Message-ID: <1476933034-46044-3-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
-References: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <julia.cartwright@ni.com>
+Return-Path: <julia.cartwright@ni.com>
+Date: Mon, 17 Oct 2016 13:32:09 -0500
+From: Julia Cartwright <julia@ni.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+CC: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>,
+        Bjorn Helgaas
+	<helgaas@kernel.org>,
+        "linux-rt-users@vger.kernel.org"
+	<linux-rt-users@vger.kernel.org>,
+        Sebastian Andrzej Siewior
+	<sebastian.siewior@linutronix.de>,
+        "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>,
+        "intel-wired-lan@lists.osuosl.org"
+	<intel-wired-lan@lists.osuosl.org>,
+        Matthew Garrett <mjg59@coreos.com>,
+        Bjorn
+ Helgaas <bhelgaas@google.com>, Greg <gvrose8192@gmail.com>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: Kernel 4.6.7-rt13: Intel Ethernet driver igb causes huge
+ latencies in cyclictest
+Message-ID: <20161017183209.GA18465@jcartwri.amer.corp.natinst.com>
+References: <AAEA33E297BCAC4B9BB20A7C2DF0AB8D8045E418@FMSMSX113.amr.corp.intel.com>
+ <29250f87b1d84aacb8aa312935582291@FE-MBX1012.de.bosch.com>
+ <20161010193958.GE22235@jcartwri.amer.corp.natinst.com>
+ <e9661abf93194ad3849e3864a8361993@FE-MBX1012.de.bosch.com>
+ <b77ea8ab312149d2b20a717d3ab0a8dc@FE-MBX1012.de.bosch.com>
+ <20161013161839.GV10625@jcartwri.amer.corp.natinst.com>
+ <f395ea6cd1274fac83d2744121da7441@FE-MBX1012.de.bosch.com>
+ <20161014195536.GB27124@jcartwri.amer.corp.natinst.com>
+ <82dcd5bb210f4f82af1e88313c3ec742@FE-MBX1012.de.bosch.com>
+ <CAKgT0Uf-F9V+AeP0+92Gf=40Tye-687_GFbhp4Sex=Hat+Ha+w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAKgT0Uf-F9V+AeP0+92Gf=40Tye-687_GFbhp4Sex=Hat+Ha+w@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
-It is non ECAM only for the RC bus config space;for any other bus
-underneath the root bus we support ECAM access.
-Add specific quirks for PCI config space accessors.This involves:
-1. New initialization call hisi_pcie_init() to obtain rc base
-addresses from PNP0C02 as subdevice of PNP0A03.
-2. New entry in common quirk array.
++linux-pci
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- MAINTAINERS                       |   1 +
- drivers/acpi/pci_mcfg.c           |  15 ++++
- drivers/pci/host/Kconfig          |   8 ++
- drivers/pci/host/Makefile         |   1 +
- drivers/pci/host/pcie-hisi-acpi.c | 170 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-ecam.h          |   4 +
- 6 files changed, 199 insertions(+)
- create mode 100755 drivers/pci/host/pcie-hisi-acpi.c
+On Mon, Oct 17, 2016 at 08:39:40AM -0700, Alexander Duyck wrote:
+> On Mon, Oct 17, 2016 at 8:00 AM, Koehrer Mathias (ETAS/ESW5)
+> <mathias.koehrer@etas.com> wrote:
+> > Hi Julia!
+> >> > > Have you tested on a vanilla (non-RT) kernel?  I doubt there is
+> >> > > anything RT specific about what you are seeing, but it might be nice
+> >> > > to get confirmation.  Also, bisection would probably be easier if you confirm on a
+> >> vanilla kernel.
+> >> > >
+> >> > > I find it unlikely that it's a kernel config option that changed
+> >> > > which regressed you, but instead was a code change to a driver.
+> >> > > Which driver is now the question, and the surface area is still big
+> >> > > (processor mapping attributes for this region, PCI root complex configuration,
+> >> PCI brige configuration, igb driver itself, etc.).
+> >> > >
+> >> > > Big enough that I'd recommend a bisection.  It looks like a
+> >> > > bisection between 3.18 and 4.8 would take you about 18 tries to narrow down,
+> >> assuming all goes well.
+> >> > >
+> >> >
+> >> > I have now repeated my tests using the vanilla kernel.
+> >> > There I got the very same issue.
+> >> > Using kernel 4.0 is fine, however starting with kernel 4.1, the issue appears.
+> >>
+> >> Great, thanks for confirming!  That helps narrow things down quite a bit.
+> >>
+> >> > Here is my exact (reproducible) test description:
+> >> > I applied the following patch to the kernel to get the igb trace.
+> >> > This patch instruments the igb_rd32() function to measure the call to
+> >> > readl() which is used to access registers of the igb NIC.
+> >>
+> >> I took your test setup and ran it between 4.0 and 4.1 on the hardware on my desk,
+> >> which is an Atom-based board with dual I210s, however I didn't see much
+> >> difference.
+> >>
+> >> However, it's a fairly simple board, with a much simpler PCI topology than your
+> >> workstation.  I'll see if I can find some other hardware to test on.
+> >>
+> >> [..]
+> >> > This means, that I think that some other stuff in kernel 4.1 has
+> >> > changed, which has impact on the igb accesses.
+> >> >
+> >> > Any idea what component could cause this kind of issue?
+> >>
+> >> Can you continue your bisection using 'git bisect'?  You've already narrowed it down
+> >> between 4.0 and 4.1, so you're well on your way.
+> >>
+> >
+> > OK - done.
+> > And finally I was successful!
+> > The following git commit is the one that is causing the trouble!
+> > (The full commit is in the attachment).
+> > +++++++++++++++++++++ BEGIN +++++++++++++++++++++++++++
+> > commit 387d37577fdd05e9472c20885464c2a53b3c945f
+> > Author: Matthew Garrett <mjg59@coreos.com>
+> > Date:   Tue Apr 7 11:07:00 2015 -0700
+> >
+> >     PCI: Don't clear ASPM bits when the FADT declares it's unsupported
+> >
+> >     Communications with a hardware vendor confirm that the expected behaviour
+> >     on systems that set the FADT ASPM disable bit but which still grant full
+> >     PCIe control is for the OS to leave any BIOS configuration intact and
+> >     refuse to touch the ASPM bits.  This mimics the behaviour of Windows.
+> >
+> >     Signed-off-by: Matthew Garrett <mjg59@coreos.com>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > +++++++++++++++++++++ HEADER +++++++++++++++++++++++++++
+> >
+> > The only files that are modified by this commit are
+> > drivers/acpi/pci_root.c
+> > drivers/pci/pcie/aspm.c
+> > include/linux/pci-aspm.h
+> >
+> > This is all generic PCIe stuff - however I do not really understand what
+> > the changes of the commit are...
+> >
+> > In my setup I am using a dual port igb Ethernet adapter.
+> > This has an onboard PCIe switch and it might be that the configuration of this
+> > PCIe switch on the Intel board is causing the trouble.
+> >
+> > Please see also the output of "lspci -v" in the attachment.
+> > The relevant PCI address of the NIC is 04:00.0 / 04:00.1
+> >
+> > Any feedback on this is welcome!
+> >
+> > Thanks
+> >
+> > Mathias
+>
+> Hi Mathias,
+>
+> If you could set the output of lspci -vvv it might be more useful as
+> most of the configuration data isn't present in the lspci dump you had
+> attached.  Specifically if you could do this for the working case and
+> the non-working case we could verify if this issue is actually due to
+> the ASPM configuration on the device.
+>
+> Also one thing you might try is booting your kernel with the kernel
+> parameter "pcie_aspm=off".  It sounds like the extra latency is likely
+> due to your platform enabling ASPM on the device and this in turn will
+> add latency if the PCIe link is disabled when you attempt to perform a
+> read as it takes some time to bring the PCIe link up when in L1 state.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1cd38a7..b224caa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/host/pcie-hisi-acpi.c
- 
- PCIE DRIVER FOR ROCKCHIP
- M:	Shawn Lin <shawn.lin@rock-chips.com>
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index bb2c508..135a9b4 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -96,6 +96,21 @@ struct mcfg_fixup {
- 	THUNDER_ECAM_MCFG(2, 12),
- 	THUNDER_ECAM_MCFG(2, 13),
- #endif
-+#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
-+	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
-+
-+#ifdef CONFIG_PCI_HISI_ACPI
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-+#endif
-+
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index ae98644..9ff2bcd 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -227,6 +227,14 @@ config PCI_HISI
- 	  Say Y here if you want PCIe controller support on HiSilicon
- 	  Hip05 and Hip06 and Hip07 SoCs
- 
-+config PCI_HISI_ACPI
-+	depends on ACPI && ARM64
-+	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe controllers"
-+	select PNP
-+	help
-+	  Say Y here if you want ACPI PCIe controller support on HiSilicon
-+	  Hip05 and Hip06 and Hip07 SoCs
-+
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
- 	depends on ARCH_QCOM && OF
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb49..9402858 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pcie-hisi-acpi.c b/drivers/pci/host/pcie-hisi-acpi.c
-new file mode 100755
-index 0000000..5650d91
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi-acpi.c
-@@ -0,0 +1,170 @@
-+/*
-+ * PCIe host controller driver for HiSilicon HipXX SoCs
-+ *
-+ * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Dongdong Liu <liudongdong3@huawei.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/pci.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
-+
-+#define DEBUG0				0x728
-+#define PCIE_LTSSM_LINKUP_STATE		0x11
-+#define PCIE_LTSSM_STATE_MASK		0x3F
-+
-+static const struct acpi_device_id hisi_pcie_rc_res_ids[] = {
-+	{"HISI0081", 0},
-+	{"", 0},
-+};
-+
-+static int hisi_pcie_link_up_acpi(struct pci_config_window *cfg)
-+{
-+	u32 val;
-+	void __iomem *reg_base = cfg->priv;
-+
-+	val = readl(reg_base + DEBUG0);
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
-+static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
-+				  int size, u32 *val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
-+
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_read32(bus, devfn, where,
-+							 size, val);
-+	}
-+
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
-+				  int where, int size, u32 val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
-+
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_write32(bus, devfn, where,
-+							  size, val);
-+	}
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				       int where)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	void __iomem *reg_base = cfg->priv;
-+
-+	if (bus->number == cfg->busr.start)
-+		return reg_base + where;
-+	else
-+		return pci_ecam_map_bus(bus, devfn, where);
-+}
-+
-+/*
-+ * Retrieve RC base and size from sub-device under the RC
-+ * Device (RES1)
-+ * {
-+ *	Name (_HID, "HISI0081")
-+ *	Name (_CID, "PNP0C02")
-+ *	Name (_CRS, ResourceTemplate (){
-+ *		Memory32Fixed (ReadWrite, 0xb0080000, 0x10000)
-+ *	})
-+ * }
-+ */
-+static int hisi_pcie_rc_addr_get(struct acpi_device *adev,
-+				 void __iomem **addr)
-+{
-+	struct acpi_device *child_adev;
-+	struct list_head list;
-+	struct resource *res;
-+	struct resource_entry *entry;
-+	unsigned long flags;
-+	int ret;
-+
-+	list_for_each_entry(child_adev, &adev->children, node) {
-+		ret = acpi_match_device_ids(child_adev, hisi_pcie_rc_res_ids);
-+		if (ret)
-+			continue;
-+
-+		INIT_LIST_HEAD(&list);
-+		flags = IORESOURCE_MEM;
-+		ret = acpi_dev_get_resources(child_adev, &list,
-+					     acpi_dev_filter_resource_type_cb,
-+					     (void *)flags);
-+		if (ret < 0) {
-+			dev_err(&child_adev->dev,
-+				"failed to parse _CRS method, error code %d\n",
-+				ret);
-+			return ret;
-+		} else if (ret == 0) {
-+			dev_err(&child_adev->dev,
-+				"no IO and memory resources present in _CRS\n");
-+			return -EINVAL;
-+		}
-+
-+		entry = list_first_entry(&list, struct resource_entry, node);
-+		res = entry->res;
-+		*addr = devm_ioremap(&child_adev->dev,
-+				     res->start, resource_size(res));
-+		acpi_dev_free_resource_list(&list);
-+		if (IS_ERR(*addr)) {
-+			dev_err(&child_adev->dev, "error with ioremap\n");
-+			return -ENOMEM;
-+		}
-+
-+		return 0;
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+static int hisi_pcie_init(struct pci_config_window *cfg)
-+{
-+	int ret;
-+	struct acpi_device *adev = to_acpi_device(cfg->parent);
-+	void __iomem *reg_base;
-+
-+	ret = hisi_pcie_rc_addr_get(adev, &reg_base);
-+	if (ret) {
-+		dev_err(&adev->dev, "can't get rc base address");
-+		return ret;
-+	}
-+
-+	cfg->priv = reg_base;
-+	if (!hisi_pcie_link_up_acpi(cfg)) {
-+		dev_err(&adev->dev, "link status is down\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+struct pci_ecam_ops hisi_pcie_ops = {
-+	.bus_shift    = 20,
-+	.init         =  hisi_pcie_init,
-+	.pci_ops      = {
-+		.map_bus    = hisi_pcie_map_bus,
-+		.read       = hisi_pcie_acpi_rd_conf,
-+		.write      = hisi_pcie_acpi_wr_conf,
-+	}
-+};
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 35f0e81..2db4db8 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -66,6 +66,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- extern struct pci_ecam_ops pci_thunder_ecam_ops;
- #endif
- 
-+#ifdef CONFIG_PCI_HISI_ACPI
-+extern struct pci_ecam_ops hisi_pcie_ops;
-+#endif
-+
- #ifdef CONFIG_PCI_HOST_GENERIC
- /* for DT-based PCI controllers that support ECAM */
- int pci_host_common_probe(struct platform_device *pdev,
--- 
-1.9.1
+So if we assume it's this commit causing the regression, then it's safe
+to assume that this system's BIOS is claiming to not support ASPM in the
+FADT, but the BIOS is leaving ASPM configured in some way on the
+relevant devices.
+
+Also, unfortunately, taking a look at the code which handles
+"pcie_aspm=off", it won't be sufficient to disable ASPM on these
+this system, as disabling these states is skipped when the FADT doesn't
+advertise ASPM support.
+
+What would be needed is an option like "force", but which force
+_disables_ ASPM.  "force-disable", maybe.
+
+   Julia
