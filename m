@@ -1,104 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:43457 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932166AbcJLCKt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 22:10:49 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 1/3] PCI: rockchip: Provide captured slot power limit and scale
-Date: Wed, 12 Oct 2016 10:05:01 +0800
-Message-Id: <1476237903-15076-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:36620 "EHLO
+        mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933143AbcJQO46 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 10:56:58 -0400
+Received: by mail-pa0-f68.google.com with SMTP id os4so5246019pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Oct 2016 07:56:58 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH -next] PCI: hisi: Remove redundant dev_err call in hisi_pcie_probe()
+Date: Mon, 17 Oct 2016 14:56:50 +0000
+Message-Id: <1476716210-31532-1-git-send-email-weiyj.lk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If vpcie3v3 is available, we could provide these information
-via RC's configure register to make EP able to know the power
-limit.
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+There is a error message within devm_ioremap_resource
+already, so remove the dev_err call to avoid redundant
+error message.
 
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
+ drivers/pci/host/pcie-hisi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Changes in v3:
-- rebase the code since it isn't cleanly applied again.
-
-Changes in v2:
-- rebase the code since it isn't cleanly applied after Bjorn's cleanup
-
- drivers/pci/host/pcie-rockchip.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index db917c7..a67ff9e 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -135,6 +135,10 @@
- #define PCIE_RC_CONFIG_VENDOR		(PCIE_RC_CONFIG_BASE + 0x00)
- #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
- #define   PCIE_RC_CONFIG_SCC_SHIFT		16
-+#define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
-+#define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
-+#define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
-+#define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
- #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
- #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
-@@ -398,6 +402,40 @@ static struct pci_ops rockchip_pcie_ops = {
- 	.write = rockchip_pcie_wr_conf,
- };
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 56154c2..a77b9bda 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -185,10 +185,8 @@ static int hisi_pcie_probe(struct platform_device *pdev)
  
-+static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip_pcie)
-+{
-+	u32 status, curr, scale, power;
-+
-+	if (IS_ERR(rockchip_pcie->vpcie3v3))
-+		return;
-+
-+	/*
-+	 * Set RC's captured slot power limit and scale if
-+	 * vpcie3v3 available. The default values are both zero
-+	 * which means the software should set these two according
-+	 * to the actual power supply.
-+	 */
-+	curr = regulator_get_current_limit(rockchip_pcie->vpcie3v3);
-+	if (curr > 0) {
-+		scale = 3; /* 0.001x */
-+		curr = curr / 1000; /* convert to mA */
-+		power = (curr * 3300) / 1000; /* milliwatt */
-+		while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
-+			if (!scale) {
-+				dev_warn(rockchip_pcie->dev, "invalid power supply\n");
-+				return;
-+			}
-+			scale--;
-+			power = power / 10;
-+		}
-+
-+		status = rockchip_pcie_readl(rockchip_pcie, PCIE_RC_CONFIG_DCR);
-+		status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
-+			  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
-+		rockchip_pcie_writel(rockchip_pcie, PCIE_RC_CONFIG_DCR, status);
-+	}
-+}
-+
- /**
-  * rockchip_pcie_init_port - Initialize hardware
-  * @rockchip_pcie: PCIe port information
-@@ -500,6 +538,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip_pcie)
- 		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
- 	rockchip_pcie_writel(rockchip_pcie, PCIE_CORE_CTRL_PLC1, status);
+ 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+ 	pp->dbi_base = devm_ioremap_resource(dev, reg);
+-	if (IS_ERR(pp->dbi_base)) {
+-		dev_err(dev, "cannot get rc_dbi base\n");
++	if (IS_ERR(pp->dbi_base))
+ 		return PTR_ERR(pp->dbi_base);
+-	}
  
-+	rockchip_pcie_set_power_limit(rockchip_pcie);
-+
- 	/* Enable Gen1 training */
- 	rockchip_pcie_writel(rockchip_pcie, PCIE_CLIENT_CONFIG,
- 			PCIE_CLIENT_LINK_TRAIN_ENABLE);
--- 
-2.3.7
+ 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+ 	if (ret)
+
 
 
