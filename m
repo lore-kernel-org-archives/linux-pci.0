@@ -1,81 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:60292 "EHLO bear.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755880AbcJLT6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 15:58:22 -0400
-Subject: Re: [PATCH v2 6/7] PCI: dra7xx: Move struct pcie_port setup to probe
- function
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36628 "EHLO
+        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934300AbcJQPFA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 11:05:00 -0400
+Received: by mail-pa0-f66.google.com with SMTP id os4so5252610pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Oct 2016 08:05:00 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-References: <20161012133112.27714.93244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20161012133322.27714.21257.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>
-From: "Andrew F. Davis" <afd@ti.com>
-Message-ID: <844ae443-f1ca-0c77-11fb-df0434d6cd0c@ti.com>
-Date: Wed, 12 Oct 2016 14:58:20 -0500
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Vineet Gupta <vgupta@synopsys.com>,
+        Robin Murphy <robin.murphy@arm.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH -next] x86/PCI: VMD: Remove unnecessary pci_set_drvdata()
+Date: Mon, 17 Oct 2016 15:04:44 +0000
+Message-Id: <1476716684-6778-1-git-send-email-weiyj.lk@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161012133322.27714.21257.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/2016 08:33 AM, Bjorn Helgaas wrote:
-> Do the basic pcie_port setup in the probe function for consistency with
-> other drivers.  No functional change intended.
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Other drivers may do this, but it is really logical? All the pcie_port
-work and variables are isolated to the add_pcie_port function, now it
-they are mixed into probe as well, I don't see any benefit to this
-style, perhaps the other drivers should become more like this.
+The driver core clears the driver data to NULL after device_release
+or on probe failure. Thus, it is not needed to manually clear the
+device driver data to NULL.
 
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/host/pci-dra7xx.c |   13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index efb24b8..bb77c35 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -267,13 +267,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  				       struct platform_device *pdev)
->  {
->  	int ret;
-> -	struct pcie_port *pp;
-> +	struct pcie_port *pp = &dra7xx->pp;
-> +	struct device *dev = pp->dev;
->  	struct resource *res;
-> -	struct device *dev = &pdev->dev;
-> -
-> -	pp = &dra7xx->pp;
-> -	pp->dev = dev;
-> -	pp->ops = &dra7xx_pcie_host_ops;
->  
->  	pp->irq = platform_get_irq(pdev, 1);
->  	if (pp->irq < 0) {
-> @@ -320,6 +316,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	void __iomem *base;
->  	struct resource *res;
->  	struct dra7xx_pcie *dra7xx;
-> +	struct pcie_port *pp;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	char name[10];
-> @@ -331,6 +328,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	if (!dra7xx)
->  		return -ENOMEM;
->  
-> +	pp = &dra7xx->pp;
-> +	pp->dev = dev;
-> +	pp->ops = &dra7xx_pcie_host_ops;
-> +
->  	irq = platform_get_irq(pdev, 0);
->  	if (irq < 0) {
->  		dev_err(dev, "missing IRQ resource\n");
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/pci/host/vmd.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 37e29b5..6614b3552 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -719,7 +719,6 @@ static void vmd_remove(struct pci_dev *dev)
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 
+ 	vmd_detach_resources(vmd);
+-	pci_set_drvdata(dev, NULL);
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+ 	pci_stop_root_bus(vmd->bus);
+ 	pci_remove_root_bus(vmd->bus);
+
+
+
