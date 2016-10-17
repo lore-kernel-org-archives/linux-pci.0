@@ -1,62 +1,44 @@
-Return-Path: <jesper.nilsson@axis.com>
-Return-Path: <jesper.nilsson@axis.com>
-Date: Wed, 12 Oct 2016 22:40:07 +0200
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jesper Nilsson <jespern@axis.com>,
-	Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@axis.com
-Subject: Re: [PATCH v2 0/7] PCI: artpec: Cleanups
-Message-ID: <20161012204007.GE30704@axis.com>
-References: <20161012132616.27228.4618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20161012160440.GL4308@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:58455 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932522AbcJQMCh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Oct 2016 08:02:37 -0400
+Date: Mon, 17 Oct 2016 14:02:34 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Emmanuel Benisty <benisty.e@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, tj@kernel.org,
+        linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: use pci_alloc_irq_vectors issues
+Message-ID: <20161017120234.GA14105@lst.de>
+References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com> <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com> <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com> <20161017103442.GA12240@lst.de> <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012160440.GL4308@localhost>
+In-Reply-To: <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 11:04:40AM -0500, Bjorn Helgaas wrote:
-> On Wed, Oct 12, 2016 at 08:28:55AM -0500, Bjorn Helgaas wrote:
-> >   - Add local "dev" pointers to reduce repetition of things like
-> >     "&pdev->dev".
-> > 
-> >   - Remove platform drvdata because it appears unused (we called
-> >     platform_set_drvdata() but not platform_get_drvdata()).
-> > 
-> >   - Use generic DesignWare accessors when possible.
-> > 
-> >   - Add register accessors to encapsulate regmap usage.
-> > 
-> >   - Pass device-specific struct to internal functions for consistency.
-> > 
-> > Nothing here should change the behavior of the driver.
-> > 
-> > Changes from v1:
-> >   I dropped the following patch because it was a lot of churn for
-> >   questionable benefit:
-> >     PCI: artpec6: Name private struct pointer "artpec6" consistently
-> > 
-> > ---
-> > 
-> > Bjorn Helgaas (7):
-> >       PCI: artpec6: Add local struct device pointers
-> >       PCI: artpec6: Remove unused platform data
-> >       PCI: artpec6: Add register accessors
-> >       PCI: artpec6: Use generic DesignWare accessors
-> >       PCI: artpec6: Remove unnecessary artpec6_pcie_link_up()
-> >       PCI: artpec6: Pass device-specific struct to internal functions
-> >       PCI: artpec6: Add resource name comments
-> > 
-> > 
-> >  drivers/pci/host/pcie-artpec6.c |  115 ++++++++++++++++++++-------------------
-> >  1 file changed, 59 insertions(+), 56 deletions(-)
-> 
-> I applied these to pci/host-artpec for v4.9.  I hope to ask Linus to
-> pull them tomorrow, so if you see any issues, let me know soon.
+Thanks a lot!  I think the current check on when to fall back from
+the multi-MSI to the single-MSI case is too narrow and we should
+just always fall back.
 
-Looks good, although I haven't been able run a test on real hardware since I'm
-currently at ELCE in Berlin... :-)
+Can you see if the patch below fixes your issue (revert the debug patch
+first, please)?
 
-/^JN - Jesper Nilsson
--- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ba5f11c..b4b8004 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1436,13 +1436,6 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	}
+ 
+ 	/*
+-	 * -ENOSPC indicated we don't have enough vectors.  Don't bother trying
+-	 * a single vectors for any other error:
+-	 */
+-	if (nvec < 0 && nvec != -ENOSPC)
+-		return nvec;
+-
+-	/*
+ 	 * If the host is not capable of supporting per-port vectors, fall
+ 	 * back to single MSI before finally attempting single MSI-X.
+ 	 */
