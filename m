@@ -1,125 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44824 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754902AbcJLOG3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:06:29 -0400
-Subject: [PATCH v2 1/7] PCI: layerscape: Add local struct device pointers
-To: Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Wed, 12 Oct 2016 08:57:30 -0500
-Message-ID: <20161012135730.29815.5926.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Li Yang <leoyang.li@nxp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Minghuan Lian
+ <minghuan.Lian@freescale.com>, Mingkai Hu <mingkai.hu@freescale.com>, Roy
+ Zang <tie-fei.zang@freescale.com>
+Subject: [PATCH] PCI: layerscape: Fix kernel panic on accessing NULL pointer
+Date: Mon, 17 Oct 2016 16:44:06 -0500
+Message-ID: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Li Yang <leoyang.li@nxp.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Stuart Yoder <stuart.yoder@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+Commit fefe6733e added reference to the pcie->drvdata before it is
+initialized which causes a kernel panic.  Fix the problem by
+initializing the pcie->drvdata earlier before it is used.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reported-by: Stuart Yoder <stuart.yoder@nxp.com>
+Signed-off-by: Li Yang <leoyang.li@nxp.com>
 ---
- drivers/pci/host/pci-layerscape.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ drivers/pci/host/pci-layerscape.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 114ba81..08b511e 100644
+index 2cb7315..958187f 100644
 --- a/drivers/pci/host/pci-layerscape.c
 +++ b/drivers/pci/host/pci-layerscape.c
-@@ -106,18 +106,19 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
- 
- static void ls1021_pcie_host_init(struct pcie_port *pp)
- {
-+	struct device *dev = pp->dev;
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 	u32 index[2];
- 
--	pcie->scfg = syscon_regmap_lookup_by_phandle(pp->dev->of_node,
-+	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
- 						     "fsl,pcie-scfg");
- 	if (IS_ERR(pcie->scfg)) {
--		dev_err(pp->dev, "No syscfg phandle specified\n");
-+		dev_err(dev, "No syscfg phandle specified\n");
- 		pcie->scfg = NULL;
- 		return;
- 	}
- 
--	if (of_property_read_u32_array(pp->dev->of_node,
-+	if (of_property_read_u32_array(dev->of_node,
- 				       "fsl,pcie-scfg", index, 2)) {
- 		pcie->scfg = NULL;
- 		return;
-@@ -158,8 +159,9 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 				 struct msi_controller *chip)
- {
-+	struct device *dev = pp->dev;
-+	struct device_node *np = dev->of_node;
- 	struct device_node *msi_node;
--	struct device_node *np = pp->dev->of_node;
- 
- 	/*
- 	 * The MSI domain is set by the generic of_msi_configure().  This
-@@ -169,7 +171,7 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 	 */
- 	msi_node = of_parse_phandle(np, "msi-parent", 0);
- 	if (!msi_node) {
--		dev_err(pp->dev, "failed to find msi-parent\n");
-+		dev_err(dev, "failed to find msi-parent\n");
- 		return -EINVAL;
- 	}
- 
-@@ -215,16 +217,17 @@ static const struct of_device_id ls_pcie_of_match[] = {
- static int __init ls_add_pcie_port(struct pcie_port *pp,
- 				   struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	int ret;
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 
--	pp->dev = &pdev->dev;
-+	pp->dev = dev;
- 	pp->dbi_base = pcie->dbi;
- 	pp->ops = pcie->drvdata->ops;
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
--		dev_err(pp->dev, "failed to initialize host\n");
-+		dev_err(dev, "failed to initialize host\n");
- 		return ret;
- 	}
- 
-@@ -233,23 +236,24 @@ static int __init ls_add_pcie_port(struct pcie_port *pp,
- 
- static int __init ls_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	const struct of_device_id *match;
- 	struct ls_pcie *pcie;
- 	struct resource *dbi_base;
- 	int ret;
- 
--	match = of_match_device(ls_pcie_of_match, &pdev->dev);
-+	match = of_match_device(ls_pcie_of_match, dev);
- 	if (!match)
- 		return -ENODEV;
- 
--	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+@@ -245,6 +245,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
  	if (!pcie)
  		return -ENOMEM;
  
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
--	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
-+	pcie->dbi = devm_ioremap_resource(dev, dbi_base);
- 	if (IS_ERR(pcie->dbi)) {
--		dev_err(&pdev->dev, "missing *regs* space\n");
-+		dev_err(dev, "missing *regs* space\n");
- 		return PTR_ERR(pcie->dbi);
++	pcie->drvdata = match->data;
+ 	pp = &pcie->pp;
+ 	pp->dev = dev;
+ 	pp->ops = pcie->drvdata->ops;
+@@ -256,7 +257,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pcie->pp.dbi_base);
  	}
  
+-	pcie->drvdata = match->data;
+ 	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
+ 
+ 	if (!ls_pcie_is_bridge(pcie))
+-- 
+1.9.0
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
