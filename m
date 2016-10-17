@@ -1,55 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:42905 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751711AbcJFGYe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2016 02:24:34 -0400
-Message-Id: <cover.1475733022.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 6 Oct 2016 08:24:29 +0200
-Subject: [PATCH 0/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, x86@kernel.org
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+Subject: Re: [PATCH v2 0/5] PCI: iproc: Cleanups
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20161012124804.24076.48957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20161012160114.GC4308@localhost>
+ <4e1e4df1-15b0-7deb-eaa9-4ac683812be9@broadcom.com>
+ <20161012161842.GW4308@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <fca0632d-ace4-b6c9-813d-0f53fccee8ed@broadcom.com>
+Date: Mon, 17 Oct 2016 15:02:22 -0700
+MIME-Version: 1.0
+In-Reply-To: <20161012161842.GW4308@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Somehow it went completely under my radar that v4.8 added another
-struct pci_platform_pm_ops for Intel Mobile Internet Devices.
+Hi Bjorn,
 
-There's a commit queued for v4.9 on Bjorn's pci/pm branch which adds
-a mandatory ->get_power hook to pci_platform_pm_ops and implements
-it for acpi_pci_platform_pm, but not mid_pci_platform_pm.
+On 10/12/2016 9:18 AM, Bjorn Helgaas wrote:
+> On Wed, Oct 12, 2016 at 09:04:26AM -0700, Ray Jui wrote:
+>> Hi Bjorn,
+>>
+>> On 10/12/2016 9:01 AM, Bjorn Helgaas wrote:
+>>> On Wed, Oct 12, 2016 at 07:53:03AM -0500, Bjorn Helgaas wrote:
+>>>>  - Add local "dev" pointers to reduce repetition of things like
+>>>>    "&pdev->dev".
+>>>>
+>>>>  - Tidy up drvdata usage.
+>>>>
+>>>>  - Remove some null pointer checking after adding corresponding checking
+>>>>    elsewhere.
+>>>>
+>>>>  - Hard-code the PCIe capability offset instead of searching for it.  This
+>>>>    removes a little bit of dependency on struct pci_bus, with an eye
+>>>>    toward moving the link maintenance before enumeration.
+>>>>
+>>>> Changes from v1:
+>>>>  I dropped the following patches because they were a lot of churn for
+>>>>  questionable benefit:
+>>>>    PCI: iproc: Rename accessors
+>>>>    PCI: iproc: Name private struct pointer "iproc" consistently
+>>>>
+>>>> ---
+>>>>
+>>>> Bjorn Helgaas (5):
+>>>>      PCI: iproc: Add local struct device pointers
+>>>>      PCI: iproc: Set drvdata at end of probe function
+>>>>      PCI: iproc: Validate CSR base in BCMA setup code
+>>>>      PCI: iproc: Remove redundant null pointer checking
+>>>>      PCI: iproc: Hard-code PCIe capability offset instead of searching
+>>>
+>>> I applied these to pci/host-iproc for v4.9.  I hope to ask Linus to
+>>> pull them tomorrow, so if you see any issues, let me know soon.
+>>>
+>>
+>> That sounds good. Are these patches in the git repo:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git at
+>> branch pci/host-iproc?
+>
+> They should be there.  I also just merged everything into my "next"
+> branch.
+>
+>> I plan to sanity test them on various iProc based SoCs.
+>
+> Great, thanks!
+>
 
-The following patch fixes that.  It's not a build issue, the missing
-hook in mid_pci_platform_pm only becomes a problem at runtime.
+I sanity tested the following patches through v4.9-rc1 on both ARM32 and 
+ARM64, iProc based platforms (i.e., Cygnus and NS2):
 
-@Andy: Could you look over this and provide an ack?  I do not have
-an Intel MID so I was only able to compile-test the patch.
+PCI: iproc: Hard-code PCIe capability offset instead of searching
+PCI: iproc: Remove redundant null pointer checking
+PCI: iproc: Validate CSR base in BCMA setup code
+PCI: iproc: Set drvdata at end of probe function
+PCI: iproc: Add local struct device pointers
 
-The ->get_power hook is currently only called to update a device's
-current_state after resume (both at runtime and after system sleep)
-and after changing its power state using the platform in
-pci_platform_power_transition().  The result of the ->get_power hook
-is ignored unless it's D3cold.  Since intel-mid PCI devices can only
-be suspended to D3hot, the return value is irrelevant on this platform,
-the hook just needs to be present to make pci_set_platform_pm() happy.
-
-If you want to test the patch, you need to apply it either on Bjorn's
-pci/pm branch or linux-next:
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
+I plan to refresh my patches on top of v4.9-rc1 and will send them out 
+once they are done.
 
 Thanks,
 
-Lukas
-
-Lukas Wunner (1):
-  x86/platform/intel-mid: Retrofit pci_platform_pm_ops ->get_power hook
-
- arch/x86/include/asm/intel-mid.h  |  1 +
- arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
- drivers/pci/pci-mid.c             |  6 ++++++
- 3 files changed, 26 insertions(+)
-
--- 
-2.9.3
-
+Ray
