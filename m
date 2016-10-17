@@ -1,167 +1,55 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH v2 04/12] PCI: iproc: Fix exception with multi-function devices
-Date: Mon, 31 Oct 2016 17:38:33 -0700
-Message-Id: <1477960721-17649-5-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
-References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35006 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757588AbcJQO7P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 10:59:15 -0400
+Received: by mail-pf0-f194.google.com with SMTP id s8so12933806pfj.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Oct 2016 07:59:15 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: bhelgaas@google.com, michal.simek@xilinx.com,
+        soren.brinkmann@xilinx.com, po.liu@nxp.com,
+        christophe.jaillet@wanadoo.fr, paul.gortmaker@windriver.com,
+        bharat.kumar.gogada@xilinx.com, rgummal@xilinx.com, arnd@arndb.de
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH -next] PCI: xilinx: Add missing of_node_put() in xilinx_pcie_init_irq_domain()
+Date: Mon, 17 Oct 2016 14:59:04 +0000
+Message-Id: <1476716344-1050-1-git-send-email-weiyj.lk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During enumeration with multi-function EP devices, access to the
-configuration space of a non-exist function results in an unsupported
-request being returned as expected. By default the PAXB based iProc
-PCIe controller forwards this as an APB error to the host system and
-that causes an exception, which is undesired
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-This patch disables this undesired behaviour and lets the kernel PCI
-stack deals with an access to the non-exist function, in which case
-a vendor ID of 0xffff is returned and handled gracefully
+This node pointer is returned by of_get_next_child() with refcount
+incremented in this function. of_node_put() on it before exitting
+this function on error.
 
-Reported-by: JD Zheng <jiandong.zheng@broadcom.com>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: JD Zheng <jiandong.zheng@broadcom.com>
-Reviewed-by: Oza Oza <oza.oza@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+This is detected by Coccinelle semantic patch.
+
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
- drivers/pci/host/pcie-iproc.c | 58 +++++++++++++++++++++++++++++++++++++++++--
- drivers/pci/host/pcie-iproc.h |  3 +++
- 2 files changed, 59 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-xilinx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index f3b3340..07ec478 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -58,6 +58,9 @@
- #define PCIE_DL_ACTIVE_SHIFT         2
- #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index c8616fa..7100ee5 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -529,6 +529,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 						 port);
+ 	if (!port->leg_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
++		of_node_put(pcie_intc_node);
+ 		return -ENODEV;
+ 	}
  
-+#define APB_ERR_EN_SHIFT             0
-+#define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
-+
- #define OARR_VALID_SHIFT             0
- #define OARR_VALID                   BIT(OARR_VALID_SHIFT)
- #define OARR_SIZE_CFG_SHIFT          1
-@@ -96,6 +99,9 @@ enum iproc_pcie_reg {
- 	/* link status */
- 	IPROC_PCIE_LINK_STATUS,
- 
-+	/* enable APB error for unsupported requests */
-+	IPROC_PCIE_APB_ERR_EN,
-+
- 	/* total number of core registers */
- 	IPROC_PCIE_MAX_NUM_REG,
- };
-@@ -124,6 +130,7 @@ static const u16 iproc_pcie_reg_paxb[] = {
- 	[IPROC_PCIE_OMAP_LO]      = 0xd40,
- 	[IPROC_PCIE_OMAP_HI]      = 0xd44,
- 	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
-+	[IPROC_PCIE_APB_ERR_EN]   = 0xf40,
- };
- 
- /* iProc PCIe PAXC v1 registers */
-@@ -181,6 +188,28 @@ static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
- 	writel(val, pcie->base + offset);
- }
- 
-+/**
-+ * APB error forwarding can be disabled during access of configuration
-+ * registers of the endpoint device, to prevent unsupported requests
-+ * (typically seen during enumeration with multi-function devices) from
-+ * triggering a system exception
-+ */
-+static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
-+					      bool disable)
-+{
-+	struct iproc_pcie *pcie = iproc_data(bus);
-+	u32 val;
-+
-+	if (bus->number && pcie->has_apb_err_disable) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_APB_ERR_EN);
-+		if (disable)
-+			val &= ~APB_ERR_EN;
-+		else
-+			val |= APB_ERR_EN;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_APB_ERR_EN, val);
-+	}
-+}
-+
- static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
- 				       enum iproc_pcie_reg reg,
- 				       unsigned window, u32 val)
-@@ -244,10 +273,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 		return (pcie->base + offset);
- }
- 
-+static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	int ret;
-+
-+	iproc_pcie_apb_err_disable(bus, true);
-+	ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+	iproc_pcie_apb_err_disable(bus, false);
-+
-+	return ret;
-+}
-+
-+static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
-+				     int where, int size, u32 val)
-+{
-+	int ret;
-+
-+	iproc_pcie_apb_err_disable(bus, true);
-+	ret = pci_generic_config_write32(bus, devfn, where, size, val);
-+	iproc_pcie_apb_err_disable(bus, false);
-+
-+	return ret;
-+}
-+
- static struct pci_ops iproc_pcie_ops = {
- 	.map_bus = iproc_pcie_map_cfg_bus,
--	.read = pci_generic_config_read32,
--	.write = pci_generic_config_write32,
-+	.read = iproc_pcie_config_read32,
-+	.write = iproc_pcie_config_write32,
- };
- 
- static void iproc_pcie_reset(struct iproc_pcie *pcie)
-@@ -485,6 +538,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		break;
- 	case IPROC_PCIE_PAXB:
- 		regs = iproc_pcie_reg_paxb;
-+		pcie->has_apb_err_disable = true;
- 		break;
- 	case IPROC_PCIE_PAXC:
- 		regs = iproc_pcie_reg_paxc;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 768be05..711dd3a 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -57,6 +57,8 @@ struct iproc_msi;
-  * @phy: optional PHY device that controls the Serdes
-  * @map_irq: function callback to map interrupts
-  * @ep_is_internal: indicates an internal emulated endpoint device is connected
-+ * @has_apb_err_disable: indicates the controller can be configured to prevent
-+ * unsupported request from being forwarded as an APB bus error
-  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
-  * @ob: outbound mapping parameters
-  * @msi: MSI data
-@@ -74,6 +76,7 @@ struct iproc_pcie {
- 	struct phy *phy;
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	bool ep_is_internal;
-+	bool has_apb_err_disable;
- 	bool need_ob_cfg;
- 	struct iproc_pcie_ob ob;
- 	struct iproc_msi *msi;
--- 
-2.1.4
+@@ -540,6 +541,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 							 &xilinx_pcie_msi_chip);
+ 		if (!port->msi_domain) {
+ 			dev_err(dev, "Failed to get a MSI IRQ domain\n");
++			of_node_put(pcie_intc_node);
+ 			return -ENODEV;
+ 		}
+
