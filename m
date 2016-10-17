@@ -1,43 +1,53 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 3/3] Revert "ACPI, PCI, IRQ: separate ISA penalty
- calculation"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
- <1476915664-27231-4-git-send-email-okaya@codeaurora.org>
- <20161021023109.GD31044@localhost>
- <8dcd59ac-815b-da71-a3f2-ba533c4182c9@codeaurora.org>
- <20161022235918.GJ9007@localhost>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org,
- agross@codeaurora.org, Robert Moore <robert.moore@intel.com>,
- linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
- Lv Zheng <lv.zheng@intel.com>, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, devel@acpica.org, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <6908f8ba-c1d9-ab40-6ebb-3e6f239c3b66@codeaurora.org>
-Date: Mon, 24 Oct 2016 00:16:16 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34850 "EHLO
+        mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933663AbcJQOzu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 10:55:50 -0400
+Received: by mail-pa0-f68.google.com with SMTP id qn10so9309994pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Oct 2016 07:55:49 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH -next] PCI: layerscape: Remove redundant dev_err call in ls_pcie_probe()
+Date: Mon, 17 Oct 2016 14:55:40 +0000
+Message-Id: <1476716140-30608-1-git-send-email-weiyj.lk@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161022235918.GJ9007@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/22/2016 7:59 PM, Bjorn Helgaas wrote:
-> Since V4 3/3 is so much bigger and makes this quite subtle change in
-> how _CRS is handled, I like V3 1/3 better.
-> 
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-OK
+There is a error message within devm_ioremap_resource
+already, so remove the dev_err call to avoid redundant
+error message.
 
-> Are we all set to go now?  I think I've acked the patches you
-> mentioned.
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/pci/host/pci-layerscape.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Yes, I'll post a follow up with your recommendations. 
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 2cb7315..bbd3d23 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -251,10 +251,8 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+ 	pcie->pp.dbi_base = devm_ioremap_resource(dev, dbi_base);
+-	if (IS_ERR(pcie->pp.dbi_base)) {
+-		dev_err(dev, "missing *regs* space\n");
++	if (IS_ERR(pcie->pp.dbi_base))
+ 		return PTR_ERR(pcie->pp.dbi_base);
+-	}
+ 
+ 	pcie->drvdata = match->data;
+ 	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+
