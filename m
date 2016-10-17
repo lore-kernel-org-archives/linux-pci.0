@@ -1,581 +1,497 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-05v.sys.comcast.net ([96.114.154.164]:39912 "EHLO
-        resqmta-po-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932276AbcJRAjY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 20:39:24 -0400
-Subject: Re: [PATCH] MIPS/PCI: Claim bus resources on PCI_PROBE_ONLY set-ups
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160623221655.3154.89258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <6ec8688e-57ed-33b3-3fe0-55d7d69a2c47@gentoo.org>
- <20161017180955.GA28905@red-moon>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Ganesan Ramalingam <ganesanr@broadcom.com>,
-        David Daney <david.daney@cavium.com>,
-        linux-pci@vger.kernel.org, Andy Isaacson <adi@hexapodia.org>,
-        Yinghai Lu <yinghai@kernel.org>
-From: Joshua Kinard <kumba@gentoo.org>
-Message-ID: <df80ff94-cb57-6da8-cc54-a8640f16fd0d@gentoo.org>
-Date: Mon, 17 Oct 2016 20:30:38 -0400
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:36170 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755482AbcJQJdH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 05:33:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <20161017180955.GA28905@red-moon>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20161017092621.GA11124@lst.de>
+References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com>
+ <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com>
+ <20161017092621.GA11124@lst.de>
+From: Emmanuel Benisty <benisty.e@gmail.com>
+Date: Mon, 17 Oct 2016 11:33:03 +0200
+Message-ID: <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com>
+Subject: Re: use pci_alloc_irq_vectors issues
+To: Christoph Hellwig <hch@lst.de>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=001a1141277c497c00053f0c4383
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/17/2016 14:09, Lorenzo Pieralisi wrote:
-> On Mon, Oct 17, 2016 at 12:36:34AM -0400, Joshua Kinard wrote:
->> On 06/23/2016 18:16, Bjorn Helgaas wrote:
->>> We claim PCI BAR and bridge window resources in pci_bus_assign_resources(),
->>> but when PCI_PROBE_ONLY is set, we treat those resources as immutable and
->>> don't call pci_bus_assign_resources(), so the resources aren't put in the
->>> resource tree.
->>>
->>> When the resources aren't in the tree, they don't show up in /proc/iomem,
->>> we can't detect conflicts, and we need special cases elsewhere for
->>> PCI_PROBE_ONLY or resources without a parent pointer.
->>>
->>> Claim all PCI BAR and window resources in the PCI_PROBE_ONLY case.
->>>
->>> If a PCI_PROBE_ONLY platform assigns conflicting resources, Linux can't fix
->>> the conflicts.  Previously we didn't notice the conflicts, but now we will,
->>> which may expose new failures.
->>>
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> ---
+--001a1141277c497c00053f0c4383
+Content-Type: text/plain; charset=UTF-8
 
-[snip]
+Hi Christoph,
 
->>
->> So I finally tested this on two SGI platforms, IP30 and IP27.  For IP30, it
->> works fine once I drop the "pci_set_flags(PCI_PROBE_ONLY);" call.  IP30 uses
->> standard virtual addressing via ioremap and the like for all of its PCI stuff,
->> so it was trivial to fix it.
->>
->> IP27, on the other hand, is not happy with this change.  I don't know about
->> mainline IP27, as that's generally bitrotted and didn't boot the last time I
->> tried it, but under the refactored code I'm using that actually boots, this
->> platform still needs to bypass *all* attempts to claim or assign the PCI addresses.
->>
->> I suspect the difference with IP27 is unlike normal systems, IP27 uses special
->> physical addresses in the 0x92xxxxxxxxxxxxxx block to address I/O devices, so
->> there's no proper ioremap or use of virtual addressing for I/O.  Ralf, does
->> this sound correct?
->>
->> If I use the patches I got plus this change and set PCI_PROBE_ONLY, this is
->> what happens:
->>
->> [   47.299511] PCI host bridge to bus 0001:00
->> [   47.348155] pci_bus 0001:00: root bus resource [mem
->> 0x920000000f200000-0x920000000f9fffff]
->> [   47.447663] pci_bus 0001:00: root bus resource [io
->> 0x920000000fa00000-0x920000000fbfffff]
->> [   47.547183] pci_bus 0001:00: root bus resource [bus 01-ff]
->> [   47.616581] pci 0001:00:00.0: can't claim BAR 0 [io  0xf200000-0xf2000ff]:
->> no compatible bridge window
->> [   47.726766] pci 0001:00:00.0: can't claim BAR 1 [mem 0x0f200000-0x0f200fff]:
->> no compatible bridge window
->> [   47.840937] pci 0001:00:00.0: can't claim BAR 6 [mem 0x00000000-0x0000ffff
->> pref]: no compatible bridge window
->> [   47.960317] pci 0001:00:01.0: can't claim BAR 0 [io  0xf400000-0xf4000ff]:
->> no compatible bridge window
->> [   48.072399] pci 0001:00:01.0: can't claim BAR 1 [mem 0x0f400000-0x0f400fff]:
->> no compatible bridge window
->> [   48.186560] pci 0001:00:01.0: can't claim BAR 6 [mem 0x00000000-0x0000ffff
->> pref]: no compatible bridge window
->> [   48.305957] pci 0001:00:02.0: can't claim BAR 0 [mem 0x0f600000-0x0f6fffff]:
->> no compatible bridge window
->> [   48.420098] pci 0001:00:06.0: can't claim BAR 0 [mem 0x0fa00000-0x0fafffff]:
->> no compatible bridge window
->> [   48.534294] pci 0001:00:07.0: can't claim BAR 0 [mem 0x00000000-0x00001fff]:
->> no compatible bridge window
->> [   48.648541] qla1280: QLA1040 found on PCI bus 0, dev 0
->> [   48.710232] PCI: Enabling device 0001:00:00.0 (0006 -> 0007)
->> [   48.779231] qla1280 0001:00:00.0: can't ioremap BAR 1: [mem size 0x00001000]
->> [   48.863145] qla1280: Unable to map I/O memory
->> [   48.916520] qla1280: QLA1040 found on PCI bus 0, dev 1
->> [   48.977298] PCI: Enabling device 0001:00:01.0 (0006 -> 0007)
->> [   49.046128] qla1280 0001:00:01.0: can't ioremap BAR 1: [mem size 0x00001000]
->> [   49.130201] qla1280: Unable to map I/O memory
->> [   49.183068] IOC3 0001:00:02.0: can't ioremap BAR 0: [mem size 0x00100000]
->> [   49.264292] ioc3: Unable to remap PCI BAR for 0001:00:02.0.
->> [   49.331533] IOC3 0001:00:06.0: can't ioremap BAR 0: [mem size 0x00100000]
->> [   49.412984] ioc3: Unable to remap PCI BAR for 0001:00:06.0.
->>
->>
->> If I disable PCI_PROBE_ONLY, then this:
->>
->> [   47.588033] PCI host bridge to bus 0001:00
->> [   47.636649] pci_bus 0001:00: root bus resource [mem
->> 0x920000000f200000-0x920000000f9fffff]
->> [   47.736144] pci_bus 0001:00: root bus resource [io
->> 0x920000000fa00000-0x920000000fbfffff]
->> [   47.835621] pci_bus 0001:00: root bus resource [bus 01-ff]
->> [   47.905023] pci 0001:00:02.0: BAR 0: no space for [mem size 0x00100000]
->> [   47.982775] pci 0001:00:02.0: BAR 0: failed to assign [mem size 0x00100000]
->> [   48.066586] pci 0001:00:06.0: BAR 0: no space for [mem size 0x00100000]
->> [   48.146173] pci 0001:00:06.0: BAR 0: failed to assign [mem size 0x00100000]
->> [   48.229972] pci 0001:00:00.0: BAR 6: no space for [mem size 0x00010000 pref]
->> [   48.314783] pci 0001:00:00.0: BAR 6: failed to assign [mem size 0x00010000 pref]
->> [   48.403825] pci 0001:00:01.0: BAR 6: no space for [mem size 0x00010000 pref]
->> [   48.488655] pci 0001:00:01.0: BAR 6: failed to assign [mem size 0x00010000 pref]
->> [   48.577695] pci 0001:00:00.0: BAR 1: no space for [mem size 0x00001000]
->> [   48.657260] pci 0001:00:00.0: BAR 1: failed to assign [mem size 0x00001000]
->> [   48.741068] pci 0001:00:01.0: BAR 1: no space for [mem size 0x00001000]
->> [   48.820644] pci 0001:00:01.0: BAR 1: failed to assign [mem size 0x00001000]
->> [   48.904452] pci 0001:00:00.0: BAR 0: no space for [io  size 0x0100]
->> [   48.979840] pci 0001:00:00.0: BAR 0: failed to assign [io  size 0x0100]
->> [   49.059459] pci 0001:00:01.0: BAR 0: no space for [io  size 0x0100]
->> [   49.134855] pci 0001:00:01.0: BAR 0: failed to assign [io  size 0x0100]
->> [   49.214588] qla1280: QLA1040 found on PCI bus 0, dev 0
->> [   49.277249] qla1280 0001:00:00.0: can't ioremap BAR 1: [??? 0x00000000 flags
->> 0x0]
->> [   49.366330] qla1280: Unable to map I/O memory
->> [   49.419832] qla1280: QLA1040 found on PCI bus 0, dev 1
->> [   49.481211] qla1280 0001:00:01.0: can't ioremap BAR 1: [??? 0x00000000 flags
->> 0x0]
->> [   49.570560] qla1280: Unable to map I/O memory
->> [   49.623439] IOC3 0001:00:02.0: can't ioremap BAR 0: [??? 0x00000000 flags 0x0]
->> [   49.709857] ioc3: Unable to remap PCI BAR for 0001:00:02.0.
->> [   49.777113] IOC3 0001:00:06.0: can't ioremap BAR 0: [??? 0x00000000 flags 0x0]
->> [   49.863796] ioc3: Unable to remap PCI BAR for 0001:00:06.0.
->>
->>
->> The only fix I could come up with was more IP27 #ifdef hackery to retain the
->> original code for IP27, but use the new conditional logic for all other
->> platforms.  Would a patch for this be acceptable (with verbose comment), or is
->> there a better way to deal with IP27 that doesn't involve re-writing its I/O
->> addressing support entirely?
-> 
-> Would you mind providing a kernel boot log, lspci output and /proc/iomem
-> /proc/ioports for your "working" system boot ? That would help debugging
-> what's the expected resources allocation for the system and consequently
-> where the problem currently lies.
+On Mon, Oct 17, 2016 at 11:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+> can you run the lspci -vv command as again, but this time as root
+> user?
 
-Sure.  I've disabled line-wrapping on this message so my mail client doesn't
-mangle the output.
+Please find attached the new file.
 
-First, is the boot output from my serial console:
-[    0.000000] Linux version 4.8.2-mipsgit-20161016 (root@helcaraxe) (gcc version 5.4.0 (Gentoo Hardened 5.4.0 p1.0, pie-0.6.5) ) #4 SMP Mon Oct 17 19:48:30 EDT 2016
-[    0.000000] ARCH: SGI-IP27
-[    0.000000] PROMLIB: ARC firmware Version 64 Revision 0
-[    0.000000] SMP: Discovered 4 cpus on 2 nodes
-[    0.000000] ************** Topology ********************
-[    0.000000]     00 01
-[    0.000000] 00  255 255
-[    0.000000] 01  255 255
-[    0.000000] bootconsole [early0] enabled
-[    0.000000] CPU0 revision is: 00000f14 (R14000)
-[    0.000000] FPU revision is: 00000900
-[    0.000000] Checking for the multiply/shift bug... no.
-[    0.000000] Checking for the daddiu bug... no.
-[    0.000000] IP27: Running on node 0.
-[    0.000000] IP27: Node 0 has a primary CPU, CPU is running.
-[    0.000000] IP27: Node 0 has a secondary CPU, CPU is running.
-[    0.000000] IP27: Machine is in M mode.
-[    0.000000] IP27: CPU 1A (CPU0): 500 MHz CPU detected.
-[    0.000000] Determined physical RAM map:
-[    0.000000]  memory: 0000000000838000 @ 000000000001c000 (usable)
-[    0.000000]  memory: 000000000057c000 @ 0000000000854000 (usable after init)
-[    0.000000] Initrd not found or empty - disabling initrd
-[    0.000000] cma: Reserved 32 MiB at 0x00000001fe000000
-[    0.000000] REPLICATION: ON nasid 0, ktext from nasid 0, kdata from nasid 0
-[    0.000000] REPLICATION: ON nasid 1, ktext from nasid 0, kdata from nasid 0
-[    0.000000] Primary instruction cache 32kB, VIPT, 2-way, linesize 64 bytes.
-[    0.000000] Primary data cache 32kB, 2-way, VIPT, no aliases, linesize 32 bytes
-[    0.000000] Unified secondary cache 8192kB 2-way, linesize 128 bytes.
-[    0.000000] Zone ranges:
-[    0.000000]   Normal   [mem 0x0000000000000000-0x00000001ffffffff]
-[    0.000000] Movable zone start for each node
-[    0.000000] Early memory node ranges
-[    0.000000]   node   0: [mem 0x0000000000000000-0x00000000ffffffff]
-[    0.000000]   node   1: [mem 0x0000000100000000-0x00000001ffffffff]
-[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x00000000ffffffff]
-[    0.000000] Initmem setup node 1 [mem 0x0000000100000000-0x00000001ffffffff]
-[    0.000000] percpu: Embedded 4 pages/cpu @a800000002010000 s36096 r0 d29440 u65536
-[    0.000000] Built 2 zonelists in Node order, mobility grouping on.  Total pages: 522240
-[    0.000000] Policy zone: Normal
-[    0.000000] Kernel command line: root=dksc(0,1,0) console=ttyS0,9600
-[    0.000000] PID hash table entries: 4096 (order: 1, 32768 bytes)
-[    0.000000] Memory: 8307776K/8388608K available (6498K kernel code, 454K rwdata, 1436K rodata, 5616K init, 543K bss, 48064K reserved, 32768K cma-reserved)
-[    0.000000] Hierarchical RCU implementation.
-[    0.000000]  Build-time adjustment of leaf fanout to 64.
-[    0.000000]  RCU restricting CPUs from NR_CPUS=64 to nr_cpu_ids=4.
-[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=64, nr_cpu_ids=4
-[    0.000000] NR_IRQS:256
-[    0.000000] clocksource: HUB: mask: 0xfffffffffffff max_cycles: 0x127350b88, max_idle_ns: 1763180808480 ns
-[    0.000019] sched_clock: 52 bits at 1250kHz, resolution 800ns, wraps every 4398046510800ns
-[    0.102422] Console: colour dummy device 80x25
-[    0.154975] Calibrating delay loop... 749.56 BogoMIPS (lpj=3747840)
-[    0.317670] pid_max: default: 32768 minimum: 301
-[    0.377938] Dentry cache hash table entries: 1048576 (order: 9, 8388608 bytes)
-[    0.592303] Inode-cache hash table entries: 524288 (order: 8, 4194304 bytes)
-[    0.736316] Mount-cache hash table entries: 16384 (order: 3, 131072 bytes)
-[    0.817310] Mountpoint-cache hash table entries: 16384 (order: 3, 131072 bytes)
-[    0.916094] Checking for the daddi bug... no.
-[    0.976495] Primary instruction cache 32kB, VIPT, 2-way, linesize 64 bytes.
-[    0.976520] Primary data cache 32kB, 2-way, VIPT, no aliases, linesize 32 bytes
-[    0.976532] Unified secondary cache 8192kB 2-way, linesize 128 bytes.
-[    0.979792] IP27: CPU 1B (CPU1): 500 MHz CPU detected.
-[    0.979824] CPU1 revision is: 00000f14 (R14000)
-[    0.979831] FPU revision is: 00000900
-[    1.014463] Primary instruction cache 32kB, VIPT, 2-way, linesize 64 bytes.
-[    1.014493] Primary data cache 32kB, 2-way, VIPT, no aliases, linesize 32 bytes
-[    1.014506] Unified secondary cache 8192kB 2-way, linesize 128 bytes.
-[    1.017888] IP27: CPU 2A (CPU2): 500 MHz CPU detected.
-[    1.017931] CPU2 revision is: 00000f14 (R14000)
-[    1.017938] FPU revision is: 00000900
-[    1.055420] Primary instruction cache 32kB, VIPT, 2-way, linesize 64 bytes.
-[    1.055452] Primary data cache 32kB, 2-way, VIPT, no aliases, linesize 32 bytes
-[    1.055467] Unified secondary cache 8192kB 2-way, linesize 128 bytes.
-[    1.058810] IP27: CPU 2B (CPU3): 500 MHz CPU detected.
-[    1.058851] CPU3 revision is: 00000f14 (R14000)
-[    1.058858] FPU revision is: 00000900
-[    1.092672] Brought up 4 CPUs
-[    2.484801] devtmpfs: initialized
-[    2.603700] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
-[    2.892716] random: fast init done
-[    2.990752] xor: measuring software checksum speed
-[    3.146730]    8regs     :   486.400 MB/sec
-[    3.295350]    8regs_prefetch:   486.400 MB/sec
-[    3.448144]    32regs    :   486.400 MB/sec
-[    3.596768]    32regs_prefetch:   486.400 MB/sec
-[    3.650415] xor: using function: 32regs_prefetch (486.400 MB/sec)
-[    3.834852] NET: Registered protocol family 16
-[    3.946535] cpuidle: using governor ladder
-[    4.043955] cpuidle: using governor menu
-[    4.089355] xtalk:n0/0 xbow widget (rev 1.3)
-[    4.140796] xtalk:n0/8 kona widget (rev unknown) registered as a platform device.
-[    4.230796] xtalk:n0/b bridge widget (rev D) registered as a platform device.
-[    4.316712] xtalk:n0/c bridge widget (rev D) registered as a platform device.
-[    4.402590] xtalk:n0/d impact widget (rev B) registered as a platform device.
-[    4.488444] xtalk:n0/f bridge widget (rev C) registered as a platform device.
-[    4.574178] xtalk:n1/0 xbow widget (rev 1.3)
-[    5.247396] raid6: int64x1  gen()    84 MB/s
-[    5.467370] raid6: int64x1  xor()    80 MB/s
-[    5.687324] raid6: int64x2  gen()   151 MB/s
-[    5.907243] raid6: int64x2  xor()   116 MB/s
-[    6.127125] raid6: int64x4  gen()   235 MB/s
-[    6.347155] raid6: int64x4  xor()   142 MB/s
-[    6.567117] raid6: int64x8  gen()   251 MB/s
-[    6.787018] raid6: int64x8  xor()   175 MB/s
-[    6.836420] raid6: using algorithm int64x8 gen() 251 MB/s
-[    6.901352] raid6: .... xor() 175 MB/s, rmw enabled
-[    6.960002] raid6: using intx1 recovery algorithm
-[    7.017544] SCSI subsystem initialized
-[    7.063853] clocksource: Switched to clocksource HUB
-[    7.363862] FS-Cache: Loaded
-[   31.643872] NET: Registered protocol family 2
-[   31.696149] TCP established hash table entries: 65536 (order: 5, 524288 bytes)
-[   31.787294] TCP bind hash table entries: 65536 (order: 6, 1048576 bytes)
-[   31.874832] TCP: Hash tables configured (established 65536 bind 65536)
-[   31.952084] UDP hash table entries: 4096 (order: 3, 131072 bytes)
-[   32.026304] UDP-Lite hash table entries: 4096 (order: 3, 131072 bytes)
-[   32.403836] NET: Registered protocol family 1
-[   32.583876] RPC: Registered named UNIX socket transport module.
-[   32.653282] RPC: Registered udp transport module.
-[   32.709785] RPC: Registered tcp transport module.
-[   32.766346] RPC: Registered tcp NFSv4.1 backchannel transport module.
-[   34.045622] futex hash table entries: 1024 (order: 3, 131072 bytes)
-[   34.275238] workingset: timestamp_bits=40 max_order=19 bucket_order=0
-[   34.350961] zbud: loaded
-[   37.383916] NFS: Registering the id_resolver key type
-[   37.442917] Key type id_resolver registered
-[   37.493101] Key type id_legacy registered
-[   37.541388] efs: 1.0a - http://aeschi.ch.eu.org/efs/
-[   37.873853] SGI XFS with ACLs, security attributes, realtime, no debug enabled
-[   39.453936] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)
-[   39.541066] io scheduler noop registered
-[   39.588223] io scheduler deadline registered
-[   39.639639] io scheduler cfq registered (default)
-[   39.973936] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-[   40.148640] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-[   40.245916] loop: module loaded
-[   40.283288] mousedev: PS/2 mouse device common for all mice
-[   40.349460] md: linear personality registered for level -1
-[   40.414802] md: raid0 personality registered for level 0
-[   40.478677] md: raid1 personality registered for level 1
-[   40.542549] md: raid10 personality registered for level 10
-[   40.609068] md: raid6 personality registered for level 6
-[   40.672411] md: raid5 personality registered for level 5
-[   40.736315] md: raid4 personality registered for level 4
-[   40.800808] PCI host bridge to bus 0000:00
-[   40.849424] pci_bus 0000:00: root bus resource [mem 0x920000000b200000-0x920000000b9fffff]
-[   40.948920] pci_bus 0000:00: root bus resource [io  0x920000000ba00000-0x920000000bbfffff]
-[   41.048408] pci_bus 0000:00: root bus resource [bus 00-ff]
-[   41.114880] PCI host bridge to bus 0001:00
-[   41.163629] pci_bus 0001:00: root bus resource [mem 0x920000000c200000-0x920000000c9fffff]
-[   41.263152] pci_bus 0001:00: root bus resource [io  0x920000000ca00000-0x920000000cbfffff]
-[   41.362645] pci_bus 0001:00: root bus resource [bus 01-ff]
-[   41.430847] PCI host bridge to bus 0002:00
-[   41.478263] pci_bus 0002:00: root bus resource [mem 0x920000000f200000-0x920000000f9fffff]
-[   41.577771] pci_bus 0002:00: root bus resource [io  0x920000000fa00000-0x920000000fbfffff]
-[   41.677250] pci_bus 0002:00: root bus resource [bus 02-ff]
-[   41.746742] qla1280: QLA1040 found on PCI bus 0, dev 0
-[   41.806687] PCI: Enabling device 0002:00:00.0 (0006 -> 0007)
-[   41.875796] scsi(0): Enabling vchannel on BRIDGE for SGI/MIPS
-[   42.324520] random: crng init done
-[   42.839160] scsi(0:0): Resetting SCSI BUS
-[   45.964232] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter
-[   45.964232]        Firmware version:  7.65.06, Driver version 3.27.1
-[   46.118149] qla1280: QLA1040 found on PCI bus 0, dev 1
-[   46.178192] PCI: Enabling device 0002:00:01.0 (0006 -> 0007)
-[   46.289985] scsi 0:0:1:0: Direct-Access     SEAGATE  SX150176LC       BA12 PQ: 0 ANSI: 2
-[   46.387174] scsi(0:0:1:0): Sync: period 10, offset 12, Wide, Tagged queuing: depth 31
-[   46.486875] scsi 0:0:2:0: Direct-Access     SEAGATE  SX150176LC       BA08 PQ: 0 ANSI: 2
-[   46.583893] scsi(0:0:2:0): Sync: period 10, offset 12, Wide, Tagged queuing: depth 31
-[   46.683736] scsi 0:0:3:0: Direct-Access     SEAGATE  SX150176LC       BA08 PQ: 0 ANSI: 2
-[   46.780696] scsi(0:0:3:0): Sync: period 10, offset 12, Wide, Tagged queuing: depth 31
-[   46.880821] scsi 0:0:4:0: Direct-Access     SEAGATE  SX150176LC       BA11 PQ: 0 ANSI: 2
-[   46.977716] scsi(0:0:4:0): Sync: period 10, offset 12, Wide, Tagged queuing: depth 31
-[   47.077797] scsi 0:0:5:0: Direct-Access     SEAGATE  SX150176LC       BA11 PQ: 0 ANSI: 2
-[   47.174768] scsi(0:0:5:0):[   47.181219] scsi(1:0): Resetting SCSI BUS
-[   47.251839]  Sync: period 10, offset 12, Wide, Tagged queuing: depth 31
-[   47.639912] scsi 0:0:6:0: CD-ROM            TOSHIBA  CD-ROM XM-5701TA 0167 PQ: 0 ANSI: 2
-[   47.736890] scsi(0:0:6:0): Sync: period 10, offset 12
-[   51.553976] scsi host1: QLogic QLA1040 PCI to SCSI Host Adapter
-[   51.553976]        Firmware version:  7.65.06, Driver version 3.27.1
-[   51.998859] ioc3: part: [], serial: [] => class IP27 BaseIO
-[   52.068783] ioc3-eth: Ethernet address is 08:00:69:05:64:74.
-[   52.136831] IOC3 0002:00:02.0 eth0: link up, 100Mbps, full-duplex, lpa 0x8DE1
-[   52.220897] eth0: Using PHY 31, vendor 0x20005c0, model 0, rev 0.
-[   52.294232] eth0: IOC3 SSRAM has 128 kbyte.
-[   52.345852] rtc-m48t35 rtc-m48t35: rtc core: registered m48t35 as rtc0
-[   52.588471] console [ttyS0] enabled
-[   52.489601] 0002:00:02.0: ttyS0 at IOC3 0xf620178 (irq = 0, base_baud = 458333) is a 16550A
-[   52.671141] bootconsole [early0] disabled
-[   54.146680] 0002:00:02.0: ttyS1 at IOC3 0xf620170 (irq = 0, base_baud = 458333) is a 16550A
-[   54.248408] IOC3 Master Driver loaded for 0002:00:02.0
-[   54.313895] ioc3: NIC search failed.
-[   54.356992] ioc3: part: [], serial: [] => class IP27 BaseIO
-[   54.424356] ioc3: request_irq fails for IRQ 0xffffffff
-[   54.490948] ioc3-eth: Ethernet address is 00:00:00:00:00:00.
-[   54.561038] IOC3 0002:00:06.0 eth1: link down
-[   54.613597] eth1: Using PHY 31, vendor 0x0, model 0, rev 0.
-[   54.680825] eth1: IOC3 SSRAM has 64 kbyte.
-[   54.765266] 0002:00:06.0: ttyS2 at IOC3 0xfa20178 (irq = 0, base_baud = 458333) is a 16550A
-[   54.888655] 0002:00:06.0: ttyS3 at IOC3 0xfa20170 (irq = 0, base_baud = 458333) is a 16550A
-[   54.990198] IOC3 Master Driver loaded for 0002:00:06.0
-[   55.052840] NET: Registered protocol family 26
-[   55.509832] sd 0:0:1:0: [sda] 97693755 512-byte logical blocks: (50.0 GB/46.6 GiB)
-[   55.515697] sr 0:0:6:0: [sr0] scsi-1 drive
-[   55.515709] cdrom: Uniform CD-ROM driver Revision: 3.20
-[   55.520834] sd 0:0:4:0: [sdd] 97693755 512-byte logical blocks: (50.0 GB/46.6 GiB)
-[   55.523611] sd 0:0:4:0: [sdd] Write Protect is off
-[   55.526511] sd 0:0:4:0: [sdd] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   55.550956]  sdd: sdd1 sdd2 sdd3 sdd4 sdd5 sdd6 sdd9 sdd11
-[   55.562326] sd 0:0:4:0: [sdd] Attached SCSI disk
-[   55.564803] sd 0:0:5:0: [sde] 97693755 512-byte logical blocks: (50.0 GB/46.6 GiB)
-[   55.567564] sd 0:0:5:0: [sde] Write Protect is off
-[   55.570463] sd 0:0:5:0: [sde] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   55.600908] sd 0:0:5:0: [sde] Attached SCSI disk
-[   55.604715] sd 0:0:2:0: [sdb] 97693755 512-byte logical blocks: (50.0 GB/46.6 GiB)
-[   55.605297] sd 0:0:3:0: [sdc] 97693755 512-byte logical blocks: (50.0 GB/46.6 GiB)
-[   55.607054] sd 0:0:2:0: [sdb] Write Protect is off
-[   55.607592] sd 0:0:3:0: [sdc] Write Protect is off
-[   55.609959] sd 0:0:2:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   55.610460] sd 0:0:3:0: [sdc] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   55.631199]  sdb: sdb1 sdb2 sdb3 sdb4 sdb5 sdb6 sdb9 sdb11
-[   55.634048]  sdc: sdc1 sdc2 sdc3 sdc4 sdc5 sdc6 sdc9 sdc11
-[   55.646437] sd 0:0:3:0: [sdc] Attached SCSI disk
-[   55.647162] sd 0:0:2:0: [sdb] Attached SCSI disk
-[   57.150140] sd 0:0:1:0: [sda] Write Protect is off
-[   57.173988] NET: Registered protocol family 10
-[   57.264566] sd 0:0:1:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   57.386960]  sda: sda1 sda2 sda3 sda4 sda5 sda6 sda9 sda11
-[   57.464000] sd 0:0:1:0: [sda] Attached SCSI disk
-[   57.544064] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
-[   57.617430] NET: Registered protocol family 17
-[   57.671360] 8021q: 802.1Q VLAN Support v1.8
-[   57.722075] sctp: Hash tables configured (bind 1024/1024)
-[   58.093962] Key type dns_resolver registered
-[   58.148015] rtc-m48t35 rtc-m48t35: setting system clock to 2016-10-17 23:49:58 UTC (1476748198)
-[   59.626451] Freeing unused kernel memory: 5616K (a800000000854000 - a800000000dd0000)
-[   59.720950] This architecture does not have kernel memory protection.
+> Also just to make sure I interpret your report correctly:
+> The ata3 devices that's creating the problems is the SK-Hynix device,
+> probably a SSD that shows up as ahci controller?
 
+Yep, it's the only drive on this machine, which is indeed a SSD drive.
 
-Next is /proc/iomem and /proc/ioports:
-# cat /proc/iomem
-0f600000-0f6fffff : ioc3
-  0f680000-0f687fff : rtc-m48t35
-0fa00000-0fafffff : ioc3
-920000000b200000-920000000b9fffff : Bridge MEM
-920000000c200000-920000000c9fffff : Bridge MEM
-920000000f200000-920000000f9fffff : Bridge MEM
+Thanks.
 
-/ # cat /proc/ioports
-920000000ba00000-920000000bbfffff : Bridge IO
-920000000ca00000-920000000cbfffff : Bridge IO
-920000000fa00000-920000000fbfffff : Bridge IO
+--001a1141277c497c00053f0c4383
+Content-Type: text/plain; charset=US-ASCII; name="lspci.txt"
+Content-Disposition: attachment; filename="lspci.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iudv11ke0
 
-
-And lspci -vvvx:
-
-/ # /usr/sbin/lspci -vvvx
-0001:00:00.0 Unassigned class [ff00]: Silicon Graphics Intl. Corp. Linc I/O controller
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        NUMA node: 0
-        Region 0: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=134217729]
-        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=2]
-lspci: Unable to load libkmod resources: error -12
-00: a9 10 02 00 00 00 00 02 00 00 00 ff 00 f8 80 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-0001:00:01.0 Unassigned class [ff00]: Silicon Graphics Intl. Corp. Linc I/O controller
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        NUMA node: 0
-        Region 0: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=134217729]
-        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=2]
-00: a9 10 02 00 00 00 00 02 00 00 00 ff 00 f8 80 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-0002:00:00.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 256 bytes
-        Interrupt: pin A routed to IRQ 1
-        NUMA node: 0
-        Region 0: I/O ports at f200000 [size=257]
-        Region 1: Memory at 0f200000 (32-bit, non-prefetchable) [size=4097]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=65537]
-        Kernel driver in use: qla1280
-00: 77 10 20 10 07 00 00 02 05 00 00 01 40 40 00 00
-10: 01 00 20 0f 00 00 20 0f 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
-
-0002:00:01.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 256 bytes
-        Interrupt: pin A routed to IRQ 2
-        NUMA node: 0
-        Region 0: I/O ports at f400000 [size=257]
-        Region 1: Memory at 0f400000 (32-bit, non-prefetchable) [size=4097]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=65537]
-        Kernel driver in use: qla1280
-00: 77 10 20 10 07 00 00 02 05 00 00 01 40 40 00 00
-10: 01 00 40 0f 00 00 40 0f 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
-
-0002:00:02.0 Unassigned class [ff00]: Silicon Graphics Intl. Corp. IOC3 I/O controller (rev 01)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64
-        Interrupt: pin A routed to IRQ 3
-        NUMA node: 0
-        Region 0: Memory at 0f600000 (32-bit, non-prefetchable) [size=1048577]
-        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=2]
-        Kernel driver in use: IOC3
-00: a9 10 03 00 06 00 80 02 01 00 00 ff 00 40 00 00
-10: 00 00 60 0f 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
-
-0002:00:06.0 Unassigned class [ff00]: Silicon Graphics Intl. Corp. IOC3 I/O controller (rev 01)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64
-        Interrupt: pin A routed to IRQ 5
-        NUMA node: 0
-        Region 0: Memory at 0fa00000 (32-bit, non-prefetchable) [size=1048577]
-        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=2]
-        Kernel driver in use: IOC3
-00: a9 10 03 00 06 00 80 02 01 00 00 ff 00 40 00 00
-10: 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
-
-0002:00:07.0 Non-VGA unclassified device: Silicon Graphics Intl. Corp. RAD Audio (rev 70)
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        NUMA node: 0
-        Region 0: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=8193]
-        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [disabled] [size=2]
-        Expansion ROM at <unassigned> [disabled] [size=2]
-00: a9 10 05 00 00 00 80 04 70 00 00 00 00 00 00 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-IP27 hardware does some interesting things with address spaces, depending on
-which "mode" you run the machine in.  "M mode" is the only one that's really
-usable these days (the other, "N mode", doesn't boot).  Under M mode,
-there's five address spaces, of which, "I/O Space" is selectable by turning on
-specific bits in the 64-bit memory address.
-
-So, given 0x920000000b200000, bits 63:62 select physical addressing (10) and
-bits 58:57 select I/O space (01), resulting in all PCI addresses (or any I/O
-address) appearing in the 0x92xxxxxxxxxxxxxx range.  The rest of the bits go
-on to select which NUMA node the I/O is targeted at and which Crosstalk widget
-to access, and so on.  I still haven't fully understood it all myself just
-yet.
-
-You can google for document 007-3410-001, "Origin and Onyx2 Programmer's
-Reference Manual" for more details (it's no longer available via SGI's
-TechPubs, but it is archived on plenty of other sites).
-
-This particular machine that I have has three "BRIDGE" chips in it, all
-attached to the Crosstalk bus.  Each BRIDGE can address up to 8 PCI devices,
-but some crosstalk boards slap a BRIDGE chip on for just a single device.  In
-this instance, the BRIDGE w/ address 0x920000000fxxxxxx is the IO6 at xtalk
-widget 0xf (this has the basic I/O devices for this machine).  The BRIDGE at
-0x920000000cxxxxxx (widget 0xc) is a PCI "shoebox" that can hold up to three
-PCI-X cards, and the BRIDGE at 0x920000000bxxxxxx (widget 0xb) is an
-SGI-specific HIPPI board (ID'ed as a LINC I/O controller by pci.ids).
-
--- 
-Joshua Kinard
-Gentoo/MIPS
-kumba@gentoo.org
-6144R/F5C6C943 2015-04-27
-177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
-
-"The past tempts us, the present confuses us, the future frightens us.  And
-our lives slip away, moment by moment, lost in that vast, terrible in-between."
-
---Emperor Turhan, Centauri Republic
-
+MDA6MDAuMCBIb3N0IGJyaWRnZTogSW50ZWwgQ29ycG9yYXRpb24gQnJvYWR3ZWxsLVUgSG9zdCBC
+cmlkZ2UgLU9QSSAocmV2IDA5KQoJU3Vic3lzdGVtOiBEZWxsIERldmljZSAwNjY1CglDb250cm9s
+OiBJL08tIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJF
+cnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJTlR4LQoJU3RhdHVzOiBDYXArIDY2TUh6
+LSBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1B
+Ym9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5jeTogMAoJQ2FwYWJpbGl0aWVzOiBbZTBd
+IFZlbmRvciBTcGVjaWZpYyBJbmZvcm1hdGlvbjogTGVuPTBjIDw/PgoJS2VybmVsIGRyaXZlciBp
+biB1c2U6IGJkd191bmNvcmUKCjAwOjAyLjAgVkdBIGNvbXBhdGlibGUgY29udHJvbGxlcjogSW50
+ZWwgQ29ycG9yYXRpb24gSEQgR3JhcGhpY3MgNTUwMCAocmV2IDA5KSAocHJvZy1pZiAwMCBbVkdB
+IGNvbnRyb2xsZXJdKQoJU3Vic3lzdGVtOiBEZWxsIERldmljZSAwNjY1CglDb250cm9sOiBJL08r
+IE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0
+ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJTlR4KwoJU3RhdHVzOiBDYXArIDY2TUh6LSBVREYt
+IEZhc3RCMkIrIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0g
+PlNFUlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5jeTogMAoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQg
+dG8gSVJRIDUxCglSZWdpb24gMDogTWVtb3J5IGF0IGY2MDAwMDAwICg2NC1iaXQsIG5vbi1wcmVm
+ZXRjaGFibGUpIFtzaXplPTE2TV0KCVJlZ2lvbiAyOiBNZW1vcnkgYXQgZTAwMDAwMDAgKDY0LWJp
+dCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT0yNTZNXQoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBmMDAw
+IFtzaXplPTY0XQoJW3ZpcnR1YWxdIEV4cGFuc2lvbiBST00gYXQgMDAwYzAwMDAgW2Rpc2FibGVk
+XSBbc2l6ZT0xMjhLXQoJQ2FwYWJpbGl0aWVzOiBbOTBdIE1TSTogRW5hYmxlKyBDb3VudD0xLzEg
+TWFza2FibGUtIDY0Yml0LQoJCUFkZHJlc3M6IGZlZTAwMDE4ICBEYXRhOiAwMDAwCglDYXBhYmls
+aXRpZXM6IFtkMF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBE
+U0krIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxEMS0sRDItLEQzaG90LSxEM2NvbGQt
+KQoJCVN0YXR1czogRDAgTm9Tb2Z0UnN0LSBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1F
+LQoJQ2FwYWJpbGl0aWVzOiBbYTRdIFBDSSBBZHZhbmNlZCBGZWF0dXJlcwoJCUFGQ2FwOiBUUCsg
+RkxSKwoJCUFGQ3RybDogRkxSLQoJCUFGU3RhdHVzOiBUUC0KCUtlcm5lbCBkcml2ZXIgaW4gdXNl
+OiBpOTE1CglLZXJuZWwgbW9kdWxlczogaTkxNQoKMDA6MDMuMCBBdWRpbyBkZXZpY2U6IEludGVs
+IENvcnBvcmF0aW9uIEJyb2Fkd2VsbC1VIEF1ZGlvIENvbnRyb2xsZXIgKHJldiAwOSkKCVN1YnN5
+c3RlbTogRGVsbCBEZXZpY2UgMDY2NQoJQ29udHJvbDogSS9PLSBNZW0rIEJ1c01hc3RlcisgU3Bl
+Y0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIy
+Qi0gRGlzSU5UeCsKCVN0YXR1czogQ2FwKyA2Nk1Iei0gVURGLSBGYXN0QjJCLSBQYXJFcnItIERF
+VlNFTD1mYXN0ID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0gSU5UeC0K
+CUxhdGVuY3k6IDAsIENhY2hlIExpbmUgU2l6ZTogNjQgYnl0ZXMKCUludGVycnVwdDogcGluIEEg
+cm91dGVkIHRvIElSUSA1MgoJUmVnaW9uIDA6IE1lbW9yeSBhdCBmNzMxODAwMCAoNjQtYml0LCBu
+b24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xNktdCglDYXBhYmlsaXRpZXM6IFs1MF0gUG93ZXIgTWFu
+YWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVu
+dD0wbUEgUE1FKEQwLSxEMS0sRDItLEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgTm9Tb2Z0
+UnN0LSBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQoJQ2FwYWJpbGl0aWVzOiBbNjBd
+IE1TSTogRW5hYmxlKyBDb3VudD0xLzEgTWFza2FibGUtIDY0Yml0LQoJCUFkZHJlc3M6IGZlZTAw
+M2Y4ICBEYXRhOiAwMDAwCglDYXBhYmlsaXRpZXM6IFs3MF0gRXhwcmVzcyAodjEpIFJvb3QgQ29t
+cGxleCBJbnRlZ3JhdGVkIEVuZHBvaW50LCBNU0kgMDAKCQlEZXZDYXA6CU1heFBheWxvYWQgMTI4
+IGJ5dGVzLCBQaGFudEZ1bmMgMAoJCQlFeHRUYWctIFJCRS0KCQlEZXZDdGw6CVJlcG9ydCBlcnJv
+cnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwtIEZhdGFsLSBVbnN1cHBvcnRlZC0KCQkJUmx4ZE9y
+ZC0gRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3ci0gTm9Tbm9vcC0KCQkJTWF4UGF5bG9hZCAxMjgg
+Ynl0ZXMsIE1heFJlYWRSZXEgMTI4IGJ5dGVzCgkJRGV2U3RhOglDb3JyRXJyLSBVbmNvcnJFcnIt
+IEZhdGFsRXJyLSBVbnN1cHBSZXEtIEF1eFB3ci0gVHJhbnNQZW5kLQoJS2VybmVsIGRyaXZlciBp
+biB1c2U6IHNuZF9oZGFfaW50ZWwKCUtlcm5lbCBtb2R1bGVzOiBzbmRfaGRhX2ludGVsCgowMDow
+NC4wIFNpZ25hbCBwcm9jZXNzaW5nIGNvbnRyb2xsZXI6IEludGVsIENvcnBvcmF0aW9uIEJyb2Fk
+d2VsbC1VIFByb2Nlc3NvciBUaGVybWFsIFN1YnN5c3RlbSAocmV2IDA5KQoJU3Vic3lzdGVtOiBE
+ZWxsIERldmljZSAwNjY1CglDb250cm9sOiBJL08tIE1lbSsgQnVzTWFzdGVyLSBTcGVjQ3ljbGUt
+IE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJ
+TlR4LQoJU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPWZh
+c3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQoJSW50ZXJy
+dXB0OiBwaW4gQSByb3V0ZWQgdG8gSVJRIDE2CglSZWdpb24gMDogTWVtb3J5IGF0IGY3MzEwMDAw
+ICg2NC1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTMyS10KCUNhcGFiaWxpdGllczogWzkw
+XSBNU0k6IEVuYWJsZS0gQ291bnQ9MS8xIE1hc2thYmxlLSA2NGJpdC0KCQlBZGRyZXNzOiAwMDAw
+MDAwMCAgRGF0YTogMDAwMAoJQ2FwYWJpbGl0aWVzOiBbZDBdIFBvd2VyIE1hbmFnZW1lbnQgdmVy
+c2lvbiAzCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShE
+MC0sRDEtLEQyLSxEM2hvdC0sRDNjb2xkLSkKCQlTdGF0dXM6IEQwIE5vU29mdFJzdCsgUE1FLUVu
+YWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCUNhcGFiaWxpdGllczogW2UwXSBWZW5kb3IgU3Bl
+Y2lmaWMgSW5mb3JtYXRpb246IExlbj0wYyA8Pz4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBwcm9j
+X3RoZXJtYWwKCUtlcm5lbCBtb2R1bGVzOiBwcm9jZXNzb3JfdGhlcm1hbF9kZXZpY2UKCjAwOjE0
+LjAgVVNCIGNvbnRyb2xsZXI6IEludGVsIENvcnBvcmF0aW9uIFdpbGRjYXQgUG9pbnQtTFAgVVNC
+IHhIQ0kgQ29udHJvbGxlciAocmV2IDAzKSAocHJvZy1pZiAzMCBbWEhDSV0pCglTdWJzeXN0ZW06
+IERlbGwgRGV2aWNlIDA2NjUKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNs
+ZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERp
+c0lOVHgrCglTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQisgUGFyRXJyLSBERVZTRUw9
+bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0gSU5UeC0KCUxh
+dGVuY3k6IDAKCUludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElSUSA0NwoJUmVnaW9uIDA6IE1l
+bW9yeSBhdCBmNzMwMDAwMCAoNjQtYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT02NEtdCglD
+YXBhYmlsaXRpZXM6IFs3MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1F
+Q2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0zNzVtQSBQTUUoRDAtLEQxLSxEMi0sRDNob3Qr
+LEQzY29sZCspCgkJU3RhdHVzOiBEMCBOb1NvZnRSc3QrIFBNRS1FbmFibGUtIERTZWw9MCBEU2Nh
+bGU9MCBQTUUtCglDYXBhYmlsaXRpZXM6IFs4MF0gTVNJOiBFbmFibGUrIENvdW50PTEvOCBNYXNr
+YWJsZS0gNjRiaXQrCgkJQWRkcmVzczogMDAwMDAwMDBmZWUwMDM1OCAgRGF0YTogMDAwMAoJS2Vy
+bmVsIGRyaXZlciBpbiB1c2U6IHhoY2lfaGNkCgowMDoxNi4wIENvbW11bmljYXRpb24gY29udHJv
+bGxlcjogSW50ZWwgQ29ycG9yYXRpb24gV2lsZGNhdCBQb2ludC1MUCBNRUkgQ29udHJvbGxlciAj
+MSAocmV2IDAzKQoJU3Vic3lzdGVtOiBEZWxsIERldmljZSAwNjY1CglDb250cm9sOiBJL08tIE1l
+bSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0ZXBw
+aW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJTlR4KwoJU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZh
+c3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNF
+UlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5jeTogMAoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8g
+SVJRIDQ5CglSZWdpb24gMDogTWVtb3J5IGF0IGY3MzIwMDAwICg2NC1iaXQsIG5vbi1wcmVmZXRj
+aGFibGUpIFtzaXplPTMyXQoJQ2FwYWJpbGl0aWVzOiBbNTBdIFBvd2VyIE1hbmFnZW1lbnQgdmVy
+c2lvbiAzCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShE
+MCssRDEtLEQyLSxEM2hvdCssRDNjb2xkKykKCQlTdGF0dXM6IEQwIE5vU29mdFJzdCsgUE1FLUVu
+YWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCUNhcGFiaWxpdGllczogWzhjXSBNU0k6IEVuYWJs
+ZSsgQ291bnQ9MS8xIE1hc2thYmxlLSA2NGJpdCsKCQlBZGRyZXNzOiAwMDAwMDAwMGZlZTAwMzk4
+ICBEYXRhOiAwMDAwCglLZXJuZWwgZHJpdmVyIGluIHVzZTogbWVpX21lCglLZXJuZWwgbW9kdWxl
+czogbWVpX21lCgowMDoxYy4wIFBDSSBicmlkZ2U6IEludGVsIENvcnBvcmF0aW9uIFdpbGRjYXQg
+UG9pbnQtTFAgUENJIEV4cHJlc3MgUm9vdCBQb3J0ICMxIChyZXYgZTMpIChwcm9nLWlmIDAwIFtO
+b3JtYWwgZGVjb2RlXSkKCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0g
+TWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERpc0lO
+VHgrCglTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFz
+dCA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgtCglMYXRlbmN5
+OiAwLCBDYWNoZSBMaW5lIFNpemU6IDY0IGJ5dGVzCglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0
+byBJUlEgNDIKCUJ1czogcHJpbWFyeT0wMCwgc2Vjb25kYXJ5PTAxLCBzdWJvcmRpbmF0ZT0wMSwg
+c2VjLWxhdGVuY3k9MAoJTWVtb3J5IGJlaGluZCBicmlkZ2U6IGY3MjAwMDAwLWY3MmZmZmZmCglT
+ZWNvbmRhcnkgc3RhdHVzOiA2Nk1Iei0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFi
+b3J0LSA8VEFib3J0LSA8TUFib3J0KyA8U0VSUi0gPFBFUlItCglCcmlkZ2VDdGw6IFBhcml0eS0g
+U0VSUi0gTm9JU0EtIFZHQS0gTUFib3J0LSA+UmVzZXQtIEZhc3RCMkItCgkJUHJpRGlzY1Rtci0g
+U2VjRGlzY1Rtci0gRGlzY1RtclN0YXQtIERpc2NUbXJTRVJSRW4tCglDYXBhYmlsaXRpZXM6IFs0
+MF0gRXhwcmVzcyAodjIpIFJvb3QgUG9ydCAoU2xvdCspLCBNU0kgMDAKCQlEZXZDYXA6CU1heFBh
+eWxvYWQgMTI4IGJ5dGVzLCBQaGFudEZ1bmMgMAoJCQlFeHRUYWctIFJCRSsKCQlEZXZDdGw6CVJl
+cG9ydCBlcnJvcnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwtIEZhdGFsLSBVbnN1cHBvcnRlZC0K
+CQkJUmx4ZE9yZC0gRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3ci0gTm9Tbm9vcC0KCQkJTWF4UGF5
+bG9hZCAxMjggYnl0ZXMsIE1heFJlYWRSZXEgMTI4IGJ5dGVzCgkJRGV2U3RhOglDb3JyRXJyLSBV
+bmNvcnJFcnItIEZhdGFsRXJyLSBVbnN1cHBSZXEtIEF1eFB3cisgVHJhbnNQZW5kLQoJCUxua0Nh
+cDoJUG9ydCAjMSwgU3BlZWQgNUdUL3MsIFdpZHRoIHgxLCBBU1BNIEwwcyBMMSwgRXhpdCBMYXRl
+bmN5IEwwcyA8NTEybnMsIEwxIDwxNnVzCgkJCUNsb2NrUE0tIFN1cnByaXNlLSBMTEFjdFJlcCsg
+QndOb3QrIEFTUE1PcHRDb21wLQoJCUxua0N0bDoJQVNQTSBMMHMgTDEgRW5hYmxlZDsgUkNCIDY0
+IGJ5dGVzIERpc2FibGVkLSBDb21tQ2xrKwoJCQlFeHRTeW5jaC0gQ2xvY2tQTS0gQXV0V2lkRGlz
+LSBCV0ludC0gQXV0QldJbnQtCgkJTG5rU3RhOglTcGVlZCAyLjVHVC9zLCBXaWR0aCB4MSwgVHJF
+cnItIFRyYWluLSBTbG90Q2xrKyBETEFjdGl2ZSsgQldNZ210KyBBQldNZ210LQoJCVNsdENhcDoJ
+QXR0bkJ0bi0gUHdyQ3RybC0gTVJMLSBBdHRuSW5kLSBQd3JJbmQtIEhvdFBsdWctIFN1cnByaXNl
+LQoJCQlTbG90ICMwLCBQb3dlckxpbWl0IDEwLjAwMFc7IEludGVybG9jay0gTm9Db21wbCsKCQlT
+bHRDdGw6CUVuYWJsZTogQXR0bkJ0bi0gUHdyRmx0LSBNUkwtIFByZXNEZXQtIENtZENwbHQtIEhQ
+SXJxLSBMaW5rQ2hnLQoJCQlDb250cm9sOiBBdHRuSW5kIFVua25vd24sIFB3ckluZCBVbmtub3du
+LCBQb3dlci0gSW50ZXJsb2NrLQoJCVNsdFN0YToJU3RhdHVzOiBBdHRuQnRuLSBQb3dlckZsdC0g
+TVJMLSBDbWRDcGx0LSBQcmVzRGV0KyBJbnRlcmxvY2stCgkJCUNoYW5nZWQ6IE1STC0gUHJlc0Rl
+dC0gTGlua1N0YXRlKwoJCVJvb3RDdGw6IEVyckNvcnJlY3RhYmxlLSBFcnJOb24tRmF0YWwtIEVy
+ckZhdGFsLSBQTUVJbnRFbmErIENSU1Zpc2libGUtCgkJUm9vdENhcDogQ1JTVmlzaWJsZS0KCQlS
+b290U3RhOiBQTUUgUmVxSUQgMDAwMCwgUE1FU3RhdHVzLSBQTUVQZW5kaW5nLQoJCURldkNhcDI6
+IENvbXBsZXRpb24gVGltZW91dDogUmFuZ2UgQUJDLCBUaW1lb3V0RGlzKywgTFRSKywgT0JGRiBO
+b3QgU3VwcG9ydGVkIEFSSUZ3ZC0KCQlEZXZDdGwyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IDUwdXMg
+dG8gNTBtcywgVGltZW91dERpcy0sIExUUissIE9CRkYgRGlzYWJsZWQgQVJJRndkLQoJCUxua0N0
+bDI6IFRhcmdldCBMaW5rIFNwZWVkOiA1R1QvcywgRW50ZXJDb21wbGlhbmNlLSBTcGVlZERpcy0K
+CQkJIFRyYW5zbWl0IE1hcmdpbjogTm9ybWFsIE9wZXJhdGluZyBSYW5nZSwgRW50ZXJNb2RpZmll
+ZENvbXBsaWFuY2UtIENvbXBsaWFuY2VTT1MtCgkJCSBDb21wbGlhbmNlIERlLWVtcGhhc2lzOiAt
+NmRCCgkJTG5rU3RhMjogQ3VycmVudCBEZS1lbXBoYXNpcyBMZXZlbDogLTMuNWRCLCBFcXVhbGl6
+YXRpb25Db21wbGV0ZS0sIEVxdWFsaXphdGlvblBoYXNlMS0KCQkJIEVxdWFsaXphdGlvblBoYXNl
+Mi0sIEVxdWFsaXphdGlvblBoYXNlMy0sIExpbmtFcXVhbGl6YXRpb25SZXF1ZXN0LQoJQ2FwYWJp
+bGl0aWVzOiBbODBdIE1TSTogRW5hYmxlKyBDb3VudD0xLzEgTWFza2FibGUtIDY0Yml0LQoJCUFk
+ZHJlc3M6IGZlZTAwMjU4ICBEYXRhOiAwMDAwCglDYXBhYmlsaXRpZXM6IFs5MF0gU3Vic3lzdGVt
+OiBEZWxsIERldmljZSAwNjY1CglDYXBhYmlsaXRpZXM6IFthMF0gUG93ZXIgTWFuYWdlbWVudCB2
+ZXJzaW9uIDMKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1F
+KEQwKyxEMS0sRDItLEQzaG90KyxEM2NvbGQrKQoJCVN0YXR1czogRDAgTm9Tb2Z0UnN0LSBQTUUt
+RW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQoJQ2FwYWJpbGl0aWVzOiBbMTAwIHYwXSAjMDAK
+CUNhcGFiaWxpdGllczogWzIwMCB2MV0gTDEgUE0gU3Vic3RhdGVzCgkJTDFTdWJDYXA6IFBDSS1Q
+TV9MMS4yKyBQQ0ktUE1fTDEuMSsgQVNQTV9MMS4yKyBBU1BNX0wxLjErIEwxX1BNX1N1YnN0YXRl
+cysKCQkJICBQb3J0Q29tbW9uTW9kZVJlc3RvcmVUaW1lPTQwdXMgUG9ydFRQb3dlck9uVGltZT0x
+MHVzCglLZXJuZWwgZHJpdmVyIGluIHVzZTogcGNpZXBvcnQKCjAwOjFjLjMgUENJIGJyaWRnZTog
+SW50ZWwgQ29ycG9yYXRpb24gV2lsZGNhdCBQb2ludC1MUCBQQ0kgRXhwcmVzcyBSb290IFBvcnQg
+IzQgKHJldiBlMykgKHByb2ctaWYgMDAgW05vcm1hbCBkZWNvZGVdKQoJQ29udHJvbDogSS9PKyBN
+ZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBTdGVw
+cGluZy0gU0VSUi0gRmFzdEIyQi0gRGlzSU5UeCsKCVN0YXR1czogQ2FwKyA2Nk1Iei0gVURGLSBG
+YXN0QjJCLSBQYXJFcnItIERFVlNFTD1mYXN0ID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5T
+RVJSLSA8UEVSUi0gSU5UeC0KCUxhdGVuY3k6IDAsIENhY2hlIExpbmUgU2l6ZTogNjQgYnl0ZXMK
+CUludGVycnVwdDogcGluIEQgcm91dGVkIHRvIElSUSA0MwoJQnVzOiBwcmltYXJ5PTAwLCBzZWNv
+bmRhcnk9MDIsIHN1Ym9yZGluYXRlPTAyLCBzZWMtbGF0ZW5jeT0wCglNZW1vcnkgYmVoaW5kIGJy
+aWRnZTogZjcxMDAwMDAtZjcxZmZmZmYKCVNlY29uZGFyeSBzdGF0dXM6IDY2TUh6LSBGYXN0QjJC
+LSBQYXJFcnItIERFVlNFTD1mYXN0ID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQrIDxTRVJSLSA8
+UEVSUi0KCUJyaWRnZUN0bDogUGFyaXR5LSBTRVJSLSBOb0lTQS0gVkdBLSBNQWJvcnQtID5SZXNl
+dC0gRmFzdEIyQi0KCQlQcmlEaXNjVG1yLSBTZWNEaXNjVG1yLSBEaXNjVG1yU3RhdC0gRGlzY1Rt
+clNFUlJFbi0KCUNhcGFiaWxpdGllczogWzQwXSBFeHByZXNzICh2MikgUm9vdCBQb3J0IChTbG90
+KyksIE1TSSAwMAoJCURldkNhcDoJTWF4UGF5bG9hZCAxMjggYnl0ZXMsIFBoYW50RnVuYyAwCgkJ
+CUV4dFRhZy0gUkJFKwoJCURldkN0bDoJUmVwb3J0IGVycm9yczogQ29ycmVjdGFibGUtIE5vbi1G
+YXRhbC0gRmF0YWwtIFVuc3VwcG9ydGVkLQoJCQlSbHhkT3JkLSBFeHRUYWctIFBoYW50RnVuYy0g
+QXV4UHdyLSBOb1Nub29wLQoJCQlNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjgg
+Ynl0ZXMKCQlEZXZTdGE6CUNvcnJFcnIrIFVuY29yckVyci0gRmF0YWxFcnItIFVuc3VwcFJlcS0g
+QXV4UHdyKyBUcmFuc1BlbmQtCgkJTG5rQ2FwOglQb3J0ICM0LCBTcGVlZCA1R1QvcywgV2lkdGgg
+eDEsIEFTUE0gTDBzIEwxLCBFeGl0IExhdGVuY3kgTDBzIDw1MTJucywgTDEgPDE2dXMKCQkJQ2xv
+Y2tQTS0gU3VycHJpc2UtIExMQWN0UmVwKyBCd05vdCsgQVNQTU9wdENvbXAtCgkJTG5rQ3RsOglB
+U1BNIEwxIEVuYWJsZWQ7IFJDQiA2NCBieXRlcyBEaXNhYmxlZC0gQ29tbUNsaysKCQkJRXh0U3lu
+Y2gtIENsb2NrUE0tIEF1dFdpZERpcy0gQldJbnQtIEF1dEJXSW50LQoJCUxua1N0YToJU3BlZWQg
+Mi41R1QvcywgV2lkdGggeDEsIFRyRXJyLSBUcmFpbi0gU2xvdENsaysgRExBY3RpdmUrIEJXTWdt
+dCsgQUJXTWdtdC0KCQlTbHRDYXA6CUF0dG5CdG4tIFB3ckN0cmwtIE1STC0gQXR0bkluZC0gUHdy
+SW5kLSBIb3RQbHVnLSBTdXJwcmlzZS0KCQkJU2xvdCAjMywgUG93ZXJMaW1pdCAxMC4wMDBXOyBJ
+bnRlcmxvY2stIE5vQ29tcGwrCgkJU2x0Q3RsOglFbmFibGU6IEF0dG5CdG4tIFB3ckZsdC0gTVJM
+LSBQcmVzRGV0LSBDbWRDcGx0LSBIUElycS0gTGlua0NoZy0KCQkJQ29udHJvbDogQXR0bkluZCBV
+bmtub3duLCBQd3JJbmQgVW5rbm93biwgUG93ZXItIEludGVybG9jay0KCQlTbHRTdGE6CVN0YXR1
+czogQXR0bkJ0bi0gUG93ZXJGbHQtIE1STC0gQ21kQ3BsdC0gUHJlc0RldCsgSW50ZXJsb2NrLQoJ
+CQlDaGFuZ2VkOiBNUkwtIFByZXNEZXQtIExpbmtTdGF0ZSsKCQlSb290Q3RsOiBFcnJDb3JyZWN0
+YWJsZS0gRXJyTm9uLUZhdGFsLSBFcnJGYXRhbC0gUE1FSW50RW5hKyBDUlNWaXNpYmxlLQoJCVJv
+b3RDYXA6IENSU1Zpc2libGUtCgkJUm9vdFN0YTogUE1FIFJlcUlEIDAwMDAsIFBNRVN0YXR1cy0g
+UE1FUGVuZGluZy0KCQlEZXZDYXAyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IFJhbmdlIEFCQywgVGlt
+ZW91dERpcyssIExUUi0sIE9CRkYgTm90IFN1cHBvcnRlZCBBUklGd2QtCgkJRGV2Q3RsMjogQ29t
+cGxldGlvbiBUaW1lb3V0OiA1MHVzIHRvIDUwbXMsIFRpbWVvdXREaXMtLCBMVFItLCBPQkZGIERp
+c2FibGVkIEFSSUZ3ZC0KCQlMbmtDdGwyOiBUYXJnZXQgTGluayBTcGVlZDogNUdUL3MsIEVudGVy
+Q29tcGxpYW5jZS0gU3BlZWREaXMtCgkJCSBUcmFuc21pdCBNYXJnaW46IE5vcm1hbCBPcGVyYXRp
+bmcgUmFuZ2UsIEVudGVyTW9kaWZpZWRDb21wbGlhbmNlLSBDb21wbGlhbmNlU09TLQoJCQkgQ29t
+cGxpYW5jZSBEZS1lbXBoYXNpczogLTZkQgoJCUxua1N0YTI6IEN1cnJlbnQgRGUtZW1waGFzaXMg
+TGV2ZWw6IC0zLjVkQiwgRXF1YWxpemF0aW9uQ29tcGxldGUtLCBFcXVhbGl6YXRpb25QaGFzZTEt
+CgkJCSBFcXVhbGl6YXRpb25QaGFzZTItLCBFcXVhbGl6YXRpb25QaGFzZTMtLCBMaW5rRXF1YWxp
+emF0aW9uUmVxdWVzdC0KCUNhcGFiaWxpdGllczogWzgwXSBNU0k6IEVuYWJsZSsgQ291bnQ9MS8x
+IE1hc2thYmxlLSA2NGJpdC0KCQlBZGRyZXNzOiBmZWUwMDI5OCAgRGF0YTogMDAwMAoJQ2FwYWJp
+bGl0aWVzOiBbOTBdIFN1YnN5c3RlbTogRGVsbCBEZXZpY2UgMDY2NQoJQ2FwYWJpbGl0aWVzOiBb
+YTBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0g
+RDItIEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDEtLEQyLSxEM2hvdCssRDNjb2xkKykKCQlTdGF0
+dXM6IEQwIE5vU29mdFJzdC0gUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCUNhcGFi
+aWxpdGllczogWzEwMCB2MF0gIzAwCglDYXBhYmlsaXRpZXM6IFsyMDAgdjFdIEwxIFBNIFN1YnN0
+YXRlcwoJCUwxU3ViQ2FwOiBQQ0ktUE1fTDEuMisgUENJLVBNX0wxLjErIEFTUE1fTDEuMisgQVNQ
+TV9MMS4xKyBMMV9QTV9TdWJzdGF0ZXMrCgkJCSAgUG9ydENvbW1vbk1vZGVSZXN0b3JlVGltZT00
+MHVzIFBvcnRUUG93ZXJPblRpbWU9MTB1cwoJS2VybmVsIGRyaXZlciBpbiB1c2U6IHBjaWVwb3J0
+CgowMDoxYy41IFBDSSBicmlkZ2U6IEludGVsIENvcnBvcmF0aW9uIFdpbGRjYXQgUG9pbnQtTFAg
+UENJIEV4cHJlc3MgUm9vdCBQb3J0ICM2IChyZXYgZTMpIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVj
+b2RlXSkKCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0g
+VkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERpc0lOVHgrCglTdGF0
+dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0
+LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgtCglMYXRlbmN5OiAwLCBDYWNo
+ZSBMaW5lIFNpemU6IDY0IGJ5dGVzCglJbnRlcnJ1cHQ6IHBpbiBCIHJvdXRlZCB0byBJUlEgNDQK
+CUJ1czogcHJpbWFyeT0wMCwgc2Vjb25kYXJ5PTAzLCBzdWJvcmRpbmF0ZT0wMywgc2VjLWxhdGVu
+Y3k9MAoJTWVtb3J5IGJlaGluZCBicmlkZ2U6IGY3MDAwMDAwLWY3MGZmZmZmCglTZWNvbmRhcnkg
+c3RhdHVzOiA2Nk1Iei0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LSA8VEFi
+b3J0LSA8TUFib3J0KyA8U0VSUi0gPFBFUlItCglCcmlkZ2VDdGw6IFBhcml0eS0gU0VSUi0gTm9J
+U0EtIFZHQS0gTUFib3J0LSA+UmVzZXQtIEZhc3RCMkItCgkJUHJpRGlzY1Rtci0gU2VjRGlzY1Rt
+ci0gRGlzY1RtclN0YXQtIERpc2NUbXJTRVJSRW4tCglDYXBhYmlsaXRpZXM6IFs0MF0gRXhwcmVz
+cyAodjIpIFJvb3QgUG9ydCAoU2xvdCspLCBNU0kgMDAKCQlEZXZDYXA6CU1heFBheWxvYWQgMTI4
+IGJ5dGVzLCBQaGFudEZ1bmMgMAoJCQlFeHRUYWctIFJCRSsKCQlEZXZDdGw6CVJlcG9ydCBlcnJv
+cnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwtIEZhdGFsLSBVbnN1cHBvcnRlZC0KCQkJUmx4ZE9y
+ZC0gRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3ci0gTm9Tbm9vcC0KCQkJTWF4UGF5bG9hZCAxMjgg
+Ynl0ZXMsIE1heFJlYWRSZXEgMTI4IGJ5dGVzCgkJRGV2U3RhOglDb3JyRXJyLSBVbmNvcnJFcnIt
+IEZhdGFsRXJyLSBVbnN1cHBSZXEtIEF1eFB3cisgVHJhbnNQZW5kLQoJCUxua0NhcDoJUG9ydCAj
+NiwgU3BlZWQgNUdUL3MsIFdpZHRoIHgyLCBBU1BNIEwwcyBMMSwgRXhpdCBMYXRlbmN5IEwwcyA8
+NTEybnMsIEwxIDwxNnVzCgkJCUNsb2NrUE0tIFN1cnByaXNlLSBMTEFjdFJlcCsgQndOb3QrIEFT
+UE1PcHRDb21wLQoJCUxua0N0bDoJQVNQTSBMMSBFbmFibGVkOyBSQ0IgNjQgYnl0ZXMgRGlzYWJs
+ZWQtIENvbW1DbGsrCgkJCUV4dFN5bmNoLSBDbG9ja1BNLSBBdXRXaWREaXMtIEJXSW50LSBBdXRC
+V0ludC0KCQlMbmtTdGE6CVNwZWVkIDVHVC9zLCBXaWR0aCB4MiwgVHJFcnItIFRyYWluLSBTbG90
+Q2xrKyBETEFjdGl2ZSsgQldNZ210KyBBQldNZ210LQoJCVNsdENhcDoJQXR0bkJ0bi0gUHdyQ3Ry
+bC0gTVJMLSBBdHRuSW5kLSBQd3JJbmQtIEhvdFBsdWctIFN1cnByaXNlLQoJCQlTbG90ICM1LCBQ
+b3dlckxpbWl0IDI1LjAwMFc7IEludGVybG9jay0gTm9Db21wbCsKCQlTbHRDdGw6CUVuYWJsZTog
+QXR0bkJ0bi0gUHdyRmx0LSBNUkwtIFByZXNEZXQtIENtZENwbHQtIEhQSXJxLSBMaW5rQ2hnLQoJ
+CQlDb250cm9sOiBBdHRuSW5kIFVua25vd24sIFB3ckluZCBVbmtub3duLCBQb3dlci0gSW50ZXJs
+b2NrLQoJCVNsdFN0YToJU3RhdHVzOiBBdHRuQnRuLSBQb3dlckZsdC0gTVJMLSBDbWRDcGx0LSBQ
+cmVzRGV0KyBJbnRlcmxvY2stCgkJCUNoYW5nZWQ6IE1STC0gUHJlc0RldC0gTGlua1N0YXRlKwoJ
+CVJvb3RDdGw6IEVyckNvcnJlY3RhYmxlLSBFcnJOb24tRmF0YWwtIEVyckZhdGFsLSBQTUVJbnRF
+bmErIENSU1Zpc2libGUtCgkJUm9vdENhcDogQ1JTVmlzaWJsZS0KCQlSb290U3RhOiBQTUUgUmVx
+SUQgMDAwMCwgUE1FU3RhdHVzLSBQTUVQZW5kaW5nLQoJCURldkNhcDI6IENvbXBsZXRpb24gVGlt
+ZW91dDogUmFuZ2UgQUJDLCBUaW1lb3V0RGlzKywgTFRSKywgT0JGRiBOb3QgU3VwcG9ydGVkIEFS
+SUZ3ZC0KCQlEZXZDdGwyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IDUwdXMgdG8gNTBtcywgVGltZW91
+dERpcy0sIExUUissIE9CRkYgRGlzYWJsZWQgQVJJRndkLQoJCUxua0N0bDI6IFRhcmdldCBMaW5r
+IFNwZWVkOiA1R1QvcywgRW50ZXJDb21wbGlhbmNlLSBTcGVlZERpcy0KCQkJIFRyYW5zbWl0IE1h
+cmdpbjogTm9ybWFsIE9wZXJhdGluZyBSYW5nZSwgRW50ZXJNb2RpZmllZENvbXBsaWFuY2UtIENv
+bXBsaWFuY2VTT1MtCgkJCSBDb21wbGlhbmNlIERlLWVtcGhhc2lzOiAtNmRCCgkJTG5rU3RhMjog
+Q3VycmVudCBEZS1lbXBoYXNpcyBMZXZlbDogLTZkQiwgRXF1YWxpemF0aW9uQ29tcGxldGUtLCBF
+cXVhbGl6YXRpb25QaGFzZTEtCgkJCSBFcXVhbGl6YXRpb25QaGFzZTItLCBFcXVhbGl6YXRpb25Q
+aGFzZTMtLCBMaW5rRXF1YWxpemF0aW9uUmVxdWVzdC0KCUNhcGFiaWxpdGllczogWzgwXSBNU0k6
+IEVuYWJsZSsgQ291bnQ9MS8xIE1hc2thYmxlLSA2NGJpdC0KCQlBZGRyZXNzOiBmZWUwMDJkOCAg
+RGF0YTogMDAwMAoJQ2FwYWJpbGl0aWVzOiBbOTBdIFN1YnN5c3RlbTogRGVsbCBEZXZpY2UgMDY2
+NQoJQ2FwYWJpbGl0aWVzOiBbYTBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzCgkJRmxhZ3M6
+IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDEtLEQyLSxEM2hv
+dCssRDNjb2xkKykKCQlTdGF0dXM6IEQwIE5vU29mdFJzdC0gUE1FLUVuYWJsZS0gRFNlbD0wIERT
+Y2FsZT0wIFBNRS0KCUNhcGFiaWxpdGllczogWzEwMCB2MF0gIzAwCglDYXBhYmlsaXRpZXM6IFsy
+MDAgdjFdIEwxIFBNIFN1YnN0YXRlcwoJCUwxU3ViQ2FwOiBQQ0ktUE1fTDEuMisgUENJLVBNX0wx
+LjErIEFTUE1fTDEuMisgQVNQTV9MMS4xKyBMMV9QTV9TdWJzdGF0ZXMrCgkJCSAgUG9ydENvbW1v
+bk1vZGVSZXN0b3JlVGltZT00MHVzIFBvcnRUUG93ZXJPblRpbWU9MTB1cwoJS2VybmVsIGRyaXZl
+ciBpbiB1c2U6IHBjaWVwb3J0CgowMDoxZi4wIElTQSBicmlkZ2U6IEludGVsIENvcnBvcmF0aW9u
+IFdpbGRjYXQgUG9pbnQtTFAgTFBDIENvbnRyb2xsZXIgKHJldiAwMykKCVN1YnN5c3RlbTogRGVs
+bCBEZXZpY2UgMDY2NQoJQ29udHJvbDogSS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBN
+ZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0gRGlzSU5U
+eC0KCVN0YXR1czogQ2FwKyA2Nk1Iei0gVURGLSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRp
+dW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5j
+eTogMAoJQ2FwYWJpbGl0aWVzOiBbZTBdIFZlbmRvciBTcGVjaWZpYyBJbmZvcm1hdGlvbjogTGVu
+PTBjIDw/PgoJS2VybmVsIGRyaXZlciBpbiB1c2U6IGxwY19pY2gKCUtlcm5lbCBtb2R1bGVzOiBs
+cGNfaWNoCgowMDoxZi4yIFNBVEEgY29udHJvbGxlcjogSW50ZWwgQ29ycG9yYXRpb24gV2lsZGNh
+dCBQb2ludC1MUCBTQVRBIENvbnRyb2xsZXIgW0FIQ0kgTW9kZV0gKHJldiAwMykgKHByb2ctaWYg
+MDEgW0FIQ0kgMS4wXSkKCVN1YnN5c3RlbTogRGVsbCBEZXZpY2UgMDY2NQoJQ29udHJvbDogSS9P
+KyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBT
+dGVwcGluZy0gU0VSUi0gRmFzdEIyQi0gRGlzSU5UeCsKCVN0YXR1czogQ2FwKyA2Nk1IeisgVURG
+LSBGYXN0QjJCKyBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9y
+dC0gPlNFUlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5jeTogMAoJSW50ZXJydXB0OiBwaW4gQiByb3V0
+ZWQgdG8gSVJRIDQ1CglSZWdpb24gMDogSS9PIHBvcnRzIGF0IGYwYjAgW3NpemU9OF0KCVJlZ2lv
+biAxOiBJL08gcG9ydHMgYXQgZjBhMCBbc2l6ZT00XQoJUmVnaW9uIDI6IEkvTyBwb3J0cyBhdCBm
+MDkwIFtzaXplPThdCglSZWdpb24gMzogSS9PIHBvcnRzIGF0IGYwODAgW3NpemU9NF0KCVJlZ2lv
+biA0OiBJL08gcG9ydHMgYXQgZjA2MCBbc2l6ZT0zMl0KCVJlZ2lvbiA1OiBNZW1vcnkgYXQgZjcz
+MWUwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MktdCglDYXBhYmlsaXRpZXM6
+IFs4MF0gTVNJOiBFbmFibGUrIENvdW50PTEvMSBNYXNrYWJsZS0gNjRiaXQtCgkJQWRkcmVzczog
+ZmVlMDAyZjggIERhdGE6IDAwMDAKCUNhcGFiaWxpdGllczogWzcwXSBQb3dlciBNYW5hZ2VtZW50
+IHZlcnNpb24gMwoJCUZsYWdzOiBQTUVDbGstIERTSS0gRDEtIEQyLSBBdXhDdXJyZW50PTBtQSBQ
+TUUoRDAtLEQxLSxEMi0sRDNob3QrLEQzY29sZC0pCgkJU3RhdHVzOiBEMCBOb1NvZnRSc3QrIFBN
+RS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCglDYXBhYmlsaXRpZXM6IFthOF0gU0FUQSBI
+QkEgdjEuMCBCQVI0IE9mZnNldD0wMDAwMDAwNAoJS2VybmVsIGRyaXZlciBpbiB1c2U6IGFoY2kK
+CjAwOjFmLjMgU01CdXM6IEludGVsIENvcnBvcmF0aW9uIFdpbGRjYXQgUG9pbnQtTFAgU01CdXMg
+Q29udHJvbGxlciAocmV2IDAzKQoJU3Vic3lzdGVtOiBEZWxsIERldmljZSAwNjY1CglDb250cm9s
+OiBJL08rIE1lbSsgQnVzTWFzdGVyLSBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJF
+cnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJTlR4LQoJU3RhdHVzOiBDYXAtIDY2TUh6
+LSBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8
+TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgtCglJbnRlcnJ1cHQ6IHBpbiBDIHJvdXRlZCB0byBJ
+UlEgMTgKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZjczMWQwMDAgKDY0LWJpdCwgbm9uLXByZWZldGNo
+YWJsZSkgW3NpemU9MjU2XQoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBmMDQwIFtzaXplPTMyXQoJ
+S2VybmVsIGRyaXZlciBpbiB1c2U6IGk4MDFfc21idXMKCUtlcm5lbCBtb2R1bGVzOiBpMmNfaTgw
+MQoKMDA6MWYuNiBTaWduYWwgcHJvY2Vzc2luZyBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlv
+biBXaWxkY2F0IFBvaW50LUxQIFRoZXJtYWwgTWFuYWdlbWVudCBDb250cm9sbGVyIChyZXYgMDMp
+CglTdWJzeXN0ZW06IERlbGwgRGV2aWNlIDA2NjUKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNNYXN0
+ZXItIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlIt
+IEZhc3RCMkItIERpc0lOVHgtCglTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFy
+RXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlIt
+IElOVHgtCglJbnRlcnJ1cHQ6IHBpbiBDIHJvdXRlZCB0byBJUlEgMTgKCVJlZ2lvbiAwOiBNZW1v
+cnkgYXQgZjczMWMwMDAgKDY0LWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9NEtdCglDYXBh
+YmlsaXRpZXM6IFs1MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMKCQlGbGFnczogUE1FQ2xr
+LSBEU0krIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxEMS0sRDItLEQzaG90LSxEM2Nv
+bGQtKQoJCVN0YXR1czogRDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAg
+UE1FLQoJQ2FwYWJpbGl0aWVzOiBbODBdIE1TSTogRW5hYmxlLSBDb3VudD0xLzEgTWFza2FibGUt
+IDY0Yml0LQoJCUFkZHJlc3M6IDAwMDAwMDAwICBEYXRhOiAwMDAwCglLZXJuZWwgZHJpdmVyIGlu
+IHVzZTogaW50ZWxfcGNoX3RoZXJtYWwKCUtlcm5lbCBtb2R1bGVzOiBpbnRlbF9wY2hfdGhlcm1h
+bAoKMDE6MDAuMCBVbmFzc2lnbmVkIGNsYXNzIFtmZjAwXTogUmVhbHRlayBTZW1pY29uZHVjdG9y
+IENvLiwgTHRkLiBSVFM1MjQ5IFBDSSBFeHByZXNzIENhcmQgUmVhZGVyIChyZXYgMDEpCglTdWJz
+eXN0ZW06IERlbGwgRGV2aWNlIDA2NjUKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNNYXN0ZXIrIFNw
+ZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RC
+MkItIERpc0lOVHgrCglTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBE
+RVZTRUw9ZmFzdCA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgt
+CglMYXRlbmN5OiAwLCBDYWNoZSBMaW5lIFNpemU6IDY0IGJ5dGVzCglJbnRlcnJ1cHQ6IHBpbiBB
+IHJvdXRlZCB0byBJUlEgNDgKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZjcyMDAwMDAgKDMyLWJpdCwg
+bm9uLXByZWZldGNoYWJsZSkgW3NpemU9NEtdCglDYXBhYmlsaXRpZXM6IFs0MF0gUG93ZXIgTWFu
+YWdlbWVudCB2ZXJzaW9uIDMKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxKyBEMisgQXV4Q3VycmVu
+dD0zNzVtQSBQTUUoRDAtLEQxKyxEMissRDNob3QrLEQzY29sZCspCgkJU3RhdHVzOiBEMCBOb1Nv
+ZnRSc3QtIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCglDYXBhYmlsaXRpZXM6IFs1
+MF0gTVNJOiBFbmFibGUrIENvdW50PTEvMSBNYXNrYWJsZS0gNjRiaXQrCgkJQWRkcmVzczogMDAw
+MDAwMDBmZWUwMDM3OCAgRGF0YTogMDAwMAoJQ2FwYWJpbGl0aWVzOiBbNzBdIEV4cHJlc3MgKHYy
+KSBFbmRwb2ludCwgTVNJIDAwCgkJRGV2Q2FwOglNYXhQYXlsb2FkIDUxMiBieXRlcywgUGhhbnRG
+dW5jIDAsIExhdGVuY3kgTDBzIHVubGltaXRlZCwgTDEgdW5saW1pdGVkCgkJCUV4dFRhZy0gQXR0
+bkJ0bi0gQXR0bkluZC0gUHdySW5kLSBSQkUrIEZMUmVzZXQtIFNsb3RQb3dlckxpbWl0IDEwLjAw
+MFcKCQlEZXZDdGw6CVJlcG9ydCBlcnJvcnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwtIEZhdGFs
+LSBVbnN1cHBvcnRlZC0KCQkJUmx4ZE9yZCsgRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3ci0gTm9T
+bm9vcC0KCQkJTWF4UGF5bG9hZCAxMjggYnl0ZXMsIE1heFJlYWRSZXEgNTEyIGJ5dGVzCgkJRGV2
+U3RhOglDb3JyRXJyKyBVbmNvcnJFcnItIEZhdGFsRXJyLSBVbnN1cHBSZXErIEF1eFB3cisgVHJh
+bnNQZW5kLQoJCUxua0NhcDoJUG9ydCAjMCwgU3BlZWQgMi41R1QvcywgV2lkdGggeDEsIEFTUE0g
+TDBzIEwxLCBFeGl0IExhdGVuY3kgTDBzIHVubGltaXRlZCwgTDEgPDY0dXMKCQkJQ2xvY2tQTSsg
+U3VycHJpc2UtIExMQWN0UmVwLSBCd05vdC0gQVNQTU9wdENvbXArCgkJTG5rQ3RsOglBU1BNIEwx
+IEVuYWJsZWQ7IFJDQiA2NCBieXRlcyBEaXNhYmxlZC0gQ29tbUNsaysKCQkJRXh0U3luY2gtIENs
+b2NrUE0rIEF1dFdpZERpcy0gQldJbnQtIEF1dEJXSW50LQoJCUxua1N0YToJU3BlZWQgMi41R1Qv
+cywgV2lkdGggeDEsIFRyRXJyLSBUcmFpbi0gU2xvdENsaysgRExBY3RpdmUtIEJXTWdtdC0gQUJX
+TWdtdC0KCQlEZXZDYXAyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IE5vdCBTdXBwb3J0ZWQsIFRpbWVv
+dXREaXMrLCBMVFIrLCBPQkZGIFZpYSBtZXNzYWdlL1dBS0UjCgkJRGV2Q3RsMjogQ29tcGxldGlv
+biBUaW1lb3V0OiA1MHVzIHRvIDUwbXMsIFRpbWVvdXREaXMtLCBMVFIrLCBPQkZGIERpc2FibGVk
+CgkJTG5rQ3RsMjogVGFyZ2V0IExpbmsgU3BlZWQ6IDIuNUdUL3MsIEVudGVyQ29tcGxpYW5jZS0g
+U3BlZWREaXMtCgkJCSBUcmFuc21pdCBNYXJnaW46IE5vcm1hbCBPcGVyYXRpbmcgUmFuZ2UsIEVu
+dGVyTW9kaWZpZWRDb21wbGlhbmNlLSBDb21wbGlhbmNlU09TLQoJCQkgQ29tcGxpYW5jZSBEZS1l
+bXBoYXNpczogLTZkQgoJCUxua1N0YTI6IEN1cnJlbnQgRGUtZW1waGFzaXMgTGV2ZWw6IC0zLjVk
+QiwgRXF1YWxpemF0aW9uQ29tcGxldGUtLCBFcXVhbGl6YXRpb25QaGFzZTEtCgkJCSBFcXVhbGl6
+YXRpb25QaGFzZTItLCBFcXVhbGl6YXRpb25QaGFzZTMtLCBMaW5rRXF1YWxpemF0aW9uUmVxdWVz
+dC0KCUNhcGFiaWxpdGllczogWzEwMCB2Ml0gQWR2YW5jZWQgRXJyb3IgUmVwb3J0aW5nCgkJVUVT
+dGE6CURMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJydC0gVW54Q21wbHQtIFJ4
+T0YtIE1hbGZUTFAtIEVDUkMtIFVuc3VwUmVxLSBBQ1NWaW9sLQoJCVVFTXNrOglETFAtIFNERVMt
+IFRMUC0gRkNQLSBDbXBsdFRPLSBDbXBsdEFicnQtIFVueENtcGx0LSBSeE9GLSBNYWxmVExQLSBF
+Q1JDLSBVbnN1cFJlcS0gQUNTVmlvbC0KCQlVRVN2cnQ6CURMUCsgU0RFUysgVExQLSBGQ1ArIENt
+cGx0VE8tIENtcGx0QWJydC0gVW54Q21wbHQtIFJ4T0YrIE1hbGZUTFArIEVDUkMtIFVuc3VwUmVx
+LSBBQ1NWaW9sLQoJCUNFU3RhOglSeEVyci0gQmFkVExQLSBCYWRETExQLSBSb2xsb3Zlci0gVGlt
+ZW91dC0gTm9uRmF0YWxFcnItCgkJQ0VNc2s6CVJ4RXJyLSBCYWRUTFAtIEJhZERMTFAtIFJvbGxv
+dmVyLSBUaW1lb3V0LSBOb25GYXRhbEVycisKCQlBRVJDYXA6CUZpcnN0IEVycm9yIFBvaW50ZXI6
+IDAwLCBHZW5DYXArIENHZW5Fbi0gQ2hrQ2FwKyBDaGtFbi0KCUNhcGFiaWxpdGllczogWzE0OCB2
+MV0gRGV2aWNlIFNlcmlhbCBOdW1iZXIgMDAtMDAtMDAtMDEtMDAtNGMtZTAtMDAKCUNhcGFiaWxp
+dGllczogWzE1OCB2MV0gTGF0ZW5jeSBUb2xlcmFuY2UgUmVwb3J0aW5nCgkJTWF4IHNub29wIGxh
+dGVuY3k6IDMxNDU3MjhucwoJCU1heCBubyBzbm9vcCBsYXRlbmN5OiAzMTQ1NzI4bnMKCUNhcGFi
+aWxpdGllczogWzE2MCB2MV0gTDEgUE0gU3Vic3RhdGVzCgkJTDFTdWJDYXA6IFBDSS1QTV9MMS4y
+KyBQQ0ktUE1fTDEuMSsgQVNQTV9MMS4yKyBBU1BNX0wxLjErIEwxX1BNX1N1YnN0YXRlcysKCQkJ
+ICBQb3J0Q29tbW9uTW9kZVJlc3RvcmVUaW1lPTYwdXMgUG9ydFRQb3dlck9uVGltZT02MHVzCglL
+ZXJuZWwgZHJpdmVyIGluIHVzZTogcnRzeF9wY2kKCUtlcm5lbCBtb2R1bGVzOiBydHN4X3BjaQoK
+MDI6MDAuMCBOZXR3b3JrIGNvbnRyb2xsZXI6IEludGVsIENvcnBvcmF0aW9uIFdpcmVsZXNzIDcy
+NjUgKHJldiA2MSkKCVN1YnN5c3RlbTogSW50ZWwgQ29ycG9yYXRpb24gRHVhbCBCYW5kIFdpcmVs
+ZXNzLUFDIDcyNjUKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVt
+V0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERpc0lOVHgr
+CglTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+
+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgtCglMYXRlbmN5OiAw
+LCBDYWNoZSBMaW5lIFNpemU6IDY0IGJ5dGVzCglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJ
+UlEgNTAKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZjcxMDAwMDAgKDY0LWJpdCwgbm9uLXByZWZldGNo
+YWJsZSkgW3NpemU9OEtdCglDYXBhYmlsaXRpZXM6IFtjOF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJz
+aW9uIDMKCQlGbGFnczogUE1FQ2xrLSBEU0krIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQw
+KyxEMS0sRDItLEQzaG90KyxEM2NvbGQrKQoJCVN0YXR1czogRDAgTm9Tb2Z0UnN0LSBQTUUtRW5h
+YmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQoJQ2FwYWJpbGl0aWVzOiBbZDBdIE1TSTogRW5hYmxl
+KyBDb3VudD0xLzEgTWFza2FibGUtIDY0Yml0KwoJCUFkZHJlc3M6IDAwMDAwMDAwZmVlMDAzYjgg
+IERhdGE6IDAwMDAKCUNhcGFiaWxpdGllczogWzQwXSBFeHByZXNzICh2MikgRW5kcG9pbnQsIE1T
+SSAwMAoJCURldkNhcDoJTWF4UGF5bG9hZCAxMjggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5
+IEwwcyA8NTEybnMsIEwxIHVubGltaXRlZAoJCQlFeHRUYWctIEF0dG5CdG4tIEF0dG5JbmQtIFB3
+ckluZC0gUkJFKyBGTFJlc2V0KyBTbG90UG93ZXJMaW1pdCAwLjAwMFcKCQlEZXZDdGw6CVJlcG9y
+dCBlcnJvcnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwtIEZhdGFsLSBVbnN1cHBvcnRlZC0KCQkJ
+Umx4ZE9yZCsgRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3cisgTm9Tbm9vcCsgRkxSZXNldC0KCQkJ
+TWF4UGF5bG9hZCAxMjggYnl0ZXMsIE1heFJlYWRSZXEgMTI4IGJ5dGVzCgkJRGV2U3RhOglDb3Jy
+RXJyKyBVbmNvcnJFcnItIEZhdGFsRXJyLSBVbnN1cHBSZXErIEF1eFB3cisgVHJhbnNQZW5kLQoJ
+CUxua0NhcDoJUG9ydCAjMCwgU3BlZWQgMi41R1QvcywgV2lkdGggeDEsIEFTUE0gTDEsIEV4aXQg
+TGF0ZW5jeSBMMHMgPDR1cywgTDEgPDMydXMKCQkJQ2xvY2tQTSsgU3VycHJpc2UtIExMQWN0UmVw
+LSBCd05vdC0gQVNQTU9wdENvbXArCgkJTG5rQ3RsOglBU1BNIEwxIEVuYWJsZWQ7IFJDQiA2NCBi
+eXRlcyBEaXNhYmxlZC0gQ29tbUNsaysKCQkJRXh0U3luY2gtIENsb2NrUE0rIEF1dFdpZERpcy0g
+QldJbnQtIEF1dEJXSW50LQoJCUxua1N0YToJU3BlZWQgMi41R1QvcywgV2lkdGggeDEsIFRyRXJy
+LSBUcmFpbi0gU2xvdENsaysgRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0KCQlEZXZDYXAyOiBD
+b21wbGV0aW9uIFRpbWVvdXQ6IFJhbmdlIEIsIFRpbWVvdXREaXMrLCBMVFIrLCBPQkZGIFZpYSBX
+QUtFIwoJCURldkN0bDI6IENvbXBsZXRpb24gVGltZW91dDogMTZtcyB0byA1NW1zLCBUaW1lb3V0
+RGlzLSwgTFRSLSwgT0JGRiBEaXNhYmxlZAoJCUxua0N0bDI6IFRhcmdldCBMaW5rIFNwZWVkOiAy
+LjVHVC9zLCBFbnRlckNvbXBsaWFuY2UtIFNwZWVkRGlzLQoJCQkgVHJhbnNtaXQgTWFyZ2luOiBO
+b3JtYWwgT3BlcmF0aW5nIFJhbmdlLCBFbnRlck1vZGlmaWVkQ29tcGxpYW5jZS0gQ29tcGxpYW5j
+ZVNPUy0KCQkJIENvbXBsaWFuY2UgRGUtZW1waGFzaXM6IC02ZEIKCQlMbmtTdGEyOiBDdXJyZW50
+IERlLWVtcGhhc2lzIExldmVsOiAtMy41ZEIsIEVxdWFsaXphdGlvbkNvbXBsZXRlLSwgRXF1YWxp
+emF0aW9uUGhhc2UxLQoJCQkgRXF1YWxpemF0aW9uUGhhc2UyLSwgRXF1YWxpemF0aW9uUGhhc2Uz
+LSwgTGlua0VxdWFsaXphdGlvblJlcXVlc3QtCglDYXBhYmlsaXRpZXM6IFsxMDAgdjFdIEFkdmFu
+Y2VkIEVycm9yIFJlcG9ydGluZwoJCVVFU3RhOglETFAtIFNERVMtIFRMUC0gRkNQLSBDbXBsdFRP
+LSBDbXBsdEFicnQtIFVueENtcGx0LSBSeE9GLSBNYWxmVExQLSBFQ1JDLSBVbnN1cFJlcS0gQUNT
+VmlvbC0KCQlVRU1zazoJRExQLSBTREVTLSBUTFAtIEZDUC0gQ21wbHRUTy0gQ21wbHRBYnJ0LSBV
+bnhDbXBsdC0gUnhPRi0gTWFsZlRMUC0gRUNSQy0gVW5zdXBSZXEtIEFDU1Zpb2wtCgkJVUVTdnJ0
+OglETFArIFNERVMrIFRMUC0gRkNQKyBDbXBsdFRPLSBDbXBsdEFicnQtIFVueENtcGx0LSBSeE9G
+KyBNYWxmVExQKyBFQ1JDLSBVbnN1cFJlcS0gQUNTVmlvbC0KCQlDRVN0YToJUnhFcnItIEJhZFRM
+UCsgQmFkRExMUC0gUm9sbG92ZXItIFRpbWVvdXQtIE5vbkZhdGFsRXJyKwoJCUNFTXNrOglSeEVy
+ci0gQmFkVExQLSBCYWRETExQLSBSb2xsb3Zlci0gVGltZW91dC0gTm9uRmF0YWxFcnIrCgkJQUVS
+Q2FwOglGaXJzdCBFcnJvciBQb2ludGVyOiAwMCwgR2VuQ2FwLSBDR2VuRW4tIENoa0NhcC0gQ2hr
+RW4tCglDYXBhYmlsaXRpZXM6IFsxNDAgdjFdIERldmljZSBTZXJpYWwgTnVtYmVyIDQ4LTQ1LTIw
+LWZmLWZmLTdmLWRiLWY5CglDYXBhYmlsaXRpZXM6IFsxNGMgdjFdIExhdGVuY3kgVG9sZXJhbmNl
+IFJlcG9ydGluZwoJCU1heCBzbm9vcCBsYXRlbmN5OiAzMTQ1NzI4bnMKCQlNYXggbm8gc25vb3Ag
+bGF0ZW5jeTogMzE0NTcyOG5zCglDYXBhYmlsaXRpZXM6IFsxNTQgdjFdIEwxIFBNIFN1YnN0YXRl
+cwoJCUwxU3ViQ2FwOiBQQ0ktUE1fTDEuMisgUENJLVBNX0wxLjErIEFTUE1fTDEuMisgQVNQTV9M
+MS4xKyBMMV9QTV9TdWJzdGF0ZXMrCgkJCSAgUG9ydENvbW1vbk1vZGVSZXN0b3JlVGltZT0zMHVz
+IFBvcnRUUG93ZXJPblRpbWU9NjB1cwoJS2VybmVsIGRyaXZlciBpbiB1c2U6IGl3bHdpZmkKCUtl
+cm5lbCBtb2R1bGVzOiBpd2x3aWZpCgowMzowMC4wIFNBVEEgY29udHJvbGxlcjogRGV2aWNlIDFj
+NWM6MTE5MyAocmV2IDEwKSAocHJvZy1pZiAwMSBbQUhDSSAxLjBdKQoJU3Vic3lzdGVtOiBEZXZp
+Y2UgMWM1YzowMTAwCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1l
+bVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLSBEaXNJTlR4
+KwoJU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPWZhc3Qg
+PlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQoJTGF0ZW5jeTog
+MCwgQ2FjaGUgTGluZSBTaXplOiA2NCBieXRlcwoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8g
+SVJRIDQ2CglSZWdpb24gNTogTWVtb3J5IGF0IGY3MDIwMDAwICgzMi1iaXQsIG5vbi1wcmVmZXRj
+aGFibGUpIFtzaXplPTRLXQoJRXhwYW5zaW9uIFJPTSBhdCBmNzAwMDAwMCBbZGlzYWJsZWRdIFtz
+aXplPTEyOEtdCglDYXBhYmlsaXRpZXM6IFs4MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMK
+CQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxKyBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwKyxEMSss
+RDItLEQzaG90KyxEM2NvbGQtKQoJCVN0YXR1czogRDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBE
+U2VsPTAgRFNjYWxlPTAgUE1FLQoJQ2FwYWJpbGl0aWVzOiBbOTBdIE1TSTogRW5hYmxlKyBDb3Vu
+dD0xLzEgTWFza2FibGUtIDY0Yml0KwoJCUFkZHJlc3M6IDAwMDAwMDAwZmVlMDAzMTggIERhdGE6
+IDAwMDAKCUNhcGFiaWxpdGllczogW2MwXSBFeHByZXNzICh2MikgRW5kcG9pbnQsIE1TSSAwMAoJ
+CURldkNhcDoJTWF4UGF5bG9hZCA1MTIgYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEwwcyA8
+MTI4bnMsIEwxIHVubGltaXRlZAoJCQlFeHRUYWctIEF0dG5CdG4tIEF0dG5JbmQtIFB3ckluZC0g
+UkJFKyBGTFJlc2V0LSBTbG90UG93ZXJMaW1pdCAwLjAwMFcKCQlEZXZDdGw6CVJlcG9ydCBlcnJv
+cnM6IENvcnJlY3RhYmxlLSBOb24tRmF0YWwrIEZhdGFsKyBVbnN1cHBvcnRlZC0KCQkJUmx4ZE9y
+ZCsgRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3ci0gTm9Tbm9vcC0KCQkJTWF4UGF5bG9hZCAxMjgg
+Ynl0ZXMsIE1heFJlYWRSZXEgNTEyIGJ5dGVzCgkJRGV2U3RhOglDb3JyRXJyLSBVbmNvcnJFcnIt
+IEZhdGFsRXJyLSBVbnN1cHBSZXEtIEF1eFB3ci0gVHJhbnNQZW5kLQoJCUxua0NhcDoJUG9ydCAj
+MCwgU3BlZWQgNUdUL3MsIFdpZHRoIHg0LCBBU1BNIEwxLCBFeGl0IExhdGVuY3kgTDBzIHVubGlt
+aXRlZCwgTDEgPDY0dXMKCQkJQ2xvY2tQTSsgU3VycHJpc2UtIExMQWN0UmVwLSBCd05vdC0gQVNQ
+TU9wdENvbXArCgkJTG5rQ3RsOglBU1BNIEwxIEVuYWJsZWQ7IFJDQiA2NCBieXRlcyBEaXNhYmxl
+ZC0gQ29tbUNsaysKCQkJRXh0U3luY2gtIENsb2NrUE0rIEF1dFdpZERpcy0gQldJbnQtIEF1dEJX
+SW50LQoJCUxua1N0YToJU3BlZWQgNUdUL3MsIFdpZHRoIHgyLCBUckVyci0gVHJhaW4tIFNsb3RD
+bGsrIERMQWN0aXZlLSBCV01nbXQtIEFCV01nbXQtCgkJRGV2Q2FwMjogQ29tcGxldGlvbiBUaW1l
+b3V0OiBSYW5nZSBCLCBUaW1lb3V0RGlzKywgTFRSKywgT0JGRiBOb3QgU3VwcG9ydGVkCgkJRGV2
+Q3RsMjogQ29tcGxldGlvbiBUaW1lb3V0OiA1MHVzIHRvIDUwbXMsIFRpbWVvdXREaXMtLCBMVFIr
+LCBPQkZGIERpc2FibGVkCgkJTG5rQ3RsMjogVGFyZ2V0IExpbmsgU3BlZWQ6IDhHVC9zLCBFbnRl
+ckNvbXBsaWFuY2UtIFNwZWVkRGlzLQoJCQkgVHJhbnNtaXQgTWFyZ2luOiBOb3JtYWwgT3BlcmF0
+aW5nIFJhbmdlLCBFbnRlck1vZGlmaWVkQ29tcGxpYW5jZS0gQ29tcGxpYW5jZVNPUy0KCQkJIENv
+bXBsaWFuY2UgRGUtZW1waGFzaXM6IC02ZEIKCQlMbmtTdGEyOiBDdXJyZW50IERlLWVtcGhhc2lz
+IExldmVsOiAtNmRCLCBFcXVhbGl6YXRpb25Db21wbGV0ZS0sIEVxdWFsaXphdGlvblBoYXNlMS0K
+CQkJIEVxdWFsaXphdGlvblBoYXNlMi0sIEVxdWFsaXphdGlvblBoYXNlMy0sIExpbmtFcXVhbGl6
+YXRpb25SZXF1ZXN0LQoJQ2FwYWJpbGl0aWVzOiBbMTAwIHYyXSBBZHZhbmNlZCBFcnJvciBSZXBv
+cnRpbmcKCQlVRVN0YToJRExQLSBTREVTLSBUTFAtIEZDUC0gQ21wbHRUTy0gQ21wbHRBYnJ0LSBV
+bnhDbXBsdC0gUnhPRi0gTWFsZlRMUC0gRUNSQy0gVW5zdXBSZXEtIEFDU1Zpb2wtCgkJVUVNc2s6
+CURMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJydC0gVW54Q21wbHQtIFJ4T0Yt
+IE1hbGZUTFAtIEVDUkMtIFVuc3VwUmVxLSBBQ1NWaW9sLQoJCVVFU3ZydDoJRExQKyBTREVTKyBU
+TFAtIEZDUCsgQ21wbHRUTy0gQ21wbHRBYnJ0LSBVbnhDbXBsdC0gUnhPRisgTWFsZlRMUCsgRUNS
+Qy0gVW5zdXBSZXEtIEFDU1Zpb2wtCgkJQ0VTdGE6CVJ4RXJyLSBCYWRUTFAtIEJhZERMTFAtIFJv
+bGxvdmVyLSBUaW1lb3V0LSBOb25GYXRhbEVyci0KCQlDRU1zazoJUnhFcnItIEJhZFRMUC0gQmFk
+RExMUC0gUm9sbG92ZXItIFRpbWVvdXQtIE5vbkZhdGFsRXJyLQoJCUFFUkNhcDoJRmlyc3QgRXJy
+b3IgUG9pbnRlcjogMDAsIEdlbkNhcCsgQ0dlbkVuLSBDaGtDYXArIENoa0VuKwoJQ2FwYWJpbGl0
+aWVzOiBbMjQwIHYxXSBMMSBQTSBTdWJzdGF0ZXMKCQlMMVN1YkNhcDogUENJLVBNX0wxLjIrIFBD
+SS1QTV9MMS4xKyBBU1BNX0wxLjIrIEFTUE1fTDEuMSsgTDFfUE1fU3Vic3RhdGVzKwoJCQkgIFBv
+cnRDb21tb25Nb2RlUmVzdG9yZVRpbWU9MTh1cyBQb3J0VFBvd2VyT25UaW1lPTEwdXMKCUNhcGFi
+aWxpdGllczogWzJhOCB2MV0gTGF0ZW5jeSBUb2xlcmFuY2UgUmVwb3J0aW5nCgkJTWF4IHNub29w
+IGxhdGVuY3k6IDMxNDU3MjhucwoJCU1heCBubyBzbm9vcCBsYXRlbmN5OiAzMTQ1NzI4bnMKCUtl
+cm5lbCBkcml2ZXIgaW4gdXNlOiBhaGNpCgo=
+--001a1141277c497c00053f0c4383--
