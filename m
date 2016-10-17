@@ -1,57 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60130 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755747AbcJLQEo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:04:44 -0400
-Date: Wed, 12 Oct 2016 11:04:40 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 17 Oct 2016 08:01:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: Re: [PATCH v2 0/7] PCI: artpec: Cleanups
-Message-ID: <20161012160440.GL4308@localhost>
-References: <20161012132616.27228.4618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: layerscape: Fix drvdata usage before assignment
+Message-ID: <20161017130145.GB18903@localhost>
+References: <1476700772-18745-1-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012132616.27228.4618.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1476700772-18745-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 08:28:55AM -0500, Bjorn Helgaas wrote:
->   - Add local "dev" pointers to reduce repetition of things like
->     "&pdev->dev".
+On Mon, Oct 17, 2016 at 11:39:32AM +0100, Marc Zyngier wrote:
+> Commit fefe6733e516 ("PCI: layerscape: Move struct pcie_port setup
+> to probe function") changed the init ordering of the pcie structure,
+> but started to use the pcie->drvdata field before initializing it.
+> Mayhem follows.
 > 
->   - Remove platform drvdata because it appears unused (we called
->     platform_set_drvdata() but not platform_get_drvdata()).
+> Fix this by moving the drvdata assignment right before the first use.
+> Tested on LS2085a.
 > 
->   - Use generic DesignWare accessors when possible.
-> 
->   - Add register accessors to encapsulate regmap usage.
-> 
->   - Pass device-specific struct to internal functions for consistency.
-> 
-> Nothing here should change the behavior of the driver.
-> 
-> Changes from v1:
->   I dropped the following patch because it was a lot of churn for
->   questionable benefit:
->     PCI: artpec6: Name private struct pointer "artpec6" consistently
-> 
-> ---
-> 
-> Bjorn Helgaas (7):
->       PCI: artpec6: Add local struct device pointers
->       PCI: artpec6: Remove unused platform data
->       PCI: artpec6: Add register accessors
->       PCI: artpec6: Use generic DesignWare accessors
->       PCI: artpec6: Remove unnecessary artpec6_pcie_link_up()
->       PCI: artpec6: Pass device-specific struct to internal functions
->       PCI: artpec6: Add resource name comments
-> 
-> 
->  drivers/pci/host/pcie-artpec6.c |  115 ++++++++++++++++++++-------------------
->  1 file changed, 59 insertions(+), 56 deletions(-)
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-I applied these to pci/host-artpec for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+Applied to for-linus for v4.9, thanks, Marc!
+
+> ---
+>  drivers/pci/host/pci-layerscape.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 856d428..27602a3 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -270,6 +270,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+>  
+>  	pp = &pcie->pp;
+>  	pp->dev = dev;
+> +	pcie->drvdata = match->data;
+>  	pp->ops = pcie->drvdata->ops;
+>  
+>  	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+> @@ -279,7 +280,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pcie->pp.dbi_base);
+>  	}
+>  
+> -	pcie->drvdata = match->data;
+>  	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
+>  
+>  	if (!ls_pcie_is_bridge(pcie))
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
