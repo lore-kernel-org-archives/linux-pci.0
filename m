@@ -1,56 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:33224 "EHLO
-        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755088AbcJQMsL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 08:48:11 -0400
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
+ interrupts
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
+ <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
+ <20161018135912.GD18903@localhost>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+ linux-pci@vger.kernel.org, agross@codeaurora.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org,
+ Len Brown <lenb@kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <b4a8995e-1454-3b84-0681-1491788087ec@codeaurora.org>
+Date: Tue, 18 Oct 2016 08:20:55 -0700
 MIME-Version: 1.0
-In-Reply-To: <20161017120234.GA14105@lst.de>
-References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com>
- <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com>
- <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com>
- <20161017103442.GA12240@lst.de> <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com>
- <20161017120234.GA14105@lst.de>
-From: Emmanuel Benisty <benisty.e@gmail.com>
-Date: Mon, 17 Oct 2016 14:48:08 +0200
-Message-ID: <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com>
-Subject: Re: use pci_alloc_irq_vectors issues
-To: Christoph Hellwig <hch@lst.de>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161018135912.GD18903@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 2:02 PM, Christoph Hellwig <hch@lst.de> wrote:
-> Thanks a lot!  I think the current check on when to fall back from
-> the multi-MSI to the single-MSI case is too narrow and we should
-> just always fall back.
->
-> Can you see if the patch below fixes your issue (revert the debug patch
-> first, please)?
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index ba5f11c..b4b8004 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1436,13 +1436,6 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
->         }
->
->         /*
-> -        * -ENOSPC indicated we don't have enough vectors.  Don't bother trying
-> -        * a single vectors for any other error:
-> -        */
-> -       if (nvec < 0 && nvec != -ENOSPC)
-> -               return nvec;
-> -
-> -       /*
->          * If the host is not capable of supporting per-port vectors, fall
->          * back to single MSI before finally attempting single MSI-X.
->          */
+On 10/18/2016 6:59 AM, Bjorn Helgaas wrote:
+>> However, this function only gets called if the IRQ number is greater than
+>> > 16 and acpi_irq_get_penalty function gets called before ACPI start in
+>> > acpi_isa_irq_available and acpi_penalize_isa_irq functions. We can't rely
+>> > on iterating the link list.
 
-Sorry Christoph, issue is still there:
+Maybe, I am missing context here. I can add this paragraph to the commit. 
 
-http://i.imgur.com/smDjT0y.jpg
-http://i.imgur.com/VV4FGI1.jpg
-http://i.imgur.com/Xqdayvj.jpg
+When we started cleaning the code we got rid of the acpi_irq_penalty_init function
+in favor of acpi_irq_pci_sharing_penalty function as it does have some fair
+amount of code duplication.
 
-Thanks
+I tried putting back the acpi_irq_pci_sharing_penalty function into the ISA
+IRQ path again during the debug and the machine died way too early. We couldn't
+collect any debug message.
+
+This is telling me that we can't even iterate the link list when these two API
+is called. ISA IRQ need to be handled with special care due to calling order.
+
+
+> It seems wrong to me that we call acpi_irq_get_penalty() from
+> acpi_irq_penalty_update() and acpi_penalize_isa_irq().  It seems like they
+> should just manipulate acpi_isa_irq_penalty[irq] directly.
+> 
+> acpi_irq_penalty_update() is for command-line parameters, so it certainly
+> doesn't need the acpi_irq_pci_sharing_penalty() information (the
+> acpi_link_list should be empty at the time we process the command-line
+> parameters).
+> 
+> acpi_penalize_isa_irq() is telling us that a PNP or ACPI device is using
+> the IRQ -- this should modify the IRQ's penalty, but it shouldn't depend on
+> the acpi_irq_pci_sharing_penalty() value at all.
+> 
+
+acpi_irq_get_penalty function knows how to deal with ISA IRQ. So, it is harmless
+to call it. Also, reading the acpi_isa_irq_penalty array directly isn't also right.
+It doesn't contain the SCI penalty. So, it returns incorrect penalty value.
+
+The rule of thumb is:
+- all PCI/SCI penalty reads need to go through acpi_isa_irq_penalty function
+- all ISA penalty writes need to go through acpi_isa_irq_penalty array directly.
+- we do not support modifying the PCI IRQ penalties greater than the ISA IRQ numbers.
+The original code supported this.
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
