@@ -1,276 +1,235 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
- <bhelgaas@google.com>, <mark.rutland@arm.com>, <arnd@arndb.de>,
- <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH V4 1/3] ARM64 LPC: Indirect ISA port IO introduced
-Date: Thu, 20 Oct 2016 17:15:38 +0800
-Message-ID: <1476954940-242159-2-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, linux-pci@vger.kernel.org,
- john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-serial@vger.kernel.org,
- benh@kernel.crashing.org, zourongrong@gmail.com, kantyzc@163.com,
- zhichang.yuan02@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35350 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030567AbcJRQEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Oct 2016 12:04:12 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v6 09/16] drivers: acpi: iort: add support for ARM SMMU platform devices creation
+Date: Tue, 18 Oct 2016 17:04:07 +0100
+Message-Id: <20161018160414.1228-10-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For arm64, there is no I/O space as other architectural platforms, such as
-X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
-such as Hip06, when accessing some legacy ISA devices connected to LPC, those
-known port addresses are used to control the corresponding target devices, for
-example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
-normal MMIO mode in using.
+In ARM ACPI systems, IOMMU components are specified through static
+IORT table entries. In order to create platform devices for the
+corresponding ARM SMMU components, IORT kernel code should be made
+able to parse IORT table entries and create platform devices
+dynamically.
 
-To drive these devices, this patch introduces a method named indirect-IO.
-In this method the in/out pair in arch/arm64/include/asm/io.h will be
-redefined. When upper layer drivers call in/out with those known legacy port
-addresses to access the peripherals, the hooking functions corrresponding to
-those target peripherals will be called. Through this way, those upper layer
-drivers which depend on in/out can run on Hip06 without any changes.
+This patch adds the generic IORT infrastructure required to create
+platform devices for ARM SMMUs.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+ARM SMMU versions have different resources requirement therefore this
+patch also introduces an IORT specific structure (ie iort_iommu_config)
+that contains hooks (to be defined when the corresponding ARM SMMU
+driver support is added to the kernel) to be used to define the
+platform devices names, init the IOMMUs, count their resources and
+finally initialize them.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- arch/arm64/Kconfig             |  6 +++
- arch/arm64/include/asm/extio.h | 94 ++++++++++++++++++++++++++++++++++++++++++
- arch/arm64/include/asm/io.h    | 29 +++++++++++++
- arch/arm64/kernel/Makefile     |  1 +
- arch/arm64/kernel/extio.c      | 29 +++++++++++++
- 5 files changed, 159 insertions(+)
- create mode 100644 arch/arm64/include/asm/extio.h
- create mode 100644 arch/arm64/kernel/extio.c
+ drivers/acpi/arm64/iort.c | 151 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 151 insertions(+)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 30398db..103dbea 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -163,6 +163,12 @@ config ARCH_MMAP_RND_COMPAT_BITS_MIN
- config ARCH_MMAP_RND_COMPAT_BITS_MAX
-        default 16
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 1433de3..2eda2f5 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -19,9 +19,11 @@
+ #define pr_fmt(fmt)	"ACPI: IORT: " fmt
  
-+config ARM64_INDIRECT_PIO
-+	bool "access peripherals with legacy I/O port"
-+	help
-+	  Support special accessors for ISA I/O devices. This is needed for
-+	  SoCs that do not support standard read/write for the ISA range.
-+
- config NO_IOPORT_MAP
- 	def_bool y if !PCI
+ #include <linux/acpi_iort.h>
++#include <linux/iommu.h>
+ #include <linux/kernel.h>
+ #include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/platform_device.h>
+ #include <linux/slab.h>
  
-diff --git a/arch/arm64/include/asm/extio.h b/arch/arm64/include/asm/extio.h
-new file mode 100644
-index 0000000..6ae0787
---- /dev/null
-+++ b/arch/arm64/include/asm/extio.h
-@@ -0,0 +1,94 @@
-+/*
-+ * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#ifndef __LINUX_EXTIO_H
-+#define __LINUX_EXTIO_H
-+
-+struct extio_ops {
-+	unsigned long start;/* inclusive, sys io addr */
-+	unsigned long end;/* inclusive, sys io addr */
-+
-+	u64 (*pfin)(void *devobj, unsigned long ptaddr,	size_t dlen);
-+	void (*pfout)(void *devobj, unsigned long ptaddr, u32 outval,
-+					size_t dlen);
-+	u64 (*pfins)(void *devobj, unsigned long ptaddr, void *inbuf,
-+				size_t dlen, unsigned int count);
-+	void (*pfouts)(void *devobj, unsigned long ptaddr,
-+				const void *outbuf, size_t dlen,
-+				unsigned int count);
-+	void *devpara;
+ struct iort_its_msi_chip {
+@@ -457,6 +459,153 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+ }
+ 
++struct iort_iommu_config {
++	const char *name;
++	int (*iommu_init)(struct acpi_iort_node *node);
++	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
++	int (*iommu_count_resources)(struct acpi_iort_node *node);
++	void (*iommu_init_resources)(struct resource *res,
++				     struct acpi_iort_node *node);
 +};
 +
-+extern struct extio_ops *arm64_extio_ops;
-+
-+#define DECLARE_EXTIO(bw, type)						\
-+extern type in##bw(unsigned long addr);					\
-+extern void out##bw(type value, unsigned long addr);			\
-+extern void ins##bw(unsigned long addr, void *buffer, unsigned int count);\
-+extern void outs##bw(unsigned long addr, const void *buffer, unsigned int count);
-+
-+#define BUILD_EXTIO(bw, type)						\
-+type in##bw(unsigned long addr)						\
-+{									\
-+	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-+			arm64_extio_ops->end < addr)			\
-+		return read##bw(PCI_IOBASE + addr);			\
-+	return arm64_extio_ops->pfin ?					\
-+		arm64_extio_ops->pfin(arm64_extio_ops->devpara,		\
-+			addr, sizeof(type)) : -1;			\
-+}									\
-+									\
-+void out##bw(type value, unsigned long addr)				\
-+{									\
-+	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-+			arm64_extio_ops->end < addr)			\
-+		write##bw(value, PCI_IOBASE + addr);			\
-+	else								\
-+		if (arm64_extio_ops->pfout)				\
-+			arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-+				addr, value, sizeof(type));		\
-+}									\
-+									\
-+void ins##bw(unsigned long addr, void *buffer, unsigned int count)	\
-+{									\
-+	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-+			arm64_extio_ops->end < addr)			\
-+		reads##bw(PCI_IOBASE + addr, buffer, count);		\
-+	else								\
-+		if (arm64_extio_ops->pfins)				\
-+			arm64_extio_ops->pfins(arm64_extio_ops->devpara,\
-+				addr, buffer, sizeof(type), count);	\
-+}									\
-+									\
-+void outs##bw(unsigned long addr, const void *buffer, unsigned int count)	\
-+{									\
-+	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-+			arm64_extio_ops->end < addr)			\
-+		writes##bw(PCI_IOBASE + addr, buffer, count);		\
-+	else								\
-+		if (arm64_extio_ops->pfouts)				\
-+			arm64_extio_ops->pfouts(arm64_extio_ops->devpara,\
-+				addr, buffer, sizeof(type), count);	\
-+}
-+
-+static inline void arm64_set_extops(struct extio_ops *ops)
++static __init
++const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
 +{
-+	if (ops)
-+		WRITE_ONCE(arm64_extio_ops, ops);
++	return NULL;
 +}
 +
-+#endif /* __LINUX_EXTIO_H*/
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 0bba427..136735d 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -31,6 +31,7 @@
- #include <asm/early_ioremap.h>
- #include <asm/alternative.h>
- #include <asm/cpufeature.h>
-+#include <asm/extio.h>
- 
- #include <xen/xen.h>
- 
-@@ -149,6 +150,34 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
- #define IO_SPACE_LIMIT		(PCI_IO_SIZE - 1)
- #define PCI_IOBASE		((void __iomem *)PCI_IO_START)
- 
-+
-+/*
-+ * redefine the in(s)b/out(s)b for indirect-IO.
++/**
++ * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
++ * @node: Pointer to SMMU ACPI IORT node
++ *
++ * Returns: 0 on success, <0 failure
 + */
-+#ifdef CONFIG_ARM64_INDIRECT_PIO
-+#define inb inb
-+#define outb outb
-+#define insb insb
-+#define outsb outsb
-+/* external declaration */
-+DECLARE_EXTIO(b, u8)
++static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
++{
++	struct fwnode_handle *fwnode;
++	struct platform_device *pdev;
++	struct resource *r;
++	enum dev_dma_attr attr;
++	int ret, count;
++	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
 +
-+#define inw inw
-+#define outw outw
-+#define insw insw
-+#define outsw outsw
++	if (!ops)
++		return -ENODEV;
 +
-+DECLARE_EXTIO(w, u16)
++	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
++	if (!pdev)
++		return PTR_ERR(pdev);
 +
-+#define inl inl
-+#define outl outl
-+#define insl insl
-+#define outsl outsl
++	count = ops->iommu_count_resources(node);
 +
-+DECLARE_EXTIO(l, u32)
-+#endif
++	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
++	if (!r) {
++		ret = -ENOMEM;
++		goto dev_put;
++	}
 +
++	ops->iommu_init_resources(r, node);
 +
- /*
-  * String version of I/O memory access operations.
-  */
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index 7d66bba..60e0482 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -31,6 +31,7 @@ arm64-obj-$(CONFIG_COMPAT)		+= sys32.o kuser32.o signal32.o 	\
- 					   sys_compat.o entry32.o
- arm64-obj-$(CONFIG_FUNCTION_TRACER)	+= ftrace.o entry-ftrace.o
- arm64-obj-$(CONFIG_MODULES)		+= arm64ksyms.o module.o
-+arm64-obj-$(CONFIG_ARM64_INDIRECT_PIO)	+= extio.o
- arm64-obj-$(CONFIG_ARM64_MODULE_PLTS)	+= module-plts.o
- arm64-obj-$(CONFIG_PERF_EVENTS)		+= perf_regs.o perf_callchain.o
- arm64-obj-$(CONFIG_HW_PERF_EVENTS)	+= perf_event.o
-diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
-new file mode 100644
-index 0000000..80cafd5
---- /dev/null
-+++ b/arch/arm64/kernel/extio.c
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
++	ret = platform_device_add_resources(pdev, r, count);
++	/*
++	 * Resources are duplicated in platform_device_add_resources,
++	 * free their allocated memory
++	 */
++	kfree(r);
 +
-+#include <linux/io.h>
++	if (ret)
++		goto dev_put;
 +
-+struct extio_ops *arm64_extio_ops;
++	/*
++	 * Add a copy of IORT node pointer to platform_data to
++	 * be used to retrieve IORT data information.
++	 */
++	ret = platform_device_add_data(pdev, &node, sizeof(node));
++	if (ret)
++		goto dev_put;
 +
++	/*
++	 * We expect the dma masks to be equivalent for
++	 * all SMMUs set-ups
++	 */
++	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
 +
-+BUILD_EXTIO(b, u8)
++	fwnode = iort_get_fwnode(node);
 +
-+BUILD_EXTIO(w, u16)
++	if (!fwnode) {
++		ret = -ENODEV;
++		goto dev_put;
++	}
 +
-+BUILD_EXTIO(l, u32)
++	pdev->dev.fwnode = fwnode;
 +
-+#endif
++	attr = ops->iommu_is_coherent(node) ?
++			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
++
++	/* Configure DMA for the page table walker */
++	acpi_dma_configure(&pdev->dev, attr);
++
++	ret = platform_device_add(pdev);
++	if (ret)
++		goto dma_deconfigure;
++
++	return 0;
++
++dma_deconfigure:
++	acpi_dma_deconfigure(&pdev->dev);
++dev_put:
++	platform_device_put(pdev);
++
++	return ret;
++}
++
++static void __init iort_init_platform_devices(void)
++{
++	struct acpi_iort_node *iort_node, *iort_end;
++	struct acpi_table_iort *iort;
++	struct fwnode_handle *fwnode;
++	int i, ret;
++
++	/*
++	 * iort_table and iort both point to the start of IORT table, but
++	 * have different struct types
++	 */
++	iort = (struct acpi_table_iort *)iort_table;
++
++	/* Get the first IORT node */
++	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
++				 iort->node_offset);
++	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort,
++				iort_table->length);
++
++	for (i = 0; i < iort->node_count; i++) {
++		if (iort_node >= iort_end) {
++			pr_err("iort node pointer overflows, bad table\n");
++			return;
++		}
++
++		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
++			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
++
++			fwnode = acpi_alloc_fwnode_static();
++			if (!fwnode)
++				return;
++
++			iort_set_fwnode(iort_node, fwnode);
++
++			ret = iort_add_smmu_platform_device(iort_node);
++			if (ret) {
++				iort_delete_fwnode(iort_node);
++				acpi_free_fwnode_static(fwnode);
++				return;
++			}
++		}
++
++		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
++					 iort_node->length);
++	}
++}
++
+ void __init acpi_iort_init(void)
+ {
+ 	acpi_status status;
+@@ -468,5 +617,7 @@ void __init acpi_iort_init(void)
+ 		return;
+ 	}
+ 
++	iort_init_platform_devices();
++
+ 	acpi_probe_device_table(iort);
+ }
 -- 
-1.9.1
+2.10.0
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
