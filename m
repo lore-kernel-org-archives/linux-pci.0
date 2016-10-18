@@ -1,108 +1,216 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 27 Oct 2016 11:17:48 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: linux-acpi@vger.kernel.org, nouveau@lists.freedesktop.org,
-        rick.2889@gmail.com, linux-pci@vger.kernel.org
-Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
- via Power Resources
-Message-ID: <20161027081748.GX1476@lahna.fi.intel.com>
-References: <bug-98398-8800@http.bugs.freedesktop.org/>
- <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
- <20161026225641.GA27017@al>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161026225641.GA27017@al>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v6 04/16] drivers: iommu: make of_iommu_set/get_ops() DT agnostic
+Date: Tue, 18 Oct 2016 17:04:02 +0100
+Message-Id: <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 27, 2016 at 12:56:41AM +0200, Peter Wu wrote:
-> Hi PCI/ACPI PM experts,
-> 
-> Since Linux 4.8, nouveau switched to rely on the PCIe port driver to
-> transition to D3cold. This however does not happen for an Acer Aspire
-> V7-582PG (Haswell, NVIDIA GTX 750M) from Rick.
-> 
-> Any idea why? acpidump, lspci, dmesg and other details can be found in
-> the linked bug below.
+The of_iommu_{set/get}_ops() API is used to associate a device
+tree node with a specific set of IOMMU operations. The same
+kernel interface is required on systems booting with ACPI, where
+devices are not associated with a device tree node, therefore
+the interface requires generalization.
 
-> 
-> Kind regards,
-> Peter
-> 
-> On Wed, Oct 26, 2016 at 10:42:07PM +0000, bugzilla-daemon@freedesktop.org wrote:
-> > https://bugs.freedesktop.org/show_bug.cgi?id=98398
-> > 
-> > --- Comment #11 from Peter Wu <peter@lekensteyn.nl> ---
-> > So 4.7 and before used the "DSM" method on runtime-suspend:
-> > - \_SB.PCI0.RP05.PEGP._DSM would be invoked to enable Optimus
-> > - \_SB.PCI0.RP05.PEGP._PS3 is then invoked which would enter D3cold
-> > (note, this method is still used in 4.8 on older laptops or with the
-> > pcie_pm_port=off kernel option)
-> > 
-> > Since 4.8, _DSM is not called anymore by nouveau (when support from the PCI
-> > core is detected) and this sequence should instead happen:
-> > - \_SB.PCI0.RP05.PEGP._PS3 (does nothing besides updating _STA)
-> > - PCIe core removes power for the PCIe port since all its children are in
-> >   D3 and are willing to transition to D3cold. It does so by invoking
-> >   \NVP3._OFF (where \NVP3 is the power resource from \_SB.PCI0.RP05._PR3)
-> > 
-> > That is how I think it should work in theory, but on Ricks laptop running
-> > 4.8.4,
-> > /sys/bus/devices/0000:1c.4/firmware_node/ does not have power_resources_D0
-> > devices (which I do have on my own laptop for 0000:01:0).
-> > 
-> > The SSDT1 of Rick's Acer laptop shows this structure:
-> > 
-> >     If (\_OSI ("Windows 2013"))
-> >     {
-> >         Scope (\_SB.PCI0.RP05)
-> >         {
-> >         //...
-> >             Name (_PR0, Package (0x01)  // _PR0: Power Resources for D0
-> >             {
-> >                 NVP3
-> >             })
-> >             Name (_PR2, Package (0x01)  // _PR2: Power Resources for D2
-> >             {
-> >                 NVP2
-> >             })
-> >             Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
-> >             {
-> >                 NVP3
-> >             })
-> >             // ...
-> >             Method (_PS0, 0, NotSerialized)  // _PS0: Power State 0
-> >             {
-> >             }
-> > 
-> >             Method (_PS3, 0, NotSerialized)  // _PS3: Power State 3
-> >             {
-> >             }
-> >         }
-> > 
-> >         Name (MSD3, Zero)
-> >         PowerResource (NVP3, 0x00, 0x0000)
-> >         {
-> >             Name (_STA, One)  // _STA: Status
-> >             // ...
-> > 
-> >             Method (_ON, 0, NotSerialized)  // _ON_: Power On
-> >             {
-> >                 // ...
-> >             }
-> > 
-> >             Method (_OFF, 0, NotSerialized)  // _OFF: Power Off
-> >             {
-> >                 // ...
-> >             }
-> >         }
-> > 
-> > The dmesg does show "ACPI: Power Resource [NVP3] (on)", so I guess that the
-> > methods are found. It is a mystery to me why the "power_resources_Dx" files are
-> > not created, possibly breaking PM.
+The struct device fwnode member represents the fwnode token
+associated with the device and the struct it points at is firmware
+specific; regardless, it is initialized on both ACPI and DT systems
+and makes an ideal candidate to use it to associate a set of IOMMU
+operations to a given device, through its struct device.fwnode member
+pointer.
 
-The ASL code looks right to me (except for the NVP2 which never set _STA
-to 0 but should not affect here).
+Convert the DT specific of_iommu_{set/get}_ops() interface to
+use struct device.fwnode as a look-up token, making the interface
+usable on ACPI systems.
 
-I wonder what does /sys/bus/pci/devices/0000:00:1c.4/firmware_node/path contain?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/iommu.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/iommu/of_iommu.c | 39 ---------------------------------------
+ include/linux/iommu.h    | 14 ++++++++++++++
+ include/linux/of_iommu.h | 12 ++++++++++--
+ 4 files changed, 67 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 9a2f196..320eb8c 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1615,6 +1615,49 @@ int iommu_request_dm_for_dev(struct device *dev)
+ 	return ret;
+ }
+ 
++struct fwnode_iommu_node {
++	struct list_head list;
++	struct fwnode_handle *fwnode;
++	const struct iommu_ops *ops;
++};
++static LIST_HEAD(fwnode_iommu_list);
++static DEFINE_SPINLOCK(fwnode_iommu_lock);
++
++void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
++			  const struct iommu_ops *ops)
++{
++	struct fwnode_iommu_node *iommu =
++				kzalloc(sizeof(*iommu), GFP_KERNEL);
++
++	if (WARN_ON(!iommu))
++		return;
++
++	if (is_of_node(fwnode))
++		of_node_get(to_of_node(fwnode));
++
++	INIT_LIST_HEAD(&iommu->list);
++	iommu->fwnode = fwnode;
++	iommu->ops = ops;
++	spin_lock(&fwnode_iommu_lock);
++	list_add_tail(&iommu->list, &fwnode_iommu_list);
++	spin_unlock(&fwnode_iommu_lock);
++}
++
++const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
++{
++	struct fwnode_iommu_node *node;
++	const struct iommu_ops *ops = NULL;
++
++	spin_lock(&fwnode_iommu_lock);
++	list_for_each_entry(node, &fwnode_iommu_list, list)
++		if (node->fwnode == fwnode) {
++			ops = node->ops;
++			break;
++		}
++	spin_unlock(&fwnode_iommu_lock);
++	return ops;
++}
++
+ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+ 		      const struct iommu_ops *ops)
+ {
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 5b82862..0f57ddc 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ }
+ EXPORT_SYMBOL_GPL(of_get_dma_window);
+ 
+-struct of_iommu_node {
+-	struct list_head list;
+-	struct device_node *np;
+-	const struct iommu_ops *ops;
+-};
+-static LIST_HEAD(of_iommu_list);
+-static DEFINE_SPINLOCK(of_iommu_lock);
+-
+-void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+-{
+-	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+-
+-	if (WARN_ON(!iommu))
+-		return;
+-
+-	of_node_get(np);
+-	INIT_LIST_HEAD(&iommu->list);
+-	iommu->np = np;
+-	iommu->ops = ops;
+-	spin_lock(&of_iommu_lock);
+-	list_add_tail(&iommu->list, &of_iommu_list);
+-	spin_unlock(&of_iommu_lock);
+-}
+-
+-const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+-{
+-	struct of_iommu_node *node;
+-	const struct iommu_ops *ops = NULL;
+-
+-	spin_lock(&of_iommu_lock);
+-	list_for_each_entry(node, &of_iommu_list, list)
+-		if (node->np == np) {
+-			ops = node->ops;
+-			break;
+-		}
+-	spin_unlock(&of_iommu_lock);
+-	return ops;
+-}
+-
+ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	struct of_phandle_args *iommu_spec = data;
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 436dc21..15d5478 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+ 		      const struct iommu_ops *ops);
+ void iommu_fwspec_free(struct device *dev);
+ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
++void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
++			  const struct iommu_ops *ops);
++const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
+ 
+ #else /* CONFIG_IOMMU_API */
+ 
+@@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+ 	return -ENODEV;
+ }
+ 
++static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
++					const struct iommu_ops *ops)
++{
++}
++
++static inline
++const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
++{
++	return NULL;
++}
++
+ #endif /* CONFIG_IOMMU_API */
+ 
+ #endif /* __LINUX_IOMMU_H */
+diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+index e80b9c7..7681007 100644
+--- a/include/linux/of_iommu.h
++++ b/include/linux/of_iommu.h
+@@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 
+ #endif	/* CONFIG_OF_IOMMU */
+ 
+-void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+-const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
++static inline void of_iommu_set_ops(struct device_node *np,
++				    const struct iommu_ops *ops)
++{
++	fwnode_iommu_set_ops(&np->fwnode, ops);
++}
++
++static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
++{
++	return fwnode_iommu_get_ops(&np->fwnode);
++}
+ 
+ extern struct of_device_id __iommu_of_table;
+ 
+-- 
+2.10.0
