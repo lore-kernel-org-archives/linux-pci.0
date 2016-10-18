@@ -1,43 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:53365 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754400AbcJIKqP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 06:46:15 -0400
-Date: Sun, 9 Oct 2016 12:46:26 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        x86@kernel.org
-Subject: Re: [PATCH 1/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_power hook
-Message-ID: <20161009104626.GA8299@wunner.de>
-References: <cover.1475733022.git.lukas@wunner.de>
- <ecb5d8669fd795fc52845f6c901e5aa26c86c452.1475733022.git.lukas@wunner.de>
- <1475873734.11323.324.camel@linux.intel.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:34729 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753824AbcJRQaw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Oct 2016 12:30:52 -0400
+Received: by mail-qk0-f193.google.com with SMTP id n189so17262693qke.1
+        for <linux-pci@vger.kernel.org>; Tue, 18 Oct 2016 09:30:51 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Lucas Stach'" <l.stach@pengutronix.de>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>
+Cc: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>,
+        "'Gary Bisson'" <gary.bisson@boundarydevices.com>,
+        <kernel@pengutronix.de>, <patchwork-lst@pengutronix.de>
+References: <20161018082549.10905-1-l.stach@pengutronix.de>
+In-Reply-To: <20161018082549.10905-1-l.stach@pengutronix.de>
+Subject: Re: [PATCH resend] PCI: designware: fix register access before host init
+Date: Tue, 18 Oct 2016 12:30:49 -0400
+Message-ID: <000001d2295c$fcfdfec0$f6f9fc40$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1475873734.11323.324.camel@linux.intel.com>
+Content-Type: text/plain;
+        charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 07, 2016 at 11:55:34PM +0300, Andy Shevchenko wrote:
-> On Thu, 2016-10-06 at 08:24 +0200, Lukas Wunner wrote:
-> > +
-> > +	reg = (id * LSS_PWS_BITS) / 32;
-> > +	bit = (id * LSS_PWS_BITS) % 32;
-> > +	power = mid_pwr_get_state(pwr, reg);
-> > +	return (power >> bit) & 3;
-> 
-> Don't add sparse warnings:
-> 
->         return (__force pci_power_t)((power >> bit) & 3);
+On Tuesday, October 18, 2016 4:26 AM, Lucas Stach wrote:
+>
+> The function used to determine if iATU unroll is available will read a RC
+register.
+> This is not possible and will result in a system hang if the RC is still
+in reset,
+>  so it is only safe to call this function after host_init() has been
+called.
+>
+> Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
+> Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-I do not get any different sparse warnings with or without the cast
-despite using -Wsparse-all.  This is with sparse 0.5.0 as included in
-Debian stretch.
+It looks good!
 
-With which options and sparse version did you manage to get new warnings?
+Acked-by: Jingoo Han <jigoohan1@gmail.com>
 
-Thanks,
 
-Lukas
+> ---
+>  drivers/pci/host/pcie-designware.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c
+b/drivers/pci/host/pcie-designware.c
+> index 035f50c03281..74510508fafc 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  	}
+>  
+> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> -
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
+>  
+> +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> +
+>  	pp->root_bus_nr = pp->busn->start;
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> --
+> 2.9.3
+
+
