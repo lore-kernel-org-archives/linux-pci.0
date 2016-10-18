@@ -1,94 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46396 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936334AbcJGQYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:24:00 -0400
-Subject: [PATCH 3/7] PCI: iproc: Hard-code PCIe capability offset instead of
- searching
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Fri, 07 Oct 2016 11:23:28 -0500
-Message-ID: <20161007162328.23015.62896.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.134]:39459 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933385AbcJRBfy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:35:54 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v4 1/4] PCI: rockchip: Provide captured slot power limit and scale
+Date: Tue, 18 Oct 2016 09:41:26 +0800
+Message-Id: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We know where the PCIe capability lives in the host bridge's config space;
-in fact, we already hard-coded the offset of the Link Control 2 register.
+If vpcie3v3 is available, we could provide these information
+via RC's configure register to make EP able to know the power
+limit.
 
-The hard-coded Link Control 2 offset was 0xdc.  Link Control 2 is at offset
-0x30 into the PCIe capability, so the capability itself must be at
-0xdc - 0x30 = 0xac.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Hard-code the PCIe capability offset, which means we don't have to search
-for it and we can use the standard definitions for registers within the
-capability.
-
-No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-iproc.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 408e99d..38f5ee0 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -63,6 +63,8 @@
- #define OARR_SIZE_CFG_SHIFT          1
- #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+Changes in v4:
+- rebase on next branch
+
+Changes in v3:
+- rebase the code since it isn't cleanly applied again.
+
+Changes in v2:
+- rebase the code since it isn't cleanly applied after Bjorn's cleanup
+
+ drivers/pci/host/pcie-rockchip.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index e0b22da..3ede865 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -135,6 +135,10 @@
+ #define PCIE_RC_CONFIG_VENDOR		(PCIE_RC_CONFIG_BASE + 0x00)
+ #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+ #define   PCIE_RC_CONFIG_SCC_SHIFT		16
++#define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
++#define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
++#define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
++#define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+ #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+@@ -395,6 +399,40 @@ static struct pci_ops rockchip_pcie_ops = {
+ 	.write = rockchip_pcie_wr_conf,
+ };
  
-+#define PCI_EXP_CAP			0xac
++static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
++{
++	u32 status, curr, scale, power;
 +
- #define MAX_NUM_OB_WINDOWS           2
++	if (IS_ERR(rockchip->vpcie3v3))
++		return;
++
++	/*
++	 * Set RC's captured slot power limit and scale if
++	 * vpcie3v3 available. The default values are both zero
++	 * which means the software should set these two according
++	 * to the actual power supply.
++	 */
++	curr = regulator_get_current_limit(rockchip->vpcie3v3);
++	if (curr > 0) {
++		scale = 3; /* 0.001x */
++		curr = curr / 1000; /* convert to mA */
++		power = (curr * 3300) / 1000; /* milliwatt */
++		while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
++			if (!scale) {
++				dev_warn(rockchip->dev, "invalid power supply\n");
++				return;
++			}
++			scale--;
++			power = power / 10;
++		}
++
++		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCR);
++		status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
++			  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
++		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
++	}
++}
++
+ /**
+  * rockchip_pcie_init_port - Initialize hardware
+  * @rockchip: PCIe port information
+@@ -496,6 +534,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
+ 	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
  
- #define IPROC_PCIE_REG_INVALID 0xffff
-@@ -259,7 +261,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *iproc, struct pci_bus *bus)
- {
- 	u8 hdr_type;
- 	u32 link_ctrl, class, val;
--	u16 pos, link_status;
-+	u16 pos = PCI_EXP_CAP, link_status;
- 	bool link_is_active = false;
- 
- 	/*
-@@ -292,30 +294,27 @@ static int iproc_pcie_check_link(struct iproc_pcie *iproc, struct pci_bus *bus)
- 	pci_bus_write_config_dword(bus, 0, PCI_BRIDGE_CTRL_REG_OFFSET, class);
- 
- 	/* check link status to see if link is active */
--	pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
- 	pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA, &link_status);
- 	if (link_status & PCI_EXP_LNKSTA_NLW)
- 		link_is_active = true;
- 
- 	if (!link_is_active) {
- 		/* try GEN 1 link speed */
--#define PCI_LINK_STATUS_CTRL_2_OFFSET 0x0dc
- #define PCI_TARGET_LINK_SPEED_MASK    0xf
- #define PCI_TARGET_LINK_SPEED_GEN2    0x2
- #define PCI_TARGET_LINK_SPEED_GEN1    0x1
- 		pci_bus_read_config_dword(bus, 0,
--					  PCI_LINK_STATUS_CTRL_2_OFFSET,
-+					  pos + PCI_EXP_LNKCTL2,
- 					  &link_ctrl);
- 		if ((link_ctrl & PCI_TARGET_LINK_SPEED_MASK) ==
- 		    PCI_TARGET_LINK_SPEED_GEN2) {
- 			link_ctrl &= ~PCI_TARGET_LINK_SPEED_MASK;
- 			link_ctrl |= PCI_TARGET_LINK_SPEED_GEN1;
- 			pci_bus_write_config_dword(bus, 0,
--					   PCI_LINK_STATUS_CTRL_2_OFFSET,
-+					   pos + PCI_EXP_LNKCTL2,
- 					   link_ctrl);
- 			msleep(100);
- 
--			pos = pci_bus_find_capability(bus, 0, PCI_CAP_ID_EXP);
- 			pci_bus_read_config_word(bus, 0, pos + PCI_EXP_LNKSTA,
- 						 &link_status);
- 			if (link_status & PCI_EXP_LNKSTA_NLW)
++	rockchip_pcie_set_power_limit(rockchip);
++
+ 	/* Enable Gen1 training */
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
+-- 
+2.3.7
+
 
