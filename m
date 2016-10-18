@@ -1,48 +1,53 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-Date: Fri, 7 Oct 2016 11:46:31 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI/VMD: Use the more reliable method for setting
- the AER
-Message-ID: <20161007174630.GA3025@localhost.localdomain>
-References: <1475861189-10794-1-git-send-email-jonathan.derrick@intel.com>
- <20161007174548.GA4746@localhost.localdomain>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH -next] PCI: rockchip: Add missing of_node_put() in
+ rockchip_pcie_init_irq_domain()
+To: Wei Yongjun <weiyj.lk@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Wenrui Li <wenrui.li@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Heiko Stuebner <heiko@sntech.de>
+References: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <87c39739-c9d0-b307-5256-591ef7324ffa@rock-chips.com>
+Date: Tue, 18 Oct 2016 08:50:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161007174548.GA4746@localhost.localdomain>
+In-Reply-To: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ Wei Yongjun <weiyongjun1@huawei.com>, linux-arm-kernel@lists.infradead.org,
+ linux-rockchip@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 07, 2016 at 01:45:49PM -0400, Keith Busch wrote:
-> On Fri, Oct 07, 2016 at 11:26:28AM -0600, Jon Derrick wrote:
-> > Instead of relying on the domain being >= 0x10000, use the member of the
-> > pci sysdata that identifies a VMD root port bus.
-> 
-> 'is_vmd' is only defined for x86. You'll need a '#define is_vmd' to
-> false in some arch generic place.
-Drats. Good catch. That's not as clean as I hoped it would be.
-> 
-> 
-> > ---
-> >  drivers/pci/quirks.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index edc7f96..713035f 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -4438,8 +4438,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-> >   */
-> >  static void quirk_no_aersid(struct pci_dev *pdev)
-> >  {
-> > -	/* VMD Domain */
-> > -	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
-> > +	if (is_vmd(pdev->bus))
-> >  		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
-> >  }
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+5ZyoIDIwMTYvMTAvMTcgMjI6NTcsIFdlaSBZb25nanVuIOWGmemBkzoKPiBGcm9tOiBXZWkgWW9u
+Z2p1biA8d2VpeW9uZ2p1bjFAaHVhd2VpLmNvbT4KPgo+IFRoaXMgbm9kZSBwb2ludGVyIGlzIHJl
+dHVybmVkIGJ5IG9mX2dldF9uZXh0X2NoaWxkKCkgd2l0aCByZWZjb3VudAo+IGluY3JlbWVudGVk
+IGluIHRoaXMgZnVuY3Rpb24uIG9mX25vZGVfcHV0KCkgb24gaXQgYmVmb3JlIGV4aXR0aW5nCj4g
+dGhpcyBmdW5jdGlvbiBvbiBlcnJvci4KPgo+IFRoaXMgaXMgZGV0ZWN0ZWQgYnkgQ29jY2luZWxs
+ZSBzZW1hbnRpYyBwYXRjaC4KClRoYW5rcyBmb3IgZml4aW5nIHRoaXMuCgpBY2tlZC1ieTogU2hh
+d24gTGluIDxzaGF3bi5saW5Acm9jay1jaGlwcy5jb20+Cgo+Cj4gU2lnbmVkLW9mZi1ieTogV2Vp
+IFlvbmdqdW4gPHdlaXlvbmdqdW4xQGh1YXdlaS5jb20+Cj4gLS0tCj4gIGRyaXZlcnMvcGNpL2hv
+c3QvcGNpZS1yb2NrY2hpcC5jIHwgMSArCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
+KQo+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jIGIvZHJp
+dmVycy9wY2kvaG9zdC9wY2llLXJvY2tjaGlwLmMKPiBpbmRleCBlMGIyMmRhLi5hYjg4ODU5IDEw
+MDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gKysrIGIvZHJp
+dmVycy9wY2kvaG9zdC9wY2llLXJvY2tjaGlwLmMKPiBAQCAtOTQ5LDYgKzk0OSw3IEBAIHN0YXRp
+YyBpbnQgcm9ja2NoaXBfcGNpZV9pbml0X2lycV9kb21haW4oc3RydWN0IHJvY2tjaGlwX3BjaWUg
+KnJvY2tjaGlwKQo+ICAJCQkJCQkgICAgJmludHhfZG9tYWluX29wcywgcm9ja2NoaXApOwo+ICAJ
+aWYgKCFyb2NrY2hpcC0+aXJxX2RvbWFpbikgewo+ICAJCWRldl9lcnIoZGV2LCAiZmFpbGVkIHRv
+IGdldCBhIElOVHggSVJRIGRvbWFpblxuIik7Cj4gKwkJb2Zfbm9kZV9wdXQoaW50Yyk7Cj4gIAkJ
+cmV0dXJuIC1FSU5WQUw7Cj4gIAl9Cj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
+aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluCj4gdGhlIGJvZHkg
+b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiBNb3JlIG1ham9yZG9t
+byBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPgoK
+Ci0tIApCZXN0IFJlZ2FyZHMKU2hhd24gTGluCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
