@@ -1,51 +1,43 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size
- to 16"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
- <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
- <20161012221357.GB15116@localhost>
- <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
- <20161013181535.GB21529@localhost>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- wim@djo.tudelft.nl, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <498097a5-f75c-d2dd-f134-148b3fb8e1ed@codeaurora.org>
-Date: Thu, 13 Oct 2016 15:36:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20161013181535.GB21529@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] PCI: rockchip: correct the use of FTS mask
+Date: Tue, 18 Oct 2016 16:13:04 -0700
+Message-Id: <1476832384-10215-1-git-send-email-briannorris@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/13/2016 2:15 PM, Bjorn Helgaas wrote:
-> It seems like the problem is that we removed acpi_penalize_sci_irq(),
-> which told us the polarity and trigger mode.  We tried to get that
-> information via irq_get_trigger_type(), but that didn't work in this
-> case because we use the acpi_irq_get_penalty() path before the SCI is
-> registered.
-> 
-> It makes sense to me to add acpi_penalize_sci_irq() back in, which is
-> what patch [3/3] does.
-> 
-> I don't understand how *this* patch, which basically just increases
-> the penalty array size from 16 to 256, helps fix the problem.  It
-> seems like this patch should only matter if the SCI were some IRQ
-> between 16 and 255.
+We're trying to mask out bits[23:8] while retaining [32:24, 7:0], but
+we're doing the inverse. That doesn't have too much effect, since we're
+setting all the [23:8] bits to 1, and the other bits are only relevant
+for modes we're currently not using. But we should get this right.
 
+Fixes: ca1989084054 ("PCI: rockchip: Fix wrong transmitted FTS count")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/pci/host/pcie-rockchip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I see your point. The original code supported 256 interrupts. 
-
-The machine where we had the problem had an SCI interrupt of 11. So,
-this patch does not necessarily fix anything for this machine alone.
-However, to be safe; I wanted to go back to the old behavior to fix
-the SCI issue for all existing platforms.
-
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index e0b22dab9b7a..5c2e3297a3ff 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -492,7 +492,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 
+ 	/* Fix the transmitted FTS count desired to exit from L0s. */
+ 	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
+-	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
++	status = (status & ~PCIE_CORE_CTRL_PLC1_FTS_MASK) |
+ 		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
+ 	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.8.0.rc3.226.g39d4020
