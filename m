@@ -1,88 +1,149 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
-Subject: [PATCH V4 0/3] ACPI, PCI,
- IRQ: revert penalty calculation for ISA and SCI interrupts
-Date: Wed, 19 Oct 2016 18:21:01 -0400
-Message-Id: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
- Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v6 03/16] drivers: acpi: iort: add support for IOMMU fwnode registration
+Date: Tue, 18 Oct 2016 17:04:01 +0100
+Message-Id: <20161018160414.1228-4-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By the time ACPI gets initialized, this code tries to determine an
-IRQ number based on penalty values in this array. It will try to locate
-the IRQ with the least penalty assignment so that interrupt sharing is
-avoided if possible.
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
-A couple of notes about the external APIs:
-1. These API can be called before the ACPI is started. Therefore, one
-cannot assume that the PCI link objects are initialized for calculating
-penalties.
-2. The polarity and trigger information passed via the
-acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
-is reporting as the call might have been placed before the IRQ is
-registered by the interrupt subsystem.
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective fwnode.
 
-The reverted changes were in the direction to remove these external API and
-try to calculate the penalties at runtime for the ISA, SCI as well as PCI
-IRQS.
-This didn't work out well with the existing platforms.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
 
-V4:
-* Drop ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-* A new patch to isolate early boot ISA penalty calculations from dynamic
-penalty calculation by directly modifying the array members in
-("ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages")
-* Now that we isolated both SCI and ISA interrupts, revert commit ("Revert
-"ACPI,PCI,IRQ: separate ISA penalty calculation"") and commit
-("487cf917ed0d
-(Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()")
-to share code between ISA and PCI penalties as originally intended.
-
-V3:
-http://www.spinics.net/lists/arm-kernel/msg536208.html
-* drop patch #1 as discussed with Bjorn
-* add patch #3 to track SCI irq and penalty separately
-
-V2: https://lkml.org/lkml/2016/10/1/106
-* Commit message updates
-
-V1:
-http://lists-archives.com/linux-kernel/28673954-revert-acpi-pci-irq-reduce-static-irq-array-size-to-16.html
-* initial implementation
-
-Sinan Kaya (3):
-  ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages
-  Revert "ACPI,PCI,IRQ: remove SCI penalize function"
-  Revert "ACPI,PCI,IRQ: separate ISA penalty calculation"
-
- arch/x86/kernel/acpi/boot.c |  1 +
- arch/x86/pci/acpi.c         |  1 -
- drivers/acpi/pci_link.c     | 72 ++++++++++++---------------------------------
- include/acpi/acpi_drivers.h |  1 -
- include/linux/acpi.h        |  1 +
- 5 files changed, 21 insertions(+), 55 deletions(-)
-
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 6b51ca7..75ff7fa 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -20,7 +20,9 @@
+ 
+ #include <linux/acpi_iort.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -28,6 +30,90 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_fwnode {
++	struct list_head list;
++	struct acpi_iort_node *iort_node;
++	struct fwnode_handle *fwnode;
++};
++static LIST_HEAD(iort_fwnode_list);
++static DEFINE_SPINLOCK(iort_fwnode_lock);
++
++/**
++ * iort_set_fwnode() - Create iort_fwnode and use it to register
++ *		       iommu data in the iort_fwnode_list
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode associated with the IORT node
++ *
++ * Returns: 0 on success
++ *          <0 on failure
++ */
++static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
++				  struct fwnode_handle *fwnode)
++{
++	struct iort_fwnode *np;
++
++	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
++
++	if (WARN_ON(!np))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&np->list);
++	np->iort_node = iort_node;
++	np->fwnode = fwnode;
++
++	spin_lock(&iort_fwnode_lock);
++	list_add_tail(&np->list, &iort_fwnode_list);
++	spin_unlock(&iort_fwnode_lock);
++
++	return 0;
++}
++
++/**
++ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: fwnode_handle pointer on success, NULL on failure
++ */
++static inline
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr;
++	struct fwnode_handle *fwnode = NULL;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry(curr, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			fwnode = curr->fwnode;
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++
++	return fwnode;
++}
++
++/**
++ * iort_delete_fwnode() - Delete fwnode associated with an IORT node
++ *
++ * @node: IORT table node associated with fwnode to delete
++ */
++static inline void iort_delete_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr, *tmp;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry_safe(curr, tmp, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			list_del(&curr->list);
++			kfree(curr);
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.10.0
