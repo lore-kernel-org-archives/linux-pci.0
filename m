@@ -1,70 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0074.outbound.protection.outlook.com ([104.47.37.74]:27712
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754251AbcJONql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 15 Oct 2016 09:46:41 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: Why MSI is limited to 32 interrupts maximum
-Date: Sat, 15 Oct 2016 13:30:13 +0000
-Message-ID: <8520D5D51A55D047800579B0941471982594B127@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B0941471982594B0F3@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20161015141401.70d95035@why.wild-wind.fr.eu.org>
-In-Reply-To: <20161015141401.70d95035@why.wild-wind.fr.eu.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v6 06/16] drivers: iommu: arm-smmu-v3: convert struct device of_node to fwnode usage
+Date: Tue, 18 Oct 2016 17:04:04 +0100
+Message-Id: <20161018160414.1228-7-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- > On Sat, 15 Oct 2016 12:37:55 +0000
-> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
->=20
-> Hi Bharat,
->=20
-> > Can anyone tell why MSI interrupts are limited to maximum 32
-> > interrupts, even though we have 16bit message data register ?
->=20
-> That's the very definition of the original PCI MSI: Up to 32 consecutive =
-interrupts
-> per function, and a single doorbell address.
-> MSI-X lifts that restriction and offers up to 2048 interrupts that do not=
- have to
-> be contiguous can target individual doorbells. Assuming your MSI controll=
-er
-> advertises MSI-X support and that your devices do support it as well, you=
-'ll be
-> able to enjoy those.
->=20
+Current ARM SMMU v3 driver rely on the struct device.of_node pointer for
+device look-up and iommu_ops retrieval.
 
-Thanks Marc, so then only 5 bits of message data register will be used, so =
-what is the purpose rest of the bits ?
+In preparation for ACPI probing enablement, convert the driver to use
+the struct device.fwnode member for device and iommu_ops look-up so that
+the driver infrastructure can be used also on systems that do not
+associate an of_node pointer to a struct device (eg ACPI), making the
+device look-up and iommu_ops retrieval firmware agnostic.
 
-> >
-> > Regards,
-> > Bharat
-> >
-> >
-> > This email and any attachments are intended for the sole use of the
-> > named recipient(s) and contain(s) confidential information that may be
-> > proprietary, privileged or copyrighted under applicable law. If you
-> > are not the intended recipient, do not read, copy, or forward this
-> > email message or any attachments. Delete this email message and any
-> > attachments immediately.
-> >
->=20
-> Please fix your email not to carry such disclaimer (or use a private emai=
-l address
-> if you can't work around your company policy). Posting confidential infor=
-mation
-> on a public mailing list feels a bit silly.
->=20
-> Thanks,
->=20
-> 	M.
-> --
-> Without deviation from the norm, progress is not possible.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 15c01c3..bbc2818 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1723,13 +1723,14 @@ static struct platform_driver arm_smmu_driver;
+ 
+ static int arm_smmu_match_node(struct device *dev, void *data)
+ {
+-	return dev->of_node == data;
++	return dev->fwnode == data;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static
++struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+-						np, arm_smmu_match_node);
++						fwnode, arm_smmu_match_node);
+ 	put_device(dev);
+ 	return dev ? dev_get_drvdata(dev) : NULL;
+ }
+@@ -1765,7 +1766,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 		master = fwspec->iommu_priv;
+ 		smmu = master->smmu;
+ 	} else {
+-		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
++		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+ 		if (!smmu)
+ 			return -ENODEV;
+ 		master = kzalloc(sizeof(*master), GFP_KERNEL);
+@@ -2634,7 +2635,8 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	/* And we're up. Go go go! */
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
++
+ #ifdef CONFIG_PCI
+ 	pci_request_acs();
+ 	ret = bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+-- 
+2.10.0
+
