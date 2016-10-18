@@ -1,138 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50062 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753234AbcJGQbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:31:31 -0400
-Subject: [PATCH 2/8] PCI: armada: Add register accessors
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:31:26 -0500
-Message-ID: <20161007163126.24582.81756.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.131]:49652 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756564AbcJRBj1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:39:27 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v8 2/3] of/pci: Add helper function to parse max-link-speed from dt
+Date: Tue, 18 Oct 2016 09:45:09 +0800
+Message-Id: <1476755110-22647-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device-specific register accessors for consistency across host drivers.
-No functional change intended.
+This new helper function could be used by host drivers to
+get the limitaion of max link speed provided by dt. If the
+property isn't assigned or is invalid, it will return -EINVAL
+to the caller.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
 ---
- drivers/pci/host/pcie-armada8k.c |   46 ++++++++++++++++++++++----------------
- 1 file changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index f88a790..d0a3ab4 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -70,13 +70,23 @@ struct armada8k_pcie {
+Changes in v8: None
+Changes in v7:
+- rename the function name and using of_property_read_u32
+  suggested by Rob
+
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/of/of_pci.c    | 21 +++++++++++++++++++++
+ include/linux/of_pci.h |  7 +++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 589b30c..0c566ca 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -120,6 +120,27 @@ int of_get_pci_domain_nr(struct device_node *node)
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
  
- #define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
- 
-+static u32 armada8k_readl(struct armada8k_pcie *armada8k, u32 offset)
+ /**
++ * This function will try to find the limitation of link speed by finding
++ * a property called "max-link-speed" of the given device node.
++ *
++ * @node: device tree node with the max link speed information
++ *
++ * Returns the associated max link speed from DT, or a negative value if the
++ * required property is not found or is invalid.
++ */
++int of_pci_get_max_link_speed(struct device_node *node)
 +{
-+	return readl(armada8k->base + offset);
-+}
++	u32 max_link_speed;
 +
-+static void armada8k_writel(struct armada8k_pcie *armada8k, u32 offset, u32 val)
-+{
-+	writel(val, armada8k->base + offset);
-+}
++	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
++	    max_link_speed > 4)
++		return -EINVAL;
 +
- static int armada8k_pcie_link_up(struct pcie_port *pp)
- {
- 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
- 	u32 reg;
- 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
- 
--	reg = readl(armada8k->base + PCIE_GLOBAL_STATUS_REG);
-+	reg = armada8k_readl(armada8k, PCIE_GLOBAL_STATUS_REG);
- 	if ((reg & mask) == mask)
- 		return 1;
- 
-@@ -87,48 +97,47 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
- static void armada8k_pcie_establish_link(struct pcie_port *pp)
- {
- 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
--	void __iomem *base = armada8k->base;
- 	u32 reg;
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Disable LTSSM state machine to enable configuration */
--		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
- 		reg &= ~(PCIE_APP_LTSSM_EN);
--		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Set the device to root complex mode */
--	reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+	reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
- 	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
- 	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
--	writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+	armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
- 
- 	/* Set the PCIe master AxCache attributes */
--	writel(ARCACHE_DEFAULT_VALUE, base + PCIE_ARCACHE_TRC_REG);
--	writel(AWCACHE_DEFAULT_VALUE, base + PCIE_AWCACHE_TRC_REG);
-+	armada8k_writel(armada8k, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
-+	armada8k_writel(armada8k, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
- 
- 	/* Set the PCIe master AxDomain attributes */
--	reg = readl(base + PCIE_ARUSER_REG);
-+	reg = armada8k_readl(armada8k, PCIE_ARUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	writel(reg, base + PCIE_ARUSER_REG);
-+	armada8k_writel(armada8k, PCIE_ARUSER_REG, reg);
- 
--	reg = readl(base + PCIE_AWUSER_REG);
-+	reg = armada8k_readl(armada8k, PCIE_AWUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	writel(reg, base + PCIE_AWUSER_REG);
-+	armada8k_writel(armada8k, PCIE_AWUSER_REG, reg);
- 
- 	/* Enable INT A-D interrupts */
--	reg = readl(base + PCIE_GLOBAL_INT_MASK1_REG);
-+	reg = armada8k_readl(armada8k, PCIE_GLOBAL_INT_MASK1_REG);
- 	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
--	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
-+	armada8k_writel(armada8k, PCIE_GLOBAL_INT_MASK1_REG, reg);
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Configuration done. Start LTSSM */
--		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
- 		reg |= PCIE_APP_LTSSM_EN;
--		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Wait until the link becomes active again */
-@@ -146,7 +155,6 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- {
- 	struct pcie_port *pp = arg;
- 	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
--	void __iomem *base = armada8k->base;
- 	u32 val;
- 
- 	/*
-@@ -154,8 +162,8 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	 * PCI device. However, they are also latched into the PCIe
- 	 * controller, so we simply discard them.
- 	 */
--	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
--	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
-+	val = armada8k_readl(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG);
-+	armada8k_writel(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG, val);
- 
- 	return IRQ_HANDLED;
++	return max_link_speed;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
++
++/**
+  * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+  *                           is present and valid
+  */
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index b969e94..2e668e3 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
++int of_pci_get_max_link_speed(struct device_node *node);
+ void of_pci_check_probe_only(void);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+@@ -52,6 +53,12 @@ of_get_pci_domain_nr(struct device_node *node)
+ 	return -1;
  }
+ 
++static inline int
++of_pci_get_max_link_speed(struct device_node *node)
++{
++	return -EINVAL;
++}
++
+ static inline void of_pci_check_probe_only(void) { }
+ #endif
+ 
+-- 
+2.3.7
+
 
