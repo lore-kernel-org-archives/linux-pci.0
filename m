@@ -1,48 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933302AbcJLNVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:21:30 -0400
-Subject: [PATCH v2 2/2] PCI: mvebu: Use existing of_node pointer
-To: Jason Cooper <jason@lakedaemon.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 07:56:06 -0500
-Message-ID: <20161012125606.24580.89263.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012125403.24580.74990.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012125403.24580.74990.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v6 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
+Date: Tue, 18 Oct 2016 17:04:03 +0100
+Message-Id: <20161018160414.1228-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the existing "np" pointer instead of looking up dev->of_node again.  No
-functional change intended.
+Current ARM SMMU driver rely on the struct device.of_node pointer for
+device look-up and iommu_ops retrieval.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+In preparation for ACPI probing enablement, convert the driver to use
+the struct device.fwnode member for device and iommu_ops look-up so that
+the driver infrastructure can be used also on systems that do not
+associate an of_node pointer to a struct device (eg ACPI), making the
+device look-up and iommu_ops retrieval firmware agnostic.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/pci/host/pci-mvebu.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/iommu/arm-smmu.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 2515200..45a89d9 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -1228,14 +1228,14 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		return ret;
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index c841eb7..9b0b501 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1367,13 +1367,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
+ 
+ static int arm_smmu_match_node(struct device *dev, void *data)
+ {
+-	return dev->of_node == data;
++	return dev->fwnode == data;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static
++struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+-						np, arm_smmu_match_node);
++						fwnode, arm_smmu_match_node);
+ 	put_device(dev);
+ 	return dev ? dev_get_drvdata(dev) : NULL;
+ }
+@@ -1391,7 +1392,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 		if (ret)
+ 			goto out_free;
+ 	} else if (fwspec) {
+-		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
++		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+ 	} else {
+ 		return -ENODEV;
+ 	}
+@@ -1995,7 +1996,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		}
  	}
  
--	num = of_get_available_child_count(dev->of_node);
-+	num = of_get_available_child_count(np);
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
+ 	platform_set_drvdata(pdev, smmu);
+ 	arm_smmu_device_reset(smmu);
  
- 	pcie->ports = devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_KERNEL);
- 	if (!pcie->ports)
- 		return -ENOMEM;
- 
- 	i = 0;
--	for_each_available_child_of_node(dev->of_node, child) {
-+	for_each_available_child_of_node(np, child) {
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
- 
- 		ret = mvebu_pcie_parse_port(pcie, port, child);
+-- 
+2.10.0
 
