@@ -1,67 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:57453 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935217AbcJaK7w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Oct 2016 06:59:52 -0400
-Date: Mon, 31 Oct 2016 12:00:40 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv4 next 3/3] pci/msix: Skip disabling removed devices
-Message-ID: <20161031110040.GA9693@wunner.de>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <1477695497-6207-4-git-send-email-keith.busch@intel.com>
+Return-Path: <mathias.koehrer@etas.com>
+Return-Path: <mathias.koehrer@etas.com>
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH] Consider the CONFIG_PCIEASPM_* values within pcie_no_aspm
+Date: Wed, 19 Oct 2016 09:19:22 +0000
+Message-ID: <04aadcf15c96482a8ab62fd58d929263@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477695497-6207-4-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 28, 2016 at 06:58:17PM -0400, Keith Busch wrote:
-> There is no need to disable MSIx interrupts or write message data on a
-> device that isn't present. This patch checks the device removed state
-> prior to executing device shutdown operations so that tear down on
-> removed devices completes quicker.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Cc: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/msi.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index bfdd074..9249ec1 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -317,7 +317,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  {
->  	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
->  
-> -	if (dev->current_state != PCI_D0) {
-> +	if (dev->current_state != PCI_D0 || dev->is_removed) {
->  		/* Don't touch the hardware now */
->  	} else if (entry->msi_attrib.is_msix) {
->  		void __iomem *base = pci_msix_desc_addr(entry);
+Consider the CONFIG_PCIEASPM_* values within pcie_no_aspm().
 
-Hm, I don't see __pci_write_msi_msg() being called anywhere on device
-removal.  Am I missing something?  Rest of the patch LGTM.
+In case that the ACPI FADT declares the system doesn't support
+PCIe ASPM, the function pcie_no_aspm() will be called.
+However this sets the aspm_policy to POLICY_DEFAULT even
+if CONFIG_PCIEASPM_PERFORMANCE has been configured.
 
-Thanks,
+Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
 
-Lukas
+---
+ drivers/pci/pcie/aspm.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-> @@ -1017,6 +1017,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
->  	if (!pci_msi_enable || !dev || !dev->msix_enabled)
->  		return;
->  
-> +	if (dev->is_removed) {
-> +		dev->msix_enabled = 0;
-> +		return;
-> +	}
-> +
->  	/* Return the device with MSI-X masked as initial states */
->  	for_each_pci_msi_entry(entry, dev) {
->  		/* Keep cached states to be restored */
-> -- 
-> 2.7.2
+Index: linux-4.8/drivers/pci/pcie/aspm.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-4.8.orig/drivers/pci/pcie/aspm.c
++++ linux-4.8/drivers/pci/pcie/aspm.c
+@@ -79,10 +79,13 @@ static LIST_HEAD(link_list);
+=20
+ #ifdef CONFIG_PCIEASPM_PERFORMANCE
+ static int aspm_policy =3D POLICY_PERFORMANCE;
++static int aspm_default_config_policy =3D POLICY_PERFORMANCE;
+ #elif defined CONFIG_PCIEASPM_POWERSAVE
+ static int aspm_policy =3D POLICY_POWERSAVE;
++static int aspm_default_config_policy =3D POLICY_POWERSAFE;
+ #else
+ static int aspm_policy;
++static int aspm_default_config_policy;
+ #endif
+=20
+ static const char *policy_str[] =3D {
+@@ -946,7 +949,7 @@ void pcie_no_aspm(void)
+ 	 * (b) prevent userspace from changing policy
+ 	 */
+ 	if (!aspm_force) {
+-		aspm_policy =3D POLICY_DEFAULT;
++		aspm_policy =3D aspm_default_config_policy;
+ 		aspm_disabled =3D 1;
+ 	}
+ }
