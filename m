@@ -1,150 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33102 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757441AbcJ0PvX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2016 11:51:23 -0400
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 20:04:02 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+ ->get_state hook
+Message-ID: <20161019180402.GA3220@wunner.de>
+References: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
+ <20161019151055.GA16147@localhost>
+ <1476892081.11323.503.camel@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <4ae639fd83d643849eb1d12533e1f00e@ausx13mpc124.AMER.DELL.COM>
-References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com> <4ae639fd83d643849eb1d12533e1f00e@ausx13mpc124.AMER.DELL.COM>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Thu, 27 Oct 2016 17:51:02 +0200
-Message-ID: <CAMxnaaXfY47wBDv2h1CTncd01YSSSR_0x5evy58DskypAgbykw@mail.gmail.com>
-Subject: Re: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM) Networking
-To: Mario.Limonciello@dell.com
-Cc: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, xiong.y.zhang@intel.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1476892081.11323.503.camel@linux.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 4:57 PM,  <Mario.Limonciello@dell.com> wrote:
->> -----Original Message-----
->> From: Amir Levy [mailto:amir.jer.levy@intel.com]
->> Sent: Wednesday, September 28, 2016 9:44 AM
->> To: gregkh@linuxfoundation.org
->> Cc: andreas.noever@gmail.com; bhelgaas@google.com; corbet@lwn.net;
->> linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
->> netdev@vger.kernel.org; linux-doc@vger.kernel.org; Limonciello, Mario
->> <Mario_Limonciello@Dell.com>; thunderbolt-linux@intel.com;
->> mika.westerberg@intel.com; tomas.winkler@intel.com;
->> xiong.y.zhang@intel.com; Amir Levy <amir.jer.levy@intel.com>
->> Subject: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM)
->> Networking
->>
->> This driver enables Thunderbolt Networking on non-Apple platforms
->> running Linux.
->>
->> Thunderbolt Networking provides peer-to-peer connections to transfer
->> files between computers, perform PC migrations, and/or set up small
->> workgroups with shared storage.
->>
->> This is a virtual connection that emulates an Ethernet adapter that
->> enables Ethernet networking with the benefit of Thunderbolt superfast
->> medium capability.
->>
->> Thunderbolt Networking enables two hosts and several devices that
->> have a Thunderbolt controller to be connected together in a linear
->> (Daisy chain) series from a single port.
->>
->> Thunderbolt Networking for Linux is compatible with Thunderbolt
->> Networking on systems running macOS or Windows and also supports
->> Thunderbolt generation 2 and 3 controllers.
->>
->> Note that all pre-existing Thunderbolt generation 3 features, such as
->> USB, Display and other Thunderbolt device connectivity will continue
->> to function exactly as they did prior to enabling Thunderbolt Networking.
->>
->> Code and Software Specifications:
->> This kernel code creates a virtual ethernet device for computer to
->> computer communication over a Thunderbolt cable.
->> The new driver is a separate driver to the existing Thunderbolt driver.
->> It is designed to work on systems running Linux that
->> interface with Intel Connection Manager (ICM) firmware based
->> Thunderbolt controllers that support Thunderbolt Networking.
->> The kernel code operates in coordination with the Thunderbolt user-
->> space daemon to implement full Thunderbolt networking functionality.
->>
->> Hardware Specifications:
->> Thunderbolt Hardware specs have not yet been published but are used
->> where necessary for register definitions.
->>
->> Changes since v7:
->>  - Removed debug prints
->>  - Edited error prints
->>  - Edited copyright notice
->>  - Changed the Kconfig patch to be after the code changes
->>
->> These patches were pushed to GitHub where they can be reviewed more
->> comfortably with green/red highlighting:
->>       https://github.com/01org/thunderbolt-software-kernel-tree
->>
->> Daemon code:
->>       https://github.com/01org/thunderbolt-software-daemon
->>
->> For reference, here's a link to version 6:
->> [v7]: https://lkml.org/lkml/2016/9/27/244
->>
->> Amir Levy (8):
->>   thunderbolt: Macro rename
->>   thunderbolt: Updating the register definitions
->>   thunderbolt: Communication with the ICM (firmware)
->>   thunderbolt: Networking state machine
->>   thunderbolt: Networking transmit and receive
->>   thunderbolt: Kconfig for Thunderbolt Networking
->>   thunderbolt: Networking doc
->>   thunderbolt: Adding maintainer entry
->>
->>  Documentation/00-INDEX                   |    2 +
->>  Documentation/thunderbolt/networking.txt |  132 ++
->>  MAINTAINERS                              |    8 +-
->>  drivers/thunderbolt/Kconfig              |   27 +-
->>  drivers/thunderbolt/Makefile             |    3 +-
->>  drivers/thunderbolt/icm/Makefile         |    2 +
->>  drivers/thunderbolt/icm/icm_nhi.c        | 1514 ++++++++++++++++++++
->>  drivers/thunderbolt/icm/icm_nhi.h        |   82 ++
->>  drivers/thunderbolt/icm/net.c            | 2254
->> ++++++++++++++++++++++++++++++
->>  drivers/thunderbolt/icm/net.h            |  287 ++++
->>  drivers/thunderbolt/nhi_regs.h           |  115 +-
->>  11 files changed, 4417 insertions(+), 9 deletions(-)
->>  create mode 100644 Documentation/thunderbolt/networking.txt
->>  create mode 100644 drivers/thunderbolt/icm/Makefile
->>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
->>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
->>  create mode 100644 drivers/thunderbolt/icm/net.c
->>  create mode 100644 drivers/thunderbolt/icm/net.h
->>
->> --
->> 2.7.4
->
-> Hi Amir,
->
-> I've tested your v8 series on Dell hardware with Thunderbolt
-> Controllers again between a Linux and Windows box.
-> Functionally it's working well.
->
-> Tested-By: Mario Limonciello <mario.limonciello@dell.com>
->
-> Andreas,
->
-> Following the history of this thread, I believe Greg was still looking for
-> an ack from you that Amir is using the interface properly.
->
-> Thanks,
+On Wed, Oct 19, 2016 at 06:48:01PM +0300, Andy Shevchenko wrote:
+> On Wed, 2016-10-19 at 10:10 -0500, Bjorn Helgaas wrote:
+> > On Sun, Oct 09, 2016 at 02:46:29PM +0200, Lukas Wunner wrote:
+> > > Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
+> > > state") augmented struct pci_platform_pm_ops with a ->get_state hook
+> > > and
+> > > implemented it for acpi_pci_platform_pm, the only
+> > > pci_platform_pm_ops
+> > > existing till v4.7.
+> > > 
+> > > However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
+> > > Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid:
+> > > Add
+> > > Power Management Unit driver").  It is missing the ->get_state hook,
+> > > which is fatal since pci_set_platform_pm() enforces its presence.
+> > 
+> > I assume Andy tested 5823d0893ec2, so apparently "fatal" here doesn't
+> > mean a panic on the MIDs?  I'm wondering (1) exactly what the user-
+> > visible failure mode is, 
+> 
+> Fatal means it crashes without even a character printed out on serial
+> console and reboot (since watchdog).
+> 
+> > and (2) whether there's anything we can do to
+> > avoid omissions like this in the future.
+> 
+> It happened because the feature was developed in PCI subsystem namespace
+> (mailing lists, etc.) without knowing anything about new coming users. I
+> have no idea how to avoid this except browsing / grepping linux-next on
+> regular basis when developing either "feature" or "user" of the API in
+> question.
 
-That I don't know, but this driver does the inverse dmi_match of the
-current apple driver (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.")), and
-therefore there should be no interaction between the two.
+Basically it was my fault because my development tree lags behind
+mainline for technical reasons.  I use ZFS for my root partition
+and every new kernel release requires adjustments to the out-of-tree
+ZoL.  So before I can upgrade I have to either wait until the ZoL
+folks make those adjustments or I have to make them myself (usually
+I'm too lazy).
 
-Acked-by: Andreas Noever <andreas.noever@gmail.com>
+In this case I didn't rebase my tree on 4.8 until the merge window
+for 4.9 had already opened, so I noticed the breakage fairly late.
 
-Cheers,
-Andreas
+However so far only 4.9-rc1 is broken and we still have like 7 weeks
+to get the fix in.
+
+
+> > 
+> > pci_set_platform_pm() does indeed return -EINVAL if it receives a
+> > pci_platform_pm_ops with a NULL ops->get_state pointer, but
+> > unfortunately neither of the callers checks that return code.
+
+At least in the case of intel-mid it wouldn't matter if the return code
+would be checked and passed up the call chain because the ultimate
+callee, do_initcall_level(), doesn't check the return value of
+do_one_initcall().
+
+Perhaps the solution would be to not return -EINVAL but to throw a WARN
+and limp on.  That way the user or developer at least gets an error
+message and knows what's wrong.
+
+> > Fixes: 5823d0893ec2 ("x86/platform/intel-mid: Add Power Management
+> > Unit driver")
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > Sounds like this should be marked for stable, since v4.8 contains
+> > 5823d0893ec2 and is apparently broken?
+> 
+> At that point there was no "feature" commit in the tree. Perhaps the
+> Fixes tag should point to the "feature" commit instead. Am I right,
+> Lukas?
+
+Right, the Fixes tag should be:
+
+Fixes: cc7cc02bada8 ("PCI: Query platform firmware for device power state")
+
+And this shouldn't get backported to 4.8, the issue is only present
+in 4.9-rc1 so far.
+
+@Ingo: Do you want me to repost with Bjorn's ack and the correct Fixes: tag?
+
+Thanks!
+
+Lukas
