@@ -1,55 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33482 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751027AbcJKIht (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 04:37:49 -0400
-Received: by mail-lf0-f65.google.com with SMTP id l131so2424162lfl.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Oct 2016 01:37:48 -0700 (PDT)
-Date: Tue, 11 Oct 2016 10:37:44 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        x86@kernel.org, Ingo Molnar <mingo@redhat.com>
-Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_state hook
-Message-ID: <20161011083744.GA7577@gmail.com>
-References: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
- <1476025280.11323.355.camel@linux.intel.com>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:35122 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756878AbcJSRoA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 13:44:00 -0400
+Received: by mail-pf0-f174.google.com with SMTP id s8so19655884pfj.2
+        for <linux-pci@vger.kernel.org>; Wed, 19 Oct 2016 10:44:00 -0700 (PDT)
+Date: Wed, 19 Oct 2016 10:43:57 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: remove the pointer to L1 substate cap
+Message-ID: <20161019174357.GB78840@google.com>
+References: <1476868234-15135-1-git-send-email-shawn.lin@rock-chips.com>
+ <20161019174205.GA78840@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1476025280.11323.355.camel@linux.intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161019174205.GA78840@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-
-> On Sun, 2016-10-09 at 14:46 +0200, Lukas Wunner wrote:
-> > Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
-> > state") augmented struct pci_platform_pm_ops with a ->get_state hook
-> > and
-> > implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
-> > existing till v4.7.
-> > 
-> > However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
-> > Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid:
-> > Add
-> > Power Management Unit driver").  It is missing the ->get_state hook,
-> > which is fatal since pci_set_platform_pm() enforces its presence.
-> > 
-> > Retrofit mid_pci_platform_pm with the missing callback to fix the
-> > breakage.
-> > 
+On Wed, Oct 19, 2016 at 10:42:05AM -0700, Brian Norris wrote:
+> Hi,
 > 
-> +Ingo.
-> 
-> I guess it should go via tip/x86/urgent tree.
+> On Wed, Oct 19, 2016 at 05:10:34PM +0800, Shawn Lin wrote:
+> > Per the errata of TRM, the RC can't support L1 substate, so we
+> > need to remove the L1 substate cap.
+> > 
+> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Can do, if Bjorn is fine with it as well - the patch is touching 
-drivers/pci/pci-mid.c.
+[snip]
 
-Thanks,
+BTW, I couldn't actually find the original patch email in any mailing
+list archive, nor in patchwork. Did the email get held up by the mailing
+list or something?
 
-	Ingo
+Brian
