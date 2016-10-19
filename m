@@ -1,88 +1,75 @@
-Return-Path: <flyos@mailoo.org>
-Return-Path: <flyos@mailoo.org>
-From: Pierre de Villemereuil <flyos@mailoo.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Mathias Nyman <mathias.nyman@linux.intel.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-Date: Wed, 12 Oct 2016 09:27:06 +1300
-Message-ID: <1592720.zmCgj0tZJa@flyosflip>
-In-Reply-To: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1610111117040.1827-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:43761 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbcJSOJ6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:09:58 -0400
+Message-Id: <dbe9c6490001a351fb63bca74e27a454ac13a300.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 7/9] ACPI / hotplug / PCI: Use cached copy of
+ PCI_EXP_SLTCAP_HPC bit
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+We cache the PCI_EXP_SLTCAP_HPC bit in pci_dev->is_hotplug_bridge on
+device probe, so there's no need to read it again when adding the ACPI
+hotplug context.
 
-I'm sorry, I'm not savvy enough to know what to do with this (I know=20
-basics on how to code and compile, but I'm no dev). Could someone=20
-guide me through it?
+Here's the call chain to prove that no ordering issue is introduced:
 
-I gather this patch needs to be applied to some kernel module code=20
-which needs to be compiled and reloaded into my current kernel,=20
-right?
+pci_scan_child_bus [drivers/pci/probe.c]
+  pci_scan_slot
+    pci_scan_single_device
+      pci_scan_device
+        pci_setup_device
+          set_pcie_hotplug_bridge
+            [is_hotplug_bridge bit is set here]
+  pci_scan_bridge
+    pci_add_new_bus
+      pci_alloc_child_bus
+        pcibios_add_bus  [arch/(x86|arm64|ia64)/...]
+          acpi_pci_add_bus [drivers/pci/pci-acpi.c]
+            acpiphp_enumerate_slots [drivers/pci/hotplug/acpiphp_glue.c]
+              acpiphp_add_context
+                device_is_managed_by_native_pciehp
+                  [is_hotplug_bridge bit is queried here]
 
-Sorry to let you down...
+No functional change intended.
 
-Cheers,
-Pierre.
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Le mardi 11 octobre 2016, 11:18:28 NZDT Alan Stern a =C3=A9crit :
-> On Sat, 8 Oct 2016, Lukas Wunner wrote:
-> > The PCI core already calls pm_runtime_get_sync() before invoking=20
-the
-> > ->probe hook of a driver (see local_pci_probe()).  Drivers need=20
-to
-> > explicitly release a runtime ref to allow their device to=20
-suspend.
-> >=20
-> > For xhci-pci, this seems to happen in usb_hcd_pci_probe():
-> > 	if (pci_dev_run_wake(dev))
-> > =09
-> > 		pm_runtime_put_noidle(&dev->dev);
-> >=20
-> > So you could either modify the if-condition if you want to=20
-change the
-> > behaviour for XHCI devices only, or if you want to change it in=20
-general,
-> >=20
-> > add something like this to pci_dev_run_wake():
-> > 	/* PME capable in principle, but not from the intended sleep=20
-state */
-> > 	if (dev->pme_support && !pci_pme_capable(dev,=20
-pci_target_state(dev)))
-> > =09
-> > 		return false;
-> >=20
-> > I've briefly looked over the callers of pci_dev_run_wake() and=20
-the above
-> > seems safe but you should double-check them.
->=20
-> That seems like a good suggestion.  The patch is below; Pierre,=20
-can you
-> test it?  This should remove the need to set the USB autosuspend=20
-module
-> parameter to -1.
->=20
-> Alan Stern
->=20
->=20
->=20
-> Index: usb-4.x/drivers/pci/pci.c
->=20
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- usb-4.x.orig/drivers/pci/pci.c
-> +++ usb-4.x/drivers/pci/pci.c
-> @@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
->  	if (!dev->pme_support)
->  		return false;
->=20
-> +	/* PME-capable in principle, but not from the intended sleep=20
-state */
-> +	if (!pci_pme_capable(dev, pci_target_state(dev)))
-> +		return false;
-> +
->  	while (bus->parent) {
->  		struct pci_dev *bridge =3D bus->self;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index a46b585..b286a56 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -225,14 +225,11 @@ static void acpiphp_post_dock_fixup(struct acpi_device *adev)
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+ static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+ {
+-	u32 reg32;
+ 	acpi_handle tmp;
+ 	struct acpi_pci_root *root;
+ 
+ 	/* Check whether the PCIe port supports native PCIe hotplug */
+-	if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
+-		return false;
+-	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
++	if (!pdev->is_hotplug_bridge)
+ 		return false;
+ 
+ 	/*
+-- 
+2.9.3
+
