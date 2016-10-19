@@ -1,78 +1,140 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
- interrupts
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
- <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
- <20161018135912.GD18903@localhost>
- <b4a8995e-1454-3b84-0681-1491788087ec@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org,
- Len Brown <lenb@kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0a82f2ef-b072-d847-104a-320cf804ebd5@codeaurora.org>
-Date: Tue, 18 Oct 2016 08:32:44 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51226 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S942016AbcJSPLB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:11:01 -0400
+Date: Wed, 19 Oct 2016 10:10:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        x86@kernel.org
+Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+ ->get_state hook
+Message-ID: <20161019151055.GA16147@localhost>
+References: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <b4a8995e-1454-3b84-0681-1491788087ec@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry, I think I didn't have enough morning coffee.
+On Sun, Oct 09, 2016 at 02:46:29PM +0200, Lukas Wunner wrote:
+> Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
+> state") augmented struct pci_platform_pm_ops with a ->get_state hook and
+> implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
+> existing till v4.7.
+> 
+> However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
+> Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid: Add
+> Power Management Unit driver").  It is missing the ->get_state hook,
+> which is fatal since pci_set_platform_pm() enforces its presence.
 
-Looking at these again and trying to be specific.
+I assume Andy tested 5823d0893ec2, so apparently "fatal" here doesn't
+mean a panic on the MIDs?  I'm wondering (1) exactly what the user-
+visible failure mode is, and (2) whether there's anything we can do to
+avoid omissions like this in the future.
 
-On 10/18/2016 8:20 AM, Sinan Kaya wrote:
-> It seems wrong to me that we call acpi_irq_get_penalty() from
->> acpi_irq_penalty_update() and acpi_penalize_isa_irq().  It seems like they
->> should just manipulate acpi_isa_irq_penalty[irq] directly.
->> 
->> acpi_irq_penalty_update() is for command-line parameters, so it certainly
->> doesn't need the acpi_irq_pci_sharing_penalty() information (the
->> acpi_link_list should be empty at the time we process the command-line
->> parameters).
+pci_set_platform_pm() does indeed return -EINVAL if it receives a
+pci_platform_pm_ops with a NULL ops->get_state pointer, but
+unfortunately neither of the callers checks that return code.
 
-Calling acpi_irq_get_penalty for ISA IRQ is OK as long as it doesn't have
-any dynamic IRQ calculation such that acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty.
+> Retrofit mid_pci_platform_pm with the missing callback to fix the
+> breakage.
+> 
+> Cc: x86@kernel.org
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Acked-and-tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-If this is broken, then we need special care so that we don't assign
-dynamically calcualted sci_penalty back to acpi_isa_irq_penalty[irq]. This
-results in returning incorrect penalty as
+Fixes: 5823d0893ec2 ("x86/platform/intel-mid: Add Power Management Unit driver")
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-acpi_irq_get_penalty = acpi_isa_irq_original_penalty[irq] + 2 * sci_penalty.
+Sounds like this should be marked for stable, since v4.8 contains
+5823d0893ec2 and is apparently broken?
 
-Now that we added sci_penalty into the acpi_irq_get_penalty function,
-calling acpi_irq_get_penalty is not correct anymore. This line here needs to
-be replaced with acpi_isa_irq_penalty[irq] as you suggested.
+I agree this should go via the x86 tree, since that's how 5823d0893ec2
+was merged.
 
-                if (used)
-                        new_penalty = acpi_irq_get_penalty(irq) +
-                                        PIRQ_PENALTY_ISA_USED;
-                else
-                        new_penalty = 0;
-
-                acpi_isa_irq_penalty[irq] = new_penalty;
-
-
->> 
->> acpi_penalize_isa_irq() is telling us that a PNP or ACPI device is using
->> the IRQ -- this should modify the IRQ's penalty, but it shouldn't depend on
->> the acpi_irq_pci_sharing_penalty() value at all.
->> 
-
-Same problem here. This line will be broken after the sci_penalty change.
-
-                acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-                  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-
-
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+> Changes v1 -> v2:
+> - Cast return value of intel_mid_pci_get_power_state() to
+>   (__force pci_power_t) to avoid "sparse -D__CHECK_ENDIAN__" warning.
+> 
+>  arch/x86/include/asm/intel-mid.h  |  1 +
+>  arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
+>  drivers/pci/pci-mid.c             |  6 ++++++
+>  3 files changed, 26 insertions(+)
+> 
+> diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+> index 9d6b097..4511c10 100644
+> --- a/arch/x86/include/asm/intel-mid.h
+> +++ b/arch/x86/include/asm/intel-mid.h
+> @@ -17,6 +17,7 @@
+>  
+>  extern int intel_mid_pci_init(void);
+>  extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
+> +extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
+>  
+>  #define INTEL_MID_PWR_LSS_OFFSET	4
+>  #define INTEL_MID_PWR_LSS_TYPE		(1 << 7)
+> diff --git a/arch/x86/platform/intel-mid/pwr.c b/arch/x86/platform/intel-mid/pwr.c
+> index c901a34..cae8d9b 100644
+> --- a/arch/x86/platform/intel-mid/pwr.c
+> +++ b/arch/x86/platform/intel-mid/pwr.c
+> @@ -260,6 +260,25 @@ int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
+>  }
+>  EXPORT_SYMBOL_GPL(intel_mid_pci_set_power_state);
+>  
+> +pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev)
+> +{
+> +	struct mid_pwr *pwr = midpwr;
+> +	int id, reg, bit;
+> +	u32 power;
+> +
+> +	if (!pwr || !pwr->available)
+> +		return PCI_UNKNOWN;
+> +
+> +	id = intel_mid_pwr_get_lss_id(pdev);
+> +	if (id < 0)
+> +		return PCI_UNKNOWN;
+> +
+> +	reg = (id * LSS_PWS_BITS) / 32;
+> +	bit = (id * LSS_PWS_BITS) % 32;
+> +	power = mid_pwr_get_state(pwr, reg);
+> +	return (__force pci_power_t)((power >> bit) & 3);
+> +}
+> +
+>  int intel_mid_pwr_get_lss_id(struct pci_dev *pdev)
+>  {
+>  	int vndr;
+> diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
+> index c878aa7..a8b52dc 100644
+> --- a/drivers/pci/pci-mid.c
+> +++ b/drivers/pci/pci-mid.c
+> @@ -29,6 +29,11 @@ static int mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
+>  	return intel_mid_pci_set_power_state(pdev, state);
+>  }
+>  
+> +static pci_power_t mid_pci_get_power_state(struct pci_dev *pdev)
+> +{
+> +	return intel_mid_pci_get_power_state(pdev);
+> +}
+> +
+>  static pci_power_t mid_pci_choose_state(struct pci_dev *pdev)
+>  {
+>  	return PCI_D3hot;
+> @@ -52,6 +57,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
+>  static struct pci_platform_pm_ops mid_pci_platform_pm = {
+>  	.is_manageable	= mid_pci_power_manageable,
+>  	.set_state	= mid_pci_set_power_state,
+> +	.get_state	= mid_pci_get_power_state,
+>  	.choose_state	= mid_pci_choose_state,
+>  	.sleep_wake	= mid_pci_sleep_wake,
+>  	.run_wake	= mid_pci_run_wake,
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
