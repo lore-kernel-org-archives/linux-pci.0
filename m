@@ -1,40 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49510 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S940957AbcJGQ35 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:29:57 -0400
-Subject: [PATCH 9/9] PCI: xilinx-nwl: Remove unused platform data
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:29:53 -0500
-Message-ID: <20161007162953.24137.29173.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout2.hostsharing.net ([83.223.90.233]:41143 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941509AbcJSOY3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:24:29 -0400
+Message-Id: <a2073dcdc8287e1a7755ca7c2a48f4124888f143.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 4/9] PCI: Activate runtime PM on a PCIe port only if it can
+ suspend
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The xilinx-nwl driver never uses the platform drvdata pointer, so don't
-bother setting it.  No functional change intended.
+Currently pcie_portdrv_probe() activates runtime PM on a PCIe port even
+if it will never actually suspend because the BIOS is too old or the
+"pcie_port_pm=off" option was specified on the kernel command line.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+A few CPU cycles can be saved by not activating runtime PM at all in
+these cases, because rpm_idle() and rpm_suspend() will bail out right
+at the beginning when calling rpm_check_suspend_allowed(), instead of
+carrying out various locking and assignments, invoking rpm_callback(),
+getting back -EBUSY and rolling everything back.
+
+The conditions checked in pci_bridge_d3_possible() are all static, they
+never change during uptime of the system, hence it's safe to call this
+to determine if runtime PM should be activated.
+
+No functional change intended.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/pci.c              | 2 +-
+ drivers/pci/pci.h              | 1 +
+ drivers/pci/pcie/portdrv_pci.c | 5 +++--
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 63b6174..ea0265e 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -864,7 +864,6 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	list_for_each_entry(child, &bus->children, node)
- 		pcie_bus_configure_settings(child);
- 	pci_bus_add_devices(bus);
--	platform_set_drvdata(pdev, nwl);
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bc60f2c..854d185 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2226,7 +2226,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+  * This function checks if it is possible to move the bridge to D3.
+  * Currently we only allow D3 for recent enough PCIe ports.
+  */
+-static bool pci_bridge_d3_possible(struct pci_dev *bridge)
++bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ {
+ 	unsigned int year;
  
- error:
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 27048bb..ffffef3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -85,6 +85,7 @@ void pci_pm_init(struct pci_dev *dev);
+ void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
++bool pci_bridge_d3_possible(struct pci_dev *dev);
+ void pci_bridge_d3_update(struct pci_dev *dev);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 79327cc..1ae712c 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/dmi.h>
+ #include <linux/pci-aspm.h>
+ 
++#include "../pci.h"
+ #include "portdrv.h"
+ #include "aer/aerdrv.h"
+ 
+@@ -157,7 +158,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	 * subordinate devices).  We can't be sure for native PCIe hotplug
+ 	 * either so prevent that as well.
+ 	 */
+-	if (!dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
+ 		/*
+ 		 * Keep the port resumed 100ms to make sure things like
+ 		 * config space accesses from userspace (lspci) will not
+@@ -175,7 +176,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
+-	if (!dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
+ 		pm_runtime_forbid(&dev->dev);
+ 		pm_runtime_get_noresume(&dev->dev);
+ 		pm_runtime_dont_use_autosuspend(&dev->dev);
+-- 
+2.9.3
 
