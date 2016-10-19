@@ -1,130 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34248 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932731AbcJLNZt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:25:49 -0400
-Subject: [PATCH v2 4/6] PCI: armada: Use generic DesignWare accessors
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:25:44 -0500
-Message-ID: <20161012132544.26736.86151.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012131957.26736.14194.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012131957.26736.14194.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
+Subject: [PATCH V4 0/3] ACPI, PCI,
+ IRQ: revert penalty calculation for ISA and SCI interrupts
+Date: Wed, 19 Oct 2016 18:21:01 -0400
+Message-Id: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces already add in
-pp->dbi_base, so use those instead of doing it ourselves in the armada8k
-driver.  No functional change intended.
+By the time ACPI gets initialized, this code tries to determine an
+IRQ number based on penalty values in this array. It will try to locate
+the IRQ with the least penalty assignment so that interrupt sharing is
+avoided if possible.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-armada8k.c |   40 ++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 23 deletions(-)
+A couple of notes about the external APIs:
+1. These API can be called before the ACPI is started. Therefore, one
+cannot assume that the PCI link objects are initialized for calculating
+penalties.
+2. The polarity and trigger information passed via the
+acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
+is reporting as the call might have been placed before the IRQ is
+registered by the interrupt subsystem.
 
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index cfa50f5..a5faa02 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -71,12 +71,10 @@ struct armada8k_pcie {
- 
- static int armada8k_pcie_link_up(struct pcie_port *pp)
- {
--	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
--	void __iomem *base = pcie->pp.dbi_base;
- 	u32 reg;
- 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
- 
--	reg = readl(base + PCIE_GLOBAL_STATUS_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_STATUS_REG);
- 
- 	if ((reg & mask) == mask)
- 		return 1;
-@@ -87,49 +85,47 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
- 
- static void armada8k_pcie_establish_link(struct pcie_port *pp)
- {
--	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
--	void __iomem *base = pcie->pp.dbi_base;
- 	u32 reg;
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Disable LTSSM state machine to enable configuration */
--		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 		reg &= ~(PCIE_APP_LTSSM_EN);
--		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+		dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Set the device to root complex mode */
--	reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
- 	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
--	writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 
- 	/* Set the PCIe master AxCache attributes */
--	writel(ARCACHE_DEFAULT_VALUE, base + PCIE_ARCACHE_TRC_REG);
--	writel(AWCACHE_DEFAULT_VALUE, base + PCIE_AWCACHE_TRC_REG);
-+	dw_pcie_writel_rc(pp, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
-+	dw_pcie_writel_rc(pp, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
- 
- 	/* Set the PCIe master AxDomain attributes */
--	reg = readl(base + PCIE_ARUSER_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_ARUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	writel(reg, base + PCIE_ARUSER_REG);
-+	dw_pcie_writel_rc(pp, PCIE_ARUSER_REG, reg);
- 
--	reg = readl(base + PCIE_AWUSER_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_AWUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	writel(reg, base + PCIE_AWUSER_REG);
-+	dw_pcie_writel_rc(pp, PCIE_AWUSER_REG, reg);
- 
- 	/* Enable INT A-D interrupts */
--	reg = readl(base + PCIE_GLOBAL_INT_MASK1_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_INT_MASK1_REG);
- 	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
--	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_INT_MASK1_REG, reg);
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Configuration done. Start LTSSM */
--		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 		reg |= PCIE_APP_LTSSM_EN;
--		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+		dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Wait until the link becomes active again */
-@@ -146,8 +142,6 @@ static void armada8k_pcie_host_init(struct pcie_port *pp)
- static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- {
- 	struct pcie_port *pp = arg;
--	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
--	void __iomem *base = pcie->pp.dbi_base;
- 	u32 val;
- 
- 	/*
-@@ -155,8 +149,8 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	 * PCI device. However, they are also latched into the PCIe
- 	 * controller, so we simply discard them.
- 	 */
--	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
--	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
-+	val = dw_pcie_readl_rc(pp, PCIE_GLOBAL_INT_CAUSE1_REG);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_INT_CAUSE1_REG, val);
- 
- 	return IRQ_HANDLED;
- }
+The reverted changes were in the direction to remove these external API and
+try to calculate the penalties at runtime for the ISA, SCI as well as PCI
+IRQS.
+This didn't work out well with the existing platforms.
 
+V4:
+* Drop ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
+* A new patch to isolate early boot ISA penalty calculations from dynamic
+penalty calculation by directly modifying the array members in
+("ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages")
+* Now that we isolated both SCI and ISA interrupts, revert commit ("Revert
+"ACPI,PCI,IRQ: separate ISA penalty calculation"") and commit
+("487cf917ed0d
+(Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()")
+to share code between ISA and PCI penalties as originally intended.
+
+V3:
+http://www.spinics.net/lists/arm-kernel/msg536208.html
+* drop patch #1 as discussed with Bjorn
+* add patch #3 to track SCI irq and penalty separately
+
+V2: https://lkml.org/lkml/2016/10/1/106
+* Commit message updates
+
+V1:
+http://lists-archives.com/linux-kernel/28673954-revert-acpi-pci-irq-reduce-static-irq-array-size-to-16.html
+* initial implementation
+
+Sinan Kaya (3):
+  ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages
+  Revert "ACPI,PCI,IRQ: remove SCI penalize function"
+  Revert "ACPI,PCI,IRQ: separate ISA penalty calculation"
+
+ arch/x86/kernel/acpi/boot.c |  1 +
+ arch/x86/pci/acpi.c         |  1 -
+ drivers/acpi/pci_link.c     | 72 ++++++++++++---------------------------------
+ include/acpi/acpi_drivers.h |  1 -
+ include/linux/acpi.h        |  1 +
+ 5 files changed, 21 insertions(+), 55 deletions(-)
+
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
