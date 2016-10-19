@@ -1,119 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35569 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933120AbcJ0Owy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2016 10:52:54 -0400
-Date: Thu, 27 Oct 2016 09:52:39 -0500
-From: Rob Herring <robh@kernel.org>
-To: Ruqiang Ju <juruqiang@huawei.com>
-Cc: bhelgaas@google.com, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bin.chen@linaro.org,
-        elder@linaro.org, hermit.wangheming@hisilicon.com,
-        yanhaifeng@hisilicon.com, xuejiancheng@hisilicon.com
-Subject: Re: [PATCH 1/2] PCI: hisi: add PCIe driver support for HiSilicon STB
- SoCs
-Message-ID: <20161027145239.yso327bl6iiazusb@rob-hp-laptop>
-References: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com
+Subject: [PATCH V4 3/3] Revert "ACPI, PCI,
+ IRQ: separate ISA penalty calculation"
+Date: Wed, 19 Oct 2016 18:21:04 -0400
+Message-Id: <1476915664-27231-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org,
+ agross@codeaurora.org, Robert Moore <robert.moore@intel.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Ingo Molnar <mingo@redhat.com>, Lv Zheng <lv.zheng@intel.com>,
+ linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl, devel@acpica.org,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Len Brown <lenb@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 09:45:36AM +0800, Ruqiang Ju wrote:
-> Add PCIe controller drvier for HiSilicon STB SoCs,
-> the controller is based on the DesignWare's PCIe core.
-> 
-> Signed-off-by: Ruqiang Ju <juruqiang@huawei.com>
-> ---
->  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
->  drivers/pci/host/Kconfig                           |   8 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-histb.c                      | 448 +++++++++++++++++++++
->  4 files changed, 523 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-histb.c
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> new file mode 100644
-> index 0000000..952f1db
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> @@ -0,0 +1,66 @@
-> +HiSilicon STB PCIe host bridge DT description
-> +
-> +HiSilicon PCIe host controller is based on Designware PCI core.
-> +It shares common functions with PCIe Designware core driver and inherits
-> +common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> +
-> +Additional properties are described here:
-> +
-> +Required properties
-> +- compatible: Should be one of the following strings
-> +		 "hisilicon,histb-pcie",
+This reverts commit f7eca374f000 ("ACPI,PCI,IRQ: separate ISA penalty
+calculation") and commit 487cf917ed0d ("revert "ACPI, PCI, IRQ: remove
+redundant code in acpi_irq_penalty_init()"").
 
-This should either be a fallback compatible or be dropped.
+Now that we understand the real issue (SCI and ISA penalty getting
+calculated before ACPI start), there is no need for special handling
+for ISA interrupts.
 
-> +		 "hisilicon,hi3798cv200-pcie"
-> +- reg: Should contain sysctl, rc_dbi, config registers location and length.
-> +- reg-names: Must include the following entries:
-> +  "sysctrl": system control registers of PCIe controller;
-> +  "rc_dbi": configuration space of PCIe controller;
-> +  "config": configuration transaction space of PCIe controller.
-> +- interrupts: MSI interrupt.
-> +- interrupt-names: Must include "msi" entries.
-> +- clocks: List of phandle and clock specifier pairs as listed
-> +		in clock-names property.
-> +- clock-name: Must include the following entries:
-> +  "aux_clk": auxiliary gate clock;
-> +  "pipe_clk": pipe gate clock;
-> +  "sys_clk": sys gate clock;
-> +  "bus_clk": bus gate clock.
-> +- resets: List of phandle and reset specifier pairs as listed
-> +			in reset-names property
-> +- reset-names: Must include the following entries:
-> +  "soft_reset": soft reset;
-> +  "sys_reset": sys reset;
-> +  "bus_rest": bus reset.
-> +
-> +Optional properties:
-> +- power-gpios: pcie device power control gpio if needed;
-> +- power-gpios-active-high: must include this propty
-> +		if active level is high.
+Let's try to simplify the code one more time to share code.
 
-This should be dropped. The power-gpios property should indicate the 
-active state.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/acpi.c         |  1 -
+ drivers/acpi/pci_link.c     | 44 +++++---------------------------------------
+ include/acpi/acpi_drivers.h |  1 -
+ 3 files changed, 5 insertions(+), 41 deletions(-)
 
-> +- status: Either "ok" or "disabled".
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..b2a4e2a 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
+ 		return -ENODEV;
+ 
+ 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
+-	acpi_irq_penalty_init();
+ 	pcibios_enable_irq = acpi_pci_irq_enable;
+ 	pcibios_disable_irq = acpi_pci_irq_disable;
+ 	x86_init.pci.init_irq = x86_init_noop;
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 294b190..dd14d78 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -478,7 +478,8 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ 		 * If a link is active, penalize its IRQ heavily
+ 		 * so we try to choose a different IRQ.
+ 		 */
+-		if (link->irq.active && link->irq.active == irq)
++		if ((link->irq.active && link->irq.active == irq) &&
++				(link->irq.initialized == 1))
+ 			penalty += PIRQ_PENALTY_PCI_USING;
+ 
+ 		/*
+@@ -501,45 +502,10 @@ static int acpi_irq_get_penalty(int irq)
+ 		penalty += sci_penalty;
+ 
+ 	if (irq < ACPI_MAX_ISA_IRQS)
+-		return penalty + acpi_isa_irq_penalty[irq];
++		penalty += acpi_isa_irq_penalty[irq];
+ 
+-	return penalty + acpi_irq_pci_sharing_penalty(irq);
+-}
+-
+-int __init acpi_irq_penalty_init(void)
+-{
+-	struct acpi_pci_link *link;
+-	int i;
+-
+-	/*
+-	 * Update penalties to facilitate IRQ balancing.
+-	 */
+-	list_for_each_entry(link, &acpi_link_list, list) {
+-
+-		/*
+-		 * reflect the possible and active irqs in the penalty table --
+-		 * useful for breaking ties.
+-		 */
+-		if (link->irq.possible_count) {
+-			int penalty =
+-			    PIRQ_PENALTY_PCI_POSSIBLE /
+-			    link->irq.possible_count;
+-
+-			for (i = 0; i < link->irq.possible_count; i++) {
+-				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
+-					acpi_isa_irq_penalty[link->irq.
+-							 possible[i]] +=
+-					    penalty;
+-			}
+-
+-		} else if (link->irq.active &&
+-				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
+-			acpi_isa_irq_penalty[link->irq.active] +=
+-			    PIRQ_PENALTY_PCI_POSSIBLE;
+-		}
+-	}
+-
+-	return 0;
++	penalty += acpi_irq_pci_sharing_penalty(irq);
++	return penalty;
+ }
+ 
+ static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 29c6912..797ae2e 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -78,7 +78,6 @@
+ 
+ /* ACPI PCI Interrupt Link (pci_link.c) */
+ 
+-int acpi_irq_penalty_init(void);
+ int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
+ 			       int *polarity, char **name);
+ int acpi_pci_link_free_irq(acpi_handle handle);
+-- 
+1.9.1
 
-No need to explicitly document this.
 
-> +
-> +Example:
-> +	pcie@f9860000 {
-> +		compatible = "hisilicon,histb-pcie", "snps,dw-pcie";
-> +		reg = <0xf9860000 0x1000>,
-> +			<0xf0000000 0x2000>,
-> +			<0xf2000000 0x01000000>;
-> +		reg-names = "sysctrl", "rc_dbi", "config";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		num-lanes = <1>;
-> +		ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
-> +			0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
-> +		interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
-> +		interrupt-names = "msi";
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0x0 0 0 1 &gic 0 131 4>;
-> +		clocks = <&crg PCIE_AUX_CLK>,
-> +			 <&crg PCIE_PIPE_CLK>,
-> +			 <&crg PCIE_SYS_CLK>,
-> +			 <&crg PCIE_BUS_CLK>;
-> +		clock-names = "aux_clk", "pipe_clk", "sys_clk", "bus_clk";
-> +		resets = <&crg 0x18c 6>, <&crg 0x18c 5>, <&crg 0x18c 4>;
-> +		reset-names = "soft_reset", "sys_reset", "bus_reset";
-> +	};
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
