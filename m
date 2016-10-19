@@ -1,41 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932886AbcJLNEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:04:20 -0400
-Subject: [PATCH v2 0/2] PCI: rockchip: Cleanup
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:04:16 -0500
-Message-ID: <20161012130256.25212.33689.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:35224 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S943139AbcJSOwy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:52:54 -0400
+Received: by mail-io0-f170.google.com with SMTP id f5so33951791ioj.2
+        for <linux-pci@vger.kernel.org>; Wed, 19 Oct 2016 07:52:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Muni Sekhar <munisekharrms@gmail.com>
+Date: Wed, 19 Oct 2016 14:45:53 +0530
+Message-ID: <CAHhAz+idn0VyUpyW8g7VcCuBWzvT9dCows2Uv=r-r=9EuVFEXw@mail.gmail.com>
+Subject: PCIe features testing
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Remove platform drvdata because it appears unused (we called
-    platform_set_drvdata() but not platform_get_drvdata()).
+Hi All,
 
-Nothing here should change the behavior of the driver.
+I have PCIe device, I would like to know what generic features we need
+to test in the PCIe block.
 
-Changes from v1:
-  Added Dan's indentation fix.
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: rockchip: Rename accessors
-    PCI: rockchip: Swap order of rockchip_writel() reg/val arguments
-
----
-
-Bjorn Helgaas (1):
-      PCI: rockchip: Remove unused platform data
-
-Dan Carpenter (1):
-      PCI: rockchip: Indent "if" statement body
+Does Linux has any test scripts to test PCIe device features?
 
 
- drivers/pci/host/pcie-rockchip.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+-- 
+Thanks,
+Sekhar
