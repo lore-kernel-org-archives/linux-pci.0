@@ -1,221 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755429AbcJLNIM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:08:12 -0400
-Subject: [PATCH v2 4/4] PCI: xgene: Add register accessors
-To: Duc Dang <dhdang@apm.com>, Tanmay Inamdar <tinamdar@apm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:08:07 -0500
-Message-ID: <20161012130807.25368.42556.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012130508.25368.95560.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout3.hostsharing.net ([176.9.242.54]:58683 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753334AbcJSOKx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:10:53 -0400
+Message-Id: <1f66f01ec1406ca76f578c02b218003fad3853e5.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 9/9] PCI: pciehp: Add runtime PM support for PCIe hotplug
+ ports
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device-specific register accessors for consistency across host drivers.
-No functional change intended.
+Linux 4.8 added support for runtime suspending PCIe ports to D3hot with
+commit 006d44e49a25 ("PCI: Add runtime PM support for PCIe ports"), but
+excluded hotplug ports.  Those are now afforded runtime PM by the
+present commit.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Hotplug ports require a few extra considerations:
+
+- The configuration space of the port remains accessible in D3hot, so
+  all the functions to read or modify the Slot Status and Slot Control
+  registers need not be modified.  Even turning on slot power doesn't
+  seem to require the port to be in D0, at least the PCIe spec doesn't
+  say so and I confirmed that by testing with a Thunderbolt controller.
+
+- However D0 is required to access devices on the subordinate bus.  This
+  happens in pciehp_check_link_status() and pciehp_configure_device()
+  (both called from board_added()) and in pciehp_unconfigure_device()
+  (called from remove_board()), so acquire a runtime PM ref for their
+  invocation.
+
+- The hotplug port stays active as long as it has active children.  If
+  all hotplugged devices below the port runtime suspend, the port is
+  allowed to runtime suspend as well.  Plug and unplug detection
+  continues to work in D3hot.
+
+- Hotplug interrupts are delivered in-band, so while the hotplug port
+  itself is allowed to go to D3hot, its parent ports must stay in D0 for
+  interrupts to come through.  Add a corresponding restriction to
+  pci_dev_check_d3cold().
+
+- Runtime PM may only be allowed if the hotplug port is handled natively
+  by the OS.  On ACPI systems, the port may alternatively be handled by
+  the firmware and things break if the OS puts the port into D3 behind
+  the firmware's back:  E.g. Thunderbolt hotplug ports on non-Macs are
+  handled by Intel's firmware in System Management Mode and the firmware
+  is known to access devices on the port's subordinate bus without
+  checking first if the port is in D0:
+  https://bugzilla.kernel.org/show_bug.cgi?id=53811
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pci-xgene.c |   86 +++++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 42 deletions(-)
+ drivers/pci/hotplug/pciehp_ctrl.c | 6 ++++++
+ drivers/pci/pci.c                 | 9 +++++----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index f1481b2..1de23d7 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -76,6 +76,16 @@ struct xgene_pcie_port {
- 	u32			version;
- };
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index efe69e8..ffd3fe6 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -31,6 +31,7 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <linux/pci.h>
+ #include "../pci.h"
+ #include "pciehp.h"
+@@ -98,6 +99,7 @@ static int board_added(struct slot *p_slot)
+ 	pciehp_green_led_blink(p_slot);
  
-+static u32 xgene_pcie_readl(struct xgene_pcie_port *port, u32 reg)
-+{
-+	return readl(port->csr_base + reg);
-+}
-+
-+static void xgene_pcie_writel(struct xgene_pcie_port *port, u32 reg, u32 val)
-+{
-+	writel(val, port->csr_base + reg);
-+}
-+
- static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
- {
- 	return (addr & PCI_BASE_ADDRESS_MEM_MASK) | flags;
-@@ -112,9 +122,9 @@ static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
- 	if (!pci_is_root_bus(bus))
- 		rtdid_val = (b << 8) | (d << 3) | f;
- 
--	writel(rtdid_val, port->csr_base + RTDID);
-+	xgene_pcie_writel(port, RTDID, rtdid_val);
- 	/* read the register back to ensure flush */
--	readl(port->csr_base + RTDID);
-+	xgene_pcie_readl(port, RTDID);
- }
- 
- /*
-@@ -182,26 +192,25 @@ static struct pci_ops xgene_pcie_ops = {
- static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *port, u32 addr,
- 				  u32 flags, u64 size)
- {
--	void __iomem *csr_base = port->csr_base;
- 	u64 mask = (~(size - 1) & PCI_BASE_ADDRESS_MEM_MASK) | flags;
- 	u32 val32 = 0;
- 	u32 val;
- 
--	val32 = readl(csr_base + addr);
-+	val32 = xgene_pcie_readl(port, addr);
- 	val = (val32 & 0x0000ffff) | (lower_32_bits(mask) << 16);
--	writel(val, csr_base + addr);
-+	xgene_pcie_writel(port, addr, val);
- 
--	val32 = readl(csr_base + addr + 0x04);
-+	val32 = xgene_pcie_readl(port, addr + 0x04);
- 	val = (val32 & 0xffff0000) | (lower_32_bits(mask) >> 16);
--	writel(val, csr_base + addr + 0x04);
-+	xgene_pcie_writel(port, addr + 0x04, val);
- 
--	val32 = readl(csr_base + addr + 0x04);
-+	val32 = xgene_pcie_readl(port, addr + 0x04);
- 	val = (val32 & 0x0000ffff) | (upper_32_bits(mask) << 16);
--	writel(val, csr_base + addr + 0x04);
-+	xgene_pcie_writel(port, addr + 0x04, val);
- 
--	val32 = readl(csr_base + addr + 0x08);
-+	val32 = xgene_pcie_readl(port, addr + 0x08);
- 	val = (val32 & 0xffff0000) | (upper_32_bits(mask) >> 16);
--	writel(val, csr_base + addr + 0x08);
-+	xgene_pcie_writel(port, addr + 0x08, val);
- 
- 	return mask;
- }
-@@ -209,15 +218,14 @@ static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *port, u32 addr,
- static void xgene_pcie_linkup(struct xgene_pcie_port *port,
- 				   u32 *lanes, u32 *speed)
- {
--	void __iomem *csr_base = port->csr_base;
- 	u32 val32;
- 
- 	port->link_up = false;
--	val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
-+	val32 = xgene_pcie_readl(port, PCIECORE_CTLANDSTATUS);
- 	if (val32 & LINK_UP_MASK) {
- 		port->link_up = true;
- 		*speed = PIPE_PHY_RATE_RD(val32);
--		val32 = readl(csr_base + BRIDGE_STATUS_0);
-+		val32 = xgene_pcie_readl(port, BRIDGE_STATUS_0);
- 		*lanes = val32 >> 26;
+ 	/* Check link training status */
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
+ 	retval = pciehp_check_link_status(ctrl);
+ 	if (retval) {
+ 		ctrl_err(ctrl, "Failed to check link status\n");
+@@ -118,12 +120,14 @@ static int board_added(struct slot *p_slot)
+ 		if (retval != -EEXIST)
+ 			goto err_exit;
  	}
++	pm_runtime_put(&ctrl->pcie->port->dev);
+ 
+ 	pciehp_green_led_on(p_slot);
+ 	pciehp_set_attention_status(p_slot, 0);
+ 	return 0;
+ 
+ err_exit:
++	pm_runtime_put(&ctrl->pcie->port->dev);
+ 	set_slot_off(ctrl, p_slot);
+ 	return retval;
  }
-@@ -266,7 +274,6 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
- 				    struct resource *res, u32 offset,
- 				    u64 cpu_addr, u64 pci_addr)
- {
--	void __iomem *base = port->csr_base + offset;
- 	struct device *dev = port->dev;
- 	resource_size_t size = resource_size(res);
- 	u64 restype = resource_type(res);
-@@ -287,22 +294,21 @@ static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
- 		dev_warn(dev, "res size 0x%llx less than minimum 0x%x\n",
- 			 (u64)size, min_size);
+@@ -137,7 +141,9 @@ static int remove_board(struct slot *p_slot)
+ 	int retval;
+ 	struct controller *ctrl = p_slot->ctrl;
  
--	writel(lower_32_bits(cpu_addr), base);
--	writel(upper_32_bits(cpu_addr), base + 0x04);
--	writel(lower_32_bits(mask), base + 0x08);
--	writel(upper_32_bits(mask), base + 0x0c);
--	writel(lower_32_bits(pci_addr), base + 0x10);
--	writel(upper_32_bits(pci_addr), base + 0x14);
-+	xgene_pcie_writel(port, offset, lower_32_bits(cpu_addr));
-+	xgene_pcie_writel(port, offset + 0x04, upper_32_bits(cpu_addr));
-+	xgene_pcie_writel(port, offset + 0x08, lower_32_bits(mask));
-+	xgene_pcie_writel(port, offset + 0x0c, upper_32_bits(mask));
-+	xgene_pcie_writel(port, offset + 0x10, lower_32_bits(pci_addr));
-+	xgene_pcie_writel(port, offset + 0x14, upper_32_bits(pci_addr));
- }
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
+ 	retval = pciehp_unconfigure_device(p_slot);
++	pm_runtime_put(&ctrl->pcie->port->dev);
+ 	if (retval)
+ 		return retval;
  
- static void xgene_pcie_setup_cfg_reg(struct xgene_pcie_port *port)
- {
--	void __iomem *csr_base = port->csr_base;
- 	u64 addr = port->cfg_addr;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f1ddb6b..b10bcca 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2241,13 +2241,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 			return false;
  
--	writel(lower_32_bits(addr), csr_base + CFGBARL);
--	writel(upper_32_bits(addr), csr_base + CFGBARH);
--	writel(EN_REG, csr_base + CFGCTL);
-+	xgene_pcie_writel(port, CFGBARL, lower_32_bits(addr));
-+	xgene_pcie_writel(port, CFGBARH, upper_32_bits(addr));
-+	xgene_pcie_writel(port, CFGCTL, EN_REG);
- }
+ 		/*
+-		 * Hotplug interrupts cannot be delivered if the link is down,
+-		 * so parents of a hotplug port must stay awake. In addition,
+ 		 * Hotplug ports handled by firmware in System Management Mode
+ 		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
+-		 * For simplicity, disallow in general for now.
+ 		 */
+-		if (bridge->is_hotplug_bridge)
++		if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
+ 			return false;
  
- static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
-@@ -353,12 +359,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
- static void xgene_pcie_setup_pims(struct xgene_pcie_port *port, u32 pim_reg,
- 				  u64 pim, u64 size)
- {
--	void __iomem *addr = port->csr_base;
--
--	writel(lower_32_bits(pim), addr + pim_reg);
--	writel(upper_32_bits(pim) | EN_COHERENCY, addr + pim_reg + 0x04);
--	writel(lower_32_bits(size), addr + pim_reg + 0x10);
--	writel(upper_32_bits(size), addr + pim_reg + 0x14);
-+	xgene_pcie_writel(port, pim_reg, lower_32_bits(pim));
-+	xgene_pcie_writel(port, pim_reg + 0x04,
-+			  upper_32_bits(pim) | EN_COHERENCY);
-+	xgene_pcie_writel(port, pim_reg + 0x10, lower_32_bits(size));
-+	xgene_pcie_writel(port, pim_reg + 0x14, upper_32_bits(size));
+ 		if (pci_bridge_d3_force)
+@@ -2283,6 +2280,10 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ 	if (!pci_power_manageable(dev))
+ 		*d3cold_ok = false;
+ 
++	/* Hotplug interrupts cannot be delivered if the link is down. */
++	if (dev->is_hotplug_bridge)
++		*d3cold_ok = false;
++
+ 	return !*d3cold_ok;
  }
  
- /*
-@@ -388,7 +393,6 @@ static int xgene_pcie_select_ib_reg(u8 *ib_reg_mask, u64 size)
- static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
- 				    struct of_pci_range *range, u8 *ib_reg_mask)
- {
--	void __iomem *csr_base = port->csr_base;
- 	void __iomem *cfg_base = port->cfg_base;
- 	struct device *dev = port->dev;
- 	void *bar_addr;
-@@ -420,17 +424,15 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
- 		pim_reg = PIM1_1L;
- 		break;
- 	case 1:
--		bar_addr = csr_base + IBAR2;
--		writel(bar_low, bar_addr);
--		writel(lower_32_bits(mask), csr_base + IR2MSK);
-+		xgene_pcie_writel(port, IBAR2, bar_low);
-+		xgene_pcie_writel(port, IR2MSK, lower_32_bits(mask));
- 		pim_reg = PIM2_1L;
- 		break;
- 	case 2:
--		bar_addr = csr_base + IBAR3L;
--		writel(bar_low, bar_addr);
--		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
--		writel(lower_32_bits(mask), csr_base + IR3MSKL);
--		writel(upper_32_bits(mask), csr_base + IR3MSKL + 0x4);
-+		xgene_pcie_writel(port, IBAR3L, bar_low);
-+		xgene_pcie_writel(port, IBAR3L + 0x4, upper_32_bits(cpu_addr));
-+		xgene_pcie_writel(port, IR3MSKL, lower_32_bits(mask));
-+		xgene_pcie_writel(port, IR3MSKL + 0x4, upper_32_bits(mask));
- 		pim_reg = PIM3_1L;
- 		break;
- 	}
-@@ -486,7 +488,7 @@ static void xgene_pcie_clear_config(struct xgene_pcie_port *port)
- 	int i;
- 
- 	for (i = PIM1_1L; i <= CFGCTL; i += 4)
--		writel(0x0, port->csr_base + i);
-+		xgene_pcie_writel(port, i, 0);
- }
- 
- static int xgene_pcie_setup(struct xgene_pcie_port *port,
-@@ -501,7 +503,7 @@ static int xgene_pcie_setup(struct xgene_pcie_port *port,
- 
- 	/* setup the vendor and device IDs correctly */
- 	val = (XGENE_PCIE_DEVICEID << 16) | XGENE_PCIE_VENDORID;
--	writel(val, port->csr_base + BRIDGE_CFG_0);
-+	xgene_pcie_writel(port, BRIDGE_CFG_0, val);
- 
- 	ret = xgene_pcie_map_ranges(port, res, io_base);
- 	if (ret)
+-- 
+2.9.3
 
