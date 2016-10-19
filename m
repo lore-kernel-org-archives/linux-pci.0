@@ -1,88 +1,169 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] ARM: BCM5301X: Add back handler ignoring external
- imprecise aborts
-To: Scott Branden <scott.branden@broadcom.com>,
- =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
- Florian Fainelli <f.fainelli@gmail.com>, linux-arm-kernel@lists.infradead.org
-References: <20161029111229.26875-1-zajec5@gmail.com>
- <a491509e-5cfc-fc7d-0011-dfcab3c884ea@broadcom.com>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <6e252703-0010-83ae-fa14-57352add007a@hauke-m.de>
-Date: Mon, 31 Oct 2016 21:59:08 +0100
-MIME-Version: 1.0
-In-Reply-To: <a491509e-5cfc-fc7d-0011-dfcab3c884ea@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:37233 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938725AbcJSOOa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:14:30 -0400
+Message-Id: <bae5458c8288c0ee1ede1c16b41f47e5cbf6e77b.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 2/9] PCI: Autosense device removal in pci_bridge_d3_update()
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiAxMC8zMS8yMDE2IDA3OjA4IFBNLCBTY290dCBCcmFuZGVuIHdyb3RlOgo+IEhpIFJhZmFs
-LAo+IAo+IAo+IE9uIDE2LTEwLTI5IDA0OjEyIEFNLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+
-IEZyb206IFJhZmHFgiBNacWCZWNraSA8cmFmYWxAbWlsZWNraS5wbD4KPj4KPj4gU2luY2UgZWFy
-bHkgQkNNNTMwMVggZGF5cyB3ZSBnb3QgYWJvcnQgaGFuZGxlciB0aGF0IHdhcyByZW1vdmVkIGJ5
-Cj4+IGNvbW1pdCA5MzdiMTIzMDZlYTc5ICgiQVJNOiBCQ001MzAxWDogcmVtb3ZlIHdvcmthcm91
-bmQgaW1wcmVjaXNlIGFib3J0Cj4+IGZhdWx0IGhhbmRsZXIiKS4gSXQgYXNzdW1lZCB3ZSBuZWVk
-IHRvIGRlYWwgb25seSB3aXRoIHBlbmRpbmcgYWJvcnRzCj4+IGxlZnQgYnkgdGhlIGJvb3Rsb2Fk
-ZXIuIFVuZm9ydHVuYXRlbHkgdGhpcyBpc24ndCB0cnVlIGZvciBCQ001MzAxWC4KPj4KPj4gV2hl
-biBwcm9iaW5nIFBDSSBjb25maWcgc3BhY2UgKGRldmljZSBlbnVtZXJhdGlvbikgaXQgaXMgZXhw
-ZWN0ZWQgdG8KPj4gaGF2ZSBtYXN0ZXIgYWJvcnRzIG9uIHRoZSBQQ0kgYnVzLiBNb3N0IGJyaWRn
-ZXMgZG9uJ3QgZm9yd2FyZCAob3IgdGhleQo+PiBhbGxvdyBkaXNhYmxpbmcgaXQpIHRoZXNlIGVy
-cm9ycyBvbnRvIHRoZSBBWEkvQU1CQSBidXMgYnV0IG5vdCB0aGUKPj4gTm9ydGhzdGFyIChCQ001
-MzAxWCkgb25lLgo+IFNob3VsZCB3ZSBvbmx5IGFkZCB0aGlzIHdvcmthcm91bmQgY29kZSBpZiBD
-T05GSUdfUENJIGlzIG9uIHRoZW4/CgpJIHRoaW5rIGFsbCB0aGUgc3VwcG9ydGVkIG5vcnRoc3Rh
-ciBkZXZpY2VzIGhhdmUgYSBQQ0llIGNvbnRyb2xsZXIuIFdlCmNvdWxkIGFkZCBzdWNoIGEgQ09O
-RklHX1BDSSBjaGVjaywgYnV0IEkgZG8gbm90IHNlZSBhIGJpZyBhZHZhbnRhZ2UuCgo+PiBpUHJv
-YyBQQ0llIGNvbnRyb2xsZXIgb24gTm9ydGhzdGFyIHNlZW1zIHRvIGJlIHNvbWUgb2xkZXIgb25l
-LCB3aXRob3V0Cj4+IGEgY29udHJvbCByZWdpc3RlciBmb3IgZXJyb3JzIGZvcndhcmRpbmcuIEl0
-IG1lYW5zIHdlIG5lZWQgdG8gd29ya2Fyb3VuZAo+PiB0aGlzIGF0IHBsYXRmb3JtIGxldmVsLiBB
-bGwgbmV3ZXIgcGxhdGZvcm1zIGFyZSBub3QgYWZmZWN0ZWQgYnkgdGhpcwo+PiBpc3N1ZS4KPj4K
-Pj4gU2lnbmVkLW9mZi1ieTogUmFmYcWCIE1pxYJlY2tpIDxyYWZhbEBtaWxlY2tpLnBsPgo+PiAt
-LS0KPj4gIGFyY2gvYXJtL21hY2gtYmNtL2JjbV81MzAxeC5jIHwgMjggKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKwo+PiAgMSBmaWxlIGNoYW5nZWQsIDI4IGluc2VydGlvbnMoKykKPj4KPj4g
-ZGlmZiAtLWdpdCBhL2FyY2gvYXJtL21hY2gtYmNtL2JjbV81MzAxeC5jCj4+IGIvYXJjaC9hcm0v
-bWFjaC1iY20vYmNtXzUzMDF4LmMKPj4gaW5kZXggYzg4MzBhMi4uZmUwNjdmNiAxMDA2NDQKPj4g
-LS0tIGEvYXJjaC9hcm0vbWFjaC1iY20vYmNtXzUzMDF4LmMKPj4gKysrIGIvYXJjaC9hcm0vbWFj
-aC1iY20vYmNtXzUzMDF4LmMKPj4gQEAgLTksMTQgKzksNDIgQEAKPj4gICNpbmNsdWRlIDxhc20v
-aGFyZHdhcmUvY2FjaGUtbDJ4MC5oPgo+Pgo+PiAgI2luY2x1ZGUgPGFzbS9tYWNoL2FyY2guaD4K
-Pj4gKyNpbmNsdWRlIDxhc20vc2lnaW5mby5oPgo+PiArI2luY2x1ZGUgPGFzbS9zaWduYWwuaD4K
-Pj4gKwo+PiArI2RlZmluZSBGU1JfRVhURVJOQUwgICAgICAgICgxIDw8IDEyKQo+PiArI2RlZmlu
-ZSBGU1JfUkVBRCAgICAgICAgKDAgPDwgMTApCj4+ICsjZGVmaW5lIEZTUl9JTVBSRUNJU0UgICAg
-ICAgIDB4MDQwNgo+Pgo+PiAgc3RhdGljIGNvbnN0IGNoYXIgKmNvbnN0IGJjbTUzMDF4X2R0X2Nv
-bXBhdFtdIF9faW5pdGNvbnN0ID0gewo+PiAgICAgICJicmNtLGJjbTQ3MDgiLAo+PiAgICAgIE5V
-TEwsCj4+ICB9Owo+Pgo+PiArc3RhdGljIGludCBiY201MzAxeF9hYm9ydF9oYW5kbGVyKHVuc2ln
-bmVkIGxvbmcgYWRkciwgdW5zaWduZWQgaW50IGZzciwKPj4gKyAgICAgICAgICAgICAgICAgIHN0
-cnVjdCBwdF9yZWdzICpyZWdzKQo+PiArewo+PiArICAgIC8qCj4+ICsgICAgICogV2Ugd2FudCB0
-byBpZ25vcmUgYWJvcnRzIGZvcndhcmRlZCBmcm9tIHRoZSBQQ0llIGJ1cyB0aGF0IGFyZQo+PiAr
-ICAgICAqIGV4cGVjdGVkIGFuZCBzaG91bGRuJ3QgcmVhbGx5IGJlIHBhc3NlZCBieSB0aGUgUENJ
-ZSBjb250cm9sbGVyLgo+PiArICAgICAqIFRoZSBiaWdnZXN0IGRpc2FkdmFudGFnZSBpcyB0aGUg
-c2FtZSBGU1IgY29kZSBtYXkgYmUgcmVwb3J0ZWQKPj4gd2hlbgo+PiArICAgICAqIHJlYWRpbmcg
-bm9uLWV4aXN0aW5nIEFQQiByZWdpc3RlciBhbmQgd2Ugc2hvdWxkbid0IGlnbm9yZSB0aGF0Lgo+
-PiArICAgICAqLwo+PiArICAgIGlmIChmc3IgPT0gKEZTUl9FWFRFUk5BTCB8IEZTUl9SRUFEIHwg
-RlNSX0lNUFJFQ0lTRSkpCj4+ICsgICAgICAgIHJldHVybiAwOwoKSG93IG9mdGVuIGRvZXMgdGhp
-cyBoYXBwZW4/IFdvdWxkIGl0IGJlIHVzZWZ1bCB0byBhZGQgYSBsb2cgbWVzc2FnZSBoZXJlPwoK
-Pj4gKwo+PiArICAgIHJldHVybiAxOwo+PiArfQo+PiArCj4+ICtzdGF0aWMgdm9pZCBfX2luaXQg
-YmNtNTMwMXhfaW5pdF9lYXJseSh2b2lkKQo+PiArewo+PiArICAgIGhvb2tfZmF1bHRfY29kZSgx
-NiArIDYsIGJjbTUzMDF4X2Fib3J0X2hhbmRsZXIsIFNJR0JVUywgQlVTX09CSkVSUiwKPj4gKyAg
-ICAgICAgICAgICJpbXByZWNpc2UgZXh0ZXJuYWwgYWJvcnQiKTsKPj4gK30KPj4gKwo+PiAgRFRf
-TUFDSElORV9TVEFSVChCQ001MzAxWCwgIkJDTTUzMDFYIikKPj4gICAgICAubDJjX2F1eF92YWwg
-ICAgPSAwLAo+PiAgICAgIC5sMmNfYXV4X21hc2sgICAgPSB+MCwKPj4gICAgICAuZHRfY29tcGF0
-ICAgID0gYmNtNTMwMXhfZHRfY29tcGF0LAo+PiArICAgIC5pbml0X2Vhcmx5ICAgID0gYmNtNTMw
-MXhfaW5pdF9lYXJseSwKPj4gIE1BQ0hJTkVfRU5ECj4+Cj4gCj4gUmVnYXJkcywKPiBTY290dAoK
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJt
-LWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
-Cmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtl
-cm5lbAo=
+The algorithm to update the flag indicating whether a bridge may go to
+D3 makes a few optimizations based on whether the update was caused by
+the removal of a device on the one hand, versus the addition of a device
+or the change of its D3cold flags on the other hand.
+
+The information whether the update pertains to a removal is currently
+passed in by the caller, but the function may as well determine that
+itself by examining the device in question, thereby allowing for a
+considerable simplification and reduction of the code.
+
+Out of several options to determine removal, I've chosen the function
+device_is_registered() because it's cheap:  It merely returns the
+dev->kobj.state_in_sysfs flag.  That flag is set through device_add()
+when the root bus is scanned and cleared through device_remove().
+The call to pci_bridge_d3_update() happens after each of these calls,
+respectively, so the ordering is correct.
+
+No functional change intended.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/bus.c    |  2 +-
+ drivers/pci/pci.c    | 35 +++++------------------------------
+ drivers/pci/pci.h    |  3 +--
+ drivers/pci/remove.c |  2 +-
+ 4 files changed, 8 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index c288e5a..bc56cf1 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -320,7 +320,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_fixup_device(pci_fixup_final, dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+-	pci_bridge_d3_device_changed(dev);
++	pci_bridge_d3_update(dev);
+ 
+ 	dev->match_driver = true;
+ 	retval = device_attach(&dev->dev);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6e0c399..c12fae7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2277,14 +2277,14 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ /*
+  * pci_bridge_d3_update - Update bridge D3 capabilities
+  * @dev: PCI device which is changed
+- * @remove: Is the device being removed
+  *
+  * Update upstream bridge PM capabilities accordingly depending on if the
+  * device PM configuration was changed or the device is being removed.  The
+  * change is also propagated upstream.
+  */
+-static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
++void pci_bridge_d3_update(struct pci_dev *dev)
+ {
++	bool remove = !device_is_registered(&dev->dev);
+ 	struct pci_dev *bridge;
+ 	bool d3cold_ok = true;
+ 
+@@ -2311,36 +2311,11 @@ static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
+ 	if (bridge->bridge_d3 != d3cold_ok) {
+ 		bridge->bridge_d3 = d3cold_ok;
+ 		/* Propagate change to upstream bridges */
+-		pci_bridge_d3_update(bridge, false);
++		pci_bridge_d3_update(bridge);
+ 	}
+ }
+ 
+ /**
+- * pci_bridge_d3_device_changed - Update bridge D3 capabilities on change
+- * @dev: PCI device that was changed
+- *
+- * If a device is added or its PM configuration, such as is it allowed to
+- * enter D3cold, is changed this function updates upstream bridge PM
+- * capabilities accordingly.
+- */
+-void pci_bridge_d3_device_changed(struct pci_dev *dev)
+-{
+-	pci_bridge_d3_update(dev, false);
+-}
+-
+-/**
+- * pci_bridge_d3_device_removed - Update bridge D3 capabilities on remove
+- * @dev: PCI device being removed
+- *
+- * Function updates upstream bridge PM capabilities based on other devices
+- * still left on the bus.
+- */
+-void pci_bridge_d3_device_removed(struct pci_dev *dev)
+-{
+-	pci_bridge_d3_update(dev, true);
+-}
+-
+-/**
+  * pci_d3cold_enable - Enable D3cold for device
+  * @dev: PCI device to handle
+  *
+@@ -2352,7 +2327,7 @@ void pci_d3cold_enable(struct pci_dev *dev)
+ {
+ 	if (dev->no_d3cold) {
+ 		dev->no_d3cold = false;
+-		pci_bridge_d3_device_changed(dev);
++		pci_bridge_d3_update(dev);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(pci_d3cold_enable);
+@@ -2369,7 +2344,7 @@ void pci_d3cold_disable(struct pci_dev *dev)
+ {
+ 	if (!dev->no_d3cold) {
+ 		dev->no_d3cold = true;
+-		pci_bridge_d3_device_changed(dev);
++		pci_bridge_d3_update(dev);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(pci_d3cold_disable);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..27048bb 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -85,8 +85,7 @@ void pci_pm_init(struct pci_dev *dev);
+ void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
+-void pci_bridge_d3_device_changed(struct pci_dev *dev);
+-void pci_bridge_d3_device_removed(struct pci_dev *dev);
++void pci_bridge_d3_update(struct pci_dev *dev);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index f9357e0..73a03d3 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	list_del(&dev->bus_list);
+ 	up_write(&pci_bus_sem);
+ 
+-	pci_bridge_d3_device_removed(dev);
++	pci_bridge_d3_update(dev);
+ 	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+-- 
+2.9.3
+
