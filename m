@@ -1,70 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33018 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754743AbcJRQll (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Oct 2016 12:41:41 -0400
-Date: Tue, 18 Oct 2016 11:41:39 -0500
-From: Rob Herring <robh@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v8 1/3] Documentation/devicetree: Add new property to
- specify the max link speed
-Message-ID: <20161018164139.z52uo7eda5xgwkzu@rob-hp-laptop>
-References: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:34463 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941135AbcJSOQ6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:16:58 -0400
+Message-Id: <a859eaee9f0188db46990e8003afcb6b714f99e4.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 3/9] PCI: Speed up algorithm in pci_bridge_d3_update()
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 18, 2016 at 09:45:08AM +0800, Shawn Lin wrote:
-> Some of the host drivers have the requirement of knowing whether the
-> EP would never train at some link speed at all. For instance, on some
-> boards, the link won't train at 5 GT/s but the host driver still sacrifice
-> some cycle to wait for the resule of training at 5 GT/s as the host could
-> actually support 5 GT/s. So we could parse this new property and make the
-> host drivers be aware of these cases.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
-> Changes in v8: None
-> Changes in v7: None
-> Changes in v6: None
-> Changes in v5: None
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
+After a device has been added, removed or had its D3cold attributes
+changed, we recheck whether its parent bridge may runtime suspend to
+D3hot with pci_bridge_d3_update().
 
-Humm, either you are respinning versions too quickly or failed to copy 
-the DT list.
+The most naive algorithm would be to iterate over the bridge's
+children and check if any of them are blocking D3.
 
-> 
->  Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
->  1 file changed, 6 insertions(+)
+The function already tries to be a bit smarter than that by first
+checking the device that was changed.  If this device already blocks D3
+on the bridge, then walking over all the other children can be skipped.
+A drawback of this approach is that if the device is *not* blocking D3,
+it will be checked a second time by pci_walk_bus().  But that's cheap
+and is outweighed by the performance gain of potentially skipping
+pci_walk_bus() altogether.
 
-Acked-by: Rob Herring <robh@kernel.org>
+The algorithm can be optimized further by taking into account if D3 is
+currently allowed for the bridge, as shown in the following truth table:
 
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 08dcfad..e7d97a3 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -18,3 +18,9 @@ driver implementation may support the following properties:
->     host bridges in the system, otherwise potentially conflicting domain numbers
->     may be assigned to root buses behind different host bridges.  The domain
->     number for each host bridge in the system must be unique.
-> +- max-link-speed:
-> +   If present this property specifies PCI gen for link capability. The host drivers
-> +   could add this as a strategy to avoid unnecessary operation for unsupported
-> +   link speed, for instance, trying to do training for unsupported link speed, etc.
-> +   Must be '4' for gen4, '3' for gen3, '2' for gen2, and '1' for gen1. Any other
-> +   values are invalid.
-> -- 
-> 2.3.7
-> 
-> 
+(a)  remove &&  bridge_d3:  D3 is currently allowed for the bridge and
+                            removing one of its children won't change
+                            that.  No action necessary.
+(b)  remove && !bridge_d3:  D3 may now be allowed for the bridge if the
+                            removed child was the only one blocking it.
+                            Check all its siblings to verify that.
+(c) !remove &&  bridge_d3:  D3 may now be disallowed but this can only
+                            be caused by the added/changed child, not
+                            any of its siblings.  Check only that single
+                            device.
+(d) !remove && !bridge_d3:  D3 may now be allowed for the bridge if the
+                            changed child was the only one blocking it.
+                            Check all its siblings to verify that.
+                            By checking beforehand if the changed child
+                            is blocking D3, we may be able to skip
+                            checking its siblings.
+
+Currently we do not special-case option (a) and in case of option (c) we
+gratuitously call pci_walk_bus().  Speed up the algorithm by adding
+these optimizations.  Reword the comments a bit in an attempt to improve
+clarity.
+
+No functional change intended.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c12fae7..bc60f2c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2293,20 +2293,32 @@ void pci_bridge_d3_update(struct pci_dev *dev)
+ 		return;
+ 
+ 	/*
+-	 * If the device is removed we do not care about its D3cold
+-	 * capabilities.
++	 * If D3 is currently allowed for the bridge, removing one of its
++	 * children won't change that.
++	 */
++	if (remove && bridge->bridge_d3)
++		return;
++
++	/*
++	 * If D3 is currently allowed for the bridge and a child is added or
++	 * changed, disallowance of D3 can only be caused by that child, so
++	 * we only need to check that single device, not any of its siblings.
++	 *
++	 * If D3 is currently not allowed for the bridge, checking the device
++	 * first may allow us to skip checking its siblings.
+ 	 */
+ 	if (!remove)
+ 		pci_dev_check_d3cold(dev, &d3cold_ok);
+ 
+-	if (d3cold_ok) {
+-		/*
+-		 * We need to go through all children to find out if all of
+-		 * them can still go to D3cold.
+-		 */
++	/*
++	 * If D3 is currently not allowed for the bridge, this may be caused
++	 * either by the device being changed/removed or any of its siblings,
++	 * so we need to go through all children to find out if one of them
++	 * continues to block D3.
++	 */
++	if (d3cold_ok && !bridge->bridge_d3)
+ 		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
+ 			     &d3cold_ok);
+-	}
+ 
+ 	if (bridge->bridge_d3 != d3cold_ok) {
+ 		bridge->bridge_d3 = d3cold_ok;
+-- 
+2.9.3
+
