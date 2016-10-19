@@ -1,89 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49870 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753234AbcJGQbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:31:01 -0400
-Subject: [PATCH 6/7] PCI: designware-plat: Add local struct device pointers
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:30:57 -0500
-Message-ID: <20161007163057.24388.93246.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout1.hostsharing.net ([83.223.95.204]:57613 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941157AbcJSORD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 10:17:03 -0400
+Message-Id: <338878168cb4f704f8f642041da00e71653afd17.1476875113.git.lukas@wunner.de>
+In-Reply-To: <cover.1476875113.git.lukas@wunner.de>
+References: <cover.1476875113.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 19 Oct 2016 16:07:13 +0200
+Subject: [PATCH 5/9] PCI: Consolidate conditions to allow runtime PM on PCIe
+ ports
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+The conditions to allow runtime PM on PCIe ports are currently spread
+across two different files:  The condition relating to hotplug ports is
+located in portdrv_pci.c whereas all other conditions are located in
+pci.c.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Consolidate all conditions in a single place in pci.c, thus making it
+easier to follow the logic and amend conditions down the road.
+
+Note that the condition relating to hotplug ports is inserted *before*
+the condition relating to the "pcie_port_pm=force" command line option,
+so runtime PM is not afforded to hotplug ports even if this option is
+given.  That's exactly how the code behaved up until now.  If this is
+not desired, the ordering of the conditions can simply be reversed.
+
+No functional change intended.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pcie-designware-plat.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/pci/pci.c              | 11 +++++++++++
+ drivers/pci/pcie/portdrv_pci.c | 12 ++----------
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index d9d01e7..f0a2a60 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -51,6 +51,7 @@ static struct pcie_host_ops dw_plat_pcie_host_ops = {
- static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 				 struct platform_device *pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 854d185..a19056e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2239,6 +2239,17 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 	case PCI_EXP_TYPE_DOWNSTREAM:
+ 		if (pci_bridge_d3_disable)
+ 			return false;
++
++		/*
++		 * Hotplug interrupts cannot be delivered if the link is down,
++		 * so parents of a hotplug port must stay awake. In addition,
++		 * Hotplug ports handled by firmware in System Management Mode
++		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
++		 * For simplicity, disallow in general for now.
++		 */
++		if (bridge->is_hotplug_bridge)
++			return false;
++
+ 		if (pci_bridge_d3_force)
+ 			return true;
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 1ae712c..8aa3f14 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -150,15 +150,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ 	pci_save_state(dev);
+ 
+-	/*
+-	 * Prevent runtime PM if the port is advertising support for PCIe
+-	 * hotplug.  Otherwise the BIOS hotplug SMI code might not be able
+-	 * to enumerate devices behind this port properly (the port is
+-	 * powered down preventing all config space accesses to the
+-	 * subordinate devices).  We can't be sure for native PCIe hotplug
+-	 * either so prevent that as well.
+-	 */
+-	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev)) {
+ 		/*
+ 		 * Keep the port resumed 100ms to make sure things like
+ 		 * config space accesses from userspace (lspci) will not
+@@ -176,7 +168,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
  {
-+	struct device *dev = pp->dev;
- 	int ret;
- 
- 	pp->irq = platform_get_irq(pdev, 1);
-@@ -62,11 +63,11 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
- 
--		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+		ret = devm_request_irq(dev, pp->msi_irq,
- 					dw_plat_pcie_msi_irq_handler,
- 					IRQF_SHARED, "dw-plat-pcie-msi", pp);
- 		if (ret) {
--			dev_err(&pdev->dev, "failed to request MSI IRQ\n");
-+			dev_err(dev, "failed to request MSI IRQ\n");
- 			return ret;
- 		}
- 	}
-@@ -76,7 +77,7 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
--		dev_err(&pdev->dev, "failed to initialize host\n");
-+		dev_err(dev, "failed to initialize host\n");
- 		return ret;
- 	}
- 
-@@ -85,21 +86,21 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 
- static int dw_plat_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct dw_plat_pcie *dw_plat_pcie;
- 	struct pcie_port *pp;
- 	struct resource *res;  /* Resource from DT */
- 	int ret;
- 
--	dw_plat_pcie = devm_kzalloc(&pdev->dev, sizeof(*dw_plat_pcie),
--					GFP_KERNEL);
-+	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
- 	if (!dw_plat_pcie)
- 		return -ENOMEM;
- 
- 	pp = &dw_plat_pcie->pp;
--	pp->dev = &pdev->dev;
-+	pp->dev = dev;
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pp->dbi_base = devm_ioremap_resource(&pdev->dev, res);
-+	pp->dbi_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pp->dbi_base))
- 		return PTR_ERR(pp->dbi_base);
- 
+-	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev)) {
+ 		pm_runtime_forbid(&dev->dev);
+ 		pm_runtime_get_noresume(&dev->dev);
+ 		pm_runtime_dont_use_autosuspend(&dev->dev);
+-- 
+2.9.3
 
