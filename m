@@ -1,33 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44848 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754599AbcJGSVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 14:21:30 -0400
-Date: Fri, 7 Oct 2016 13:21:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Roy Zang <roy.zang@nxp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/7] PCI: layerscape: Name private struct pointer "ls"
- consistently
-Message-ID: <20161007182125.GB30438@localhost>
-References: <20161007164149.26341.87049.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <HE1PR0402MB27481312F256EBB295800F878BC60@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+Return-Path: <stern+581ae0c0@rowland.harvard.edu>
+Return-Path: <stern+581ae0c0@rowland.harvard.edu>
+Date: Thu, 20 Oct 2016 09:57:29 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>,
+    Mathias Nyman <mathias.nyman@linux.intel.com>,
+    Pierre de Villemereuil <flyos@mailoo.org>,
+    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
+     <linux-pci@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
+In-Reply-To: <20161020100146.GA3319@wunner.de>
+Message-ID: <Pine.LNX.4.44L0.1610200956380.1462-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <HE1PR0402MB27481312F256EBB295800F878BC60@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 07, 2016 at 05:05:05PM +0000, Roy Zang wrote:
-> On 10/07/2016 11:42 AM, Bjorn Helgaas wrote:
-> > Use a device-specific name, "ls", for struct ls_pcie pointers
-> > to hint that this is device-specific information.  No functional change
-> > intended.
-> how about ls_pcie  instead of ls ?
+On Thu, 20 Oct 2016, Lukas Wunner wrote:
 
-Done, and re-pushed the branch, thanks!
+> On Tue, Oct 11, 2016 at 11:18:28AM -0400, Alan Stern wrote:
+> > On Sat, 8 Oct 2016, Lukas Wunner wrote:
+> > > The PCI core already calls pm_runtime_get_sync() before invoking the
+> > > ->probe hook of a driver (see local_pci_probe()).  Drivers need to
+> > > explicitly release a runtime ref to allow their device to suspend.
+> > > For xhci-pci, this seems to happen in usb_hcd_pci_probe():
+> > > 
+> > > 	if (pci_dev_run_wake(dev))
+> > > 		pm_runtime_put_noidle(&dev->dev);
+> > > 
+> > > So you could either modify the if-condition if you want to change the
+> > > behaviour for XHCI devices only, or if you want to change it in general,
+> > > add something like this to pci_dev_run_wake():
+> > > 
+> > > 	/* PME capable in principle, but not from the intended sleep state */
+> > > 	if (dev->pme_support && !pci_pme_capable(dev, pci_target_state(dev)))
+> > > 		return false;
+> > > 
+> > > I've briefly looked over the callers of pci_dev_run_wake() and the above
+> > > seems safe but you should double-check them.
+> > 
+> > That seems like a good suggestion.  The patch is below; Pierre, can you 
+> > test it?  This should remove the need to set the USB autosuspend module 
+> > parameter to -1.
+> 
+> Alan, how do we proceed with this?  Are you going to submit a patch
+> (with commit message, tags and all) to linux-pci@ or would you prefer
+> me to do that?  I just went over the callers of pci_dev_run_wake()
+> once more and the patch still looks safe to me.
+
+Thanks for checking.  I intend to submit it soon; there just hasn't 
+been enough free time this week.  :-(
+
+Alan Stern
