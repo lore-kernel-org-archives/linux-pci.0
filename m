@@ -1,98 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36554 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750840AbcJ2LMp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 07:12:45 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>,
-        linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        Jon Mason <jonmason@broadcom.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] ARM: BCM5301X: Add back handler ignoring external imprecise aborts
-Date: Sat, 29 Oct 2016 13:12:29 +0200
-Message-Id: <20161029111229.26875-1-zajec5@gmail.com>
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V3 0/2] Add ACPI support for HiSilicon SoCs Host Controllers
+Date: Thu, 20 Oct 2016 11:10:32 +0800
+Message-ID: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
+PCIe controllers.
+The two patches respectively:
+        - rework the current HiSilicon driver to add support for ECAM
+          platforms(not RC).
+        - adds the HiSilicon ACPI specific quirks.
 
-Since early BCM5301X days we got abort handler that was removed by
-commit 937b12306ea79 ("ARM: BCM5301X: remove workaround imprecise abort
-fault handler"). It assumed we need to deal only with pending aborts
-left by the bootloader. Unfortunately this isn't true for BCM5301X.
+This patchset is based on 4.9-rc1 and add Tomasz quirks V6 pathcset.
+Tomasz quirks V6 patchset can be found here:
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-v6)
 
-When probing PCI config space (device enumeration) it is expected to
-have master aborts on the PCI bus. Most bridges don't forward (or they
-allow disabling it) these errors onto the AXI/AMBA bus but not the
-Northstar (BCM5301X) one.
+v2 -> v3:
+- rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset. 
+- obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead of
+  hardcode the addresses.
+- modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
+  Arnd comments.
 
-iProc PCIe controller on Northstar seems to be some older one, without
-a control register for errors forwarding. It means we need to workaround
-this at platform level. All newer platforms are not affected by this
-issue.
+v1 -> v2:
+- rebase against Tomasz RFC V5 quirk mechanism
+- add ACPI support for the HiSilicon Hip07 SoC PCIe controllers
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- arch/arm/mach-bcm/bcm_5301x.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+Dongdong Liu (2):
+  PCI: hisi: Add ECAM support for devices that are not RC
+  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
 
-diff --git a/arch/arm/mach-bcm/bcm_5301x.c b/arch/arm/mach-bcm/bcm_5301x.c
-index c8830a2..fe067f6 100644
---- a/arch/arm/mach-bcm/bcm_5301x.c
-+++ b/arch/arm/mach-bcm/bcm_5301x.c
-@@ -9,14 +9,42 @@
- #include <asm/hardware/cache-l2x0.h>
- 
- #include <asm/mach/arch.h>
-+#include <asm/siginfo.h>
-+#include <asm/signal.h>
-+
-+#define FSR_EXTERNAL		(1 << 12)
-+#define FSR_READ		(0 << 10)
-+#define FSR_IMPRECISE		0x0406
- 
- static const char *const bcm5301x_dt_compat[] __initconst = {
- 	"brcm,bcm4708",
- 	NULL,
- };
- 
-+static int bcm5301x_abort_handler(unsigned long addr, unsigned int fsr,
-+				  struct pt_regs *regs)
-+{
-+	/*
-+	 * We want to ignore aborts forwarded from the PCIe bus that are
-+	 * expected and shouldn't really be passed by the PCIe controller.
-+	 * The biggest disadvantage is the same FSR code may be reported when
-+	 * reading non-existing APB register and we shouldn't ignore that.
-+	 */
-+	if (fsr == (FSR_EXTERNAL | FSR_READ | FSR_IMPRECISE))
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static void __init bcm5301x_init_early(void)
-+{
-+	hook_fault_code(16 + 6, bcm5301x_abort_handler, SIGBUS, BUS_OBJERR,
-+			"imprecise external abort");
-+}
-+
- DT_MACHINE_START(BCM5301X, "BCM5301X")
- 	.l2c_aux_val	= 0,
- 	.l2c_aux_mask	= ~0,
- 	.dt_compat	= bcm5301x_dt_compat,
-+	.init_early	= bcm5301x_init_early,
- MACHINE_END
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
+ MAINTAINERS                                        |   1 +
+ drivers/acpi/pci_mcfg.c                            |  15 ++
+ drivers/pci/host/Kconfig                           |  12 +-
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-designware.c                 |   4 +-
+ drivers/pci/host/pcie-designware.h                 |   2 +
+ drivers/pci/host/pcie-hisi-acpi.c                  | 170 +++++++++++++++++++++
+ drivers/pci/host/pcie-hisi.c                       |  45 ++++++
+ include/linux/pci-ecam.h                           |   4 +
+ 10 files changed, 259 insertions(+), 10 deletions(-)
+ create mode 100755 drivers/pci/host/pcie-hisi-acpi.c
+
 -- 
-2.9.3
-
+1.9.1
