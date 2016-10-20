@@ -1,196 +1,194 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46866 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938918AbcJGQYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:24:21 -0400
-Subject: [PATCH 1/2] PCI: mvebu: Swap order of mvebu_writel() reg/val
- arguments
-To: Jason Cooper <jason@lakedaemon.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:24:16 -0500
-Message-ID: <20161007162416.23224.35628.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V3 1/2] PCI: hisi: Add ECAM support for devices that are not RC
+Date: Thu, 20 Oct 2016 11:10:33 +0800
+Message-ID: <1476933034-46044-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
+References: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Swap order of mvebu_writel() arguments to match the "dev, pos, val"
-order used by pci_write_config_word() and other drivers.  No functional
-change intended.
+This patch modifies the current Hip05/Hip06 PCIe host
+controller driver to add support for 'almost ECAM'
+compliant platforms. Some controllers are ECAM compliant
+for all the devices of the hierarchy except the root
+complex; this patch adds support for such controllers.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This is needed in preparation for the ACPI based driver
+to allow both DT and ACPI drivers to use the same BIOS
+(that configure the Designware iATUs).
+This commit doesn't break backward compatibility with
+previous non-ECAM platforms.
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 ---
- drivers/pci/host/pci-mvebu.c |   64 ++++++++++++++++++++----------------------
- 1 file changed, 31 insertions(+), 33 deletions(-)
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
+ drivers/pci/host/Kconfig                           |  4 +-
+ drivers/pci/host/pcie-designware.c                 |  4 +-
+ drivers/pci/host/pcie-designware.h                 |  2 +
+ drivers/pci/host/pcie-hisi.c                       | 45 ++++++++++++++++++++++
+ 5 files changed, 60 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 307f81d..9243dcd 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -157,12 +157,12 @@ struct mvebu_pcie_port {
- 	u32 saved_pcie_stat;
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index 59c2f47..87a597a 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -9,10 +9,13 @@ Additional properties are described here:
+ 
+ Required properties
+ - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
+-- reg: Should contain rc_dbi, config registers location and length.
+-- reg-names: Must include the following entries:
++- reg: Should contain rc_dbi and  either config or ecam-cfg registers
++       location and length (it depends on the platform BIOS).
++- reg-names: Must include
+   "rc_dbi": controller configuration registers;
+-  "config": PCIe configuration space registers.
++  and one of the following entries:
++    "config": PCIe configuration space registers for non-ECAM platforms.
++    "ecam-cfg": PCIe configuration space registers for ECAM platforms
+ - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+ - port-id: Should be 0, 1, 2 or 3.
+ 
+@@ -23,8 +26,10 @@ Optional properties:
+ Hip05 Example (note that Hip06 is the same except compatible):
+ 	pcie@0xb0080000 {
+ 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+-		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+-		reg-names = "rc_dbi", "config";
++		reg = <0 0xb0080000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>
++		/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
++		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
+ 		bus-range = <0  15>;
+ 		msi-parent = <&its_pcie>;
+ 		#address-cells = <3>;
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d7e7c0a..ae98644 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -219,13 +219,13 @@ config PCIE_ALTERA_MSI
+ 
+ config PCI_HISI
+ 	depends on OF && ARM64
+-	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
++	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+ 	  Say Y here if you want PCIe controller support on HiSilicon
+-	  Hip05 and Hip06 SoCs
++	  Hip05 and Hip06 and Hip07 SoCs
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 035f50c..da11644 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -101,8 +101,6 @@
+ #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
+ #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
+ 
+-static struct pci_ops dw_pcie_ops;
+-
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+ 	if ((uintptr_t)addr & (size - 1)) {
+@@ -800,7 +798,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
+-static struct pci_ops dw_pcie_ops = {
++struct pci_ops dw_pcie_ops = {
+ 	.read = dw_pcie_rd_conf,
+ 	.write = dw_pcie_wr_conf,
+ };
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a567ea2..30d228a 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -83,4 +83,6 @@ struct pcie_host_ops {
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+ 
++extern struct pci_ops dw_pcie_ops;
++
+ #endif /* _PCIE_DESIGNWARE_H */
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 56154c2..555c964 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -43,6 +43,34 @@ struct hisi_pcie {
+ 	struct pcie_soc_ops *soc_ops;
  };
  
--static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
-+static void mvebu_writel(struct mvebu_pcie_port *port, u32 reg, u32 val)
- {
- 	writel(val, port->base + reg);
- }
- 
--static inline u32 mvebu_readl(struct mvebu_pcie_port *port, u32 reg)
-+static u32 mvebu_readl(struct mvebu_pcie_port *port, u32 reg)
- {
- 	return readl(port->base + reg);
- }
-@@ -184,7 +184,7 @@ static void mvebu_pcie_set_local_bus_nr(struct mvebu_pcie_port *port, int nr)
- 	stat = mvebu_readl(port, PCIE_STAT_OFF);
- 	stat &= ~PCIE_STAT_BUS;
- 	stat |= nr << 8;
--	mvebu_writel(port, stat, PCIE_STAT_OFF);
-+	mvebu_writel(port, PCIE_STAT_OFF, stat);
- }
- 
- static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
-@@ -194,7 +194,7 @@ static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
- 	stat = mvebu_readl(port, PCIE_STAT_OFF);
- 	stat &= ~PCIE_STAT_DEV;
- 	stat |= nr << 16;
--	mvebu_writel(port, stat, PCIE_STAT_OFF);
-+	mvebu_writel(port, PCIE_STAT_OFF, stat);
- }
- 
- /*
-@@ -212,34 +212,33 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
- 
- 	/* First, disable and clear BARs and windows. */
- 	for (i = 1; i < 3; i++) {
--		mvebu_writel(port, 0, PCIE_BAR_CTRL_OFF(i));
--		mvebu_writel(port, 0, PCIE_BAR_LO_OFF(i));
--		mvebu_writel(port, 0, PCIE_BAR_HI_OFF(i));
-+		mvebu_writel(port, PCIE_BAR_CTRL_OFF(i), 0);
-+		mvebu_writel(port, PCIE_BAR_LO_OFF(i), 0);
-+		mvebu_writel(port, PCIE_BAR_HI_OFF(i), 0);
++static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++				    unsigned int devfn, int where, int size,
++				    u32 *value)
++{
++	return pci_generic_config_read(bus, devfn, where, size, value);
++}
++
++static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++				    unsigned int devfn, int where, int size,
++				    u32 value)
++{
++	return pci_generic_config_write(bus, devfn, where, size, value);
++}
++
++static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
++					      unsigned int devfn,
++					      int where)
++{
++	void __iomem *addr;
++	struct pcie_port *pp = bus->sysdata;
++
++	addr = pp->va_cfg1_base - (pp->busn->start << 20) +
++		((bus->number << 20) | (devfn << 12)) +
++		where;
++
++	return addr;
++}
++
+ /* HipXX PCIe host only supports 32-bit config access */
+ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+ 			      u32 *val)
+@@ -190,6 +218,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
  	}
  
- 	for (i = 0; i < 5; i++) {
--		mvebu_writel(port, 0, PCIE_WIN04_CTRL_OFF(i));
--		mvebu_writel(port, 0, PCIE_WIN04_BASE_OFF(i));
--		mvebu_writel(port, 0, PCIE_WIN04_REMAP_OFF(i));
-+		mvebu_writel(port, PCIE_WIN04_CTRL_OFF(i), 0);
-+		mvebu_writel(port, PCIE_WIN04_BASE_OFF(i), 0);
-+		mvebu_writel(port, PCIE_WIN04_REMAP_OFF(i), 0);
- 	}
- 
--	mvebu_writel(port, 0, PCIE_WIN5_CTRL_OFF);
--	mvebu_writel(port, 0, PCIE_WIN5_BASE_OFF);
--	mvebu_writel(port, 0, PCIE_WIN5_REMAP_OFF);
-+	mvebu_writel(port, PCIE_WIN5_CTRL_OFF, 0);
-+	mvebu_writel(port, PCIE_WIN5_BASE_OFF, 0);
-+	mvebu_writel(port, PCIE_WIN5_REMAP_OFF, 0);
- 
- 	/* Setup windows for DDR banks.  Count total DDR size on the fly. */
- 	size = 0;
- 	for (i = 0; i < dram->num_cs; i++) {
- 		const struct mbus_dram_window *cs = dram->cs + i;
- 
--		mvebu_writel(port, cs->base & 0xffff0000,
--			     PCIE_WIN04_BASE_OFF(i));
--		mvebu_writel(port, 0, PCIE_WIN04_REMAP_OFF(i));
--		mvebu_writel(port,
-+		mvebu_writel(port, PCIE_WIN04_BASE_OFF(i),
-+			     cs->base & 0xffff0000);
-+		mvebu_writel(port, PCIE_WIN04_REMAP_OFF(i), 0);
-+		mvebu_writel(port, PCIE_WIN04_CTRL_OFF(i),
- 			     ((cs->size - 1) & 0xffff0000) |
- 			     (cs->mbus_attr << 8) |
--			     (dram->mbus_dram_target_id << 4) | 1,
--			     PCIE_WIN04_CTRL_OFF(i));
-+			     (dram->mbus_dram_target_id << 4) | 1);
- 
- 		size += cs->size;
- 	}
-@@ -249,10 +248,9 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
- 		size = 1 << fls(size);
- 
- 	/* Setup BAR[1] to all DRAM banks. */
--	mvebu_writel(port, dram->cs[0].base, PCIE_BAR_LO_OFF(1));
--	mvebu_writel(port, 0, PCIE_BAR_HI_OFF(1));
--	mvebu_writel(port, ((size - 1) & 0xffff0000) | 1,
--		     PCIE_BAR_CTRL_OFF(1));
-+	mvebu_writel(port, PCIE_BAR_LO_OFF(1), dram->cs[0].base);
-+	mvebu_writel(port, PCIE_BAR_HI_OFF(1), 0);
-+	mvebu_writel(port, PCIE_BAR_CTRL_OFF(1), ((size - 1) & 0xffff0000) | 1);
- }
- 
- static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
-@@ -267,12 +265,12 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
- 	cmd |= PCI_COMMAND_IO;
- 	cmd |= PCI_COMMAND_MEMORY;
- 	cmd |= PCI_COMMAND_MASTER;
--	mvebu_writel(port, cmd, PCIE_CMD_OFF);
-+	mvebu_writel(port, PCIE_CMD_OFF, cmd);
- 
- 	/* Enable interrupt lines A-D. */
- 	mask = mvebu_readl(port, PCIE_MASK_OFF);
- 	mask |= PCIE_MASK_ENABLE_INTS;
--	mvebu_writel(port, mask, PCIE_MASK_OFF);
-+	mvebu_writel(port, PCIE_MASK_OFF, mask);
- }
- 
- static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
-@@ -281,8 +279,8 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
- {
- 	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
- 
--	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
--		     PCIE_CONF_ADDR_OFF);
-+	mvebu_writel(port, PCIE_CONF_ADDR_OFF,
-+		     PCIE_CONF_ADDR(bus->number, devfn, where));
- 
- 	switch (size) {
- 	case 1:
-@@ -305,8 +303,8 @@ static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
- {
- 	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
- 
--	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
--		     PCIE_CONF_ADDR_OFF);
-+	mvebu_writel(port, PCIE_CONF_ADDR_OFF,
-+		     PCIE_CONF_ADDR(bus->number, devfn, where));
- 
- 	switch (size) {
- 	case 1:
-@@ -717,7 +715,7 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 		if (mask == 0xffff0000)
- 			value &= 0xffff;
- 
--		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL);
-+		mvebu_writel(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL, value);
- 		break;
- 
- 	case PCISWCAP_EXP_LNKCTL:
-@@ -738,11 +736,11 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 		if (mask == 0xffff0000)
- 			value &= 0xffff;
- 
--		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
-+		mvebu_writel(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL, value);
- 		break;
- 
- 	case PCISWCAP_EXP_RTSTA:
--		mvebu_writel(port, value, PCIE_RC_RTSTA);
-+		mvebu_writel(port, PCIE_RC_RTSTA, value);
- 		break;
- 
- 	default:
-@@ -1025,7 +1023,7 @@ static int mvebu_pcie_resume(struct device *dev)
- 	pcie = dev_get_drvdata(dev);
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = pcie->ports + i;
--		mvebu_writel(port, port->saved_pcie_stat, PCIE_STAT_OFF);
-+		mvebu_writel(port, PCIE_STAT_OFF, port->saved_pcie_stat);
- 		mvebu_pcie_setup_hw(port);
- 	}
- 
-
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
++	if (reg) {
++		/* ECAM driver version */
++		hisi_pcie->pp.va_cfg0_base =
++		devm_ioremap_resource(&pdev->dev, reg);
++		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
++			dev_err(pp->dev, "cannot get ecam-cfg\n");
++			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
++		}
++		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
++
++		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
++
++		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
++		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
++	}
++
+ 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+ 	if (ret)
+ 		return ret;
+-- 
+1.9.1
