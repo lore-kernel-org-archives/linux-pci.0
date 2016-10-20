@@ -1,119 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize function"
-Date: Sat,  1 Oct 2016 13:46:16 -0400
-Message-Id: <1475343976-20744-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
-References: <1475343976-20744-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:4448 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934018AbcJTOSP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Oct 2016 10:18:15 -0400
+Date: Thu, 20 Oct 2016 17:18:10 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 6/9] PCI: Unfold conditions to block runtime PM on PCIe
+ ports
+Message-ID: <20161020141810.GM24289@lahna.fi.intel.com>
+References: <cover.1476875113.git.lukas@wunner.de>
+ <ba2f9f322b4aeea1aeb01f98a2eda8efe055494f.1476875113.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ba2f9f322b4aeea1aeb01f98a2eda8efe055494f.1476875113.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize
-function"). SCI penalty API was replaced by the runtime penalty calculation
-based on the value of acpi_gbl_FADT.sci_interrupt.
+On Wed, Oct 19, 2016 at 04:07:13PM +0200, Lukas Wunner wrote:
+> The conditions to block D3 on parent ports are currently condensed into
+> a single expression in pci_dev_check_d3cold().  Upcoming commits will
+> add further conditions for hotplug ports, making this expression fairly
+> large and impenetrable.  Unfold the conditions to maintain readability
+> when they are amended.
+> 
+> No functional change intended.
 
-acpi_gbl_FADT.sci_interrupt type does not get updated at the right time
-for some platforms and results in incorrect penalty assignment for PCI
-IRQs as irq_get_trigger_type returns the wrong type.
+This actually results a functional change because now all the conditions
+are evaluated whereas previosly it bailed out immediately when the
+condition was true ;-)
 
-Link: http://www.spinics.net/lists/linux-pci/msg54599.html
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/kernel/acpi/boot.c |  1 +
- drivers/acpi/pci_link.c     | 34 ++++++++++++++--------------------
- include/linux/acpi.h        |  1 +
- 3 files changed, 16 insertions(+), 20 deletions(-)
+Not that it matters here.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 90d84c3..0ffd26e 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
- 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
- 
- 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
-+	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
- 
- 	/*
- 	 * stash over-ride to indicate we've been here
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 06c2a11..6a2af19 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -495,27 +495,10 @@ static int acpi_irq_pci_sharing_penalty(int irq)
- 
- static int acpi_irq_get_penalty(int irq)
- {
--	int penalty = 0;
--
--	/*
--	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
--	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
--	* use for PCI IRQs.
--	*/
--	if (irq == acpi_gbl_FADT.sci_interrupt) {
--		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
--
--		if (type != IRQ_TYPE_LEVEL_LOW)
--			penalty += PIRQ_PENALTY_ISA_ALWAYS;
--		else
--			penalty += PIRQ_PENALTY_PCI_USING;
--	}
--
--	if (irq < ACPI_MAX_ISA_IRQS)
--		return penalty + acpi_irq_penalty[irq];
-+	if (irq < ACPI_MAX_IRQS)
-+		return acpi_irq_penalty[irq];
- 
--	penalty += acpi_irq_pci_sharing_penalty(irq);
--	return penalty;
-+	return acpi_irq_pci_sharing_penalty(irq);
- }
- 
- int __init acpi_irq_penalty_init(void)
-@@ -886,6 +869,17 @@ bool acpi_isa_irq_available(int irq)
- 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
- }
- 
-+void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
-+{
-+	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
-+		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
-+		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
-+			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
-+		else
-+			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
-+	}
-+}
-+
- /*
-  * Over-ride default table to reserve additional IRQs for use by ISA
-  * e.g. acpi_irq_isa=5
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 4d8452c..85ac7d5 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -318,6 +318,7 @@ struct pci_dev;
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
- bool acpi_isa_irq_available(int irq);
-+void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
- void acpi_pci_irq_disable (struct pci_dev *dev);
- 
- extern int ec_read(u8 addr, u8 *val);
--- 
-1.9.1
-
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/pci.c | 21 +++++++++++----------
+>  1 file changed, 11 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a19056e..f1ddb6b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2270,19 +2270,20 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+>  {
+>  	bool *d3cold_ok = data;
+> -	bool no_d3cold;
+>  
+> -	/*
+> -	 * The device needs to be allowed to go D3cold and if it is wake
+> -	 * capable to do so from D3cold.
+> -	 */
+> -	no_d3cold = dev->no_d3cold || !dev->d3cold_allowed ||
+> -		(device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold)) ||
+> -		!pci_power_manageable(dev);
+> +	/* The device needs to be allowed to go D3cold. */
+> +	if (dev->no_d3cold || !dev->d3cold_allowed)
+> +		*d3cold_ok = false;
+> +
+> +	/* If it is wakeup capable it must be able to do so from D3cold. */
+> +	if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
+> +		*d3cold_ok = false;
+>  
+> -	*d3cold_ok = !no_d3cold;
+> +	/* If it is a bridge it must be allowed to go to D3. */
+> +	if (!pci_power_manageable(dev))
+> +		*d3cold_ok = false;
+>  
+> -	return no_d3cold;
+> +	return !*d3cold_ok;
+>  }
+>  
+>  /*
+> -- 
+> 2.9.3
