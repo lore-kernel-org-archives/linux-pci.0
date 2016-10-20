@@ -1,309 +1,250 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Alex Barba <alex.barba@broadcom.com>,
-	Oza Oza <oza.oza@broadcom.com>,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH v2 06/12] PCI: iproc: Add PAXC v2 support
-Date: Mon, 31 Oct 2016 17:38:35 -0700
-Message-Id: <1477960721-17649-7-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
-References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
+ <bhelgaas@google.com>, <mark.rutland@arm.com>, <arnd@arndb.de>,
+ <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH V4 2/3] ARM64 LPC: Add missing range exception for special ISA
+Date: Thu, 20 Oct 2016 17:15:39 +0800
+Message-ID: <1476954940-242159-3-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ gabriele.paoloni@huawei.com, minyard@acm.org, linux-pci@vger.kernel.org,
+ john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
+ xuwei5@hisilicon.com, linuxarm@huawei.com,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-serial@vger.kernel.org,
+ benh@kernel.crashing.org, zourongrong@gmail.com, kantyzc@163.com,
+ zhichang.yuan02@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the second generation of the iProc PCIe PAXC host
-controller to the iProc PCIe host driver
+Currently if the range property is not specified of_translate_one
+returns an error. There are some special devices that work on a
+range of I/O ports where it's is not correct to specify a range
+property as the cpu addresses are used by special accessors.
+Here we add a new exception in of_translate_one to return
+the cpu address if the range property is not there. The exception
+checks if the parent bus is ISA and if the special accessors are
+defined.
 
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 ---
- drivers/pci/host/pcie-iproc-platform.c |   3 +
- drivers/pci/host/pcie-iproc.c          | 176 ++++++++++++++++++++++++++++++++-
- drivers/pci/host/pcie-iproc.h          |   4 +
- 3 files changed, 180 insertions(+), 3 deletions(-)
+ arch/arm64/include/asm/io.h |  7 +++++++
+ arch/arm64/kernel/extio.c   | 24 +++++++++++++++++++++++
+ drivers/of/address.c        | 47 +++++++++++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.c           |  6 +++---
+ include/linux/of_address.h  | 17 ++++++++++++++++
+ 5 files changed, 96 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index a3de087..f243150 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -33,6 +33,9 @@ static const struct of_device_id iproc_pcie_of_match_table[] = {
- 	}, {
- 		.compatible = "brcm,iproc-pcie-paxc",
- 		.data = (int *)IPROC_PCIE_PAXC,
-+	}, {
-+		.compatible = "brcm,iproc-pcie-paxc-v2",
-+		.data = (int *)IPROC_PCIE_PAXC_V2,
- 	},
- 	{ /* sentinel */ }
- };
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 07ec478..02f3ed3 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -21,6 +21,7 @@
- #include <linux/slab.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irqchip/arm-gic-v3.h>
- #include <linux/platform_device.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -38,6 +39,12 @@
- #define RC_PCIE_RST_OUTPUT           BIT(RC_PCIE_RST_OUTPUT_SHIFT)
- #define PAXC_RESET_MASK              0x7f
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 136735d..e480199 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -175,6 +175,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+ #define outsl outsl
  
-+#define GIC_V3_CFG_SHIFT             0
-+#define GIC_V3_CFG                   BIT(GIC_V3_CFG_SHIFT)
+ DECLARE_EXTIO(l, u32)
 +
-+#define MSI_ENABLE_CFG_SHIFT         0
-+#define MSI_ENABLE_CFG               BIT(MSI_ENABLE_CFG_SHIFT)
 +
- #define CFG_IND_ADDR_MASK            0x00001ffc
++#define indirect_io_ison indirect_io_ison
++extern int indirect_io_ison(void);
++
++#define chk_indirect_range chk_indirect_range
++extern int chk_indirect_range(u64 taddr);
+ #endif
  
- #define CFG_ADDR_BUS_NUM_SHIFT       20
-@@ -79,6 +86,31 @@ enum iproc_pcie_reg {
- 	/* clock/reset signal control */
- 	IPROC_PCIE_CLK_CTRL = 0,
  
-+	/*
-+	 * To allow MSI to be steered to an external MSI controller (e.g., ARM
-+	 * GICv3 ITS)
-+	 */
-+	IPROC_PCIE_MSI_GIC_MODE,
-+
-+	/*
-+	 * IPROC_PCIE_MSI_BASE_ADDR and IPROC_PCIE_MSI_WINDOW_SIZE define the
-+	 * window where the MSI posted writes are written, for the writes to be
-+	 * interpreted as MSI writes
-+	 */
-+	IPROC_PCIE_MSI_BASE_ADDR,
-+	IPROC_PCIE_MSI_WINDOW_SIZE,
-+
-+	/*
-+	 * To hold the address of the register where the MSI writes are
-+	 * programed. When ARM GICv3 ITS is used, this should be programmed
-+	 * with the address of the GITS_TRANSLATER register
-+	 */
-+	IPROC_PCIE_MSI_ADDR_LO,
-+	IPROC_PCIE_MSI_ADDR_HI,
-+
-+	/* enable MSI */
-+	IPROC_PCIE_MSI_EN_CFG,
-+
- 	/* allow access to root complex configuration space */
- 	IPROC_PCIE_CFG_IND_ADDR,
- 	IPROC_PCIE_CFG_IND_DATA,
-@@ -142,6 +174,20 @@ static const u16 iproc_pcie_reg_paxc[] = {
- 	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
- };
+diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
+index 80cafd5..55df8dc 100644
+--- a/arch/arm64/kernel/extio.c
++++ b/arch/arm64/kernel/extio.c
+@@ -19,6 +19,30 @@
  
-+/* iProc PCIe PAXC v2 registers */
-+static const u16 iproc_pcie_reg_paxc_v2[] = {
-+	[IPROC_PCIE_MSI_GIC_MODE]     = 0x050,
-+	[IPROC_PCIE_MSI_BASE_ADDR]    = 0x074,
-+	[IPROC_PCIE_MSI_WINDOW_SIZE]  = 0x078,
-+	[IPROC_PCIE_MSI_ADDR_LO]      = 0x07c,
-+	[IPROC_PCIE_MSI_ADDR_HI]      = 0x080,
-+	[IPROC_PCIE_MSI_EN_CFG]       = 0x09c,
-+	[IPROC_PCIE_CFG_IND_ADDR]     = 0x1f0,
-+	[IPROC_PCIE_CFG_IND_DATA]     = 0x1f4,
-+	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
-+	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
-+};
+ struct extio_ops *arm64_extio_ops;
+ 
++/**
++ * indirect_io_ison - check whether indirectIO can work well. This function only call
++ *		before the target I/O address was obtained.
++ *
++ * Returns 1 when indirectIO can work.
++ */
++int indirect_io_ison()
++{
++	return arm64_extio_ops ? 1 : 0;
++}
 +
- static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- {
- 	struct iproc_pcie *pcie;
-@@ -506,13 +552,131 @@ static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
- 	return 0;
++/**
++ * check_indirect_io - check whether the input taddr is for indirectIO.
++ * @taddr: the io address to be checked.
++ *
++ * Returns 1 when taddr is in the range; otherwise return 0.
++ */
++int chk_indirect_range(u64 taddr)
++{
++	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end < taddr)
++		return 0;
++
++	return 1;
++}
+ 
+ BUILD_EXTIO(b, u8)
+ 
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..0bee822 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -479,6 +479,39 @@ static int of_empty_ranges_quirk(struct device_node *np)
+ 	return false;
  }
  
-+static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
-+			       struct device_node *msi_node,
-+			       u64 *msi_addr)
++
++/*
++ * Check whether the current device being translating use indirectIO.
++ *
++ * return 1 if the check is past, or 0 represents fail checking.
++ */
++static int of_isa_indirect_io(struct device_node *parent,
++				struct of_bus *bus, __be32 *addr,
++				int na, u64 *presult)
 +{
-+	struct device *dev = pcie->dev;
-+	int ret;
-+	struct resource res;
++	unsigned int flags;
++	unsigned int rlen;
 +
-+	/*
-+	 * Check if 'msi-map' points to ARM GICv3 ITS, which is the only
-+	 * supported external MSI controller that requires steering
-+	 */
-+	if (!of_device_is_compatible(msi_node, "arm,gic-v3-its")) {
-+		dev_err(dev, "unable to find compatible MSI controller\n");
-+		return -ENODEV;
-+	}
++	/* whether support indirectIO */
++	if (!indirect_io_ison())
++		return 0;
 +
-+	/* derive GITS_TRANSLATER address from GICv3 */
-+	ret = of_address_to_resource(msi_node, 0, &res);
-+	if (ret < 0) {
-+		dev_err(dev, "unable to obtain MSI controller resources\n");
-+		return ret;
-+	}
++	if (!of_bus_isa_match(parent))
++		return 0;
 +
-+	*msi_addr = res.start + GITS_TRANSLATER;
-+	return 0;
++	flags = bus->get_flags(addr);
++	if (!(flags & IORESOURCE_IO))
++		return 0;
++
++	/* there is ranges property, apply the normal translation directly. */
++	if (of_get_property(parent, "ranges", &rlen))
++		return 0;
++
++	*presult = of_read_number(addr + 1, na - 1);
++
++	return chk_indirect_range(*presult);
 +}
 +
-+static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
-+{
-+	u32 val;
-+
-+	/*
-+	 * Program bits [43:13] of address of GITS_TRANSLATER register into
-+	 * bits [30:0] of the MSI base address register. In fact, in all iProc
-+	 * based SoCs, all I/O register bases are well below the 32-bit
-+	 * boundary, so we can safely assume bits [43:32] are always zeros
-+	 */
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_BASE_ADDR,
-+			     (u32)(msi_addr >> 13));
-+
-+	/* use a default 8K window size */
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_WINDOW_SIZE, 0);
-+
-+	/* steering MSI to GICv3 ITS */
-+	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_GIC_MODE);
-+	val |= GIC_V3_CFG;
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_GIC_MODE, val);
-+
-+	/*
-+	 * Program bits [43:2] of address of GITS_TRANSLATER register into the
-+	 * iProc MSI address registers
-+	 */
-+	msi_addr >>= 2;
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_ADDR_HI,
-+			     upper_32_bits(msi_addr));
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_ADDR_LO,
-+			     lower_32_bits(msi_addr));
-+
-+	/* enable MSI */
-+	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
-+	val |= MSI_ENABLE_CFG;
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
-+}
-+
-+static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
-+				struct device_node *msi_node)
-+{
-+	struct device *dev = pcie->dev;
-+	int ret;
-+	u64 msi_addr;
-+
-+	ret = iproce_pcie_get_msi(pcie, msi_node, &msi_addr);
-+	if (ret < 0) {
-+		dev_err(dev, "msi steering failed\n");
-+		return ret;
-+	}
-+
-+	switch (pcie->type) {
-+	case IPROC_PCIE_PAXC_V2:
-+		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
- {
- 	struct device_node *msi_node;
-+	int ret;
-+
-+	/*
-+	 * Either the "msi-parent" or the "msi-map" phandle needs to exist
-+	 * for us to obtain the MSI node
-+	 */
+ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 			    struct of_bus *pbus, __be32 *addr,
+ 			    int na, int ns, int pna, const char *rprop)
+@@ -532,7 +565,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 	}
+ 	memcpy(addr, ranges + na, 4 * pna);
  
- 	msi_node = of_parse_phandle(pcie->dev->of_node, "msi-parent", 0);
--	if (!msi_node)
--		return -ENODEV;
-+	if (!msi_node) {
-+		const __be32 *msi_map = NULL;
-+		int len;
-+		u32 phandle;
-+
-+		msi_map = of_get_property(pcie->dev->of_node, "msi-map", &len);
-+		if (!msi_map)
-+			return -ENODEV;
-+
-+		phandle = be32_to_cpup(msi_map + 1);
-+		msi_node = of_find_node_by_phandle(phandle);
-+		if (!msi_node)
-+			return -ENODEV;
-+	}
-+
-+	/*
-+	 * Certain revisions of the iProc PCIe controller require additional
-+	 * configurations to steer the MSI writes towards an external MSI
-+	 * controller
-+	 */
-+	if (pcie->need_msi_steer) {
-+		ret = iproc_pcie_msi_steer(pcie, msi_node);
-+		if (ret)
-+			return ret;
-+	}
+- finish:
++finish:
+ 	of_dump_addr("parent translation for:", addr, pna);
+ 	pr_debug("with offset: %llx\n", (unsigned long long)offset);
  
- 	/*
- 	 * If another MSI controller is being used, the call below should fail
-@@ -544,6 +708,11 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		regs = iproc_pcie_reg_paxc;
- 		pcie->ep_is_internal = true;
- 		break;
-+	case IPROC_PCIE_PAXC_V2:
-+		regs = iproc_pcie_reg_paxc_v2;
-+		pcie->ep_is_internal = true;
-+		pcie->need_msi_steer = true;
-+		break;
- 	default:
- 		dev_err(dev, "incompatible iProc PCIe interface\n");
+@@ -595,6 +628,15 @@ static u64 __of_translate_address(struct device_node *dev,
+ 			result = of_read_number(addr, na);
+ 			break;
+ 		}
++		/*
++		 * For indirectIO device which has no ranges property, get
++		 * the address from reg directly.
++		 */
++		if (of_isa_indirect_io(dev, bus, addr, na, &result)) {
++			pr_info("isa indirectIO matched(%s)..addr = 0x%llx\n",
++				of_node_full_name(dev), result);
++			break;
++		}
+ 
+ 		/* Get new parent bus and counts */
+ 		pbus = of_match_bus(parent);
+@@ -688,8 +730,9 @@ static int __of_address_to_resource(struct device_node *dev,
+ 	if (taddr == OF_BAD_ADDR)
  		return -EINVAL;
-@@ -556,7 +725,8 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		return -ENOMEM;
+ 	memset(r, 0, sizeof(struct resource));
+-	if (flags & IORESOURCE_IO) {
++	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
+ 		unsigned long port;
++
+ 		port = pci_address_to_pio(taddr);
+ 		if (port == (unsigned long)-1)
+ 			return -EINVAL;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..1a08511 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3263,7 +3263,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
  
- 	/* go through the register table and populate all valid registers */
--	pcie->reg_offsets[0] = regs[0];
-+	pcie->reg_offsets[0] = (pcie->type == IPROC_PCIE_PAXC_V2) ?
-+		IPROC_PCIE_REG_INVALID : regs[0];
- 	for (reg_idx = 1; reg_idx < IPROC_PCIE_MAX_NUM_REG; reg_idx++)
- 		pcie->reg_offsets[reg_idx] = regs[reg_idx] ?
- 			regs[reg_idx] : IPROC_PCIE_REG_INVALID;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 711dd3a..c2da140 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -27,6 +27,7 @@ enum iproc_pcie_type {
- 	IPROC_PCIE_PAXB_BCMA = 0,
- 	IPROC_PCIE_PAXB,
- 	IPROC_PCIE_PAXC,
-+	IPROC_PCIE_PAXC_V2,
- };
+ #ifdef PCI_IOBASE
+ 	struct io_range *range;
+-	resource_size_t allocated_size = 0;
++	resource_size_t allocated_size = PCIBIOS_MIN_IO;
  
- /**
-@@ -61,6 +62,8 @@ struct iproc_msi;
-  * unsupported request from being forwarded as an APB bus error
-  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
-  * @ob: outbound mapping parameters
-+ * @need_msi_steer: indicates additional configuration of the iProc PCIe
-+ * controller is required to steer MSI writes to external interrupt controller
-  * @msi: MSI data
-  */
- struct iproc_pcie {
-@@ -79,6 +82,7 @@ struct iproc_pcie {
- 	bool has_apb_err_disable;
- 	bool need_ob_cfg;
- 	struct iproc_pcie_ob ob;
-+	bool need_msi_steer;
- 	struct iproc_msi *msi;
- };
+ 	/* check if the range hasn't been previously recorded */
+ 	spin_lock(&io_range_lock);
+@@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
  
+ #ifdef PCI_IOBASE
+ 	struct io_range *range;
+-	resource_size_t allocated_size = 0;
++	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+ 
+ 	if (pio > IO_SPACE_LIMIT)
+ 		return address;
+@@ -3335,7 +3335,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+ 	struct io_range *res;
+-	resource_size_t offset = 0;
++	resource_size_t offset = PCIBIOS_MIN_IO;
+ 	unsigned long addr = -1;
+ 
+ 	spin_lock(&io_range_lock);
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 3786473..0ba7e21 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -24,6 +24,23 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
++
++#ifndef indirect_io_ison
++#define indirect_io_ison indirect_io_ison
++static inline int indirect_io_ison(void)
++{
++	return 0;
++}
++#endif
++
++#ifndef chk_indirect_range
++#define chk_indirect_range chk_indirect_range
++static inline int chk_indirect_range(u64 taddr)
++{
++	return 0;
++}
++#endif
++
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
 -- 
-2.1.4
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
