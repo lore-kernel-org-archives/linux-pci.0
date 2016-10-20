@@ -1,71 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:34729 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753824AbcJRQaw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Oct 2016 12:30:52 -0400
-Received: by mail-qk0-f193.google.com with SMTP id n189so17262693qke.1
-        for <linux-pci@vger.kernel.org>; Tue, 18 Oct 2016 09:30:51 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Lucas Stach'" <l.stach@pengutronix.de>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>
-Cc: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>,
-        "'Gary Bisson'" <gary.bisson@boundarydevices.com>,
-        <kernel@pengutronix.de>, <patchwork-lst@pengutronix.de>
-References: <20161018082549.10905-1-l.stach@pengutronix.de>
-In-Reply-To: <20161018082549.10905-1-l.stach@pengutronix.de>
-Subject: Re: [PATCH resend] PCI: designware: fix register access before host init
-Date: Tue, 18 Oct 2016 12:30:49 -0400
-Message-ID: <000001d2295c$fcfdfec0$f6f9fc40$@gmail.com>
+Received: from lucky1.263xmail.com ([211.157.147.135]:36970 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756216AbcJTBHd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Oct 2016 21:07:33 -0400
+Subject: Re: [PATCH] PCI: rockchip: remove the pointer to L1 substate cap
+To: Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+References: <1476868234-15135-1-git-send-email-shawn.lin@rock-chips.com>
+ <20161019174205.GA78840@google.com> <20161019174357.GB78840@google.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <22d32ccb-9c3c-4a8b-f2e2-2de471f8dac5@rock-chips.com>
+Date: Thu, 20 Oct 2016 09:07:14 +0800
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
+In-Reply-To: <20161019174357.GB78840@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 18, 2016 4:26 AM, Lucas Stach wrote:
+在 2016/10/20 1:43, Brian Norris 写道:
+> On Wed, Oct 19, 2016 at 10:42:05AM -0700, Brian Norris wrote:
+>> Hi,
+>>
+>> On Wed, Oct 19, 2016 at 05:10:34PM +0800, Shawn Lin wrote:
+>>> Per the errata of TRM, the RC can't support L1 substate, so we
+>>> need to remove the L1 substate cap.
+>>>
+>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 >
-> The function used to determine if iATU unroll is available will read a RC
-register.
-> This is not possible and will result in a system hang if the RC is still
-in reset,
->  so it is only safe to call this function after host_init() has been
-called.
+> [snip]
 >
-> Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
-> Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> BTW, I couldn't actually find the original patch email in any mailing
+> list archive, nor in patchwork. Did the email get held up by the mailing
+> list or something?
 
-It looks good!
+I don't know if this patch was held by linux-pci, but I could find it
+here:
 
-Acked-by: Jingoo Han <jigoohan1@gmail.com>
+https://patchwork.kernel.org/patch/9383721/
 
 
-> ---
->  drivers/pci/host/pcie-designware.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+
 >
-> diff --git a/drivers/pci/host/pcie-designware.c
-b/drivers/pci/host/pcie-designware.c
-> index 035f50c03281..74510508fafc 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -
->  	if (pp->ops->host_init)
->  		pp->ops->host_init(pp);
->  
-> +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +
->  	pp->root_bus_nr = pp->busn->start;
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> Brian
 > --
-> 2.9.3
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
+
+-- 
+Best Regards
+Shawn Lin
 
