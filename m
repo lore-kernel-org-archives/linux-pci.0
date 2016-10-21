@@ -1,75 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45672 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938836AbcJGQWP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:22:15 -0400
-Subject: [PATCH 03/10] PCI: altera: Simplify TLP_CFG_DW1 usage
-To: Ley Foon Tan <lftan@altera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org
-Date: Fri, 07 Oct 2016 11:22:11 -0500
-Message-ID: <20161007162211.22796.53431.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162153.22796.13721.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] pci: pcie-designware-plat: changing driver authors e-mail
+To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
+References: <de627efa8f7beaf1e8c04624b21e410caf7d0b51.1477042092.git.jpinto@synopsys.com>
+ <20161021145749.GA7238@localhost>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <63a4d586-2c0c-ce15-a83f-f774562f6299@synopsys.com>
+Date: Fri, 21 Oct 2016 17:18:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161021145749.GA7238@localhost>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-TLP_CFG_DW1() was only used with altera->root_bus_nr and RP_DEVFN, so
-encode that directly into the macro so we don't have to clutter the uses
-with the TLP_REQ_ID() usage.  No functional change intended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-altera.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+Thank you Bjorn!
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 1398d92..243e6bc 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -55,18 +55,19 @@
- #define TLP_PAYLOAD_SIZE		0x01
- #define TLP_READ_TAG			0x1d
- #define TLP_WRITE_TAG			0x10
-+#define RP_DEVFN			0
-+#define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
- #define TLP_CFG_DW0(altera, bus)					\
-     ((((bus == altera->root_bus_nr) ? TLP_FMTTYPE_CFGRD0		\
- 				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
-      TLP_PAYLOAD_SIZE)
--#define TLP_CFG_DW1(reqid, tag, be)	(((reqid) << 16) | (tag << 8) | (be))
-+#define TLP_CFG_DW1(altera, tag, be)	\
-+    (((TLP_REQ_ID(altera->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
- #define TLP_CFG_DW2(bus, devfn, offset)	\
- 				(((bus) << 24) | ((devfn) << 16) | (offset))
--#define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
- #define TLP_COMP_STATUS(s)		(((s) >> 12) & 7)
- #define TLP_HDR_SIZE			3
- #define TLP_LOOP			500
--#define RP_DEVFN			0
- 
- #define LINK_UP_TIMEOUT			HZ
- #define LINK_RETRAIN_TIMEOUT		HZ
-@@ -222,8 +223,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *altera, u8 bus, u32 devfn,
- 	u32 headers[TLP_HDR_SIZE];
- 
- 	headers[0] = TLP_CFG_DW0(altera, bus);
--	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(altera->root_bus_nr, RP_DEVFN),
--					TLP_READ_TAG, byte_en);
-+	headers[1] = TLP_CFG_DW1(altera, TLP_READ_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
- 	tlp_write_packet(altera, headers, 0, false);
-@@ -238,8 +238,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *altera, u8 bus, u32 devfn,
- 	int ret;
- 
- 	headers[0] = TLP_CFG_DW0(altera, bus);
--	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(altera->root_bus_nr, RP_DEVFN),
--					TLP_WRITE_TAG, byte_en);
-+	headers[1] = TLP_CFG_DW1(altera, TLP_WRITE_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
- 	/* check alignment to Qword */
-
+On 10/21/2016 3:57 PM, Bjorn Helgaas wrote:
+> On Fri, Oct 21, 2016 at 10:31:48AM +0100, Joao Pinto wrote:
+>> Although I am leaving Synopsys, I would like to keep working with the
+>> linux kernel community and help in what you might find useful. For that
+>> I am sending this patch to change my contact e-mail. 
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> Applied to for-linus for v4.9, thanks, Joao!  Best wishes in your next
+> adventure.  Thanks for all your work and I hope you keep contributing to
+> PCI!
+> 
+>> ---
+>>  drivers/pci/host/pcie-designware-plat.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+>> index 537f58a..8df6312 100644
+>> --- a/drivers/pci/host/pcie-designware-plat.c
+>> +++ b/drivers/pci/host/pcie-designware-plat.c
+>> @@ -3,7 +3,7 @@
+>>   *
+>>   * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+>>   *
+>> - * Authors: Joao Pinto <jpinto@synopsys.com>
+>> + * Authors: Joao Pinto <jpmpinto@gmail.com>
+>>   *
+>>   * This program is free software; you can redistribute it and/or modify
+>>   * it under the terms of the GNU General Public License version 2 as
+>> -- 
+>> 1.8.1.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
