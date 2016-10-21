@@ -1,90 +1,179 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Po Liu <po.liu@nxp.com>
-To: Rob Herring <robh@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-        "M.H. Lian" <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>
-Subject: RE: [PATCH v6 3/3] pci:add support aer/pme interrupts with none
- MSI/MSI-X/INTx mode
-Date: Sun, 9 Oct 2016 02:47:36 +0000
-Message-ID: <VI1PR0401MB170914050D7ADE4E8FC96A0A92D80@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1473741659-17618-3-git-send-email-po.liu@nxp.com>
- <1475226697-7709-1-git-send-email-po.liu@nxp.com>
- <1475226697-7709-3-git-send-email-po.liu@nxp.com>
- <20161008204959.GA17455@rob-hp-laptop>
-In-Reply-To: <20161008204959.GA17455@rob-hp-laptop>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 20 Oct 2016 20:58:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, Len Brown <len.brown@intel.com>,
+        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-kernel@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>, Pavel Machek <pavel@ucw.cz>,
+        linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4 2/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
+ function"
+Message-ID: <20161021015814.GC31044@localhost>
+References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+ <1476915664-27231-3-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476915664-27231-3-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUm9iLA0KDQpCZXN0IHJlZ2FyZHMsDQpMaXUgUG8NCg0KPiAgLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCj4gIEZyb206IFJvYiBIZXJyaW5nIFttYWlsdG86cm9iaEBrZXJuZWwub3JnXQ0K
-PiAgU2VudDogU3VuZGF5LCBPY3RvYmVyIDA5LCAyMDE2IDQ6NTAgQU0NCj4gIFRvOiBQbyBMaXUN
-Cj4gIENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3Rz
-LmluZnJhZGVhZC5vcmc7DQo+ICBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZpY2V0
-cmVlQHZnZXIua2VybmVsLm9yZzsgQmpvcm4gSGVsZ2FhczsNCj4gIFNoYXduIEd1bzsgTWFyYyBa
-eW5naWVyOyBSb3kgWmFuZzsgTWluZ2thaSBIdTsgU3R1YXJ0IFlvZGVyOyBMZW8gTGk7DQo+ICBB
-cm5kIEJlcmdtYW5uOyBNLkguIExpYW47IE11cmFsaSBLYXJpY2hlcmkNCj4gIFN1YmplY3Q6IFJl
-OiBbUEFUQ0ggdjYgMy8zXSBwY2k6YWRkIHN1cHBvcnQgYWVyL3BtZSBpbnRlcnJ1cHRzIHdpdGgg
-bm9uZQ0KPiAgTVNJL01TSS1YL0lOVHggbW9kZQ0KPiAgDQo+ICBPbiBGcmksIFNlcCAzMCwgMjAx
-NiBhdCAwNToxMTozN1BNICswODAwLCBQbyBMaXUgd3JvdGU6DQo+ICA+IE9uIHNvbWUgcGxhdGZv
-cm1zLCByb290IHBvcnQgZG9lc24ndCBzdXBwb3J0IE1TSS9NU0ktWC9JTlR4IGluIFJDIG1vZGUu
-DQo+ICA+IFdoZW4gY2hpcCBzdXBwb3J0IHRoZSBhZXIvcG1lIGludGVycnVwdHMgd2l0aCBub25l
-IE1TSS9NU0ktWC9JTlR4DQo+ICA+IG1vZGUsIG1heWJlIHRoZXJlIGlzIGludGVycnVwdCBsaW5l
-IGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZQ0KPiAgPiBpbnRlcnJ1cHQgbnVtYmVyIGluIHRo
-ZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5pcnEgd2l0aCBpdC4NCj4gIA0KPiAgQWdh
-aW4sIGV4cGxhaW4gd2h5IHlvdSBhcmUgYnJlYWtpbmcgY29tcGF0aWJpbGl0eS4gV2lsbCBhbiBv
-bGQgZHRiIHVzaW5nDQo+ICAiaW50ciIgc3RpbGwgd29yayB3aXRoIHRoaXMgY2hhbmdlPyBJdCBz
-aG91bGQgbm9ybWFsbHkuIFRoZXJlIGFyZSBzb21lDQo+ICBleGNlcHRpb25zLCBidXQgeW91IG5l
-ZWQgdG8gc2F5IHdoYXQgdGhleSBhcmUuDQo+ICANCk9rLCB1bmRlcnN0YW5kLg0KDQo+ICA+DQo+
-ICA+IFNpZ25lZC1vZmYtYnk6IFBvIExpdSA8cG8ubGl1QG54cC5jb20+DQo+ICA+IC0tLQ0KPiAg
-PiBjaGFuZ2VzIGZvciB2NjoNCj4gID4gCS0gbW9kaWZ5IGJpbmRpbmdzIGZvciAiYWVyIiJwbWUi
-Ow0KPiAgPiAJLSBjaGFuZ2luZyB0byB0aGUgaG9vZCBtZXRob2QgdG8gaW1wbGVtZW50IHRoZSBh
-ZXIgcG1lIGludGVycnVwdDsNCj4gID4gCS0gYWRkIHBtZSBpbnRlcnJ1cHQgaW4gdGhlIHNhbWUg
-d2F5Ow0KPiAgPg0KPiAgPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUt
-cGNpLnR4dCAgICAgfCAxMyArKysrKy0tDQo+ICA+ICBhcmNoL2FybS9rZXJuZWwvYmlvczMyLmMg
-ICAgICAgICAgICAgICAgICAgICAgICAgICB8IDQzDQo+ICArKysrKysrKysrKysrKysrKysrKysr
-DQo+ICA+ICBhcmNoL2FybTY0L2tlcm5lbC9wY2kuYyAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICB8IDQzDQo+ICArKysrKysrKysrKysrKysrKysrKysrDQo+ICA+ICBkcml2ZXJzL3BjaS9wY2ll
-L3BvcnRkcnZfY29yZS5jICAgICAgICAgICAgICAgICAgICB8IDMxDQo+ICArKysrKysrKysrKysr
-KystDQo+ICA+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8ICAxICsNCj4gID4gIDUgZmlsZXMgY2hhbmdlZCwgMTI2IGluc2VydGlvbnMoKyksIDUg
-ZGVsZXRpb25zKC0pDQo+ICA+DQo+ICA+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2Rldmlj
-ZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiAgPiBiL0RvY3VtZW50YXRp
-b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+IGluZGV4
-IDQxZTlmNTUuLjUxZWQ0OWUgMTAwNjQ0DQo+ICA+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+ICsrKyBiL0RvY3VtZW50
-YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+IEBA
-IC0xOCw4ICsxOCwxMiBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAgPiAgLSByZWc6IGJhc2Ug
-YWRkcmVzc2VzIGFuZCBsZW5ndGhzIG9mIHRoZSBQQ0llIGNvbnRyb2xsZXINCj4gID4gIC0gaW50
-ZXJydXB0czogQSBsaXN0IG9mIGludGVycnVwdCBvdXRwdXRzIG9mIHRoZSBjb250cm9sbGVyLiBN
-dXN0DQo+ICBjb250YWluIGFuDQo+ICA+ICAgIGVudHJ5IGZvciBlYWNoIGVudHJ5IGluIHRoZSBp
-bnRlcnJ1cHQtbmFtZXMgcHJvcGVydHkuDQo+ICA+IC0tIGludGVycnVwdC1uYW1lczogTXVzdCBp
-bmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4gID4gLSAgImludHIiOiBUaGUgaW50ZXJy
-dXB0IHRoYXQgaXMgYXNzZXJ0ZWQgZm9yIGNvbnRyb2xsZXIgaW50ZXJydXB0cw0KPiAgPiArLSBp
-bnRlcnJ1cHQtbmFtZXM6IEl0IGNvdWxkIGluY2x1ZGUgdGhlIGZvbGxvd2luZyBlbnRyaWVzOg0K
-PiAgDQo+ICAiQ291bGQiIGlzIG5vdCBzdHJvbmcgZW5vdWdoLiBFdmVyeSB2YWxpZCBjb21iaW5h
-dGlvbiBvZiBpbnRlcnJ1cHRzDQo+ICBzaG91bGQgY29ycmVzcG9uZCB0byBhIHNwZWNpZmljIGNv
-bXBhdGlibGUgc3RyaW5nLiBBIGdpdmVuIHZlcnNpb24gb2YNCj4gIGgvdyBlaXRoZXIgaGFzIHRo
-ZXNlIGludGVycnVwdHMgb3Igbm90Lg0KDQpPaywgd2lsbCBjaGFuZ2UgdG8gJ211c3QnLg0KDQo+
-ICANCj4gID4gKyAgImFlciI6IEFzc2VydGVkIGZvciBhZXIgaW50ZXJydXB0IHdoZW4gY2hpcCBz
-dXBwb3J0IHRoZSBhZXINCj4gIGludGVycnVwdCB3aXRoDQo+ICA+ICsJCSBub25lIE1TSS9NU0kt
-WC9JTlR4IG1vZGUsYnV0IHRoZXJlIGlzIGludGVycnVwdCBsaW5lIGZvcg0KPiAgYWVyLg0KPiAg
-PiArICAicG1lIjogQXNzZXJ0ZWQgZm9yIHBtZSBpbnRlcnJ1cHQgd2hlbiBjaGlwIHN1cHBvcnQg
-dGhlIHBtZQ0KPiAgaW50ZXJydXB0IHdpdGgNCj4gID4gKwkJIG5vbmUgTVNJL01TSS1YL0lOVHgg
-bW9kZSxidXQgdGhlcmUgaXMgaW50ZXJydXB0IGxpbmUgZm9yDQo+ICBwbWUuDQo+ICA+ICsgIC4u
-Li4uLg0KPiAgPiAgLSBmc2wscGNpZS1zY2ZnOiBNdXN0IGluY2x1ZGUgdHdvIGVudHJpZXMuDQo+
-ICA+ICAgIFRoZSBmaXJzdCBlbnRyeSBtdXN0IGJlIGEgbGluayB0byB0aGUgU0NGRyBkZXZpY2Ug
-bm9kZQ0KPiAgPiAgICBUaGUgc2Vjb25kIGVudHJ5IG11c3QgYmUgJzAnIG9yICcxJyBiYXNlZCBv
-biBwaHlzaWNhbCBQQ0llDQo+ICBjb250cm9sbGVyIGluZGV4Lg0K
+On Wed, Oct 19, 2016 at 06:21:03PM -0400, Sinan Kaya wrote:
+> The SCI penalize function was removed in two steps (first refactor
+> and then remove) and these changes are reverted here in one go.
+> 
+> The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> refactored the original code so that SCI penalty is calculated dynamically
+> by the time get_penalty function is called. That change is partially
+> reverted here, specifically for the SCI IRQ alone.
+> 
+> The SCI penalize function was finally dropped by commit 9e5ed6d1fb87
+> ("ACPI,PCI,IRQ: remove SCI penalize function") that replaced the old SCI
+> penalty API with penalty calculation carried out dynamically and based
+> on the acpi_gbl_FADT.sci_interrupt value.
+> 
+> However, that new algorithm relies on the accurate setting of IRQ
+> types and that doesn't happen early enough on some platforms which
+> leads to incorrect penalty assignments for PCI IRQs.  In those cases,
+> irq_get_trigger_type() returns incorrect values for the IRQs in
+> question, because they have not been registered yet by the time the
+> penalties are calculated.
+> 
+> To fix this problem, we only need to fix the penalty for the SCI interrupt.
+> It seems better to add a single "sci_penalty" variable, set it to
+> PIRQ_PENALTY_PCI_USING if it's level/low or PIRQ_PENALTY_ISA_ALWAYS
+> otherwise, and add "sci_penalty" in when appropriate.  That should fix it
+> for *any* SCI IRQ, not just those less than 256, and we don't have to add
+> these extra penalty table entries that are all unused (except possibly for
+> one entry if we have an SCI in the 16-255 range).
+> 
+> For this reason, revert commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI
+> penalize function") completely to restore the correct behavior.
+
+I like this patch fine, except for the changelog.  I don't think it's
+useful to describe this as a revert and give all the historical
+details.  I think the important part is something like this:
+
+  We previously used irq_get_trigger_type(irq) to help compute the
+  penalty for the SCI, but that depends on the SCI having been
+  registered already.  Add acpi_penalize_sci_irq() so platforms can
+  tell us the SCI IRQ, trigger, and polarity so we can compute the
+  penalty even before the SCI has been registered.
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> Link: https://lkml.org/lkml/2016/10/4/283
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Fixes: commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> Fixes: commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize function")
+
+"commit" is redundant; it's sufficient to say:
+
+  Fixes: 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+
+In fact, I don't think you really need to include "commit" in the
+reference to 9e5ed6d1fb87 above either.
+
+> ---
+>  arch/x86/kernel/acpi/boot.c |  1 +
+>  drivers/acpi/pci_link.c     | 30 +++++++++++++++---------------
+>  include/linux/acpi.h        |  1 +
+>  3 files changed, 17 insertions(+), 15 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+> index 90d84c3..0ffd26e 100644
+> --- a/arch/x86/kernel/acpi/boot.c
+> +++ b/arch/x86/kernel/acpi/boot.c
+> @@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+>  		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+>  
+>  	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
+> +	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+>  
+>  	/*
+>  	 * stash over-ride to indicate we've been here
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index 4f37938..294b190 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -87,6 +87,7 @@ struct acpi_pci_link {
+>  
+>  static LIST_HEAD(acpi_link_list);
+>  static DEFINE_MUTEX(acpi_link_lock);
+> +static int sci_irq = -1, sci_penalty;
+>  
+>  /* --------------------------------------------------------------------------
+>                              PCI Link Device Management
+> @@ -496,25 +497,13 @@ static int acpi_irq_get_penalty(int irq)
+>  {
+>  	int penalty = 0;
+>  
+> -	/*
+> -	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+> -	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+> -	* use for PCI IRQs.
+> -	*/
+> -	if (irq == acpi_gbl_FADT.sci_interrupt) {
+> -		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+> -
+> -		if (type != IRQ_TYPE_LEVEL_LOW)
+> -			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+> -		else
+> -			penalty += PIRQ_PENALTY_PCI_USING;
+> -	}
+> +	if (irq == sci_irq)
+> +		penalty += sci_penalty;
+>  
+>  	if (irq < ACPI_MAX_ISA_IRQS)
+>  		return penalty + acpi_isa_irq_penalty[irq];
+>  
+> -	penalty += acpi_irq_pci_sharing_penalty(irq);
+> -	return penalty;
+> +	return penalty + acpi_irq_pci_sharing_penalty(irq);
+>  }
+>  
+>  int __init acpi_irq_penalty_init(void)
+> @@ -881,6 +870,17 @@ bool acpi_isa_irq_available(int irq)
+>  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+>  }
+>  
+> +void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+> +{
+> +	sci_irq = irq;
+> +
+> +	if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
+> +	    polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
+> +		sci_penalty = PIRQ_PENALTY_PCI_USING;
+> +	else
+> +		sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
+> +}
+> +
+>  /*
+>   * Over-ride default table to reserve additional IRQs for use by ISA
+>   * e.g. acpi_irq_isa=5
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index c5eaf2f..67d1d3e 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -318,6 +318,7 @@ struct pci_dev;
+>  int acpi_pci_irq_enable (struct pci_dev *dev);
+>  void acpi_penalize_isa_irq(int irq, int active);
+>  bool acpi_isa_irq_available(int irq);
+> +void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+>  void acpi_pci_irq_disable (struct pci_dev *dev);
+>  
+>  extern int ec_read(u8 addr, u8 *val);
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
