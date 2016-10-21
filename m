@@ -1,95 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50166 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:39484 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753234AbcJGQbu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:31:50 -0400
-Subject: [PATCH 4/8] PCI: armada: Pass device-specific struct to internal
- functions
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:31:46 -0500
-Message-ID: <20161007163146.24582.28368.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S932626AbcJURTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 13:19:35 -0400
+Date: Fri, 21 Oct 2016 13:30:04 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
+Message-ID: <20161021173004.GB8633@localhost.localdomain>
+References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+ <1475007815-28354-3-git-send-email-keith.busch@intel.com>
+ <20161021165810.GD4221@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161021165810.GD4221@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only interfaces used from outside the driver, e.g., those called by the
-DesignWare core, need to accept pointers to the generic struct pcie_port.
-Internal interfaces can accept pointers to the device-specific struct,
-which makes them more straightforward.  No functional change intended.
+On Fri, Oct 21, 2016 at 06:58:10PM +0200, Lukas Wunner wrote:
+> On Tue, Sep 27, 2016 at 04:23:32PM -0400, Keith Busch wrote:
+> I note that you've removed the change to pci_device_is_present()
+> completely from v3 of this patch, however only a portion of the
+> change was problematic.  This portion would have been okay:
+> 
+> 
+> +	if (pdev->is_removed)
+> +		return false;
+>  
+> 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
+> 
+> 
+> Up to you if you want to include this in the next iteration or not.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-armada8k.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index ed96857..16fcb43 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -93,9 +93,9 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void armada8k_pcie_establish_link(struct pcie_port *pp)
-+static void armada8k_pcie_establish_link(struct armada8k_pcie *armada8k)
- {
--	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
-+	struct pcie_port *pp = &armada8k->pp;
- 	u32 reg;
- 
- 	if (!dw_pcie_link_up(pp)) {
-@@ -146,14 +146,15 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
- 
- static void armada8k_pcie_host_init(struct pcie_port *pp)
- {
-+	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
-+
- 	dw_pcie_setup_rc(pp);
--	armada8k_pcie_establish_link(pp);
-+	armada8k_pcie_establish_link(armada8k);
- }
- 
- static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- {
--	struct pcie_port *pp = arg;
--	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
-+	struct armada8k_pcie *armada8k = arg;
- 	u32 val;
- 
- 	/*
-@@ -172,9 +173,10 @@ static struct pcie_host_ops armada8k_pcie_host_ops = {
- 	.host_init = armada8k_pcie_host_init,
- };
- 
--static int armada8k_add_pcie_port(struct pcie_port *pp,
-+static int armada8k_add_pcie_port(struct armada8k_pcie *armada8k,
- 				  struct platform_device *pdev)
- {
-+	struct pcie_port *pp = &armada8k->pp;
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
-@@ -188,7 +190,7 @@ static int armada8k_add_pcie_port(struct pcie_port *pp,
- 	}
- 
- 	ret = devm_request_irq(dev, pp->irq, armada8k_pcie_irq_handler,
--			       IRQF_SHARED, "armada8k-pcie", pp);
-+			       IRQF_SHARED, "armada8k-pcie", armada8k);
- 	if (ret) {
- 		dev_err(dev, "failed to request irq %d\n", pp->irq);
- 		return ret;
-@@ -234,7 +236,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 		goto fail;
- 	}
- 
--	ret = armada8k_add_pcie_port(pp, pdev);
-+	ret = armada8k_add_pcie_port(armada8k, pdev);
- 	if (ret)
- 		goto fail;
- 
-
+I was thinking it didn't matter since patch 3/5 has config access return
+-ENODEV on a removed pci_dev, but pci_bus_read_dev_vendor_id doesn't use
+the pci_dev. I'll add it back in.
