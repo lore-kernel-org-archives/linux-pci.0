@@ -1,49 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609300844.24325.linux@rainbow-software.org>
- <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
- <201609301756.25894.linux@rainbow-software.org>
- <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
- <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
- <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
- <CAJZ5v0isjggpiSnFYy_1omEorTD6HSWe2jCsRmvugyH6qiYq2g@mail.gmail.com>
- <a1d4d971-2737-c831-1f34-93f2be449478@codeaurora.org>
- <CAJZ5v0gKFVEYFhyge8+_ZTSg_OK6uzBByivgbvEV-Up4Q3YSiw@mail.gmail.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
-        ravikanth.nalla@hpe.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <dda55738-d52b-1cdd-8973-8dea3506a835@codeaurora.org>
-Date: Sat, 1 Oct 2016 13:49:17 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47210 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934096AbcJUQW4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 12:22:56 -0400
+Date: Fri, 21 Oct 2016 11:22:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org,
+        Gary Bisson <gary.bisson@boundarydevices.com>,
+        kernel@pengutronix.de, patchwork-lst@pengutronix.de,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+        jose.abreu@synopsys.com, Jesper Nilsson <jespern@axis.com>,
+        Joao Pinto <jpmpinto@gmail.com>
+Subject: Re: [PATCH resend] PCI: designware: fix register access before host
+ init
+Message-ID: <20161021162251.GD9007@localhost>
+References: <20161018082549.10905-1-l.stach@pengutronix.de>
+ <20161021153142.GB9007@localhost>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gKFVEYFhyge8+_ZTSg_OK6uzBByivgbvEV-Up4Q3YSiw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161021153142.GB9007@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/30/2016 5:27 PM, Rafael J. Wysocki wrote:
->>> >> What's the drawback, if any?
->> >
->> > I don't see any drawback to be honest.
-> I'd go for it then, if Bjorn doesn't hate it.
+[+cc Joao, Niklas, Carlos, Jose, Jesper]
+
+On Fri, Oct 21, 2016 at 10:31:42AM -0500, Bjorn Helgaas wrote:
+> On Tue, Oct 18, 2016 at 10:25:49AM +0200, Lucas Stach wrote:
+> > The function used to determine if iATU unroll is available will read
+> > a RC register. This is not possible and will result in a system hang
+> > if the RC is still in reset, so it is only safe to call this function
+> > after host_init() has been called.
 > 
+> I'm sure Joao tested a0601a470537 somewhere, so I assume this hang only
+> happens on certain systems?
+> 
+> I'm wondering if this is suggesting something that's currently done
+> differently across the drivers but could be done more similarly.
+> 
+> > Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
+> > Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> > Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 035f50c03281..74510508fafc 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >  		}
+> >  	}
+> >  
+> > -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> > -
+> >  	if (pp->ops->host_init)
+> >  		pp->ops->host_init(pp);
+> >  
+> > +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> > +
 
-I posted a follow up patch a minute ago. 
+Niklas suggested this exact change earlier [1], but Joao pointed out the
+problem with calling dw_pcie_iatu_unroll_enabled() after calling
+pp->ops->host_init():
 
-[PATCH 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size to 16"
-[PATCH 2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-[PATCH 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize function"
+  dw_pcie_host_init
+    pp->ops->host_init
+      dw_pcie_setup_rc
+        dw_pcie_prog_outbound_atu
+          if (pp->iatu_unroll_enabled)
+	    ...
+    pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled()
 
-Can we have some testing coverage? and eventually have tested-by?
+We check iatu_unroll_enabled in dw_pcie_prog_outbound_atu() before it
+has been set.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Niklas' second patch [2] looks like a better fix.  Can you guys take a
+look and see if you agree?
+
+[1] http://lkml.kernel.org/r/b53d5807-8199-5789-6184-e37324a1d79e@axis.com
+[2] http://lkml.kernel.org/r/1476482095-26289-1-git-send-email-niklass@axis.com
+
+> >  	pp->root_bus_nr = pp->busn->start;
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> >  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> > -- 
+> > 2.9.3
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
