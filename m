@@ -1,41 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57646 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755502AbcJLNLv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:11:51 -0400
-Subject: [PATCH v2 2/5] PCI: xilinx: Remove unused platform data
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:10:47 -0500
-Message-ID: <20161012131047.25793.54060.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012130819.25793.17542.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 20 Oct 2016 21:41:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
+        linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
+ interrupts
+Message-ID: <20161021024111.GA24336@localhost>
+References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
+ <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
+ <20161018135912.GD18903@localhost>
+ <b4a8995e-1454-3b84-0681-1491788087ec@codeaurora.org>
+ <0a82f2ef-b072-d847-104a-320cf804ebd5@codeaurora.org>
+ <20161019224405.GA14915@localhost>
+ <a418cf9d-5eeb-a588-6653-fd00e0c2693c@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a418cf9d-5eeb-a588-6653-fd00e0c2693c@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The xilinx driver never uses the platform drvdata pointer, so don't
-bother setting it.  No functional change intended.
+On Thu, Oct 20, 2016 at 01:01:04PM -0700, Sinan Kaya wrote:
+> On 10/19/2016 3:44 PM, Bjorn Helgaas wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-xilinx.c |    2 --
- 1 file changed, 2 deletions(-)
+> >   - Maintain a mapping of (IRQ, penalty).  Initially all penalties are
+> >     zero.  This is for *all* IRQs, not just ISA ones.  This could be a
+> >     linked list, but the structure is not important as long as we can
+> >     add things dynamically.
+> 
+> Dynamic allocation doesn't work due to early calls from x86 architecture.
+> This is the reason why we iterate the link objects.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 2ef47af..8a0eb03 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -688,8 +688,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- #endif
- 	pci_bus_add_devices(bus);
--	platform_set_drvdata(pdev, port);
--
- 	return 0;
- 
- error:
-
+Where exactly is this early penalization?  That seems to be the
+biggest problem.  Well, maybe the question of ACPI core parsing of
+_CRS/_PRS is a bigger structural problem, but the dynamic allocation
+thing at least seems solvable.
