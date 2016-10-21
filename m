@@ -1,114 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:54177 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932111AbcJaKkR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Oct 2016 06:40:17 -0400
-Date: Mon, 31 Oct 2016 11:41:04 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCHv4 next 1/3] pci: Add is_removed state
-Message-ID: <20161031104104.GA9424@wunner.de>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <1477695497-6207-2-git-send-email-keith.busch@intel.com>
+Return-Path: <jpmpinto@gmail.com>
+Return-Path: <jpmpinto@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477695497-6207-2-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161021162251.GD9007@localhost>
+References: <20161018082549.10905-1-l.stach@pengutronix.de>
+ <20161021153142.GB9007@localhost> <20161021162251.GD9007@localhost>
+From: =?UTF-8?Q?Jo=C3=A3o_Pinto?= <jpmpinto@gmail.com>
+Date: Fri, 21 Oct 2016 17:44:10 +0100
+Message-ID: <CAMcwGNRbMKZY2m0ahd2zaJ2G1_h6O104C8brteY2eAmU0rM5CQ@mail.gmail.com>
+Subject: Re: [PATCH resend] PCI: designware: fix register access before host init
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lucas Stach <l.stach@pengutronix.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, Gary Bisson <gary.bisson@boundarydevices.com>,
+	kernel@pengutronix.de, patchwork-lst@pengutronix.de,
+	Niklas Cassel <niklas.cassel@axis.com>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+	jose.abreu@synopsys.com, Jesper Nilsson <jespern@axis.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 28, 2016 at 06:58:15PM -0400, Keith Busch wrote:
-> This adds a new state for devices that were once in the system, but
-> unexpectedly removed. This is so device tear down functions can observe
-> the device is not accessible so it may skip attempting to initialize
-> the hardware.
-> 
-> The pciehp and pcie-dpc drivers are aware of when the link is down,
-> so these explicitly set this flag when its handlers detect the device
-> is gone.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+Hi,
+Sorry for replying directly from gmail, I don't have the Linux
+environment ready yet :)
+Niklas patch is the one that should be applied, because in the
+host_init  we need to know if the iATU is in Unroll or in Legacy mode.
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Thanks.
 
-I'll send a follow-up patch in a few minutes which leverages the
-is_removed flag to fix a soft lockup on surprise removal of the
-Apple Thunderbolt Gigabit Ethernet adapter.
-
-Thanks,
-
-Lukas
-
-> ---
->  drivers/pci/hotplug/pciehp_pci.c | 5 +++++
->  drivers/pci/pcie/pcie-dpc.c      | 4 ++++
->  include/linux/pci.h              | 7 +++++++
->  3 files changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 9e69403..7560961 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -109,6 +109,11 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->  				break;
->  			}
->  		}
-> +		if (!presence) {
-> +			pci_set_removed(dev, NULL);
-> +			if (pci_has_subordinate(dev))
-> +				pci_walk_bus(dev->subordinate, pci_set_removed, NULL);
-> +		}
->  		pci_stop_and_remove_bus_device(dev);
->  		/*
->  		 * Ensure that no new Requests will be generated from
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index 9811b14..7818c88 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -14,6 +14,7 @@
->  #include <linux/init.h>
->  #include <linux/pci.h>
->  #include <linux/pcieport_if.h>
-> +#include "../pci.h"
->  
->  struct dpc_dev {
->  	struct pcie_device	*dev;
-> @@ -46,6 +47,9 @@ static void interrupt_event_handler(struct work_struct *work)
->  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->  					 bus_list) {
->  		pci_dev_get(dev);
-> +		pci_set_removed(dev, NULL);
-> +		if (pci_has_subordinate(dev))
-> +			pci_walk_bus(dev->subordinate, pci_set_removed, NULL);
->  		pci_stop_and_remove_bus_device(dev);
->  		pci_dev_put(dev);
->  	}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0e49f70..2115d19 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -341,6 +341,7 @@ struct pci_dev {
->  	unsigned int	multifunction:1;/* Part of multi-function device */
->  	/* keep track of device state */
->  	unsigned int	is_added:1;
-> +	unsigned int	is_removed:1;	/* device was surprise removed */
->  	unsigned int	is_busmaster:1; /* device is busmaster */
->  	unsigned int	no_msi:1;	/* device may not use msi */
->  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
-> @@ -417,6 +418,12 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
->  	return (pdev->error_state != pci_channel_io_normal);
->  }
->  
-> +static inline int pci_set_removed(struct pci_dev *pdev, void *unused)
-> +{
-> +	pdev->is_removed = 1;
-> +	return 0;
-> +}
-> +
->  struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
-> -- 
-> 2.7.2
+2016-10-21 17:22 GMT+01:00 Bjorn Helgaas <helgaas@kernel.org>:
+> [+cc Joao, Niklas, Carlos, Jose, Jesper]
+>
+> On Fri, Oct 21, 2016 at 10:31:42AM -0500, Bjorn Helgaas wrote:
+>> On Tue, Oct 18, 2016 at 10:25:49AM +0200, Lucas Stach wrote:
+>> > The function used to determine if iATU unroll is available will read
+>> > a RC register. This is not possible and will result in a system hang
+>> > if the RC is still in reset, so it is only safe to call this function
+>> > after host_init() has been called.
+>>
+>> I'm sure Joao tested a0601a470537 somewhere, so I assume this hang only
+>> happens on certain systems?
+>>
+>> I'm wondering if this is suggesting something that's currently done
+>> differently across the drivers but could be done more similarly.
+>>
+>> > Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
+>> > Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
+>> > Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
+>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> > ---
+>> >  drivers/pci/host/pcie-designware.c | 4 ++--
+>> >  1 file changed, 2 insertions(+), 2 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> > index 035f50c03281..74510508fafc 100644
+>> > --- a/drivers/pci/host/pcie-designware.c
+>> > +++ b/drivers/pci/host/pcie-designware.c
+>> > @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>> >             }
+>> >     }
+>> >
+>> > -   pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> > -
+>> >     if (pp->ops->host_init)
+>> >             pp->ops->host_init(pp);
+>> >
+>> > +   pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> > +
+>
+> Niklas suggested this exact change earlier [1], but Joao pointed out the
+> problem with calling dw_pcie_iatu_unroll_enabled() after calling
+> pp->ops->host_init():
+>
+>   dw_pcie_host_init
+>     pp->ops->host_init
+>       dw_pcie_setup_rc
+>         dw_pcie_prog_outbound_atu
+>           if (pp->iatu_unroll_enabled)
+>             ...
+>     pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled()
+>
+> We check iatu_unroll_enabled in dw_pcie_prog_outbound_atu() before it
+> has been set.
+>
+> Niklas' second patch [2] looks like a better fix.  Can you guys take a
+> look and see if you agree?
+>
+> [1] http://lkml.kernel.org/r/b53d5807-8199-5789-6184-e37324a1d79e@axis.com
+> [2] http://lkml.kernel.org/r/1476482095-26289-1-git-send-email-niklass@axis.com
+>
+>> >     pp->root_bus_nr = pp->busn->start;
+>> >     if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> >             bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+>> > --
+>> > 2.9.3
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
