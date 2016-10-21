@@ -1,43 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60414 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:37372 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932716AbcJLNTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:19:07 -0400
-Subject: [PATCH v2 10/10] PCI: designware-plat: Remove unused platform data
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:19:03 -0500
-Message-ID: <20161012131903.26443.19905.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S934814AbcJUPUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 11:20:23 -0400
+Date: Fri, 21 Oct 2016 10:20:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Joao Pinto <jpmpinto@gmail.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>
+Subject: [GIT PULL] PCI fixes for v4.9
+Message-ID: <20161021152018.GA9007@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The designware-plat driver never uses the platform drvdata pointer, so
-don't bother setting it.  No functional change intended.
+This includes:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware-plat.c |    1 -
- 1 file changed, 1 deletion(-)
+  - Fix for a Layerscape driver issue that causes a use-before-set crash
+  - Maintainer update for the Synopsis prototyping device driver
 
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index f0a2a60..537f58a 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -108,7 +108,6 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		return ret;
- 
--	platform_set_drvdata(pdev, dw_plat_pcie);
- 	return 0;
- }
- 
+The following changes since commit 1001354ca34179f3db924eb66672442a173147dc:
 
+  Linux 4.9-rc1 (2016-10-15 12:17:50 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.9-fixes-1
+
+for you to fetch changes up to 02a1b8f4167eac709d269341f7c3c340984c28a6:
+
+  PCI: designware-plat: Update author email address (2016-10-21 09:54:46 -0500)
+
+----------------------------------------------------------------
+pci-v4.9-fixes-1
+
+----------------------------------------------------------------
+Joao Pinto (2):
+      PCI: designware-plat: Change maintainer to Jose Abreu
+      PCI: designware-plat: Update author email address
+
+Marc Zyngier (1):
+      PCI: layerscape: Fix drvdata usage before assignment
+
+ MAINTAINERS                             | 2 +-
+ drivers/pci/host/pci-layerscape.c       | 2 +-
+ drivers/pci/host/pcie-designware-plat.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
