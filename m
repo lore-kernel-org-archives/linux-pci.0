@@ -1,52 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754879AbcJLQ0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:26:38 -0400
-Date: Wed, 12 Oct 2016 11:00:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ley Foon Tan <lftan@altera.com>, linux-pci@vger.kernel.org,
-        rfi@lists.rocketboards.org
-Subject: Re: [PATCH v2 0/6] PCI: altera: Cleanups
-Message-ID: <20161012160053.GB4308@localhost>
-References: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012123804.23240.96181.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from lucky1.263xmail.com ([211.157.147.135]:58273 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752976AbcJUCiv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2016 22:38:51 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Heiko Stuebner <heiko@sntech.de>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 0/2] Add new resets for pcie-rockchip
+Date: Fri, 21 Oct 2016 10:43:54 +0800
+Message-Id: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 07:46:59AM -0500, Bjorn Helgaas wrote:
->   - Add local "dev" pointers to reduce repetition of things like
->     "&pdev->dev".
-> 
->   - Remove platform drvdata because it appears unused (we called
->     platform_set_drvdata() but not platform_get_drvdata()).
-> 
->   - Removed an unnecessary platform_get_resource() return value check.
-> 
->   - Rework TLB_CFG_DW0 and TLP_CFG_DW1 to make the code prettier.
-> 
-> Nothing here should change the behavior of the driver.
-> 
-> Changes from v1:
->   I dropped the following patches because they were a lot of churn for
->   questionable benefit:
->     PCI: altera: Name private struct pointer "altera" consistently
->     PCI: altera: Rename _altera_pcie_cfg_read() to altera_raw_cfg_read()
->     PCI: altera: Rename CRA accessors
->     PCI: altera: Swap order of altera_cra_writel() reg/val arguments
-> 
-> ---
-> 
-> Bjorn Helgaas (6):
->       PCI: altera: Add local struct device pointers
->       PCI: altera: Remove unused platform data
->       PCI: altera: Remove redundant platform_get_resource() return value check
->       PCI: altera: Rename altera_pcie_valid_config() to altera_pcie_valid_device()
->       PCI: altera: Simplify TLB_CFG_DW0 usage
->       PCI: altera: Simplify TLP_CFG_DW1 usage
 
-I applied these to pci/host-altera for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+Hi Bjorn and Heiko,
+
+Sorry for updating pcie-rockchip so frequently under this development
+cycle. This patch is going to fix a urgent issue of missing control for
+pm_rst, aclk_rst and pclk_rst. These three resets was controlled by rom code
+but now the driver will take over it in order to solve some weird issues
+found by MP test. Thanks to that it is still under MP test internally, so
+the backward compatibility of dtb won't be a big deal.
+
+And there are still some on-going patches for pcie-rockchip on linux-pci
+wasn't merged. All of them was also rebased on your next branch, so hope there
+is no conflict if you wish to pick them(including this patch 1), otherwise I could
+rebase all of them again. :)
+
+
+
+Shawn Lin (2):
+  PCI: rockchip: Add three new resets as required properties
+  arm64: dts: rockchip: add three new resets for rk3399 PCIe controller
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 11 ++--
+ arch/arm64/boot/dts/rockchip/rk3399.dtsi           |  7 ++-
+ drivers/pci/host/pcie-rockchip.c                   | 62 ++++++++++++++++++++++
+ 3 files changed, 75 insertions(+), 5 deletions(-)
+
+-- 
+2.3.7
+
+
