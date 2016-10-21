@@ -1,81 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38748 "EHLO mail.kernel.org"
+Received: from gloria.sntech.de ([95.129.55.99]:51249 "EHLO gloria.sntech.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753528AbcJLNhl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:37:41 -0400
-Subject: [PATCH v2 3/5] PCI: exynos: Name private struct pointer
- "exynos_pcie" consistently
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:37:36 -0500
-Message-ID: <20161012133736.28194.54662.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012133428.28194.54006.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1751465AbcJUH62 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 03:58:28 -0400
+From: Heiko Stuebner <heiko@sntech.de>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] arm64: dts: rockchip: add three new resets for rk3399 PCIe controller
+Date: Fri, 21 Oct 2016 09:58:11 +0200
+Message-ID: <7351283.vgsyxVQ7sJ@phil>
+In-Reply-To: <1477017836-19317-3-git-send-email-shawn.lin@rock-chips.com>
+References: <1477017836-19317-1-git-send-email-shawn.lin@rock-chips.com> <1477017836-19317-3-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most struct exynos_pcie pointers are already called "exynos_pcie".  Change
-the rest of them to match.  No functional change intended.
+Hi Bjorn,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-exynos.c |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Am Freitag, 21. Oktober 2016, 10:43:56 CEST schrieb Shawn Lin:
+> pm_rst, aclk_rst and pclk_rst should be controlled by driver, so we
+> need to add these three resets for PCIe controller.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 8e841f8..2b4d886 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -102,34 +102,34 @@ struct exynos_pcie {
- #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
- #define PCIE_PHY_TRSV3_LVCC		0x31c
- 
--static void exynos_elb_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
-+static void exynos_elb_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
- {
--	writel(val, pcie->elbi_base + reg);
-+	writel(val, exynos_pcie->elbi_base + reg);
- }
- 
--static u32 exynos_elb_readl(struct exynos_pcie *pcie, u32 reg)
-+static u32 exynos_elb_readl(struct exynos_pcie *exynos_pcie, u32 reg)
- {
--	return readl(pcie->elbi_base + reg);
-+	return readl(exynos_pcie->elbi_base + reg);
- }
- 
--static void exynos_phy_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
-+static void exynos_phy_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
- {
--	writel(val, pcie->phy_base + reg);
-+	writel(val, exynos_pcie->phy_base + reg);
- }
- 
--static u32 exynos_phy_readl(struct exynos_pcie *pcie, u32 reg)
-+static u32 exynos_phy_readl(struct exynos_pcie *exynos_pcie, u32 reg)
- {
--	return readl(pcie->phy_base + reg);
-+	return readl(exynos_pcie->phy_base + reg);
- }
- 
--static void exynos_blk_writel(struct exynos_pcie *pcie, u32 val, u32 reg)
-+static void exynos_blk_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
- {
--	writel(val, pcie->block_base + reg);
-+	writel(val, exynos_pcie->block_base + reg);
- }
- 
--static u32 exynos_blk_readl(struct exynos_pcie *pcie, u32 reg)
-+static u32 exynos_blk_readl(struct exynos_pcie *exynos_pcie, u32 reg)
- {
--	return readl(pcie->block_base + reg);
-+	return readl(exynos_pcie->block_base + reg);
- }
- 
- static void exynos_pcie_sideband_dbi_w_mode(struct pcie_port *pp, bool on)
+If patch1 is ok and you want to take both patches at once,
+that is fine by me, so
+Acked-by: Heiko Stuebner <heiko@sntech.de>
+
+Otherwise I can also pick this one up after (and if) your ok with patch1.
+
+
+Heiko
+
+> ---
+> 
+>  arch/arm64/boot/dts/rockchip/rk3399.dtsi | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+> b/arch/arm64/boot/dts/rockchip/rk3399.dtsi index 76b2864..5191cfd 100644
+> --- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+> +++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+> @@ -300,8 +300,11 @@
+>  		ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
+>  			  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
+>  		resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+> -			 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+> -		reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+> +			 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>,
+> +			 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>,
+> +			 <&cru SRST_A_PCIE>;
+> +		reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
+> +			      "pm", "pclk", "aclk";
+>  		status = "disabled";
+> 
+>  		pcie0_intc: interrupt-controller {
+
 
