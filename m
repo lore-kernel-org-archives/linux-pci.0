@@ -1,187 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 21 Oct 2016 09:45:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, Len Brown <len.brown@intel.com>,
-        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-kernel@vger.kernel.org,
-        Ingo Molnar <mingo@redhat.com>, Pavel Machek <pavel@ucw.cz>,
-        linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V4 2/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
- function"
-Message-ID: <20161021144535.GB877@localhost>
-References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
- <1476915664-27231-3-git-send-email-okaya@codeaurora.org>
- <20161021015814.GC31044@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:49666 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753953AbcJUQEr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 12:04:47 -0400
+Date: Fri, 21 Oct 2016 12:15:16 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
+Message-ID: <20161021161515.GA8596@localhost.localdomain>
+References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+ <1475007815-28354-3-git-send-email-keith.busch@intel.com>
+ <20161021153714.GA4221@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021015814.GC31044@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161021153714.GA4221@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 20, 2016 at 08:58:14PM -0500, Bjorn Helgaas wrote:
-> On Wed, Oct 19, 2016 at 06:21:03PM -0400, Sinan Kaya wrote:
-> > The SCI penalize function was removed in two steps (first refactor
-> > and then remove) and these changes are reverted here in one go.
-> > 
-> > The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
-> > refactored the original code so that SCI penalty is calculated dynamically
-> > by the time get_penalty function is called. That change is partially
-> > reverted here, specifically for the SCI IRQ alone.
-> > 
-> > The SCI penalize function was finally dropped by commit 9e5ed6d1fb87
-> > ("ACPI,PCI,IRQ: remove SCI penalize function") that replaced the old SCI
-> > penalty API with penalty calculation carried out dynamically and based
-> > on the acpi_gbl_FADT.sci_interrupt value.
-> > 
-> > However, that new algorithm relies on the accurate setting of IRQ
-> > types and that doesn't happen early enough on some platforms which
-> > leads to incorrect penalty assignments for PCI IRQs.  In those cases,
-> > irq_get_trigger_type() returns incorrect values for the IRQs in
-> > question, because they have not been registered yet by the time the
-> > penalties are calculated.
-> > 
-> > To fix this problem, we only need to fix the penalty for the SCI interrupt.
-> > It seems better to add a single "sci_penalty" variable, set it to
-> > PIRQ_PENALTY_PCI_USING if it's level/low or PIRQ_PENALTY_ISA_ALWAYS
-> > otherwise, and add "sci_penalty" in when appropriate.  That should fix it
-> > for *any* SCI IRQ, not just those less than 256, and we don't have to add
-> > these extra penalty table entries that are all unused (except possibly for
-> > one entry if we have an SCI in the 16-255 range).
-> > 
-> > For this reason, revert commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI
-> > penalize function") completely to restore the correct behavior.
+On Fri, Oct 21, 2016 at 05:37:14PM +0200, Lukas Wunner wrote:
+> On Tue, Sep 27, 2016 at 04:23:32PM -0400, Keith Busch wrote:
+> > --- a/drivers/pci/hotplug/pciehp_pci.c
+> > +++ b/drivers/pci/hotplug/pciehp_pci.c
+> > @@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+> >  				break;
+> >  			}
+> >  		}
+> > +		if (!presence)
+> > +			dev->is_removed = 1;
+> >  		pci_stop_and_remove_bus_device(dev);
+> >  		/*
+> >  		 * Ensure that no new Requests will be generated from
 > 
-> I like this patch fine, except for the changelog.  I don't think it's
-> useful to describe this as a revert and give all the historical
-> details.  I think the important part is something like this:
+> Sorry for the delay Keith, I finally got around to test v3 of your
+> series with hot-removed Thunderbolt devices on Apple Macs.
 > 
->   We previously used irq_get_trigger_type(irq) to help compute the
->   penalty for the SCI, but that depends on the SCI having been
->   registered already.  Add acpi_penalize_sci_irq() so platforms can
->   tell us the SCI IRQ, trigger, and polarity so we can compute the
->   penalty even before the SCI has been registered.
+> I've found that the above isn't sufficient, it's necessary to also
+> set the is_removed bit on any child devices.  E.g. on my system
+> when an Apple Gigabit Ethernet adapter is plugged in, the topology
+> looks like this:
 
-Thanks for the pointer [1] to the issues around
-acpi_penalize_sci_irq() being called before kmalloc() is available.
-That begs the question of exactly *why* we need
-acpi_penalize_sci_irq() so early -- I doubt we actually need to handle
-SCIs that early, and obviously we don't need to look up penalties that
-early (because we only look them up when enabling interrupt links,
-which happens much later).
+Thanks for the catch. Your proposal looks good to me. I'll send a new
+revision incorporating something like this that the dpc driver can
+also use.
+ 
+> With your patch above, the is_removed bit is only set on 0000:09:00.0
+> but not on its children.  Consequently the "tg3" driver tries to
+> access the hot-removed Broadcom 57762 Ethernet chip as before,
+> causing a soft lockup.
 
-[1] http://marc.info/?l=linux-acpi&m=145580159209240&w=2)
-
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Wait a minute, I still have a question here: what about other ACPI
-arches (ia64, arm64)?  Don't they need to call acpi_penalize_sci_irq()
-somewhere?
-
-> > ---
-> >  arch/x86/kernel/acpi/boot.c |  1 +
-> >  drivers/acpi/pci_link.c     | 30 +++++++++++++++---------------
-> >  include/linux/acpi.h        |  1 +
-> >  3 files changed, 17 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-> > index 90d84c3..0ffd26e 100644
-> > --- a/arch/x86/kernel/acpi/boot.c
-> > +++ b/arch/x86/kernel/acpi/boot.c
-> > @@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
-> >  		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
-> >  
-> >  	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
-> > +	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
-> >  
-> >  	/*
-> >  	 * stash over-ride to indicate we've been here
-> > diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> > index 4f37938..294b190 100644
-> > --- a/drivers/acpi/pci_link.c
-> > +++ b/drivers/acpi/pci_link.c
-> > @@ -87,6 +87,7 @@ struct acpi_pci_link {
-> >  
-> >  static LIST_HEAD(acpi_link_list);
-> >  static DEFINE_MUTEX(acpi_link_lock);
-> > +static int sci_irq = -1, sci_penalty;
-> >  
-> >  /* --------------------------------------------------------------------------
-> >                              PCI Link Device Management
-> > @@ -496,25 +497,13 @@ static int acpi_irq_get_penalty(int irq)
-> >  {
-> >  	int penalty = 0;
-> >  
-> > -	/*
-> > -	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
-> > -	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
-> > -	* use for PCI IRQs.
-> > -	*/
-> > -	if (irq == acpi_gbl_FADT.sci_interrupt) {
-> > -		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
-> > -
-> > -		if (type != IRQ_TYPE_LEVEL_LOW)
-> > -			penalty += PIRQ_PENALTY_ISA_ALWAYS;
-> > -		else
-> > -			penalty += PIRQ_PENALTY_PCI_USING;
-> > -	}
-> > +	if (irq == sci_irq)
-> > +		penalty += sci_penalty;
-> >  
-> >  	if (irq < ACPI_MAX_ISA_IRQS)
-> >  		return penalty + acpi_isa_irq_penalty[irq];
-> >  
-> > -	penalty += acpi_irq_pci_sharing_penalty(irq);
-> > -	return penalty;
-> > +	return penalty + acpi_irq_pci_sharing_penalty(irq);
-> >  }
-> >  
-> >  int __init acpi_irq_penalty_init(void)
-> > @@ -881,6 +870,17 @@ bool acpi_isa_irq_available(int irq)
-> >  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
-> >  }
-> >  
-> > +void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
-> > +{
-> > +	sci_irq = irq;
-> > +
-> > +	if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
-> > +	    polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
-> > +		sci_penalty = PIRQ_PENALTY_PCI_USING;
-> > +	else
-> > +		sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
-> > +}
-> > +
-> >  /*
-> >   * Over-ride default table to reserve additional IRQs for use by ISA
-> >   * e.g. acpi_irq_isa=5
-> > diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> > index c5eaf2f..67d1d3e 100644
-> > --- a/include/linux/acpi.h
-> > +++ b/include/linux/acpi.h
-> > @@ -318,6 +318,7 @@ struct pci_dev;
-> >  int acpi_pci_irq_enable (struct pci_dev *dev);
-> >  void acpi_penalize_isa_irq(int irq, int active);
-> >  bool acpi_isa_irq_available(int irq);
-> > +void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
-> >  void acpi_pci_irq_disable (struct pci_dev *dev);
-> >  
-> >  extern int ec_read(u8 addr, u8 *val);
-> > -- 
-> > 1.9.1
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is that something that can be fixed in the tg3 driver? I don't think
+drivers can rely on this patch to fense off their unintended access since
+we can't stop tg3 from accesses a removed device before 'is_removed'
+is set.
