@@ -1,104 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39872 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:40282 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754953AbcJLNnM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:43:12 -0400
-Subject: [PATCH v2 5/8] PCI: hisi: Use generic DesignWare accessors
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:43:07 -0500
-Message-ID: <20161012134307.28562.93976.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S934311AbcJUPhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 11:37:07 -0400
+Date: Fri, 21 Oct 2016 10:37:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Li Yang <leoyang.li@nxp.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Stuart Yoder <stuart.yoder@nxp.com>
+Subject: Re: [PATCH] PCI: layerscape: Fix kernel panic on accessing NULL
+ pointer
+Message-ID: <20161021153701.GC9007@localhost>
+References: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces already add in
-pp->dbi_base, so use those instead of doing it ourselves in the hisi
-driver.  No functional change intended.
+On Mon, Oct 17, 2016 at 04:44:06PM -0500, Li Yang wrote:
+> Commit fefe6733e added reference to the pcie->drvdata before it is
+> initialized which causes a kernel panic.  Fix the problem by
+> initializing the pcie->drvdata earlier before it is used.
+> 
+> Reported-by: Stuart Yoder <stuart.yoder@nxp.com>
+> Signed-off-by: Li Yang <leoyang.li@nxp.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-hisi.c |   29 ++++++++---------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+I applied Marc Zyngier's identical patch to for-linus for v4.9.  I don't
+know which was posted first, but I saw Marc's first.  Sorry I didn't at
+least credit you when I applied it.
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index f2bb206..d0e081b 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -43,29 +43,17 @@ struct hisi_pcie {
- 	struct pcie_soc_ops *soc_ops;
- };
- 
--static inline void hisi_pcie_apb_writel(struct hisi_pcie *hisi_pcie,
--					u32 val, u32 reg)
--{
--	writel(val, hisi_pcie->pp.dbi_base + reg);
--}
--
--static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *hisi_pcie, u32 reg)
--{
--	return readl(hisi_pcie->pp.dbi_base + reg);
--}
--
- /* HipXX PCIe host only supports 32-bit config access */
- static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
- 			      u32 *val)
- {
- 	u32 reg;
- 	u32 reg_val;
--	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
- 	void *walker = &reg_val;
- 
- 	walker += (where & 0x3);
- 	reg = where & ~0x3;
--	reg_val = hisi_pcie_apb_readl(hisi_pcie, reg);
-+	reg_val = dw_pcie_readl_rc(pp, reg);
- 
- 	if (size == 1)
- 		*val = *(u8 __force *) walker;
-@@ -85,21 +73,20 @@ static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
- {
- 	u32 reg_val;
- 	u32 reg;
--	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
- 	void *walker = &reg_val;
- 
- 	walker += (where & 0x3);
- 	reg = where & ~0x3;
- 	if (size == 4)
--		hisi_pcie_apb_writel(hisi_pcie, val, reg);
-+		dw_pcie_writel_rc(pp, reg, val);
- 	else if (size == 2) {
--		reg_val = hisi_pcie_apb_readl(hisi_pcie, reg);
-+		reg_val = dw_pcie_readl_rc(pp, reg);
- 		*(u16 __force *) walker = val;
--		hisi_pcie_apb_writel(hisi_pcie, reg_val, reg);
-+		dw_pcie_writel_rc(pp, reg, reg_val);
- 	} else if (size == 1) {
--		reg_val = hisi_pcie_apb_readl(hisi_pcie, reg);
-+		reg_val = dw_pcie_readl_rc(pp, reg);
- 		*(u8 __force *) walker = val;
--		hisi_pcie_apb_writel(hisi_pcie, reg_val, reg);
-+		dw_pcie_writel_rc(pp, reg, reg_val);
- 	} else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -118,10 +105,10 @@ static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
- 
- static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
- {
-+	struct pcie_port *pp = &hisi_pcie->pp;
- 	u32 val;
- 
--	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
--			PCIE_SYS_STATE4);
-+	val = dw_pcie_readl_rc(pp, PCIE_HIP06_CTRL_OFF + PCIE_SYS_STATE4);
- 
- 	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
- }
-
+> ---
+>  drivers/pci/host/pci-layerscape.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 2cb7315..958187f 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -245,6 +245,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+>  	if (!pcie)
+>  		return -ENOMEM;
+>  
+> +	pcie->drvdata = match->data;
+>  	pp = &pcie->pp;
+>  	pp->dev = dev;
+>  	pp->ops = pcie->drvdata->ops;
+> @@ -256,7 +257,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pcie->pp.dbi_base);
+>  	}
+>  
+> -	pcie->drvdata = match->data;
+>  	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
+>  
+>  	if (!ls_pcie_is_bridge(pcie))
+> -- 
+> 1.9.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
