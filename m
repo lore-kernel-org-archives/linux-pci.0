@@ -1,45 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34158 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753142AbcJZN7D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 09:59:03 -0400
-Subject: Re: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge
- hasn't
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <9faf0b91-70b3-a46d-cf98-369738094e11@suse.de>
-Date: Wed, 26 Oct 2016 15:58:59 +0200
+Received: from esa6.dell-outbound.iphmx.com ([68.232.149.229]:27964 "EHLO
+        esa6.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750857AbcJUPIU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2016 11:08:20 -0400
+From: <Mario.Limonciello@dell.com>
+To: <amir.jer.levy@intel.com>, <gregkh@linuxfoundation.org>,
+        <andreas.noever@gmail.com>
+CC: <bhelgaas@google.com>, <corbet@lwn.net>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <thunderbolt-linux@intel.com>, <mika.westerberg@intel.com>,
+        <tomas.winkler@intel.com>, <xiong.y.zhang@intel.com>
+Subject: RE: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Date: Fri, 21 Oct 2016 14:57:31 +0000
+Message-ID: <4ae639fd83d643849eb1d12533e1f00e@ausx13mpc124.AMER.DELL.COM>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/26/2016 03:53 PM, Johannes Thumshirn wrote:
-> The Read Completion Boundary bit must only be set on a device or endpoint if
-> it is set on the upstream bridge.
-> 
-> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/pci/probe.c | 26 ++++++++++++++++++++++++--
->  1 file changed, 24 insertions(+), 2 deletions(-)
-> 
-This fixes a regression where the mlx4 driver would not load (and, in
-fact, crash) on certain Ivybridge servers.
+> -----Original Message-----
+> From: Amir Levy [mailto:amir.jer.levy@intel.com]
+> Sent: Wednesday, September 28, 2016 9:44 AM
+> To: gregkh@linuxfoundation.org
+> Cc: andreas.noever@gmail.com; bhelgaas@google.com; corbet@lwn.net;
+> linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
+> netdev@vger.kernel.org; linux-doc@vger.kernel.org; Limonciello, Mario
+> <Mario_Limonciello@Dell.com>; thunderbolt-linux@intel.com;
+> mika.westerberg@intel.com; tomas.winkler@intel.com;
+> xiong.y.zhang@intel.com; Amir Levy <amir.jer.levy@intel.com>
+> Subject: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM)
+> Networking
+>=20
+> This driver enables Thunderbolt Networking on non-Apple platforms
+> running Linux.
+>=20
+> Thunderbolt Networking provides peer-to-peer connections to transfer
+> files between computers, perform PC migrations, and/or set up small
+> workgroups with shared storage.
+>=20
+> This is a virtual connection that emulates an Ethernet adapter that
+> enables Ethernet networking with the benefit of Thunderbolt superfast
+> medium capability.
+>=20
+> Thunderbolt Networking enables two hosts and several devices that
+> have a Thunderbolt controller to be connected together in a linear
+> (Daisy chain) series from a single port.
+>=20
+> Thunderbolt Networking for Linux is compatible with Thunderbolt
+> Networking on systems running macOS or Windows and also supports
+> Thunderbolt generation 2 and 3 controllers.
+>=20
+> Note that all pre-existing Thunderbolt generation 3 features, such as
+> USB, Display and other Thunderbolt device connectivity will continue
+> to function exactly as they did prior to enabling Thunderbolt Networking.
+>=20
+> Code and Software Specifications:
+> This kernel code creates a virtual ethernet device for computer to
+> computer communication over a Thunderbolt cable.
+> The new driver is a separate driver to the existing Thunderbolt driver.
+> It is designed to work on systems running Linux that
+> interface with Intel Connection Manager (ICM) firmware based
+> Thunderbolt controllers that support Thunderbolt Networking.
+> The kernel code operates in coordination with the Thunderbolt user-
+> space daemon to implement full Thunderbolt networking functionality.
+>=20
+> Hardware Specifications:
+> Thunderbolt Hardware specs have not yet been published but are used
+> where necessary for register definitions.
+>=20
+> Changes since v7:
+>  - Removed debug prints
+>  - Edited error prints
+>  - Edited copyright notice
+>  - Changed the Kconfig patch to be after the code changes
+>=20
+> These patches were pushed to GitHub where they can be reviewed more
+> comfortably with green/red highlighting:
+> 	https://github.com/01org/thunderbolt-software-kernel-tree
+>=20
+> Daemon code:
+> 	https://github.com/01org/thunderbolt-software-daemon
+>=20
+> For reference, here's a link to version 6:
+> [v7]:	https://lkml.org/lkml/2016/9/27/244
+>=20
+> Amir Levy (8):
+>   thunderbolt: Macro rename
+>   thunderbolt: Updating the register definitions
+>   thunderbolt: Communication with the ICM (firmware)
+>   thunderbolt: Networking state machine
+>   thunderbolt: Networking transmit and receive
+>   thunderbolt: Kconfig for Thunderbolt Networking
+>   thunderbolt: Networking doc
+>   thunderbolt: Adding maintainer entry
+>=20
+>  Documentation/00-INDEX                   |    2 +
+>  Documentation/thunderbolt/networking.txt |  132 ++
+>  MAINTAINERS                              |    8 +-
+>  drivers/thunderbolt/Kconfig              |   27 +-
+>  drivers/thunderbolt/Makefile             |    3 +-
+>  drivers/thunderbolt/icm/Makefile         |    2 +
+>  drivers/thunderbolt/icm/icm_nhi.c        | 1514 ++++++++++++++++++++
+>  drivers/thunderbolt/icm/icm_nhi.h        |   82 ++
+>  drivers/thunderbolt/icm/net.c            | 2254
+> ++++++++++++++++++++++++++++++
+>  drivers/thunderbolt/icm/net.h            |  287 ++++
+>  drivers/thunderbolt/nhi_regs.h           |  115 +-
+>  11 files changed, 4417 insertions(+), 9 deletions(-)
+>  create mode 100644 Documentation/thunderbolt/networking.txt
+>  create mode 100644 drivers/thunderbolt/icm/Makefile
+>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
+>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
+>  create mode 100644 drivers/thunderbolt/icm/net.c
+>  create mode 100644 drivers/thunderbolt/icm/net.h
+>=20
+> --
+> 2.7.4
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hi Amir,
 
-Cheers,
+I've tested your v8 series on Dell hardware with Thunderbolt=20
+Controllers again between a Linux and Windows box.
+Functionally it's working well.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Tested-By: Mario Limonciello <mario.limonciello@dell.com>
+
+Andreas,
+
+Following the history of this thread, I believe Greg was still looking for=
+=20
+an ack from you that Amir is using the interface properly.
+
+Thanks,
