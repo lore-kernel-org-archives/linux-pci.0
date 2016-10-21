@@ -1,55 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Oct 2016 15:38:52 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2 3/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
- function"
-In-Reply-To: <1475615720-31047-4-git-send-email-okaya@codeaurora.org>
-Message-ID: <alpine.DEB.2.20.1610051538310.8953@nanos>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org> <1475615720-31047-4-git-send-email-okaya@codeaurora.org>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, Pierre de Villemereuil <flyos@mailoo.org>, linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: check for PME in targeted sleep state
+Date: Fri, 21 Oct 2016 22:55:11 +0200
+Message-ID: <14794360.GyRuIHiIML@vostro.rjw.lan>
+In-Reply-To: <Pine.LNX.4.44L0.1610211640150.1898-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1610211640150.1898-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Oct 2016, Sinan Kaya wrote:
+On Friday, October 21, 2016 04:45:38 PM Alan Stern wrote:
+> One some systems, the firmware does not allow certain PCI devices to
+> be put in deep D-states.  This can cause problems for wakeup
+> signalling, if the device does not support PME# in the deepest allowed
+> suspend state.  For example, Pierre reports that on his system, ACPI
+> does not permit his xHCI host controller to go into D3 during runtime
+> suspend -- but D3 is the only state in which the controller can generate
+> PME# signals.  As a result, the controller goes into runtime suspend
+> but never wakes up, so it doesn't work properly.  USB devices plugged
+> into the controller are never detected.
+> 
+> If the device relies on PME# for wakeup signals but is not capable of
+> generating PME# in the target state, the PCI core should accurately
+> report that it cannot do wakeup from runtime suspend.  This patch
+> modifies the pci_dev_run_wake() routine to add this check.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> CC: Lukas Wunner <lukas@wunner.de>
+> Reported-by: Pierre de Villemereuil <flyos@mailoo.org>
+> Tested-by: Pierre de Villemereuil <flyos@mailoo.org>
+> CC: <stable@vger.kernel.org>
 
-> The SCI function was removed in two steps (first refactor and then remove).
-> This patch does the revert in one step.
-> 
-> The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
-> refactored the original code so that SCI penalty is calculated dynamically
-> by the time get_penalty function is called. This patch does a partial
-> revert for the SCI functionality only.
-> 
-> The commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize function") is
-> for the removal of the function. SCI penalty API was replaced by the
-> runtime penalty calculation based on the value of
-> acpi_gbl_FADT.sci_interrupt.
-> 
-> The IRQ type does not get updated at the right time for some platforms and
-> results in incorrect penalty assignment for PCI IRQs as
-> irq_get_trigger_type returns the wrong type.
-> 
-> The register_gsi function delivers the IRQ found in the ACPI table to
-> the interrupt controller driver.  Penalties are calculated before a
-> link object is enabled to find out which interrupt has the least number
-> of users. By the time penalties are calculated, the IRQ is not registered
-> yet and the API returns the wrong type.
-> 
-> Tested-by: Jonathan Liu <net147@gmail.com>
-> Tested-by: Ondrej Zary <linux@rainbow-software.org>
-> Link: https://lkml.org/lkml/2016/10/4/283
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+> 
+> [as1814]
+> 
+> 
+>  drivers/pci/pci.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> Index: usb-4.x/drivers/pci/pci.c
+> ===================================================================
+> --- usb-4.x.orig/drivers/pci/pci.c
+> +++ usb-4.x/drivers/pci/pci.c
+> @@ -2064,6 +2064,10 @@ bool pci_dev_run_wake(struct pci_dev *de
+>  	if (!dev->pme_support)
+>  		return false;
+>  
+> +	/* PME-capable in principle, but not from the intended sleep state */
+> +	if (!pci_pme_capable(dev, pci_target_state(dev)))
+> +		return false;
+> +
+>  	while (bus->parent) {
+>  		struct pci_dev *bridge = bus->self;
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
