@@ -1,105 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:40475 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751586AbcJKEUk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 00:20:40 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v6 2/3] of/pci: Add helper function to parse max-link-speed from dt
-Date: Tue, 11 Oct 2016 12:26:26 +0800
-Message-Id: <1476159987-31372-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1476159987-31372-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1476159987-31372-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:39702 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755700AbcJUPbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Oct 2016 11:31:47 -0400
+Date: Fri, 21 Oct 2016 10:31:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org,
+        Gary Bisson <gary.bisson@boundarydevices.com>,
+        kernel@pengutronix.de, patchwork-lst@pengutronix.de
+Subject: Re: [PATCH resend] PCI: designware: fix register access before host
+ init
+Message-ID: <20161021153142.GB9007@localhost>
+References: <20161018082549.10905-1-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161018082549.10905-1-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This new helper function could be used by host drivers to
-get the limitaion of max link speed provided by dt. If the
-property isn't assigned or is invalid, it will return -EINVAL
-to the caller.
+On Tue, Oct 18, 2016 at 10:25:49AM +0200, Lucas Stach wrote:
+> The function used to determine if iATU unroll is available will read
+> a RC register. This is not possible and will result in a system hang
+> if the RC is still in reset, so it is only safe to call this function
+> after host_init() has been called.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I'm sure Joao tested a0601a470537 somewhere, so I assume this hang only
+happens on certain systems?
 
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+I'm wondering if this is suggesting something that's currently done
+differently across the drivers but could be done more similarly.
 
- drivers/of/of_pci.c    | 27 +++++++++++++++++++++++++++
- include/linux/of_pci.h |  7 +++++++
- 2 files changed, 34 insertions(+)
-
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 589b30c..91fd465 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -120,6 +120,33 @@ int of_get_pci_domain_nr(struct device_node *node)
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
- /**
-+ * This function will try to find the limitation of link speed by finding
-+ * a property called "max-link-speed" of the given device node.
-+ *
-+ * @node: device tree node with the max link speed information
-+ *
-+ * Returns the associated max link speed from DT, or a negative value if the
-+ * required property is not found or is invalid.
-+ */
-+int of_get_pci_max_link_speed(struct device_node *node)
-+{
-+	const __be32 *value;
-+	int len;
-+	u16 max_link_speed;
-+
-+	value = of_get_property(node, "max-link-speed", &len);
-+	if (!value || len < sizeof(*value))
-+		return -EINVAL;
-+
-+	max_link_speed = (u16)be32_to_cpup(value);
-+	if (max_link_speed > 4)
-+		return -EINVAL;
-+
-+	return max_link_speed;
-+}
-+EXPORT_SYMBOL_GPL(of_get_pci_max_link_speed);
-+
-+/**
-  * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
-  *                           is present and valid
-  */
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index b969e94..a8946d7 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+int of_get_pci_max_link_speed(struct device_node *node);
- void of_pci_check_probe_only(void);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
-@@ -52,6 +53,12 @@ of_get_pci_domain_nr(struct device_node *node)
- 	return -1;
- }
- 
-+static inline int
-+of_get_pci_max_link_speed(struct device_node *node)
-+{
-+	return -EINVAL;
-+}
-+
- static inline void of_pci_check_probe_only(void) { }
- #endif
- 
--- 
-2.3.7
-
-
+> Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
+> Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/host/pcie-designware.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 035f50c03281..74510508fafc 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  	}
+>  
+> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> -
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
+>  
+> +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> +
+>  	pp->root_bus_nr = pp->busn->start;
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
