@@ -1,58 +1,50 @@
-Return-Path: <hare@suse.de>
-Return-Path: <hare@suse.de>
-Subject: Re: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge
- hasn't
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Johannes Thumshirn <jthumshirn@suse.de>
-References: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
- <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
-Date: Thu, 27 Oct 2016 07:42:27 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Oct 2016 09:57:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: pcie-designware-plat: changing driver authors e-mail
+Message-ID: <20161021145749.GA7238@localhost>
+References: <de627efa8f7beaf1e8c04624b21e410caf7d0b51.1477042092.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <de627efa8f7beaf1e8c04624b21e410caf7d0b51.1477042092.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/26/2016 09:43 PM, Bjorn Helgaas wrote:
-> Hi Johannes,
+On Fri, Oct 21, 2016 at 10:31:48AM +0100, Joao Pinto wrote:
+> Although I am leaving Synopsys, I would like to keep working with the
+> linux kernel community and help in what you might find useful. For that
+> I am sending this patch to change my contact e-mail. 
 > 
-> On Wed, Oct 26, 2016 at 03:53:34PM +0200, Johannes Thumshirn wrote:
->> The Read Completion Boundary bit must only be set on a device or endpoint if
->> it is set on the upstream bridge.
->>
->> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+
+Applied to for-linus for v4.9, thanks, Joao!  Best wishes in your next
+adventure.  Thanks for all your work and I hope you keep contributing to
+PCI!
+
+> ---
+>  drivers/pci/host/pcie-designware-plat.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Can you please include a spec citation and a pointer to the bug report?
+> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+> index 537f58a..8df6312 100644
+> --- a/drivers/pci/host/pcie-designware-plat.c
+> +++ b/drivers/pci/host/pcie-designware-plat.c
+> @@ -3,7 +3,7 @@
+>   *
+>   * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+>   *
+> - * Authors: Joao Pinto <jpinto@synopsys.com>
+> + * Authors: Joao Pinto <jpmpinto@gmail.com>
+>   *
+>   * This program is free software; you can redistribute it and/or modify
+>   * it under the terms of the GNU General Public License version 2 as
+> -- 
+> 1.8.1.5
 > 
-PCI Express Base Specification 1.1,
-section 2.3.1.1. Data Return for Read Requests:
-
-The Read Completion Boundary (RCB) parameter determines the naturally
-aligned address boundaries on which a Read Request may be serviced with
-multiple Completions
-o For a Root Complex, RCB is 64 bytes or 128 bytes
-  o This value is reported through a configuration register
-    (see Section 7.8)
-  Note: Bridges and Endpoints may implement a corresponding command
-  bit which may be set by system software to indicate the RCB value
-  for the Root Complex, allowing the Bridge/Endpoint to optimize its
-  behavior when the Root Complex’s RCB is 128 bytes.
-o For all other system elements, RCB is 128 bytes
-
-In this particular case the _HPX method was causing the RCB for all PCI
-devices to be set to 128 bytes, while the root bridge remained at 64 bytes.
-While this is arguably a BIOS bug, earlier linux version (ie without the
-mentioned patch) were running fine, so this is actually a regression.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
