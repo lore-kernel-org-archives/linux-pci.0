@@ -1,83 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57034 "EHLO comal.ext.ti.com"
+Received: from mail.kernel.org ([198.145.29.136]:44442 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752973AbcJKQXc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Oct 2016 12:23:32 -0400
-Subject: Re: [PATCH 3/4] PCI: dra7xx: Add support to force RC to work in GEN1
- mode
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>
-References: <1476190715-16884-1-git-send-email-kishon@ti.com>
- <1476190715-16884-4-git-send-email-kishon@ti.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Sekhar Nori <nsekhar@ti.com>
-Message-ID: <cd8d9591-1f21-a44d-93e5-282acd992900@ti.com>
-Date: Tue, 11 Oct 2016 21:49:55 +0530
+        id S1756164AbcJVX27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 22 Oct 2016 19:28:59 -0400
+Date: Sat, 22 Oct 2016 18:28:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, Len Brown <len.brown@intel.com>,
+        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        agross@codeaurora.org, linux-kernel@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>, Pavel Machek <pavel@ucw.cz>,
+        linux-arm-msm@vger.kernel.org, wim@djo.tudelft.nl,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4 2/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
+ function"
+Message-ID: <20161022232852.GA25453@localhost>
+References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+ <1476915664-27231-3-git-send-email-okaya@codeaurora.org>
+ <20161021015814.GC31044@localhost>
 MIME-Version: 1.0
-In-Reply-To: <1476190715-16884-4-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161021015814.GC31044@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 11 October 2016 06:28 PM, Kishon Vijay Abraham I wrote:
-> PCIe in AM57x/DRA7x devices is by default
-> configured to work in GEN2 mode.  However there
-> may be situations when working in GEN1 mode is
-> desired. One example is limitation i925 (PCIe GEN2
-> mode not supported at junction temperatures < 0C).
+On Thu, Oct 20, 2016 at 08:58:14PM -0500, Bjorn Helgaas wrote:
+> On Wed, Oct 19, 2016 at 06:21:03PM -0400, Sinan Kaya wrote:
+> > The SCI penalize function was removed in two steps (first refactor
+> > and then remove) and these changes are reverted here in one go.
+> > 
+> > The commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> > refactored the original code so that SCI penalty is calculated dynamically
+> > by the time get_penalty function is called. That change is partially
+> > reverted here, specifically for the SCI IRQ alone.
+> > 
+> > The SCI penalize function was finally dropped by commit 9e5ed6d1fb87
+> > ("ACPI,PCI,IRQ: remove SCI penalize function") that replaced the old SCI
+> > penalty API with penalty calculation carried out dynamically and based
+> > on the acpi_gbl_FADT.sci_interrupt value.
+> > 
+> > However, that new algorithm relies on the accurate setting of IRQ
+> > types and that doesn't happen early enough on some platforms which
+> > leads to incorrect penalty assignments for PCI IRQs.  In those cases,
+> > irq_get_trigger_type() returns incorrect values for the IRQs in
+> > question, because they have not been registered yet by the time the
+> > penalties are calculated.
+> > 
+> > To fix this problem, we only need to fix the penalty for the SCI interrupt.
+> > It seems better to add a single "sci_penalty" variable, set it to
+> > PIRQ_PENALTY_PCI_USING if it's level/low or PIRQ_PENALTY_ISA_ALWAYS
+> > otherwise, and add "sci_penalty" in when appropriate.  That should fix it
+> > for *any* SCI IRQ, not just those less than 256, and we don't have to add
+> > these extra penalty table entries that are all unused (except possibly for
+> > one entry if we have an SCI in the 16-255 range).
+> > 
+> > For this reason, revert commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI
+> > penalize function") completely to restore the correct behavior.
 > 
-> Add support to force Root Complex to work in GEN1
-> mode if so desired, but don't force GEN1 mode on
-> any board just yet.
+> I like this patch fine, except for the changelog.  I don't think it's
+> useful to describe this as a revert and give all the historical
+> details.  I think the important part is something like this:
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-> ---
->  Documentation/devicetree/bindings/pci/ti-pci.txt |    1 +
->  drivers/pci/host/pci-dra7xx.c                    |   27 ++++++++++++++++++++++
->  2 files changed, 28 insertions(+)
+>   We previously used irq_get_trigger_type(irq) to help compute the
+>   penalty for the SCI, but that depends on the SCI having been
+>   registered already.  Add acpi_penalize_sci_irq() so platforms can
+>   tell us the SCI IRQ, trigger, and polarity so we can compute the
+>   penalty even before the SCI has been registered.
+
+I think this is actually the critical patch that fixes the regression
+reported by Ondrej, so the changelog really should include details
+about the regression, e.g., something like this:
+
+  ACPI: pci_link: Penalize SCI correctly
+
+  Ondrej reported that IRQs stopped working in v4.7 on several
+  platforms.  A typical scenario, from Ondrej's VT82C694X/694X, is:
+
+    ACPI: Using PIC for interrupt routing
+    ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 7 10 *11 12 14 15)
+    ACPI: No IRQ available for PCI Interrupt Link [LNKA]
+    8139too 0000:00:0f.0: PCI INT A: no GSI
+
+  We're using PIC routing, so acpi_irq_balance == 0, and LNKA is already
+  active at IRQ 11.  In that case, acpi_pci_link_allocate() only tries
+  to use the active IRQ (IRQ 11) which also happens to be the SCI.
+
+  We should penalize the SCI by PIRQ_PENALTY_PCI_USING, but
+  irq_get_trigger_type(11) returns something other than
+  IRQ_TYPE_LEVEL_LOW, so we penalize it by PIRQ_PENALTY_ISA_ALWAYS
+  instead, which makes acpi_pci_link_allocate() assume the IRQ isn't
+  available and give up.
+
+  Add acpi_penalize_sci_irq() so platforms can tell us the SCI IRQ,
+  trigger, and polarity directly and we don't have to depend on
+  irq_get_trigger_type().
+
+  Link: http://lkml.kernel.org/r/201609251512.05657.linux@rainbow-software.org
+  Reported-by: Ondrej Zary <linux@rainbow-software.org>
+
+I don't understand what's broken about using irq_get_trigger_type().
+The SCI is registered in the following path, which is certainly before
+we try to enable LNKA for the 8139too device:
+
+  acpi_init                                           # subsys_initcall
+    acpi_bus_init
+      acpi_enable_subsystem
+	acpi_ev_install_xrupt_handlers
+	  acpi_ev_install_sci_handler
+	    acpi_os_install_interrupt_handler(sci_interrupt, ...)
+	      acpi_gsi_to_irq
+		acpi_register_gsi
+		  irq_create_fwspec_mapping
+		    irqd_set_trigger_type
+
+In any event, I think this patch to add acpi_penalize_sci_irq() is
+fine.
+
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> index 60e2516..a3d6ca3 100644
-> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> @@ -25,6 +25,7 @@ PCIe Designware Controller
->  
->  Optional Property:
->   - gpios : Should be added if a gpio line is required to drive PERST# line
-> + - ti,pcie-is-gen1 : Force the PCIe controller to work in GEN1 (2.5 GT/s).
->  
->  Example:
->  axi {
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 4ccba6d..2a669cb 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -63,11 +63,14 @@
->  #define	LINK_UP						BIT(16)
->  #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
->  
-> +#define EXP_CAP_ID_OFFSET				0x70
-> +
->  struct dra7xx_pcie {
->  	struct pcie_port	pp;
->  	void __iomem		*base;		/* DT ti_conf */
->  	int			phy_count;	/* DT phy-names count */
->  	struct phy		**phy;
-> +	bool			is_gen1;
-
-I think it will be nice to reference the errata number as comments in
-the code along with references to TI public documentation that explains
-the said errata.
-
-Or may be this can be added to the binding documentation. Somewhere 'git
-grep' can find.
-
-BTW, per Documentation/devicetree/bindings/submitting-patches.txt, the
-binding documentation should be a separate patch.
-
-Thanks,
-Sekhar
-
+> > Link: https://lkml.org/lkml/2016/10/4/283
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > Fixes: commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> > Fixes: commit 9e5ed6d1fb87 ("ACPI,PCI,IRQ: remove SCI penalize function")
+> 
+> "commit" is redundant; it's sufficient to say:
+> 
+>   Fixes: 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> 
+> In fact, I don't think you really need to include "commit" in the
+> reference to 9e5ed6d1fb87 above either.
+> 
+> > ---
+> >  arch/x86/kernel/acpi/boot.c |  1 +
+> >  drivers/acpi/pci_link.c     | 30 +++++++++++++++---------------
+> >  include/linux/acpi.h        |  1 +
+> >  3 files changed, 17 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+> > index 90d84c3..0ffd26e 100644
+> > --- a/arch/x86/kernel/acpi/boot.c
+> > +++ b/arch/x86/kernel/acpi/boot.c
+> > @@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+> >  		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+> >  
+> >  	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
+> > +	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+> >  
+> >  	/*
+> >  	 * stash over-ride to indicate we've been here
+> > diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> > index 4f37938..294b190 100644
+> > --- a/drivers/acpi/pci_link.c
+> > +++ b/drivers/acpi/pci_link.c
+> > @@ -87,6 +87,7 @@ struct acpi_pci_link {
+> >  
+> >  static LIST_HEAD(acpi_link_list);
+> >  static DEFINE_MUTEX(acpi_link_lock);
+> > +static int sci_irq = -1, sci_penalty;
+> >  
+> >  /* --------------------------------------------------------------------------
+> >                              PCI Link Device Management
+> > @@ -496,25 +497,13 @@ static int acpi_irq_get_penalty(int irq)
+> >  {
+> >  	int penalty = 0;
+> >  
+> > -	/*
+> > -	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+> > -	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+> > -	* use for PCI IRQs.
+> > -	*/
+> > -	if (irq == acpi_gbl_FADT.sci_interrupt) {
+> > -		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+> > -
+> > -		if (type != IRQ_TYPE_LEVEL_LOW)
+> > -			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+> > -		else
+> > -			penalty += PIRQ_PENALTY_PCI_USING;
+> > -	}
+> > +	if (irq == sci_irq)
+> > +		penalty += sci_penalty;
+> >  
+> >  	if (irq < ACPI_MAX_ISA_IRQS)
+> >  		return penalty + acpi_isa_irq_penalty[irq];
+> >  
+> > -	penalty += acpi_irq_pci_sharing_penalty(irq);
+> > -	return penalty;
+> > +	return penalty + acpi_irq_pci_sharing_penalty(irq);
+> >  }
+> >  
+> >  int __init acpi_irq_penalty_init(void)
+> > @@ -881,6 +870,17 @@ bool acpi_isa_irq_available(int irq)
+> >  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+> >  }
+> >  
+> > +void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+> > +{
+> > +	sci_irq = irq;
+> > +
+> > +	if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
+> > +	    polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
+> > +		sci_penalty = PIRQ_PENALTY_PCI_USING;
+> > +	else
+> > +		sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
+> > +}
+> > +
+> >  /*
+> >   * Over-ride default table to reserve additional IRQs for use by ISA
+> >   * e.g. acpi_irq_isa=5
+> > diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> > index c5eaf2f..67d1d3e 100644
+> > --- a/include/linux/acpi.h
+> > +++ b/include/linux/acpi.h
+> > @@ -318,6 +318,7 @@ struct pci_dev;
+> >  int acpi_pci_irq_enable (struct pci_dev *dev);
+> >  void acpi_penalize_isa_irq(int irq, int active);
+> >  bool acpi_isa_irq_available(int irq);
+> > +void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+> >  void acpi_pci_irq_disable (struct pci_dev *dev);
+> >  
+> >  extern int ec_read(u8 addr, u8 *val);
+> > -- 
+> > 1.9.1
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
