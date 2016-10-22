@@ -1,108 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49596 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753234AbcJGQaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:30:21 -0400
-Subject: [PATCH 2/7] PCI: designware: Simplify pcie_host_ops.readl_rc() and
- .writel_rc() interfaces
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:30:17 -0500
-Message-ID: <20161007163017.24388.75972.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Message-ID: <1477150280.6423.19.camel@linux.intel.com>
+Subject: Re: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+ ->get_state hook
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	x86@kernel.org
+Date: Sat, 22 Oct 2016 18:31:20 +0300
+In-Reply-To: <20161019180402.GA3220@wunner.de>
+References: 
+	<63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
+	 <20161019151055.GA16147@localhost>
+	 <1476892081.11323.503.camel@linux.intel.com>
+	 <20161019180402.GA3220@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-The struct pcie_host_ops.readl_rc() and .writel_rc() function pointers
-allow a driver to override the default DesignWare register accessors.
+On Wed, 2016-10-19 at 20:04 +0200, Lukas Wunner wrote:
+> On Wed, Oct 19, 2016 at 06:48:01PM +0300, Andy Shevchenko wrote:
+> > On Wed, 2016-10-19 at 10:10 -0500, Bjorn Helgaas wrote:
+> > > On Sun, Oct 09, 2016 at 02:46:29PM +0200, Lukas Wunner wrote:
 
-Make the signature of the override functions the same as the default
-accessors.  This makes the default dw_pcie_readl_rc() and the corresponding
-override more structurally similar: both will compute the final register
-address with "pp->dbi_base + reg".  Previously dw_pcie_readl_rc() computed
-the address and passed it to the override.
 
-No functional change intended.
+> However so far only 4.9-rc1 is broken and we still have like 7 weeks
+> to get the fix in.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-exynos.c      |   10 ++++------
- drivers/pci/host/pcie-designware.c |    4 ++--
- drivers/pci/host/pcie-designware.h |    5 ++---
- 3 files changed, 8 insertions(+), 11 deletions(-)
+One week less. :-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 2e2d7f0..b29e9d6 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -425,22 +425,20 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
- 		exynos_pcie_msi_init(pp);
- }
- 
--static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp,
--				       void __iomem *dbi_base)
-+static inline u32 exynos_pcie_readl_rc(struct pcie_port *pp, u32 reg)
- {
- 	u32 val;
- 
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
--	val = readl(dbi_base);
-+	val = readl(pp->dbi_base + reg);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
- 	return val;
- }
- 
--static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
--					u32 val, void __iomem *dbi_base)
-+static inline void exynos_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- {
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
--	writel(val, dbi_base);
-+	writel(val, pp->dbi_base + reg);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
- }
- 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index b58f078..c5b54a3 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -144,7 +144,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
- {
- 	if (pp->ops->readl_rc)
--		return pp->ops->readl_rc(pp, pp->dbi_base + reg);
-+		return pp->ops->readl_rc(pp, reg);
- 
- 	return readl(pp->dbi_base + reg);
- }
-@@ -152,7 +152,7 @@ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
- static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- {
- 	if (pp->ops->writel_rc)
--		pp->ops->writel_rc(pp, val, pp->dbi_base + reg);
-+		pp->ops->writel_rc(pp, val, reg);
- 	else
- 		writel(val, pp->dbi_base + reg);
- }
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index c8e5bc6..60cbc68 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -54,9 +54,8 @@ struct pcie_port {
- };
- 
- struct pcie_host_ops {
--	u32 (*readl_rc)(struct pcie_port *pp, void __iomem *dbi_base);
--	void (*writel_rc)(struct pcie_port *pp,
--			u32 val, void __iomem *dbi_base);
-+	u32 (*readl_rc)(struct pcie_port *pp, u32 reg);
-+	void (*writel_rc)(struct pcie_port *pp, u32 val, u32 reg);
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
- 	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+> > > Fixes: 5823d0893ec2 ("x86/platform/intel-mid: Add Power Management
+> > > Unit driver")
+> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > 
+> > > Sounds like this should be marked for stable, since v4.8 contains
+> > > 5823d0893ec2 and is apparently broken?
+> > 
+> > At that point there was no "feature" commit in the tree. Perhaps the
+> > Fixes tag should point to the "feature" commit instead. Am I right,
+> > Lukas?
+> 
+> Right, the Fixes tag should be:
+> 
+> Fixes: cc7cc02bada8 ("PCI: Query platform firmware for device power
+> state")
+> 
+> And this shouldn't get backported to 4.8, the issue is only present
+> in 4.9-rc1 so far.
+> 
+> @Ingo: Do you want me to repost with Bjorn's ack and the correct
+> Fixes: tag?
 
+I didn't noticed the patch in last urgent pull request, so, I assume you
+need to send v3.
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
