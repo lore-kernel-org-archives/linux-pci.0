@@ -1,303 +1,213 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56840 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938522AbcJGQkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:40:39 -0400
-Subject: [PATCH 10/10] PCI: imx6: Add local struct device pointers
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:39:58 -0500
-Message-ID: <20161007163958.25776.72538.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Mon, 24 Oct 2016 10:28:02 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, benh@au1.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH v2 2/2] PCI: Don't disable PF's memory decoding when
+ enabling SRIOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1475192870-7763-2-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20161021165034.GE9007@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161021165034.GE9007@localhost>
+Message-Id: <20161023232802.GA7215@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+On Fri, Oct 21, 2016 at 11:50:34AM -0500, Bjorn Helgaas wrote:
+>Hi Gavin,
+>
+>On Fri, Sep 30, 2016 at 09:47:50AM +1000, Gavin Shan wrote:
+>> pci_update_resource() might be called to update (shift) IOV BARs
+>> in PPC PowerNV specific pcibios_sriov_enable() when enabling PF's
+>> SRIOV capability. At that point, the PF have been functional if
+>> the SRIOV is enabled through sysfs entry "sriov_numvfs". The PF's
+>> memory decoding (0x2 in PCI_COMMAND) shouldn't be disabled when
+>> updating its IOV BARs with pci_update_resource(). Otherwise, we
+>> receives EEH error caused by MMIO access to PF's memory BARs during
+>> the window when PF's memory decoding is disabled.
+>
+>The fact that you get EEH errors is irrelevant.  We can't write code
+>simply to avoid errors -- we have to write code to make the system
+>work correctly.
+>
+>I do not want to add a "mmio_force_on" parameter to
+>pci_update_resource().  That puts the burden on the caller to
+>understand this subtle issue.  If the caller passes mmio_force_on=1
+>when it shouldn't, things will almost always work, but once in a blue
+>moon a half-updated BAR will conflict with some other device in the
+>system, and we'll have an unreproducible, undebuggable crash.
+>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-imx6.c |   77 ++++++++++++++++++++++---------------------
- 1 file changed, 40 insertions(+), 37 deletions(-)
+Bjorn, thanks for your comments. Yes, the EEH error was caused by MMIO
+access to PF's normal BARs, not VF BARs. Yeah, I also had the conern
+that adding parameter to pci_update_resource() increases the visible
+complexity to the caller of the function.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 9f35f3a..d737a1d 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -304,13 +304,14 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
- static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 	int ret = 0;
- 
- 	switch (imx6->variant) {
- 	case IMX6SX:
- 		ret = clk_prepare_enable(imx6->pcie_inbound_axi);
- 		if (ret) {
--			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
-+			dev_err(dev, "unable to enable pcie_axi clock\n");
- 			break;
- 		}
- 
-@@ -340,29 +341,30 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6)
- static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 	int ret;
- 
- 	ret = clk_prepare_enable(imx6->pcie_phy);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
-+		dev_err(dev, "unable to enable pcie_phy clock\n");
- 		return;
- 	}
- 
- 	ret = clk_prepare_enable(imx6->pcie_bus);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie_bus clock\n");
-+		dev_err(dev, "unable to enable pcie_bus clock\n");
- 		goto err_pcie_bus;
- 	}
- 
- 	ret = clk_prepare_enable(imx6->pcie);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie clock\n");
-+		dev_err(dev, "unable to enable pcie clock\n");
- 		goto err_pcie;
- 	}
- 
- 	ret = imx6_pcie_enable_ref_clk(imx6);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie ref clock\n");
-+		dev_err(dev, "unable to enable pcie ref clock\n");
- 		goto err_ref_clk;
- 	}
- 
-@@ -439,12 +441,13 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6)
- static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 
- 	/* check if the link is up or not */
- 	if (!dw_pcie_wait_for_link(pp))
- 		return 0;
- 
--	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+	dev_dbg(dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
- 		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
- 		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
- 	return -ETIMEDOUT;
-@@ -453,6 +456,7 @@ static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6)
- static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 	u32 tmp;
- 	unsigned int retries;
- 
-@@ -464,7 +468,7 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6)
- 		usleep_range(100, 1000);
- 	}
- 
--	dev_err(pp->dev, "Speed change timeout\n");
-+	dev_err(dev, "Speed change timeout\n");
- 	return -EINVAL;
- }
- 
-@@ -479,6 +483,7 @@ static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
- static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 	u32 tmp;
- 	int ret;
- 
-@@ -498,7 +503,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 
- 	ret = imx6_pcie_wait_for_link(imx6);
- 	if (ret) {
--		dev_info(pp->dev, "Link never came up\n");
-+		dev_info(dev, "Link never came up\n");
- 		goto err_reset_phy;
- 	}
- 
-@@ -509,7 +514,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
- 		dw_pcie_writel_rc(pp, tmp, PCIE_RC_LCR);
- 	} else {
--		dev_info(pp->dev, "Link: Gen2 disabled\n");
-+		dev_info(dev, "Link: Gen2 disabled\n");
- 	}
- 
- 	/*
-@@ -522,23 +527,23 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 
- 	ret = imx6_pcie_wait_for_speed_change(imx6);
- 	if (ret) {
--		dev_err(pp->dev, "Failed to bring link up!\n");
-+		dev_err(dev, "Failed to bring link up!\n");
- 		goto err_reset_phy;
- 	}
- 
- 	/* Make sure link training is finished as well! */
- 	ret = imx6_pcie_wait_for_link(imx6);
- 	if (ret) {
--		dev_err(pp->dev, "Failed to bring link up!\n");
-+		dev_err(dev, "Failed to bring link up!\n");
- 		goto err_reset_phy;
- 	}
- 
- 	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
--	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
-+	dev_info(dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- 
- err_reset_phy:
--	dev_dbg(pp->dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
-+	dev_dbg(dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
- 		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
- 		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
- 	imx6_pcie_reset_phy(imx6);
-@@ -575,21 +580,22 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6,
- 				     struct platform_device *pdev)
- {
- 	struct pcie_port *pp = &imx6->pp;
-+	struct device *dev = pp->dev;
- 	int ret;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq <= 0) {
--			dev_err(&pdev->dev, "failed to get MSI irq\n");
-+			dev_err(dev, "failed to get MSI irq\n");
- 			return -ENODEV;
- 		}
- 
--		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+		ret = devm_request_irq(dev, pp->msi_irq,
- 				       imx6_pcie_msi_handler,
- 				       IRQF_SHARED | IRQF_NO_THREAD,
- 				       "mx6-pcie-msi", imx6);
- 		if (ret) {
--			dev_err(&pdev->dev, "failed to request MSI irq\n");
-+			dev_err(dev, "failed to request MSI irq\n");
- 			return ret;
- 		}
- 	}
-@@ -599,7 +605,7 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6,
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
--		dev_err(&pdev->dev, "failed to initialize host\n");
-+		dev_err(dev, "failed to initialize host\n");
- 		return ret;
- 	}
- 
-@@ -608,28 +614,29 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6,
- 
- static int __init imx6_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct imx6_pcie *imx6;
- 	struct pcie_port *pp;
--	struct device_node *np = pdev->dev.of_node;
-+	struct device_node *np = dev->of_node;
- 	struct resource *dbi_base;
- 	int ret;
- 
--	imx6 = devm_kzalloc(&pdev->dev, sizeof(*imx6), GFP_KERNEL);
-+	imx6 = devm_kzalloc(dev, sizeof(*imx6), GFP_KERNEL);
- 	if (!imx6)
- 		return -ENOMEM;
- 
- 	pp = &imx6->pp;
--	pp->dev = &pdev->dev;
-+	pp->dev = dev;
- 
- 	imx6->variant =
--		(enum imx6_pcie_variants)of_device_get_match_data(&pdev->dev);
-+		(enum imx6_pcie_variants)of_device_get_match_data(dev);
- 
- 	/* Added for PCI abort handling */
- 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
- 		"imprecise external abort");
- 
- 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
-+	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
- 	if (IS_ERR(pp->dbi_base))
- 		return PTR_ERR(pp->dbi_base);
- 
-@@ -638,44 +645,40 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	imx6->gpio_active_high = of_property_read_bool(np,
- 						"reset-gpio-active-high");
- 	if (gpio_is_valid(imx6->reset_gpio)) {
--		ret = devm_gpio_request_one(&pdev->dev, imx6->reset_gpio,
-+		ret = devm_gpio_request_one(dev, imx6->reset_gpio,
- 				imx6->gpio_active_high ?
- 					GPIOF_OUT_INIT_HIGH :
- 					GPIOF_OUT_INIT_LOW,
- 				"PCIe reset");
- 		if (ret) {
--			dev_err(&pdev->dev, "unable to get reset gpio\n");
-+			dev_err(dev, "unable to get reset gpio\n");
- 			return ret;
- 		}
- 	}
- 
- 	/* Fetch clocks */
--	imx6->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
-+	imx6->pcie_phy = devm_clk_get(dev, "pcie_phy");
- 	if (IS_ERR(imx6->pcie_phy)) {
--		dev_err(&pdev->dev,
--			"pcie_phy clock source missing or invalid\n");
-+		dev_err(dev, "pcie_phy clock source missing or invalid\n");
- 		return PTR_ERR(imx6->pcie_phy);
- 	}
- 
--	imx6->pcie_bus = devm_clk_get(&pdev->dev, "pcie_bus");
-+	imx6->pcie_bus = devm_clk_get(dev, "pcie_bus");
- 	if (IS_ERR(imx6->pcie_bus)) {
--		dev_err(&pdev->dev,
--			"pcie_bus clock source missing or invalid\n");
-+		dev_err(dev, "pcie_bus clock source missing or invalid\n");
- 		return PTR_ERR(imx6->pcie_bus);
- 	}
- 
--	imx6->pcie = devm_clk_get(&pdev->dev, "pcie");
-+	imx6->pcie = devm_clk_get(dev, "pcie");
- 	if (IS_ERR(imx6->pcie)) {
--		dev_err(&pdev->dev,
--			"pcie clock source missing or invalid\n");
-+		dev_err(dev, "pcie clock source missing or invalid\n");
- 		return PTR_ERR(imx6->pcie);
- 	}
- 
- 	if (imx6->variant == IMX6SX) {
--		imx6->pcie_inbound_axi = devm_clk_get(&pdev->dev,
--							   "pcie_inbound_axi");
-+		imx6->pcie_inbound_axi = devm_clk_get(dev, "pcie_inbound_axi");
- 		if (IS_ERR(imx6->pcie_inbound_axi)) {
--			dev_err(&pdev->dev,
-+			dev_err(dev,
- 				"pcie_incbound_axi clock missing or invalid\n");
- 			return PTR_ERR(imx6->pcie_inbound_axi);
- 		}
-@@ -685,7 +688,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	imx6->iomuxc_gpr =
- 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
- 	if (IS_ERR(imx6->iomuxc_gpr)) {
--		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
-+		dev_err(dev, "unable to find iomuxc registers\n");
- 		return PTR_ERR(imx6->iomuxc_gpr);
- 	}
- 
+>What you do need is an explanation of why it's safe to non-atomically
+>update a VF BARx in the SR-IOV capability.  I think this probably
+>involves the VF MSE bit, and you probably have to either disable VFs
+>completely or clear the MSE bit while you're updating the VF BARx.  We
+>should be able to do this inside pci_update_resource() without
+>changing the interface.
+>
 
+Yes, It's what PATCH[1/2] does: (PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE)
+are set after VF BARs are updated with pci_update_resource() in this PPC
+specific scenario. There are other two situations where the IOV BARs are
+updated: PCI resource resizing and allocation during system booting or hot
+adding PF. The VF shouldn't be enabled in both cases when updating IOV BARs.
+
+I think you suggest to add check in pci_update_resource(): Don't disable
+PF's memory decoding when updating VF BARs. I will send updated revision
+if it's what you want.
+
+	/*
+	 * The PF might be functional when updating its IOV BARs. So PF's
+	 * memory decoding shouldn't be disabled when updating its IOV BARs.
+	 */
+	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
+#ifdef CONFIG_PCI_IOV
+	disable &= !(resno >= PCI_IOV_RESOURCES &&
+		     resno <= PCI_IOV_RESOURCE_END);
+#endif
+	if (disable) {
+		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+		pci_write_config_word(dev, PCI_COMMAND,
+				      cmd & ~PCI_COMMAND_MEMORY);
+	}
+
+Thanks,
+Gavin
+
+>>    sriov_numvfs_store
+>>    pdev->driver->sriov_configure
+>>    mlx5_core_sriov_configure
+>>    pci_enable_sriov
+>>    sriov_enable
+>>    pcibios_sriov_enable
+>>    pnv_pci_sriov_enable
+>>    pnv_pci_vf_resource_shift
+>>    pci_update_resource
+>> 
+>> This doesn't change the PF's memory decoding in the path by introducing
+>> additional parameter (@mmio_force_on) to pci_update_resource() in
+>> the above path.
+>
+>> 
+>> Reported-by: Carol Soto <clsoto@us.ibm.com>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> Tested-by: Carol Soto <clsoto@us.ibm.com>
+>> ---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
+>>  drivers/pci/iov.c                         | 2 +-
+>>  drivers/pci/pci.c                         | 2 +-
+>>  drivers/pci/setup-res.c                   | 9 +++++----
+>>  include/linux/pci.h                       | 2 +-
+>>  5 files changed, 9 insertions(+), 8 deletions(-)
+>> 
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 38a5c65..f4ccc5b 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -1006,7 +1006,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>>  		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
+>>  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+>>  			 num_vfs, offset);
+>> -		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+>> +		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
+>>  	}
+>>  	return 0;
+>>  }
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index f1343f0..db31966 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+>>  		return;
+>>  
+>>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
+>> -		pci_update_resource(dev, i);
+>> +		pci_update_resource(dev, i, false);
+>>  
+>>  	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+>>  	pci_iov_set_numvfs(dev, iov->num_VFs);
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index aab9d51..87a33c0 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
+>>  		return;
+>>  
+>>  	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
+>> -		pci_update_resource(dev, i);
+>> +		pci_update_resource(dev, i, false);
+>>  }
+>>  
+>>  static const struct pci_platform_pm_ops *pci_platform_pm;
+>> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>> index 66c4d8f..e8a50ff 100644
+>> --- a/drivers/pci/setup-res.c
+>> +++ b/drivers/pci/setup-res.c
+>> @@ -26,7 +26,7 @@
+>>  #include "pci.h"
+>>  
+>>  
+>> -void pci_update_resource(struct pci_dev *dev, int resno)
+>> +void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
+>>  {
+>>  	struct pci_bus_region region;
+>>  	bool disable;
+>> @@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+>>  	 * disable decoding so that a half-updated BAR won't conflict
+>>  	 * with another device.
+>>  	 */
+>> -	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
+>> +	disable = (res->flags & IORESOURCE_MEM_64) &&
+>> +		  !mmio_force_on && !dev->mmio_always_on;
+>>  	if (disable) {
+>>  		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>>  		pci_write_config_word(dev, PCI_COMMAND,
+>> @@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+>>  	res->flags &= ~IORESOURCE_STARTALIGN;
+>>  	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
+>>  	if (resno < PCI_BRIDGE_RESOURCES)
+>> -		pci_update_resource(dev, resno);
+>> +		pci_update_resource(dev, resno, false);
+>>  
+>>  	return 0;
+>>  }
+>> @@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+>>  	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
+>>  		 resno, res, (unsigned long long) addsize);
+>>  	if (resno < PCI_BRIDGE_RESOURCES)
+>> -		pci_update_resource(dev, resno);
+>> +		pci_update_resource(dev, resno, false);
+>>  
+>>  	return 0;
+>>  }
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 0ab8359..99231d1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
+>>  void pci_reset_secondary_bus(struct pci_dev *dev);
+>>  void pcibios_reset_secondary_bus(struct pci_dev *dev);
+>>  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>> -void pci_update_resource(struct pci_dev *dev, int resno);
+>> +void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
+>>  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>>  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+>>  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+>> -- 
+>> 2.1.0
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
