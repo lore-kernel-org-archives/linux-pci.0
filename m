@@ -1,50 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36620 "EHLO
-        mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933143AbcJQO46 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 10:56:58 -0400
-Received: by mail-pa0-f68.google.com with SMTP id os4so5246019pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 17 Oct 2016 07:56:58 -0700 (PDT)
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH -next] PCI: hisi: Remove redundant dev_err call in hisi_pcie_probe()
-Date: Mon, 17 Oct 2016 14:56:50 +0000
-Message-Id: <1476716210-31532-1-git-send-email-weiyj.lk@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout1.hostsharing.net ([83.223.95.204]:53035 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753307AbcJWLzj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Oct 2016 07:55:39 -0400
+Message-Id: <cover.1477221514.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 23 Oct 2016 13:55:34 +0200
+Subject: [PATCH v3 0/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
+To: Ingo Molnar <mingo@kernel.org>
+Cc: x86@kernel.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+Hi Ingo,
 
-There is a error message within devm_ioremap_resource
-already, so remove the dev_err call to avoid redundant
-error message.
+please consider merging the following patch to x86/urgent for v4.9-rc3,
+it fixes a regression (boot failure) of Intel Mobile Internet Devices
+due to a change in the PCI subsystem that appeared in v4.9-rc1.
 
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/pci/host/pcie-hisi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+The patch is marked v3 but in fact it's identical to v2 except now it's
+rebased on today's tip.git master branch, has acks by Bjorn and Andy
+plus a Fixes tag.  I also polished the commit message a bit.
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 56154c2..a77b9bda 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -185,10 +185,8 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 
- 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
- 	pp->dbi_base = devm_ioremap_resource(dev, reg);
--	if (IS_ERR(pp->dbi_base)) {
--		dev_err(dev, "cannot get rc_dbi base\n");
-+	if (IS_ERR(pp->dbi_base))
- 		return PTR_ERR(pp->dbi_base);
--	}
- 
- 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
- 	if (ret)
+Thanks!
+
+Lukas
 
 
+Lukas Wunner (1):
+  x86/platform/intel-mid: Retrofit pci_platform_pm_ops ->get_state hook
+
+ arch/x86/include/asm/intel-mid.h  |  1 +
+ arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
+ drivers/pci/pci-mid.c             |  6 ++++++
+ 3 files changed, 26 insertions(+)
+
+-- 
+2.9.3
 
