@@ -1,63 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39367 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753758AbcJZBWq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 21:22:46 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9Q1K9pX079177
-        for <linux-pci@vger.kernel.org>; Tue, 25 Oct 2016 21:22:45 -0400
-Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26ah2bc8rg-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 25 Oct 2016 21:22:45 -0400
-Received: from localhost
-        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Wed, 26 Oct 2016 11:22:43 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp03.au.ibm.com (Postfix) with ESMTP id DDC9C3578057
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100 (EST)
-Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u9Q1Medu65732748
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100
-Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
-        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u9Q1MdgW027833
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-        benh@kernel.crashing.org, mpe@ellerman.id.au, clsoto@us.ibm.com,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 0/2] Disable VF's memory space on updating IOV BARs
-Date: Wed, 26 Oct 2016 12:15:34 +1100
-Message-Id: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: net147@gmail.com, linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V5 2/3] ACPI: pci_link: penalize SCI correctly
+Date: Mon, 24 Oct 2016 00:31:31 -0400
+Message-Id: <1477283492-26657-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This moves pcibios_sriov_enable() to the point before VF and VF BARs
-are enabled on PowerNV platform. Also, pci_update_resource() is used
-to update IOV BARs on PowerNV platform, the PF might have been functional
-when the function is called. We shouldn't disable PF's memory decoding
-at that point. Instead, the VF's memory space should be disabled.
+Ondrej reported that IRQs stopped working in v4.7 on several
+platforms.  A typical scenario, from Ondrej's VT82C694X/694X, is:
 
-Changelog
-=========
-v3:
-  * Disable VF's memory space when IOV BARs are updated in
-    pcibios_sriov_enable().
-v2:
-  * Added one patch calling pcibios_sriov_enable() before the VF
-    and VF BARs are enabled.
+ACPI: Using PIC for interrupt routing
+ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 7 10 *11 12 14 15)
+ACPI: No IRQ available for PCI Interrupt Link [LNKA]
+8139too 0000:00:0f.0: PCI INT A: no GSI
 
-Gavin Shan (2):
-  PCI: Call pcibios_sriov_enable() before IOV BARs are enabled
-  PCI: Disable VF's memory space on updating IOV BAR in
-    pci_update_resource()
+We're using PIC routing, so acpi_irq_balance == 0, and LNKA is already
+active at IRQ 11. In that case, acpi_pci_link_allocate() only tries
+to use the active IRQ (IRQ 11) which also happens to be the SCI.
 
- drivers/pci/iov.c       | 14 +++++++-------
- drivers/pci/setup-res.c | 28 ++++++++++++++++++++--------
- 2 files changed, 27 insertions(+), 15 deletions(-)
+We should penalize the SCI by PIRQ_PENALTY_PCI_USING, but
+irq_get_trigger_type(11) returns something other than
+IRQ_TYPE_LEVEL_LOW, so we penalize it by PIRQ_PENALTY_ISA_ALWAYS
+instead, which makes acpi_pci_link_allocate() assume the IRQ isn't
+available and give up.
 
+Add acpi_penalize_sci_irq() so platforms can tell us the SCI IRQ,
+trigger, and polarity directly and we don't have to depend on
+irq_get_trigger_type().
+
+Link: http://lkml.kernel.org/r/201609251512.05657.linux@rainbow-software.org
+Reported-by: Ondrej Zary <linux@rainbow-software.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/kernel/acpi/boot.c |  1 +
+ drivers/acpi/pci_link.c     | 30 +++++++++++++++---------------
+ include/linux/acpi.h        |  1 +
+ 3 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 90d84c3..0ffd26e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -453,6 +453,7 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+ 
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
++	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+ 
+ 	/*
+ 	 * stash over-ride to indicate we've been here
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 6229b02..74bf96e 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -87,6 +87,7 @@ struct acpi_pci_link {
+ 
+ static LIST_HEAD(acpi_link_list);
+ static DEFINE_MUTEX(acpi_link_lock);
++static int sci_irq = -1, sci_penalty;
+ 
+ /* --------------------------------------------------------------------------
+                             PCI Link Device Management
+@@ -496,25 +497,13 @@ static int acpi_irq_get_penalty(int irq)
+ {
+ 	int penalty = 0;
+ 
+-	/*
+-	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+-	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+-	* use for PCI IRQs.
+-	*/
+-	if (irq == acpi_gbl_FADT.sci_interrupt) {
+-		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+-
+-		if (type != IRQ_TYPE_LEVEL_LOW)
+-			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			penalty += PIRQ_PENALTY_PCI_USING;
+-	}
++	if (irq == sci_irq)
++		penalty += sci_penalty;
+ 
+ 	if (irq < ACPI_MAX_ISA_IRQS)
+ 		return penalty + acpi_isa_irq_penalty[irq];
+ 
+-	penalty += acpi_irq_pci_sharing_penalty(irq);
+-	return penalty;
++	return penalty + acpi_irq_pci_sharing_penalty(irq);
+ }
+ 
+ int __init acpi_irq_penalty_init(void)
+@@ -881,6 +870,17 @@ bool acpi_isa_irq_available(int irq)
+ 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
++{
++	sci_irq = irq;
++
++	if (trigger == ACPI_MADT_TRIGGER_LEVEL &&
++	    polarity == ACPI_MADT_POLARITY_ACTIVE_LOW)
++		sci_penalty = PIRQ_PENALTY_PCI_USING;
++	else
++		sci_penalty = PIRQ_PENALTY_ISA_ALWAYS;
++}
++
+ /*
+  * Over-ride default table to reserve additional IRQs for use by ISA
+  * e.g. acpi_irq_isa=5
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index c5eaf2f..67d1d3e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -318,6 +318,7 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
++void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ extern int ec_read(u8 addr, u8 *val);
 -- 
-2.1.0
+1.9.1
 
