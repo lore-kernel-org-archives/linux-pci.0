@@ -1,65 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leo Li <leoyang.li@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH] PCI: layerscape: Fix kernel panic on accessing NULL
- pointer
-Date: Fri, 21 Oct 2016 16:05:04 +0000
-Message-ID: <AM2PR04MB077062B18CE8197BB7FE77808FD40@AM2PR04MB0770.eurprd04.prod.outlook.com>
-References: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
- <20161021153701.GC9007@localhost>
-In-Reply-To: <20161021153701.GC9007@localhost>
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+Subject: Re: [PATCH 07/12] PCI: iproc: Update iProc PCIe DT binding
+To: Scott Branden <scott.branden@broadcom.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+ <1477347432-17656-8-git-send-email-ray.jui@broadcom.com>
+ <94ae3c67-d5ed-d736-6e17-036f3caf4eaa@broadcom.com>
+Cc: linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, Alex Barba <alex.barba@broadcom.com>,
+ Oza Oza <oza.oza@broadcom.com>, Ray Jui <rjui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <df28b5f4-7263-8288-39eb-d5ead6f7475d@broadcom.com>
+Date: Mon, 24 Oct 2016 15:27:08 -0700
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <94ae3c67-d5ed-d736-6e17-036f3caf4eaa@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+Thanks! Will address both typos in the next revision. Waiting for 
+feedback from Bjorn before sending out the next revision.
 
+Ray
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Friday, October 21, 2016 10:37 AM
-> To: Leo Li <leoyang.li@nxp.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; Minghuan Lian
-> <minghuan.Lian@freescale.com>; Mingkai Hu <mingkai.hu@freescale.com>;
-> Roy Zang <tie-fei.zang@freescale.com>; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Stuart Yoder
-> <stuart.yoder@nxp.com>
-> Subject: Re: [PATCH] PCI: layerscape: Fix kernel panic on accessing NULL pointer
-> 
-> On Mon, Oct 17, 2016 at 04:44:06PM -0500, Li Yang wrote:
-> > Commit fefe6733e added reference to the pcie->drvdata before it is
-> > initialized which causes a kernel panic.  Fix the problem by
-> > initializing the pcie->drvdata earlier before it is used.
-> >
-> > Reported-by: Stuart Yoder <stuart.yoder@nxp.com>
-> > Signed-off-by: Li Yang <leoyang.li@nxp.com>
-> 
-> I applied Marc Zyngier's identical patch to for-linus for v4.9.  I don't know which
-> was posted first, but I saw Marc's first.  Sorry I didn't at least credit you when I
-> applied it.
-
-It's ok.  Seems Marc sent the patch earlier and I didn't notice his patch.  There is no difference as long as the problem is addressed.  :)
-
-Regards,
-Leo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 10/24/2016 3:24 PM, Scott Branden wrote:
+> 2 spelling typos
+>
+> On 16-10-24 03:17 PM, Ray Jui wrote:
+>> Remove the following outbound related device tree properties:
+>> brcm,pcie-ob-window-size
+>> brcm,pcie-ob-oarr-size
+>>
+>> The above two prperties are a bit duplicated in functions. In addition,
+> properties typo
+>> the next generation iProc PCIe controller has outbound mapping window
+>> that
+>> supports more than just two sizes, which cannot be properly supported by
+>> these properties
+>>
+>> A better solution is to make the driver outbound mapping logic slightly
+>> more inteligent so it can figure out how to configure the outbound
+>> mapping
+> intelligent typo
+>> based on the 'ranges' specified in device tree and the number and sizes
+>> of the outbound mapping windows that a particular revision of the iProc
+>> PCIe controller can support
+>>
+>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>> ---
+>>  Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 7 -------
+>>  1 file changed, 7 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> index 071bbc2..f827b8d 100644
+>> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> @@ -35,11 +35,6 @@ effective:
+>>  Required:
+>>  - brcm,pcie-ob-axi-offset: The offset from the AXI address to the
+>> internal
+>>  address used by the iProc PCIe core (not the PCIe address)
+>> -- brcm,pcie-ob-window-size: The outbound address mapping window size
+>> (in MB)
+>> -
+>> -Optional:
+>> -- brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to
+>> be set to
+>> -increase the outbound window size
+>>
+>>  MSI support (optional):
+>>
+>> @@ -95,9 +90,7 @@ Example:
+>>          phy-names = "pcie-phy";
+>>
+>>          brcm,pcie-ob;
+>> -        brcm,pcie-ob-oarr-size;
+>>          brcm,pcie-ob-axi-offset = <0x00000000>;
+>> -        brcm,pcie-ob-window-size = <256>;
+>>
+>>          msi-parent = <&msi0>;
+>>
+>>
