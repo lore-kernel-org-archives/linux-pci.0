@@ -1,84 +1,223 @@
 Return-Path: <ray.jui@broadcom.com>
 Return-Path: <ray.jui@broadcom.com>
-Subject: Re: [PATCH 07/12] PCI: iproc: Update iProc PCIe DT binding
-To: Scott Branden <scott.branden@broadcom.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
- <1477347432-17656-8-git-send-email-ray.jui@broadcom.com>
- <94ae3c67-d5ed-d736-6e17-036f3caf4eaa@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Alex Barba <alex.barba@broadcom.com>,
- Oza Oza <oza.oza@broadcom.com>, Ray Jui <rjui@broadcom.com>
 From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <df28b5f4-7263-8288-39eb-d5ead6f7475d@broadcom.com>
-Date: Mon, 24 Oct 2016 15:27:08 -0700
-MIME-Version: 1.0
-In-Reply-To: <94ae3c67-d5ed-d736-6e17-036f3caf4eaa@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 01/12] PCI: iproc: Improve core register population
+Date: Mon, 24 Oct 2016 15:17:01 -0700
+Message-Id: <1477347432-17656-2-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks! Will address both typos in the next revision. Waiting for 
-feedback from Bjorn before sending out the next revision.
+As the number of iProc PCIe core registers starts to grow and differ
+between different revisions of the iProc PCIe controllers, the
+current way of populating each individual unsupported register with
+value 'IPROC_PCIE_REG_INVALID' with a table entry has become a bit
+messy and is difficult to scale up in the future
 
-Ray
+This patch improves the current driver by populating the invalid
+entries with code instead of through individual table entries. This
+helps to avoid a significant number of invalid table entries when
+support for the next revision of the iProc controller is added
 
-On 10/24/2016 3:24 PM, Scott Branden wrote:
-> 2 spelling typos
->
-> On 16-10-24 03:17 PM, Ray Jui wrote:
->> Remove the following outbound related device tree properties:
->> brcm,pcie-ob-window-size
->> brcm,pcie-ob-oarr-size
->>
->> The above two prperties are a bit duplicated in functions. In addition,
-> properties typo
->> the next generation iProc PCIe controller has outbound mapping window
->> that
->> supports more than just two sizes, which cannot be properly supported by
->> these properties
->>
->> A better solution is to make the driver outbound mapping logic slightly
->> more inteligent so it can figure out how to configure the outbound
->> mapping
-> intelligent typo
->> based on the 'ranges' specified in device tree and the number and sizes
->> of the outbound mapping windows that a particular revision of the iProc
->> PCIe controller can support
->>
->> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
->> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->> ---
->>  Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 7 -------
->>  1 file changed, 7 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> index 071bbc2..f827b8d 100644
->> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> @@ -35,11 +35,6 @@ effective:
->>  Required:
->>  - brcm,pcie-ob-axi-offset: The offset from the AXI address to the
->> internal
->>  address used by the iProc PCIe core (not the PCIe address)
->> -- brcm,pcie-ob-window-size: The outbound address mapping window size
->> (in MB)
->> -
->> -Optional:
->> -- brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to
->> be set to
->> -increase the outbound window size
->>
->>  MSI support (optional):
->>
->> @@ -95,9 +90,7 @@ Example:
->>          phy-names = "pcie-phy";
->>
->>          brcm,pcie-ob;
->> -        brcm,pcie-ob-oarr-size;
->>          brcm,pcie-ob-axi-offset = <0x00000000>;
->> -        brcm,pcie-ob-window-size = <256>;
->>
->>          msi-parent = <&msi0>;
->>
->>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 83 +++++++++++++++++++++++++++++++------------
+ drivers/pci/host/pcie-iproc.h |  4 ++-
+ 2 files changed, 64 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0b999a9..a9b9cd8 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -69,18 +69,35 @@
+ 
+ #define IPROC_PCIE_REG_INVALID 0xffff
+ 
++/*
++ * iProc PCIe host registers
++ */
+ enum iproc_pcie_reg {
++	/* clock/reset signal control */
+ 	IPROC_PCIE_CLK_CTRL = 0,
++
++	/* allow access to root complex configuration space */
+ 	IPROC_PCIE_CFG_IND_ADDR,
+ 	IPROC_PCIE_CFG_IND_DATA,
++
++	/* allow access to device configuration space */
+ 	IPROC_PCIE_CFG_ADDR,
+ 	IPROC_PCIE_CFG_DATA,
++
++	/* enable INTx */
+ 	IPROC_PCIE_INTX_EN,
++
++	/* outbound address mapping */
+ 	IPROC_PCIE_OARR_LO,
+ 	IPROC_PCIE_OARR_HI,
+ 	IPROC_PCIE_OMAP_LO,
+ 	IPROC_PCIE_OMAP_HI,
++
++	/* link status */
+ 	IPROC_PCIE_LINK_STATUS,
++
++	/* total number of core registers */
++	IPROC_PCIE_MAX_NUM_REG,
+ };
+ 
+ /* iProc PCIe PAXB registers */
+@@ -105,12 +122,6 @@ static const u16 iproc_pcie_reg_paxc[] = {
+ 	[IPROC_PCIE_CFG_IND_DATA] = 0x1f4,
+ 	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
+ 	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
+-	[IPROC_PCIE_INTX_EN]      = IPROC_PCIE_REG_INVALID,
+-	[IPROC_PCIE_OARR_LO]      = IPROC_PCIE_REG_INVALID,
+-	[IPROC_PCIE_OARR_HI]      = IPROC_PCIE_REG_INVALID,
+-	[IPROC_PCIE_OMAP_LO]      = IPROC_PCIE_REG_INVALID,
+-	[IPROC_PCIE_OMAP_HI]      = IPROC_PCIE_REG_INVALID,
+-	[IPROC_PCIE_LINK_STATUS]  = IPROC_PCIE_REG_INVALID,
+ };
+ 
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+@@ -204,7 +215,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 	 * PAXC is connected to an internally emulated EP within the SoC.  It
+ 	 * allows only one device.
+ 	 */
+-	if (pcie->type == IPROC_PCIE_PAXC)
++	if (pcie->ep_is_internal)
+ 		if (slot > 0)
+ 			return NULL;
+ 
+@@ -232,7 +243,7 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ {
+ 	u32 val;
+ 
+-	if (pcie->type == IPROC_PCIE_PAXC) {
++	if (pcie->ep_is_internal) {
+ 		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+ 		val &= ~PAXC_RESET_MASK;
+ 		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+@@ -270,7 +281,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ 	 * PAXC connects to emulated endpoint devices directly and does not
+ 	 * have a Serdes.  Therefore skip the link detection logic here.
+ 	 */
+-	if (pcie->type == IPROC_PCIE_PAXC)
++	if (pcie->ep_is_internal)
+ 		return 0;
+ 
+ 	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_LINK_STATUS);
+@@ -454,6 +465,40 @@ static void iproc_pcie_msi_disable(struct iproc_pcie *pcie)
+ 	iproc_msi_exit(pcie);
+ }
+ 
++static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	unsigned int reg_idx;
++	const u16 *regs;
++
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXB:
++		regs = iproc_pcie_reg_paxb;
++		break;
++	case IPROC_PCIE_PAXC:
++		regs = iproc_pcie_reg_paxc;
++		pcie->ep_is_internal = true;
++		break;
++	default:
++		dev_err(dev, "incompatible iProc PCIe interface\n");
++		return -EINVAL;
++	}
++
++	pcie->reg_offsets = devm_kcalloc(dev, IPROC_PCIE_MAX_NUM_REG,
++					 sizeof(*pcie->reg_offsets),
++					 GFP_KERNEL);
++	if (!pcie->reg_offsets)
++		return -ENOMEM;
++
++	/* go through the register table and populate all valid registers */
++	pcie->reg_offsets[0] = regs[0];
++	for (reg_idx = 1; reg_idx < IPROC_PCIE_MAX_NUM_REG; reg_idx++)
++		pcie->reg_offsets[reg_idx] = regs[reg_idx] ?
++			regs[reg_idx] : IPROC_PCIE_REG_INVALID;
++
++	return 0;
++}
++
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ {
+ 	struct device *dev;
+@@ -462,6 +507,13 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	struct pci_bus *bus;
+ 
+ 	dev = pcie->dev;
++
++	ret = iproc_pcie_rev_init(pcie);
++	if (ret) {
++		dev_err(dev, "unable to initialize controller parameters\n");
++		return ret;
++	}
++
+ 	ret = devm_request_pci_bus_resources(dev, res);
+ 	if (ret)
+ 		return ret;
+@@ -478,19 +530,6 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	switch (pcie->type) {
+-	case IPROC_PCIE_PAXB:
+-		pcie->reg_offsets = iproc_pcie_reg_paxb;
+-		break;
+-	case IPROC_PCIE_PAXC:
+-		pcie->reg_offsets = iproc_pcie_reg_paxc;
+-		break;
+-	default:
+-		dev_err(dev, "incompatible iProc PCIe interface\n");
+-		ret = -EINVAL;
+-		goto err_power_off_phy;
+-	}
+-
+ 	iproc_pcie_reset(pcie);
+ 
+ 	if (pcie->need_ob_cfg) {
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index e84d93c..83643d5 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -55,6 +55,7 @@ struct iproc_msi;
+  * @root_bus: pointer to root bus
+  * @phy: optional PHY device that controls the Serdes
+  * @map_irq: function callback to map interrupts
++ * @ep_is_internal: indicates an internal emulated endpoint device is connected
+  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+  * @ob: outbound mapping parameters
+  * @msi: MSI data
+@@ -62,7 +63,7 @@ struct iproc_msi;
+ struct iproc_pcie {
+ 	struct device *dev;
+ 	enum iproc_pcie_type type;
+-	const u16 *reg_offsets;
++	u16 *reg_offsets;
+ 	void __iomem *base;
+ 	phys_addr_t base_addr;
+ #ifdef CONFIG_ARM
+@@ -71,6 +72,7 @@ struct iproc_pcie {
+ 	struct pci_bus *root_bus;
+ 	struct phy *phy;
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
++	bool ep_is_internal;
+ 	bool need_ob_cfg;
+ 	struct iproc_pcie_ob ob;
+ 	struct iproc_msi *msi;
+-- 
+2.1.4
