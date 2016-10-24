@@ -1,66 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37554 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S944115AbcJaSZk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Oct 2016 14:25:40 -0400
-Date: Mon, 31 Oct 2016 13:25:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tobias Klauser <tklauser@distanz.ch>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: hv: Make unnecessarily global IRQ masking functions
- static
-Message-ID: <20161031182533.GB11486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161031110409.27300-1-tklauser@distanz.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161031110409.27300-1-tklauser@distanz.ch>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 11/12] PCI: iproc: Update iProc PCIe DT binding
+Date: Mon, 24 Oct 2016 15:17:11 -0700
+Message-Id: <1477347432-17656-12-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 31, 2016 at 12:04:09PM +0100, Tobias Klauser wrote:
-> Make hv_irq_mask and hv_irq_unmask static as they are only used in
-> pci-hyperv.c
-> 
-> This fixes a sparse warning.
-> 
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+Add new compatible string 'brcm,iproc-pcie-paxb-v2', for the next
+generation of the iProc PAXB PCIe host controller
 
-Applied with KY's ack to pci/host-hv for v4.10, thanks!
+Signed-off-by: Oza Oza <oza.oza@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
+ Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 763ff8745828..06c98695c06c 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -755,7 +755,7 @@ static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
->  	return parent->chip->irq_set_affinity(parent, dest, force);
->  }
->  
-> -void hv_irq_mask(struct irq_data *data)
-> +static void hv_irq_mask(struct irq_data *data)
->  {
->  	pci_msi_mask_irq(data);
->  }
-> @@ -770,7 +770,7 @@ void hv_irq_mask(struct irq_data *data)
->   * is built out of this PCI bus's instance GUID and the function
->   * number of the device.
->   */
-> -void hv_irq_unmask(struct irq_data *data)
-> +static void hv_irq_unmask(struct irq_data *data)
->  {
->  	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
->  	struct irq_cfg *cfg = irqd_cfg(data);
-> -- 
-> 2.9.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index 62a0ab9..c8d8c1c 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -4,6 +4,8 @@ Required properties:
+ - compatible:
+       "brcm,iproc-pcie" for the first generation of PAXB based controller,
+ used in SoCs including NSP, Cygnus, NS2, and Pegasus
++      "brcm,iproc-pcie-paxb-v2" for the second generation of PAXB based
++controller, used in Stingray
+       "brcm,iproc-pcie-paxc" for the first generation of PAXC based
+ controller, used in NS2
+       "brcm,iproc-pcie-paxc-v2" for the second generation of PAXC based
+-- 
+2.1.4
