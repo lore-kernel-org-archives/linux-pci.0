@@ -1,49 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41988 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754954AbcJLNxE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:53:04 -0400
-Subject: [PATCH v2 0/6] PCI: keystone: Cleanups
-To: Murali Karicheri <m-karicheri2@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:53:00 -0500
-Message-ID: <20161012134953.29306.24609.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH V4 2/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
+ function"
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1476915664-27231-1-git-send-email-okaya@codeaurora.org>
+ <1476915664-27231-3-git-send-email-okaya@codeaurora.org>
+ <20161021015814.GC31044@localhost> <20161021144535.GB877@localhost>
+ <2a824792-486a-6251-4931-c5cc6fd67978@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
+ cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+ Len Brown <len.brown@intel.com>, x86@kernel.org,
+ "H. Peter Anvin" <hpa@zytor.com>, linux-pm@vger.kernel.org,
+ linux-pci@vger.kernel.org, agross@codeaurora.org,
+ linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+ Pavel Machek <pavel@ucw.cz>, linux-arm-msm@vger.kernel.org,
+ wim@djo.tudelft.nl, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <6fb06d82-13aa-555b-72fc-06e670f9fd28@codeaurora.org>
+Date: Sun, 23 Oct 2016 23:48:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2a824792-486a-6251-4931-c5cc6fd67978@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
+On 10/21/2016 12:13 PM, Sinan Kaya wrote:
+>> Wait a minute, I still have a question here: what about other ACPI
+>> > arches (ia64, arm64)?  Don't they need to call acpi_penalize_sci_irq()
+>> > somewhere?
+>> > 
+> ACPI ARM64 architecture implements reduced ACPI profile which doesn't
+> have GED object.
 
-  - Use generic DesignWare accessors when possible.
+I actually wanted to mean that ARM64 architecture doesn't have *GPE* object
+implemented on ACPI reduced profile.
 
-  - Pass device-specific struct instead of register addresses to IRQ and
-    DBI functions.
-
-  - Add app register accessors to encapsulate usage of va_app_base.
-
-Nothing here should change the behavior of the driver.
-
-Changes from v1:
-  Added local struct device pointers.
-  I dropped the following patch because it was a lot of churn for
-  questionable benefit:
-    PCI: keystone: Name private struct pointer "keystone" consistently
-
----
-
-Bjorn Helgaas (6):
-      PCI: keystone: Add local struct device pointers
-      PCI: keystone: Use generic DesignWare accessors
-      PCI: keystone: Pass keystone_pcie, not address, to IRQ functions
-      PCI: keystone: Pass keystone_pcie, not va_app_base, to DBI functions
-      PCI: keystone: Add app register accessors
-      PCI: keystone: Reorder struct keystone_pcie
-
-
- drivers/pci/host/pci-keystone-dw.c |  123 ++++++++++++++++++++----------------
- drivers/pci/host/pci-keystone.c    |   28 ++++----
- drivers/pci/host/pci-keystone.h    |    9 +--
- 3 files changed, 88 insertions(+), 72 deletions(-)
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
