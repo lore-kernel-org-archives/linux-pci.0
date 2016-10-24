@@ -1,40 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59189 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932444AbcJUJb4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2016 05:31:56 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH] pci: pcie-designware-plat: changing driver authors e-mail
-Date: Fri, 21 Oct 2016 10:31:48 +0100
-Message-Id: <de627efa8f7beaf1e8c04624b21e410caf7d0b51.1477042092.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 04/12] PCI: iproc: Fix exception with multi-function devices
+Date: Mon, 24 Oct 2016 15:17:04 -0700
+Message-Id: <1477347432-17656-5-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Although I am leaving Synopsys, I would like to keep working with the
-linux kernel community and help in what you might find useful. For that
-I am sending this patch to change my contact e-mail. 
+During enumeration with multi-function EP devices, access to the
+configuration space of a non-exist function results in an unsupported
+request being returned as expected. By default the PAXB based iProc
+PCIe controller forwards this as an APB error to the host system and
+that causes an exception, which is undesired
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+This patch disables this undesired behavior and lets the kernel PCI
+stack deals with an access to the non-exist function, in which case
+a vendor ID of 0xffff is returned and handled gracefully
+
+Reported-by: JD Zheng <jiandong.zheng@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: JD Zheng <jiandong.zheng@broadcom.com>
+Reviewed-by: Oza Oza <oza.oza@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 ---
- drivers/pci/host/pcie-designware-plat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-iproc.c | 58 +++++++++++++++++++++++++++++++++++++++++--
+ drivers/pci/host/pcie-iproc.h |  3 +++
+ 2 files changed, 59 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index 537f58a..8df6312 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-  *
-- * Authors: Joao Pinto <jpinto@synopsys.com>
-+ * Authors: Joao Pinto <jpmpinto@gmail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index f3b3340..07ec478 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -58,6 +58,9 @@
+ #define PCIE_DL_ACTIVE_SHIFT         2
+ #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+ 
++#define APB_ERR_EN_SHIFT             0
++#define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
++
+ #define OARR_VALID_SHIFT             0
+ #define OARR_VALID                   BIT(OARR_VALID_SHIFT)
+ #define OARR_SIZE_CFG_SHIFT          1
+@@ -96,6 +99,9 @@ enum iproc_pcie_reg {
+ 	/* link status */
+ 	IPROC_PCIE_LINK_STATUS,
+ 
++	/* enable APB error for unsupported requests */
++	IPROC_PCIE_APB_ERR_EN,
++
+ 	/* total number of core registers */
+ 	IPROC_PCIE_MAX_NUM_REG,
+ };
+@@ -124,6 +130,7 @@ static const u16 iproc_pcie_reg_paxb[] = {
+ 	[IPROC_PCIE_OMAP_LO]      = 0xd40,
+ 	[IPROC_PCIE_OMAP_HI]      = 0xd44,
+ 	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
++	[IPROC_PCIE_APB_ERR_EN]   = 0xf40,
+ };
+ 
+ /* iProc PCIe PAXC v1 registers */
+@@ -181,6 +188,28 @@ static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
+ 	writel(val, pcie->base + offset);
+ }
+ 
++/**
++ * APB error forwarding can be disabled during access of configuration
++ * registers of the endpoint device, to prevent unsupported requests
++ * (typically seen during enumeration with multi-function devices) from
++ * triggering a system exception
++ */
++static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
++					      bool disable)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	u32 val;
++
++	if (bus->number && pcie->has_apb_err_disable) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_APB_ERR_EN);
++		if (disable)
++			val &= ~APB_ERR_EN;
++		else
++			val |= APB_ERR_EN;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_APB_ERR_EN, val);
++	}
++}
++
+ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+ 				       enum iproc_pcie_reg reg,
+ 				       unsigned window, u32 val)
+@@ -244,10 +273,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	int ret;
++
++	iproc_pcie_apb_err_disable(bus, true);
++	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	iproc_pcie_apb_err_disable(bus, false);
++
++	return ret;
++}
++
++static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
++				     int where, int size, u32 val)
++{
++	int ret;
++
++	iproc_pcie_apb_err_disable(bus, true);
++	ret = pci_generic_config_write32(bus, devfn, where, size, val);
++	iproc_pcie_apb_err_disable(bus, false);
++
++	return ret;
++}
++
+ static struct pci_ops iproc_pcie_ops = {
+ 	.map_bus = iproc_pcie_map_cfg_bus,
+-	.read = pci_generic_config_read32,
+-	.write = pci_generic_config_write32,
++	.read = iproc_pcie_config_read32,
++	.write = iproc_pcie_config_write32,
+ };
+ 
+ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+@@ -485,6 +538,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		break;
+ 	case IPROC_PCIE_PAXB:
+ 		regs = iproc_pcie_reg_paxb;
++		pcie->has_apb_err_disable = true;
+ 		break;
+ 	case IPROC_PCIE_PAXC:
+ 		regs = iproc_pcie_reg_paxc;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 768be05..711dd3a 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -57,6 +57,8 @@ struct iproc_msi;
+  * @phy: optional PHY device that controls the Serdes
+  * @map_irq: function callback to map interrupts
+  * @ep_is_internal: indicates an internal emulated endpoint device is connected
++ * @has_apb_err_disable: indicates the controller can be configured to prevent
++ * unsupported request from being forwarded as an APB bus error
+  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+  * @ob: outbound mapping parameters
+  * @msi: MSI data
+@@ -74,6 +76,7 @@ struct iproc_pcie {
+ 	struct phy *phy;
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	bool ep_is_internal;
++	bool has_apb_err_disable;
+ 	bool need_ob_cfg;
+ 	struct iproc_pcie_ob ob;
+ 	struct iproc_msi *msi;
 -- 
-1.8.1.5
-
+2.1.4
