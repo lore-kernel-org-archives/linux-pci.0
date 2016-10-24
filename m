@@ -1,247 +1,136 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 28 Oct 2016 16:50:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v6 09/16] drivers: acpi: iort: add support for ARM SMMU
- platform devices creation
-Message-ID: <20161028155007.GA19523@red-moon>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
- <20161018160414.1228-10-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161018160414.1228-10-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.ru ([83.169.36.222]:49247 "EHLO ozlabs.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757123AbcJXHE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Oct 2016 03:04:28 -0400
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: linux-kernel@vger.kernel.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        Netdev <netdev@vger.kernel.org>,
+        Santosh Raspatur <santosh@chelsio.com>
+Subject: [PATCH kernel v3] PCI: Enable access to custom VPD for Chelsio devices (cxgb3)
+Date: Mon, 24 Oct 2016 18:04:17 +1100
+Message-Id: <1477292657-3021-1-git-send-email-aik@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 18, 2016 at 05:04:07PM +0100, Lorenzo Pieralisi wrote:
-> In ARM ACPI systems, IOMMU components are specified through static
-> IORT table entries. In order to create platform devices for the
-> corresponding ARM SMMU components, IORT kernel code should be made
-> able to parse IORT table entries and create platform devices
-> dynamically.
-> 
-> This patch adds the generic IORT infrastructure required to create
-> platform devices for ARM SMMUs.
-> 
-> ARM SMMU versions have different resources requirement therefore this
-> patch also introduces an IORT specific structure (ie iort_iommu_config)
-> that contains hooks (to be defined when the corresponding ARM SMMU
-> driver support is added to the kernel) to be used to define the
-> platform devices names, init the IOMMUs, count their resources and
-> finally initialize them.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/arm64/iort.c | 151 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 151 insertions(+)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index 1433de3..2eda2f5 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -19,9 +19,11 @@
->  #define pr_fmt(fmt)	"ACPI: IORT: " fmt
->  
->  #include <linux/acpi_iort.h>
-> +#include <linux/iommu.h>
->  #include <linux/kernel.h>
->  #include <linux/list.h>
->  #include <linux/pci.h>
-> +#include <linux/platform_device.h>
->  #include <linux/slab.h>
->  
->  struct iort_its_msi_chip {
-> @@ -457,6 +459,153 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
->  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
->  }
->  
-> +struct iort_iommu_config {
-> +	const char *name;
-> +	int (*iommu_init)(struct acpi_iort_node *node);
-> +	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
-> +	int (*iommu_count_resources)(struct acpi_iort_node *node);
-> +	void (*iommu_init_resources)(struct resource *res,
-> +				     struct acpi_iort_node *node);
-> +};
-> +
-> +static __init
-> +const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
-> +{
-> +	return NULL;
-> +}
-> +
-> +/**
-> + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
-> + * @node: Pointer to SMMU ACPI IORT node
-> + *
-> + * Returns: 0 on success, <0 failure
-> + */
-> +static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
-> +{
-> +	struct fwnode_handle *fwnode;
-> +	struct platform_device *pdev;
-> +	struct resource *r;
-> +	enum dev_dma_attr attr;
-> +	int ret, count;
-> +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
-> +
-> +	if (!ops)
-> +		return -ENODEV;
-> +
-> +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
-> +	if (!pdev)
-> +		return PTR_ERR(pdev);
-> +
-> +	count = ops->iommu_count_resources(node);
-> +
-> +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
-> +	if (!r) {
-> +		ret = -ENOMEM;
-> +		goto dev_put;
-> +	}
-> +
-> +	ops->iommu_init_resources(r, node);
-> +
-> +	ret = platform_device_add_resources(pdev, r, count);
-> +	/*
-> +	 * Resources are duplicated in platform_device_add_resources,
-> +	 * free their allocated memory
-> +	 */
-> +	kfree(r);
-> +
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	/*
-> +	 * Add a copy of IORT node pointer to platform_data to
-> +	 * be used to retrieve IORT data information.
-> +	 */
-> +	ret = platform_device_add_data(pdev, &node, sizeof(node));
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	/*
-> +	 * We expect the dma masks to be equivalent for
-> +	 * all SMMUs set-ups
-> +	 */
-> +	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-> +
-> +	fwnode = iort_get_fwnode(node);
-> +
-> +	if (!fwnode) {
-> +		ret = -ENODEV;
-> +		goto dev_put;
-> +	}
-> +
-> +	pdev->dev.fwnode = fwnode;
-> +
-> +	attr = ops->iommu_is_coherent(node) ?
-> +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
-> +
-> +	/* Configure DMA for the page table walker */
-> +	acpi_dma_configure(&pdev->dev, attr);
-> +
-> +	ret = platform_device_add(pdev);
-> +	if (ret)
-> +		goto dma_deconfigure;
-> +
-> +	return 0;
-> +
-> +dma_deconfigure:
-> +	acpi_dma_deconfigure(&pdev->dev);
-> +dev_put:
-> +	platform_device_put(pdev);
-> +
-> +	return ret;
-> +}
-> +
-> +static void __init iort_init_platform_devices(void)
-> +{
-> +	struct acpi_iort_node *iort_node, *iort_end;
-> +	struct acpi_table_iort *iort;
-> +	struct fwnode_handle *fwnode;
-> +	int i, ret;
-> +
-> +	/*
-> +	 * iort_table and iort both point to the start of IORT table, but
-> +	 * have different struct types
-> +	 */
-> +	iort = (struct acpi_table_iort *)iort_table;
-> +
-> +	/* Get the first IORT node */
-> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-> +				 iort->node_offset);
-> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-> +				iort_table->length);
-> +
-> +	for (i = 0; i < iort->node_count; i++) {
-> +		if (iort_node >= iort_end) {
-> +			pr_err("iort node pointer overflows, bad table\n");
-> +			return;
-> +		}
-> +
-> +		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
-> +			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
-> +
-> +			fwnode = acpi_alloc_fwnode_static();
-> +			if (!fwnode)
-> +				return;
-> +
-> +			iort_set_fwnode(iort_node, fwnode);
-> +
-> +			ret = iort_add_smmu_platform_device(iort_node);
-> +			if (ret) {
-> +				iort_delete_fwnode(iort_node);
-> +				acpi_free_fwnode_static(fwnode);
-> +				return;
-> +			}
-> +		}
-> +
-> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-> +					 iort_node->length);
-> +	}
-> +}
-> +
->  void __init acpi_iort_init(void)
->  {
->  	acpi_status status;
-> @@ -468,5 +617,7 @@ void __init acpi_iort_init(void)
->  		return;
->  	}
->  
+There is at least one Chelsio 10Gb card which uses VPD area to store
+some custom blocks (example below). However pci_vpd_size() returns
+the length of the first block only assuming that there can be only
+one VPD "End Tag" and VFIO blocks access beyond that offset
+(since 4e1a63555) which leads to the situation when the guest "cxgb3"
+driver fails to probe the device. The host system does not have this
+problem as the drives accesses the config space directly without
+pci_read_vpd()/...
 
-Slipped through the cracks while rebasing v6, I should add code that
-returns if no IORT table found here to prevent calling:
+This adds a quirk to override the VPD size to a bigger value.
+The maximum size is taken from EEPROMSIZE in
+drivers/net/ethernet/chelsio/cxgb3/common.h. We do not read the tag
+as the cxgb3 driver does as the driver supports writing to EEPROM/VPD
+and when it writes, it only checks for 8192 bytes boundary. The quirk
+is registerted for all devices supported by the cxgb3 driver.
 
-iort_init_platform_devices()
+This adds a quirk to the PCI layer (not to the cxgb3 driver) as
+the cxgb3 driver itself accesses VPD directly and the problem only exists
+with the vfio-pci driver (when cxgb3 is not running on the host and
+may not be even loaded) which blocks accesses beyond the first block
+of VPD data. However vfio-pci itself does not have quirks mechanism so
+we add it to PCI.
 
-I will update the next version, it is just a heads-up for testers,
-I can push an updated/fixed branch if needed.
+This is the controller:
+Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
 
-Thanks,
-Lorenzo
+This is what I parsed from its vpd:
+===
+b'\x82*\x0010 Gigabit Ethernet-SR PCI Express Adapter\x90J\x00EC\x07D76809 FN\x0746K'
+ 0000 Large item 42 bytes; name 0x2 Identifier String
+	b'10 Gigabit Ethernet-SR PCI Express Adapter'
+ 002d Large item 74 bytes; name 0x10
+	#00 [EC] len=7: b'D76809 '
+	#0a [FN] len=7: b'46K7897'
+	#14 [PN] len=7: b'46K7897'
+	#1e [MN] len=4: b'1037'
+	#25 [FC] len=4: b'5769'
+	#2c [SN] len=12: b'YL102035603V'
+	#3b [NA] len=12: b'00145E992ED1'
+ 007a Small item 1 bytes; name 0xf End Tag
 
-> +	iort_init_platform_devices();
-> +
->  	acpi_probe_device_table(iort);
->  }
-> -- 
-> 2.10.0
-> 
+ 0c00 Large item 16 bytes; name 0x2 Identifier String
+	b'S310E-SR-X      '
+ 0c13 Large item 234 bytes; name 0x10
+	#00 [PN] len=16: b'TBD             '
+	#13 [EC] len=16: b'110107730D2     '
+	#26 [SN] len=16: b'97YL102035603V  '
+	#39 [NA] len=12: b'00145E992ED1'
+	#48 [V0] len=6: b'175000'
+	#51 [V1] len=6: b'266666'
+	#5a [V2] len=6: b'266666'
+	#63 [V3] len=6: b'2000  '
+	#6c [V4] len=2: b'1 '
+	#71 [V5] len=6: b'c2    '
+	#7a [V6] len=6: b'0     '
+	#83 [V7] len=2: b'1 '
+	#88 [V8] len=2: b'0 '
+	#8d [V9] len=2: b'0 '
+	#92 [VA] len=2: b'0 '
+	#97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+ 0d00 Large item 252 bytes; name 0x11
+	#00 [VC] len=16: b'122310_1222 dp  '
+	#13 [VD] len=16: b'610-0001-00 H1\x00\x00'
+	#26 [VE] len=16: b'122310_1353 fp  '
+	#39 [VF] len=16: b'610-0001-00 H1\x00\x00'
+	#4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+ 0dff Small item 0 bytes; name 0xf End Tag
+
+10f3 Large item 13315 bytes; name 0x62
+!!! unknown item name 98: b'\xd0\x03\x00@`\x0c\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+===
+
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+Changes:
+v3:
+* unconditionally set VPD size to 8192
+
+v2:
+* used pci_set_vpd_size() helper
+* added explicit list of IDs from cxgb3 driver
+* added a note in the commit log why the quirk is not in cxgb3
+---
+ drivers/pci/quirks.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c232729..bc7c541 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3255,6 +3255,25 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+ 			quirk_thunderbolt_hotplug_msi);
+ 
++static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
++{
++	pci_set_vpd_size(dev, 8192);
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x20, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x21, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x22, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x23, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x24, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x25, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x26, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x30, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x31, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x32, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x35, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x36, quirk_chelsio_extend_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x37, quirk_chelsio_extend_vpd);
++
+ #ifdef CONFIG_ACPI
+ /*
+  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+-- 
+2.5.0.rc3
+
