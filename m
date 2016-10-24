@@ -1,74 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57318 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964789AbcJGQlR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:41:17 -0400
-Subject: [PATCH 6/6] PCI: keystone: Use dw_pcie_readl_rc() and
- dw_pcie_pcie_writel_rc()
-To: Murali Karicheri <m-karicheri2@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:41:12 -0500
-Message-ID: <20161007164112.26090.95754.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007164026.26090.42844.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007164026.26090.42844.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com
+Cc: net147@gmail.com, linux-pci@vger.kernel.org, agross@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Sinan Kaya <okaya@codeaurora.org>, Len Brown <lenb@kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V5 3/3] ACPI: pci_link: Include PIRQ_PENALTY_PCI_USING for ISA IRQs
+Date: Mon, 24 Oct 2016 00:31:32 -0400
+Message-Id: <1477283492-26657-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the DesignWare-generic register accessors instead of doing readl() and
-writel() directly.  No functional change intended.
+Commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+replaced the addition of PIRQ_PENALTY_PCI_USING in acpi_pci_link_allocate()
+with an addition in acpi_irq_pci_sharing_penalty(), but f7eca374f000
+("ACPI,PCI,IRQ: separate ISA penalty calculation") removed the use
+of acpi_irq_pci_sharing_penalty() for ISA IRQs.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Therefore, PIRQ_PENALTY_PCI_USING is missing from ISA IRQs used by
+interrupt links.  Include that penalty by adding it in the
+acpi_pci_link_allocate() path.
+
+Fixes: f7eca374f000 ("ACPI,PCI,IRQ: separate ISA penalty calculation")
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-keystone-dw.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/acpi/pci_link.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index 5be7cf4..e8dee7b 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -372,8 +372,8 @@ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *keystone)
- 
- 	/* Disable BARs for inbound access */
- 	ks_dw_pcie_set_dbi_mode(keystone);
--	writel(0, pp->dbi_base + PCI_BASE_ADDRESS_0);
--	writel(0, pp->dbi_base + PCI_BASE_ADDRESS_1);
-+	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, 0);
-+	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_1, 0);
- 	ks_dw_pcie_clear_dbi_mode(keystone);
- 
- 	/* Set outbound translation size per window division */
-@@ -471,8 +471,8 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
- 	ks_dw_pcie_set_dbi_mode(keystone);
- 
- 	/* Enable BAR0 */
--	writel(1, pp->dbi_base + PCI_BASE_ADDRESS_0);
--	writel(SZ_4K - 1, pp->dbi_base + PCI_BASE_ADDRESS_0);
-+	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, 1);
-+	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, SZ_4K - 1);
- 
- 	ks_dw_pcie_clear_dbi_mode(keystone);
- 
-@@ -480,7 +480,7 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
- 	  * For BAR0, just setting bus address for inbound writes (MSI) should
- 	  * be sufficient.  Use physical address to avoid any conflicts.
- 	  */
--	writel(keystone->app.start, pp->dbi_base + PCI_BASE_ADDRESS_0);
-+	dw_pcie_writel_rc(pp, PCI_BASE_ADDRESS_0, keystone->app.start);
- }
- 
- /**
-@@ -488,8 +488,9 @@ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp)
-  */
- int ks_dw_pcie_link_up(struct pcie_port *pp)
- {
--	u32 val = readl(pp->dbi_base + DEBUG0);
-+	u32 val;
- 
-+	val = dw_pcie_readl_rc(pp, DEBUG0);
- 	return (val & LTSSM_STATE_MASK) == LTSSM_STATE_L0;
- }
- 
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 74bf96e..bc3d914 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -608,6 +608,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 			    acpi_device_bid(link->device));
+ 		return -ENODEV;
+ 	} else {
++		if (link->irq.active < ACPI_MAX_ISA_IRQS)
++			acpi_isa_irq_penalty[link->irq.active] +=
++				PIRQ_PENALTY_PCI_USING;
++
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
+-- 
+1.9.1
 
