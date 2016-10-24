@@ -1,86 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42738 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752537AbcJDRYU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Oct 2016 13:24:20 -0400
-Date: Tue, 4 Oct 2016 12:24:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH 1/2] PCI: rockchip: improve the deassert sequence of four
- reset pins
-Message-ID: <20161004172404.GC3449@localhost>
-References: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>,
+	Ray Jui <raj.jui@broadcom.com>
+Subject: [PATCH 02/12] PCI: iproc: Do not reset PAXC when initializing the driver
+Date: Mon, 24 Oct 2016 15:17:02 -0700
+Message-Id: <1477347432-17656-3-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 23, 2016 at 10:05:59AM +0800, Shawn Lin wrote:
-> Per TRM, we need to deassert the four reset pins simultaneously.
-> Currently the reset framework doesn't support that so we did it
-> one by one. It seems no side effect found but it does impact the
-> state machine of controller, so sometimes the change speed bit is
-> not setted when sending training sequence from recover state.
-> After the silicon RTL review from Soc guys, we don't need to do
-> the sequence recommended by TRM, and could just move the deassert
-> of mgmt_sticky_rst to the first place.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+During initialization, the current iProc PCIe host driver resets PAXC
+and the downstream internal endpoint device that PAXC connects to. If
+the endpoint device is already loaded with firmware and has started
+running from the bootloader stage, this downstream reset causes the
+endpoint device to stop working
 
-Applied both to pci/host-rockchip for v4.9, thanks!
+Signed-off-by: Ray Jui <raj.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index c3593e6..5e51121 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -433,21 +433,25 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		return err;
->  	}
->  
-> -	err = reset_control_deassert(rockchip->core_rst);
-> +	/*
-> +	 * Please don't reorder the deassert sequence of the following
-> +	 * four reset pins.
-> +	 */
-> +	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
->  	if (err) {
-> -		dev_err(dev, "deassert core_rst err %d\n", err);
-> +		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
->  		return err;
->  	}
->  
-> -	err = reset_control_deassert(rockchip->mgmt_rst);
-> +	err = reset_control_deassert(rockchip->core_rst);
->  	if (err) {
-> -		dev_err(dev, "deassert mgmt_rst err %d\n", err);
-> +		dev_err(dev, "deassert core_rst err %d\n", err);
->  		return err;
->  	}
->  
-> -	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
-> +	err = reset_control_deassert(rockchip->mgmt_rst);
->  	if (err) {
-> -		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-> +		dev_err(dev, "deassert mgmt_rst err %d\n", err);
->  		return err;
->  	}
->  
-> -- 
-> 2.3.7
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index a9b9cd8..3f4884a 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -243,16 +243,13 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ {
+ 	u32 val;
+ 
+-	if (pcie->ep_is_internal) {
+-		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+-		val &= ~PAXC_RESET_MASK;
+-		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-		udelay(100);
+-		val |= PAXC_RESET_MASK;
+-		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-		udelay(100);
++	/*
++	 * PAXC and the internal emulated endpoint device downstream should not
++	 * be reset. If firmware has been loaded on the endpoint device at an
++	 * earlier boot stage, reset here causes issues
++	 */
++	if (pcie->ep_is_internal)
+ 		return;
+-	}
+ 
+ 	/*
+ 	 * Select perst_b signal as reset source. Put the device into reset,
+-- 
+2.1.4
