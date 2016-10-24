@@ -1,104 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:39654 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754805AbcJLBzZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Oct 2016 21:55:25 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 2/3] of/pci: Add helper function to parse max-link-speed from dt
-Date: Wed, 12 Oct 2016 10:01:24 +0800
-Message-Id: <1476237685-14539-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1476237685-14539-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1476237685-14539-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:60070 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935741AbcJXODV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:03:21 -0400
+Date: Mon, 24 Oct 2016 09:03:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bhelgaas@google.com, benh@au1.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH v2 2/2] PCI: Don't disable PF's memory decoding when
+ enabling SRIOV
+Message-ID: <20161024140316.GA14177@localhost>
+References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1475192870-7763-2-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20161021165034.GE9007@localhost>
+ <20161023232802.GA7215@gwshan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161023232802.GA7215@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This new helper function could be used by host drivers to
-get the limitaion of max link speed provided by dt. If the
-property isn't assigned or is invalid, it will return -EINVAL
-to the caller.
+On Mon, Oct 24, 2016 at 10:28:02AM +1100, Gavin Shan wrote:
+> On Fri, Oct 21, 2016 at 11:50:34AM -0500, Bjorn Helgaas wrote:
+> >Hi Gavin,
+> >
+> >On Fri, Sep 30, 2016 at 09:47:50AM +1000, Gavin Shan wrote:
+> >> pci_update_resource() might be called to update (shift) IOV BARs
+> >> in PPC PowerNV specific pcibios_sriov_enable() when enabling PF's
+> >> SRIOV capability. At that point, the PF have been functional if
+> >> the SRIOV is enabled through sysfs entry "sriov_numvfs". The PF's
+> >> memory decoding (0x2 in PCI_COMMAND) shouldn't be disabled when
+> >> updating its IOV BARs with pci_update_resource(). Otherwise, we
+> >> receives EEH error caused by MMIO access to PF's memory BARs during
+> >> the window when PF's memory decoding is disabled.
+> >
+> >The fact that you get EEH errors is irrelevant.  We can't write code
+> >simply to avoid errors -- we have to write code to make the system
+> >work correctly.
+> >
+> >I do not want to add a "mmio_force_on" parameter to
+> >pci_update_resource().  That puts the burden on the caller to
+> >understand this subtle issue.  If the caller passes mmio_force_on=1
+> >when it shouldn't, things will almost always work, but once in a blue
+> >moon a half-updated BAR will conflict with some other device in the
+> >system, and we'll have an unreproducible, undebuggable crash.
+> >
+> 
+> Bjorn, thanks for your comments. Yes, the EEH error was caused by MMIO
+> access to PF's normal BARs, not VF BARs. Yeah, I also had the conern
+> that adding parameter to pci_update_resource() increases the visible
+> complexity to the caller of the function.
+> 
+> >What you do need is an explanation of why it's safe to non-atomically
+> >update a VF BARx in the SR-IOV capability.  I think this probably
+> >involves the VF MSE bit, and you probably have to either disable VFs
+> >completely or clear the MSE bit while you're updating the VF BARx.  We
+> >should be able to do this inside pci_update_resource() without
+> >changing the interface.
+> >
+> 
+> Yes, It's what PATCH[1/2] does: (PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE)
+> are set after VF BARs are updated with pci_update_resource() in this PPC
+> specific scenario. There are other two situations where the IOV BARs are
+> updated: PCI resource resizing and allocation during system booting or hot
+> adding PF. The VF shouldn't be enabled in both cases when updating IOV BARs.
+> 
+> I think you suggest to add check in pci_update_resource(): Don't disable
+> PF's memory decoding when updating VF BARs. I will send updated revision
+> if it's what you want.
+> 
+> 	/*
+> 	 * The PF might be functional when updating its IOV BARs. So PF's
+> 	 * memory decoding shouldn't be disabled when updating its IOV BARs.
+> 	 */
+> 	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
+> #ifdef CONFIG_PCI_IOV
+> 	disable &= !(resno >= PCI_IOV_RESOURCES &&
+> 		     resno <= PCI_IOV_RESOURCE_END);
+> #endif
+> 	if (disable) {
+> 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> 		pci_write_config_word(dev, PCI_COMMAND,
+> 				      cmd & ~PCI_COMMAND_MEMORY);
+> 	}
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Not exactly.  A 64-bit BAR cannot be updated atomically.  The whole
+point of this exercise is to make sure that when we update such a BAR,
+whether it is a normal PCI BAR or an SR-IOV BAR, the transient state
+does not conflict with anything else in the system.
 
----
+For example, consider two devices that do not conflict:
 
-Changes in v7:
-- rename the function name and using of_property_read_u32
-  suggested by Rob
+  device A BAR 0: 0x00000000_20000000
+  device B BAR 0: 0x00000000_40000000
 
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+We want to update A's BAR 0 to 0x00000001_40000000.  We can't do the
+update atomically, so we have this sequence:
 
- drivers/of/of_pci.c    | 21 +++++++++++++++++++++
- include/linux/of_pci.h |  7 +++++++
- 2 files changed, 28 insertions(+)
+  before update:            device A BAR 0: 0x00000000_20000000
+  after writing lower half: device A BAR 0: 0x00000000_40000000
+  after writing upper half: device A BAR 0: 0x00000001_40000000
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 589b30c..0c566ca 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -120,6 +120,27 @@ int of_get_pci_domain_nr(struct device_node *node)
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
- /**
-+ * This function will try to find the limitation of link speed by finding
-+ * a property called "max-link-speed" of the given device node.
-+ *
-+ * @node: device tree node with the max link speed information
-+ *
-+ * Returns the associated max link speed from DT, or a negative value if the
-+ * required property is not found or is invalid.
-+ */
-+int of_pci_get_max_link_speed(struct device_node *node)
-+{
-+	u32 max_link_speed;
-+
-+	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
-+	    max_link_speed > 4)
-+		return -EINVAL;
-+
-+	return max_link_speed;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
-+
-+/**
-  * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
-  *                           is present and valid
-  */
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index b969e94..2e668e3 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+int of_pci_get_max_link_speed(struct device_node *node);
- void of_pci_check_probe_only(void);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
-@@ -52,6 +53,12 @@ of_get_pci_domain_nr(struct device_node *node)
- 	return -1;
- }
- 
-+static inline int
-+of_pci_get_max_link_speed(struct device_node *node)
-+{
-+	return -EINVAL;
-+}
-+
- static inline void of_pci_check_probe_only(void) { }
- #endif
- 
--- 
-2.3.7
+If the driver for device B accesses B between the writes, both A and B
+may respond, which is a fatal error.
 
+Probably the *best* thing would be to make pci_update_resource()
+return an error if it's asked to update a BAR that is enabled, but I
+haven't looked at all the callers to see whether that's practical.
 
+The current strategy in pci_update_resource() is to clear
+PCI_COMMAND_MEMORY when updating a 64-bit memory BAR.  This only
+applies to the regular PCI BARs 0-5.
+
+Extending that strategy to SR-IOV would mean clearing
+PCI_SRIOV_CTRL_MSE when updating a 64-bit VF BAR.  Obviously you
+wouldn't clear PCI_COMMAND_MEMORY in this case because
+PCI_COMMAND_MEMORY doesn't affect the VF BARs.
+
+Bjorn
