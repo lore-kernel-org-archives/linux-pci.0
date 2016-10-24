@@ -1,56 +1,45 @@
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Date: Fri, 21 Oct 2016 16:49:07 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bjorn Helgaas <helgaas@kernel.org>, Greg KH <greg@kroah.com>
-cc: Lukas Wunner <lukas@wunner.de>, Pierre de Villemereuil <flyos@mailoo.org>,
-     <linux-pci@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
-Subject: [PATCH 2/2] USB: UHCI: report non-PME wakeup signalling for Intel
- hardware
-Message-ID: <Pine.LNX.4.44L0.1610211642420.1898-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47142 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756954AbcJXERd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2016 00:17:33 -0400
+Subject: Re: [V4, 1/3] ACPI, PCI, IRQ: assign ISA IRQ directly during early
+ boot stages
+To: Jonathan Liu <net147@gmail.com>
+References: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
+ <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
+        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
+        linux@rainbow-software.org, timur@codeaurora.org,
+        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <fae460e4-d838-22c0-8984-52d6d2b6c099@codeaurora.org>
+Date: Mon, 24 Oct 2016 00:17:29 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The UHCI controllers in Intel chipsets rely on a platform-specific
-non-PME mechanism for wakeup signalling.  They can generate wakeup
-signals even though they don't support PME.
+Thanks,
 
-We need to let the USB core know this so that it will enable runtime
-suspend for UHCI controllers.
+On 10/22/2016 11:48 PM, Jonathan Liu wrote:
+> This series fixes one or more network adapters not working in Linux
+> 32-bit x86 guest running inside VirtualBox if I have 4 network
+> adapters enabled. The following message no longer appears in the
+> kernel log:
+> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+> 
+> Tested-by: Jonathan Liu <net147@gmail.com>
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: <stable@vger.kernel.org>
+I'm hoping that you can retest V5 so that Rafael can pull in your tested-by into
+the commit message.
 
----
-
-Greg:
-
-This patch is somewhat independent of the 1/2 patch I sent to Bjorn.  
-Still, it will help to keep them together.  Is it okay to have him
-merge both of them through his tree?
-
-Alan Stern
-
-
-[as1815]
-
-
- drivers/usb/host/uhci-pci.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-Index: usb-4.x/drivers/usb/host/uhci-pci.c
-===================================================================
---- usb-4.x.orig/drivers/usb/host/uhci-pci.c
-+++ usb-4.x/drivers/usb/host/uhci-pci.c
-@@ -129,6 +129,10 @@ static int uhci_pci_init(struct usb_hcd
- 	if (to_pci_dev(uhci_dev(uhci))->vendor == PCI_VENDOR_ID_HP)
- 		uhci->wait_for_hp = 1;
- 
-+	/* Intel controllers use non-PME wakeup signalling */
-+	if (to_pci_dev(uhci_dev(uhci))->vendor == PCI_VENDOR_ID_INTEL)
-+		device_set_run_wake(uhci_dev(uhci), 1);
-+
- 	/* Set up pointers to PCI-specific functions */
- 	uhci->reset_hc = uhci_pci_reset_hc;
- 	uhci->check_and_reset_hc = uhci_pci_check_and_reset_hc;
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
