@@ -1,282 +1,233 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56706 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938859AbcJGQjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:39:48 -0400
-Subject: [PATCH 08/10] PCI: imx6: Replace imx6_pcie_readl() with
- dw_pcie_readl_rc()
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:39:39 -0500
-Message-ID: <20161007163939.25776.84197.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 12/12] PCI: iproc: Add support for the next-gen PAXB controller
+Date: Mon, 24 Oct 2016 15:17:12 -0700
+Message-Id: <1477347432-17656-13-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
+References: <1477347432-17656-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces do the same as
-imx6_pcie_readl() and imx6_pcie_writel(), and they also give us a clue that
-we're using the DesignWare-generic functionality.  Use the dw_*()
-interfaces and remove the hisi-specific ones.  No functional change
-intended.
+This patch adds the support for the next generation of the iProc PAXB
+host controller, used in Stingray
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Oza Oza <oza.oza@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 ---
- drivers/pci/host/pci-imx6.c |   73 +++++++++++++++++++------------------------
- 1 file changed, 33 insertions(+), 40 deletions(-)
+ drivers/pci/host/pcie-iproc-platform.c |   3 +
+ drivers/pci/host/pcie-iproc.c          | 128 +++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 132 insertions(+)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 9971b73..2d9ccbb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -95,24 +95,15 @@ struct imx6_pcie {
- #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
- #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 47329d3..fd3ed9b 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -31,6 +31,9 @@ static const struct of_device_id iproc_pcie_of_match_table[] = {
+ 		.compatible = "brcm,iproc-pcie",
+ 		.data = (int *)IPROC_PCIE_PAXB,
+ 	}, {
++		.compatible = "brcm,iproc-pcie-paxb-v2",
++		.data = (int *)IPROC_PCIE_PAXB_V2,
++	}, {
+ 		.compatible = "brcm,iproc-pcie-paxc",
+ 		.data = (int *)IPROC_PCIE_PAXC,
+ 	}, {
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index c4e2211..8ffb9d4 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -118,6 +118,29 @@ static const struct iproc_pcie_ob_map paxb_ob_map[] = {
+ 	},
+ };
  
--static u32 imx6_pcie_readl(struct imx6_pcie *imx6, u32 offset)
--{
--	return readl(imx6->pp.dbi_base + offset);
--}
--
--static void imx6_pcie_writel(struct imx6_pcie *imx6, u32 offset, u32 val)
--{
--	writel(val, imx6->pp.dbi_base + offset);
--}
--
- static int imx6_pcie_phy_poll_ack(struct imx6_pcie *imx6, int exp_val)
- {
-+	struct pcie_port *pp = &imx6->pp;
- 	u32 val;
- 	u32 max_iterations = 10;
- 	u32 wait_counter = 0;
++static const struct iproc_pcie_ob_map paxb_v2_ob_map[] = {
++	{
++		/* OARR0/OMAP0 */
++		.window_sizes = { 128, 256 },
++		.nr_sizes = 2,
++	},
++	{
++		/* OARR1/OMAP1 */
++		.window_sizes = { 128, 256 },
++		.nr_sizes = 2,
++	},
++	{
++		/* OARR2/OMAP2 */
++		.window_sizes = { 128, 256, 512, 1024 },
++		.nr_sizes = 4,
++	},
++	{
++		/* OARR3/OMAP3 */
++		.window_sizes = { 128, 256, 512, 1024 },
++		.nr_sizes = 4,
++	},
++};
++
+ /**
+  * iProc PCIe inbound mapping type
+  */
+@@ -156,6 +179,54 @@ struct iproc_pcie_ib_map {
+ 	u16 imap_window_offset;
+ };
  
- 	do {
--		val = imx6_pcie_readl(imx6, PCIE_PHY_STAT);
-+		val = dw_pcie_readl_rc(pp, PCIE_PHY_STAT);
- 		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
- 		wait_counter++;
++static const struct iproc_pcie_ib_map paxb_v2_ib_map[] = {
++	{
++		/* IARR0/IMAP0 */
++		.type = IPROC_PCIE_IB_MAP_IO,
++		.size_unit = SZ_1K,
++		.region_sizes = { 32 },
++		.nr_sizes = 1,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x40,
++		.imap_window_offset = 0x4,
++	},
++	{
++		/* IARR1/IMAP1 (currently unused) */
++		.type = IPROC_PCIE_IB_MAP_INVALID,
++	},
++	{
++		/* IARR2/IMAP2 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1M,
++		.region_sizes = { 64, 128, 256, 512, 1024, 2048, 4096, 8192,
++				  16384 },
++		.nr_sizes = 9,
++		.nr_windows = 1,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++	{
++		/* IARR3/IMAP3 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1G,
++		.region_sizes = { 1, 2, 4, 8, 16, 32 },
++		.nr_sizes = 6,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++	{
++		/* IARR4/IMAP4 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1G,
++		.region_sizes = { 32, 64, 128, 256, 512 },
++		.nr_sizes = 5,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++};
++
+ /*
+  * iProc PCIe host registers
+  */
+@@ -258,6 +329,34 @@ static const u16 iproc_pcie_reg_paxb[] = {
+ 	[IPROC_PCIE_APB_ERR_EN]       = 0xf40,
+ };
  
-@@ -127,21 +118,22 @@ static int imx6_pcie_phy_poll_ack(struct imx6_pcie *imx6, int exp_val)
- 
- static int imx6_pcie_phy_wait_ack(struct imx6_pcie *imx6, int addr)
- {
-+	struct pcie_port *pp = &imx6->pp;
- 	u32 val;
- 	int ret;
- 
- 	val = addr << PCIE_PHY_CTRL_DATA_LOC;
--	imx6_pcie_writel(imx6, val, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, val, PCIE_PHY_CTRL);
- 
- 	val |= (0x1 << PCIE_PHY_CTRL_CAP_ADR_LOC);
--	imx6_pcie_writel(imx6, val, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, val, PCIE_PHY_CTRL);
- 
- 	ret = imx6_pcie_phy_poll_ack(imx6, 1);
- 	if (ret)
- 		return ret;
- 
- 	val = addr << PCIE_PHY_CTRL_DATA_LOC;
--	imx6_pcie_writel(imx6, val, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, val, PCIE_PHY_CTRL);
- 
- 	return imx6_pcie_phy_poll_ack(imx6, 0);
- }
-@@ -149,6 +141,7 @@ static int imx6_pcie_phy_wait_ack(struct imx6_pcie *imx6, int addr)
- /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
- static int imx6_pcie_phy_read(struct imx6_pcie *imx6, int addr, int *data)
- {
-+	struct pcie_port *pp = &imx6->pp;
- 	u32 val, phy_ctl;
- 	int ret;
- 
-@@ -158,23 +151,24 @@ static int imx6_pcie_phy_read(struct imx6_pcie *imx6, int addr, int *data)
- 
- 	/* assert Read signal */
- 	phy_ctl = 0x1 << PCIE_PHY_CTRL_RD_LOC;
--	imx6_pcie_writel(imx6, phy_ctl, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, phy_ctl, PCIE_PHY_CTRL);
- 
- 	ret = imx6_pcie_phy_poll_ack(imx6, 1);
- 	if (ret)
- 		return ret;
- 
--	val = imx6_pcie_readl(imx6, PCIE_PHY_STAT);
-+	val = dw_pcie_readl_rc(pp, PCIE_PHY_STAT);
- 	*data = val & 0xffff;
- 
- 	/* deassert Read signal */
--	imx6_pcie_writel(imx6, 0x00, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, 0x00, PCIE_PHY_CTRL);
- 
- 	return imx6_pcie_phy_poll_ack(imx6, 0);
- }
- 
- static int imx6_pcie_phy_write(struct imx6_pcie *imx6, int addr, int data)
- {
-+	struct pcie_port *pp = &imx6->pp;
- 	u32 var;
- 	int ret;
- 
-@@ -185,11 +179,11 @@ static int imx6_pcie_phy_write(struct imx6_pcie *imx6, int addr, int data)
- 		return ret;
- 
- 	var = data << PCIE_PHY_CTRL_DATA_LOC;
--	imx6_pcie_writel(imx6, var, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, var, PCIE_PHY_CTRL);
- 
- 	/* capture data */
- 	var |= (0x1 << PCIE_PHY_CTRL_CAP_DAT_LOC);
--	imx6_pcie_writel(imx6, var, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, var, PCIE_PHY_CTRL);
- 
- 	ret = imx6_pcie_phy_poll_ack(imx6, 1);
- 	if (ret)
-@@ -197,7 +191,7 @@ static int imx6_pcie_phy_write(struct imx6_pcie *imx6, int addr, int data)
- 
- 	/* deassert cap data */
- 	var = data << PCIE_PHY_CTRL_DATA_LOC;
--	imx6_pcie_writel(imx6, var, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, var, PCIE_PHY_CTRL);
- 
- 	/* wait for ack de-assertion */
- 	ret = imx6_pcie_phy_poll_ack(imx6, 0);
-@@ -206,7 +200,7 @@ static int imx6_pcie_phy_write(struct imx6_pcie *imx6, int addr, int data)
- 
- 	/* assert wr signal */
- 	var = 0x1 << PCIE_PHY_CTRL_WR_LOC;
--	imx6_pcie_writel(imx6, var, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, var, PCIE_PHY_CTRL);
- 
- 	/* wait for ack */
- 	ret = imx6_pcie_phy_poll_ack(imx6, 1);
-@@ -215,14 +209,14 @@ static int imx6_pcie_phy_write(struct imx6_pcie *imx6, int addr, int data)
- 
- 	/* deassert wr signal */
- 	var = data << PCIE_PHY_CTRL_DATA_LOC;
--	imx6_pcie_writel(imx6, var, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, var, PCIE_PHY_CTRL);
- 
- 	/* wait for ack de-assertion */
- 	ret = imx6_pcie_phy_poll_ack(imx6, 0);
- 	if (ret)
- 		return ret;
- 
--	imx6_pcie_writel(imx6, 0x0, PCIE_PHY_CTRL);
-+	dw_pcie_writel_rc(pp, 0x0, PCIE_PHY_CTRL);
- 
++/* iProc PCIe PAXB v2 registers */
++static const u16 iproc_pcie_reg_paxb_v2[] = {
++	[IPROC_PCIE_CLK_CTRL]         = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR]     = 0x120,
++	[IPROC_PCIE_CFG_IND_DATA]     = 0x124,
++	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
++	[IPROC_PCIE_INTX_EN]          = 0x330,
++	[IPROC_PCIE_OARR0]            = 0xd20,
++	[IPROC_PCIE_OMAP0]            = 0xd40,
++	[IPROC_PCIE_OARR1]            = 0xd28,
++	[IPROC_PCIE_OMAP1]            = 0xd48,
++	[IPROC_PCIE_OARR2]            = 0xd60,
++	[IPROC_PCIE_OMAP2]            = 0xd68,
++	[IPROC_PCIE_OARR3]            = 0xdf0,
++	[IPROC_PCIE_OMAP3]            = 0xdf8,
++	[IPROC_PCIE_IARR0]            = 0xd00,
++	[IPROC_PCIE_IMAP0]            = 0xc00,
++	[IPROC_PCIE_IARR2]            = 0xd10,
++	[IPROC_PCIE_IMAP2]            = 0xcc0,
++	[IPROC_PCIE_IARR3]            = 0xe00,
++	[IPROC_PCIE_IMAP3]            = 0xe08,
++	[IPROC_PCIE_IARR4]            = 0xe68,
++	[IPROC_PCIE_IMAP4]            = 0xe70,
++	[IPROC_PCIE_LINK_STATUS]      = 0xf0c,
++	[IPROC_PCIE_APB_ERR_EN]       = 0xf40,
++};
++
+ /* iProc PCIe PAXC v1 registers */
+ static const u16 iproc_pcie_reg_paxc[] = {
+ 	[IPROC_PCIE_CLK_CTRL]         = 0x000,
+@@ -912,6 +1011,19 @@ static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
  	return 0;
  }
-@@ -253,6 +247,7 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
  
- static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
++static int iproc_pcie_paxb_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
++{
++	int ret;
++	struct of_pci_range range;
++
++	memset(&range, 0, sizeof(range));
++	range.size = SZ_32K;
++	range.pci_addr = range.cpu_addr = ALIGN(msi_addr, range.size);
++
++	ret = iproc_pcie_setup_ib(pcie, &range, IPROC_PCIE_IB_MAP_IO);
++	return ret;
++}
++
+ static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
  {
-+	struct pcie_port *pp = &imx6->pp;
- 	u32 val, gpr1, gpr12;
- 
- 	switch (imx6->variant) {
-@@ -289,10 +284,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
- 
- 		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
- 		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--			val = imx6_pcie_readl(imx6, PCIE_PL_PFLR);
-+			val = dw_pcie_readl_rc(pp, PCIE_PL_PFLR);
- 			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
- 			val |= PCIE_PL_PFLR_FORCE_LINK;
--			imx6_pcie_writel(imx6, val, PCIE_PL_PFLR);
-+			dw_pcie_writel_rc(pp, val, PCIE_PL_PFLR);
- 
- 			regmap_update_bits(imx6->iomuxc_gpr, IOMUXC_GPR12,
- 					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-@@ -450,8 +445,8 @@ static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6)
- 		return 0;
- 
- 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		imx6_pcie_readl(imx6, PCIE_PHY_DEBUG_R0),
--		imx6_pcie_readl(imx6, PCIE_PHY_DEBUG_R1));
-+		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
-+		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
- 	return -ETIMEDOUT;
- }
- 
-@@ -462,7 +457,7 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6)
- 	unsigned int retries;
- 
- 	for (retries = 0; retries < 200; retries++) {
--		tmp = imx6_pcie_readl(imx6, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 		/* Test if the speed change finished. */
- 		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
- 			return 0;
-@@ -492,10 +487,10 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 	 * started in Gen2 mode, there is a possibility the devices on the
- 	 * bus will not be detected at all.  This happens with PCIe switches.
- 	 */
--	tmp = imx6_pcie_readl(imx6, PCIE_RC_LCR);
-+	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCR);
- 	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
--	imx6_pcie_writel(imx6, tmp, PCIE_RC_LCR);
-+	dw_pcie_writel_rc(pp, tmp, PCIE_RC_LCR);
- 
- 	/* Start LTSSM. */
- 	regmap_update_bits(imx6->iomuxc_gpr, IOMUXC_GPR12,
-@@ -509,10 +504,10 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 
- 	if (imx6->link_gen == 2) {
- 		/* Allow Gen2 mode after the link is up. */
--		tmp = imx6_pcie_readl(imx6, PCIE_RC_LCR);
-+		tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCR);
- 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
--		imx6_pcie_writel(imx6, tmp, PCIE_RC_LCR);
-+		dw_pcie_writel_rc(pp, tmp, PCIE_RC_LCR);
- 	} else {
- 		dev_info(pp->dev, "Link: Gen2 disabled\n");
- 	}
-@@ -521,9 +516,9 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 	 * Start Directed Speed Change so the best possible speed both link
- 	 * partners support can be negotiated.
- 	 */
--	tmp = imx6_pcie_readl(imx6, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 	tmp |= PORT_LOGIC_SPEED_CHANGE;
--	imx6_pcie_writel(imx6, tmp, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	dw_pcie_writel_rc(pp, tmp, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 
- 	ret = imx6_pcie_wait_for_speed_change(imx6);
- 	if (ret) {
-@@ -538,14 +533,14 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6)
- 		goto err_reset_phy;
+ 	u32 val;
+@@ -963,6 +1075,11 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
  	}
  
--	tmp = imx6_pcie_readl(imx6, PCIE_RC_LCSR);
-+	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
- 	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- 
- err_reset_phy:
- 	dev_dbg(pp->dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
--		imx6_pcie_readl(imx6, PCIE_PHY_DEBUG_R0),
--		imx6_pcie_readl(imx6, PCIE_PHY_DEBUG_R1));
-+		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R0),
-+		dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1));
- 	imx6_pcie_reset_phy(imx6);
- 
- 	return ret;
-@@ -567,9 +562,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 
- static int imx6_pcie_link_up(struct pcie_port *pp)
- {
--	struct imx6_pcie *imx6 = to_imx6_pcie(pp);
--
--	return imx6_pcie_readl(imx6, PCIE_PHY_DEBUG_R1) &
-+	return dw_pcie_readl_rc(pp, PCIE_PHY_DEBUG_R1) &
- 			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
- }
- 
-
+ 	switch (pcie->type) {
++	case IPROC_PCIE_PAXB_V2:
++		ret = iproc_pcie_paxb_v2_msi_steer(pcie, msi_addr);
++		if (ret)
++			return ret;
++		break;
+ 	case IPROC_PCIE_PAXC_V2:
+ 		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+ 		break;
+@@ -1040,6 +1157,17 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 			pcie->ob.nr_windows = ARRAY_SIZE(paxb_ob_map);
+ 		}
+ 		break;
++	case IPROC_PCIE_PAXB_V2:
++		regs = iproc_pcie_reg_paxb_v2;
++		pcie->has_apb_err_disable = true;
++		if (pcie->need_ob_cfg) {
++			pcie->ob_map = paxb_v2_ob_map;
++			pcie->ob.nr_windows = ARRAY_SIZE(paxb_v2_ob_map);
++		}
++		pcie->ib.nr_regions = ARRAY_SIZE(paxb_v2_ib_map);
++		pcie->ib_map = paxb_v2_ib_map;
++		pcie->need_msi_steer = true;
++		break;
+ 	case IPROC_PCIE_PAXC:
+ 		regs = iproc_pcie_reg_paxc;
+ 		pcie->ep_is_internal = true;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 3f2709a..04fed8e 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -26,6 +26,7 @@
+ enum iproc_pcie_type {
+ 	IPROC_PCIE_PAXB_BCMA = 0,
+ 	IPROC_PCIE_PAXB,
++	IPROC_PCIE_PAXB_V2,
+ 	IPROC_PCIE_PAXC,
+ 	IPROC_PCIE_PAXC_V2,
+ };
+-- 
+2.1.4
