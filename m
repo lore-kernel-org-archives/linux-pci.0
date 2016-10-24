@@ -1,67 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33366 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936228AbcJGRWC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2016 13:22:02 -0400
-Date: Fri, 7 Oct 2016 19:21:58 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexandre Courbot <gnurou@gmail.com>,
-        Stephen Warren <swarren@wwwdotorg.org>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: tegra: Swap order of afi_writel() reg/val
- arguments
-Message-ID: <20161007172158.GA10399@ulmo.ba.sec>
-References: <20161007162615.23718.84354.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20161007162624.23718.46538.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="huq684BweRXVnRxX"
-In-Reply-To: <20161007162624.23718.46538.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1477283492-26657-4-git-send-email-okaya@codeaurora.org>
+References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org> <1477283492-26657-4-git-send-email-okaya@codeaurora.org>
+From: Jonathan Liu <net147@gmail.com>
+Date: Mon, 24 Oct 2016 15:46:45 +1100
+Message-ID: <CANwerB2KywvUKAv84kvoyAV2YkqtOL9LbFOqSTLgZ=dCk-Z5xA@mail.gmail.com>
+Subject: Re: [PATCH V5 3/3] ACPI: pci_link: Include PIRQ_PENALTY_PCI_USING for
+ ISA IRQs
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
+        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
+        linux@rainbow-software.org, timur@codeaurora.org,
+        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---huq684BweRXVnRxX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Oct 07, 2016 at 11:26:24AM -0500, Bjorn Helgaas wrote:
-> Swap order of afi_writel() arguments to match the "dev, pos, val"
-> order used by pci_write_config_word() and other drivers.  No functional
-> change intended.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On 24 October 2016 at 15:31, Sinan Kaya <okaya@codeaurora.org> wrote:
+> Commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+> replaced the addition of PIRQ_PENALTY_PCI_USING in acpi_pci_link_allocate()
+> with an addition in acpi_irq_pci_sharing_penalty(), but f7eca374f000
+> ("ACPI,PCI,IRQ: separate ISA penalty calculation") removed the use
+> of acpi_irq_pci_sharing_penalty() for ISA IRQs.
+>
+> Therefore, PIRQ_PENALTY_PCI_USING is missing from ISA IRQs used by
+> interrupt links.  Include that penalty by adding it in the
+> acpi_pci_link_allocate() path.
+>
+> Fixes: f7eca374f000 ("ACPI,PCI,IRQ: separate ISA penalty calculation")
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  drivers/pci/host/pci-tegra.c |  133 +++++++++++++++++++++---------------=
-------
->  1 file changed, 66 insertions(+), 67 deletions(-)
+>  drivers/acpi/pci_link.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index 74bf96e..bc3d914 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -608,6 +608,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>                             acpi_device_bid(link->device));
+>                 return -ENODEV;
+>         } else {
+> +               if (link->irq.active < ACPI_MAX_ISA_IRQS)
+> +                       acpi_isa_irq_penalty[link->irq.active] +=
+> +                               PIRQ_PENALTY_PCI_USING;
+> +
+>                 printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>                        acpi_device_name(link->device),
+>                        acpi_device_bid(link->device), link->irq.active);
+> --
+> 1.9.1
+>
 
-Most Tegra drivers that I'm aware of follow the (value, offset) style of
-the writel() function. But this is your turf, so if you prefer this for
-consistency:
+This series fixes one or more network adapters not working in Linux
+32-bit x86 guest running inside VirtualBox if I have 4 network
+adapters enabled.
+The following message no longer appears in the kernel log:
+ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
 
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---huq684BweRXVnRxX
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJX99m0AAoJEN0jrNd/PrOhtbsQALdJ7UeoMLvHx0mbR6uGCBnu
-rnw+6pCdz20Z9aPdr7tc0Ia283JQMLETyxIwjDe2yp8FBvkbfDo5Tfc0wlGcj82u
-zCWNiQ6FoK0lEp3Ubvwqk7a4TyKkEcwqbH3dgUJTcQIzxPRrjPevQt4626WWXVIZ
-55urtK6vQYeQt8OTGtG5tkoi/SC0jLpjoN0P2QTeN2OPBOBIWWyOXu9RyjJYPWa8
-eQoN/R4ZMb0UT45xclZ7TzDvuaBxQM3goISDDe3hCWtpSW/HKmWoBJ9p7lXf8vAG
-rcLQ4R+InrHroJ2ckU+y6vqEX9DMY2gkZkggZIjoCoEXIroJwgfp133MuzMwWpiT
-Mr8KiUwKfVRaSXe1iwLLtqJ5op9doVmF9EpJgHw5c80YiIqAfhD1XYviT5CK13La
-j1DRfPE/T49QgzYM8sHM/T9d08zJFzWTZ0owlzwh6dTCfT4dfEXsVhu/m5j8DWk8
-0Xw9GaeIja8hZ8Lm+sy06qqz2EGHtADZZPAL/WReXrYTbwsIMi5FJtguvsPhoUrp
-Zb3ymP0r2MPkHnpnEdblMtNR19oDwEy6ulFNh9DiKZeolF6QqforENJTliHiVrMv
-+qZv8jZUb9j3YBQudI2jkwJiJwLWaInj/h9CvA6BAxGLdjY87R4RkrS7/4gq+zuR
-ZONkEFKa1d0wuKeinRz9
-=n3ej
------END PGP SIGNATURE-----
-
---huq684BweRXVnRxX--
+Tested-by: Jonathan Liu <net147@gmail.com>
