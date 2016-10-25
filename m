@@ -1,105 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:50423 "EHLO lekensteyn.nl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933434AbcJZXdJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Oct 2016 19:33:09 -0400
-Date: Thu, 27 Oct 2016 00:56:41 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: linux-acpi@vger.kernel.org
-Cc: nouveau@lists.freedesktop.org, rick.2889@gmail.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU via
- Power Resources
-Message-ID: <20161026225641.GA27017@al>
-References: <bug-98398-8800@http.bugs.freedesktop.org/>
- <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Minghuan Lian <Minghuan.Lian@nxp.com>
+To: <linux-pci@vger.kernel.org>
+Subject: [PATCH] pci: layerscape: add LS1046a support
+Date: Tue, 25 Oct 2016 20:36:56 +0800
+Message-ID: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ Minghuan Lian <Minghuan.Lian@nxp.com>, linux-arm-kernel@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi PCI/ACPI PM experts,
+From: "mingkai.hu@nxp.com" <mingkai.hu@nxp.com>
 
-Since Linux 4.8, nouveau switched to rely on the PCIe port driver to
-transition to D3cold. This however does not happen for an Acer Aspire
-V7-582PG (Haswell, NVIDIA GTX 750M) from Rick.
+1. LS1046a PCIe controller has a different LUT_DBG offset.
+Available "lut_dbg" is added to ls_pcie_drvdata to describe
+this difference.
+2. Match LS1046 PCIe compatible
 
-Any idea why? acpidump, lspci, dmesg and other details can be found in
-the linked bug below.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+Signed-off-by: Mingkai Hu <mingkai.hu@nxp.com>
+---
+ Documentation/devicetree/bindings/pci/layerscape-pci.txt |  1 +
+ drivers/pci/host/pci-layerscape.c                        | 13 ++++++++++++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-Kind regards,
-Peter
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index 41e9f55..ee1c72d5 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -15,6 +15,7 @@ Required properties:
+ - compatible: should contain the platform identifier such as:
+         "fsl,ls1021a-pcie", "snps,dw-pcie"
+         "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
++        "fsl,ls1046a-pcie"
+ - reg: base addresses and lengths of the PCIe controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 958187f..8cebf9a 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -41,6 +41,7 @@
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+ 	u32 ltssm_shift;
++	u32 lut_dbg;
+ 	struct pcie_host_ops *ops;
+ };
+ 
+@@ -134,7 +135,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+ 	struct ls_pcie *pcie = to_ls_pcie(pp);
+ 	u32 state;
+ 
+-	state = (ioread32(pcie->lut + PCIE_LUT_DBG) >>
++	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
+ 		 pcie->drvdata->ltssm_shift) &
+ 		 LTSSM_STATE_MASK;
+ 
+@@ -196,18 +197,28 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+ static struct ls_pcie_drvdata ls1043_drvdata = {
+ 	.lut_offset = 0x10000,
+ 	.ltssm_shift = 24,
++	.lut_dbg = 0x7fc,
++	.ops = &ls_pcie_host_ops,
++};
++
++static struct ls_pcie_drvdata ls1046_drvdata = {
++	.lut_offset = 0x80000,
++	.ltssm_shift = 24,
++	.lut_dbg = 0x407fc,
+ 	.ops = &ls_pcie_host_ops,
+ };
+ 
+ static struct ls_pcie_drvdata ls2080_drvdata = {
+ 	.lut_offset = 0x80000,
+ 	.ltssm_shift = 0,
++	.lut_dbg = 0x7fc,
+ 	.ops = &ls_pcie_host_ops,
+ };
+ 
+ static const struct of_device_id ls_pcie_of_match[] = {
+ 	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+ 	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
++	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
+ 	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+ 	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+ 	{ },
+-- 
+1.9.1
 
-On Wed, Oct 26, 2016 at 10:42:07PM +0000, bugzilla-daemon@freedesktop.org wrote:
-> https://bugs.freedesktop.org/show_bug.cgi?id=98398
-> 
-> --- Comment #11 from Peter Wu <peter@lekensteyn.nl> ---
-> So 4.7 and before used the "DSM" method on runtime-suspend:
-> - \_SB.PCI0.RP05.PEGP._DSM would be invoked to enable Optimus
-> - \_SB.PCI0.RP05.PEGP._PS3 is then invoked which would enter D3cold
-> (note, this method is still used in 4.8 on older laptops or with the
-> pcie_pm_port=off kernel option)
-> 
-> Since 4.8, _DSM is not called anymore by nouveau (when support from the PCI
-> core is detected) and this sequence should instead happen:
-> - \_SB.PCI0.RP05.PEGP._PS3 (does nothing besides updating _STA)
-> - PCIe core removes power for the PCIe port since all its children are in
->   D3 and are willing to transition to D3cold. It does so by invoking
->   \NVP3._OFF (where \NVP3 is the power resource from \_SB.PCI0.RP05._PR3)
-> 
-> That is how I think it should work in theory, but on Ricks laptop running
-> 4.8.4,
-> /sys/bus/devices/0000:1c.4/firmware_node/ does not have power_resources_D0
-> devices (which I do have on my own laptop for 0000:01:0).
-> 
-> The SSDT1 of Rick's Acer laptop shows this structure:
-> 
->     If (\_OSI ("Windows 2013"))
->     {
->         Scope (\_SB.PCI0.RP05)
->         {
->         //...
->             Name (_PR0, Package (0x01)  // _PR0: Power Resources for D0
->             {
->                 NVP3
->             })
->             Name (_PR2, Package (0x01)  // _PR2: Power Resources for D2
->             {
->                 NVP2
->             })
->             Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
->             {
->                 NVP3
->             })
->             // ...
->             Method (_PS0, 0, NotSerialized)  // _PS0: Power State 0
->             {
->             }
-> 
->             Method (_PS3, 0, NotSerialized)  // _PS3: Power State 3
->             {
->             }
->         }
-> 
->         Name (MSD3, Zero)
->         PowerResource (NVP3, 0x00, 0x0000)
->         {
->             Name (_STA, One)  // _STA: Status
->             // ...
-> 
->             Method (_ON, 0, NotSerialized)  // _ON_: Power On
->             {
->                 // ...
->             }
-> 
->             Method (_OFF, 0, NotSerialized)  // _OFF: Power Off
->             {
->                 // ...
->             }
->         }
-> 
-> The dmesg does show "ACPI: Power Resource [NVP3] (on)", so I guess that the
-> methods are found. It is a mystery to me why the "power_resources_Dx" files are
-> not created, possibly breaking PM.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
