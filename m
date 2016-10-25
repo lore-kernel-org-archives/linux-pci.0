@@ -1,73 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54012 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754926AbcJLTHw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 15:07:52 -0400
-Date: Wed, 12 Oct 2016 14:07:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2 2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
- interrupts
-Message-ID: <20161012190729.GA15116@localhost>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
- <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:38461 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755577AbcJYGS4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 02:18:56 -0400
+Date: Tue, 25 Oct 2016 08:19:34 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>,
+        Ingo Molnar <mingo@kernel.org>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_state hook
+Message-ID: <20161025061934.GB5630@wunner.de>
+References: <cover.1477221514.git.lukas@wunner.de>
+ <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
+ <1477226275.2932.54.camel@nexus-software.ie>
+ <20161023145757.GA4909@wunner.de>
+ <1477300505.6423.41.camel@linux.intel.com>
+ <20161024100940.GB5144@wunner.de>
+ <1477307145.6423.48.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475615720-31047-3-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1477307145.6423.48.camel@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 04, 2016 at 05:15:18PM -0400, Sinan Kaya wrote:
-> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
-> resource requirements") removed PCI_USING penalty from
-> acpi_pci_link_allocate function as there is no longer a fixed size penalty
-> array for both PCI and IRQ interrupts.
+On Mon, Oct 24, 2016 at 02:05:45PM +0300, Andy Shevchenko wrote:
+> On Mon, 2016-10-24 at 12:09 +0200, Lukas Wunner wrote:
+> > I note that you're exporting intel_mid_pci_set_power_state() even
+> > though there's currently no module user, so perhaps you're intending
+> > to call the function from somewhere else.
 > 
-> We need to add the PCI_USING penalty for ISA interrupts too if the link is
-> in use and matches our ISA IRQ number.
+> The export there is purely dictated by leaving abstract stuff under
+> drivers/pci when platform code is kept under arch/x86/platform. Other
+> than that there is no plans to call this outside of pci-mid.c.
+
+The PCI core, including pci-mid.o, is linked into vmlinux, not a module,
+and exporting is only needed for module users.  A commit to unexport the
+symbol has been sitting on my development branch for 2 weeks, I delayed
+it because I wanted to wait for the regression to be fixed first.
+Sending out now since the topic has come up.
+
+
+> > > > The usage of a mutex in mid_pwr_set_power_state() actually seems
+> > > > questionable since this is called with interrupts disabled:
+> > > > 
+> > > > pci_pm_resume_noirq
+> > > >   pci_pm_default_resume_early
+> > > >     pci_power_up
+> > > >       platform_pci_set_power_state
+> > > >         mid_pci_set_power_state
+> > > >           intel_mid_pci_set_power_state
+> > > >             mid_pwr_set_power_state
+> > > 
+> > > Hmm... I have to look at this closer. I don't remember why I put
+> > > mutex
+> > > in the first place there. Anyway it's another story.
 > 
-> Tested-by: Jonathan Liu <net147@gmail.com>
-> Tested-by: Ondrej Zary <linux@rainbow-software.org>
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> There are two code paths
+> pci_power_up()
+> pci_platform_power_transition()
 > 
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index f3792f4..06c2a11 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -620,6 +620,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
->  			    acpi_device_bid(link->device));
->  		return -ENODEV;
->  	} else {
-> +		if (link->irq.active < ACPI_MAX_IRQS)
-> +			acpi_irq_penalty[link->irq.active] +=
-> +				PIRQ_PENALTY_PCI_USING;
-
-Nit: elsewhere you use ARRAY_SIZE(acpi_irq_penalty), so it'd be nice
-to be consistent, e.g.,
-
-  if (link->irq.active < ARRAY_SIZE(acpi_irq_penalty))
-    acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
-
-There are a couple other similar uses in acpi_irq_get_penalty() and
-acpi_irq_penalty_init().
-
->  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
->  		       acpi_device_name(link->device),
->  		       acpi_device_bid(link->device), link->irq.active);
-> -- 
-> 1.9.1
+> Second one can be called in non-atomic context for sure (consider
+> standard ->resume() callback).
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> First one runs when IRQ disabled on CPU side.
+> 
+> In any case we probably need to serialize access in our code to protect
+> against several PCI devices being powered up simultaneously.
+
+Right, good point, the PM core will indeed parallelize suspend/resume
+of the devices, so if __update_power_state() cannot be safely called
+concurrently for different devices (I don't know if that's the case)
+then indeed you need locking (with spinlocks).  It might be worth
+pondering if the locking should happen further down in the call stack
+because I assume the critical section would really just be in
+__update_power_state().
+
+Best regards,
+
+Lukas
