@@ -1,276 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48324 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S940520AbcJGQ1K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:27:10 -0400
-Subject: [PATCH 1/3] PCI: rockchip: Rename accessors
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:27:06 -0500
-Message-ID: <20161007162706.23835.10081.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-de.keymile.com ([195.8.104.250]:48171 "EHLO
+        mail-de.keymile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758770AbcJYMiF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 08:38:05 -0400
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+From: Valentin Longchamp <valentin.longchamp@keymile.com>
+Subject: Device tree nodes for devices behind a PCIe switch
+Message-ID: <90e305c7-be1f-8c37-f489-0701de697de4@keymile.com>
+Date: Tue, 25 Oct 2016 14:32:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename rockchip_pcie_read() to rockchip_readl() and rockchip_pcie_write()
-to rockchip_writel() for consistency with other drivers.  No functional
-change intended.
+Hello,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-rockchip.c |   85 +++++++++++++++++++-------------------
- 1 file changed, 42 insertions(+), 43 deletions(-)
+We have a board that embeds an FPGA with multiple functions (MFD driver) that is
+connected to the the PCIe bus with a PCIe switch (more precisely PLX/Avago's
+8714), since we have several PCIe devices on the board.
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index b8c82fc..0ef2f9f 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -204,12 +204,12 @@ struct rockchip_pcie {
- 	struct	irq_domain *irq_domain;
- };
- 
--static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-+static u32 rockchip_readl(struct rockchip_pcie *rockchip, u32 reg)
- {
- 	return readl(rockchip->apb_base + reg);
- }
- 
--static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
-+static void rockchip_writel(struct rockchip_pcie *rockchip, u32 val,
- 				u32 reg)
- {
- 	writel(val, rockchip->apb_base + reg);
-@@ -219,18 +219,18 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
--	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
- 	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
--	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
- }
- 
- static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
--	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
- 	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
--	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
- }
- 
- static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
-@@ -238,10 +238,10 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
- 	u32 val;
- 
- 	/* Update Tx credit maximum update interval */
--	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
-+	val = rockchip_readl(rockchip, PCIE_CORE_TXCREDIT_CFG1);
- 	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
- 	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
--	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
-+	rockchip_writel(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
- }
- 
- static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
-@@ -438,7 +438,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
--	rockchip_pcie_write(rockchip,
-+	rockchip_writel(rockchip,
- 			    PCIE_CLIENT_CONF_ENABLE |
- 			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
- 			    PCIE_CLIENT_ARI_ENABLE |
-@@ -487,17 +487,17 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	 * reliable and enabling ASPM doesn't work.  This is a controller
- 	 * bug we need to work around.
- 	 */
--	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
--	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
-+	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
-+	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
- 
- 	/* Fix the transmitted FTS count desired to exit from L0s. */
--	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
-+	status = rockchip_readl(rockchip, PCIE_CORE_CTRL_PLC1);
- 	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
- 		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
--	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
-+	rockchip_writel(rockchip, status, PCIE_CORE_CTRL_PLC1);
- 
- 	/* Enable Gen1 training */
--	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
-+	rockchip_writel(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
- 			    PCIE_CLIENT_CONFIG);
- 
- 	gpiod_set_value(rockchip->ep_gpio, 1);
-@@ -506,8 +506,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	timeout = jiffies + msecs_to_jiffies(500);
- 
- 	for (;;) {
--		status = rockchip_pcie_read(rockchip,
--					    PCIE_CLIENT_BASIC_STATUS1);
-+		status = rockchip_readl(rockchip, PCIE_CLIENT_BASIC_STATUS1);
- 		if ((status & PCIE_CLIENT_LINK_STATUS_MASK) ==
- 		    PCIE_CLIENT_LINK_STATUS_UP) {
- 			dev_dbg(dev, "PCIe link training gen1 pass!\n");
-@@ -526,13 +525,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	 * Enable retrain for gen2. This should be configured only after
- 	 * gen1 finished.
- 	 */
--	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+	status = rockchip_readl(rockchip, PCIE_RC_CONFIG_LCS);
- 	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
--	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+	rockchip_writel(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
- 	timeout = jiffies + msecs_to_jiffies(500);
- 	for (;;) {
--		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-+		status = rockchip_readl(rockchip, PCIE_CORE_CTRL);
- 		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
- 		    PCIE_CORE_PL_CONF_SPEED_5G) {
- 			dev_dbg(dev, "PCIe link training gen2 pass!\n");
-@@ -548,25 +547,25 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	}
- 
- 	/* Check the final link width from negotiated lane counter from MGMT */
--	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-+	status = rockchip_readl(rockchip, PCIE_CORE_CTRL);
- 	status =  0x1 << ((status & PCIE_CORE_PL_CONF_LANE_MASK) >>
- 			  PCIE_CORE_PL_CONF_LANE_MASK);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
--	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
-+	rockchip_writel(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_RC_CONFIG_VENDOR);
--	rockchip_pcie_write(rockchip,
-+	rockchip_writel(rockchip,
- 			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
- 			    PCIE_RC_CONFIG_RID_CCR);
--	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
-+	rockchip_writel(rockchip, 0x0, PCIE_RC_BAR_CONF);
- 
--	rockchip_pcie_write(rockchip,
-+	rockchip_writel(rockchip,
- 			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
- 			    PCIE_CORE_OB_REGION_ADDR0);
--	rockchip_pcie_write(rockchip, RC_REGION_0_ADDR_TRANS_H,
-+	rockchip_writel(rockchip, RC_REGION_0_ADDR_TRANS_H,
- 			    PCIE_CORE_OB_REGION_ADDR1);
--	rockchip_pcie_write(rockchip, 0x0080000a, PCIE_CORE_OB_REGION_DESC0);
--	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
-+	rockchip_writel(rockchip, 0x0080000a, PCIE_CORE_OB_REGION_DESC0);
-+	rockchip_writel(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
- 
- 	return 0;
- }
-@@ -578,10 +577,10 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 	u32 reg;
- 	u32 sub_reg;
- 
--	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
-+	reg = rockchip_readl(rockchip, PCIE_CLIENT_INT_STATUS);
- 	if (reg & PCIE_CLIENT_INT_LOCAL) {
- 		dev_dbg(dev, "local interrupt received\n");
--		sub_reg = rockchip_pcie_read(rockchip, PCIE_CORE_INT_STATUS);
-+		sub_reg = rockchip_readl(rockchip, PCIE_CORE_INT_STATUS);
- 		if (sub_reg & PCIE_CORE_INT_PRFPE)
- 			dev_dbg(dev, "parity error detected while reading from the PNP receive FIFO RAM\n");
- 
-@@ -624,15 +623,15 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 		if (sub_reg & PCIE_CORE_INT_MMVC)
- 			dev_dbg(dev, "MSI mask register changes\n");
- 
--		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
-+		rockchip_writel(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
- 	} else if (reg & PCIE_CLIENT_INT_PHY) {
- 		dev_dbg(dev, "phy link changes\n");
- 		rockchip_pcie_update_txcredit_mui(rockchip);
- 		rockchip_pcie_clr_bw_int(rockchip);
- 	}
- 
--	rockchip_pcie_write(rockchip, reg & PCIE_CLIENT_INT_LOCAL,
--			    PCIE_CLIENT_INT_STATUS);
-+	rockchip_writel(rockchip, reg & PCIE_CLIENT_INT_LOCAL,
-+			PCIE_CLIENT_INT_STATUS);
- 
- 	return IRQ_HANDLED;
- }
-@@ -643,7 +642,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- 	struct device *dev = rockchip->dev;
- 	u32 reg;
- 
--	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
-+	reg = rockchip_readl(rockchip, PCIE_CLIENT_INT_STATUS);
- 	if (reg & PCIE_CLIENT_INT_LEGACY_DONE)
- 		dev_dbg(dev, "legacy done interrupt received\n");
- 
-@@ -668,7 +667,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- 	if (reg & PCIE_CLIENT_INT_PHY)
- 		dev_dbg(dev, "phy interrupt received\n");
- 
--	rockchip_pcie_write(rockchip, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
-+	rockchip_writel(rockchip, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
- 			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
- 			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
- 			      PCIE_CLIENT_INT_NFATAL_ERR |
-@@ -690,7 +689,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- 
- 	chained_irq_enter(chip, desc);
- 
--	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
-+	reg = rockchip_readl(rockchip, PCIE_CLIENT_INT_STATUS);
- 	reg = (reg & PCIE_CLIENT_INTR_MASK) >> PCIE_CLIENT_INTR_SHIFT;
- 
- 	while (reg) {
-@@ -914,9 +913,9 @@ err_out:
- 
- static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
- {
--	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
-+	rockchip_writel(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
- 			    (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
--	rockchip_pcie_write(rockchip, (u32)(~PCIE_CORE_INT),
-+	rockchip_writel(rockchip, (u32)(~PCIE_CORE_INT),
- 			    PCIE_CORE_INT_MASK);
- 
- 	rockchip_pcie_enable_bw_int(rockchip);
-@@ -986,13 +985,13 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
- 	ob_addr_1 = upper_addr;
- 	ob_desc_0 = (1 << 23 | type);
- 
--	rockchip_pcie_write(rockchip, ob_addr_0,
-+	rockchip_writel(rockchip, ob_addr_0,
- 			    PCIE_CORE_OB_REGION_ADDR0 + aw_offset);
--	rockchip_pcie_write(rockchip, ob_addr_1,
-+	rockchip_writel(rockchip, ob_addr_1,
- 			    PCIE_CORE_OB_REGION_ADDR1 + aw_offset);
--	rockchip_pcie_write(rockchip, ob_desc_0,
-+	rockchip_writel(rockchip, ob_desc_0,
- 			    PCIE_CORE_OB_REGION_DESC0 + aw_offset);
--	rockchip_pcie_write(rockchip, 0,
-+	rockchip_writel(rockchip, 0,
- 			    PCIE_CORE_OB_REGION_DESC1 + aw_offset);
- 
- 	return 0;
-@@ -1019,8 +1018,8 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 	ib_addr_0 |= (lower_addr << 8) & PCIE_CORE_IB_REGION_ADDR0_LO_ADDR;
- 	ib_addr_1 = upper_addr;
- 
--	rockchip_pcie_write(rockchip, ib_addr_0, PCIE_RP_IB_ADDR0 + aw_offset);
--	rockchip_pcie_write(rockchip, ib_addr_1, PCIE_RP_IB_ADDR1 + aw_offset);
-+	rockchip_writel(rockchip, ib_addr_0, PCIE_RP_IB_ADDR0 + aw_offset);
-+	rockchip_writel(rockchip, ib_addr_1, PCIE_RP_IB_ADDR1 + aw_offset);
- 
- 	return 0;
- }
+The MFD driver that I have written and tested on the development boards relies
+on a device tree node to configure the several "sub-devices" embedded in the
+FPGA. On the testing setup, this was pretty simple since the CPU dev board has
+no PCIe switch and when I connect the FPGA dev board on the PCI of the CPU dev
+board here is what I get:
 
+> root@192:~# lspci
+> 0000:00:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
+> 0001:02:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
+> 0001:03:00.0 Unassigned class [ff00]: Altera Corporation Device 006d (rev 01)
+> 0002:04:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
+> 0003:06:00.0 PCI bridge: Freescale Semiconductor Inc Device 0820 (rev 11)
+> root@192:~# lspci -t
+> -+-[0003:06]---00.0-[07]--
+>  +-[0002:04]---00.0-[05]--
+>  +-[0001:02]---00.0-[03]----00.0
+>  \-[0000:00]---00.0-[01]--
+
+The Altera FPGA is "directly connected" to the root of the PCIe.
+
+With this device tree node for the corresponding PCIe bus, the pci_dev gets the
+femt of_node assigned and I can work with it in the MFD driver.
+
+> pci1: pcie@ffe250000 {
+> 		pcie@0 {
+> 			femt {
+> 				/* 0001:03:00.0 -> domain:bus:device.fn
+> 				 * reg must be npt000ss bbbbbbbb dddddfff rrrrrrrr
+> 				 * according to http://sametwice.com/of_pci_bus_address
+> 				 */
+> 				reg = <0x00030000 0 0 0 0>;
+> 				#address-cells = <1>;
+> 				#size-cells = <1>;
+> 				gpio@100 {
+> 					compatible = "keymile,femt-gpio";
+> 					reg = <0x100 20>;
+> 					gpio-controller;
+> 					#gpio-cells = <2>;
+> 				};
+> 				gpio@180 {
+> 					compatible = "keymile,femt-gpio";
+> 					reg = <0x180 20>;
+> 					gpio-controller;
+> 					#gpio-cells = <2>;
+> 				};
+> 			};
+> 		};
+> 	};
+
+On our board, the PCIe switch raises the complexity by a level and I cannot get
+the femt of_node to assigned to the corresponding pci_device. By debugging a
+little bit I have found out that the pci_set_of_node() call from
+pci_scan_device() directly returns because there is no of_node for the bus the
+FPGA is on.
+
+Based on this I have tried to add the busses created by the PLX bridge to my
+device tree.
+
+Here are my lspci outputs:
+
+> root@kmcent2:~# lspci -t
+> -[0000:00]---00.0-[01-06]----00.0-[02-06]--+-01.0-[03]----00.0
+>                                            +-02.0-[04]--
+>                                            +-03.0-[05]----00.0
+>                                            \-04.0-[06]----00.0
+> root@kmcent2:~# lspci
+> 00:00.0 PCI bridge: Freescale Semiconductor Inc Device 0821 (rev 11)
+> 01:00.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
+> 02:01.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
+> 02:02.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
+> 02:03.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
+> 02:04.0 PCI bridge: PLX Technology, Inc. Device 8714 (rev ab)
+> 03:00.0 Ethernet controller: Marvell Technology Group Ltd. Device fc00
+> 05:00.0 Unassigned class [ff00]: Altera Corporation Device 006d (rev 01)
+> 06:00.0 Bridge: PLX Technology, Inc. PEX 8732 32-lane, 8-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ab)
+
+And here is my attempt at describing it in the device tree:
+
+> 	pci0: pcie@ffe240000 {
+> 		reg = <0xf 0xfe240000 0 0x10000>;
+> 		ranges = <0x02000000 0 0xe0000000 0xc 0x00000000 0x0 0x20000000
+> 			  0x01000000 0 0x00000000 0xf 0xf8000000 0x0 0x00010000>;
+> 		pcie@0 {
+> 			/* 00:00.0 root fsl cpu */
+> 			ranges = <0x02000000 0 0xe0000000
+> 				  0x02000000 0 0xe0000000
+> 				  0 0x20000000
+> 
+> 				  0x01000000 0 0x00000000
+> 				  0x01000000 0 0x00000000
+> 				  0 0x00010000>;
+> 			bridge@2,3 {
+> 				/* 02:03.0 bridge PLX */
+> 				reg = <0x00021100 0 0 0 0>;
+> 				#address-cells = <3>;
+> 				#size-cells = <2>;
+> 				bridge@5,0 {
+> 					/* 05:00.0 bridge PLX */
+> 					reg = <0x00050000 0 0 0 0>;
+> 					#address-cells = <3>;
+> 					#size-cells = <2>;
+> 					femt {
+> 						/* 00:00.0 FPGA */
+> 						reg = <0x00000000 0 0 0 0>;
+> 						#address-cells = <1>;
+> 						#size-cells = <1>;
+> 						interrupts = <0>;
+> 						gpio@100 {
+> 							compatible = "keymile,femt-gpio";
+> 							reg = <0x100 20>;
+> 							gpio-controller;
+> 							#gpio-cells = <2>;
+> 						};
+> 						gpio@180 {
+> 							compatible = "keymile,femt-gpio";
+> 							reg = <0x180 20>;
+> 							gpio-controller;
+> 							#gpio-cells = <2>;
+> 						};
+> 					};
+> 				};
+> 			};
+> 		};
+> 	};
+
+Is it really necessary to rebuild all this hierarchy in the device tree or have
+I missed something that would allow me to get rid of this complex description of
+the whole PCIe bus in the device tree ? PCIe is dynamic and can be enumerated
+and it would be great to have an easier way to "link" an of_node to certain pci_dev.
+
+If there is no other way than the complete description in the device tree, any
+suggestion about what is wrong in my above device tree attempt ? Am I missing
+one "intermediate" bus level ?
+
+Valentin
