@@ -1,126 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:59251 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756488AbcJWL4D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Oct 2016 07:56:03 -0400
-Message-Id: <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
-In-Reply-To: <cover.1477221514.git.lukas@wunner.de>
-References: <cover.1477221514.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 23 Oct 2016 13:55:34 +0200
-Subject: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_state hook
-To: Ingo Molnar <mingo@kernel.org>
-Cc: x86@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+Received: from mx1.redhat.com ([209.132.183.28]:51542 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933600AbcJYSY0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Oct 2016 14:24:26 -0400
+From: Laszlo Ersek <lersek@redhat.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lersek@redhat.com
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Andrei Grigore <andrei.grg@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jayme Howard <g.prime@gmail.com>
+Subject: [PATCH] PCI: pci-stub: accept exceptions to the ID- and class-based matching
+Date: Tue, 25 Oct 2016 20:24:19 +0200
+Message-Id: <20161025182419.22910-1-lersek@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
-state") augmented struct pci_platform_pm_ops with a ->get_state hook and
-implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
-existing till v4.7.
+Some systems have multiple instances of the exact same kind of PCI device
+installed. When VFIO users intend to assign these devices to VMs, they
+occasionally don't want to assign all of them; they'd keep a few for
+host-side use. The current ID- and class-based matching in pci-stub
+doesn't accommodate this use case, so users are left with either
+rc.local-style host boot scripts, or QEMU wrapper scripts (which are
+inferior to a pure libvirt environment).
 
-However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
-Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid: Add
-Power Management Unit driver").  It is missing the ->get_state hook,
-which is fatal since pci_set_platform_pm() enforces its presence.  Andy
-Shevchenko reports that without the present commit, such a device
-"crashes without even a character printed out on serial console and
-reboots (since watchdog)".
+Introduce the "except" module parameter for pci-stub. In addition to
+"ids", users can specify a list of Domain:Bus:Device.Function tuples. The
+tuples are parsed and saved before pci_add_dynid() is called. The pci-stub
+probe function will fail for the listed devices, for the initial and all
+later (explicit) binding attempts.
 
-Retrofit mid_pci_platform_pm with the missing callback to fix the
-breakage.
-
-Fixes: cc7cc02bada8 ("PCI: Query platform firmware for device power state")
-Cc: x86@kernel.org
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-and-tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Cc: Andrei Grigore <andrei.grg@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jayme Howard <g.prime@gmail.com>
+Reported-by: Andrei Grigore <andrei.grg@gmail.com>
+Ref: https://www.redhat.com/archives/vfio-users/2016-October/msg00121.html
+Signed-off-by: Laszlo Ersek <lersek@redhat.com>
 ---
-Changes v1 -> v2:
-- Cast return value of intel_mid_pci_get_power_state() to
-  (__force pci_power_t) to avoid "sparse -D__CHECK_ENDIAN__" warning.
-- Add ack by Andy Shevchenko.
+ drivers/pci/pci-stub.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-Changes v2 -> v3:
-- Amend commit message to explain the user-visible failure mode as
-  reported by Andy.
-- Add ack by Bjorn Helgaas and Fixes tag.
-
- arch/x86/include/asm/intel-mid.h  |  1 +
- arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
- drivers/pci/pci-mid.c             |  6 ++++++
- 3 files changed, 26 insertions(+)
-
-diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
-index 5b6753d..49da9f4 100644
---- a/arch/x86/include/asm/intel-mid.h
-+++ b/arch/x86/include/asm/intel-mid.h
-@@ -17,6 +17,7 @@
+diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
+index 886fb3570278..120c29609c44 100644
+--- a/drivers/pci/pci-stub.c
++++ b/drivers/pci/pci-stub.c
+@@ -26,8 +26,44 @@ MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the stub driver, format is "
+ 		 "\"vendor:device[:subvendor[:subdevice[:class[:class_mask]]]]\""
+ 		 " and multiple comma separated entries can be specified");
  
- extern int intel_mid_pci_init(void);
- extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
-+extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
- 
- extern void intel_mid_pwr_power_off(void);
- 
-diff --git a/arch/x86/platform/intel-mid/pwr.c b/arch/x86/platform/intel-mid/pwr.c
-index 5d3b45a..67375dd 100644
---- a/arch/x86/platform/intel-mid/pwr.c
-+++ b/arch/x86/platform/intel-mid/pwr.c
-@@ -272,6 +272,25 @@ int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
- }
- EXPORT_SYMBOL_GPL(intel_mid_pci_set_power_state);
- 
-+pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev)
++#define MAX_EXCEPT 16
++
++static unsigned num_except;
++static struct except {
++	u16 domain;
++	u16 devid;
++} except[MAX_EXCEPT];
++
++/*
++ * Accommodate substrings like "0000:00:1c.4," MAX_EXCEPT times, with the comma
++ * replaced with '\0' in the last instance
++ */
++static char except_str[13 * MAX_EXCEPT] __initdata;
++
++module_param_string(except, except_str, sizeof except_str, 0);
++MODULE_PARM_DESC(except, "Comma-separated list of PCI addresses to except "
++		 "from the ID- and class-based binding. The address format is "
++		 "Domain:Bus:Device.Function (all components are required and "
++		 "written in hex), for example, 0000:00:1c.4. At most "
++		 __stringify(MAX_EXCEPT) " exceptions are supported.");
++
++static inline bool exception_matches(const struct except *ex,
++				     const struct pci_dev *dev)
 +{
-+	struct mid_pwr *pwr = midpwr;
-+	int id, reg, bit;
-+	u32 power;
-+
-+	if (!pwr || !pwr->available)
-+		return PCI_UNKNOWN;
-+
-+	id = intel_mid_pwr_get_lss_id(pdev);
-+	if (id < 0)
-+		return PCI_UNKNOWN;
-+
-+	reg = (id * LSS_PWS_BITS) / 32;
-+	bit = (id * LSS_PWS_BITS) % 32;
-+	power = mid_pwr_get_state(pwr, reg);
-+	return (__force pci_power_t)((power >> bit) & 3);
++	return ex->domain == pci_domain_nr(dev->bus) &&
++	       ex->devid == PCI_DEVID(dev->bus->number, dev->devfn);
 +}
 +
- void intel_mid_pwr_power_off(void)
+ static int pci_stub_probe(struct pci_dev *dev, const struct pci_device_id *id)
  {
- 	struct mid_pwr *pwr = midpwr;
-diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
-index 55f453d..c7f3408 100644
---- a/drivers/pci/pci-mid.c
-+++ b/drivers/pci/pci-mid.c
-@@ -29,6 +29,11 @@ static int mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
- 	return intel_mid_pci_set_power_state(pdev, state);
- }
- 
-+static pci_power_t mid_pci_get_power_state(struct pci_dev *pdev)
-+{
-+	return intel_mid_pci_get_power_state(pdev);
-+}
++	unsigned i;
 +
- static pci_power_t mid_pci_choose_state(struct pci_dev *pdev)
- {
- 	return PCI_D3hot;
-@@ -52,6 +57,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
- static struct pci_platform_pm_ops mid_pci_platform_pm = {
- 	.is_manageable	= mid_pci_power_manageable,
- 	.set_state	= mid_pci_set_power_state,
-+	.get_state	= mid_pci_get_power_state,
- 	.choose_state	= mid_pci_choose_state,
- 	.sleep_wake	= mid_pci_sleep_wake,
- 	.run_wake	= mid_pci_run_wake,
++	for (i = 0; i < num_except; i++)
++		if (exception_matches(&except[i], dev)) {
++			dev_info(&dev->dev, "skipped by stub\n");
++			return -EPERM;
++		}
++
+ 	dev_info(&dev->dev, "claimed by stub\n");
+ 	return 0;
+ }
+@@ -47,6 +83,33 @@ static int __init pci_stub_init(void)
+ 	if (rc)
+ 		return rc;
+ 
++	/* parse exceptions */
++	p = except_str;
++	while ((id = strsep(&p, ","))) {
++		int fields;
++		unsigned domain, bus, dev, fn;
++
++		if (*id == '\0')
++			continue;
++
++		fields = sscanf(id, "%x:%x:%x.%x", &domain, &bus, &dev, &fn);
++		if (fields != 4 || domain > 0xffff || bus > 0xff ||
++		    dev > 0x1f || fn > 0x7) {
++			printk(KERN_WARNING
++			       "pci-stub: invalid exception \"%s\"\n", id);
++			continue;
++		}
++
++		if (num_except < MAX_EXCEPT) {
++			struct except *ex = &except[num_except++];
++
++			ex->domain = domain;
++			ex->devid = PCI_DEVID(bus, PCI_DEVFN(dev, fn));
++		} else
++			printk(KERN_WARNING
++			       "pci-stub: no room for exception \"%s\"\n", id);
++	}
++
+ 	/* no ids passed actually */
+ 	if (ids[0] == '\0')
+ 		return 0;
 -- 
-2.9.3
+2.9.2
 
