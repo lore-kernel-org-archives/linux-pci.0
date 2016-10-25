@@ -1,61 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39568 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755004AbcJLNmc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:42:32 -0400
-Subject: [PATCH v2 0/8] PCI: hisi: Cleanups
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:42:27 -0500
-Message-ID: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 00/16] ACPI IORT ARM SMMU support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <e52c2ad5-08fc-f236-a768-fbf03dd3d552@linaro.org>
+Date: Tue, 25 Oct 2016 23:24:30 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  - Add local "dev" pointers to reduce repetition of things like
-    "&pdev->dev".
+On 2016/10/19 0:03, Lorenzo Pieralisi wrote:
+> This patch series is v6 of a previous posting:
+>
+> https://lkml.org/lkml/2016/9/9/418
+>
+> v5 -> v6
+> 	- Rebased against v4.9-rc1
+> 	- Changed FWNODE_IOMMU to FWNODE_ACPI_STATIC
+> 	- Moved platform devices creation into IORT code
+> 	- Updated fwnode handling
+> 	- Added default dma masks initialization
+>
+> v4 -> v5
+> 	- Added SMMUv1/v2 support
+> 	- Rebased against v4.8-rc5 and dependencies series
+> 	- Consolidated IORT platform devices creation
+>
+[...]
+>
+> The ACPI IORT table provides information that allows instantiating
+> ARM SMMU devices and carrying out id mappings between components on
+> ARM based systems (devices, IOMMUs, interrupt controllers).
+>
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>
+> Building on basic IORT support, this patchset enables ARM SMMUs support
+> on ACPI systems.
+>
+> Most of the code is aimed at building the required generic ACPI
+> infrastructure to create and enable IOMMU components and to bring
+> the IOMMU infrastructure for ACPI on par with DT, which is going to
+> make future ARM SMMU components easier to integrate.
+>
+[...]
+>
+> This patchset is provided for review/testing purposes here:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v6
+>
+> Tested on Juno and FVP models for ARM SMMU v1 and v3 probing path.
 
-  - Remove platform drvdata because it appears unused (we called
-    platform_set_drvdata() but not platform_get_drvdata()).
+I rebased my platform MSI, interrupt producer and mbi-gen patch set
+on top of yours, and test it on Hisilicon D03 board with SMMv3
+enabled, USB and SAS are working properly with configuration
+in IORT (yes, I need to add patch from Robin - iommu/arm-smmu: Don't
+inadvertently reject multiple SMMUv3s),
 
-  - Name private struct pointer consistently within driver.
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-  - Remove redundant struct members.
-
-  - Use generic DesignWare accessors when possible.
-
-  - Pass device-specific struct to internal functions for consistency.
-
-  - Include register block base in PCIE_SYS_STATE4 address to simplify
-    users.
-
-Nothing here should change the behavior of the driver.
-
-Changes from v1:
-  I dropped the following patches because they were a lot of churn for
-  questionable benefit:
-    PCI: hisi: Rename APB accessors
-    PCI: hisi: Rename config accessors
-    PCI: hisi: Name private struct pointer "hisi" consistently
-      (Instead of renaming *all* the pointers, I only renamed enough to
-      make them consistent within this file.)
-    PCI: hisi: Swap order of hisi_apb_writel() reg/val arguments
-
----
-
-Bjorn Helgaas (8):
-      PCI: hisi: Add local struct device pointers
-      PCI: hisi: Remove unused platform data
-      PCI: hisi: Name private struct pointer "hisi_pcie" consistently
-      PCI: hisi: Remove redundant struct hisi_pcie.reg_base
-      PCI: hisi: Use generic DesignWare accessors
-      PCI: hisi: Include register block base in PCIE_SYS_STATE4 address
-      PCI: hisi: Pass device-specific struct to internal functions
-      PCI: hisi: Reorder struct hisi_pcie
-
-
- drivers/pci/host/pcie-hisi.c |   86 +++++++++++++++++-------------------------
- 1 file changed, 35 insertions(+), 51 deletions(-)
+Thanks
+Hanjun
