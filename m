@@ -1,58 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:8005 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751271AbcJUQ6R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 12:58:17 -0400
-Date: Fri, 21 Oct 2016 13:08:46 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
-Message-ID: <20161021170846.GA8633@localhost.localdomain>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
- <1475007815-28354-3-git-send-email-keith.busch@intel.com>
- <20161021162010.GB4221@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 26 Oct 2016 14:42:46 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/5] PCI: Extract link retraining from
+ pcie_aspm_configure_common_clock()
+Message-ID: <20161026144246.5bfdf25c@t450s.home>
+In-Reply-To: <20161026180128.23495.19403.stgit@gimli.home>
+References: <20161026175156.23495.12980.stgit@gimli.home>
+        <20161026180128.23495.19403.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021162010.GB4221@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 06:20:10PM +0200, Lukas Wunner wrote:
-> I've found that the following simple change on top of your series is
-> already sufficient to make hot-removal of the Apple Gigabit Ethernet
-> adapter "just work" (no more soft lockups, which is a giant improvement):
+On Wed, 26 Oct 2016 12:01:28 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
+
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c       |   29 +++++++++++++++++++++++++++++
+>  drivers/pci/pcie/aspm.c |   17 +----------------
+>  include/linux/pci.h     |    1 +
+>  3 files changed, 31 insertions(+), 16 deletions(-)
 > 
-> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6d6cf89..4d327d4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4729,6 +4729,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>  }
+>  EXPORT_SYMBOL(pcie_set_mps);
+>  
+> +int pcie_retrain_link(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +	u16 lnksta;
+> +	unsigned long timeout;
+> +
+> +	/* Can only retrain from downstream ports */
+> +	if (!pci_is_pcie(dev) ||
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM &&
+> +	     pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
+> +		return -EINVAL;
+> +
+> +	ret = pcie_capability_set_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RL);
+> +	if (ret)
+> +		return ret;
+> +
+> +	timeout = jiffies + HZ; /* Retraining timeout */
+> +	for (;;) {
+> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+> +		if (!(lnksta & PCI_EXP_LNKSTA_LT) ||
+> +		    time_after(jiffies, timeout))
+> +			break;
+> +		msleep(1);
+> +	}
+> +
+> +	return (lnksta & PCI_EXP_LNKSTA_LT) ? -EBUSY : 0;
+> +}
+> +EXPORT_SYMBOL(pcie_retrain_link);
+> +
+>  int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  		  enum pcie_link_width *width)
+>  {
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 0ec649d..482d60c 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -91,8 +91,6 @@ struct pcie_link_state {
+>  	[POLICY_POWERSAVE] = "powersave"
+>  };
+>  
+> -#define LINK_RETRAIN_TIMEOUT HZ
+> -
+>  static int policy_to_aspm_state(struct pcie_link_state *link)
+>  {
+>  	switch (aspm_policy) {
+> @@ -222,20 +220,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+>  	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+>  
+>  	/* Retrain link */
+> -	reg16 |= PCI_EXP_LNKCTL_RL;
+> -	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+> -
+> -	/* Wait for link training end. Break out after waiting for timeout */
+> -	start_jiffies = jiffies;
+
+Zero day builders remind me that I forgot to remove the declaration of
+start_jiffies from this function and that it's now unused.  I'll refrain
+from immediately spamming the list with a v2 for that minor change, but
+note that this patch will need a respin or fixup on commit, whichever
+is preferred.  Thanks,
+
+Alex
+
+> -	for (;;) {
+> -		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
+> -		if (!(reg16 & PCI_EXP_LNKSTA_LT))
+> -			break;
+> -		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
+> -			break;
+> -		msleep(1);
+> -	}
+> -	if (!(reg16 & PCI_EXP_LNKSTA_LT))
+> +	if (!pcie_retrain_link(parent))
+>  		return;
+>  
+>  	/* Training failed. Restore common clock configurations */
 > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5c43012..cc8b234 100644
+> index fbfbb40..eb0e9be 100644
 > --- a/include/linux/pci.h
 > +++ b/include/linux/pci.h
-> @@ -406,7 +406,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
->  
->  static inline int pci_channel_offline(struct pci_dev *pdev)
->  {
-> -	return (pdev->error_state != pci_channel_io_normal);
-> +	return pdev->error_state != pci_channel_io_normal || pdev->is_removed;
->  }
->  
->  struct pci_host_bridge {
+> @@ -1024,6 +1024,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+>  int pcie_set_readrq(struct pci_dev *dev, int rq);
+>  int pcie_get_mps(struct pci_dev *dev);
+>  int pcie_set_mps(struct pci_dev *dev, int mps);
+> +int pcie_retrain_link(struct pci_dev *dev);
+>  int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  			  enum pcie_link_width *width);
+>  int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
 > 
-> 
-> This got me thinking:  We've got three pci_channel_state values defined
-> in include/linux/pci.h, "normal", "frozen" and "perm_failure".  Instead
-> of adding a new "is_removed" bit to struct pci_dev, would it perhaps
-> make more sense to just add a new type of pci_channel_state for removed
-> devices?  Then the above change to pci_channel_offline() wouldn't even
-> be necessary.  The pciehp and dpc drivers would just change the channel
-> status to "removed" and all the drivers already querying it with
-> pci_channel_offline() would pick up the change automatically.
-> 
-> Thoughts?
-
-I'd be happy if we can reuse that, but concerned about overloading
-error_state's intended purpose for AER. The conditions under which an
-'is_removed' may be set can also create AER events, and the aer driver
-overrides the error_state.
