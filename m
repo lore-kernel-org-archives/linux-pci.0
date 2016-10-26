@@ -1,102 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34864 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S947218AbcJaVjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Oct 2016 17:39:06 -0400
-Subject: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit config
- writes
-From: Bjorn Helgaas <bhelgaas@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 3/5] PCI: Extract link retraining from
+ pcie_aspm_configure_common_clock()
+From: Alex Williamson <alex.williamson@redhat.com>
 To: linux-pci@vger.kernel.org
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Greg Ungerer <gerg@uclinux.org>,
-        Thierry Reding <treding@nvidia.com>
-Date: Mon, 31 Oct 2016 16:39:02 -0500
-Message-ID: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 26 Oct 2016 12:01:28 -0600
+Message-ID: <20161026180128.23495.19403.stgit@gimli.home>
+In-Reply-To: <20161026175156.23495.12980.stgit@gimli.home>
+References: <20161026175156.23495.12980.stgit@gimli.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hardware that supports only 32-bit config writes is not spec-compliant.
-For example, if software performs a 16-bit write, we must do a 32-bit read,
-merge in the 16 bits we intend to write, followed by a 32-bit write.  If
-the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
-to-clear) bits set, we just inadvertently cleared something we shouldn't
-have.
-
-Add a rate-limited warning when we do sub-32 bit config writes.  Remove
-similar probe-time warnings from some of the affected host bridge drivers.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/access.c             |   17 +++++++++++++++--
- drivers/pci/host/pcie-hisi.c     |    2 --
- drivers/pci/host/pcie-rockchip.c |    3 ---
- 3 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/pci/pci.c       |   29 +++++++++++++++++++++++++++++
+ drivers/pci/pcie/aspm.c |   17 +----------------
+ include/linux/pci.h     |    1 +
+ 3 files changed, 31 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d11cdbb..e0cd124 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -142,10 +142,23 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	if (size == 4) {
- 		writel(val, addr);
- 		return PCIBIOS_SUCCESSFUL;
--	} else {
--		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
- 	}
- 
-+	/*
-+	 * N.B.  In general, hardware that supports only 32-bit writes on
-+	 * PCI is not spec-compliant.  For example, software may perform a
-+	 * 16-bit write.  If the hardware only supports 32-bit accesses, we
-+	 * must do a 32-bit read, merge in the 16 bits we intend to write,
-+	 * followed by a 32-bit write.  If the 16 bits we *don't* intend to
-+	 * write happen to have any RW1C (write-one-to-clear) bits set, we
-+	 * just inadvertently cleared something we shouldn't have.
-+	 */
-+
-+	dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
-+			     size, pci_domain_nr(bus), bus->number,
-+			     PCI_SLOT(devfn), PCI_FUNC(devfn), where);
-+
-+	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
- 	tmp = readl(addr) & mask;
- 	tmp |= val << ((where & 0x3) * 8);
- 	writel(tmp, addr);
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 56154c2..5b5901d 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -194,8 +194,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
--
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6d6cf89..4d327d4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4729,6 +4729,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
  }
+ EXPORT_SYMBOL(pcie_set_mps);
  
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index e0b22da..6419d8c 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1187,9 +1187,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		pcie_bus_configure_settings(child);
++int pcie_retrain_link(struct pci_dev *dev)
++{
++	int ret;
++	u16 lnksta;
++	unsigned long timeout;
++
++	/* Can only retrain from downstream ports */
++	if (!pci_is_pcie(dev) ||
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM &&
++	     pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
++		return -EINVAL;
++
++	ret = pcie_capability_set_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RL);
++	if (ret)
++		return ret;
++
++	timeout = jiffies + HZ; /* Retraining timeout */
++	for (;;) {
++		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
++		if (!(lnksta & PCI_EXP_LNKSTA_LT) ||
++		    time_after(jiffies, timeout))
++			break;
++		msleep(1);
++	}
++
++	return (lnksta & PCI_EXP_LNKSTA_LT) ? -EBUSY : 0;
++}
++EXPORT_SYMBOL(pcie_retrain_link);
++
+ int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 		  enum pcie_link_width *width)
+ {
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 0ec649d..482d60c 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -91,8 +91,6 @@ struct pcie_link_state {
+ 	[POLICY_POWERSAVE] = "powersave"
+ };
  
- 	pci_bus_add_devices(bus);
+-#define LINK_RETRAIN_TIMEOUT HZ
 -
--	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
--
- 	return err;
+ static int policy_to_aspm_state(struct pcie_link_state *link)
+ {
+ 	switch (aspm_policy) {
+@@ -222,20 +220,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+ 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
  
- err_vpcie:
-
+ 	/* Retrain link */
+-	reg16 |= PCI_EXP_LNKCTL_RL;
+-	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+-
+-	/* Wait for link training end. Break out after waiting for timeout */
+-	start_jiffies = jiffies;
+-	for (;;) {
+-		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
+-		if (!(reg16 & PCI_EXP_LNKSTA_LT))
+-			break;
+-		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
+-			break;
+-		msleep(1);
+-	}
+-	if (!(reg16 & PCI_EXP_LNKSTA_LT))
++	if (!pcie_retrain_link(parent))
+ 		return;
+ 
+ 	/* Training failed. Restore common clock configurations */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fbfbb40..eb0e9be 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1024,6 +1024,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_readrq(struct pci_dev *dev, int rq);
+ int pcie_get_mps(struct pci_dev *dev);
+ int pcie_set_mps(struct pci_dev *dev, int mps);
++int pcie_retrain_link(struct pci_dev *dev);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_link(struct pci_dev *dev, enum pci_bus_speed *speed,
