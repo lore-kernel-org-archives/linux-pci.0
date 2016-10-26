@@ -1,111 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:32925 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751487AbcJIMqh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2016 08:46:37 -0400
-Message-Id: <63b7393731a5708dbbf107055e3fd9801c3c00b3.1476007467.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 9 Oct 2016 14:46:29 +0200
-Subject: [PATCH v2] x86/platform/intel-mid: Retrofit pci_platform_pm_ops
- ->get_state hook
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, x86@kernel.org
+Received: from mail.kernel.org ([198.145.29.136]:33626 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933693AbcJZT7a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 15:59:30 -0400
+Date: Wed, 26 Oct 2016 14:50:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc: svarbanov@mm-sol.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: fix NULL pointer dereference in
+ get_resources()
+Message-ID: <20161026195059.GD17507@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477402971-22146-1-git-send-email-srinivas.kandagatla@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477402971-22146-1-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit cc7cc02bada8 ("PCI: Query platform firmware for device power
-state") augmented struct pci_platform_pm_ops with a ->get_state hook and
-implemented it for acpi_pci_platform_pm, the only pci_platform_pm_ops
-existing till v4.7.
+On Tue, Oct 25, 2016 at 02:42:51PM +0100, Srinivas Kandagatla wrote:
+> get_resources() will dereference dev as NULL pointer when called from probe(),
+> as pp.dev is only assigned after get_resources() is called.
+> 
+> Fix this by moving dev pointer assignment before get_resources() call.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> Fixes: e6a087eeaf91 ("PCI: qcom: Remove redundant struct qcom_pcie.dev")
 
-However v4.8 introduced another pci_platform_pm_ops for Intel Mobile
-Internet Devices with commit 5823d0893ec2 ("x86/platform/intel-mid: Add
-Power Management Unit driver").  It is missing the ->get_state hook,
-which is fatal since pci_set_platform_pm() enforces its presence.
+Applied to for-linus for v4.9, thanks, Srinivas.  Sorry for the breakage.
 
-Retrofit mid_pci_platform_pm with the missing callback to fix the
-breakage.
-
-Cc: x86@kernel.org
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-and-tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
-Changes v1 -> v2:
-- Cast return value of intel_mid_pci_get_power_state() to
-  (__force pci_power_t) to avoid "sparse -D__CHECK_ENDIAN__" warning.
-
- arch/x86/include/asm/intel-mid.h  |  1 +
- arch/x86/platform/intel-mid/pwr.c | 19 +++++++++++++++++++
- drivers/pci/pci-mid.c             |  6 ++++++
- 3 files changed, 26 insertions(+)
-
-diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
-index 9d6b097..4511c10 100644
---- a/arch/x86/include/asm/intel-mid.h
-+++ b/arch/x86/include/asm/intel-mid.h
-@@ -17,6 +17,7 @@
- 
- extern int intel_mid_pci_init(void);
- extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
-+extern pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev);
- 
- #define INTEL_MID_PWR_LSS_OFFSET	4
- #define INTEL_MID_PWR_LSS_TYPE		(1 << 7)
-diff --git a/arch/x86/platform/intel-mid/pwr.c b/arch/x86/platform/intel-mid/pwr.c
-index c901a34..cae8d9b 100644
---- a/arch/x86/platform/intel-mid/pwr.c
-+++ b/arch/x86/platform/intel-mid/pwr.c
-@@ -260,6 +260,25 @@ int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
- }
- EXPORT_SYMBOL_GPL(intel_mid_pci_set_power_state);
- 
-+pci_power_t intel_mid_pci_get_power_state(struct pci_dev *pdev)
-+{
-+	struct mid_pwr *pwr = midpwr;
-+	int id, reg, bit;
-+	u32 power;
-+
-+	if (!pwr || !pwr->available)
-+		return PCI_UNKNOWN;
-+
-+	id = intel_mid_pwr_get_lss_id(pdev);
-+	if (id < 0)
-+		return PCI_UNKNOWN;
-+
-+	reg = (id * LSS_PWS_BITS) / 32;
-+	bit = (id * LSS_PWS_BITS) % 32;
-+	power = mid_pwr_get_state(pwr, reg);
-+	return (__force pci_power_t)((power >> bit) & 3);
-+}
-+
- int intel_mid_pwr_get_lss_id(struct pci_dev *pdev)
- {
- 	int vndr;
-diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
-index c878aa7..a8b52dc 100644
---- a/drivers/pci/pci-mid.c
-+++ b/drivers/pci/pci-mid.c
-@@ -29,6 +29,11 @@ static int mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state)
- 	return intel_mid_pci_set_power_state(pdev, state);
- }
- 
-+static pci_power_t mid_pci_get_power_state(struct pci_dev *pdev)
-+{
-+	return intel_mid_pci_get_power_state(pdev);
-+}
-+
- static pci_power_t mid_pci_choose_state(struct pci_dev *pdev)
- {
- 	return PCI_D3hot;
-@@ -52,6 +57,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
- static struct pci_platform_pm_ops mid_pci_platform_pm = {
- 	.is_manageable	= mid_pci_power_manageable,
- 	.set_state	= mid_pci_set_power_state,
-+	.get_state	= mid_pci_get_power_state,
- 	.choose_state	= mid_pci_choose_state,
- 	.sleep_wake	= mid_pci_sleep_wake,
- 	.run_wake	= mid_pci_run_wake,
--- 
-2.9.3
-
+> ---
+>  drivers/pci/host/pcie-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+> index ef0a84c..3593640 100644
+> --- a/drivers/pci/host/pcie-qcom.c
+> +++ b/drivers/pci/host/pcie-qcom.c
+> @@ -533,11 +533,11 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	if (IS_ERR(pcie->phy))
+>  		return PTR_ERR(pcie->phy);
+>  
+> +	pp->dev = dev;
+>  	ret = pcie->ops->get_resources(pcie);
+>  	if (ret)
+>  		return ret;
+>  
+> -	pp->dev = dev;
+>  	pp->root_bus_nr = -1;
+>  	pp->ops = &qcom_pcie_dw_ops;
+>  
+> -- 
+> 2.10.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
