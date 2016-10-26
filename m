@@ -1,63 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60732 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753771AbcJLQGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 12:06:10 -0400
-Date: Wed, 12 Oct 2016 11:06:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/8] PCI: imx6: Cleanups
-Message-ID: <20161012160605.GP4308@localhost>
-References: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-co1nam03on0084.outbound.protection.outlook.com ([104.47.40.84]:43434
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932290AbcJZQnf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 12:43:35 -0400
+From: Fabio Estevam <fabio.estevam@nxp.com>
+To: <bhelgaas@google.com>
+CC: <l.stach@pengutronix.de>, <hongxing.zhu@nxp.com>,
+        <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: [PATCH 3/3] MAINTAINERS: PCI: imx6: Add devicetree binding file
+Date: Wed, 26 Oct 2016 14:27:24 -0200
+Message-ID: <1477499244-10640-3-git-send-email-fabio.estevam@nxp.com>
+In-Reply-To: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
+References: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161012134335.28919.64137.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 08:47:32AM -0500, Bjorn Helgaas wrote:
->   - Add local "dev" pointers to reduce repetition of things like
->     "&pdev->dev".
-> 
->   - Clean up redundant dev->of_node usage.
-> 
->   - Remove redundant struct members.
-> 
->   - Pass struct imx6_pcie pointer rather than register address to PHY
->     accessors.  This enables use of the generic DesignWare accessors.
-> 
->   - Use generic DesignWare accessors when possible.
-> 
->   - Pass device-specific struct to internal functions for consistency.
-> 
->   - Remove unused return values.
-> 
-> Nothing here should change the behavior of the driver.
-> 
-> Changes from v1:
->   I dropped the following patches because they were a lot of churn for
->   questionable benefit:
->     PCI: imx6: Name private struct pointer "imx6" consistently
->     PCI: imx6: Name PHY accessors consistently with other i.MX6 accessors
->     PCI: imx6: Add register accessors
-> 
-> ---
-> 
-> Bjorn Helgaas (8):
->       PCI: imx6: Add local struct device pointers
->       PCI: imx6: Remove redundant of_node pointer
->       PCI: imx6: Removed unused struct imx6_pcie.mem_base
->       PCI: imx6: Pass struct imx6_pcie to PHY accessors
->       PCI: imx6: Pass device-specific struct to internal functions
->       PCI: imx6: Use generic DesignWare accessors
->       PCI: imx6: Reorder struct imx6_pcie
->       PCI: imx6: Remove unused return values
-> 
-> 
->  drivers/pci/host/pci-imx6.c |  250 ++++++++++++++++++++++---------------------
->  1 file changed, 126 insertions(+), 124 deletions(-)
+Add an entry for the devicetree binding file, so that when
+people run ./scripts/get_maintainer.pl the PCI imx6 maintainers could
+also be listed.
 
-I applied these to pci/host-imx6 for v4.9.  I hope to ask Linus to
-pull them tomorrow, so if you see any issues, let me know soon.
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cf828f4..d61aead 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9262,6 +9262,7 @@ M:	Lucas Stach <l.stach@pengutronix.de>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
++F:	Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+ F:	drivers/pci/host/*imx6*
+ 
+ PCI DRIVER FOR TI KEYSTONE
+-- 
+2.7.4
+
