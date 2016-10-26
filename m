@@ -1,75 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58085 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:54582 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932335AbcJQKeo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Oct 2016 06:34:44 -0400
-Date: Mon, 17 Oct 2016 12:34:42 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Emmanuel Benisty <benisty.e@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, tj@kernel.org,
-        linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: use pci_alloc_irq_vectors issues
-Message-ID: <20161017103442.GA12240@lst.de>
-References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com> <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com> <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com>
+        id S1753142AbcJZOAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 10:00:55 -0400
+Message-ID: <5810B715.2040308@redhat.com>
+Date: Wed, 26 Oct 2016 10:00:53 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        David Arcari <darcari@redhat.com>,
+        Myron Stowe <mstowe@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFE PATCH] pci: Do not enable intx on MSI-capable devices on
+ shutdown
+References: <1477052083-13815-1-git-send-email-prarit@redhat.com> <20161025180858.GA22422@localhost.localdomain> <580FADC6.1020407@redhat.com> <20161025221613.GA32365@localhost.localdomain>
+In-Reply-To: <20161025221613.GA32365@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 11:33:03AM +0200, Emmanuel Benisty wrote:
-> Hi Christoph,
+On 10/25/2016 06:16 PM, Keith Busch wrote:
+> On Tue, Oct 25, 2016 at 03:08:54PM -0400, Prarit Bhargava wrote:
+>> When pci_disable_msi() is currently called the result is that device is
+>> switched back to intx and then the MSI IRQs are free'd.  This patch would
+>> modify that behavior, and intx would not be reenabled when pci_disable_msix()
+>> was called during runtime.  With the system_state patch we're only affecting
+>> shutdown, which is seen as less risky than doing
 > 
-> On Mon, Oct 17, 2016 at 11:26 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > can you run the lspci -vv command as again, but this time as root
-> > user?
-> 
-> Please find attached the new file.
-> 
-> > Also just to make sure I interpret your report correctly:
-> > The ata3 devices that's creating the problems is the SK-Hynix device,
-> > probably a SSD that shows up as ahci controller?
-> 
-> Yep, it's the only drive on this machine, which is indeed a SSD drive.
+> My proposal isn't really modifying exisiting behavior since if it does,
+> the currently in place expectations are being violated: if anyone calls
+> "pci_disable_msi" with actions on the irqs being disabled, they're
+> already screwed since they will hit the BUG_ON in free_msi_irqs.
 
-Thanks.  Still can't make sense of the issue, can you apply the debug
-patch below, and try to caputure the screen output when the ata
-device is beeing probed?
+I thought msi_has_action() would have returned 1 until free_msi_irqs() was
+called.  Yes, your patch would work.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ba5f11c..458d139 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1422,6 +1422,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 			PCI_IRQ_MSIX | PCI_IRQ_MSI);
- 	if (nvec > 0) {
- 		if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
-+			printk(KERN_INFO "ahci: using %d MSI(-X) vectors)\n", nvec);
- 			hpriv->get_irq_vector = ahci_get_irq_vector;
- 			hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
- 			return nvec;
-@@ -1439,17 +1440,22 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 	 * -ENOSPC indicated we don't have enough vectors.  Don't bother trying
- 	 * a single vectors for any other error:
- 	 */
--	if (nvec < 0 && nvec != -ENOSPC)
-+	if (nvec < 0 && nvec != -ENOSPC) {
-+		printk("ahci: pci_alloc_irq_vectors (multi) returned %d\n", nvec);
- 		return nvec;
-+	}
- 
- 	/*
- 	 * If the host is not capable of supporting per-port vectors, fall
- 	 * back to single MSI before finally attempting single MSI-X.
- 	 */
- 	nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
-+	printk("ahci: pci_alloc_irq_vectors (MSI) returned %d\n", nvec);
- 	if (nvec == 1)
- 		return nvec;
--	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
-+	nvec =  pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
-+	printk("ahci: pci_alloc_irq_vectors (MSI-X) returned %d\n", nvec);
-+	return nvec;
- }
- 
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+I also want to add this interesting tidbit:  I have noticed in the past that
+*many* systems no longer print the
+
+ Restarting system.
+ reboot: machine restart
+
+[and some also print an extra line of, "ACPI MEMORY or I/O RESET_REG"]
+
+messages at the end of boot.  For a long time I had assumed that this was
+because the reboot was racing with printk somehow and that the system shutdown
+or rebooted before those lines made it "out" through the serial port.
+
+With the previously rejected patch from
+
+https://patchwork.kernel.org/patch/5990701/
+
+the messages are output to the screen again (I'm not 100% sure on this but I
+think this is occurring for systems where the serial port or usb port is behind
+a pci device).  This result lends more support to the idea that we're doing
+something wrong by blindly disabling msi/x interrupts when the driver doesn't
+support it.
+
+There are several ways of fixing this, and I'm not sure one is better than the
+other.  It seems no matter what we do here there's risk of breaking something
+and I'm leaning towards fixing this by only calling the msi disable code when a
+shutdown function has been called.
+
+Bjorn, I'd like to hear what you think...
+
+P.
