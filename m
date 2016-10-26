@@ -1,97 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Oct 2016 05:21:44 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
-Message-ID: <20161012122144.GA2009@infradead.org>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <2837059.ka7z3gzjF2@wuerfel> <57DA5CC1.6030502@ti.com>
- <6722152.QTF992tLpW@wuerfel> <57E8BB69.4020804@ti.com>
-MIME-Version: 1.0
-In-Reply-To: <57E8BB69.4020804@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao.Pinto@synopsys.com,
- Dave Jiang <dave.jiang@intel.com>, Arnd Bergmann <arnd@arndb.de>,
- linux-doc@vger.kernel.org, Joao Pinto <jpinto@synopsys.com>,
- Jingoo Han <jingoohan1@gmail.com>, Jon Mason <jdmason@kudzu.us>,
- Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- hch@infradead.org, m-karicheri2@ti.com, linux-arm-kernel@lists.infradead.org,
- Allen Hubbe <Allen.Hubbe@emc.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-ntb@googlegroups.com,
- linux-omap@vger.kernel.org, mingkai.hu@nxp.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37016 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753335AbcJZBWp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2016 21:22:45 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9Q1J8jc004238
+        for <linux-pci@vger.kernel.org>; Tue, 25 Oct 2016 21:22:45 -0400
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26af6g8yv5-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 25 Oct 2016 21:22:44 -0400
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Wed, 26 Oct 2016 11:22:42 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id BA5FA2BB0059
+        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+        by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u9Q1Me6918088058
+        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u9Q1Mdtc014894
+        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 12:22:40 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au, clsoto@us.ibm.com,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 1/2] PCI: Call pcibios_sriov_enable() before IOV BARs are enabled
+Date: Wed, 26 Oct 2016 12:15:35 +1100
+In-Reply-To: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-Id: <1477444536-29612-2-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 26, 2016 at 11:38:41AM +0530, Kishon Vijay Abraham I wrote:
-> > Ok, so in theory there can be other hardware (and quite likely is)
-> > that supports multiple functions, and we can extend the framework
-> > to support them without major obstacles, but your hardware doesn't,
-> > so you kept it simple with one hardcoded function, right?
-> 
-> right, PCIe can have upto 8 functions. So the issues with the current framework
-> has to be fixed. I don't expect major obstacles with this as of now.
+In current implementation, pcibios_sriov_enable() is used by PPC
+PowerNV platform only. In PowerNV specific pcibios_sriov_enable(),
+PF's IOV BARs might be updated (shifted) by pci_update_resource().
+It means the IOV BARs aren't ready for decoding incoming memory
+address until pcibios_sriov_enable() returns.
 
-I wouldn't be too worried about.  We have two kinds of functions in
-PCIe: physical functions, or virtual functions using SR-IOV.
+This calls pcibios_sriov_enable() earlier before the IOV BARs are
+enabled. As the result, the IOV BARs have been configured correctly
+when they are enabled.
 
-For the first one we pretty much just need the controller driver to
-report them separately as there is almost no interaction between
-functions.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Tested-by: Carol Soto <clsoto@us.ibm.com>
+---
+ drivers/pci/iov.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-SR-IOV support will be more interesting as the physical functions
-controls creation of the associated virtual functions.  I'd like to
-defer that problem until we get hold of a software programmable
-controller that supports SR-IOV and has open documentation.  (That
-beeing said, if someone has a pointer to such a beast send it my way!)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index e30f05c..d41ec29 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -306,13 +306,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_iov_set_numvfs(dev, nr_virtfn);
+-	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+-	pci_cfg_access_lock(dev);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	msleep(100);
+-	pci_cfg_access_unlock(dev);
+-
+ 	iov->initial_VFs = initial;
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+@@ -323,6 +316,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		goto err_pcibios;
+ 	}
+ 
++	pci_iov_set_numvfs(dev, nr_virtfn);
++	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
++	pci_cfg_access_lock(dev);
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
++	msleep(100);
++	pci_cfg_access_unlock(dev);
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = pci_iov_add_virtfn(dev, i, 0);
+ 		if (rc)
+-- 
+2.1.0
 
-> > We should still find out whether it's important that you can have
-> > a single PCI function with a software multi-function support of some
-> > sort. We'd still be limited to six BARs in total, and would also need
-> > something to identify those sub-functions, so implementing that might
-> > get quite hairy.
-> > 
-> > Possibly this could be done at a higher level, e.g. by implementing
-> > a PCI-virtio multiplexer that can host multiple virtio based devices
-> > inside of a single PCI function. If we think that would be a good idea,
-> > we should make sure the configfs interface is extensible enough to
-> > handle that.
-> 
-> Okay. So here the main function (actual PCI function) *can* perform the work of
-> virtio muliplexer if the platform wants to support sub-functions or it can be a
-> normal PCI function. right?
-
-I really don't think we should be worried about this multiplexer.  It's
-not something real PCIe devices do (sane ones anyway, the rest is
-handled by ad-hoc multiplexers), and we should avoid creating our own
-magic periphals for it.
-
-> > One use case I have in mind for this is to have a PCI function that
-> > can use virtio to provide rootfs (virtio-blk or 9pfs), network
-> > and console to the system that implements the PCI function (note
-> > that this is the opposite direction of what almost everyone else
-> > uses PCI devices for).
-> 
-> Do you mean the virtio should actually be in the host side? Even here the
-> system that implements PCI function should have multiple functions right? (one
-> for network, other for console etc..). So there should be a virtio multiplexer
-> both in the host side and in the device side?
-
-We already support virtio over phsysical PCIe buses to support intel MIC
-devices.  Take a look at drivers/misc/mic/bus/vop_bus.c and
-drivers/misc/mic/vop (yes, what a horrible place for that code, not my
-fault)
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
