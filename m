@@ -1,65 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59660 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:33464 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932266AbcJLNSD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:18:03 -0400
-Subject: [PATCH v2 02/10] PCI: designware: Simplify dw_pcie_readl_unroll(),
- dw_pcie_writel_unroll()
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:17:59 -0500
-Message-ID: <20161012131758.26443.96419.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012131616.26443.89407.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S1755277AbcJZNxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 09:53:44 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Hannes Reinecke <hare@suse.de>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge hasn't
+Date: Wed, 26 Oct 2016 15:53:34 +0200
+Message-Id: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kishon Vijay Abraham I <kishon@ti.com>
+The Read Completion Boundary bit must only be set on a device or endpoint if
+it is set on the upstream bridge.
 
-dw_pcie_readl_unroll() and dw_pcie_writel_unroll() duplicate what
-dw_pcie_readl_rc() and dw_pcie_writel_rc() already do, so call them
-directly.
-
-[bhelgaas: reworked into patch series]
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/pci/host/pcie-designware.c |   10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/pci/probe.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index b58f078..7ce4f75 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -161,10 +161,7 @@ static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
- {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
- 
--	if (pp->ops->readl_rc)
--		return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
--
--	return readl(pp->dbi_base + offset + reg);
-+	return dw_pcie_readl_rc(pp, offset + reg);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ab00267..5007b96 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1439,6 +1439,16 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+ 		dev_warn(&dev->dev, "PCI-X settings not supported\n");
  }
  
- static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
-@@ -172,10 +169,7 @@ static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
++static bool pcie_get_upstream_rcb(struct pci_dev *dev)
++{
++	struct pci_dev *bridge = pci_upstream_bridge(dev);
++	u16 lnkctl;
++
++	pcie_capability_read_word(bridge, PCI_EXP_LNKCTL, &lnkctl);
++
++	return lnkctl & PCI_EXP_LNKCTL_RCB;
++}
++
+ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
  {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+ 	int pos;
+@@ -1468,9 +1478,21 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
  
--	if (pp->ops->writel_rc)
--		pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
--	else
--		writel(val, pp->dbi_base + offset + reg);
-+	dw_pcie_writel_rc(pp, val, offset + reg);
- }
+ 	/* Initialize Link Control Register */
+-	if (pcie_cap_has_lnkctl(dev))
++	if (pcie_cap_has_lnkctl(dev)) {
++		bool us_rcb;
++		u16 clear;
++		u16 set;
++
++		us_rcb = pcie_get_upstream_rcb(dev);
++
++		clear = ~hpp->pci_exp_lnkctl_and;
++		set = hpp->pci_exp_lnkctl_or;
++		if (!us_rcb)
++			set &= ~PCI_EXP_LNKCTL_RCB;
++
+ 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+-			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
++						  clear, set);
++	}
  
- static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	/* Find Advanced Error Reporting Enhanced Capability */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-- 
+1.8.5.6
 
