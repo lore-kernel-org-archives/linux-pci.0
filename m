@@ -1,36 +1,44 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V3 2/3] Revert "ACPI,PCI,IRQ: remove SCI penalize
- function"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
- <1476505867-24599-3-git-send-email-okaya@codeaurora.org>
- <20161018140543.GE18903@localhost>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- Len Brown <len.brown@intel.com>, x86@kernel.org,
- "H. Peter Anvin" <hpa@zytor.com>, linux-pm@vger.kernel.org,
- linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
- Pavel Machek <pavel@ucw.cz>, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 3/3] ACPI: pci_link: Include PIRQ_PENALTY_PCI_USING for
+ ISA IRQs
+References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+ <1477283492-26657-4-git-send-email-okaya@codeaurora.org>
+ <CANwerB2KywvUKAv84kvoyAV2YkqtOL9LbFOqSTLgZ=dCk-Z5xA@mail.gmail.com>
+Cc: Jonathan Liu <net147@gmail.com>, linux-acpi@vger.kernel.org,
+        rjw@rjwysocki.net, Bjorn Helgaas <bhelgaas@google.com>,
+        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        Andy Gross <agross@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>,
+        linux-kernel@vger.kernel.org
+To: ravikanth.nalla@hpe.com, linux@rainbow-software.org,
+        wim@djo.tudelft.nl
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <84372578-eb80-249f-01ef-b16f4a18a0fb@codeaurora.org>
-Date: Tue, 18 Oct 2016 08:05:05 -0700
+Message-ID: <e08e67d2-4f4f-4063-a561-339d6a5bf7ca@codeaurora.org>
+Date: Wed, 26 Oct 2016 14:34:29 -0400
 MIME-Version: 1.0
-In-Reply-To: <20161018140543.GE18903@localhost>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CANwerB2KywvUKAv84kvoyAV2YkqtOL9LbFOqSTLgZ=dCk-Z5xA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2016 7:05 AM, Bjorn Helgaas wrote:
-> I think you should squash patches 2 & 3 and not bother with trying to
-> make this a revert followed by a fix.  Squashing them makes the git
-> history much easier to follow, plus you don't have to deal with the
-> headache of ensuring the intermediate state is correct and bisectable.
+Thanks Jonathan,
 
-OK. I can do that.
+On 10/24/2016 12:46 AM, Jonathan Liu wrote:
+>> 1.9.1
+>> >
+> This series fixes one or more network adapters not working in Linux
+> 32-bit x86 guest running inside VirtualBox if I have 4 network
+> adapters enabled.
+> The following message no longer appears in the kernel log:
+> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+> 
+> Tested-by: Jonathan Liu <net147@gmail.com>
+
+Can we also get some more testing coverage from the people in TO?
+
+We want to make sure that we fixed all outstanding ACPI PCI IRQ issues.
 
 -- 
 Sinan Kaya
