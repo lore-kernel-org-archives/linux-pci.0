@@ -1,40 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53370 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:36608 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755028AbcJLM6z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:58:55 -0400
-Subject: [PATCH v2 2/5] PCI: rcar: Remove unused platform data
-To: Simon Horman <horms@verge.net.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 07:58:51 -0500
-Message-ID: <20161012125851.24785.64524.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012125631.24785.91272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S932987AbcJZUOa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 16:14:30 -0400
+Date: Wed, 26 Oct 2016 15:07:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: bhelgaas@google.com, Thomas Gleixner <tglx@linutronix.de>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] doc: add missing parameter for msi_setup
+Message-ID: <20161026200701.GF17507@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161023093234.41f2d1fb@xeon-e3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161023093234.41f2d1fb@xeon-e3>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar driver never uses the platform drvdata pointer, so don't bother
-setting it.  No functional change intended.
+On Sun, Oct 23, 2016 at 09:32:34AM -0700, Stephen Hemminger wrote:
+> From: Stephen Hemminger <sthemmin@microsoft.com>
+> 
+> commit 92ca8d20dee2 ("genirq/msi: Switch to new irq spreading")
+> introduced new parameter to msi_init_setup and but did not update
+> docbook comments. Fixes 'make htmldocs' warning.
+> 
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
----
- drivers/pci/host/pcie-rcar.c |    1 -
- 1 file changed, 1 deletion(-)
+Applied to pci/misc for v4.10, thanks, Stephen!
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 821d38a..4f352e8 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1136,7 +1136,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pcie->dev = dev;
--	platform_set_drvdata(pdev, pcie);
- 
- 	INIT_LIST_HEAD(&pcie->resources);
- 
-
+> ---
+>  drivers/pci/msi.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index bfdd074..ad70507 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -610,6 +610,7 @@ static int msi_verify_entries(struct pci_dev *dev)
+>   * msi_capability_init - configure device's MSI capability structure
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: number of interrupts to allocate
+> + * @affinity: flag to indicate cpu irq affinity mask should be set
+>   *
+>   * Setup the MSI capability structure of the device with the requested
+>   * number of interrupts.  A return value of zero indicates the successful
+> @@ -752,6 +753,7 @@ static void msix_program_entries(struct pci_dev *dev,
+>   * @dev: pointer to the pci_dev data structure of MSI-X device function
+>   * @entries: pointer to an array of struct msix_entry entries
+>   * @nvec: number of @entries
+> + * @affinity: flag to indicate cpu irq affinity mask should be set
+>   *
+>   * Setup the MSI-X capability structure of device function with a
+>   * single MSI-X irq. A return of zero indicates the successful setup of
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
