@@ -1,85 +1,319 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941142AbcJGQjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:39:35 -0400
-Subject: [PATCH 07/10] PCI: imx6: Remove unused return values
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:39:31 -0500
-Message-ID: <20161007163931.25776.92712.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163839.25776.2512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rafael Wysocki <rafael@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Salter <msalter@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	patches <patches@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [RFC PATCH v2 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+Date: Tue, 25 Oct 2016 18:24:32 -0700
+Message-Id: <ff2976e86b4990fba80544e9916a85361afcc237.1477443743.git.dhdang@apm.com>
+In-Reply-To: <20160921212258.GE20006@localhost>
+References: <20160921212258.GE20006@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove unused return values.  No functional change intended.
+PCIe controllers in X-Gene SoCs is not ECAM compliant: software
+needs to configure additional controller's register to address
+device at bus:dev:function.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch depends on "ECAM quirks handling for ARM64 platforms"
+series (http://www.spinics.net/lists/arm-kernel/msg530692.html,
+the series was also modified by Bjorn) to address the limitation
+above for X-Gene PCIe controller.
+
+The quirk will only be applied for X-Gene PCIe MCFG table with
+OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
+
+Signed-off-by: Duc Dang <dhdang@apm.com>
 ---
- drivers/pci/host/pci-imx6.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+v2 changes:
+	1. Get rid of pci-xgene-ecam.c file and fold quirk code into pci-xgene.c
+	2. Redefine fixup array for X-Gene
+	3. Use devm_ioremap_resource to map csr_base
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 1a89165..9971b73 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -251,7 +251,7 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- 	return 0;
- }
- 
--static int imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
-+static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
- {
- 	u32 val, gpr1, gpr12;
- 
-@@ -304,8 +304,6 @@ static int imx6_pcie_assert_core_reset(struct imx6_pcie *imx6)
- 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
- 		break;
- 	}
--
--	return 0;
- }
- 
- static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6)
-@@ -344,7 +342,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6)
- 	return ret;
- }
- 
--static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6)
-+static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6)
- {
- 	struct pcie_port *pp = &imx6->pp;
- 	int ret;
-@@ -352,7 +350,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6)
- 	ret = clk_prepare_enable(imx6->pcie_phy);
- 	if (ret) {
- 		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
--		goto err_pcie_phy;
-+		return;
- 	}
- 
- 	ret = clk_prepare_enable(imx6->pcie_bus);
-@@ -400,7 +398,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6)
- 		break;
- 	}
- 
--	return 0;
-+	return;
- 
- err_ref_clk:
- 	clk_disable_unprepare(imx6->pcie);
-@@ -408,8 +406,6 @@ err_pcie:
- 	clk_disable_unprepare(imx6->pcie_bus);
- err_pcie_bus:
- 	clk_disable_unprepare(imx6->pcie_phy);
--err_pcie_phy:
--	return ret;
- }
- 
- static void imx6_pcie_init_phy(struct imx6_pcie *imx6)
+ drivers/acpi/pci_mcfg.c      |  30 ++++++++
+ drivers/pci/host/pci-xgene.c | 165 ++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci-ecam.h     |   5 ++
+ 3 files changed, 197 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index bb2c508..9dfc937 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -96,6 +96,36 @@ struct mcfg_fixup {
+ 	THUNDER_ECAM_MCFG(2, 12),
+ 	THUNDER_ECAM_MCFG(2, 13),
+ #endif
++#ifdef CONFIG_PCI_XGENE
++#define XGENE_V1_ECAM_MCFG(rev, seg) \
++	{"APM   ", "XGENE   ", rev, seg, MCFG_BUS_ANY, \
++		&xgene_v1_pcie_ecam_ops }
++#define XGENE_V2_1_ECAM_MCFG(rev, seg) \
++	{"APM   ", "XGENE   ", rev, seg, MCFG_BUS_ANY, \
++		&xgene_v2_1_pcie_ecam_ops }
++#define XGENE_V2_2_ECAM_MCFG(rev, seg) \
++	{"APM   ", "XGENE   ", rev, seg, MCFG_BUS_ANY, \
++		&xgene_v2_2_pcie_ecam_ops }
++
++	/* X-Gene SoC with v1 PCIe controller */
++	XGENE_V1_ECAM_MCFG(1, 0),
++	XGENE_V1_ECAM_MCFG(1, 1),
++	XGENE_V1_ECAM_MCFG(1, 2),
++	XGENE_V1_ECAM_MCFG(1, 3),
++	XGENE_V1_ECAM_MCFG(1, 4),
++	XGENE_V1_ECAM_MCFG(2, 0),
++	XGENE_V1_ECAM_MCFG(2, 1),
++	XGENE_V1_ECAM_MCFG(2, 2),
++	XGENE_V1_ECAM_MCFG(2, 3),
++	XGENE_V1_ECAM_MCFG(2, 4),
++	/* X-Gene SoC with v2.1 PCIe controller */
++	XGENE_V2_1_ECAM_MCFG(3, 0),
++	XGENE_V2_1_ECAM_MCFG(3, 1),
++	/* X-Gene SoC with v2.2 PCIe controller */
++	XGENE_V2_2_ECAM_MCFG(4, 0),
++	XGENE_V2_2_ECAM_MCFG(4, 1),
++	XGENE_V2_2_ECAM_MCFG(4, 2),
++#endif
+ };
+ 
+ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 1de23d7..d6aa642 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -27,6 +27,8 @@
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
++#include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
+@@ -64,6 +66,7 @@
+ /* PCIe IP version */
+ #define XGENE_PCIE_IP_VER_UNKN		0
+ #define XGENE_PCIE_IP_VER_1		1
++#define XGENE_PCIE_IP_VER_2		2
+ 
+ struct xgene_pcie_port {
+ 	struct device_node	*node;
+@@ -97,7 +100,15 @@ static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
+  */
+ static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
+ {
+-	struct xgene_pcie_port *port = bus->sysdata;
++	struct pci_config_window *cfg;
++	struct xgene_pcie_port *port;
++
++	if (acpi_disabled)
++		port = bus->sysdata;
++	else {
++		cfg = bus->sysdata;
++		port = cfg->priv;
++	}
+ 
+ 	if (bus->number >= (bus->primary + 1))
+ 		return port->cfg_base + AXI_EP_CFG_ACCESS;
+@@ -111,10 +122,18 @@ static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
+  */
+ static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
+ {
+-	struct xgene_pcie_port *port = bus->sysdata;
++	struct pci_config_window *cfg;
++	struct xgene_pcie_port *port;
+ 	unsigned int b, d, f;
+ 	u32 rtdid_val = 0;
+ 
++	if (acpi_disabled)
++		port = bus->sysdata;
++	else {
++		cfg = bus->sysdata;
++		port = cfg->priv;
++	}
++
+ 	b = bus->number;
+ 	d = PCI_SLOT(devfn);
+ 	f = PCI_FUNC(devfn);
+@@ -158,7 +177,15 @@ static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+ static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+-	struct xgene_pcie_port *port = bus->sysdata;
++	struct pci_config_window *cfg;
++	struct xgene_pcie_port *port;
++
++	if (acpi_disabled)
++		port = bus->sysdata;
++	else {
++		cfg = bus->sysdata;
++		port = cfg->priv;
++	}
+ 
+ 	if (pci_generic_config_read32(bus, devfn, where & ~0x3, 4, val) !=
+ 	    PCIBIOS_SUCCESSFUL)
+@@ -189,6 +216,138 @@ static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 	.write = pci_generic_config_write32,
+ };
+ 
++#ifdef CONFIG_ACPI
++static struct resource xgene_v1_csr_res[] = {
++	[0] = DEFINE_RES_MEM(0x1f2b0000UL, SZ_64K),
++	[1] = DEFINE_RES_MEM(0x1f2c0000UL, SZ_64K),
++	[2] = DEFINE_RES_MEM(0x1f2d0000UL, SZ_64K),
++	[3] = DEFINE_RES_MEM(0x1f500000UL, SZ_64K),
++	[4] = DEFINE_RES_MEM(0x1f510000UL, SZ_64K),
++};
++
++static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct acpi_device *adev = to_acpi_device(cfg->parent);
++	struct acpi_pci_root *root = acpi_driver_data(adev);
++	struct device *dev = cfg->parent;
++	struct xgene_pcie_port *port;
++	struct resource *csr;
++
++	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
++	if (!port)
++		return -ENOMEM;
++
++	csr = &xgene_v1_csr_res[root->segment];
++	port->csr_base = devm_ioremap_resource(dev, csr);
++	if (IS_ERR(port->csr_base)) {
++		kfree(port);
++		return -ENOMEM;
++	}
++
++	port->cfg_base = cfg->win;
++	port->version = XGENE_PCIE_IP_VER_1;
++
++	cfg->priv = port;
++
++	return 0;
++}
++
++struct pci_ecam_ops xgene_v1_pcie_ecam_ops = {
++	.bus_shift      = 16,
++	.init           = xgene_v1_pcie_ecam_init,
++	.pci_ops        = {
++		.map_bus        = xgene_pcie_map_bus,
++		.read           = xgene_pcie_config_read32,
++		.write          = pci_generic_config_write,
++	}
++};
++
++static struct resource xgene_v2_1_csr_res[] = {
++	[0] = DEFINE_RES_MEM(0x1f2b0000UL, SZ_64K),
++	[1] = DEFINE_RES_MEM(0x1f2c0000UL, SZ_64K),
++};
++
++static int xgene_v2_1_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct acpi_device *adev = to_acpi_device(cfg->parent);
++	struct acpi_pci_root *root = acpi_driver_data(adev);
++	struct device *dev = cfg->parent;
++	struct xgene_pcie_port *port;
++	struct resource *csr;
++
++	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
++	if (!port)
++		return -ENOMEM;
++
++	csr = &xgene_v2_1_csr_res[root->segment];
++	port->csr_base = devm_ioremap_resource(dev, csr);
++	if (IS_ERR(port->csr_base)) {
++		kfree(port);
++		return -ENOMEM;
++	}
++
++	port->cfg_base = cfg->win;
++	port->version = XGENE_PCIE_IP_VER_2;
++
++	cfg->priv = port;
++
++	return 0;
++}
++
++struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops = {
++	.bus_shift      = 16,
++	.init           = xgene_v2_1_pcie_ecam_init,
++	.pci_ops        = {
++		.map_bus        = xgene_pcie_map_bus,
++		.read           = xgene_pcie_config_read32,
++		.write          = pci_generic_config_write,
++	}
++};
++
++static struct resource xgene_v2_2_csr_res[] = {
++	[0] = DEFINE_RES_MEM(0x1f2b0000UL, SZ_64K),
++	[1] = DEFINE_RES_MEM(0x1f500000UL, SZ_64K),
++	[2] = DEFINE_RES_MEM(0x1f2d0000UL, SZ_64K),
++};
++
++static int xgene_v2_2_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct acpi_device *adev = to_acpi_device(cfg->parent);
++	struct acpi_pci_root *root = acpi_driver_data(adev);
++	struct device *dev = cfg->parent;
++	struct xgene_pcie_port *port;
++	struct resource *csr;
++
++	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
++	if (!port)
++		return -ENOMEM;
++
++	csr = &xgene_v2_2_csr_res[root->segment];
++	port->csr_base = devm_ioremap_resource(dev, csr);
++	if (IS_ERR(port->csr_base)) {
++		kfree(port);
++		return -ENOMEM;
++	}
++
++	port->cfg_base = cfg->win;
++	port->version = XGENE_PCIE_IP_VER_2;
++
++	cfg->priv = port;
++
++	return 0;
++}
++
++struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops = {
++	.bus_shift      = 16,
++	.init           = xgene_v2_2_pcie_ecam_init,
++	.pci_ops        = {
++		.map_bus        = xgene_pcie_map_bus,
++		.read           = xgene_pcie_config_read32,
++		.write          = pci_generic_config_write,
++	}
++};
++#endif
++
+ static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *port, u32 addr,
+ 				  u32 flags, u64 size)
+ {
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 35f0e81..40da3e7 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -65,6 +65,11 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ #ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+ extern struct pci_ecam_ops pci_thunder_ecam_ops;
+ #endif
++#ifdef CONFIG_PCI_XGENE
++extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops;
++extern struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops;
++extern struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops;
++#endif
+ 
+ #ifdef CONFIG_PCI_HOST_GENERIC
+ /* for DT-based PCI controllers that support ECAM */
+-- 
+1.9.1
