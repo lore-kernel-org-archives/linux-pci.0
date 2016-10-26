@@ -1,60 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:34724 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751212AbcJBLlH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Oct 2016 07:41:07 -0400
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Wed, 26 Oct 2016 12:02:25 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, benh@au1.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au, clsoto@us.ibm.com
+Subject: Re: [PATCH v2 2/2] PCI: Don't disable PF's memory decoding when
+ enabling SRIOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1475192870-7763-2-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20161021165034.GE9007@localhost>
+ <20161023232802.GA7215@gwshan>
+ <20161024140316.GA14177@localhost>
+ <20161025014728.GA32507@gwshan>
+ <20161025035113.GA21423@localhost>
 MIME-Version: 1.0
-In-Reply-To: <1475343976-20744-2-git-send-email-okaya@codeaurora.org>
-References: <1475343976-20744-2-git-send-email-okaya@codeaurora.org>
-From: Jonathan Liu <net147@gmail.com>
-Date: Sun, 2 Oct 2016 22:40:36 +1100
-Message-ID: <CANwerB0+yS709kZG9BkAQaqSixmyfz4As3fUs-dcZ3uun=S+5w@mail.gmail.com>
-Subject: Re: [2/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        ravikanth.nalla@hpe.com, linux@rainbow-software.org,
-        timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161025035113.GA21423@localhost>
+Message-Id: <20161026010225.GA10306@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2 October 2016 at 04:46, Sinan Kaya <okaya@codeaurora.org> wrote:
-> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
-> resource requirements") removed PCI_USING penalty from
-> acpi_pci_link_allocate function as there is no longer a fixed size penalty
-> array for both PCI and IRQ interrupts.
->
-> We need to add the PCI_USING penalty for ISA interrupts too if the link is
-> in use and matches our ISA IRQ number.
->
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index f3792f4..06c2a11 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -620,6 +620,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
->                             acpi_device_bid(link->device));
->                 return -ENODEV;
->         } else {
-> +               if (link->irq.active < ACPI_MAX_IRQS)
-> +                       acpi_irq_penalty[link->irq.active] +=
-> +                               PIRQ_PENALTY_PCI_USING;
-> +
->                 printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
->                        acpi_device_name(link->device),
->                        acpi_device_bid(link->device), link->irq.active);
+On Mon, Oct 24, 2016 at 10:51:13PM -0500, Bjorn Helgaas wrote:
+>On Tue, Oct 25, 2016 at 12:47:28PM +1100, Gavin Shan wrote:
+>> On Mon, Oct 24, 2016 at 09:03:16AM -0500, Bjorn Helgaas wrote:
+>> >On Mon, Oct 24, 2016 at 10:28:02AM +1100, Gavin Shan wrote:
+>> >> On Fri, Oct 21, 2016 at 11:50:34AM -0500, Bjorn Helgaas wrote:
+>> >> >On Fri, Sep 30, 2016 at 09:47:50AM +1000, Gavin Shan wrote:
 
-This series fixes one or more network adapters in VirtualBox not
-working with Linux 32-bit x86 guest if I have 4 network adapters
-enabled. The following message no longer appears in the kernel log:
-ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
+.../...
 
-Tested-by: Jonathan Liu <net147@gmail.com>
+>
+>That specific case (pci_enable_device() followed by
+>pci_update_resource()) should *not* work.  pci_enable_device() is
+>normally called by a driver's .probe() method, and after we call a
+>.probe() method, the PCI core shouldn't touch the device at all
+>because there's no means of mutual exclusion between the driver and
+>the PCI core.
+>
+>I think pci_update_resource() should only be called in situations
+>where the caller already knows that nobody is using the device.  For
+>regular PCI BARs, that doesn't necessarily mean PCI_COMMAND_MEMORY is
+>turned off, because firmware leaves PCI_COMMAND_MEMORY enabled for
+>many devices, even though nobody is using them.
+>
+>Anyway, I think that's a project for another day.  That's too much to
+>tackle for the limited problem you're trying to solve.
+>
+
+Bjorn, it's all about discussion. Please take your time and reply when
+you have bandwidth.
+
+Well, some drivers break the order and expects the relaxed order to work.
+One example is drivers/char/agp/efficeon-agp.c::agp_efficeon_probe(). I
+didn't check all usage cases.
+
+I think it's hard for user, who calls pci_update_resource(), to know
+that nobody is using the devcie (limited to memory BARs as we concern).
+The memory write is usually non-posted transaction and it can be on
+the way to target device when pci_update_resource() is called. So which
+one tranaction will be completed first (disabling memory decoding and
+memory write). I guess it can happen even with the mutual exclusion,
+especially on SMP system. Yes, the situation is worse without the
+synchronization.
+
+.../...
+
+>> 
+>> Yeah, it would be the solution to have. If you agree, I will post
+>> updatd version according to this: Clearing PCI_SRIOV_CTRL_MSE when
+>> updating IOV BARs. The bit won't be touched if pdev->mmio_always_on
+>> is true.
+>
+>I think you should ignore pdev->mmio_always_on for IOV BARs.
+>mmio_always_on is basically a workaround for devices that either don't
+>follow the spec or where we didn't completely understand the problem.
+>I don't think there's any reason to set mmio_always_on for SR-IOV
+>devices.
+>
+
+Agree, thanks for the comments again. I will post updated version
+shortly.
+
+Thanks,
+Gavin
