@@ -1,45 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47142 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756954AbcJXERd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2016 00:17:33 -0400
-Subject: Re: [V4, 1/3] ACPI, PCI, IRQ: assign ISA IRQ directly during early
- boot stages
-To: Jonathan Liu <net147@gmail.com>
-References: <1476915664-27231-2-git-send-email-okaya@codeaurora.org>
- <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net,
-        Bjorn Helgaas <bhelgaas@google.com>, ravikanth.nalla@hpe.com,
-        linux@rainbow-software.org, timur@codeaurora.org,
-        cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, Andy Gross <agross@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-        Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <fae460e4-d838-22c0-8984-52d6d2b6c099@codeaurora.org>
-Date: Mon, 24 Oct 2016 00:17:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <CANwerB0UzXPL3a4wu=0XfUtzBw93qdurSaMcYBOvxEyiCjLh6Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mga02.intel.com ([134.134.136.20]:6174 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751790AbcJZPBy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Oct 2016 11:01:54 -0400
+Message-ID: <1477494063.5295.12.camel@linux.intel.com>
+Subject: Re: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_state hook
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bryan O'Donoghue <pure.logic@nexus-software.ie>,
+        Lukas Wunner <lukas@wunner.de>
+Cc: Ingo Molnar <mingo@kernel.org>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 26 Oct 2016 18:01:03 +0300
+In-Reply-To: <1477490807.25812.20.camel@nexus-software.ie>
+References: <cover.1477221514.git.lukas@wunner.de>
+         <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
+         <1477226275.2932.54.camel@nexus-software.ie>
+         <20161023145757.GA4909@wunner.de>
+         <1477300505.6423.41.camel@linux.intel.com>
+         <20161024100940.GB5144@wunner.de>
+         <1477307145.6423.48.camel@linux.intel.com>
+         <20161025061934.GB5630@wunner.de>
+         <1477490807.25812.20.camel@nexus-software.ie>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks,
+On Wed, 2016-10-26 at 15:06 +0100, Bryan O'Donoghue wrote:
+> On Tue, 2016-10-25 at 08:19 +0200, Lukas Wunner wrote:
 
-On 10/22/2016 11:48 PM, Jonathan Liu wrote:
-> This series fixes one or more network adapters not working in Linux
-> 32-bit x86 guest running inside VirtualBox if I have 4 network
-> adapters enabled. The following message no longer appears in the
-> kernel log:
-> ACPI: No IRQ available for PCI Interrupt Link [LNKD]. Try pci=noacpi or acpi=off
 > 
-> Tested-by: Jonathan Liu <net147@gmail.com>
+> So the conclusion is to apply this patch now and go and look further @
+> locking in a separate series right ? There's not much point in leaving
+> Edison not booting as is the case with tip-of-tree right now.
 
-I'm hoping that you can retest V5 so that Rafael can pull in your tested-by into
-the commit message.
+That's what I think is a summary of the discussion.
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
