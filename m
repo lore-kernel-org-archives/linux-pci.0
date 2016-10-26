@@ -1,43 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40106 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755168AbcJLNnf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:43:35 -0400
-Subject: [PATCH v2 8/8] PCI: hisi: Reorder struct hisi_pcie
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:43:31 -0500
-Message-ID: <20161012134331.28562.13018.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012133904.28562.74066.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60871 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754074AbcJZGxj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Oct 2016 02:53:39 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9Q6mXXZ064559
+        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 02:53:39 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26aqcd8qdn-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2016 02:53:38 -0400
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Wed, 26 Oct 2016 00:53:37 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [RFC PATCH v7 1/3] PCI: Ignore requested alignment for IOV BARs
+Date: Wed, 26 Oct 2016 14:53:31 +0800
+In-Reply-To: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1477464813-2499-2-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct hisi_pcie to put generic fields first.  No functional change
-intended.
+We would call pci_reassigndev_resource_alignment() before
+pci_init_capabilities(). So the requested alignment would
+never work for IOV BARs. And it's also meaningless to do
+so.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pcie-hisi.c |    2 +-
+ drivers/pci/pci.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index bfff666..56154c2 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -37,9 +37,9 @@ struct pcie_soc_ops {
- };
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..9a30832 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5118,7 +5118,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
  
- struct hisi_pcie {
-+	struct pcie_port pp;		/* pp.dbi_base is DT rc_dbi */
- 	struct regmap *subctrl;
- 	u32 port_id;
--	struct pcie_port pp;
- 	struct pcie_soc_ops *soc_ops;
- };
- 
+-	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+-- 
+1.7.9.5
 
