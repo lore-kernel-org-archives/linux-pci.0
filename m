@@ -1,98 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34766 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbcJ2GOy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 02:14:54 -0400
-Received: by mail-oi0-f67.google.com with SMTP id 62so2640371oif.1
-        for <linux-pci@vger.kernel.org>; Fri, 28 Oct 2016 23:14:54 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
- <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com> <5420659.scnjID7ZLn@wuerfel>
- <ae624772-9306-50ee-3dc1-df8156eaa16d@broadcom.com> <acccb06d-14b9-33bd-466b-47dd3689e537@broadcom.com>
- <CACna6rxCdgyqFMU5-LD0rJn1s6voSiVvk1AGGnaykGZPMDbwPw@mail.gmail.com> <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sat, 29 Oct 2016 08:14:53 +0200
-Message-ID: <CACna6rxf=0YsozkipXALS03bGT9R6RuhTfOkve6KF2ELtVEtAg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+References: <1477283492-26657-1-git-send-email-okaya@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 27 Oct 2016 12:31:47 +0200
+Message-ID: <CAJZ5v0iwHyts_esnG095a7SuAa0s-GsxYCvGhVX7Vi9mEakZyg@mail.gmail.com>
+Subject: Re: [PATCH V5 0/3] ACPI,PCI,IRQ: revert penalty calculation for ISA
+ and SCI interrupts
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, net147@gmail.com,
+ Ondrej Zary <linux@rainbow-software.org>, ravikanth.nalla@hpe.com,
+ Jon Masters <jcm@redhat.com>, Timur Tabi <timur@codeaurora.org>,
+ Andy Gross <agross@codeaurora.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Christopher Covington <cov@codeaurora.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ wim@djo.tudelft.nl, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28 October 2016 at 18:58, Ray Jui <ray.jui@broadcom.com> wrote:
-> On 10/28/2016 8:31 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
->> On 20 April 2016 at 20:18, Ray Jui <ray.jui@broadcom.com> wrote:
->>> Hi Rafal/Florian/Arnd,
->>>
->>> After a couple days of email exchange with the ASIC team, I think I've
->>> figured out the behavior on all of the Broadcom SoCs that use this iPro=
-c
->>> PCIe controller.
->>>
->>> On NSP, Cygnus, and NS2:
->>> - There's an APB error enable register at offset 0xf40 from the iProc P=
-CIe
->>> controller's base address. If one clears bit 0 (enabled by default afte=
-r
->>> chip POR) of that register, one can stop this from being forwarded to "=
-iProc
->>> host" as an APB error/external imprecise abort
->>> - I will submit a patch to the iProc PCIe driver to disable this error
->>> forwarding
->>>
->>> On NS:
->>> - Unfortunately, there's no such control register in NS. In other words=
-, we
->>> cannot disable this error at the PCIe controller level
->>> - FSR code corresponds to external (bit[12] =3D '1'), read (bit[11] =3D=
- '0'),
->>> imprecise abort (bits[10][3:0] =3D '1''0110'), i.e., external imprecise=
- abort
->>> triggered by read access. Our ASIC team believes a read access to a
->>> non-exist APB register can also trigger an abort with the same FSR code=
-.
->>> Note this is the tricky part, by registering an abort hook that skips t=
-his
->>> particular FSR, one has a chance of skipping other aborts triggered by
->>> accessing invalid APB registers. But given that this cannot be disabled=
- for
->>> the PCIe controller NS, I'm not sure what approach we should take. Any
->>> thoughts?
->>
->> It's really late reply but I wanted to finally handle this problem.
->>
->> From Ray's e-mail it seems Northstar is the only platform requiring
->> this workaround. So we don't have to worry about arm64.
+On Mon, Oct 24, 2016 at 6:31 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
 >
-> Yes, Northstar is the only platform that requires this workaround. Even
-> the arm32 platforms like NSP and Cygnus can disable unsupported request
-> being forwarded as APB error. I've recently sent out a patch series to
-> fix this for all other platforms, and sorry I should have included you
-> in the email but I did not. I'll include you when revision 2 is sent out.
+> By the time ACPI gets initialized, this code tries to determine an
+> IRQ number based on penalty values in this array. It will try to locate
+> the IRQ with the least penalty assignment so that interrupt sharing is
+> avoided if possible.
 >
->>
->> We have two options then:
->> 1) Add workaround in arch/arm/mach-bcm/bcm_5301x.c
->> 2) Add workaround into built-in drivers/pci/host/pcie-iproc-fault.c
+> A couple of notes about the external APIs:
+> 1. These API can be called before the ACPI is started. Therefore, one
+> cannot assume that the PCI link objects are initialized for calculating
+> penalties.
+> 2. The polarity and trigger information passed via the
+> acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
+> is reporting as the call might have been placed before the IRQ is
+> registered by the interrupt subsystem.
 >
-> How do you plan to implement pcie-iproc-fault.c? If it's similar to what
-> you have now, then I think it fits more to bcm_5301x.c
+> The reverted changes were in the direction to remove these external API and
+> try to calculate the penalties at runtime for the ISA, SCI as well as PCI
+> IRQS.
+> This didn't work out well with the existing platforms.
+>
+> V5:
+> * clean up the commit message for 1/3 and 2/3
+> * drop 3/3
+> * bring back ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts as 3/3
+>
+> V4:
+> https://www.spinics.net/lists/arm-kernel/msg537158.html
+> * Drop ACPI, PCI IRQ: add PCI_USING penalty for ISA interrupts
+> * A new patch to isolate early boot ISA penalty calculations from dynamic
+> penalty calculation by directly modifying the array members in
+> ("ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages")
+> * Now that we isolated both SCI and ISA interrupts, revert commit ("Revert
+> "ACPI,PCI,IRQ: separate ISA penalty calculation"") and commit
+> ("487cf917ed0d
+> (Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()")
+> to share code between ISA and PCI penalties as originally intended.
+>
+> V3:
+> http://www.spinics.net/lists/arm-kernel/msg536208.html
+> * drop patch #1 as discussed with Bjorn
+> * add patch #3 to track SCI irq and penalty separately
+>
+> V2: https://lkml.org/lkml/2016/10/1/106
+> * Commit message updates
+>
+> V1:
+> http://lists-archives.com/linux-kernel/28673954-revert-acpi-pci-irq-reduce-static-irq-array-size-to-16.html
+> * initial implementation
+>
+> Sinan Kaya (3):
+>   ACPI, PCI, IRQ: assign ISA IRQ directly during early boot stages
+>   ACPI: pci_link: penalize SCI correctly
+>   ACPI: pci_link: Include PIRQ_PENALTY_PCI_USING for ISA IRQs
+>
+>  arch/x86/kernel/acpi/boot.c |  1 +
+>  drivers/acpi/pci_link.c     | 38 +++++++++++++++++++++-----------------
+>  include/linux/acpi.h        |  1 +
+>  3 files changed, 23 insertions(+), 17 deletions(-)
 
-Yes, I just wanted to have a simple file with 2 functions there: one
-adding a hook and second being a callback.
+I've queued up this series for the next ACPI pull request with 4.9 fixes.
 
---=20
-Rafa=C5=82
+Thanks,
+Rafael
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
