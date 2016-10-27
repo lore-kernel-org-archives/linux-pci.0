@@ -1,54 +1,67 @@
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Return-Path: <stern+581ae0c0@rowland.harvard.edu>
-Date: Thu, 20 Oct 2016 09:57:29 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <helgaas@kernel.org>,
-    Mathias Nyman <mathias.nyman@linux.intel.com>,
-    Pierre de Villemereuil <flyos@mailoo.org>,
-    Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>,
-     <linux-pci@vger.kernel.org>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: USB hot-plug not working (ASUS TP301UA-C4028T)
-In-Reply-To: <20161020100146.GA3319@wunner.de>
-Message-ID: <Pine.LNX.4.44L0.1610200956380.1462-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42904 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932768AbcJ0P3a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Oct 2016 11:29:30 -0400
+Date: Thu, 27 Oct 2016 06:51:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge
+ hasn't
+Message-ID: <20161027115152.GG17507@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
+ <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
+ <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 20 Oct 2016, Lukas Wunner wrote:
-
-> On Tue, Oct 11, 2016 at 11:18:28AM -0400, Alan Stern wrote:
-> > On Sat, 8 Oct 2016, Lukas Wunner wrote:
-> > > The PCI core already calls pm_runtime_get_sync() before invoking the
-> > > ->probe hook of a driver (see local_pci_probe()).  Drivers need to
-> > > explicitly release a runtime ref to allow their device to suspend.
-> > > For xhci-pci, this seems to happen in usb_hcd_pci_probe():
-> > > 
-> > > 	if (pci_dev_run_wake(dev))
-> > > 		pm_runtime_put_noidle(&dev->dev);
-> > > 
-> > > So you could either modify the if-condition if you want to change the
-> > > behaviour for XHCI devices only, or if you want to change it in general,
-> > > add something like this to pci_dev_run_wake():
-> > > 
-> > > 	/* PME capable in principle, but not from the intended sleep state */
-> > > 	if (dev->pme_support && !pci_pme_capable(dev, pci_target_state(dev)))
-> > > 		return false;
-> > > 
-> > > I've briefly looked over the callers of pci_dev_run_wake() and the above
-> > > seems safe but you should double-check them.
+On Thu, Oct 27, 2016 at 07:42:27AM +0200, Hannes Reinecke wrote:
+> On 10/26/2016 09:43 PM, Bjorn Helgaas wrote:
+> > Hi Johannes,
 > > 
-> > That seems like a good suggestion.  The patch is below; Pierre, can you 
-> > test it?  This should remove the need to set the USB autosuspend module 
-> > parameter to -1.
+> > On Wed, Oct 26, 2016 at 03:53:34PM +0200, Johannes Thumshirn wrote:
+> >> The Read Completion Boundary bit must only be set on a device or endpoint if
+> >> it is set on the upstream bridge.
+> >>
+> >> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
+> > 
+> > Can you please include a spec citation and a pointer to the bug report?
+> > 
+> PCI Express Base Specification 1.1,
+> section 2.3.1.1. Data Return for Read Requests:
 > 
-> Alan, how do we proceed with this?  Are you going to submit a patch
-> (with commit message, tags and all) to linux-pci@ or would you prefer
-> me to do that?  I just went over the callers of pci_dev_run_wake()
-> once more and the patch still looks safe to me.
+> The Read Completion Boundary (RCB) parameter determines the naturally
+> aligned address boundaries on which a Read Request may be serviced with
+> multiple Completions
+> o For a Root Complex, RCB is 64 bytes or 128 bytes
+>   o This value is reported through a configuration register
+>     (see Section 7.8)
+>   Note: Bridges and Endpoints may implement a corresponding command
+>   bit which may be set by system software to indicate the RCB value
+>   for the Root Complex, allowing the Bridge/Endpoint to optimize its
+>   behavior when the Root Complex’s RCB is 128 bytes.
+> o For all other system elements, RCB is 128 bytes
+> 
+> In this particular case the _HPX method was causing the RCB for all PCI
+> devices to be set to 128 bytes, while the root bridge remained at 64 bytes.
+> While this is arguably a BIOS bug, earlier linux version (ie without the
+> mentioned patch) were running fine, so this is actually a regression.
 
-Thanks for checking.  I intend to submit it soon; there just hasn't 
-been enough free time this week.  :-(
+Thanks!  I can fold this into the changelog.
 
-Alan Stern
+I assume you didn't mention a bugzilla or similar URL because this was
+found internally?  I'd still like a clue about what this issue looks
+like to a user, because that helps connect future problem reports with
+this fix.
+
+And I suppose that since 7a1562d4f2d0 appeared in v3.18, we maybe
+should consider marking the fix for stable?
+
+Bjorn
