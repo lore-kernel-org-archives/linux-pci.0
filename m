@@ -1,66 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49742 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933163AbcJGQap (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:30:45 -0400
-Subject: [PATCH 4/7] PCI: designware: Export dw_pcie_readl_rc(),
- dw_pcie_writel_rc()
-To: Joao Pinto <jpinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:30:40 -0500
-Message-ID: <20161007163040.24388.29925.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163009.24388.11253.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 27 Oct 2016 11:17:48 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: linux-acpi@vger.kernel.org, nouveau@lists.freedesktop.org,
+        rick.2889@gmail.com, linux-pci@vger.kernel.org
+Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
+ via Power Resources
+Message-ID: <20161027081748.GX1476@lahna.fi.intel.com>
+References: <bug-98398-8800@http.bugs.freedesktop.org/>
+ <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
+ <20161026225641.GA27017@al>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026225641.GA27017@al>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export dw_pcie_readl_rc() and dw_pcie_writel_rc().  Many other drivers can
-use these instead of implementing their own versions.  No functional change
-intended.
+On Thu, Oct 27, 2016 at 12:56:41AM +0200, Peter Wu wrote:
+> Hi PCI/ACPI PM experts,
+> 
+> Since Linux 4.8, nouveau switched to rely on the PCIe port driver to
+> transition to D3cold. This however does not happen for an Acer Aspire
+> V7-582PG (Haswell, NVIDIA GTX 750M) from Rick.
+> 
+> Any idea why? acpidump, lspci, dmesg and other details can be found in
+> the linked bug below.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |    4 ++--
- drivers/pci/host/pcie-designware.h |    2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> Kind regards,
+> Peter
+> 
+> On Wed, Oct 26, 2016 at 10:42:07PM +0000, bugzilla-daemon@freedesktop.org wrote:
+> > https://bugs.freedesktop.org/show_bug.cgi?id=98398
+> > 
+> > --- Comment #11 from Peter Wu <peter@lekensteyn.nl> ---
+> > So 4.7 and before used the "DSM" method on runtime-suspend:
+> > - \_SB.PCI0.RP05.PEGP._DSM would be invoked to enable Optimus
+> > - \_SB.PCI0.RP05.PEGP._PS3 is then invoked which would enter D3cold
+> > (note, this method is still used in 4.8 on older laptops or with the
+> > pcie_pm_port=off kernel option)
+> > 
+> > Since 4.8, _DSM is not called anymore by nouveau (when support from the PCI
+> > core is detected) and this sequence should instead happen:
+> > - \_SB.PCI0.RP05.PEGP._PS3 (does nothing besides updating _STA)
+> > - PCIe core removes power for the PCIe port since all its children are in
+> >   D3 and are willing to transition to D3cold. It does so by invoking
+> >   \NVP3._OFF (where \NVP3 is the power resource from \_SB.PCI0.RP05._PR3)
+> > 
+> > That is how I think it should work in theory, but on Ricks laptop running
+> > 4.8.4,
+> > /sys/bus/devices/0000:1c.4/firmware_node/ does not have power_resources_D0
+> > devices (which I do have on my own laptop for 0000:01:0).
+> > 
+> > The SSDT1 of Rick's Acer laptop shows this structure:
+> > 
+> >     If (\_OSI ("Windows 2013"))
+> >     {
+> >         Scope (\_SB.PCI0.RP05)
+> >         {
+> >         //...
+> >             Name (_PR0, Package (0x01)  // _PR0: Power Resources for D0
+> >             {
+> >                 NVP3
+> >             })
+> >             Name (_PR2, Package (0x01)  // _PR2: Power Resources for D2
+> >             {
+> >                 NVP2
+> >             })
+> >             Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
+> >             {
+> >                 NVP3
+> >             })
+> >             // ...
+> >             Method (_PS0, 0, NotSerialized)  // _PS0: Power State 0
+> >             {
+> >             }
+> > 
+> >             Method (_PS3, 0, NotSerialized)  // _PS3: Power State 3
+> >             {
+> >             }
+> >         }
+> > 
+> >         Name (MSD3, Zero)
+> >         PowerResource (NVP3, 0x00, 0x0000)
+> >         {
+> >             Name (_STA, One)  // _STA: Status
+> >             // ...
+> > 
+> >             Method (_ON, 0, NotSerialized)  // _ON_: Power On
+> >             {
+> >                 // ...
+> >             }
+> > 
+> >             Method (_OFF, 0, NotSerialized)  // _OFF: Power Off
+> >             {
+> >                 // ...
+> >             }
+> >         }
+> > 
+> > The dmesg does show "ACPI: Power Resource [NVP3] (on)", so I guess that the
+> > methods are found. It is a mystery to me why the "power_resources_Dx" files are
+> > not created, possibly breaking PM.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 041b5da..5ee8772 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -141,7 +141,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
-+u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
- {
- 	if (pp->ops->readl_rc)
- 		return pp->ops->readl_rc(pp, reg);
-@@ -149,7 +149,7 @@ static inline u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
- 	return readl(pp->dbi_base + reg);
- }
- 
--static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
-+void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val)
- {
- 	if (pp->ops->writel_rc)
- 		pp->ops->writel_rc(pp, reg, val);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index c413848..a567ea2 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -72,6 +72,8 @@ struct pcie_host_ops {
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
- };
- 
-+u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg);
-+void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val);
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+The ASL code looks right to me (except for the NVP2 which never set _STA
+to 0 but should not affect here).
 
+I wonder what does /sys/bus/pci/devices/0000:00:1c.4/firmware_node/path contain?
