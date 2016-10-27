@@ -1,69 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40282 "EHLO mail.kernel.org"
+Received: from lekensteyn.nl ([178.21.112.251]:43193 "EHLO lekensteyn.nl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934311AbcJUPhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 11:37:07 -0400
-Date: Fri, 21 Oct 2016 10:37:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Li Yang <leoyang.li@nxp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Stuart Yoder <stuart.yoder@nxp.com>
-Subject: Re: [PATCH] PCI: layerscape: Fix kernel panic on accessing NULL
- pointer
-Message-ID: <20161021153701.GC9007@localhost>
-References: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
+        id S935408AbcJ0QGx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Oct 2016 12:06:53 -0400
+Date: Thu, 27 Oct 2016 18:06:48 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rick Kerkhof <rick.2889@gmail.com>, linux-acpi@vger.kernel.org,
+        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org
+Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
+ via Power Resources
+Message-ID: <20161027160648.GF27017@al>
+References: <bug-98398-8800@http.bugs.freedesktop.org/>
+ <bug-98398-8800-66oU1nuK0R@http.bugs.freedesktop.org/>
+ <20161026225641.GA27017@al>
+ <20161027081748.GX1476@lahna.fi.intel.com>
+ <20161027090604.GB27017@al>
+ <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
+ <20161027093011.GZ1476@lahna.fi.intel.com>
+ <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
+ <20161027095508.GA1476@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476740647-11155-1-git-send-email-leoyang.li@nxp.com>
+In-Reply-To: <20161027095508.GA1476@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 04:44:06PM -0500, Li Yang wrote:
-> Commit fefe6733e added reference to the pcie->drvdata before it is
-> initialized which causes a kernel panic.  Fix the problem by
-> initializing the pcie->drvdata earlier before it is used.
+On Thu, Oct 27, 2016 at 12:55:08PM +0300, Mika Westerberg wrote:
+> On Thu, Oct 27, 2016 at 09:42:28AM +0000, Rick Kerkhof wrote:
+> >    No, there are not. Here is the recursive directory listing:
 > 
-> Reported-by: Stuart Yoder <stuart.yoder@nxp.com>
-> Signed-off-by: Li Yang <leoyang.li@nxp.com>
+> Are you able to try the following patch and send me dmesg (or attach it
+> to that bug)? It should show if the ACPI core even tries to add those
+> power resources.
 
-I applied Marc Zyngier's identical patch to for-linus for v4.9.  I don't
-know which was posted first, but I saw Marc's first.  Sorry I didn't at
-least credit you when I applied it.
+So Rick has tested this patch now on top of 4.8.4 (mainline fails to
+boot due to a kbuild issue which I reported elsewhere), but the output
+is empty. That seems to indicate that flags.power_resources is unset.
 
-> ---
->  drivers/pci/host/pci-layerscape.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 2cb7315..958187f 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -245,6 +245,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  	if (!pcie)
->  		return -ENOMEM;
+Given that _PS3 exists and is indeed a package with some elements, it
+seems that acpi_extract_power_resources is failing. Note that in the
+SSDT, the power resource NVP3 was referenced before it was defined,
+could that result in this enumeration failure? Relevant SSDT excerpt:
+
+    Scope (\_SB.PCI0.RP05)
+    {
+        Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
+        {
+            NVP3
+        })
+        // ...
+    }
+
+    PowerResource (NVP3, 0x00, 0x0000)
+
+Kind regards,
+Peter
+
+> diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+> index fcd4ce6f78d5..af9c3e15dd74 100644
+> --- a/drivers/acpi/power.c
+> +++ b/drivers/acpi/power.c
+> @@ -444,6 +444,9 @@ void acpi_power_add_remove_device(struct acpi_device *adev, bool add)
+>  	if (!adev->power.flags.power_resources)
+>  		return;
 >  
-> +	pcie->drvdata = match->data;
->  	pp = &pcie->pp;
->  	pp->dev = dev;
->  	pp->ops = pcie->drvdata->ops;
-> @@ -256,7 +257,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pcie->pp.dbi_base);
->  	}
->  
-> -	pcie->drvdata = match->data;
->  	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
->  
->  	if (!ls_pcie_is_bridge(pcie))
-> -- 
-> 1.9.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +	acpi_handle_info(adev->handle, "Adding power resources for %s\n",
+> +			 dev_name(&adev->dev));
+> +
+>  	for (state = ACPI_STATE_D0; state <= ACPI_STATE_D3_HOT; state++)
+>  		acpi_power_expose_hide(adev,
+>  				       &adev->power.states[state].resources,
