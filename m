@@ -1,193 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941014AbcJGQ0G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:26:06 -0400
-Subject: [PATCH 10/10] PCI: rcar-gen2: Add local struct device pointers
-To: Simon Horman <horms@verge.net.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:26:01 -0500
-Message-ID: <20161007162601.23279.76660.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162446.23279.48813.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mout.kundenserver.de ([212.227.126.135]:62744 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935162AbcJ0PHH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2016 11:07:07 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ruqiang Ju <juruqiang@huawei.com>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bin.chen@linaro.org,
+        elder@linaro.org, hermit.wangheming@hisilicon.com,
+        yanhaifeng@hisilicon.com, xuejiancheng@hisilicon.com
+Subject: Re: [PATCH 1/2] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
+Date: Thu, 27 Oct 2016 17:06:40 +0200
+Message-ID: <3432492.SEq6J3hYME@wuerfel>
+In-Reply-To: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
+References: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+On Friday, October 21, 2016 9:45:36 AM CEST Ruqiang Ju wrote:
+> Add PCIe controller drvier for HiSilicon STB SoCs,
+> the controller is based on the DesignWare's PCIe core.
+> 
+> Signed-off-by: Ruqiang Ju <juruqiang@huawei.com>
+> ---
+>  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
+>  drivers/pci/host/Kconfig                           |   8 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-histb.c                      | 448 +++++++++++++++++++++
+>  4 files changed, 523 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-histb.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> new file mode 100644
+> index 0000000..952f1db
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> @@ -0,0 +1,66 @@
+> +HiSilicon STB PCIe host bridge DT description
+> +
+> +HiSilicon PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties
+> +- compatible: Should be one of the following strings
+> +		 "hisilicon,histb-pcie",
+> +		 "hisilicon,hi3798cv200-pcie"
+> +- reg: Should contain sysctl, rc_dbi, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "sysctrl": system control registers of PCIe controller;
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-rcar-gen2.c |   47 +++++++++++++++++++++-----------------
- 1 file changed, 26 insertions(+), 21 deletions(-)
+> +  "rc_dbi": configuration space of PCIe controller;
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index b210ec0..97f15b0 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -164,10 +164,11 @@ static int rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
- {
- 	struct rcar_pci *rcar = pw;
-+	struct device *dev = rcar->dev;
- 	u32 status = rcar_readl(rcar, RCAR_PCI_INT_STATUS_REG);
- 
- 	if (status & RCAR_PCI_INT_ALLERRORS) {
--		dev_err(rcar->dev, "error irq: status %08x\n", status);
-+		dev_err(dev, "error irq: status %08x\n", status);
- 
- 		/* clear the error(s) */
- 		rcar_writel(rcar, RCAR_PCI_INT_STATUS_REG,
-@@ -180,13 +181,14 @@ static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
- 
- static void rcar_pci_setup_errirq(struct rcar_pci *rcar)
- {
-+	struct device *dev = rcar->dev;
- 	int ret;
- 	u32 val;
- 
--	ret = devm_request_irq(rcar->dev, rcar->irq, rcar_pci_err_irq,
-+	ret = devm_request_irq(dev, rcar->irq, rcar_pci_err_irq,
- 			       IRQF_SHARED, "error irq", rcar);
- 	if (ret) {
--		dev_err(rcar->dev, "cannot claim IRQ for error handling\n");
-+		dev_err(dev, "cannot claim IRQ for error handling\n");
- 		return;
- 	}
- 
-@@ -202,14 +204,15 @@ static inline void rcar_pci_setup_errirq(struct rcar_pci *rcar) { }
- static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct rcar_pci *rcar = sys->private_data;
-+	struct device *dev = rcar->dev;
- 	u32 val;
- 	int ret;
- 
--	pm_runtime_enable(rcar->dev);
--	pm_runtime_get_sync(rcar->dev);
-+	pm_runtime_enable(dev);
-+	pm_runtime_get_sync(dev);
- 
- 	val = rcar_readl(rcar, RCAR_PCI_UNIT_REV_REG);
--	dev_info(rcar->dev, "PCI: bus%u revision %x\n", sys->busnr, val);
-+	dev_info(dev, "PCI: bus%u revision %x\n", sys->busnr, val);
- 
- 	/* Disable Direct Power Down State and assert reset */
- 	val = rcar_readl(rcar, RCAR_USBCTR_REG) & ~RCAR_USBCTR_DIRPD;
-@@ -284,7 +287,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 
- 	/* Add PCI resources */
- 	pci_add_resource(&sys->resources, &rcar->mem_res);
--	ret = devm_request_pci_bus_resources(rcar->dev, &sys->resources);
-+	ret = devm_request_pci_bus_resources(dev, &sys->resources);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -320,6 +323,7 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
- static int rcar_pci_parse_map_dma_ranges(struct rcar_pci *rcar,
- 					 struct device_node *np)
- {
-+	struct device *dev = rcar->dev;
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	int index = 0;
-@@ -340,14 +344,14 @@ static int rcar_pci_parse_map_dma_ranges(struct rcar_pci *rcar,
- 
- 		/* Catch HW limitations */
- 		if (!(range.flags & IORESOURCE_PREFETCH)) {
--			dev_err(rcar->dev, "window must be prefetchable\n");
-+			dev_err(dev, "window must be prefetchable\n");
- 			return -EINVAL;
- 		}
- 		if (rcar->window_addr) {
- 			u32 lowaddr = 1 << (ffs(rcar->window_addr) - 1);
- 
- 			if (lowaddr < rcar->window_size) {
--				dev_err(rcar->dev, "invalid window size/addr\n");
-+				dev_err(dev, "invalid window size/addr\n");
- 				return -EINVAL;
- 			}
- 		}
-@@ -359,14 +363,15 @@ static int rcar_pci_parse_map_dma_ranges(struct rcar_pci *rcar,
- 
- static int rcar_pci_probe(struct platform_device *pdev)
- {
--	struct resource *cfg_res, *mem_res;
-+	struct device *dev = &pdev->dev;
- 	struct rcar_pci *rcar;
-+	struct resource *cfg_res, *mem_res;
- 	void __iomem *reg;
- 	struct hw_pci hw;
- 	void *hw_private[1];
- 
- 	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
-+	reg = devm_ioremap_resource(dev, cfg_res);
- 	if (IS_ERR(reg))
- 		return PTR_ERR(reg);
- 
-@@ -377,7 +382,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	if (mem_res->start & 0xFFFF)
- 		return -EINVAL;
- 
--	rcar = devm_kzalloc(&pdev->dev, sizeof(*rcar), GFP_KERNEL);
-+	rcar = devm_kzalloc(dev, sizeof(*rcar), GFP_KERNEL);
- 	if (!rcar)
- 		return -ENOMEM;
- 
-@@ -386,10 +391,10 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 
- 	rcar->irq = platform_get_irq(pdev, 0);
- 	rcar->reg = reg;
--	rcar->dev = &pdev->dev;
-+	rcar->dev = dev;
- 
- 	if (rcar->irq < 0) {
--		dev_err(&pdev->dev, "no valid irq found\n");
-+		dev_err(dev, "no valid irq found\n");
- 		return rcar->irq;
- 	}
- 
-@@ -398,23 +403,23 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	rcar->window_pci = 0x40000000;
- 	rcar->window_size = SZ_1G;
- 
--	if (pdev->dev.of_node) {
-+	if (dev->of_node) {
- 		struct resource busnr;
- 		int ret;
- 
--		ret = of_pci_parse_bus_range(pdev->dev.of_node, &busnr);
-+		ret = of_pci_parse_bus_range(dev->of_node, &busnr);
- 		if (ret < 0) {
--			dev_err(&pdev->dev, "failed to parse bus-range\n");
-+			dev_err(dev, "failed to parse bus-range\n");
- 			return ret;
- 		}
- 
- 		rcar->busnr = busnr.start;
- 		if (busnr.end != busnr.start)
--			dev_warn(&pdev->dev, "only one bus number supported\n");
-+			dev_warn(dev, "only one bus number supported\n");
- 
--		ret = rcar_pci_parse_map_dma_ranges(rcar, pdev->dev.of_node);
-+		ret = rcar_pci_parse_map_dma_ranges(rcar, dev->of_node);
- 		if (ret < 0) {
--			dev_err(&pdev->dev, "failed to parse dma-range\n");
-+			dev_err(dev, "failed to parse dma-range\n");
- 			return ret;
- 		}
- 	} else {
-@@ -429,7 +434,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	hw.map_irq = rcar_pci_map_irq;
- 	hw.ops = &rcar_pci_ops;
- 	hw.setup = rcar_pci_setup;
--	pci_common_init_dev(&pdev->dev, &hw);
-+	pci_common_init_dev(dev, &hw);
- 	return 0;
- }
- 
+Please use "-" instead of "_" in identifiers.
+
+> +  "config": configuration transaction space of PCIe controller.
+> +- interrupts: MSI interrupt.
+> +- interrupt-names: Must include "msi" entries.
+
+Shouldn't this be handled using the msi-map property?
+
+> +- clocks: List of phandle and clock specifier pairs as listed
+> +		in clock-names property.
+> +- clock-name: Must include the following entries:
+> +  "aux_clk": auxiliary gate clock;
+> +  "pipe_clk": pipe gate clock;
+> +  "sys_clk": sys gate clock;
+> +  "bus_clk": bus gate clock.
+
+drop the redundant _clk postfix.
+
+> +- resets: List of phandle and reset specifier pairs as listed
+> +			in reset-names property
+> +- reset-names: Must include the following entries:
+> +  "soft_reset": soft reset;
+> +  "sys_reset": sys reset;
+> +  "bus_rest": bus reset.
+
+drop the _rest and _reset postfix.
+
+> +Optional properties:
+> +- power-gpios: pcie device power control gpio if needed;
+> +- power-gpios-active-high: must include this propty
+> +		if active level is high.
+> +- status: Either "ok" or "disabled".
+> +
+> +Example:
+> +	pcie@f9860000 {
+> +		compatible = "hisilicon,histb-pcie", "snps,dw-pcie";
+> +		reg = <0xf9860000 0x1000>,
+> +			<0xf0000000 0x2000>,
+> +			<0xf2000000 0x01000000>;
+> +		reg-names = "sysctrl", "rc_dbi", "config";
+
+Could it be that the "sysctrl" is not actually part of the PCIe
+block but instead part of the system controller block?
+
+Please use a syscon reference instead for those.
+
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		num-lanes = <1>;
+> +		ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
+> +			0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
+
+That is very short for the memory window. Is there no
+prefetchable 64-bit window in the hardware?
+
+> +	/* check if the link is up or not */
+> +	while (!dw_pcie_link_up(pp)) {
+> +		mdelay(10);
+> +		count++;
+> +		if (count == 50) {
+> +			dev_err(pp->dev, "PCIe Link Fail\n");
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+
+That is a very long delay here. Please don't do that.
+
+> +	dev_info(pp->dev, "Link up\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static void histb_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	histb_pcie_establish_link(pp);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +}
+
+Just make it depen on PCI_MSI_IRQ_DOMAIN and drop the IS_ENABLED
+check.
+
+> +#ifdef CONFIG_PCI_MSI
+> +static irqreturn_t histb_pcie_msi_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +
+> +	return dw_handle_msi_irq(pp);
+> +}
+> +#endif
+
+This seems misplaced here. How do the other dw-pcie drivers handle
+it? If there is a chance that this driver gets reused on a future
+product that has a GICv3, please write the driver so it can already
+use that.
+
+	Arnd
+
 
