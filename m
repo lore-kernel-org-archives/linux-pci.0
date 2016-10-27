@@ -1,173 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:58313 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756950AbcJRBjd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:39:33 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v8 3/3] PCI: rockchip: Specify the link capability
-Date: Tue, 18 Oct 2016 09:45:10 +0800
-Message-Id: <1476755110-22647-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 27 Oct 2016 18:35:13 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Yinghai Lu <yinghai@kernel.org>,
+        Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+In-Reply-To: <20161026215047.GA28097@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.LRH.2.20.1610271756330.32157@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <20161026215047.GA28097@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-rk3399 supports PCIe 2.x link speeds marginally at best, and on some
-boards, the link won't train at 5 GT/s at all. Rather than sacrifice
-500ms waiting for training that will never happen, let's use the helper
-function, of_pci_get_max_link_speed, to get the max link speed from DT
-and specify link capability.
+On Wed, 26 Oct 2016, Bjorn Helgaas wrote:
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Hi Meelis,
+> 
+> On Wed, Oct 07, 2015 at 12:25:19PM +0300, Meelis Roos wrote:
+> > First I noticed that on Sun Netra t1-150 (sparc64 CPU), PCI allocation 
+> > was failing for qla1280 scsi driver. Reading dmesg uncovered "can't 
+> > claim BAR" errors. Looking for this in my other test machines I see more 
+> > of them - on many sparc64 machines and some on x86.
+> > 
+> > In another thread for "Resource allocation cleanup for v4.4", Yinghai Lu 
+> > asked for full dmesg to solve another similar case. So to help 
+> > understanding this one, here are the dmesgs of my machines:
 
----
+> I'm looking through the PCI bugs in bugzilla.kernel.org and came
+> across one that I opened for this issue
+> (https://bugzilla.kernel.org/show_bug.cgi?id=117191)
+> 
+> Is this still an issue?  I've applied some patches from Yinghai, but I
+> know there are a bunch more in the queue, so I'm trying to figure out
+> what's fixed and what's still broken.
 
-Changes in v8:
-- rebase on next branch
+All of these issues seem to be still present:
 
-Changes in v7:
-- rebase on Bjorn's host-rockcip branch again since it isn't applied
-  cleanly after the cleanup
-- call new function, of_pci_get_max_link_speed.
+> > 
+> > sparc64 machines:
+> > 
+> > http://kodu.ut.ee/~mroos/dm/dm.t1-105
 
-Changes in v6:
-- user helper function of_get_pci_max_link_speed and use gen2 by default
-  if finding any errors from of_get_pci_max_link_speed. It could be
-  backward compatibe to the old dtb. (Suggested by Rob)
+Still present in 4.8.0-09031-g95107b3:
 
-Changes in v5:
-- rebase the code since it isn't cleanly applied after Bjorn's cleanup
+[   21.143842] pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+[   21.143947] pci 0000:02:01.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
+[   21.144020] pci 0000:03:0f.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
+[   21.144087] pci 0000:04:00.0: can't claim BAR 0 [mem 0x1ff01000000-0x1ff01ffffff]: no compatible bridge window
+[   21.144153] pci 0000:04:00.0: can't claim BAR 1 [mem 0x1ff02000000-0x1ff027fffff]: no compatible bridge window
+[   21.144220] pci 0000:04:00.1: can't claim BAR 0 [mem 0x1ff02800000-0x1ff0280702f]: no compatible bridge window
+[   21.144288] pci 0000:04:04.0: can't claim BAR 1 [mem 0x1ff02808000-0x1ff02808fff]: no compatible bridge window
+[   21.144355] pci 0000:04:04.0: can't claim BAR 6 [mem 0x1ff02810000-0x1ff0281ffff]: no compatible bridge window
+...
+[   50.775038] qla1280 0000:04:04.0: can't ioremap BAR 1: [mem size 0x00001000]
+[   50.883435] qla1280: Unable to map I/O memory
 
-Changes in v4:
-- define link_gen as u32
-- elaborate more for rockchip,max-link-speed on doc
+> > http://kodu.ut.ee/~mroos/dm/dm.t1-200
 
-Changes in v3:
-- Cast a warning for invalid max link speed and use gen1 for it.
-  That looks better than v2. (Suggested by Brian)
+Still present in 4.8.0-09031-g95107b3:
 
-Changes in v2:
-- rename the property to rockchip,max-link-speed according to
-  Bjorn's recommendation and take some bits from imx6q-pcie to
-  make this requirement more consisent.
+[   51.138280] pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+[   51.138399] pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
+[   51.138461] pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
+[   51.138522] pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
+[   51.138580] pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
+[   51.138639] pci 0000:02:05.0: can't claim BAR 1 [mem 0x1ff0000a000-0x1ff0000bfff]: no compatible bridge window
+[   51.138695] pci 0000:02:05.0: can't claim BAR 6 [mem 0x1ff00020000-0x1ff0003ffff]: no compatible bridge window
 
- drivers/pci/host/pcie-rockchip.c | 60 +++++++++++++++++++++++++---------------
- 1 file changed, 37 insertions(+), 23 deletions(-)
+> > http://kodu.ut.ee/~mroos/dm/dm.v120
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index e0b22da..1ba676f 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -53,6 +53,7 @@
- #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
- #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
- #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
-+#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
- #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
- #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
- #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
-@@ -200,6 +201,7 @@ struct rockchip_pcie {
- 	struct	gpio_desc *ep_gpio;
- 	u32	lanes;
- 	u8	root_bus_nr;
-+	int	link_gen;
- 	struct	device *dev;
- 	struct	irq_domain *irq_domain;
- };
-@@ -438,14 +440,20 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
-+	if (rockchip->link_gen == 2)
-+		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
-+				    PCIE_CLIENT_CONFIG);
-+	else
-+		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
-+				    PCIE_CLIENT_CONFIG);
-+
- 	rockchip_pcie_write(rockchip,
- 			    PCIE_CLIENT_CONF_ENABLE |
- 			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
- 			    PCIE_CLIENT_ARI_ENABLE |
- 			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
--			    PCIE_CLIENT_MODE_RC |
--			    PCIE_CLIENT_GEN_SEL_2,
--				PCIE_CLIENT_CONFIG);
-+			    PCIE_CLIENT_MODE_RC,
-+			    PCIE_CLIENT_CONFIG);
- 
- 	err = phy_power_on(rockchip->phy);
- 	if (err) {
-@@ -522,29 +530,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		msleep(20);
- 	}
- 
--	/*
--	 * Enable retrain for gen2. This should be configured only after
--	 * gen1 finished.
--	 */
--	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
--	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+	if (rockchip->link_gen == 2) {
-+		/*
-+		 * Enable retrain for gen2. This should be configured only after
-+		 * gen1 finished.
-+		 */
-+		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
-+		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+
-+		timeout = jiffies + msecs_to_jiffies(500);
-+		for (;;) {
-+			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-+			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
-+			    PCIE_CORE_PL_CONF_SPEED_5G) {
-+				dev_dbg(dev, "PCIe link training gen2 pass!\n");
-+				break;
-+			}
- 
--	timeout = jiffies + msecs_to_jiffies(500);
--	for (;;) {
--		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
--		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
--		    PCIE_CORE_PL_CONF_SPEED_5G) {
--			dev_dbg(dev, "PCIe link training gen2 pass!\n");
--			break;
--		}
-+			if (time_after(jiffies, timeout)) {
-+				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
-+				break;
-+			}
- 
--		if (time_after(jiffies, timeout)) {
--			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
--			break;
-+			msleep(20);
- 		}
--
--		msleep(20);
- 	}
- 
- 	/* Check the final link width from negotiated lane counter from MGMT */
-@@ -753,6 +763,10 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		rockchip->lanes = 1;
- 	}
- 
-+	rockchip->link_gen = of_pci_get_max_link_speed(node);
-+	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
-+		rockchip->link_gen = 2;
-+
- 	rockchip->core_rst = devm_reset_control_get(dev, "core");
- 	if (IS_ERR(rockchip->core_rst)) {
- 		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+Still present in 4.8.0-09031-g95107b3:
+
+[   51.025122] pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+[   51.025240] pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
+[   51.025302] pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
+[   51.025363] pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
+[   51.025423] pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
+
+> > http://kodu.ut.ee/~mroos/dm/dm.v210
+
+Still present in 4.8.0:
+
+Oct  5 13:56:52 v210 kernel: [   39.003270] PCI: Claiming 0001:00:07.0: Resource 0: 000007fe01000000..000007fe0100ffff [101]
+Oct  5 13:56:52 v210 kernel: [   39.003309] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]Oct  5 13:56:52 v210 kernel: [   39.003350] PCI: Claiming 0001:00:07.0: Resource 1: 000007ff00000000..000007ff000fffff [200]
+Oct  5 13:56:52 v210 kernel: [   39.003389] pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+Oct  5 13:56:52 v210 kernel: [   39.003437] PCI: Claiming 0001:00:07.0: Resource 2: 000007ff00000000..000007ff000fffff [200]
+Oct  5 13:56:52 v210 kernel: [   39.003474] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+
+
+> > http://kodu.ut.ee/~mroos/dm/dm.v240
+
+Still present in 4.8.0-09031-g95107b3:
+
+[   41.120991] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+[   41.121054] pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+[   41.121122] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+
+> > http://kodu.ut.ee/~mroos/dm/dm.sb100
+
+Still present in 4.9.0-rc1-00067-g1a1891d:
+
+[   41.280647] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
+[   41.282521] pci 0000:00:07.0: can't claim BAR 1 [mem 0x1ff00000000-0x1ff000fffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+
+> > amd64 machine:
+> > 
+> > http://kodu.ut.ee/~mroos/dm/dm.x2100
+
+Still present in 4.8.0:
+
+[    0.242410] pci 0000:00:01.1: can't claim BAR 4 [io  0x1c00-0x1c3f]: no compatible bridge window
+[    0.242609] pci 0000:00:01.1: can't claim BAR 5 [io  0x1c40-0x1c7f]: no compatible bridge window
+
 -- 
-2.3.7
-
-
+Meelis Roos (mroos@linux.ee)
