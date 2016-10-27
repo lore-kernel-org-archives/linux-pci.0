@@ -1,216 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v6 04/16] drivers: iommu: make of_iommu_set/get_ops() DT agnostic
-Date: Tue, 18 Oct 2016 17:04:02 +0100
-Message-Id: <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <hare@suse.de>
+Return-Path: <hare@suse.de>
+Subject: Re: [PATCH] pci: Don't set RCB bit in LNKCTL if the upstream bridge
+ hasn't
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Johannes Thumshirn <jthumshirn@suse.de>
+References: <1477490014-115917-1-git-send-email-jthumshirn@suse.de>
+ <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <41d13b8c-98f5-af26-534e-37ceafd68eb3@suse.de>
+Date: Thu, 27 Oct 2016 07:42:27 +0200
+MIME-Version: 1.0
+In-Reply-To: <20161026194317.GC17507@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-The of_iommu_{set/get}_ops() API is used to associate a device
-tree node with a specific set of IOMMU operations. The same
-kernel interface is required on systems booting with ACPI, where
-devices are not associated with a device tree node, therefore
-the interface requires generalization.
+On 10/26/2016 09:43 PM, Bjorn Helgaas wrote:
+> Hi Johannes,
+> 
+> On Wed, Oct 26, 2016 at 03:53:34PM +0200, Johannes Thumshirn wrote:
+>> The Read Completion Boundary bit must only be set on a device or endpoint if
+>> it is set on the upstream bridge.
+>>
+>> Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
+> 
+> Can you please include a spec citation and a pointer to the bug report?
+> 
+PCI Express Base Specification 1.1,
+section 2.3.1.1. Data Return for Read Requests:
 
-The struct device fwnode member represents the fwnode token
-associated with the device and the struct it points at is firmware
-specific; regardless, it is initialized on both ACPI and DT systems
-and makes an ideal candidate to use it to associate a set of IOMMU
-operations to a given device, through its struct device.fwnode member
-pointer.
+The Read Completion Boundary (RCB) parameter determines the naturally
+aligned address boundaries on which a Read Request may be serviced with
+multiple Completions
+o For a Root Complex, RCB is 64 bytes or 128 bytes
+  o This value is reported through a configuration register
+    (see Section 7.8)
+  Note: Bridges and Endpoints may implement a corresponding command
+  bit which may be set by system software to indicate the RCB value
+  for the Root Complex, allowing the Bridge/Endpoint to optimize its
+  behavior when the Root Complex’s RCB is 128 bytes.
+o For all other system elements, RCB is 128 bytes
 
-Convert the DT specific of_iommu_{set/get}_ops() interface to
-use struct device.fwnode as a look-up token, making the interface
-usable on ACPI systems.
+In this particular case the _HPX method was causing the RCB for all PCI
+devices to be set to 128 bytes, while the root bridge remained at 64 bytes.
+While this is arguably a BIOS bug, earlier linux version (ie without the
+mentioned patch) were running fine, so this is actually a regression.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/iommu.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
- drivers/iommu/of_iommu.c | 39 ---------------------------------------
- include/linux/iommu.h    | 14 ++++++++++++++
- include/linux/of_iommu.h | 12 ++++++++++--
- 4 files changed, 67 insertions(+), 41 deletions(-)
+Cheers,
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 9a2f196..320eb8c 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1615,6 +1615,49 @@ int iommu_request_dm_for_dev(struct device *dev)
- 	return ret;
- }
- 
-+struct fwnode_iommu_node {
-+	struct list_head list;
-+	struct fwnode_handle *fwnode;
-+	const struct iommu_ops *ops;
-+};
-+static LIST_HEAD(fwnode_iommu_list);
-+static DEFINE_SPINLOCK(fwnode_iommu_lock);
-+
-+void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-+			  const struct iommu_ops *ops)
-+{
-+	struct fwnode_iommu_node *iommu =
-+				kzalloc(sizeof(*iommu), GFP_KERNEL);
-+
-+	if (WARN_ON(!iommu))
-+		return;
-+
-+	if (is_of_node(fwnode))
-+		of_node_get(to_of_node(fwnode));
-+
-+	INIT_LIST_HEAD(&iommu->list);
-+	iommu->fwnode = fwnode;
-+	iommu->ops = ops;
-+	spin_lock(&fwnode_iommu_lock);
-+	list_add_tail(&iommu->list, &fwnode_iommu_list);
-+	spin_unlock(&fwnode_iommu_lock);
-+}
-+
-+const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-+{
-+	struct fwnode_iommu_node *node;
-+	const struct iommu_ops *ops = NULL;
-+
-+	spin_lock(&fwnode_iommu_lock);
-+	list_for_each_entry(node, &fwnode_iommu_list, list)
-+		if (node->fwnode == fwnode) {
-+			ops = node->ops;
-+			break;
-+		}
-+	spin_unlock(&fwnode_iommu_lock);
-+	return ops;
-+}
-+
- int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
- 		      const struct iommu_ops *ops)
- {
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 5b82862..0f57ddc 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- }
- EXPORT_SYMBOL_GPL(of_get_dma_window);
- 
--struct of_iommu_node {
--	struct list_head list;
--	struct device_node *np;
--	const struct iommu_ops *ops;
--};
--static LIST_HEAD(of_iommu_list);
--static DEFINE_SPINLOCK(of_iommu_lock);
--
--void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
--{
--	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
--
--	if (WARN_ON(!iommu))
--		return;
--
--	of_node_get(np);
--	INIT_LIST_HEAD(&iommu->list);
--	iommu->np = np;
--	iommu->ops = ops;
--	spin_lock(&of_iommu_lock);
--	list_add_tail(&iommu->list, &of_iommu_list);
--	spin_unlock(&of_iommu_lock);
--}
--
--const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
--{
--	struct of_iommu_node *node;
--	const struct iommu_ops *ops = NULL;
--
--	spin_lock(&of_iommu_lock);
--	list_for_each_entry(node, &of_iommu_list, list)
--		if (node->np == np) {
--			ops = node->ops;
--			break;
--		}
--	spin_unlock(&of_iommu_lock);
--	return ops;
--}
--
- static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct of_phandle_args *iommu_spec = data;
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 436dc21..15d5478 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
- 		      const struct iommu_ops *ops);
- void iommu_fwspec_free(struct device *dev);
- int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
-+void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-+			  const struct iommu_ops *ops);
-+const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
- 
- #else /* CONFIG_IOMMU_API */
- 
-@@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
- 	return -ENODEV;
- }
- 
-+static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-+					const struct iommu_ops *ops)
-+{
-+}
-+
-+static inline
-+const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-+{
-+	return NULL;
-+}
-+
- #endif /* CONFIG_IOMMU_API */
- 
- #endif /* __LINUX_IOMMU_H */
-diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-index e80b9c7..7681007 100644
---- a/include/linux/of_iommu.h
-+++ b/include/linux/of_iommu.h
-@@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
- 
- #endif	/* CONFIG_OF_IOMMU */
- 
--void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
--const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-+static inline void of_iommu_set_ops(struct device_node *np,
-+				    const struct iommu_ops *ops)
-+{
-+	fwnode_iommu_set_ops(&np->fwnode, ops);
-+}
-+
-+static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
-+{
-+	return fwnode_iommu_get_ops(&np->fwnode);
-+}
- 
- extern struct of_device_id __iommu_of_table;
- 
+Hannes
 -- 
-2.10.0
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
