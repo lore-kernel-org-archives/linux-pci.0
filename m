@@ -1,108 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57016 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941222AbcJGQkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:40:39 -0400
-Subject: [PATCH 2/6] PCI: keystone: Pass keystone_pcie, not address,
- to IRQ functions
-To: Murali Karicheri <m-karicheri2@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:40:35 -0500
-Message-ID: <20161007164035.26090.37896.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007164026.26090.42844.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007164026.26090.42844.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33680 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760482AbcJ1Pb3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 11:31:29 -0400
+Received: by mail-oi0-f67.google.com with SMTP id i127so3715200oia.0
+        for <linux-pci@vger.kernel.org>; Fri, 28 Oct 2016 08:31:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <acccb06d-14b9-33bd-466b-47dd3689e537@broadcom.com>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+ <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com> <5420659.scnjID7ZLn@wuerfel>
+ <ae624772-9306-50ee-3dc1-df8156eaa16d@broadcom.com> <acccb06d-14b9-33bd-466b-47dd3689e537@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 28 Oct 2016 17:31:28 +0200
+Message-ID: <CACna6rxCdgyqFMU5-LD0rJn1s6voSiVvk1AGGnaykGZPMDbwPw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of passing the application register base to IRQ functions,
-pass the struct keystone_pcie.  This will allow them to use register
-accessors.  No functional change intended.
+On 20 April 2016 at 20:18, Ray Jui <ray.jui@broadcom.com> wrote:
+> Hi Rafal/Florian/Arnd,
+>
+> After a couple days of email exchange with the ASIC team, I think I've
+> figured out the behavior on all of the Broadcom SoCs that use this iProc
+> PCIe controller.
+>
+> On NSP, Cygnus, and NS2:
+> - There's an APB error enable register at offset 0xf40 from the iProc PCIe
+> controller's base address. If one clears bit 0 (enabled by default after
+> chip POR) of that register, one can stop this from being forwarded to "iProc
+> host" as an APB error/external imprecise abort
+> - I will submit a patch to the iProc PCIe driver to disable this error
+> forwarding
+>
+> On NS:
+> - Unfortunately, there's no such control register in NS. In other words, we
+> cannot disable this error at the PCIe controller level
+> - FSR code corresponds to external (bit[12] = '1'), read (bit[11] = '0'),
+> imprecise abort (bits[10][3:0] = '1''0110'), i.e., external imprecise abort
+> triggered by read access. Our ASIC team believes a read access to a
+> non-exist APB register can also trigger an abort with the same FSR code.
+> Note this is the tricky part, by registering an abort hook that skips this
+> particular FSR, one has a chance of skipping other aborts triggered by
+> accessing invalid APB registers. But given that this cannot be disabled for
+> the PCIe controller NS, I'm not sure what approach we should take. Any
+> thoughts?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-keystone-dw.c |   15 ++++++++-------
- drivers/pci/host/pci-keystone.c    |    5 ++---
- drivers/pci/host/pci-keystone.h    |    5 ++---
- 3 files changed, 12 insertions(+), 13 deletions(-)
+It's really late reply but I wanted to finally handle this problem.
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index d09e3c6..5c67d54 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -259,25 +259,26 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *keystone, int offset)
- 	writel(offset, keystone->va_app_base + IRQ_EOI);
- }
- 
--void ks_dw_pcie_enable_error_irq(void __iomem *reg_base)
-+void ks_dw_pcie_enable_error_irq(struct keystone_pcie *keystone)
- {
--	writel(ERR_IRQ_ALL, reg_base + ERR_IRQ_ENABLE_SET);
-+	writel(ERR_IRQ_ALL, keystone->va_app_base + ERR_IRQ_ENABLE_SET);
- }
- 
--irqreturn_t ks_dw_pcie_handle_error_irq(struct device *dev,
--					void __iomem *reg_base)
-+irqreturn_t ks_dw_pcie_handle_error_irq(struct keystone_pcie *keystone)
- {
- 	u32 status;
- 
--	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
-+	status = readl(keystone->va_app_base + ERR_IRQ_STATUS_RAW) &
-+			    ERR_IRQ_ALL;
- 	if (!status)
- 		return IRQ_NONE;
- 
- 	if (status & ERR_FATAL_IRQ)
--		dev_err(dev, "fatal error (status %#010x)\n", status);
-+		dev_err(keystone->pp.dev, "fatal error (status %#010x)\n",
-+			status);
- 
- 	/* Ack the IRQ; status bits are RW1C */
--	writel(status, reg_base + ERR_IRQ_STATUS);
-+	writel(status, keystone->va_app_base + ERR_IRQ_STATUS);
- 	return IRQ_HANDLED;
- }
- 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 55b2be7..6b1cb14 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -234,7 +234,7 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *keystone)
- 	}
- 
- 	if (keystone->error_irq > 0)
--		ks_dw_pcie_enable_error_irq(keystone->va_app_base);
-+		ks_dw_pcie_enable_error_irq(keystone);
- }
- 
- /*
-@@ -302,8 +302,7 @@ static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
- {
- 	struct keystone_pcie *keystone = priv;
- 
--	return ks_dw_pcie_handle_error_irq(keystone->pp.dev,
--					   keystone->va_app_base);
-+	return ks_dw_pcie_handle_error_irq(keystone);
- }
- 
- static int __init ks_add_pcie_port(struct keystone_pcie *keystone,
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 379213c..2a81e05 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -45,9 +45,8 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
- /* Keystone specific PCI controller APIs */
- void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *keystone);
- void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *keystone, int offset);
--void ks_dw_pcie_enable_error_irq(void __iomem *reg_base);
--irqreturn_t ks_dw_pcie_handle_error_irq(struct device *dev,
--					void __iomem *reg_base);
-+void ks_dw_pcie_enable_error_irq(struct keystone_pcie *keystone);
-+irqreturn_t ks_dw_pcie_handle_error_irq(struct keystone_pcie *keystone);
- int  ks_dw_pcie_host_init(struct keystone_pcie *keystone,
- 			struct device_node *msi_intc_np);
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>From Ray's e-mail it seems Northstar is the only platform requiring
+this workaround. So we don't have to worry about arm64.
 
+We have two options then:
+1) Add workaround in arch/arm/mach-bcm/bcm_5301x.c
+2) Add workaround into built-in drivers/pci/host/pcie-iproc-fault.c
+
+Do you have any preference about that?
