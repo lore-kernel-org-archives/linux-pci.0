@@ -1,35 +1,76 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	helgaas@kernel.org
-Cc: jose.abreu@synopsys.com, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH] pci: pcie-designware-plat: changing maintainer
-Date: Fri, 14 Oct 2016 17:01:21 +0100
-Message-Id: <0c901c49ad655165e5f72245e9d260f43968cf9e.1476460342.git.jpinto@synopsys.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:57925 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937911AbcJ1Iyw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:54:52 -0400
+Message-Id: <cc74b62ca37389d863aeae1573208a2be240b837.1477611126.git.lukas@wunner.de>
+In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
+References: <cover.1477611126.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 28 Oct 2016 10:52:06 +0200
+Subject: [PATCH v2 7/9] ACPI / hotplug / PCI: Use cached copy of
+ PCI_EXP_SLTCAP_HPC bit
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am going to leave Synopsys and so this patch changes the Maintainer
-for PCIe Designware Platform driver to my colleague Jose Abreu.
+We cache the PCI_EXP_SLTCAP_HPC bit in pci_dev->is_hotplug_bridge on
+device probe, so there's no need to read it again when adding the ACPI
+hotplug context.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Here's the call chain to prove that no ordering issue is introduced:
+
+pci_scan_child_bus [drivers/pci/probe.c]
+  pci_scan_slot
+    pci_scan_single_device
+      pci_scan_device
+        pci_setup_device
+          set_pcie_hotplug_bridge
+            [is_hotplug_bridge bit is set here]
+  pci_scan_bridge
+    pci_add_new_bus
+      pci_alloc_child_bus
+        pcibios_add_bus  [arch/(x86|arm64|ia64)/...]
+          acpi_pci_add_bus [drivers/pci/pci-acpi.c]
+            acpiphp_enumerate_slots [drivers/pci/hotplug/acpiphp_glue.c]
+              acpiphp_add_context
+                device_is_managed_by_native_pciehp
+                  [is_hotplug_bridge bit is queried here]
+
+No functional change intended.
+
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/hotplug/acpiphp_glue.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 01bff8e..5ac91d8a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9052,7 +9052,7 @@ S:	Maintained
- F:	drivers/pci/host/*designware*
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index a46b585..b286a56 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -225,14 +225,11 @@ static void acpiphp_post_dock_fixup(struct acpi_device *adev)
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+ static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+ {
+-	u32 reg32;
+ 	acpi_handle tmp;
+ 	struct acpi_pci_root *root;
  
- PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
--M:	Joao Pinto <jpinto@synopsys.com>
-+M:	Jose Abreu <Jose.Abreu@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+ 	/* Check whether the PCIe port supports native PCIe hotplug */
+-	if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
+-		return false;
+-	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
++	if (!pdev->is_hotplug_bridge)
+ 		return false;
+ 
+ 	/*
 -- 
-1.8.1.5
+2.9.3
+
