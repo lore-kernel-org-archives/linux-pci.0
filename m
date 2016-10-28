@@ -1,137 +1,247 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50320 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756843AbcJGQcG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:32:06 -0400
-Subject: [PATCH 6/8] PCI: armada: Replace armada8k_readl() with
- dw_pcie_readl_rc()
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:32:01 -0500
-Message-ID: <20161007163201.24582.53500.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007163118.24582.12385.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 28 Oct 2016 16:50:07 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v6 09/16] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+Message-ID: <20161028155007.GA19523@red-moon>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+ <20161018160414.1228-10-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161018160414.1228-10-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dw_pcie_readl_rc() and dw_pcie_writel_rc() interfaces do the same as
-armada8k_readl() and armada8k_writel(), and they also give us a clue that
-we're using the DesignWare-generic functionality.  Use the dw_*()
-interfaces and remove the armada8k-specific ones.  No functional change
-intended.
+On Tue, Oct 18, 2016 at 05:04:07PM +0100, Lorenzo Pieralisi wrote:
+> In ARM ACPI systems, IOMMU components are specified through static
+> IORT table entries. In order to create platform devices for the
+> corresponding ARM SMMU components, IORT kernel code should be made
+> able to parse IORT table entries and create platform devices
+> dynamically.
+> 
+> This patch adds the generic IORT infrastructure required to create
+> platform devices for ARM SMMUs.
+> 
+> ARM SMMU versions have different resources requirement therefore this
+> patch also introduces an IORT specific structure (ie iort_iommu_config)
+> that contains hooks (to be defined when the corresponding ARM SMMU
+> driver support is added to the kernel) to be used to define the
+> platform devices names, init the IOMMUs, count their resources and
+> finally initialize them.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/arm64/iort.c | 151 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 151 insertions(+)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 1433de3..2eda2f5 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -19,9 +19,11 @@
+>  #define pr_fmt(fmt)	"ACPI: IORT: " fmt
+>  
+>  #include <linux/acpi_iort.h>
+> +#include <linux/iommu.h>
+>  #include <linux/kernel.h>
+>  #include <linux/list.h>
+>  #include <linux/pci.h>
+> +#include <linux/platform_device.h>
+>  #include <linux/slab.h>
+>  
+>  struct iort_its_msi_chip {
+> @@ -457,6 +459,153 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
+>  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>  }
+>  
+> +struct iort_iommu_config {
+> +	const char *name;
+> +	int (*iommu_init)(struct acpi_iort_node *node);
+> +	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
+> +	int (*iommu_count_resources)(struct acpi_iort_node *node);
+> +	void (*iommu_init_resources)(struct resource *res,
+> +				     struct acpi_iort_node *node);
+> +};
+> +
+> +static __init
+> +const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
+> +{
+> +	return NULL;
+> +}
+> +
+> +/**
+> + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
+> + * @node: Pointer to SMMU ACPI IORT node
+> + *
+> + * Returns: 0 on success, <0 failure
+> + */
+> +static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
+> +{
+> +	struct fwnode_handle *fwnode;
+> +	struct platform_device *pdev;
+> +	struct resource *r;
+> +	enum dev_dma_attr attr;
+> +	int ret, count;
+> +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
+> +
+> +	if (!ops)
+> +		return -ENODEV;
+> +
+> +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
+> +	if (!pdev)
+> +		return PTR_ERR(pdev);
+> +
+> +	count = ops->iommu_count_resources(node);
+> +
+> +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
+> +	if (!r) {
+> +		ret = -ENOMEM;
+> +		goto dev_put;
+> +	}
+> +
+> +	ops->iommu_init_resources(r, node);
+> +
+> +	ret = platform_device_add_resources(pdev, r, count);
+> +	/*
+> +	 * Resources are duplicated in platform_device_add_resources,
+> +	 * free their allocated memory
+> +	 */
+> +	kfree(r);
+> +
+> +	if (ret)
+> +		goto dev_put;
+> +
+> +	/*
+> +	 * Add a copy of IORT node pointer to platform_data to
+> +	 * be used to retrieve IORT data information.
+> +	 */
+> +	ret = platform_device_add_data(pdev, &node, sizeof(node));
+> +	if (ret)
+> +		goto dev_put;
+> +
+> +	/*
+> +	 * We expect the dma masks to be equivalent for
+> +	 * all SMMUs set-ups
+> +	 */
+> +	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+> +
+> +	fwnode = iort_get_fwnode(node);
+> +
+> +	if (!fwnode) {
+> +		ret = -ENODEV;
+> +		goto dev_put;
+> +	}
+> +
+> +	pdev->dev.fwnode = fwnode;
+> +
+> +	attr = ops->iommu_is_coherent(node) ?
+> +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
+> +
+> +	/* Configure DMA for the page table walker */
+> +	acpi_dma_configure(&pdev->dev, attr);
+> +
+> +	ret = platform_device_add(pdev);
+> +	if (ret)
+> +		goto dma_deconfigure;
+> +
+> +	return 0;
+> +
+> +dma_deconfigure:
+> +	acpi_dma_deconfigure(&pdev->dev);
+> +dev_put:
+> +	platform_device_put(pdev);
+> +
+> +	return ret;
+> +}
+> +
+> +static void __init iort_init_platform_devices(void)
+> +{
+> +	struct acpi_iort_node *iort_node, *iort_end;
+> +	struct acpi_table_iort *iort;
+> +	struct fwnode_handle *fwnode;
+> +	int i, ret;
+> +
+> +	/*
+> +	 * iort_table and iort both point to the start of IORT table, but
+> +	 * have different struct types
+> +	 */
+> +	iort = (struct acpi_table_iort *)iort_table;
+> +
+> +	/* Get the first IORT node */
+> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
+> +				 iort->node_offset);
+> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort,
+> +				iort_table->length);
+> +
+> +	for (i = 0; i < iort->node_count; i++) {
+> +		if (iort_node >= iort_end) {
+> +			pr_err("iort node pointer overflows, bad table\n");
+> +			return;
+> +		}
+> +
+> +		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
+> +			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
+> +
+> +			fwnode = acpi_alloc_fwnode_static();
+> +			if (!fwnode)
+> +				return;
+> +
+> +			iort_set_fwnode(iort_node, fwnode);
+> +
+> +			ret = iort_add_smmu_platform_device(iort_node);
+> +			if (ret) {
+> +				iort_delete_fwnode(iort_node);
+> +				acpi_free_fwnode_static(fwnode);
+> +				return;
+> +			}
+> +		}
+> +
+> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+> +					 iort_node->length);
+> +	}
+> +}
+> +
+>  void __init acpi_iort_init(void)
+>  {
+>  	acpi_status status;
+> @@ -468,5 +617,7 @@ void __init acpi_iort_init(void)
+>  		return;
+>  	}
+>  
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-armada8k.c |   46 +++++++++++++++-----------------------
- 1 file changed, 18 insertions(+), 28 deletions(-)
+Slipped through the cracks while rebasing v6, I should add code that
+returns if no IORT table found here to prevent calling:
 
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index 276125f..19086a4 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -69,23 +69,12 @@ struct armada8k_pcie {
- 
- #define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
- 
--static u32 armada8k_readl(struct armada8k_pcie *armada8k, u32 offset)
--{
--	return readl(armada8k->pp.dbi_base + offset);
--}
--
--static void armada8k_writel(struct armada8k_pcie *armada8k, u32 offset, u32 val)
--{
--	writel(val, armada8k->pp.dbi_base + offset);
--}
--
- static int armada8k_pcie_link_up(struct pcie_port *pp)
- {
--	struct armada8k_pcie *armada8k = to_armada8k_pcie(pp);
- 	u32 reg;
- 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
- 
--	reg = armada8k_readl(armada8k, PCIE_GLOBAL_STATUS_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_STATUS_REG);
- 	if ((reg & mask) == mask)
- 		return 1;
- 
-@@ -100,43 +89,43 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *armada8k)
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Disable LTSSM state machine to enable configuration */
--		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
-+		reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 		reg &= ~(PCIE_APP_LTSSM_EN);
--		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
-+		dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Set the device to root complex mode */
--	reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
- 	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
--	armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 
- 	/* Set the PCIe master AxCache attributes */
--	armada8k_writel(armada8k, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
--	armada8k_writel(armada8k, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
-+	dw_pcie_writel_rc(pp, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
-+	dw_pcie_writel_rc(pp, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
- 
- 	/* Set the PCIe master AxDomain attributes */
--	reg = armada8k_readl(armada8k, PCIE_ARUSER_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_ARUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	armada8k_writel(armada8k, PCIE_ARUSER_REG, reg);
-+	dw_pcie_writel_rc(pp, PCIE_ARUSER_REG, reg);
- 
--	reg = armada8k_readl(armada8k, PCIE_AWUSER_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_AWUSER_REG);
- 	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
- 	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	armada8k_writel(armada8k, PCIE_AWUSER_REG, reg);
-+	dw_pcie_writel_rc(pp, PCIE_AWUSER_REG, reg);
- 
- 	/* Enable INT A-D interrupts */
--	reg = armada8k_readl(armada8k, PCIE_GLOBAL_INT_MASK1_REG);
-+	reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_INT_MASK1_REG);
- 	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
--	armada8k_writel(armada8k, PCIE_GLOBAL_INT_MASK1_REG, reg);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_INT_MASK1_REG, reg);
- 
- 	if (!dw_pcie_link_up(pp)) {
- 		/* Configuration done. Start LTSSM */
--		reg = armada8k_readl(armada8k, PCIE_GLOBAL_CONTROL_REG);
-+		reg = dw_pcie_readl_rc(pp, PCIE_GLOBAL_CONTROL_REG);
- 		reg |= PCIE_APP_LTSSM_EN;
--		armada8k_writel(armada8k, PCIE_GLOBAL_CONTROL_REG, reg);
-+		dw_pcie_writel_rc(pp, PCIE_GLOBAL_CONTROL_REG, reg);
- 	}
- 
- 	/* Wait until the link becomes active again */
-@@ -155,6 +144,7 @@ static void armada8k_pcie_host_init(struct pcie_port *pp)
- static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- {
- 	struct armada8k_pcie *armada8k = arg;
-+	struct pcie_port *pp = &armada8k->pp;
- 	u32 val;
- 
- 	/*
-@@ -162,8 +152,8 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	 * PCI device. However, they are also latched into the PCIe
- 	 * controller, so we simply discard them.
- 	 */
--	val = armada8k_readl(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG);
--	armada8k_writel(armada8k, PCIE_GLOBAL_INT_CAUSE1_REG, val);
-+	val = dw_pcie_readl_rc(pp, PCIE_GLOBAL_INT_CAUSE1_REG);
-+	dw_pcie_writel_rc(pp, PCIE_GLOBAL_INT_CAUSE1_REG, val);
- 
- 	return IRQ_HANDLED;
- }
+iort_init_platform_devices()
 
+I will update the next version, it is just a heads-up for testers,
+I can push an updated/fixed branch if needed.
+
+Thanks,
+Lorenzo
+
+> +	iort_init_platform_devices();
+> +
+>  	acpi_probe_device_table(iort);
+>  }
+> -- 
+> 2.10.0
+> 
