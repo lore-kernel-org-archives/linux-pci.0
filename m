@@ -1,181 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:35816 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbcJEEgw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Oct 2016 00:36:52 -0400
-Received: by mail-pf0-f176.google.com with SMTP id s13so83207164pfd.2
-        for <linux-pci@vger.kernel.org>; Tue, 04 Oct 2016 21:36:52 -0700 (PDT)
-Date: Tue, 4 Oct 2016 21:36:48 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>
-Subject: Re: [PATCH v2] PCI: rockchip: Support property to specify the link
- capability
-Message-ID: <20161005043647.GA125531@google.com>
-References: <1475636776-11386-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35535 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941660AbcJ1REj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 13:04:39 -0400
+Received: by mail-pf0-f196.google.com with SMTP id s8so1739271pfj.2
+        for <linux-pci@vger.kernel.org>; Fri, 28 Oct 2016 10:04:39 -0700 (PDT)
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+To: Ray Jui <ray.jui@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+ <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com> <5420659.scnjID7ZLn@wuerfel>
+ <ae624772-9306-50ee-3dc1-df8156eaa16d@broadcom.com>
+ <acccb06d-14b9-33bd-466b-47dd3689e537@broadcom.com>
+ <CACna6rxCdgyqFMU5-LD0rJn1s6voSiVvk1AGGnaykGZPMDbwPw@mail.gmail.com>
+ <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <b11c63b3-b95a-cb90-2fea-462c9c89f24f@gmail.com>
+Date: Fri, 28 Oct 2016 10:04:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475636776-11386-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+On 10/28/2016 09:58 AM, Ray Jui wrote:
+> Hi Rafal,
+> 
+> On 10/28/2016 8:31 AM, Rafał Miłecki wrote:
+>> On 20 April 2016 at 20:18, Ray Jui <ray.jui@broadcom.com> wrote:
+>>> Hi Rafal/Florian/Arnd,
+>>>
+>>> After a couple days of email exchange with the ASIC team, I think I've
+>>> figured out the behavior on all of the Broadcom SoCs that use this iProc
+>>> PCIe controller.
+>>>
+>>> On NSP, Cygnus, and NS2:
+>>> - There's an APB error enable register at offset 0xf40 from the iProc PCIe
+>>> controller's base address. If one clears bit 0 (enabled by default after
+>>> chip POR) of that register, one can stop this from being forwarded to "iProc
+>>> host" as an APB error/external imprecise abort
+>>> - I will submit a patch to the iProc PCIe driver to disable this error
+>>> forwarding
+>>>
+>>> On NS:
+>>> - Unfortunately, there's no such control register in NS. In other words, we
+>>> cannot disable this error at the PCIe controller level
+>>> - FSR code corresponds to external (bit[12] = '1'), read (bit[11] = '0'),
+>>> imprecise abort (bits[10][3:0] = '1''0110'), i.e., external imprecise abort
+>>> triggered by read access. Our ASIC team believes a read access to a
+>>> non-exist APB register can also trigger an abort with the same FSR code.
+>>> Note this is the tricky part, by registering an abort hook that skips this
+>>> particular FSR, one has a chance of skipping other aborts triggered by
+>>> accessing invalid APB registers. But given that this cannot be disabled for
+>>> the PCIe controller NS, I'm not sure what approach we should take. Any
+>>> thoughts?
+>>
+>> It's really late reply but I wanted to finally handle this problem.
+>>
+>> From Ray's e-mail it seems Northstar is the only platform requiring
+>> this workaround. So we don't have to worry about arm64.
+> 
+> Yes, Northstar is the only platform that requires this workaround. Even
+> the arm32 platforms like NSP and Cygnus can disable unsupported request
+> being forwarded as APB error. I've recently sent out a patch series to
+> fix this for all other platforms, and sorry I should have included you
+> in the email but I did not. I'll include you when revision 2 is sent out.
+> 
+>>
+>> We have two options then:
+>> 1) Add workaround in arch/arm/mach-bcm/bcm_5301x.c
+>> 2) Add workaround into built-in drivers/pci/host/pcie-iproc-fault.c
+> 
+> How do you plan to implement pcie-iproc-fault.c? If it's similar to what
+> you have now, then I think it fits more to bcm_5301x.c
 
-On Wed, Oct 05, 2016 at 11:06:16AM +0800, Shawn Lin wrote:
-> From: Brian Norris <briannorris@chromium.org>
-> 
-> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
-> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
-> ms waiting for training that will never happen, let's add a property
-> from devicetree to specify link capability.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v2:
-> - rename the property to rockchip,max-link-speed according to
->   Bjorn's recommendation and take some bits from imx6q-pcie to
->   make this requirement more consisent.
-> 
->  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
->  drivers/pci/host/pcie-rockchip.c                   | 61 ++++++++++++++--------
->  2 files changed, 41 insertions(+), 22 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> index ba67b39..8335f03 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -42,6 +42,8 @@ Required properties:
->  Optional Property:
->  - ep-gpios: contain the entry for pre-reset gpio
->  - num-lanes: number of lanes to use
-> +- rockchip,max-link-speed: Specify PCI gen for link capability. Must
-> +	be '2' for gen2, otherwise will default to gen1.
->  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
->  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
->  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 35591b1..ca3db51 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -53,6 +53,7 @@
->  #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
->  #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
->  #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
-> +#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
->  #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
->  #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
->  #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
-> @@ -205,6 +206,7 @@ struct rockchip_pcie {
->  	struct	gpio_desc *ep_gpio;
->  	u32	lanes;
->  	u8	root_bus_nr;
-> +	int	link_gen;
->  	struct	device *dev;
->  	struct	irq_domain *irq_domain;
->  };
-> @@ -443,13 +445,21 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		return err;
->  	}
->  
-> +	if (rockchip->link_gen == 2) {
-> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
-> +				    PCIE_CLIENT_CONFIG);
-> +	} else {
-> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
-> +				    PCIE_CLIENT_CONFIG);
-> +		dev_info(dev, "max link speed is gen 1\n");
-> +	}
-> +
->  	rockchip_pcie_write(rockchip,
->  			    PCIE_CLIENT_CONF_ENABLE |
->  			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
->  			    PCIE_CLIENT_ARI_ENABLE |
->  			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
-> -			    PCIE_CLIENT_MODE_RC |
-> -			    PCIE_CLIENT_GEN_SEL_2,
-> +			    PCIE_CLIENT_MODE_RC,
->  				PCIE_CLIENT_CONFIG);
->  
->  	err = phy_power_on(rockchip->phy);
-> @@ -550,29 +560,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		msleep(20);
->  	}
->  
-> -	/*
-> -	 * Enable retrain for gen2. This should be configured only after
-> -	 * gen1 finished.
-> -	 */
-> -	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-> -	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
-> -	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-> +	if (rockchip->link_gen == 2) {
-> +		/*
-> +		 * Enable retrain for gen2. This should be configured only after
-> +		 * gen1 finished.
-> +		 */
-> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-> +		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
-> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-> +
-> +		timeout = jiffies + msecs_to_jiffies(500);
-> +		for (;;) {
-> +			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-> +			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
-> +					PCIE_CORE_PL_CONF_SPEED_5G) {
-> +				dev_dbg(dev, "PCIe link training gen2 pass!\n");
-> +				break;
-> +			}
->  
-> -	timeout = jiffies + msecs_to_jiffies(500);
-> -	for (;;) {
-> -		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-> -		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
-> -		    PCIE_CORE_PL_CONF_SPEED_5G) {
-> -			dev_dbg(dev, "PCIe link training gen2 pass!\n");
-> -			break;
-> -		}
-> +			if (time_after(jiffies, timeout)) {
-> +				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
-> +				break;
-> +			}
->  
-> -		if (time_after(jiffies, timeout)) {
-> -			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
-> -			break;
-> +			msleep(20);
->  		}
-> -
-> -		msleep(20);
->  	}
->  
->  	/* Check the final link width from negotiated lane counter from MGMT */
-> @@ -781,6 +793,11 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->  		rockchip->lanes = 1;
->  	}
->  
-> +	err = of_property_read_u32(node, "rockchip,max-link-speed",
-> +				   &rockchip->link_gen);
-> +	if (err)
-> +		rockchip->link_gen = 1;
-
-I realize you copied this from the IMX6 driver, but this allows people
-to put anything but '2' in the property, and we'll treat it like '1'.
-How about in the !err case, we check that the value is either 1 or 2,
-and return an error for anything else?
-
-Brian
-
-> +
->  	rockchip->core_rst = devm_reset_control_get(dev, "core");
->  	if (IS_ERR(rockchip->core_rst)) {
->  		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
-> -- 
-> 2.3.7
-> 
-> 
+I was going to suggest adding it to the PCIe driver so as to make it
+localized there, but that seems like a better idea, in case the PCIe
+driver is not built into the kernel, or as a module, it seems like a
+nice thing to be able to clear the abort.
+-- 
+Florian
