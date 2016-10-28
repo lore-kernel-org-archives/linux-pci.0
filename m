@@ -1,103 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47210 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934096AbcJUQW4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Oct 2016 12:22:56 -0400
-Date: Fri, 21 Oct 2016 11:22:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org,
-        Gary Bisson <gary.bisson@boundarydevices.com>,
-        kernel@pengutronix.de, patchwork-lst@pengutronix.de,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-        jose.abreu@synopsys.com, Jesper Nilsson <jespern@axis.com>,
-        Joao Pinto <jpmpinto@gmail.com>
-Subject: Re: [PATCH resend] PCI: designware: fix register access before host
- init
-Message-ID: <20161021162251.GD9007@localhost>
-References: <20161018082549.10905-1-l.stach@pengutronix.de>
- <20161021153142.GB9007@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021153142.GB9007@localhost>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:45277 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938588AbcJ1IyH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:54:07 -0400
+Message-Id: <3adde3ae2d6350fed9ad8b484bdd1344adce2cc5.1477611126.git.lukas@wunner.de>
+In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
+References: <cover.1477611126.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 28 Oct 2016 10:52:06 +0200
+Subject: [PATCH v2 5/9] PCI: Consolidate conditions to allow runtime PM on
+ PCIe ports
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joao, Niklas, Carlos, Jose, Jesper]
+The conditions to allow runtime PM on PCIe ports are currently spread
+across two different files:  The condition relating to hotplug ports is
+located in portdrv_pci.c whereas all other conditions are located in
+pci.c.
 
-On Fri, Oct 21, 2016 at 10:31:42AM -0500, Bjorn Helgaas wrote:
-> On Tue, Oct 18, 2016 at 10:25:49AM +0200, Lucas Stach wrote:
-> > The function used to determine if iATU unroll is available will read
-> > a RC register. This is not possible and will result in a system hang
-> > if the RC is still in reset, so it is only safe to call this function
-> > after host_init() has been called.
-> 
-> I'm sure Joao tested a0601a470537 somewhere, so I assume this hang only
-> happens on certain systems?
-> 
-> I'm wondering if this is suggesting something that's currently done
-> differently across the drivers but could be done more similarly.
-> 
-> > Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
-> > Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> > Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 035f50c03281..74510508fafc 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -637,11 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >  		}
-> >  	}
-> >  
-> > -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> > -
-> >  	if (pp->ops->host_init)
-> >  		pp->ops->host_init(pp);
-> >  
-> > +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> > +
+Consolidate all conditions in a single place in pci.c, thus making it
+easier to follow the logic and amend conditions down the road.
 
-Niklas suggested this exact change earlier [1], but Joao pointed out the
-problem with calling dw_pcie_iatu_unroll_enabled() after calling
-pp->ops->host_init():
+Note that the condition relating to hotplug ports is inserted *before*
+the condition relating to the "pcie_port_pm=force" command line option,
+so runtime PM is not afforded to hotplug ports even if this option is
+given.  That's exactly how the code behaved up until now.  If this is
+not desired, the ordering of the conditions can simply be reversed.
 
-  dw_pcie_host_init
-    pp->ops->host_init
-      dw_pcie_setup_rc
-        dw_pcie_prog_outbound_atu
-          if (pp->iatu_unroll_enabled)
-	    ...
-    pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled()
+No functional change intended.
 
-We check iatu_unroll_enabled in dw_pcie_prog_outbound_atu() before it
-has been set.
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c              | 11 +++++++++++
+ drivers/pci/pcie/portdrv_pci.c | 12 ++----------
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-Niklas' second patch [2] looks like a better fix.  Can you guys take a
-look and see if you agree?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 854d185..a19056e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2239,6 +2239,17 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 	case PCI_EXP_TYPE_DOWNSTREAM:
+ 		if (pci_bridge_d3_disable)
+ 			return false;
++
++		/*
++		 * Hotplug interrupts cannot be delivered if the link is down,
++		 * so parents of a hotplug port must stay awake. In addition,
++		 * Hotplug ports handled by firmware in System Management Mode
++		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
++		 * For simplicity, disallow in general for now.
++		 */
++		if (bridge->is_hotplug_bridge)
++			return false;
++
+ 		if (pci_bridge_d3_force)
+ 			return true;
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 1ae712c..8aa3f14 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -150,15 +150,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ 	pci_save_state(dev);
+ 
+-	/*
+-	 * Prevent runtime PM if the port is advertising support for PCIe
+-	 * hotplug.  Otherwise the BIOS hotplug SMI code might not be able
+-	 * to enumerate devices behind this port properly (the port is
+-	 * powered down preventing all config space accesses to the
+-	 * subordinate devices).  We can't be sure for native PCIe hotplug
+-	 * either so prevent that as well.
+-	 */
+-	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev)) {
+ 		/*
+ 		 * Keep the port resumed 100ms to make sure things like
+ 		 * config space accesses from userspace (lspci) will not
+@@ -176,7 +168,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
+-	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev)) {
+ 		pm_runtime_forbid(&dev->dev);
+ 		pm_runtime_get_noresume(&dev->dev);
+ 		pm_runtime_dont_use_autosuspend(&dev->dev);
+-- 
+2.9.3
 
-[1] http://lkml.kernel.org/r/b53d5807-8199-5789-6184-e37324a1d79e@axis.com
-[2] http://lkml.kernel.org/r/1476482095-26289-1-git-send-email-niklass@axis.com
-
-> >  	pp->root_bus_nr = pp->busn->start;
-> >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> >  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-> > -- 
-> > 2.9.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
