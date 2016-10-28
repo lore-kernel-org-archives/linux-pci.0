@@ -1,38 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Oct 2016 05:43:15 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [RFC PATCH 05/11] pci: rename *host* directory to *controller*
-Message-ID: <20161012124315.GC942@infradead.org>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <1473829927-20466-6-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-In-Reply-To: <1473829927-20466-6-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao.Pinto@synopsys.com,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Joao Pinto <jpinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- hch@infradead.org, m-karicheri2@ti.com, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-omap@vger.kernel.org, mingkai.hu@nxp.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:36911 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938618AbcJ1Ixo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:53:44 -0400
+Message-Id: <f2fc212d4c75a2e3f3b8162976b15881da57dfb1.1477611126.git.lukas@wunner.de>
+In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
+References: <cover.1477611126.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 28 Oct 2016 10:52:06 +0200
+Subject: [PATCH v2 4/9] PCI: Activate runtime PM on a PCIe port only if it can
+ suspend
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a big and painful change.  I'd suggest to either drop it for
-now or convince Bjorn to take it as a scripted renamed just after -rc1.
+Currently pcie_portdrv_probe() activates runtime PM on a PCIe port even
+if it will never actually suspend because the BIOS is too old or the
+"pcie_port_pm=off" option was specified on the kernel command line.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+A few CPU cycles can be saved by not activating runtime PM at all in
+these cases, because rpm_idle() and rpm_suspend() will bail out right
+at the beginning when calling rpm_check_suspend_allowed(), instead of
+carrying out various locking and assignments, invoking rpm_callback(),
+getting back -EBUSY and rolling everything back.
+
+The conditions checked in pci_bridge_d3_possible() are all static, they
+never change during uptime of the system, hence it's safe to call this
+to determine if runtime PM should be activated.
+
+No functional change intended.
+
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c              | 2 +-
+ drivers/pci/pci.h              | 1 +
+ drivers/pci/pcie/portdrv_pci.c | 5 +++--
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bc60f2c..854d185 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2226,7 +2226,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+  * This function checks if it is possible to move the bridge to D3.
+  * Currently we only allow D3 for recent enough PCIe ports.
+  */
+-static bool pci_bridge_d3_possible(struct pci_dev *bridge)
++bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ {
+ 	unsigned int year;
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 27048bb..ffffef3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -85,6 +85,7 @@ void pci_pm_init(struct pci_dev *dev);
+ void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
++bool pci_bridge_d3_possible(struct pci_dev *dev);
+ void pci_bridge_d3_update(struct pci_dev *dev);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 79327cc..1ae712c 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/dmi.h>
+ #include <linux/pci-aspm.h>
+ 
++#include "../pci.h"
+ #include "portdrv.h"
+ #include "aer/aerdrv.h"
+ 
+@@ -157,7 +158,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	 * subordinate devices).  We can't be sure for native PCIe hotplug
+ 	 * either so prevent that as well.
+ 	 */
+-	if (!dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
+ 		/*
+ 		 * Keep the port resumed 100ms to make sure things like
+ 		 * config space accesses from userspace (lspci) will not
+@@ -175,7 +176,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
+-	if (!dev->is_hotplug_bridge) {
++	if (pci_bridge_d3_possible(dev) && !dev->is_hotplug_bridge) {
+ 		pm_runtime_forbid(&dev->dev);
+ 		pm_runtime_get_noresume(&dev->dev);
+ 		pm_runtime_dont_use_autosuspend(&dev->dev);
+-- 
+2.9.3
+
