@@ -1,51 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1475713112.3784.183.camel@kernel.crashing.org>
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: John Garry <john.garry@huawei.com>, Jon Masters <jcm@jonmasters.org>,
- Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-Date: Thu, 06 Oct 2016 11:18:32 +1100
-In-Reply-To: <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
- <5869118.UilSPY9Sai@wuerfel>
- <2af4f2d8-e3a4-fa00-e700-60af70bf4560@jonmasters.org>
- <6bbfeb57-7a55-6a3e-60b2-3f44525e5882@huawei.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, gregkh@linuxfoundation.org,
- zhichang.yuan02@gmail.com, will.deacon@arm.com, linux-kernel@vger.kernel.org,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, linuxarm@huawei.com,
- xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
- zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 28 Oct 2016 14:19:07 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Rick Kerkhof <rick.2889@gmail.com>, linux-acpi@vger.kernel.org,
+        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        Robert Moore <Robert.Moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
+ via Power Resources
+Message-ID: <20161028111907.GD23812@lahna.fi.intel.com>
+References: <20161026225641.GA27017@al>
+ <20161027081748.GX1476@lahna.fi.intel.com>
+ <20161027090604.GB27017@al>
+ <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
+ <20161027093011.GZ1476@lahna.fi.intel.com>
+ <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
+ <20161027095508.GA1476@lahna.fi.intel.com>
+ <20161027160648.GF27017@al>
+ <20161028085630.GD1476@lahna.fi.intel.com>
+ <20161028110930.GA1521@al>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161028110930.GA1521@al>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTEwLTA0IGF0IDEzOjAyICswMTAwLCBKb2huIEdhcnJ5IHdyb3RlOgo+IFJp
-Z2h0LCBzbyBJIHRoaW5rIFpoaWNoYW5nIGNhbiBtYWtlIHRoZSBuZWNlc3NhcnkgZ2VuZXJpYyBj
-aGFuZ2VzIHRvwqAKPiA4MjUwIE9GIGRyaXZlciB0byBzdXBwb3J0IElPIHBvcnQgYXMgd2VsbCBh
-cyBNTUlPLWJhc2VkLgo+IAo+IEhvd2V2ZXIgYW4gTFBDLWJhc2VkIGVhcmx5Y29uIGRyaXZlciBp
-cyBzdGlsbCByZXF1aXJlZC4KPiAKPiBBIG5vdGUgb24gaGlwMDctYmFzZWQgRDA1IChmb3IgdGhv
-c2UgdW5hd2FyZSk6IHRoaXMgZG9lcyBub3QgdXNlwqAKPiBMUEMtYmFzZWQgdWFydC4gSXQgdXNl
-cyBQTDAxMS4gVGhlIGhhcmR3YXJlIGd1eXMgaGF2ZSBtYW5hZ2VkIHNvbWXCoAo+IHRyaWNrZXJ5
-IHdoZXJlIHRoZXkgbG9vcGJhY2sgdGhlIHNlcmlhbCBsaW5lIGFyb3VuZCB0aGUgQk1DL0NQTEQu
-IEJ1dCB3ZcKgCj4gc3RpbGwgbmVlZCBpdCBmb3IgaGlwMDYgRDAzIGFuZCBhbnkgb3RoZXIgYm9h
-cmRzIHdoaWNoIHdhbnQgdG8gdXNlIExQQ8KgCj4gYnVzIGZvciB1YXJ0Lgo+IAo+IEEgcXVlc3Rp
-b24gb24gU0JTQTogZG9lcyBpdCBwcm9wb3NlIGhvdyB0byBwcm92aWRlIHNlcmlhbCB2aWEgQk1D
-IGZvciBTT0w/CgpQcm9iYWJseSBhbm90aGVyIHJlYXNvbiB0byBrZWVwIDgyNTAgYXMgYSBsZWdh
-bCBvcHRpb24gLi4uIFRoZSAodmVyeQpwb3B1bGFyKSBBc3BlZWQgQk1DcyB0ZW5kIHRvIGRvIHRo
-aXMgdmlhIGEgODI1MC1sb29raW5nIHZpcnR1YWwgVUFSVCBvbgpMUEMuCgpDaGVlcnMsCkJlbiwK
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1h
-cm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
-cmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0t
-a2VybmVsCg==
+On Fri, Oct 28, 2016 at 01:09:30PM +0200, Peter Wu wrote:
+> On Fri, Oct 28, 2016 at 11:56:30AM +0300, Mika Westerberg wrote:
+> > On Thu, Oct 27, 2016 at 06:06:48PM +0200, Peter Wu wrote:
+> > > On Thu, Oct 27, 2016 at 12:55:08PM +0300, Mika Westerberg wrote:
+> > > > On Thu, Oct 27, 2016 at 09:42:28AM +0000, Rick Kerkhof wrote:
+> > > > >    No, there are not. Here is the recursive directory listing:
+> > > > 
+> > > > Are you able to try the following patch and send me dmesg (or attach it
+> > > > to that bug)? It should show if the ACPI core even tries to add those
+> > > > power resources.
+> > > 
+> > > So Rick has tested this patch now on top of 4.8.4 (mainline fails to
+> > > boot due to a kbuild issue which I reported elsewhere), but the output
+> > > is empty. That seems to indicate that flags.power_resources is unset.
+> > 
+> > Is it completely empty or is it empty just for RP05? It should print out
+> > all devices with power resources.
+> 
+> \NVP2 and \NVP3 are the only power resources under RP05 and defined in
+> SSDT1, there are no others.
+
+We should probably add a debug print before checking
+flags.power_resources just to be sure the patch is correctly applied.
