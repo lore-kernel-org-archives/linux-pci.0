@@ -1,353 +1,670 @@
-Return-Path: <davsingl@cisco.com>
-Return-Path: <davsingl@cisco.com>
-From: "David Singleton -X (davsingl - MONTA VISTA SOFTWARE INC at Cisco)"
-	<davsingl@cisco.com>
-To: "helgaas@kernel.org" <helgaas@kernel.org>
-CC: "David Singleton -X (davsingl - MONTA VISTA SOFTWARE INC at Cisco)"
-	<davsingl@cisco.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "Steve Shih (sshih)" <sshih@cisco.com>,
-        "xe-kernel@external.cisco.com" <xe-kernel@external.cisco.com>
-Subject: Re: Re: [PATCH] pcie: aer: aerdrv: PCIe AER workaround and handling
- for ASR1K platforms.
-Date: Sat, 22 Oct 2016 03:27:10 +0000
-Message-ID: <9D016821-8AF9-4995-A17D-7580C814BDD8@cisco.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 28 Oct 2016 12:53:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ruqiang Ju <juruqiang@huawei.com>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bin.chen@linaro.org,
+        elder@linaro.org, hermit.wangheming@hisilicon.com,
+        yanhaifeng@hisilicon.com, xuejiancheng@hisilicon.com
+Subject: Re: [PATCH 1/2] PCI: hisi: add PCIe driver support for HiSilicon STB
+ SoCs
+Message-ID: <20161028175306.GA13927@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477014336-12385-1-git-send-email-juruqiang@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Qmpvcm4sDQoNCiAgIHNvcnJ5IGZvciB0aGUgZGVsYXkgaW4gZ2V0dGluZyBiYWNrIHRvIHlvdS4g
-IFRoZSBmaXJzdCBwYXRjaCB3YXMgaW5jb21wbGV0ZS4gIFRoZSBwYXRjaCB3YXMgbm90IGEgDQpj
-b21wbGV0ZSB1bml0LiAgVGhlcmUgd2FzIGEgc2Vjb25kIHBhdGNoIHRoYXQgaGFzIHRoZSBjYWxs
-ZXJzIG9mIHRoZQ0Kcm91dGluZXMgaW4gcXVlc3Rpb24uDQoNCiAgIEFwcGVuZGVkIGFyZSB0aGUg
-dHdvIHBhdGNoZXMgbWVyZ2VkIGludG8gb25lIG5ldyBwYXRjaC4gIEFuZCBoZXJlIGlzIGFuIGV4
-cGxhbmF0aW9uIGZyb20NCnRoZSBvcmlnaW5hbCBBdXRob3IsICBTdGV2ZSBTaGloLg0KDQpIaSBT
-dGV2ZSAmIERhdmlkLA0KDQpPbiBNb24sIE9jdCAxNywgMjAxNiBhdCAwOTo1MTowNkFNIC0wNzAw
-LCBEYXZpZCBTaW5nbGV0b24gd3JvdGU6DQo+IEZyb206IFN0ZXZlIFNoaWggDQo8c3NoaWhAY2lz
-Y28uY29tPg0KDQo+IA0KPiBBU1IxSyBGUEdBcyBhbmQgQVNJQ3MgYXJlIGNvbmZpZ3VyZWQgdG8g
-cmFpc2UgU0VSUi9QRVJSIHRocm91Z2ggUENJZSBBRVIuDQo+IFdoZW4gYW4gZXJyb3IgaXMgcmFp
-c2VkLCBpdCBpcyBkZXRlY3RlZCBhdCB0aGUgcm9vdCBjb21wbGV4LCBidXQgaXQgaXMgbm90DQo+
-IGRldGVjdGVkIGJ5IHRoZSBBRVIgZHJpdmVyLiBJZiB0aGUgcm9vdCBjb21wbGV4IGJyaWRnZSBj
-b250cm9sIHJlZ2lzdGVyIGlzDQo+IGNvbmZpZ3VyZWQgdG8gZm9yd2FyZCBzZWNvbmRhcnkgYnVz
-IGVycm9ycyB0byB0aGUgcHJpbWFyeSBidXMgKHdoaWNoIGlzIG5vdA0KPiB0aGUgY2FzZSBieSBk
-ZWZhdWx0KSwgdGhlbiB0aGUgYWVyZHJ2LmM6YWVyX2lycSgpIGlzIGludm9rZWQsIGJ1dCB0aGUg
-aWQgcmVhZA0KPiBmcm9tIHRoZSBQQ0lfRVJSX1JPT1RfQ09SX1NSQyByZWdpc3RlciBpcyAwLiBX
-aGVuIGFlcl9pc3Jfb25lX2Vycm9yKCkNCj4gcHJvY2Vzc2VzIHRoZSB3b3JrIHBvc3RlZCBieSBh
-ZXJfaXJxKCksIGl0IHN1YnNlcXVlbnRseSBjb21wbGFpbnMgdGhhdA0KPiAiYWVyX2lzcl9vbmVf
-ZXJyLT5jYW4ndCBmaW5kIGRldmljZSBvZiBJRDAwMDAiLg0KPiANCj4gTW9kaWZpY2F0aW9ucyBu
-ZWVkIHRvIGJlIG1hZGUgc3VjaCB0aGF0IFBDSWUgQUVSIGFyZSBwcm9wYWdhdGVkIHRocm91Z2gg
-dGhlDQo+IHJvb3QgY29tcGxleCBkZXRlY3RlZCBieSB0aGUgQUVSIGRyaXZlciBhbmQgZGVsaXZl
-cmVkIHRvIHRoZSBBU1IxSyBQQ0kgZXJyb3INCj4gaGFuZGxlci4NCj4gDQo+IEluIGFkZGl0aW9u
-cywgTUNINTEwMCBhbmQgMzUwMC81NTAwIEpGIHNlbmQgYnJvYWRjYXN0IEVPSSB0byBzdWJvcmRp
-bmF0ZQ0KPiBkZXZpY2VzLiBIb3dldmVyLCB0aGUgQ2lzY28gRlBHQXMgYW5kIEFTSUNzIGRvbid0
-IGhhbmRsZSB0aGUgdmVuZG9yIChJbnRlbCkNCj4gc3BlY2lmaWMgbWVzc2FnZXMgcHJvcGVybHkg
-YW5kIHJhc2VzIFVuY29ycmVjdGFibGUgYW5kIFVuc3VwcG9ydGVkIFJlcXVlc3QNCj4gZXJyb3Jz
-LiBUaHVzLCBuZWVkIHRvIGRpc2FibGUgRU9JIEJyb2FkY2FzdC4NCj4gDQo+IFRoaXMgY2hhbmdl
-IGlzIG5lZWRlZCB0byBzdXBwb3J0IDFSVSwgRlA0MCwgS2luZ3BpbiwgRlA4MCwgYW5kIEZQMTYw
-Lg0KDQpDYW4geW91IGhlbHAgbWUgdW5kZXJzdGFuZCB0aGlzPyAgSSdtIGhhdmluZyB0cm91Ymxl
-IGNvbm5lY3RpbmcgdGhlDQpjaGFuZ2Vsb2cgdG8gdGhlIHBhdGNoLiAgVGhlIHBhdGNoIGFkZHMg
-YSBwY2lfYWVyX3NldF9jYWxsYmFja3MoKQ0KaW50ZXJmYWNlLCBidXQgbm8gdXNlcnMgb2YgaXQu
-ICBJdCBhbHNvIGFkZHMgYSBwY2lfZml4dXBfYWVyX2VuYWJsZQ0KZml4dXAgcGhhc2UsIGJ1dCBp
-dCBpcyBhbHNvIHVudXNlZC4NCg0KVGhlIGNoYW5nZWxvZyBtZW50aW9ucyBhIGNoYW5nZSB0byB0
-aGUgcm9vdCBjb21wbGV4IGJyaWRnZSBjb250cm9sDQpyZWdpc3RlciwgYnV0IEkgZG9uJ3Qgc2Vl
-IHRoYXQgaW4gdGhlIHBhdGNoLiAgSXQgYWxzbyBtZW50aW9ucyBhDQpicm9hZGNhc3QgRU9JIGNo
-YW5nZSwgd2hpY2ggYWxzbyBkb2Vzbid0IGFwcGVhciBpbiB0aGUgcGF0Y2guDQoNCldlIGhhdmUg
-YW5vdGhlciBwbGF0Zm9ybSB3aGVyZSBBRVIgZG9lc24ndCB3b3JrIHdpdGggdGhlIGV4aXN0aW5n
-DQpMaW51eCBkcml2ZXI7IHNlZSBbMV0uICBJdCdkIGJlIG5pY2UgaWYgaXQgdHVybmVkIG91dCB0
-aGF0IHRoZSBzYW1lDQpzb3J0IG9mIGNoYW5nZSB3b3VsZCBoZWxwIGJvdGggdGhhdCBzeXN0ZW0g
-YW5kIHlvdXIgQ2lzY28gcGxhdGZvcm1zLg0KDQpJJ20gZmFtaWxpYXIgd2l0aCB0aGUgbm9ybWFs
-IFBDSSBCcmlkZ2UgQ29udHJvbCBSZWdpc3Rlci4gIEJ1dCBJIGRvbid0DQprbm93IHdoYXQgdGhl
-ICJyb290IGNvbXBsZXggYnJpZGdlIGNvbnRyb2wgcmVnaXN0ZXIiIGlzLiAgQ2FuIHlvdQ0KcG9p
-bnQgbWUgdG8gYSBzZWN0aW9uIG9mIHRoZSBzcGVjPyAgU2luY2UgeW91IG1lbnRpb24gZm9yd2Fy
-ZGluZw0Kc2Vjb25kYXJ5IGJ1cyBlcnJvcnMgdG8gdGhlIHByaW1hcnkgYnVzLCBtYXliZSB5b3Ug
-bWVhbiBhIFJvb3QgUG9ydA0KYnJpZGdlIGNvbnRyb2wgcmVnaXN0ZXI/DQoNCklzIHRoaXMgYSBj
-YXNlIG9mIHRoZSBoYXJkd2FyZSBub3QgcXVpdGUgY29uZm9ybWluZyB0byB0aGUgc3BlYywgb3Ig
-aXMNCml0IGEgY2FzZSBvZiBzcGVjLWNvbXBsaWFudCBoYXJkd2FyZSB3aGVyZSBMaW51eCBpcyBq
-dXN0IG1pc3NpbmcNCnN1cHBvcnQgZm9yIHRoaXMgcGFydGljdWxhciBjYXNlPw0KDQpJJ20gZ29p
-bmcgdG8gcmVzaXN0IGFkZGluZyBhIG5ldyBmaXh1cCBwaGFzZSwgZXNwZWNpYWxseSBvbmUgYXMN
-CnNwZWNpYWwtcHVycG9zZSBhcyB0aGlzIG9uZSBhcHBlYXJzIHRvIGJlLiAgV2l0aG91dCBzZWVp
-bmcgdGhlIHdheSB5b3UNCndhbnQgdG8gYWN0dWFsbHkgdXNlIGl0LCBpdCdzIGhhcmQgdG8gdGVs
-bCwgYnV0IGxpa2VseSBvbmUgb2YgdGhlDQpleGlzdGluZyBmaXh1cCBwaGFzZXMgd291bGQgYmUg
-ZW5vdWdoLg0KDQpCam9ybg0KDQoNCg0KICBZZXMsIGl04oCZcyB0aGUgcm9vdCBwb3J0IFBDSSBi
-cmlkZ2UgY29udHJvbCByZWdpc3RlciBhdCBvZmZzZXQgMHgzZToNCiANCiNkZWZpbmUgUENJX0JS
-SURHRV9DT05UUk9MICAgICAgMHgzZQ0KI2RlZmluZSAgUENJX0JSSURHRV9DVExfUEFSSVRZICAw
-eDAxICAgIC8qIEVuYWJsZSBwYXJpdHkgZGV0ZWN0aW9uIG9uIHNlY29uZGFyeSBpbnRlcmZhY2Ug
-Ki8NCiNkZWZpbmUgIFBDSV9CUklER0VfQ1RMX1NFUlIgICAgMHgwMiAgICAvKiBUaGUgc2FtZSBm
-b3IgU0VSUiBmb3J3YXJkaW5nICovDQojZGVmaW5lICBQQ0lfQlJJREdFX0NUTF9JU0EgICAgIDB4
-MDQgICAgLyogRW5hYmxlIElTQSBtb2RlICovDQojZGVmaW5lICBQQ0lfQlJJREdFX0NUTF9WR0Eg
-ICAgIDB4MDggICAgLyogRm9yd2FyZCBWR0EgYWRkcmVzc2VzICovDQojZGVmaW5lICBQQ0lfQlJJ
-REdFX0NUTF9NQVNURVJfQUJPUlQgICAgMHgyMCAgLyogUmVwb3J0IG1hc3RlciBhYm9ydHMgKi8N
-CiNkZWZpbmUgIFBDSV9CUklER0VfQ1RMX0JVU19SRVNFVCAgICAgICAweDQwICAgIC8qIFNlY29u
-ZGFyeSBidXMgcmVzZXQgKi8NCiNkZWZpbmUgIFBDSV9CUklER0VfQ1RMX0ZBU1RfQkFDSyAgICAg
-ICAweDgwICAgIC8qIEZhc3QgQmFjazJCYWNrIGVuYWJsZWQgb24gc2Vjb25kYXJ5IGludGVyZmFj
-ZSAqLw0KIA0KICAgICAgICAvKg0KICAgICAgICAgKiBXZSBtdXN0IGFsc28gZm9yd2FyZCAjU0VS
-UiBhbmQgI1BFUlIgZnJvbSB0aGUgc2Vjb25kYXJ5DQogICAgICAgICAqIHRvIHByaW1hcnkgYnVz
-LiAgVGhpcyB3aWxsIHJlc3VsdCBpbiB0aGUgQUVSIGRyaXZlcg0KICAgICAgICAgKiByZWNlaXZp
-bmcgYW4gaW50ZXJydXB0IHRoYXQgY2FuIHRoZW4gYmUgZGVsaXZlcmVkIHRvDQogICAgICAgICAq
-IHRoZSBkZXZpY2Ugc3BlY2lmaWMgZHJpdmVyLg0KICAgICAgICAgKi8NCiAgICAgICAgcGNpX3Jl
-YWRfY29uZmlnX3dvcmQocGRldiwgUENJX0JSSURHRV9DT05UUk9MLCAmcmVnMTYpOw0KICAgICAg
-ICByZWcxNiB8PSBQQ0lfQlJJREdFX0NUTF9QQVJJVFkgfCBQQ0lfQlJJREdFX0NUTF9TRVJSOw0K
-ICAgICAgICBwY2lfd3JpdGVfY29uZmlnX3dvcmQocGRldiwgUENJX0JSSURHRV9DT05UUk9MLCBy
-ZWcxNik7DQogDQogDQpZZXMsIHRoZSBDaXNjbyBGUEdBL0FTSUMgaXMgbm90IGNvbmZpcm1pbmcg
-dG8gdGhlIFBDSWUgc3RhbmRhcmQgaW4gaGFuZGxpbmcgdmVuZG9yIHNwZWNpZmljIG1lc3NhZ2Vz
-LiBJbnN0ZWFkIG9mIGlnbm9yaW5nIHRoZSBJbnRlbCBzcGVjaWZpYyBtZXNzYWdlcywgdGhlIEZQ
-R0EvQVNJQyByYWlzZXMgVW5jb3JyZWN0YWJsZSBhbmQgVW5zdXBwb3J0ZWQgUmVxdWVzdCBlcnJv
-cnMuDQogDQogICAgICAgIC8qDQogICAgICAgICAqIDM1MDAvNTUwMCBzZXJpZXMgQ1BVcyAoSkYp
-IHNlbmQgYnJvYWRjYXN0IEVPSSB0bw0KICAgICAgICAgKiBzdWJvcmRpbmF0ZSBkZXZpY2VzLiBJ
-dCBpcyBhIHZlbmRvciAoSW50ZWwpIHNwZWNpZmljDQogICAgICAgICAqIG1lc3NhZ2UgdGhhdCBz
-aG91bGQgYmUgaWdub3JlZCBieSBub24tSW50ZWwgZGV2aWNlcywNCiAgICAgICAgICogYnV0IG91
-ciBkZXZpY2VzIChZb2RhIGV0YykgZG8gbm90IGlnbm9yZSBpdCBhbmQNCiAgICAgICAgICogcmFp
-c2UgVW5jb3JyZWN0YWJsZSBhbmQgVW5zdXBwb3J0ZWQgUmVxdWVzdA0KICAgICAgICAgKiBlcnJv
-cnMuDQogICAgICAgICAqDQogICAgICAgICAqIFRoZSBFT0kgaXMgZm9yIHRoZSBJbnRlbCBJTyBB
-UElDLCB3aGljaCBpcyBub3QNCiAgICAgICAgICogcHJlc2VudCBhbmQgdGhlcmVmb3JlIG5vdCBy
-ZXF1aXJlZC4NCiAgICAgICAgICoNCiAgICAgICAgICogRGlzYWJsZSBFT0kgQnJvYWRjYXN0IHRv
-IGF2b2lkIFVuY29ycmVjdGFibGUgYW5kDQogICAgICAgICAqIFVuc3VwcG9ydGVkIHJlcXVlc3Qg
-ZXJyb3JzIGZyb20gZGV2aWNlcyB3aGljaCBkbw0KICAgICAgICAgKiBub3Qgc3VwcG9ydCB0aGUg
-RU9JIGFuZCBkbyBub3QgYWRoZXJlIHRvIHRoZSBQQ0llDQogICAgICAgICAqIHNwZWMuDQogICAg
-ICAgICAqLw0KICAgICAgICBwY2lfcmVhZF9jb25maWdfZHdvcmQocGRldiwgTUlTQ0NUUkxTVFNf
-UkVHLCAmcmVnMzIpOw0KICAgICAgICByZWczMiB8PSBNSVNDQ1RSTFNUU19ESVNBQkxFX0VPSV9N
-QVNLOw0KICAgICAgICBwY2lfd3JpdGVfY29uZmlnX2R3b3JkKHBkZXYsIE1JU0NDVFJMU1RTX1JF
-RywgcmVnMzIpOw0KIA0KLVN0ZXZlDQoNCkZyb20gYmY1MmIxOGQ2YmFiZjRkMWZmNzliNjAzNjM2
-OWFmOWQ1ZGM5OTFiZSBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCkZyb206IFN0ZXZlIFNoaWgg
-PHNzaGloQGNpc2NvLmNvbT4NCkRhdGU6IE1vbiwgMTAgT2N0IDIwMTYgMTk6MjM6NTggLTA3MDAN
-ClN1YmplY3Q6IFtQQVRDSF0gcGNpZTogYWVyOiBhZXJkcnY6IFBDSWUgQUVSIHdvcmthcm91bmQg
-YW5kIGhhbmRsaW5nIGZvciBBU1IxSw0KIHBsYXRmb3Jtcy4NCg0KQVNSMUsgRlBHQXMgYW5kIEFT
-SUNzIGFyZSBjb25maWd1cmVkIHRvIHJhaXNlIFNFUlIvUEVSUiB0aHJvdWdoIFBDSWUgQUVSLg0K
-V2hlbiBhbiBlcnJvciBpcyByYWlzZWQsIGl0IGlzIGRldGVjdGVkIGF0IHRoZSByb290IGNvbXBs
-ZXgsIGJ1dCBpdCBpcyBub3QNCmRldGVjdGVkIGJ5IHRoZSBBRVIgZHJpdmVyLiBJZiB0aGUgcm9v
-dCBjb21wbGV4IGJyaWRnZSBjb250cm9sIHJlZ2lzdGVyIGlzDQpjb25maWd1cmVkIHRvIGZvcndh
-cmQgc2Vjb25kYXJ5IGJ1cyBlcnJvcnMgdG8gdGhlIHByaW1hcnkgYnVzICh3aGljaCBpcyBub3QN
-CnRoZSBjYXNlIGJ5IGRlZmF1bHQpLCB0aGVuIHRoZSBhZXJkcnYuYzphZXJfaXJxKCkgaXMgaW52
-b2tlZCwgYnV0IHRoZSBpZCByZWFkDQpmcm9tIHRoZSBQQ0lfRVJSX1JPT1RfQ09SX1NSQyByZWdp
-c3RlciBpcyAwLiBXaGVuIGFlcl9pc3Jfb25lX2Vycm9yKCkNCnByb2Nlc3NlcyB0aGUgd29yayBw
-b3N0ZWQgYnkgYWVyX2lycSgpLCBpdCBzdWJzZXF1ZW50bHkgY29tcGxhaW5zIHRoYXQNCiJhZXJf
-aXNyX29uZV9lcnItPmNhbid0IGZpbmQgZGV2aWNlIG9mIElEMDAwMCIuDQoNCk1vZGlmaWNhdGlv
-bnMgbmVlZCB0byBiZSBtYWRlIHN1Y2ggdGhhdCBQQ0llIEFFUiBhcmUgcHJvcGFnYXRlZCB0aHJv
-dWdoIHRoZQ0Kcm9vdCBjb21wbGV4IGRldGVjdGVkIGJ5IHRoZSBBRVIgZHJpdmVyIGFuZCBkZWxp
-dmVyZWQgdG8gdGhlIEFTUjFLIFBDSSBlcnJvcg0KaGFuZGxlci4NCg0KSW4gYWRkaXRpb25zLCBN
-Q0g1MTAwIGFuZCAzNTAwLzU1MDAgSkYgc2VuZCBicm9hZGNhc3QgRU9JIHRvIHN1Ym9yZGluYXRl
-DQpkZXZpY2VzLiBIb3dldmVyLCB0aGUgQ2lzY28gRlBHQXMgYW5kIEFTSUNzIGRvbid0IGhhbmRs
-ZSB0aGUgdmVuZG9yIChJbnRlbCkNCnNwZWNpZmljIG1lc3NhZ2VzIHByb3Blcmx5IGFuZCByYXNl
-cyBVbmNvcnJlY3RhYmxlIGFuZCBVbnN1cHBvcnRlZCBSZXF1ZXN0DQplcnJvcnMuIFRodXMsIG5l
-ZWQgdG8gZGlzYWJsZSBFT0kgQnJvYWRjYXN0Lg0KDQpUaGlzIGNoYW5nZSBpcyBuZWVkZWQgdG8g
-c3VwcG9ydCAxUlUsIEZQNDAsIEtpbmdwaW4sIEZQODAsIGFuZCBGUDE2MC4NCg0KQ2M6IHhlLWtl
-cm5lbEBleHRlcm5hbC5jaXNjby5jb20NClNpZ25lZC1vZmYtYnk6IFN0ZXZlIFNoaWggPHNzaGlo
-QGNpc2NvLmNvbT4NClNpZ25lZC1vZmYtYnk6IERhdmlkIFNpbmdsZXRvbiA8ZGF2c2luZ2xAY2lz
-Y28uY29tPg0KLS0tDQogYXJjaC94ODYvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgfCAgIDkg
-KysNCiBhcmNoL3g4Ni9wbGF0Zm9ybS9NYWtlZmlsZSAgICAgICAgICB8ICAgMSArDQogYXJjaC94
-ODYvcGxhdGZvcm0vYXNyMWsvTWFrZWZpbGUgICAgfCAgIDEgKw0KIGFyY2gveDg2L3BsYXRmb3Jt
-L2FzcjFrL2FzcjFrX2Flci5jIHwgMTY1ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKw0KIGRyaXZlcnMvcGNpL3BjaWUvYWVyL2FlcmRydi5jICAgICAgIHwgIDEzICsrKw0KIGRy
-aXZlcnMvcGNpL3BjaWUvYWVyL2FlcmRydi5oICAgICAgIHwgICA1ICsrDQogZHJpdmVycy9wY2kv
-cXVpcmtzLmMgICAgICAgICAgICAgICAgfCAgIDcgKysNCiBpbmNsdWRlL2FzbS1nZW5lcmljL3Zt
-bGludXgubGRzLmggICB8ICAgMyArDQogaW5jbHVkZS9saW51eC9wY2kuaCAgICAgICAgICAgICAg
-ICAgfCAgIDUgKysNCiA5IGZpbGVzIGNoYW5nZWQsIDIwOSBpbnNlcnRpb25zKCspDQogY3JlYXRl
-IG1vZGUgMTAwNjQ0IGFyY2gveDg2L3BsYXRmb3JtL2FzcjFrL01ha2VmaWxlDQogY3JlYXRlIG1v
-ZGUgMTAwNjQ0IGFyY2gveDg2L3BsYXRmb3JtL2FzcjFrL2FzcjFrX2Flci5jDQoNCmRpZmYgLS1n
-aXQgYS9hcmNoL3g4Ni9LY29uZmlnIGIvYXJjaC94ODYvS2NvbmZpZw0KaW5kZXggYmFkYTYzNi4u
-MTFiZGNiMiAxMDA2NDQNCi0tLSBhL2FyY2gveDg2L0tjb25maWcNCisrKyBiL2FyY2gveDg2L0tj
-b25maWcNCkBAIC00NDksNiArNDQ5LDE1IEBAIGNvbmZpZyBYODZfRVhURU5ERURfUExBVEZPUk0N
-CiBlbmRpZg0KICMgVGhpcyBpcyBhbiBhbHBoYWJldGljYWxseSBzb3J0ZWQgbGlzdCBvZiA2NCBi
-aXQgZXh0ZW5kZWQgcGxhdGZvcm1zDQogIyBQbGVhc2UgbWFpbnRhaW4gdGhlIGFscGhhYmV0aWMg
-b3JkZXIgaWYgYW5kIHdoZW4gdGhlcmUgYXJlIGFkZGl0aW9ucw0KKw0KK2NvbmZpZyBYODZfQVNS
-MUsNCisJYm9vbCAiQ2lzY28gQVNSMUsiDQorCWRlcGVuZHMgb24gWDg2XzY0DQorCWRlcGVuZHMg
-b24gWDg2X0VYVEVOREVEX1BMQVRGT1JNDQorCS0tLWhlbHAtLS0NCisJICBUaGlzIG9wdGlvbiBp
-cyBuZWVkZWQgaW4gb3JkZXIgdG8gc3VwcG9ydCBDaXNjbyBBU1IxSyBwbGF0Zm9ybXMuDQorCSAg
-SWYgeW91IGRvbid0IGhhdmUgb25lIG9mIHRoZXNlLCB5b3Ugc2hvdWxkIHNheSBOIGhlcmUuDQor
-DQogY29uZmlnIFg4Nl9OVU1BQ0hJUA0KIAlib29sICJOdW1hc2NhbGUgTnVtYUNoaXAiDQogCWRl
-cGVuZHMgb24gWDg2XzY0DQpkaWZmIC0tZ2l0IGEvYXJjaC94ODYvcGxhdGZvcm0vTWFrZWZpbGUg
-Yi9hcmNoL3g4Ni9wbGF0Zm9ybS9NYWtlZmlsZQ0KaW5kZXggM2MzYzE5ZS4uY2JhZThjMiAxMDA2
-NDQNCi0tLSBhL2FyY2gveDg2L3BsYXRmb3JtL01ha2VmaWxlDQorKysgYi9hcmNoL3g4Ni9wbGF0
-Zm9ybS9NYWtlZmlsZQ0KQEAgLTEsNSArMSw2IEBADQogIyBQbGF0Zm9ybSBzcGVjaWZpYyBjb2Rl
-IGdvZXMgaGVyZQ0KIG9iai15CSs9IGF0b20vDQorb2JqLSQoWDg2X0FTUjFLKQkrPSBhc3Ixay8N
-CiBvYmoteQkrPSBjZTQxMDAvDQogb2JqLXkJKz0gZWZpLw0KIG9iai15CSs9IGdlb2RlLw0KZGlm
-ZiAtLWdpdCBhL2FyY2gveDg2L3BsYXRmb3JtL2FzcjFrL01ha2VmaWxlIGIvYXJjaC94ODYvcGxh
-dGZvcm0vYXNyMWsvTWFrZWZpbGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAw
-Li4wMjE5ZTQwDQotLS0gL2Rldi9udWxsDQorKysgYi9hcmNoL3g4Ni9wbGF0Zm9ybS9hc3Ixay9N
-YWtlZmlsZQ0KQEAgLTAsMCArMSBAQA0KK29iai0kKENPTkZJR19QQ0lFQUVSKQkrPSBhc3Ixa19h
-ZXIubw0KZGlmZiAtLWdpdCBhL2FyY2gveDg2L3BsYXRmb3JtL2FzcjFrL2FzcjFrX2Flci5jIGIv
-YXJjaC94ODYvcGxhdGZvcm0vYXNyMWsvYXNyMWtfYWVyLmMNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0
-DQppbmRleCAwMDAwMDAwLi42OTYyNjcyDQotLS0gL2Rldi9udWxsDQorKysgYi9hcmNoL3g4Ni9w
-bGF0Zm9ybS9hc3Ixay9hc3Ixa19hZXIuYw0KQEAgLTAsMCArMSwxNjUgQEANCisvKg0KKyAqIENp
-c2NvIEFTUjFLIHBsYXRmb3JtIFBDSWUgQUVSIHN1cHBvcnQNCisgKg0KKyAqIENvcHlyaWdodCAo
-YykgMjAxNSBieSBjaXNjbyBTeXN0ZW1zLCBJbmMuDQorICovDQorDQorI2luY2x1ZGUgPGxpbnV4
-L3BjaS5oPg0KKyNpbmNsdWRlIDwuLi8uLi8uLi9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnYu
-aD4NCisNCisvKiBNQ0ggNTEwMCAqLw0KKyNkZWZpbmUgUENJX0RFVklDRV9JRF81MTAwX1BPUlRf
-MCAgIAkweDcyNzANCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfNTEwMF9QT1JUXzJfMwkweDY1RjcN
-CisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfNTEwMF9QT1JUXzYJMHg2NUU2DQorI2RlZmluZSBQRVhD
-VFJMMwkJCTB4NEQNCisjZGVmaW5lIFBFWENUUkwzX01TSV9SQVNfRVJSRU4JCTB4MDENCisjZGVm
-aW5lIFBFWENUUkwJCQkJMHg0OA0KKyNkZWZpbmUgUEVYQ1RSTF9ESVNfQVBJQ19FT0kJCTB4MDIN
-CisNCisvKiBKYXNwZXIgRm9yZXN0IC0gMzUwMC81NTAwIFNlcmllcyAqLw0KKyNkZWZpbmUgUENJ
-X0RFVklDRV9JRF8zNTAwX1BPUlRfMQkweDM3MjENCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfMzUw
-MF9QT1JUXzIJMHgzNzIyDQorI2RlZmluZSBQQ0lfREVWSUNFX0lEXzM1MDBfUE9SVF8zCTB4Mzcy
-Mw0KKyNkZWZpbmUgUENJX0RFVklDRV9JRF8zNTAwX1BPUlRfNAkweDM3MjQNCisjZGVmaW5lIE1J
-U0NDVFJMU1RTX1JFRwkJCTB4MTg4DQorI2RlZmluZSBNSVNDQ1RSTFNUU19ESVNBQkxFX0VPSV9N
-QVNLCTB4MDQwMDAwMDANCisNCitzdGF0aWMgaW50IGFlcl9lcnJfc3JjX21jaDUxMDAoc3RydWN0
-IHBjaV9kZXYgKnBkZXYsIHVuc2lnbmVkIGludCAqaWQpDQorew0KKwkvKg0KKwkgKiBNQ0ggNTEw
-MCBkb2Vzbid0IHBvcHVsYXRlIHNyYyByZWdpc3RlciwgZXhwbGFpbmVkDQorCSAqIGluIGFuIGVy
-cmF0YSwgc28gaGFyZCBjb2RpbmcgdGhlIHNvdXJjZSBpZA0KKwkgKi8NCisJKmlkID0gKChwZGV2
-LT5kZXZmbiA8PCAxNikgfCBwZGV2LT5kZXZmbik7DQorDQorCXJldHVybiAwOw0KK30NCisNCitz
-dGF0aWMgaW50IGFlcl9lcnJfc3JjX2pmKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCB1bnNpZ25lZCBp
-bnQgKmlkKQ0KK3sNCisJLyoNCisJICogWGVvbiAzNTAwLzU1MDAgc2VyaWVzIChKYXNwZXIgRm9y
-ZXN0KSBkb2Vzbid0IHBvcHVsYXRlDQorCSAqIHRoZSBzb3VyY2UgcmVnaXN0ZXIgZWl0aGVyLCBz
-byB3ZSBtdXN0IGhhcmQgY29kZS4NCisJICovDQorCXVuc2lnbmVkIGludCBkZXZmbiA9IChwZGV2
-LT5zdWJvcmRpbmF0ZS0+bnVtYmVyIDw8IDgpIHwNCisJCQkJUENJX0RFVkZOKDAsMCk7DQorCSpp
-ZCA9IChkZXZmbiA8PCAxNikgfCBkZXZmbjsNCisNCisJcmV0dXJuIDA7DQorfQ0KKw0KK2ludCBh
-ZXJfZXJyX3NyYyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCB1bnNpZ25lZCBpbnQgKmlkKQ0KK3sNCisJ
-aWYgKChkZXYtPnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0lOVEVMKSAmJg0KKwkgICAgKChkZXYt
-PmRldmljZSA9PSBQQ0lfREVWSUNFX0lEXzUxMDBfUE9SVF8wKSB8fA0KKwkgICAgIChkZXYtPmRl
-dmljZSA9PSBQQ0lfREVWSUNFX0lEXzUxMDBfUE9SVF8yXzMpIHx8DQorCSAgICAgKGRldi0+ZGV2
-aWNlID09IFBDSV9ERVZJQ0VfSURfNTEwMF9QT1JUXzYpKSkNCisJCXJldHVybiBhZXJfZXJyX3Ny
-Y19tY2g1MTAwKGRldiwgaWQpOw0KKw0KKwlpZiAoKGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1Jf
-SURfSU5URUwpICYmDQorCSAgICAoKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfMzUwMF9Q
-T1JUXzEpIHx8DQorCSAgICAgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfMzUwMF9QT1JU
-XzIpIHx8DQorCSAgICAgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfMzUwMF9QT1JUXzMp
-IHx8DQorCSAgICAgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfMzUwMF9QT1JUXzQpKSkN
-CisJCXJldHVybiBhZXJfZXJyX3NyY19qZihkZXYsIGlkKTsNCisNCisJcmV0dXJuIDA7DQorfQ0K
-Kw0KK3N0YXRpYyBib29sIGFlcl9jYWxsYmFja3Nfc2V0Ow0KKw0KK3N0YXRpYyBzdHJ1Y3QgcGNp
-X2Flcl9jYWxsYmFja3MgYWVyX2NhbGxiYWNrcyA9IHsNCisJLmVycm9yX3NvdXJjZSA9IGFlcl9l
-cnJfc3JjLA0KK307DQorDQorc3RhdGljIHZvaWQgYWVyX2VuYWJsZV9yb290cG9ydF9tY2g1MTAw
-KHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KK3sNCisJdTMyIHJlZzMyOw0KKwl1OCByZWc4Ow0KKw0K
-KwlpZiAoIWFlcl9jYWxsYmFja3Nfc2V0KSB7DQorCQlwY2lfYWVyX3NldF9jYWxsYmFja3MoJmFl
-cl9jYWxsYmFja3MpOw0KKwkJYWVyX2NhbGxiYWNrc19zZXQgPSB0cnVlOw0KKwl9DQorDQorCS8q
-DQorCSAqIE1DSDUxMDAgc2VuZHMgYnJvYWRjYXN0IEVPSSB0byBzdWJvcmRpbmF0ZQ0KKwkgKiBk
-ZXZpY2VzLiBJdCBpcyBhIHZlbmRvciAoSW50ZWwpIHNwZWNpZmljIG1lc3NhZ2UNCisJICogdGhh
-dCBzaG91bGQgYmUgaWdub3JlZCBieSBub24tSW50ZWwgZGV2aWNlcywgYnV0DQorCSAqIG91ciBk
-ZXZpY2VzIChIeXRvcCBldGMpIGRvIG5vdCBpZ25vcmUgaXQgYW5kDQorCSAqIHJhaXNlIFVuY29y
-cmVjdGFibGUgYW5kIFVuc3VwcG9ydGVkIFJlcXVlc3QNCisJICogZXJyb3JzLg0KKwkgKg0KKwkg
-KiBUaGUgRU9JIGlzIGZvciB0aGUgSW50ZWwgSU8gQVBJQywgd2hpY2ggaXMgbm90DQorCSAqIHBy
-ZXNlbnQgYW5kIHRoZXJlZm9yZSBub3QgcmVxdWlyZWQuDQorCSAqDQorCSAqIERpc2FibGUgRU9J
-IEJyb2FkY2FzdCB0byBhdm9pZCBVbmNvcnJlY3RhYmxlIGFuZA0KKwkgKiBVbnN1cHBvcnRlZCBy
-ZXF1ZXN0IGVycm9ycyBmcm9tIGRldmljZXMgd2hpY2ggZG8NCisJICogbm90IHN1cHBvcnQgdGhl
-IEVPSSBhbmQgZG8gbm90IGFkaGVyZSB0byB0aGUgUENJZQ0KKwkgKiBzcGVjLg0KKwkgKi8NCisJ
-cGNpX3JlYWRfY29uZmlnX2R3b3JkKHBkZXYsIFBFWENUUkwsICZyZWczMik7DQorCXJlZzMyIHw9
-IFBFWENUUkxfRElTX0FQSUNfRU9JOw0KKwlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKHBkZXYsIFBF
-WENUUkwsIHJlZzMyKTsNCisNCisJLyogRW5hYmxlIE1TSSAqLw0KKwlwY2lfcmVhZF9jb25maWdf
-Ynl0ZShwZGV2LCBQRVhDVFJMMywgJnJlZzgpOw0KKwlyZWc4IHw9IFBFWENUUkwzX01TSV9SQVNf
-RVJSRU47DQorCXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2LCBQRVhDVFJMMywgcmVnOCk7DQor
-fQ0KKw0KK3N0YXRpYyB2b2lkIGFlcl9lbmFibGVfcm9vdHBvcnRfamYoc3RydWN0IHBjaV9kZXYg
-KnBkZXYpDQorew0KKwl1MzIgcmVnMzI7DQorCXUxNiByZWcxNjsNCisNCisJaWYgKCFhZXJfY2Fs
-bGJhY2tzX3NldCkgew0KKwkJcGNpX2Flcl9zZXRfY2FsbGJhY2tzKCZhZXJfY2FsbGJhY2tzKTsN
-CisJCWFlcl9jYWxsYmFja3Nfc2V0ID0gdHJ1ZTsNCisJfQ0KKw0KKwkvKg0KKwkgKiAzNTAwLzU1
-MDAgc2VyaWVzIENQVXMgKEpGKSBzZW5kIGJyb2FkY2FzdCBFT0kgdG8NCisJICogc3Vib3JkaW5h
-dGUgZGV2aWNlcy4gSXQgaXMgYSB2ZW5kb3IgKEludGVsKSBzcGVjaWZpYw0KKwkgKiBtZXNzYWdl
-IHRoYXQgc2hvdWxkIGJlIGlnbm9yZWQgYnkgbm9uLUludGVsIGRldmljZXMsDQorCSAqIGJ1dCBv
-dXIgZGV2aWNlcyAoWW9kYSBldGMpIGRvIG5vdCBpZ25vcmUgaXQgYW5kDQorCSAqIHJhaXNlIFVu
-Y29ycmVjdGFibGUgYW5kIFVuc3VwcG9ydGVkIFJlcXVlc3QNCisJICogZXJyb3JzLg0KKwkgKg0K
-KwkgKiBUaGUgRU9JIGlzIGZvciB0aGUgSW50ZWwgSU8gQVBJQywgd2hpY2ggaXMgbm90DQorCSAq
-IHByZXNlbnQgYW5kIHRoZXJlZm9yZSBub3QgcmVxdWlyZWQuDQorCSAqDQorCSAqIERpc2FibGUg
-RU9JIEJyb2FkY2FzdCB0byBhdm9pZCBVbmNvcnJlY3RhYmxlIGFuZA0KKwkgKiBVbnN1cHBvcnRl
-ZCByZXF1ZXN0IGVycm9ycyBmcm9tIGRldmljZXMgd2hpY2ggZG8NCisJICogbm90IHN1cHBvcnQg
-dGhlIEVPSSBhbmQgZG8gbm90IGFkaGVyZSB0byB0aGUgUENJZQ0KKwkgKiBzcGVjLg0KKwkgKi8N
-CisJcGNpX3JlYWRfY29uZmlnX2R3b3JkKHBkZXYsIE1JU0NDVFJMU1RTX1JFRywgJnJlZzMyKTsN
-CisJcmVnMzIgfD0gTUlTQ0NUUkxTVFNfRElTQUJMRV9FT0lfTUFTSzsNCisJcGNpX3dyaXRlX2Nv
-bmZpZ19kd29yZChwZGV2LCBNSVNDQ1RSTFNUU19SRUcsIHJlZzMyKTsNCisNCisJLyoNCisJICog
-V2UgbXVzdCBhbHNvIGZvcndhcmQgI1NFUlIgYW5kICNQRVJSIGZyb20gdGhlIHNlY29uZGFyeQ0K
-KwkgKiB0byBwcmltYXJ5IGJ1cy4gIFRoaXMgd2lsbCByZXN1bHQgaW4gdGhlIEFFUiBkcml2ZXIN
-CisJICogcmVjZWl2aW5nIGFuIGludGVycnVwdCB0aGF0IGNhbiB0aGVuIGJlIGRlbGl2ZXJlZCB0
-bw0KKwkgKiB0aGUgZGV2aWNlIHNwZWNpZmljIGRyaXZlci4NCisJICovDQorCXBjaV9yZWFkX2Nv
-bmZpZ193b3JkKHBkZXYsIFBDSV9CUklER0VfQ09OVFJPTCwgJnJlZzE2KTsNCisJcmVnMTYgfD0g
-UENJX0JSSURHRV9DVExfUEFSSVRZIHwgUENJX0JSSURHRV9DVExfU0VSUjsNCisJcGNpX3dyaXRl
-X2NvbmZpZ193b3JkKHBkZXYsIFBDSV9CUklER0VfQ09OVFJPTCwgcmVnMTYpOw0KK30NCisNCitE
-RUNMQVJFX1BDSV9GSVhVUF9BRVJfRU5BQkxFKFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJ
-Q0VfSURfNTEwMF9QT1JUXzAsDQorCQkJCWFlcl9lbmFibGVfcm9vdHBvcnRfbWNoNTEwMCk7DQor
-REVDTEFSRV9QQ0lfRklYVVBfQUVSX0VOQUJMRShQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lfREVW
-SUNFX0lEXzUxMDBfUE9SVF8yXzMsDQorCQkJCWFlcl9lbmFibGVfcm9vdHBvcnRfbWNoNTEwMCk7
-DQorREVDTEFSRV9QQ0lfRklYVVBfQUVSX0VOQUJMRShQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lf
-REVWSUNFX0lEXzUxMDBfUE9SVF82LA0KKwkJCQlhZXJfZW5hYmxlX3Jvb3Rwb3J0X21jaDUxMDAp
-Ow0KK0RFQ0xBUkVfUENJX0ZJWFVQX0FFUl9FTkFCTEUoUENJX1ZFTkRPUl9JRF9JTlRFTCwgUENJ
-X0RFVklDRV9JRF8zNTAwX1BPUlRfMSwNCisJCQkJYWVyX2VuYWJsZV9yb290cG9ydF9qZik7DQor
-REVDTEFSRV9QQ0lfRklYVVBfQUVSX0VOQUJMRShQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lfREVW
-SUNFX0lEXzM1MDBfUE9SVF8yLA0KKwkJCQlhZXJfZW5hYmxlX3Jvb3Rwb3J0X2pmKTsNCitERUNM
-QVJFX1BDSV9GSVhVUF9BRVJfRU5BQkxFKFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0Vf
-SURfMzUwMF9QT1JUXzMsDQorCQkJCWFlcl9lbmFibGVfcm9vdHBvcnRfamYpOw0KK0RFQ0xBUkVf
-UENJX0ZJWFVQX0FFUl9FTkFCTEUoUENJX1ZFTkRPUl9JRF9JTlRFTCwgUENJX0RFVklDRV9JRF8z
-NTAwX1BPUlRfNCwNCisJCQkJYWVyX2VuYWJsZV9yb290cG9ydF9qZik7DQpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2LmMgYi9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJk
-cnYuYw0KaW5kZXggMTM5MTUwYi4uODM2ZTBjYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcGNpL3Bj
-aWUvYWVyL2FlcmRydi5jDQorKysgYi9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnYuYw0KQEAg
-LTYyLDYgKzYyLDggQEAgc3RhdGljIHN0cnVjdCBwY2llX3BvcnRfc2VydmljZV9kcml2ZXIgYWVy
-ZHJpdmVyID0gew0KIAkucmVzZXRfbGluawk9IGFlcl9yb290X3Jlc2V0LA0KIH07DQogDQorc3Rh
-dGljIHN0cnVjdCBwY2lfYWVyX2NhbGxiYWNrcyBjYWxsYmFja3M7DQorDQogc3RhdGljIGludCBw
-Y2llX2Flcl9kaXNhYmxlOw0KIA0KIHZvaWQgcGNpX25vX2Flcih2b2lkKQ0KQEAgLTc0LDYgKzc2
-LDExIEBAIGJvb2wgcGNpX2Flcl9hdmFpbGFibGUodm9pZCkNCiAJcmV0dXJuICFwY2llX2Flcl9k
-aXNhYmxlICYmIHBjaV9tc2lfZW5hYmxlZCgpOw0KIH0NCiANCit2b2lkIHBjaV9hZXJfc2V0X2Nh
-bGxiYWNrcyhzdHJ1Y3QgcGNpX2Flcl9jYWxsYmFja3MgKmNiKQ0KK3sNCisJbWVtY3B5KCZjYWxs
-YmFja3MsIGNiLCBzaXplb2YoKmNiKSk7DQorfQ0KKw0KIHN0YXRpYyBpbnQgc2V0X2RldmljZV9l
-cnJvcl9yZXBvcnRpbmcoc3RydWN0IHBjaV9kZXYgKmRldiwgdm9pZCAqZGF0YSkNCiB7DQogCWJv
-b2wgZW5hYmxlID0gKigoYm9vbCAqKWRhdGEpOw0KQEAgLTE0OSw2ICsxNTYsOCBAQCBzdGF0aWMg
-dm9pZCBhZXJfZW5hYmxlX3Jvb3Rwb3J0KHN0cnVjdCBhZXJfcnBjICpycGMpDQogCXBjaV9yZWFk
-X2NvbmZpZ19kd29yZChwZGV2LCBhZXJfcG9zICsgUENJX0VSUl9ST09UX0NPTU1BTkQsICZyZWcz
-Mik7DQogCXJlZzMyIHw9IFJPT1RfUE9SVF9JTlRSX09OX01FU0dfTUFTSzsNCiAJcGNpX3dyaXRl
-X2NvbmZpZ19kd29yZChwZGV2LCBhZXJfcG9zICsgUENJX0VSUl9ST09UX0NPTU1BTkQsIHJlZzMy
-KTsNCisNCisJcGNpX2ZpeHVwX2RldmljZShwY2lfZml4dXBfYWVyX2VuYWJsZSwgcGRldik7DQog
-fQ0KIA0KIC8qKg0KQEAgLTIxMiw2ICsyMjEsMTAgQEAgaXJxcmV0dXJuX3QgYWVyX2lycShpbnQg
-aXJxLCB2b2lkICpjb250ZXh0KQ0KIA0KIAkvKiBSZWFkIGVycm9yIHNvdXJjZSBhbmQgY2xlYXIg
-ZXJyb3Igc3RhdHVzICovDQogCXBjaV9yZWFkX2NvbmZpZ19kd29yZChwZGV2LT5wb3J0LCBwb3Mg
-KyBQQ0lfRVJSX1JPT1RfRVJSX1NSQywgJmlkKTsNCisNCisJaWYgKGNhbGxiYWNrcy5lcnJvcl9z
-b3VyY2UpDQorCQljYWxsYmFja3MuZXJyb3Jfc291cmNlKHBkZXYtPnBvcnQsICZpZCk7DQorDQog
-CXBjaV93cml0ZV9jb25maWdfZHdvcmQocGRldi0+cG9ydCwgcG9zICsgUENJX0VSUl9ST09UX1NU
-QVRVUywgc3RhdHVzKTsNCiANCiAJLyogU3RvcmUgZXJyb3Igc291cmNlIGZvciBsYXRlciBEUEMg
-aGFuZGxlciAqLw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaWUvYWVyL2FlcmRydi5oIGIv
-ZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2LmgNCmluZGV4IGQ1MWU0YTUuLjc5YWM2NDIgMTAw
-NjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnYuaA0KKysrIGIvZHJpdmVycy9w
-Y2kvcGNpZS9hZXIvYWVyZHJ2LmgNCkBAIC04MCw2ICs4MCwxMCBAQCBzdHJ1Y3QgYWVyX2Jyb2Fk
-Y2FzdF9kYXRhIHsNCiAJZW51bSBwY2lfZXJzX3Jlc3VsdCByZXN1bHQ7DQogfTsNCiANCitzdHJ1
-Y3QgcGNpX2Flcl9jYWxsYmFja3Mgew0KKwlpbnQgKCplcnJvcl9zb3VyY2UpKHN0cnVjdCBwY2lf
-ZGV2ICpkZXYsIHVuc2lnbmVkIGludCAqaWQpOw0KK307DQorDQogc3RhdGljIGlubGluZSBwY2lf
-ZXJzX3Jlc3VsdF90IG1lcmdlX3Jlc3VsdChlbnVtIHBjaV9lcnNfcmVzdWx0IG9yaWcsDQogCQll
-bnVtIHBjaV9lcnNfcmVzdWx0IG5ldykNCiB7DQpAQCAtMTEwLDYgKzExNCw3IEBAIHZvaWQgYWVy
-X2lzcihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspOw0KIHZvaWQgYWVyX3ByaW50X2Vycm9yKHN0
-cnVjdCBwY2lfZGV2ICpkZXYsIHN0cnVjdCBhZXJfZXJyX2luZm8gKmluZm8pOw0KIHZvaWQgYWVy
-X3ByaW50X3BvcnRfaW5mbyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgYWVyX2Vycl9pbmZv
-ICppbmZvKTsNCiBpcnFyZXR1cm5fdCBhZXJfaXJxKGludCBpcnEsIHZvaWQgKmNvbnRleHQpOw0K
-K3ZvaWQgcGNpX2Flcl9zZXRfY2FsbGJhY2tzKHN0cnVjdCBwY2lfYWVyX2NhbGxiYWNrcyAqY2Ip
-Ow0KIA0KICNpZmRlZiBDT05GSUdfQUNQSV9BUEVJDQogaW50IHBjaWVfYWVyX2dldF9maXJtd2Fy
-ZV9maXJzdChzdHJ1Y3QgcGNpX2RldiAqcGNpX2Rldik7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9w
-Y2kvcXVpcmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KaW5kZXggYzIzMjcyOS4uNjNiMzNm
-ZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQorKysgYi9kcml2ZXJzL3BjaS9x
-dWlya3MuYw0KQEAgLTMzOTcsNiArMzM5Nyw4IEBAIGV4dGVybiBzdHJ1Y3QgcGNpX2ZpeHVwIF9f
-c3RhcnRfcGNpX2ZpeHVwc19zdXNwZW5kW107DQogZXh0ZXJuIHN0cnVjdCBwY2lfZml4dXAgX19l
-bmRfcGNpX2ZpeHVwc19zdXNwZW5kW107DQogZXh0ZXJuIHN0cnVjdCBwY2lfZml4dXAgX19zdGFy
-dF9wY2lfZml4dXBzX3N1c3BlbmRfbGF0ZVtdOw0KIGV4dGVybiBzdHJ1Y3QgcGNpX2ZpeHVwIF9f
-ZW5kX3BjaV9maXh1cHNfc3VzcGVuZF9sYXRlW107DQorZXh0ZXJuIHN0cnVjdCBwY2lfZml4dXAg
-X19zdGFydF9wY2lfZml4dXBzX2Flcl9lbmFibGVbXTsNCitleHRlcm4gc3RydWN0IHBjaV9maXh1
-cCBfX2VuZF9wY2lfZml4dXBzX2Flcl9lbmFibGVbXTsNCiANCiBzdGF0aWMgYm9vbCBwY2lfYXBw
-bHlfZml4dXBfZmluYWxfcXVpcmtzOw0KIA0KQEAgLTM0NDcsNiArMzQ0OSwxMSBAQCB2b2lkIHBj
-aV9maXh1cF9kZXZpY2UoZW51bSBwY2lfZml4dXBfcGFzcyBwYXNzLCBzdHJ1Y3QgcGNpX2RldiAq
-ZGV2KQ0KIAkJZW5kID0gX19lbmRfcGNpX2ZpeHVwc19zdXNwZW5kX2xhdGU7DQogCQlicmVhazsN
-CiANCisJY2FzZSBwY2lfZml4dXBfYWVyX2VuYWJsZToNCisJCXN0YXJ0ID0gX19zdGFydF9wY2lf
-Zml4dXBzX2Flcl9lbmFibGU7DQorCQllbmQgPSBfX2VuZF9wY2lfZml4dXBzX2Flcl9lbmFibGU7
-DQorCQlicmVhazsNCisNCiAJZGVmYXVsdDoNCiAJCS8qIHN0dXBpZCBjb21waWxlciB3YXJuaW5n
-LCB5b3Ugd291bGQgdGhpbmsgd2l0aCBhbiBlbnVtLi4uICovDQogCQlyZXR1cm47DQpkaWZmIC0t
-Z2l0IGEvaW5jbHVkZS9hc20tZ2VuZXJpYy92bWxpbnV4Lmxkcy5oIGIvaW5jbHVkZS9hc20tZ2Vu
-ZXJpYy92bWxpbnV4Lmxkcy5oDQppbmRleCAzMDc0Nzk2Li5jNjQ2MTA2IDEwMDY0NA0KLS0tIGEv
-aW5jbHVkZS9hc20tZ2VuZXJpYy92bWxpbnV4Lmxkcy5oDQorKysgYi9pbmNsdWRlL2FzbS1nZW5l
-cmljL3ZtbGludXgubGRzLmgNCkBAIC0zMTEsNiArMzExLDkgQEANCiAJCVZNTElOVVhfU1lNQk9M
-KF9fc3RhcnRfcGNpX2ZpeHVwc19zdXNwZW5kX2xhdGUpID0gLjsJXA0KIAkJKigucGNpX2ZpeHVw
-X3N1c3BlbmRfbGF0ZSkJCQkJXA0KIAkJVk1MSU5VWF9TWU1CT0woX19lbmRfcGNpX2ZpeHVwc19z
-dXNwZW5kX2xhdGUpID0gLjsJXA0KKwkJVk1MSU5VWF9TWU1CT0woX19zdGFydF9wY2lfZml4dXBz
-X2Flcl9lbmFibGUpID0gLjsgICAgICBcDQorCQkqKC5wY2lfZml4dXBfYWVyX2VuYWJsZSkgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCisJCVZNTElOVVhfU1lNQk9MKF9fZW5kX3Bj
-aV9maXh1cHNfYWVyX2VuYWJsZSkgPSAuOwlcDQogCX0JCQkJCQkJCVwNCiAJCQkJCQkJCQlcDQog
-CS8qIEJ1aWx0LWluIGZpcm13YXJlIGJsb2JzICovCQkJCQlcDQpkaWZmIC0tZ2l0IGEvaW5jbHVk
-ZS9saW51eC9wY2kuaCBiL2luY2x1ZGUvbGludXgvcGNpLmgNCmluZGV4IDBlNDlmNzAuLjlhOTEx
-OWMgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L3BjaS5oDQorKysgYi9pbmNsdWRlL2xpbnV4
-L3BjaS5oDQpAQCAtMTY4OSw2ICsxNjg5LDcgQEAgZW51bSBwY2lfZml4dXBfcGFzcyB7DQogCXBj
-aV9maXh1cF9zdXNwZW5kLAkvKiBwY2lfZGV2aWNlX3N1c3BlbmQoKSAqLw0KIAlwY2lfZml4dXBf
-cmVzdW1lX2Vhcmx5LCAvKiBwY2lfZGV2aWNlX3Jlc3VtZV9lYXJseSgpICovDQogCXBjaV9maXh1
-cF9zdXNwZW5kX2xhdGUsCS8qIHBjaV9kZXZpY2Vfc3VzcGVuZF9sYXRlKCkgKi8NCisJcGNpX2Zp
-eHVwX2Flcl9lbmFibGUsICAgLyogcGNpX2RldmljZV9hZXJfZW5hYmxlKCkgKi8NCiB9Ow0KIA0K
-IC8qIEFub255bW91cyB2YXJpYWJsZXMgd291bGQgYmUgbmljZS4uLiAqLw0KQEAgLTE3NjMsNiAr
-MTc2NCwxMCBAQCBlbnVtIHBjaV9maXh1cF9wYXNzIHsNCiAJREVDTEFSRV9QQ0lfRklYVVBfU0VD
-VElPTigucGNpX2ZpeHVwX3N1c3BlbmRfbGF0ZSwJCVwNCiAJCXN1c3BlbmRfbGF0ZSMjaG9vaywg
-dmVuZG9yLCBkZXZpY2UsCVwNCiAJCVBDSV9BTllfSUQsIDAsIGhvb2spDQorI2RlZmluZSBERUNM
-QVJFX1BDSV9GSVhVUF9BRVJfRU5BQkxFKHZlbmRvciwgZGV2aWNlLCBob29rKQkJXA0KKwlERUNM
-QVJFX1BDSV9GSVhVUF9TRUNUSU9OKC5wY2lfZml4dXBfYWVyX2VuYWJsZSwJCVwNCisJCWFlcl9l
-bmFibGUjI3ZlbmRvciMjZGV2aWNlIyNob29rLCB2ZW5kb3IsIGRldmljZSwJXA0KKwkJUENJX0FO
-WV9JRCwgMCwgaG9vaykNCiANCiAjaWZkZWYgQ09ORklHX1BDSV9RVUlSS1MNCiB2b2lkIHBjaV9m
-aXh1cF9kZXZpY2UoZW51bSBwY2lfZml4dXBfcGFzcyBwYXNzLCBzdHJ1Y3QgcGNpX2RldiAqZGV2
-KTsNCi0tIA0KMi4xMC4xDQoNCg0KDQo=
+Hi Ruqiang,
+
+On Fri, Oct 21, 2016 at 09:45:36AM +0800, Ruqiang Ju wrote:
+> Add PCIe controller drvier for HiSilicon STB SoCs,
+
+s/drvier/driver/
+
+> the controller is based on the DesignWare's PCIe core.
+> 
+> Signed-off-by: Ruqiang Ju <juruqiang@huawei.com>
+> ---
+>  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
+>  drivers/pci/host/Kconfig                           |   8 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-histb.c                      | 448 +++++++++++++++++++++
+>  4 files changed, 523 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-histb.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> new file mode 100644
+> index 0000000..952f1db
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> @@ -0,0 +1,66 @@
+> +HiSilicon STB PCIe host bridge DT description
+> +
+> +HiSilicon PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+
+Documentation/devicetree/bindings/pci/designware-pcie.txt ("pcie" at
+the end, not "pci").
+
+> +
+> +Additional properties are described here:
+> +
+> +Required properties
+> +- compatible: Should be one of the following strings
+> +		 "hisilicon,histb-pcie",
+> +		 "hisilicon,hi3798cv200-pcie"
+> +- reg: Should contain sysctl, rc_dbi, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "sysctrl": system control registers of PCIe controller;
+> +  "rc_dbi": configuration space of PCIe controller;
+> +  "config": configuration transaction space of PCIe controller.
+> +- interrupts: MSI interrupt.
+> +- interrupt-names: Must include "msi" entries.
+> +- clocks: List of phandle and clock specifier pairs as listed
+> +		in clock-names property.
+> +- clock-name: Must include the following entries:
+> +  "aux_clk": auxiliary gate clock;
+> +  "pipe_clk": pipe gate clock;
+> +  "sys_clk": sys gate clock;
+> +  "bus_clk": bus gate clock.
+> +- resets: List of phandle and reset specifier pairs as listed
+> +			in reset-names property
+> +- reset-names: Must include the following entries:
+> +  "soft_reset": soft reset;
+> +  "sys_reset": sys reset;
+> +  "bus_rest": bus reset.
+
+Please add "bus-range" as a required property so we don't have to
+assume the 00-ff range.  Documented in
+Documentation/devicetree/bindings/pci/designware-pcie.txt.
+
+> +
+> +Optional properties:
+> +- power-gpios: pcie device power control gpio if needed;
+> +- power-gpios-active-high: must include this propty
+> +		if active level is high.
+> +- status: Either "ok" or "disabled".
+> +
+> +Example:
+> +	pcie@f9860000 {
+> +		compatible = "hisilicon,histb-pcie", "snps,dw-pcie";
+> +		reg = <0xf9860000 0x1000>,
+> +			<0xf0000000 0x2000>,
+> +			<0xf2000000 0x01000000>;
+> +		reg-names = "sysctrl", "rc_dbi", "config";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		num-lanes = <1>;
+> +		ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
+> +			0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
+> +		interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
+> +		interrupt-names = "msi";
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0x0 0 0 1 &gic 0 131 4>;
+> +		clocks = <&crg PCIE_AUX_CLK>,
+> +			 <&crg PCIE_PIPE_CLK>,
+> +			 <&crg PCIE_SYS_CLK>,
+> +			 <&crg PCIE_BUS_CLK>;
+> +		clock-names = "aux_clk", "pipe_clk", "sys_clk", "bus_clk";
+> +		resets = <&crg 0x18c 6>, <&crg 0x18c 5>, <&crg 0x18c 4>;
+> +		reset-names = "soft_reset", "sys_reset", "bus_reset";
+> +	};
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index d7e7c0a..57ce4df 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -227,6 +227,14 @@ config PCI_HISI
+>  	  Say Y here if you want PCIe controller support on HiSilicon
+>  	  Hip05 and Hip06 SoCs
+>  
+> +config PCIE_HISI_STB
+> +	depends on OF
+> +	bool "HiSilicon STB SoCs PCIe controllers"
+> +	select PCIEPORTBUS
+> +	select PCIE_DW
+> +	help
+> +	  Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+> +
+>  config PCIE_QCOM
+>  	bool "Qualcomm PCIe controller"
+>  	depends on ARCH_QCOM && OF
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 084cb49..55f4fe7 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+>  obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+> +obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+> diff --git a/drivers/pci/host/pcie-histb.c b/drivers/pci/host/pcie-histb.c
+> new file mode 100644
+> index 0000000..71e344f
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-histb.c
+> @@ -0,0 +1,448 @@
+> +/*
+> + * PCIe host controller driver for HiSilicon STB SoCs
+> + *
+> + * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
+> + *
+> + * Authors: RuQiang Ju <juruqiang@huawei.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/of_gpio.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/reset.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define PCIE_SYS_CTRL0			0x0000
+> +#define PCIE_SYS_CTRL1			0x0004
+> +#define PCIE_SYS_CTRL7			0x001C
+> +#define PCIE_SYS_CTRL13			0x0034
+> +#define PCIE_SYS_CTRL15			0x003c
+> +#define PCIE_SYS_CTRL16			0x0040
+> +#define PCIE_SYS_CTRL17			0x0044
+> +
+> +#define PCIE_SYS_STAT0			0x0100
+> +#define PCIE_SYS_STAT4			0x0110
+> +
+> +#define PCIE_RDLH_LINK_UP		BIT(5)
+> +#define PCIE_XMLH_LINK_UP		BIT(15)
+> +#define PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
+> +#define PCIE_APP_LTSSM_ENABLE		BIT(11)
+> +
+> +#define PCIE_DEVICE_TYPE_MASK		GENMASK(31, 28)
+> +#define PCIE_WM_EP			0
+> +#define PCIE_WM_LEGACY			BIT(1)
+> +#define PCIE_WM_RC			BIT(30)
+> +
+> +#define PCIE_LTSSM_STATE_MASK		GENMASK(5, 0)
+> +#define PCIE_LTSSM_STATE_ACTIVE		0x11
+> +
+> +struct histb_pcie_host {
+
+struct histb_pcie (without "_host") should be enough.
+
+> +	void __iomem *sysctrl;
+> +	int power_gpio;
+> +	bool gpio_active_high;
+> +	struct clk *aux_clk;
+> +	struct clk *pipe_clk;
+> +	struct clk *sys_clk;
+> +	struct clk *bus_clk;
+> +	struct reset_control *soft_reset;
+> +	struct reset_control *sys_reset;
+> +	struct reset_control *bus_reset;
+> +	struct pcie_port pp;
+
+Reorder as in f84cfdf72109 ("PCI: hisi: Reorder struct hisi_pcie") and
+add comment(s) about related DT property names.
+
+> +};
+> +
+> +#define to_histb_pcie(x) container_of(x, struct histb_pcie_host, pp)
+> +
+
+Can you add accessors, e.g.,
+
+  static u32 histb_pcie_readl(struct histb_pcie *histb_pcie, u32 reg)
+  {
+    return readl(histb_pcie->sysctrl + reg);
+  }
+
+  static void histb_pcie_writel(struct histb_pcie *histb_pcie, u32 reg, u32 val)
+  {
+    writel(val, histb_pcie->sysctrl + reg);
+  }
+
+> +static void histb_pcie_dbi_w_mode(struct pcie_port *pp, bool enable)
+
+Rework this and other internal interfaces as in e9480b5a7f34 ("PCI:
+hisi: Pass device-specific struct to internal functions").
+
+> +{
+> +	struct histb_pcie_host *hipcie = to_histb_pcie(pp);
+
+struct histb_pcie *histb_pcie;
+
+> +	u32 val;
+> +
+> +	if (enable) {
+> +		val = readl(hipcie->sysctrl + PCIE_SYS_CTRL0);
+> +		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+> +		writel(val, hipcie->sysctrl + PCIE_SYS_CTRL0);
+> +	} else {
+> +		val = readl(hipcie->sysctrl + PCIE_SYS_CTRL0);
+> +		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +		writel(val, hipcie->sysctrl + PCIE_SYS_CTRL0);
+
+  val = histb_pcie_readl(hipcie, PCIE_SYS_CTRL0);
+  if (enable)
+    val |= PCIE_ELBI_SLV_DBI_ENABLE;
+  else
+    val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+  histb_pcie_writel(hipcie, PCIE_SYS_CTRL0, val);
+
+We should do the same to exynos_pcie_sideband_dbi_w_mode() and
+exynos_pcie_sideband_dbi_r_mode().
+
+> +	}
+> +}
+> +
+> +static void histb_pcie_dbi_r_mode(struct pcie_port *pp, bool enable)
+> +{
+> +	struct histb_pcie_host *hipcie = to_histb_pcie(pp);
+> +	u32 val;
+> +
+> +	if (enable) {
+> +		val = readl(hipcie->sysctrl + PCIE_SYS_CTRL1);
+> +		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+> +		writel(val, hipcie->sysctrl + PCIE_SYS_CTRL1);
+> +	} else {
+> +		val = readl(hipcie->sysctrl + PCIE_SYS_CTRL1);
+> +		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +		writel(val, hipcie->sysctrl + PCIE_SYS_CTRL1);
+> +	}
+
+Similar to above.
+
+> +}
+> +
+> +static inline u32 histb_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+
+It's pointless to mark these "inline".  They can't be inline in any case
+because the only use is to save a pointer to them in the
+histb_pcie_host_ops structure.
+
+> +{
+> +	u32 val;
+> +
+> +	histb_pcie_dbi_r_mode(pp, true);
+> +	val = readl(pp->dbi_base + reg);
+> +	histb_pcie_dbi_r_mode(pp, false);
+> +
+> +	return val;
+> +}
+> +
+> +static inline void histb_pcie_writel_rc(struct pcie_port *pp,
+> +					u32 reg, u32 val)
+> +{
+> +	histb_pcie_dbi_w_mode(pp, true);
+> +	writel(val, pp->dbi_base + reg);
+> +	histb_pcie_dbi_w_mode(pp, false);
+> +}
+> +
+> +static int histb_pcie_rd_own_conf(struct pcie_port *pp,
+> +	int where, int size, u32 *val)
+> +{
+> +	int ret;
+> +
+> +	histb_pcie_dbi_r_mode(pp, true);
+> +	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
+> +	histb_pcie_dbi_r_mode(pp, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static int histb_pcie_wr_own_conf(struct pcie_port *pp,
+> +	int where, int size, u32 val)
+> +{
+> +	int ret;
+> +
+> +	histb_pcie_dbi_w_mode(pp, true);
+> +	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
+> +	histb_pcie_dbi_w_mode(pp, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static int histb_pcie_link_up(struct pcie_port *pp)
+> +{
+> +	struct histb_pcie_host *hipcie = to_histb_pcie(pp);
+> +	u32 regval;
+> +	u32 status;
+> +
+> +	regval = readl(hipcie->sysctrl + PCIE_SYS_STAT0);
+> +	status = readl(hipcie->sysctrl + PCIE_SYS_STAT4);
+> +	status &= PCIE_LTSSM_STATE_MASK;
+> +	if ((regval & PCIE_XMLH_LINK_UP) &&
+> +		(regval & PCIE_RDLH_LINK_UP) &&
+> +		(status == PCIE_LTSSM_STATE_ACTIVE))
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static int histb_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	struct histb_pcie_host *hipcie = to_histb_pcie(pp);
+> +	u32 regval;
+> +	int count = 0;
+> +
+> +	if (dw_pcie_link_up(pp)) {
+> +		dev_err(pp->dev, "Link already up\n");
+
+This doesn't seem like an error condition to me; maybe dev_info() if
+we need a message at all.  We should also change the other drivers
+that do the same thing.
+
+> +		return 0;
+> +	}
+> +
+> +	/* PCIe RC work mode */
+> +	regval = readl(hipcie->sysctrl + PCIE_SYS_CTRL0);
+> +	regval &= ~PCIE_DEVICE_TYPE_MASK;
+> +	regval |= PCIE_WM_RC;
+> +	writel(regval, hipcie->sysctrl + PCIE_SYS_CTRL0);
+> +
+> +	/* setup root complex */
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	/* assert LTSSM enable */
+> +	regval = readl(hipcie->sysctrl + PCIE_SYS_CTRL7);
+> +	regval |= PCIE_APP_LTSSM_ENABLE;
+> +	writel(regval,  hipcie->sysctrl + PCIE_SYS_CTRL7);
+> +
+> +	/* check if the link is up or not */
+> +	while (!dw_pcie_link_up(pp)) {
+> +		mdelay(10);
+> +		count++;
+> +		if (count == 50) {
+> +			dev_err(pp->dev, "PCIe Link Fail\n");
+> +			return -EINVAL;
+> +		}
+> +	}
+
+Use dw_pcie_wait_for_link().
+
+> +
+> +	dev_info(pp->dev, "Link up\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static void histb_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	histb_pcie_establish_link(pp);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +}
+> +
+> +static struct pcie_host_ops histb_pcie_host_ops = {
+> +	.readl_rc = histb_pcie_readl_rc,
+> +	.writel_rc = histb_pcie_writel_rc,
+> +	.rd_own_conf = histb_pcie_rd_own_conf,
+> +	.wr_own_conf = histb_pcie_wr_own_conf,
+> +	.link_up = histb_pcie_link_up,
+> +	.host_init = histb_pcie_host_init,
+> +};
+> +
+> +#ifdef CONFIG_PCI_MSI
+> +static irqreturn_t histb_pcie_msi_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +
+> +	return dw_handle_msi_irq(pp);
+> +}
+> +#endif
+> +
+> +static void histb_pcie_host_disable(struct histb_pcie_host *hipcie)
+> +{
+> +	reset_control_assert(hipcie->soft_reset);
+> +	reset_control_assert(hipcie->sys_reset);
+> +	reset_control_assert(hipcie->bus_reset);
+> +
+> +	clk_disable_unprepare(hipcie->aux_clk);
+> +	clk_disable_unprepare(hipcie->pipe_clk);
+> +	clk_disable_unprepare(hipcie->sys_clk);
+> +	clk_disable_unprepare(hipcie->bus_clk);
+> +
+> +	if (gpio_is_valid(hipcie->power_gpio))
+> +		gpio_set_value_cansleep(hipcie->power_gpio,
+> +					!hipcie->gpio_active_high);
+> +}
+> +
+> +static int histb_pcie_host_enable(struct pcie_port *pp)
+> +{
+> +	struct histb_pcie_host *hipcie = to_histb_pcie(pp);
+> +	struct device *dev = pp->dev;
+> +	int ret;
+> +
+> +	/* power on pcie device if have */
+> +	if (gpio_is_valid(hipcie->power_gpio))
+> +		gpio_set_value_cansleep(hipcie->power_gpio,
+> +					hipcie->gpio_active_high);
+> +
+
+Thanks for splitting all this clock and reset management into its own
+function.  Many of the other drivers mix it in with discovery of
+resources from DT, which I think is a mistake.
+
+> +	ret = clk_prepare_enable(hipcie->bus_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable bus_clk\n");
+> +		goto err_bus_clk;
+> +	}
+> +	ret = clk_prepare_enable(hipcie->sys_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable sys_clk\n");
+> +		goto err_sys_clk;
+> +	}
+> +	ret = clk_prepare_enable(hipcie->pipe_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable pipe_clk\n");
+> +		goto err_pipe_clk;
+> +	}
+> +	ret = clk_prepare_enable(hipcie->aux_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable aux_clk\n");
+> +		goto err_aux_clk;
+> +	}
+> +
+> +	reset_control_assert(hipcie->soft_reset);
+> +	reset_control_deassert(hipcie->soft_reset);
+> +
+> +	reset_control_assert(hipcie->sys_reset);
+> +	reset_control_deassert(hipcie->sys_reset);
+> +
+> +	reset_control_assert(hipcie->bus_reset);
+> +	reset_control_deassert(hipcie->bus_reset);
+> +
+> +	return 0;
+> +
+> +err_aux_clk:
+> +	clk_disable_unprepare(hipcie->aux_clk);
+> +err_pipe_clk:
+> +	clk_disable_unprepare(hipcie->pipe_clk);
+> +err_sys_clk:
+> +	clk_disable_unprepare(hipcie->sys_clk);
+> +err_bus_clk:
+> +	clk_disable_unprepare(hipcie->bus_clk);
+> +
+> +	return ret;
+> +}
+> +
+> +
+> +static int histb_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct histb_pcie_host *hipcie;
+> +	struct pcie_port *pp;
+> +	struct resource *res;
+> +	struct device_node *np = pdev->dev.of_node;
+> +	struct device *dev = &pdev->dev;
+> +	int ret;
+> +
+> +	hipcie = devm_kzalloc(dev, sizeof(*hipcie), GFP_KERNEL);
+> +	if (!hipcie)
+> +		return -ENOMEM;
+> +
+> +	pp = &hipcie->pp;
+> +	pp->dev = dev;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "sysctrl");
+> +	hipcie->sysctrl = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(hipcie->sysctrl)) {
+> +		dev_err(dev, "cannot get sysctrl base\n");
+> +		return PTR_ERR(hipcie->sysctrl);
+> +	}
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+> +	pp->dbi_base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pp->dbi_base)) {
+> +		dev_err(dev, "cannot get rc_dbi base\n");
+> +		return PTR_ERR(pp->dbi_base);
+> +	}
+> +
+> +	hipcie->power_gpio = of_get_named_gpio(np, "power-gpios", 0);
+> +	hipcie->gpio_active_high = of_property_read_bool(np,
+> +						"power-gpios-active-high");
+> +	if (gpio_is_valid(hipcie->power_gpio)) {
+> +		ret = devm_gpio_request_one(dev, hipcie->power_gpio,
+> +				hipcie->gpio_active_high ?
+> +					GPIOF_OUT_INIT_HIGH :
+> +					GPIOF_OUT_INIT_LOW,
+> +					"PCIe Dev power");
+> +		if (ret) {
+> +			dev_err(dev, "unable to request gpio\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	hipcie->aux_clk = devm_clk_get(dev, "aux_clk");
+> +	if (IS_ERR(hipcie->aux_clk)) {
+> +		dev_err(dev, "Failed to get pcie aux_clk clock\n");
+> +		return PTR_ERR(hipcie->aux_clk);
+> +	}
+> +
+> +	hipcie->pipe_clk = devm_clk_get(dev, "pipe_clk");
+> +	if (IS_ERR(hipcie->pipe_clk)) {
+> +		dev_err(dev, "Failed to get pcie pipe_clk clock\n");
+> +		return PTR_ERR(hipcie->pipe_clk);
+> +	}
+> +
+> +	hipcie->sys_clk = devm_clk_get(dev, "sys_clk");
+> +	if (IS_ERR(hipcie->sys_clk)) {
+> +		dev_err(dev, "Failed to get pcie sys_clk clock\n");
+> +		return PTR_ERR(hipcie->sys_clk);
+> +	}
+> +
+> +	hipcie->bus_clk = devm_clk_get(dev, "bus_clk");
+> +	if (IS_ERR(hipcie->bus_clk)) {
+> +		dev_err(dev, "Failed to get pcie bus_clk clock\n");
+> +		return PTR_ERR(hipcie->bus_clk);
+> +	}
+> +
+> +	hipcie->soft_reset = devm_reset_control_get(dev, "soft_reset");
+> +	if (IS_ERR(hipcie->soft_reset)) {
+> +		dev_err(dev, "couldn't get soft_reset\n");
+> +		return PTR_ERR(hipcie->soft_reset);
+> +	}
+> +
+> +	hipcie->sys_reset = devm_reset_control_get(dev, "sys_reset");
+> +	if (IS_ERR(hipcie->sys_reset)) {
+> +		dev_err(dev, "couldn't get sys_reset\n");
+> +		return PTR_ERR(hipcie->sys_reset);
+> +	}
+> +
+> +	hipcie->bus_reset = devm_reset_control_get(dev, "bus_reset");
+> +	if (IS_ERR(hipcie->bus_reset)) {
+> +		dev_err(dev, "couldn't get bus_reset\n");
+> +		return PTR_ERR(hipcie->bus_reset);
+> +	}
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+> +		if (pp->msi_irq < 0) {
+> +			dev_err(dev, "Failed to get msi irq\n");
+> +			return pp->msi_irq;
+> +		}
+> +		ret = devm_request_irq(dev, pp->msi_irq,
+> +				       histb_pcie_msi_irq_handler,
+> +				       IRQF_SHARED, "histb-pcie-msi", pp);
+> +		if (ret) {
+> +			dev_err(dev, "cannot request msi irq\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	pp->root_bus_nr = -1;
+> +	pp->ops = &histb_pcie_host_ops;
+> +
+> +	ret = histb_pcie_host_enable(pp);
+> +	if (ret) {
+> +		dev_err(dev, "failed to enable host\n");
+> +		return ret;
+> +	}
+> +
+> +	ret = dw_pcie_host_init(pp);
+> +	if (ret) {
+> +		dev_err(dev, "failed to initialize host\n");
+> +		return ret;
+> +	}
+> +
+> +	platform_set_drvdata(pdev, hipcie);
+> +
+> +	return 0;
+> +}
+> +
+> +static int histb_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct histb_pcie_host *hipcie = platform_get_drvdata(pdev);
+> +
+> +	histb_pcie_host_disable(hipcie);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id histb_pcie_of_match[] = {
+> +	{ .compatible = "hisilicon,histb-pcie", },
+> +	{ .compatible = "hisilicon,hi3798cv200-pcie", },
+> +	{},
+> +};
+> +
+> +MODULE_DEVICE_TABLE(of, histb_pcie_of_match);
+> +
+> +static struct platform_driver histb_pcie_platform_driver = {
+> +	.probe	= histb_pcie_probe,
+> +	.remove	= histb_pcie_remove,
+> +	.driver = {
+> +		.name = "histb-pcie",
+> +		.of_match_table = of_match_ptr(histb_pcie_of_match),
+> +	},
+> +};
+> +
+> +module_platform_driver(histb_pcie_platform_driver);
+> +
+> +MODULE_AUTHOR("RuQiang Ju <juruqiang@huawei.com>");
+> +MODULE_DESCRIPTION("HiSilicon STB PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
