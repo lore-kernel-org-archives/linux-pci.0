@@ -1,45 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43598 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754864AbcJLOAd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:00:33 -0400
-Subject: [PATCH v2 4/4] PCI: qcom: Reorder struct qcom_pcie
-To: Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 09:00:27 -0500
-Message-ID: <20161012140027.30144.729.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout1.hostsharing.net ([83.223.95.204]:54011 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935654AbcJ1Iya (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Oct 2016 04:54:30 -0400
+Message-Id: <93166ee4923958b9a0c0a023af5f21a4fed437a2.1477611126.git.lukas@wunner.de>
+In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
+References: <cover.1477611126.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 28 Oct 2016 10:52:06 +0200
+Subject: [PATCH v2 6/9] PCI: Unfold conditions to block runtime PM on PCIe
+ ports
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorder struct qcom_pcie to put generic fields first.  No functional change
-intended.
+The conditions to block D3 on parent ports are currently condensed into
+a single expression in pci_dev_check_d3cold().  Upcoming commits will
+add further conditions for hotplug ports, making this expression fairly
+large and impenetrable.  Unfold the conditions to maintain readability
+when they are amended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+No functional change intended.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pcie-qcom.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/pci.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 6f6cbb1..ef0a84c 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -86,10 +86,10 @@ struct qcom_pcie_ops {
- };
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a19056e..d0e6de0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2270,19 +2270,20 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ {
+ 	bool *d3cold_ok = data;
+-	bool no_d3cold;
  
- struct qcom_pcie {
--	struct pcie_port pp;
-+	struct pcie_port pp;			/* pp.dbi_base is DT dbi */
-+	void __iomem *parf;			/* DT parf */
-+	void __iomem *elbi;			/* DT elbi */
- 	union qcom_pcie_resources res;
--	void __iomem *parf;
--	void __iomem *elbi;
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	struct qcom_pcie_ops *ops;
+-	/*
+-	 * The device needs to be allowed to go D3cold and if it is wake
+-	 * capable to do so from D3cold.
+-	 */
+-	no_d3cold = dev->no_d3cold || !dev->d3cold_allowed ||
+-		(device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold)) ||
+-		!pci_power_manageable(dev);
++	if (/* The device needs to be allowed to go D3cold ... */
++	    dev->no_d3cold || !dev->d3cold_allowed ||
++
++	    /* ... and if it is wakeup capable to do so from D3cold. */
++	    (device_may_wakeup(&dev->dev) &&
++	     !pci_pme_capable(dev, PCI_D3cold)) ||
++
++	    /* If it is a bridge it must be allowed to go to D3. */
++	    !pci_power_manageable(dev))
+ 
+-	*d3cold_ok = !no_d3cold;
++		*d3cold_ok = false;
+ 
+-	return no_d3cold;
++	return !*d3cold_ok;
+ }
+ 
+ /*
+-- 
+2.9.3
 
