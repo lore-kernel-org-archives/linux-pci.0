@@ -1,289 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 2/3] ARM64 LPC: Add missing range exception for special
- ISA
-To: Rob Herring <robh@kernel.org>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <bhelgaas@google.com>, <mark.rutland@arm.com>
-References: <1476954940-242159-1-git-send-email-yuanzhichang@hisilicon.com>
- <1476954940-242159-3-git-send-email-yuanzhichang@hisilicon.com>
- <20161026222542.g4etrqesqb7febid@rob-hp-laptop>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Message-ID: <5811C93B.8070703@hisilicon.com>
-Date: Thu, 27 Oct 2016 17:30:35 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34766 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbcJ2GOy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 02:14:54 -0400
+Received: by mail-oi0-f67.google.com with SMTP id 62so2640371oif.1
+        for <linux-pci@vger.kernel.org>; Fri, 28 Oct 2016 23:14:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20161026222542.g4etrqesqb7febid@rob-hp-laptop>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com, minyard@acm.org,
- arnd@arndb.de, linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
- john.garry@huawei.com, liviu.dudau@arm.com, linuxarm@huawei.com,
- xuwei5@hisilicon.com, linux-kernel@vger.kernel.org,
- linux-serial@vger.kernel.org, benh@kernel.crashing.org, zourongrong@gmail.com,
- kantyzc@163.com, zhichang.yuan02@gmail.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+ <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com> <5420659.scnjID7ZLn@wuerfel>
+ <ae624772-9306-50ee-3dc1-df8156eaa16d@broadcom.com> <acccb06d-14b9-33bd-466b-47dd3689e537@broadcom.com>
+ <CACna6rxCdgyqFMU5-LD0rJn1s6voSiVvk1AGGnaykGZPMDbwPw@mail.gmail.com> <1b58db80-c9ff-d4d6-0df1-d80d1c03bc45@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sat, 29 Oct 2016 08:14:53 +0200
+Message-ID: <CACna6rxf=0YsozkipXALS03bGT9R6RuhTfOkve6KF2ELtVEtAg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Rob,
-
-Thanks for your comments!
-Please check the response blow.
-
-BTW, Are there any comments from other maintainers/hackers??
-Thanks in advance!
-
-
-On 2016/10/27 6:25, Rob Herring wrote:
-> On Thu, Oct 20, 2016 at 05:15:39PM +0800, zhichang.yuan wrote:
->> Currently if the range property is not specified of_translate_one
->> returns an error. There are some special devices that work on a
->> range of I/O ports where it's is not correct to specify a range
->> property as the cpu addresses are used by special accessors.
->> Here we add a new exception in of_translate_one to return
->> the cpu address if the range property is not there. The exception
->> checks if the parent bus is ISA and if the special accessors are
->> defined.
+On 28 October 2016 at 18:58, Ray Jui <ray.jui@broadcom.com> wrote:
+> On 10/28/2016 8:31 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> On 20 April 2016 at 20:18, Ray Jui <ray.jui@broadcom.com> wrote:
+>>> Hi Rafal/Florian/Arnd,
+>>>
+>>> After a couple days of email exchange with the ASIC team, I think I've
+>>> figured out the behavior on all of the Broadcom SoCs that use this iPro=
+c
+>>> PCIe controller.
+>>>
+>>> On NSP, Cygnus, and NS2:
+>>> - There's an APB error enable register at offset 0xf40 from the iProc P=
+CIe
+>>> controller's base address. If one clears bit 0 (enabled by default afte=
+r
+>>> chip POR) of that register, one can stop this from being forwarded to "=
+iProc
+>>> host" as an APB error/external imprecise abort
+>>> - I will submit a patch to the iProc PCIe driver to disable this error
+>>> forwarding
+>>>
+>>> On NS:
+>>> - Unfortunately, there's no such control register in NS. In other words=
+, we
+>>> cannot disable this error at the PCIe controller level
+>>> - FSR code corresponds to external (bit[12] =3D '1'), read (bit[11] =3D=
+ '0'),
+>>> imprecise abort (bits[10][3:0] =3D '1''0110'), i.e., external imprecise=
+ abort
+>>> triggered by read access. Our ASIC team believes a read access to a
+>>> non-exist APB register can also trigger an abort with the same FSR code=
+.
+>>> Note this is the tricky part, by registering an abort hook that skips t=
+his
+>>> particular FSR, one has a chance of skipping other aborts triggered by
+>>> accessing invalid APB registers. But given that this cannot be disabled=
+ for
+>>> the PCIe controller NS, I'm not sure what approach we should take. Any
+>>> thoughts?
 >>
->> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> ---
->>  arch/arm64/include/asm/io.h |  7 +++++++
->>  arch/arm64/kernel/extio.c   | 24 +++++++++++++++++++++++
->>  drivers/of/address.c        | 47 +++++++++++++++++++++++++++++++++++++++++++--
->>  drivers/pci/pci.c           |  6 +++---
->>  include/linux/of_address.h  | 17 ++++++++++++++++
->>  5 files changed, 96 insertions(+), 5 deletions(-)
+>> It's really late reply but I wanted to finally handle this problem.
 >>
->> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
->> index 136735d..e480199 100644
->> --- a/arch/arm64/include/asm/io.h
->> +++ b/arch/arm64/include/asm/io.h
->> @@ -175,6 +175,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
->>  #define outsl outsl
->>  
->>  DECLARE_EXTIO(l, u32)
->> +
->> +
->> +#define indirect_io_ison indirect_io_ison
->> +extern int indirect_io_ison(void);
->> +
->> +#define chk_indirect_range chk_indirect_range
->> +extern int chk_indirect_range(u64 taddr);
->>  #endif
->>  
->>  
->> diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
->> index 80cafd5..55df8dc 100644
->> --- a/arch/arm64/kernel/extio.c
->> +++ b/arch/arm64/kernel/extio.c
->> @@ -19,6 +19,30 @@
->>  
->>  struct extio_ops *arm64_extio_ops;
->>  
->> +/**
->> + * indirect_io_ison - check whether indirectIO can work well. This function only call
->> + *		before the target I/O address was obtained.
->> + *
->> + * Returns 1 when indirectIO can work.
->> + */
->> +int indirect_io_ison()
->> +{
->> +	return arm64_extio_ops ? 1 : 0;
->> +}
->> +
->> +/**
->> + * check_indirect_io - check whether the input taddr is for indirectIO.
->> + * @taddr: the io address to be checked.
->> + *
->> + * Returns 1 when taddr is in the range; otherwise return 0.
->> + */
->> +int chk_indirect_range(u64 taddr)
->> +{
->> +	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end < taddr)
->> +		return 0;
->> +
->> +	return 1;
->> +}
->>  
->>  BUILD_EXTIO(b, u8)
->>  
->> diff --git a/drivers/of/address.c b/drivers/of/address.c
->> index 02b2903..0bee822 100644
->> --- a/drivers/of/address.c
->> +++ b/drivers/of/address.c
->> @@ -479,6 +479,39 @@ static int of_empty_ranges_quirk(struct device_node *np)
->>  	return false;
->>  }
->>  
->> +
->> +/*
->> + * Check whether the current device being translating use indirectIO.
->> + *
->> + * return 1 if the check is past, or 0 represents fail checking.
->> + */
->> +static int of_isa_indirect_io(struct device_node *parent,
-> 
-> Make the return bool.
-ok. will update it.
-
-> 
->> +				struct of_bus *bus, __be32 *addr,
->> +				int na, u64 *presult)
->> +{
->> +	unsigned int flags;
->> +	unsigned int rlen;
->> +
->> +	/* whether support indirectIO */
->> +	if (!indirect_io_ison())
-> 
-> indirect_io_is_enabled() would be a bit more readable.
-Ok.
-> 
->> +		return 0;
->> +
->> +	if (!of_bus_isa_match(parent))
->> +		return 0;
->> +
->> +	flags = bus->get_flags(addr);
->> +	if (!(flags & IORESOURCE_IO))
->> +		return 0;
->> +
->> +	/* there is ranges property, apply the normal translation directly. */
->> +	if (of_get_property(parent, "ranges", &rlen))
->> +		return 0;
->> +
->> +	*presult = of_read_number(addr + 1, na - 1);
->> +
->> +	return chk_indirect_range(*presult);
->> +}
->> +
->>  static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->>  			    struct of_bus *pbus, __be32 *addr,
->>  			    int na, int ns, int pna, const char *rprop)
->> @@ -532,7 +565,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->>  	}
->>  	memcpy(addr, ranges + na, 4 * pna);
->>  
->> - finish:
->> +finish:
-> 
-> This hunk is unrelated. Drop it.
-Yes. Will drop this change.
-> 
->>  	of_dump_addr("parent translation for:", addr, pna);
->>  	pr_debug("with offset: %llx\n", (unsigned long long)offset);
->>  
->> @@ -595,6 +628,15 @@ static u64 __of_translate_address(struct device_node *dev,
->>  			result = of_read_number(addr, na);
->>  			break;
->>  		}
->> +		/*
->> +		 * For indirectIO device which has no ranges property, get
->> +		 * the address from reg directly.
->> +		 */
->> +		if (of_isa_indirect_io(dev, bus, addr, na, &result)) {
->> +			pr_info("isa indirectIO matched(%s)..addr = 0x%llx\n",
->> +				of_node_full_name(dev), result);
-> 
-> This should be debugging.
-ok. will replace with pr_debug.
-
-
-thanks!
-Zhichang
-
-> 
->> +			break;
->> +		}
->>  
->>  		/* Get new parent bus and counts */
->>  		pbus = of_match_bus(parent);
->> @@ -688,8 +730,9 @@ static int __of_address_to_resource(struct device_node *dev,
->>  	if (taddr == OF_BAD_ADDR)
->>  		return -EINVAL;
->>  	memset(r, 0, sizeof(struct resource));
->> -	if (flags & IORESOURCE_IO) {
->> +	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
->>  		unsigned long port;
->> +
->>  		port = pci_address_to_pio(taddr);
->>  		if (port == (unsigned long)-1)
->>  			return -EINVAL;
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index ba34907..1a08511 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3263,7 +3263,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->>  
->>  #ifdef PCI_IOBASE
->>  	struct io_range *range;
->> -	resource_size_t allocated_size = 0;
->> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
->>  
->>  	/* check if the range hasn't been previously recorded */
->>  	spin_lock(&io_range_lock);
->> @@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
->>  
->>  #ifdef PCI_IOBASE
->>  	struct io_range *range;
->> -	resource_size_t allocated_size = 0;
->> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
->>  
->>  	if (pio > IO_SPACE_LIMIT)
->>  		return address;
->> @@ -3335,7 +3335,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
->>  {
->>  #ifdef PCI_IOBASE
->>  	struct io_range *res;
->> -	resource_size_t offset = 0;
->> +	resource_size_t offset = PCIBIOS_MIN_IO;
->>  	unsigned long addr = -1;
->>  
->>  	spin_lock(&io_range_lock);
->> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
->> index 3786473..0ba7e21 100644
->> --- a/include/linux/of_address.h
->> +++ b/include/linux/of_address.h
->> @@ -24,6 +24,23 @@ struct of_pci_range {
->>  #define for_each_of_pci_range(parser, range) \
->>  	for (; of_pci_range_parser_one(parser, range);)
->>  
->> +
->> +#ifndef indirect_io_ison
->> +#define indirect_io_ison indirect_io_ison
->> +static inline int indirect_io_ison(void)
->> +{
->> +	return 0;
->> +}
->> +#endif
->> +
->> +#ifndef chk_indirect_range
->> +#define chk_indirect_range chk_indirect_range
->> +static inline int chk_indirect_range(u64 taddr)
->> +{
->> +	return 0;
->> +}
->> +#endif
->> +
->>  /* Translate a DMA address from device space to CPU space */
->>  extern u64 of_translate_dma_address(struct device_node *dev,
->>  				    const __be32 *in_addr);
->> -- 
->> 1.9.1
+>> From Ray's e-mail it seems Northstar is the only platform requiring
+>> this workaround. So we don't have to worry about arm64.
+>
+> Yes, Northstar is the only platform that requires this workaround. Even
+> the arm32 platforms like NSP and Cygnus can disable unsupported request
+> being forwarded as APB error. I've recently sent out a patch series to
+> fix this for all other platforms, and sorry I should have included you
+> in the email but I did not. I'll include you when revision 2 is sent out.
+>
 >>
-> 
-> .
-> 
+>> We have two options then:
+>> 1) Add workaround in arch/arm/mach-bcm/bcm_5301x.c
+>> 2) Add workaround into built-in drivers/pci/host/pcie-iproc-fault.c
+>
+> How do you plan to implement pcie-iproc-fault.c? If it's similar to what
+> you have now, then I think it fits more to bcm_5301x.c
 
+Yes, I just wanted to have a simple file with 2 functions there: one
+adding a hook and second being a callback.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--=20
+Rafa=C5=82
