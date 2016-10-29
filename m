@@ -1,367 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49446 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S940957AbcJGQ3u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:29:50 -0400
-Subject: [PATCH 8/9] PCI: xilinx-nwl: Add local struct device pointers
-To: Michal Simek <michal.simek@xilinx.com>,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:29:44 -0500
-Message-ID: <20161007162944.24137.44119.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162847.24137.38713.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36554 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750840AbcJ2LMp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 07:12:45 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Florian Fainelli <f.fainelli@gmail.com>,
+        linux-arm-kernel@lists.infradead.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        Jon Mason <jonmason@broadcom.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] ARM: BCM5301X: Add back handler ignoring external imprecise aborts
+Date: Sat, 29 Oct 2016 13:12:29 +0200
+Message-Id: <20161029111229.26875-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency with other
-drivers.  No functional change intended.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Since early BCM5301X days we got abort handler that was removed by
+commit 937b12306ea79 ("ARM: BCM5301X: remove workaround imprecise abort
+fault handler"). It assumed we need to deal only with pending aborts
+left by the bootloader. Unfortunately this isn't true for BCM5301X.
+
+When probing PCI config space (device enumeration) it is expected to
+have master aborts on the PCI bus. Most bridges don't forward (or they
+allow disabling it) these errors onto the AXI/AMBA bus but not the
+Northstar (BCM5301X) one.
+
+iProc PCIe controller on Northstar seems to be some older one, without
+a control register for errors forwarding. It means we need to workaround
+this at platform level. All newer platforms are not affected by this
+issue.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c |  108 ++++++++++++++++++------------------
- 1 file changed, 54 insertions(+), 54 deletions(-)
+ arch/arm/mach-bcm/bcm_5301x.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 2403865..63b6174 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -277,6 +277,7 @@ static struct pci_ops nwl_pcie_ops = {
- static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
- {
- 	struct nwl_pcie *nwl = data;
-+	struct device *dev = nwl->dev;
- 	u32 misc_stat;
+diff --git a/arch/arm/mach-bcm/bcm_5301x.c b/arch/arm/mach-bcm/bcm_5301x.c
+index c8830a2..fe067f6 100644
+--- a/arch/arm/mach-bcm/bcm_5301x.c
++++ b/arch/arm/mach-bcm/bcm_5301x.c
+@@ -9,14 +9,42 @@
+ #include <asm/hardware/cache-l2x0.h>
  
- 	/* Checking for misc interrupts */
-@@ -286,45 +287,43 @@ static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
- 		return IRQ_NONE;
+ #include <asm/mach/arch.h>
++#include <asm/siginfo.h>
++#include <asm/signal.h>
++
++#define FSR_EXTERNAL		(1 << 12)
++#define FSR_READ		(0 << 10)
++#define FSR_IMPRECISE		0x0406
  
- 	if (misc_stat & MSGF_MISC_SR_RXMSG_OVER)
--		dev_err(nwl->dev, "Received Message FIFO Overflow\n");
-+		dev_err(dev, "Received Message FIFO Overflow\n");
+ static const char *const bcm5301x_dt_compat[] __initconst = {
+ 	"brcm,bcm4708",
+ 	NULL,
+ };
  
- 	if (misc_stat & MSGF_MISC_SR_SLAVE_ERR)
--		dev_err(nwl->dev, "Slave error\n");
-+		dev_err(dev, "Slave error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_MASTER_ERR)
--		dev_err(nwl->dev, "Master error\n");
-+		dev_err(dev, "Master error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_I_ADDR_ERR)
--		dev_err(nwl->dev,
--			"In Misc Ingress address translation error\n");
-+		dev_err(dev, "In Misc Ingress address translation error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_E_ADDR_ERR)
--		dev_err(nwl->dev,
--			"In Misc Egress address translation error\n");
-+		dev_err(dev, "In Misc Egress address translation error\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_FATAL_AER)
--		dev_err(nwl->dev, "Fatal Error in AER Capability\n");
-+		dev_err(dev, "Fatal Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_NON_FATAL_AER)
--		dev_err(nwl->dev, "Non-Fatal Error in AER Capability\n");
-+		dev_err(dev, "Non-Fatal Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_CORR_AER)
--		dev_err(nwl->dev, "Correctable Error in AER Capability\n");
-+		dev_err(dev, "Correctable Error in AER Capability\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_UR_DETECT)
--		dev_err(nwl->dev, "Unsupported request Detected\n");
-+		dev_err(dev, "Unsupported request Detected\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_NON_FATAL_DEV)
--		dev_err(nwl->dev, "Non-Fatal Error Detected\n");
-+		dev_err(dev, "Non-Fatal Error Detected\n");
- 
- 	if (misc_stat & MSGF_MISC_SR_FATAL_DEV)
--		dev_err(nwl->dev, "Fatal Error Detected\n");
-+		dev_err(dev, "Fatal Error Detected\n");
- 
- 	if (misc_stat & MSGF_MSIC_SR_LINK_AUTO_BWIDTH)
--		dev_info(nwl->dev, "Link Autonomous Bandwidth Management Status bit set\n");
-+		dev_info(dev, "Link Autonomous Bandwidth Management Status bit set\n");
- 
- 	if (misc_stat & MSGF_MSIC_SR_LINK_BWIDTH)
--		dev_info(nwl->dev, "Link Bandwidth Management Status bit set\n");
-+		dev_info(dev, "Link Bandwidth Management Status bit set\n");
- 
- 	/* Clear misc interrupt status */
- 	nwl_bridge_writel(nwl, MSGF_MISC_STATUS, misc_stat);
-@@ -494,20 +493,21 @@ static const struct irq_domain_ops dev_msi_domain_ops = {
- static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *nwl)
- {
- #ifdef CONFIG_PCI_MSI
--	struct fwnode_handle *fwnode = of_node_to_fwnode(nwl->dev->of_node);
-+	struct device *dev = nwl->dev;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
- 	struct nwl_msi *msi = &nwl->msi;
- 
- 	msi->dev_domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
- 						&dev_msi_domain_ops, nwl);
- 	if (!msi->dev_domain) {
--		dev_err(nwl->dev, "failed to create dev IRQ domain\n");
-+		dev_err(dev, "failed to create dev IRQ domain\n");
- 		return -ENOMEM;
- 	}
- 	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
- 						    &nwl_msi_domain_info,
- 						    msi->dev_domain);
- 	if (!msi->msi_domain) {
--		dev_err(nwl->dev, "failed to create msi IRQ domain\n");
-+		dev_err(dev, "failed to create msi IRQ domain\n");
- 		irq_domain_remove(msi->dev_domain);
- 		return -ENOMEM;
- 	}
-@@ -517,12 +517,13 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *nwl)
- 
- static int nwl_pcie_init_irq_domain(struct nwl_pcie *nwl)
- {
--	struct device_node *node = nwl->dev->of_node;
-+	struct device *dev = nwl->dev;
-+	struct device_node *node = dev->of_node;
- 	struct device_node *legacy_intc_node;
- 
- 	legacy_intc_node = of_get_next_child(node, NULL);
- 	if (!legacy_intc_node) {
--		dev_err(nwl->dev, "No legacy intc node found\n");
-+		dev_err(dev, "No legacy intc node found\n");
- 		return -EINVAL;
- 	}
- 
-@@ -532,7 +533,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *nwl)
- 							nwl);
- 
- 	if (!nwl->legacy_irq_domain) {
--		dev_err(nwl->dev, "failed to create IRQ domain\n");
-+		dev_err(dev, "failed to create IRQ domain\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -542,7 +543,8 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *nwl)
- 
- static int nwl_pcie_enable_msi(struct nwl_pcie *nwl, struct pci_bus *bus)
- {
--	struct platform_device *pdev = to_platform_device(nwl->dev);
-+	struct device *dev = nwl->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
- 	struct nwl_msi *msi = &nwl->msi;
- 	unsigned long base;
- 	int ret;
-@@ -557,7 +559,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *nwl, struct pci_bus *bus)
- 	/* Get msi_1 IRQ number */
- 	msi->irq_msi1 = platform_get_irq_byname(pdev, "msi1");
- 	if (msi->irq_msi1 < 0) {
--		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi1);
-+		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi1);
- 		ret = -EINVAL;
- 		goto err;
- 	}
-@@ -568,7 +570,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *nwl, struct pci_bus *bus)
- 	/* Get msi_0 IRQ number */
- 	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
- 	if (msi->irq_msi0 < 0) {
--		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi0);
-+		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi0);
- 		ret = -EINVAL;
- 		goto err;
- 	}
-@@ -579,7 +581,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *nwl, struct pci_bus *bus)
- 	/* Check for msii_present bit */
- 	ret = nwl_bridge_readl(nwl, I_MSII_CAPABILITIES) & MSII_PRESENT;
- 	if (!ret) {
--		dev_err(nwl->dev, "MSI not present\n");
-+		dev_err(dev, "MSI not present\n");
- 		ret = -EIO;
- 		goto err;
- 	}
-@@ -631,13 +633,14 @@ err:
- 
- static int nwl_pcie_bridge_init(struct nwl_pcie *nwl)
- {
--	struct platform_device *pdev = to_platform_device(nwl->dev);
-+	struct device *dev = nwl->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
- 	u32 breg_val, ecam_val, first_busno = 0;
- 	int err;
- 
- 	breg_val = nwl_bridge_readl(nwl, E_BREG_CAPABILITIES) & BREG_PRESENT;
- 	if (!breg_val) {
--		dev_err(nwl->dev, "BREG is not present\n");
-+		dev_err(dev, "BREG is not present\n");
- 		return breg_val;
- 	}
- 
-@@ -669,7 +672,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *nwl)
- 
- 	ecam_val = nwl_bridge_readl(nwl, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
- 	if (!ecam_val) {
--		dev_err(nwl->dev, "ECAM is not present\n");
-+		dev_err(dev, "ECAM is not present\n");
- 		return ecam_val;
- 	}
- 
-@@ -697,24 +700,22 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *nwl)
- 	writel(ecam_val, (nwl->ecam_base + PCI_PRIMARY_BUS));
- 
- 	if (nwl_pcie_link_up(nwl))
--		dev_info(nwl->dev, "Link is UP\n");
-+		dev_info(dev, "Link is UP\n");
- 	else
--		dev_info(nwl->dev, "Link is DOWN\n");
-+		dev_info(dev, "Link is DOWN\n");
- 
- 	/* Get misc IRQ number */
- 	nwl->irq_misc = platform_get_irq_byname(pdev, "misc");
- 	if (nwl->irq_misc < 0) {
--		dev_err(&pdev->dev, "failed to get misc IRQ %d\n",
--			nwl->irq_misc);
-+		dev_err(dev, "failed to get misc IRQ %d\n", nwl->irq_misc);
- 		return -EINVAL;
- 	}
- 
--	err = devm_request_irq(nwl->dev, nwl->irq_misc,
-+	err = devm_request_irq(dev, nwl->irq_misc,
- 			       nwl_pcie_misc_handler, IRQF_SHARED,
- 			       "nwl_pcie:misc", nwl);
- 	if (err) {
--		dev_err(nwl->dev, "fail to register misc IRQ#%d\n",
--			nwl->irq_misc);
-+		dev_err(dev, "fail to register misc IRQ#%d\n", nwl->irq_misc);
- 		return err;
- 	}
- 
-@@ -751,31 +752,32 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *nwl)
- static int nwl_pcie_parse_dt(struct nwl_pcie *nwl,
- 			     struct platform_device *pdev)
- {
--	struct device_node *node = nwl->dev->of_node;
-+	struct device *dev = nwl->dev;
-+	struct device_node *node = dev->of_node;
- 	struct resource *res;
- 	const char *type;
- 
- 	/* Check for device type */
- 	type = of_get_property(node, "device_type", NULL);
- 	if (!type || strcmp(type, "pci")) {
--		dev_err(nwl->dev, "invalid \"device_type\" %s\n", type);
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
- 		return -EINVAL;
- 	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
--	nwl->breg_base = devm_ioremap_resource(nwl->dev, res);
-+	nwl->breg_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(nwl->breg_base))
- 		return PTR_ERR(nwl->breg_base);
- 	nwl->phys_breg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pcireg");
--	nwl->pcireg_base = devm_ioremap_resource(nwl->dev, res);
-+	nwl->pcireg_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(nwl->pcireg_base))
- 		return PTR_ERR(nwl->pcireg_base);
- 	nwl->phys_pcie_reg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
--	nwl->ecam_base = devm_ioremap_resource(nwl->dev, res);
-+	nwl->ecam_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(nwl->ecam_base))
- 		return PTR_ERR(nwl->ecam_base);
- 	nwl->phys_ecam_base = res->start;
-@@ -783,14 +785,12 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *nwl,
- 	/* Get intx IRQ number */
- 	nwl->irq_intx = platform_get_irq_byname(pdev, "intx");
- 	if (nwl->irq_intx < 0) {
--		dev_err(&pdev->dev, "failed to get intx IRQ %d\n",
--			nwl->irq_intx);
-+		dev_err(dev, "failed to get intx IRQ %d\n", nwl->irq_intx);
- 		return -EINVAL;
- 	}
- 
- 	irq_set_chained_handler_and_data(nwl->irq_intx,
- 					 nwl_pcie_leg_handler, nwl);
--
- 	return 0;
- }
- 
-@@ -801,7 +801,8 @@ static const struct of_device_id nwl_pcie_of_match[] = {
- 
- static int nwl_pcie_probe(struct platform_device *pdev)
- {
--	struct device_node *node = pdev->dev.of_node;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *node = dev->of_node;
- 	struct nwl_pcie *nwl;
- 	struct pci_bus *bus;
- 	struct pci_bus *child;
-@@ -809,42 +810,42 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	resource_size_t iobase = 0;
- 	LIST_HEAD(res);
- 
--	nwl = devm_kzalloc(&pdev->dev, sizeof(*nwl), GFP_KERNEL);
-+	nwl = devm_kzalloc(dev, sizeof(*nwl), GFP_KERNEL);
- 	if (!nwl)
- 		return -ENOMEM;
- 
--	nwl->dev = &pdev->dev;
-+	nwl->dev = dev;
- 	nwl->ecam_value = NWL_ECAM_VALUE_DEFAULT;
- 
- 	err = nwl_pcie_parse_dt(nwl, pdev);
- 	if (err) {
--		dev_err(nwl->dev, "Parsing DT failed\n");
-+		dev_err(dev, "Parsing DT failed\n");
- 		return err;
- 	}
- 
- 	err = nwl_pcie_bridge_init(nwl);
- 	if (err) {
--		dev_err(nwl->dev, "HW Initialization failed\n");
-+		dev_err(dev, "HW Initialization failed\n");
- 		return err;
- 	}
- 
- 	err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
- 	if (err) {
--		dev_err(nwl->dev, "Getting bridge resources failed\n");
-+		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
- 
--	err = devm_request_pci_bus_resources(nwl->dev, &res);
-+	err = devm_request_pci_bus_resources(dev, &res);
- 	if (err)
- 		goto error;
- 
- 	err = nwl_pcie_init_irq_domain(nwl);
- 	if (err) {
--		dev_err(nwl->dev, "Failed creating IRQ Domain\n");
-+		dev_err(dev, "Failed creating IRQ Domain\n");
- 		goto error;
- 	}
- 
--	bus = pci_create_root_bus(&pdev->dev, nwl->root_busno,
-+	bus = pci_create_root_bus(dev, nwl->root_busno,
- 				  &nwl_pcie_ops, nwl, &res);
- 	if (!bus) {
- 		err = -ENOMEM;
-@@ -854,8 +855,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		err = nwl_pcie_enable_msi(nwl, bus);
- 		if (err < 0) {
--			dev_err(&pdev->dev,
--				"failed to enable MSI support: %d\n", err);
-+			dev_err(dev, "failed to enable MSI support: %d\n", err);
- 			goto error;
- 		}
- 	}
++static int bcm5301x_abort_handler(unsigned long addr, unsigned int fsr,
++				  struct pt_regs *regs)
++{
++	/*
++	 * We want to ignore aborts forwarded from the PCIe bus that are
++	 * expected and shouldn't really be passed by the PCIe controller.
++	 * The biggest disadvantage is the same FSR code may be reported when
++	 * reading non-existing APB register and we shouldn't ignore that.
++	 */
++	if (fsr == (FSR_EXTERNAL | FSR_READ | FSR_IMPRECISE))
++		return 0;
++
++	return 1;
++}
++
++static void __init bcm5301x_init_early(void)
++{
++	hook_fault_code(16 + 6, bcm5301x_abort_handler, SIGBUS, BUS_OBJERR,
++			"imprecise external abort");
++}
++
+ DT_MACHINE_START(BCM5301X, "BCM5301X")
+ 	.l2c_aux_val	= 0,
+ 	.l2c_aux_mask	= ~0,
+ 	.dt_compat	= bcm5301x_dt_compat,
++	.init_early	= bcm5301x_init_early,
+ MACHINE_END
+-- 
+2.9.3
 
