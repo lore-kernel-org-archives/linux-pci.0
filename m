@@ -1,150 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41948 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752572AbcJDRNm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Oct 2016 13:13:42 -0400
-Date: Tue, 4 Oct 2016 12:13:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v2] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
-Message-ID: <20161004171322.GA3449@localhost>
-References: <3386780.3qrqUfW7i7@wasted.cogentembedded.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3386780.3qrqUfW7i7@wasted.cogentembedded.com>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:36693 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754176AbcJ2T4Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2016 15:56:24 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-omap@vger.kernel.org,
+        alsa-devel@alsa-project.org, linuxppc-dev@lists.ozlabs.org,
+        linux-mips@linux-mips.org, linux-pm@vger.kernel.org,
+        patches@opensource.wolfsonmicro.com, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net
+Subject: [PATCH 00/15] use permission-specific DEVICE_ATTR variants
+Date: Sat, 29 Oct 2016 21:36:54 +0200
+Message-Id: <1477769829-22230-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 22, 2016 at 11:20:18PM +0300, Sergei Shtylyov wrote:
-> Initially, the PCIe link speed is set up only  at 2.5 GT/s.
-> For better performance,  we're trying to increase link speed to 5 GT/s.
-> 
-> Based on the original patch by Grigory Kletsko
-> <grigory.kletsko@cogentembedded.com>.
-> 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-I addressed Simon's comment for you, added his ack, and applied this to
-pci/host-rcar for v4.9.
+Use DEVICE_ATTR_RO etc. for read only attributes etc.  This simplifies the
+source code, improves readbility, and reduces the chance of
+inconsistencies.
 
-> ---
-> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
-> 
-> Changes in version 2:
-> - switched from the interrupt based speed change algorithm to polling with
->   1-second timeout, got rid  of the now unneeded register/bit #define's;
-> - made rcar_pcie_force_speedup() *static*;
-> - moved the speed capability check to the start of rcar_pcie_force_speedup();
-> - adjusted the speed change in-progress check and the error message;
-> - read MACSR ony once during the speed change setup;
-> - print current link speed after any speed change outcome and when the speed
->   is already 5 GT/s;
-> - removed the TODO comment;
-> - moved rcar_pcie_force_speedup() call to the start of rcar_pcie_enable();
-> - changed the patch authorship, updated the patch description accordingly.
-> 
->  drivers/pci/host/pcie-rcar.c |   70 +++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 70 insertions(+)
-> 
-> Index: pci/drivers/pci/host/pcie-rcar.c
-> ===================================================================
-> --- pci.orig/drivers/pci/host/pcie-rcar.c
-> +++ pci/drivers/pci/host/pcie-rcar.c
-> @@ -84,8 +84,19 @@
->  #define IDSETR1			0x011004
->  #define TLCTLR			0x011048
->  #define MACSR			0x011054
-> +#define  SPCHG			(1 << 5)
-> +#define  SPCHGFIN		(1 << 4)
-> +#define  SPCHGSUC		(1 << 7)
-> +#define  SPCHGFAIL		(1 << 6)
-> +#define  LINK_SPEED		(0xf << 16)
-> +#define  LINK_SPEED_2_5GTS	(1 << 16)
-> +#define  LINK_SPEED_5_0GTS	(2 << 16)
->  #define MACCTLR			0x011058
-> +#define  SPEED_CHANGE		(1 << 24)
->  #define  SCRAMBLE_DISABLE	(1 << 27)
-> +#define MACS2R			0x011078
-> +#define MACCGSPSETR		0x011084
-> +#define  SPCNGRSN		(1 << 31)
->  
->  /* R-Car H1 PHY */
->  #define H1_PCIEPHYADRR		0x04000c
-> @@ -385,11 +396,70 @@ static int rcar_pcie_setup(struct list_h
->  	return 1;
->  }
->  
-> +static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
-> +{
-> +	unsigned int timeout = 1000;
-> +	u32 macsr;
-> +
-> +	if ((rcar_pci_read_reg(pcie, MACS2R) & LINK_SPEED) != LINK_SPEED_5_0GTS)
-> +		return;
-> +
-> +	dev_info(pcie->dev, "Trying speed up to 5 GT/s\n");
-> +
-> +	if (rcar_pci_read_reg(pcie, MACCTLR) & SPEED_CHANGE) {
-> +		dev_err(pcie->dev, "Speed change is in progress\n");
-> +		return;
-> +	}
-> +
-> +	macsr = rcar_pci_read_reg(pcie, MACSR);
-> +	if ((macsr & LINK_SPEED) == LINK_SPEED_5_0GTS)
-> +		goto done;
-> +
-> +	/* Set target link speed to 5.0 GT/s */
-> +	rcar_rmw32(pcie, EXPCAP(12), PCI_EXP_LNKSTA_CLS,
-> +		   PCI_EXP_LNKSTA_CLS_5_0GB);
-> +
-> +	/* Set speed change reason as intentional factor */
-> +	rcar_rmw32(pcie, MACCGSPSETR, SPCNGRSN, 0);
-> +
-> +	/* Clear SPCHGFIN, SPCHGSUC, and SPCHGFAIL */
-> +	if (macsr & (SPCHGFIN | SPCHGSUC | SPCHGFAIL))
-> +		rcar_pci_write_reg(pcie, macsr, MACSR);
-> +
-> +	/* Start link speed change */
-> +	rcar_rmw32(pcie, MACCTLR, SPEED_CHANGE, SPEED_CHANGE);
-> +
-> +	while (timeout--) {
-> +		macsr = rcar_pci_read_reg(pcie, MACSR);
-> +		if (macsr & SPCHGFIN) {
-> +			/* Clear the interrupt bits */
-> +			rcar_pci_write_reg(pcie, macsr, MACSR);
-> +
-> +			if (macsr & SPCHGFAIL)
-> +				dev_err(pcie->dev, "Speed change failed\n");
-> +
-> +			goto done;
-> +		}
-> +
-> +		msleep(1);
-> +	};
-> +
-> +	dev_err(pcie->dev, "Speed change timed out\n");
-> +
-> +done:
-> +	/* Check speed */
-> +	dev_info(pcie->dev, "Current link speed is %s GT/s\n",
-> +		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
-> +}
-> +
->  static int rcar_pcie_enable(struct rcar_pcie *pcie)
->  {
->  	struct pci_bus *bus, *child;
->  	LIST_HEAD(res);
->  
-> +	/* Try setting 5 GT/s link speed */
-> +	rcar_pcie_force_speedup(pcie);
-> +
->  	rcar_pcie_setup(&res, pcie);
->  
->  	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The complete semantic patch is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@ro@
+declarer name DEVICE_ATTR;
+identifier x,x_show;
+@@
+
+DEVICE_ATTR(x, \(0444\|S_IRUGO\), x_show, NULL);
+
+@wo@
+declarer name DEVICE_ATTR;
+identifier x,x_store;
+@@
+
+DEVICE_ATTR(x, \(0200\|S_IWUSR\), NULL, x_store);
+
+@rw@
+declarer name DEVICE_ATTR;
+identifier x,x_show,x_store;
+@@
+
+DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
+
+@script:ocaml@
+x << ro.x;
+x_show << ro.x_show;
+@@
+
+if not (x^"_show" = x_show) then Coccilib.include_match false
+
+@script:ocaml@
+x << wo.x;
+x_store << wo.x_store;
+@@
+
+if not (x^"_store" = x_store) then Coccilib.include_match false
+
+@script:ocaml@
+x << rw.x;
+x_show << rw.x_show;
+x_store << rw.x_store;
+@@
+
+if not (x^"_show" = x_show && x^"_store" = x_store)
+then Coccilib.include_match false
+
+@@
+declarer name DEVICE_ATTR_RO;
+identifier ro.x,ro.x_show;
+@@
+
+- DEVICE_ATTR(x, \(0444\|S_IRUGO\), x_show, NULL);
++ DEVICE_ATTR_RO(x);
+
+@@
+declarer name DEVICE_ATTR_WO;
+identifier wo.x,wo.x_store;
+@@
+
+- DEVICE_ATTR(x, \(0200\|S_IWUSR\), NULL, x_store);
++ DEVICE_ATTR_WO(x);
+
+@@
+declarer name DEVICE_ATTR_RW;
+identifier rw.x,rw.x_show,rw.x_store;
+@@
+
+- DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
++ DEVICE_ATTR_RW(x);
+// </smpl>
+
+---
+
+ arch/mips/txx9/generic/7segled.c                  |    4 ++--
+ arch/powerpc/kernel/iommu.c                       |    3 +--
+ arch/tile/kernel/sysfs.c                          |   14 +++++++-------
+ drivers/atm/solos-pci.c                           |    2 +-
+ drivers/pci/pcie/aspm.c                           |    4 ++--
+ drivers/power/supply/wm8350_power.c               |    2 +-
+ drivers/ptp/ptp_sysfs.c                           |    2 +-
+ drivers/thermal/int340x_thermal/int3400_thermal.c |    2 +-
+ drivers/thermal/thermal_hwmon.c                   |    2 +-
+ drivers/tty/nozomi.c                              |    4 ++--
+ drivers/usb/wusbcore/dev-sysfs.c                  |    6 +++---
+ drivers/usb/wusbcore/wusbhc.c                     |   13 +++++--------
+ drivers/video/fbdev/wm8505fb.c                    |    2 +-
+ sound/soc/omap/mcbsp.c                            |    4 ++--
+ sound/soc/soc-dapm.c                              |    2 +-
+ 15 files changed, 31 insertions(+), 35 deletions(-)
