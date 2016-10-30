@@ -1,62 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58792 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965228AbcJGQoR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:44:17 -0400
-Subject: [PATCH 5/5] PCI: spear: Clean up struct device usage
-To: Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 07 Oct 2016 11:44:13 -0500
-Message-ID: <20161007164413.26585.22779.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007164336.26585.23271.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 30 Oct 2016 12:08:59 +0100
+From: Peter Wu <peter@lekensteyn.nl>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Rick Kerkhof <rick.2889@gmail.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU
+ via Power Resources
+Message-ID: <20161030110859.GB23970@al>
+References: <20161026225641.GA27017@al>
+ <20161027081748.GX1476@lahna.fi.intel.com>
+ <20161027090604.GB27017@al>
+ <CANni8hdMs4pL0m6FrgeyJjE2R2C=6PaHbVbMVoUU+NszJuf9OA@mail.gmail.com>
+ <20161027093011.GZ1476@lahna.fi.intel.com>
+ <CANni8her35iORgrZOkDzxhfVaOOzObTLG2Ly0kkNZPDTrbyfQQ@mail.gmail.com>
+ <20161027095508.GA1476@lahna.fi.intel.com>
+ <20161027160648.GF27017@al>
+ <20161028085630.GD1476@lahna.fi.intel.com>
+ <1AE640813FDE7649BE1B193DEA596E886A25E758@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886A25E758@SHSMSX101.ccr.corp.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For consistency with other drivers, use the struct device pointer from
-struct pcie_port whenever possible instead of relying on the
-platform_device pointer.  No functional change intended.
+On Sat, Oct 29, 2016 at 12:42:34AM +0000, Zheng, Lv wrote:
+> Hi, Mika
+> 
+> > From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+> > Subject: Re: Acer Aspire V7-582PG (Haswell, GTX 750M) fails to power off GPU via Power Resources
+> > 
+> > On Thu, Oct 27, 2016 at 06:06:48PM +0200, Peter Wu wrote:
+> > > On Thu, Oct 27, 2016 at 12:55:08PM +0300, Mika Westerberg wrote:
+> > > > On Thu, Oct 27, 2016 at 09:42:28AM +0000, Rick Kerkhof wrote:
+> > > > >    No, there are not. Here is the recursive directory listing:
+> > > >
+> > > > Are you able to try the following patch and send me dmesg (or attach it
+> > > > to that bug)? It should show if the ACPI core even tries to add those
+> > > > power resources.
+> > >
+> > > So Rick has tested this patch now on top of 4.8.4 (mainline fails to
+> > > boot due to a kbuild issue which I reported elsewhere), but the output
+> > > is empty. That seems to indicate that flags.power_resources is unset.
+> > 
+> > Is it completely empty or is it empty just for RP05? It should print out
+> > all devices with power resources.
+> > 
+> > > Given that _PS3 exists and is indeed a package with some elements, it
+> > > seems that acpi_extract_power_resources is failing. Note that in the
+> > > SSDT, the power resource NVP3 was referenced before it was defined,
+> > > could that result in this enumeration failure? Relevant SSDT excerpt:
+> > >
+> > >     Scope (\_SB.PCI0.RP05)
+> > >     {
+> > >         Name (_PR3, Package (0x01)  // _PR3: Power Resources for D3hot
+> > >         {
+> > >             NVP3
+> > >         })
+> > >         // ...
+> > >     }
+> > >
+> > >     PowerResource (NVP3, 0x00, 0x0000)
+> 
+> Looks wrong order to me.
+> 
+> However, _PR3 is a package, for AML opcode that contains PkgLength grammar primitive, forward reference may be OK (for example Method).
+> DefPackage := PackageOp PkgLength NumElements PackageElementList
+> DefMethod := MethodOp PkgLength NameString MethodFlags TermList
+> As when it is encountered, AML interpreter may only saves entire packaged object.
+> 
+> I need to test behaviors around Package with qemu but I don't have environment now.
+> Can you help to give it a try?
+> By adding customize an ssdt with the above code putting under root scope,
+> DefinitionBlock ("ssdt-package.aml", "SSDT", 2, "INTEL ", "PACKAGE ", 0x00003000)
+> {
+>     Scope (\)
+>     {
+>         Name (_PR3, Package (0x01) { NVP3 })
+>     }
+>     PowerResource (NVP3, 0x00, 0x0000) {}
+> }
+> Running Windows images on qemu with this ssdt appended "-acpitable file=ssdt-package.aml".
+> To see if blue screen can be resulted.
+> 
+> Thanks
+> Lv
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-spear13xx.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+Testing this code with Windows 10 gives a BSOD, changing the order of
+the PowerResource and Scope does not make a difference. If I take my
+previous SSDT and change the ordering of NVP3 definition vs _PR3 use,
+there is no change.
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 61bb8d7..07fbd96 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -191,7 +191,7 @@ static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx,
- 				   struct platform_device *pdev)
- {
- 	struct pcie_port *pp = &spear13xx->pp;
--	struct device *dev = &pdev->dev;
-+	struct device *dev = pp->dev;
- 	int ret;
- 
- 	pp->irq = platform_get_irq(pdev, 0);
-@@ -221,10 +221,10 @@ static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx,
- 
- static int spear13xx_pcie_probe(struct platform_device *pdev)
- {
-+	struct device *dev = &pdev->dev;
- 	struct spear13xx_pcie *spear13xx;
- 	struct pcie_port *pp;
--	struct device *dev = &pdev->dev;
--	struct device_node *np = pdev->dev.of_node;
-+	struct device_node *np = dev->of_node;
- 	struct resource *dbi_base;
- 	int ret;
- 
-@@ -256,7 +256,6 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	pp = &spear13xx->pp;
--
- 	pp->dev = dev;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+Kind regards,
+Peter
 
+> > 
+> > That and the fact that they come from an SSDT instead of DSDT may cause
+> > this. However, I'm not expert in ACPICA so adding Bob and Lv if they
+> > have ideas.
+> > 
+> > Bob, Lv, the bug in question is: https://bugs.freedesktop.org/show_bug.cgi?id=98398
