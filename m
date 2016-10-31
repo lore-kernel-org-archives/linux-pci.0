@@ -1,40 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f67.google.com ([209.85.213.67]:35738 "EHLO
-        mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934886AbcJRSgd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Oct 2016 14:36:33 -0400
-Received: by mail-vk0-f67.google.com with SMTP id 130so132997vkg.2
-        for <linux-pci@vger.kernel.org>; Tue, 18 Oct 2016 11:36:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20161018082549.10905-1-l.stach@pengutronix.de>
-References: <20161018082549.10905-1-l.stach@pengutronix.de>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 18 Oct 2016 16:36:31 -0200
-Message-ID: <CAOMZO5AG+Z8M69HyQv-QUm8HNTgi2NxyiD8ZU+j0eZF+28AoSA@mail.gmail.com>
-Subject: Re: [PATCH resend] PCI: designware: fix register access before host init
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Gary Bisson <gary.bisson@boundarydevices.com>,
-        Sascha Hauer <kernel@pengutronix.de>,
-        patchwork-lst@pengutronix.de
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Juergen Gross <jgross@suse.com>
+To: linux-kernel@vger.kernel.org, xen-devel@lists.xen.org
+Cc: david.vrabel@citrix.com, boris.ostrovsky@oracle.com,
+        Juergen Gross <jgross@suse.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 08/12] xen: make use of xenbus_read_unsigned() in xen-pcifront
+Date: Mon, 31 Oct 2016 17:48:26 +0100
+Message-Id: <1477932510-28594-9-git-send-email-jgross@suse.com>
+In-Reply-To: <1477932510-28594-1-git-send-email-jgross@suse.com>
+References: <1477932510-28594-1-git-send-email-jgross@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 18, 2016 at 6:25 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> The function used to determine if iATU unroll is available will read
-> a RC register. This is not possible and will result in a system hang
-> if the RC is still in reset, so it is only safe to call this function
-> after host_init() has been called.
->
-> Fixes: a0601a470537 (PCI: designware: Add iATU Unroll feature)
-> Reported-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Use xenbus_read_unsigned() instead of xenbus_scanf() when possible.
+This requires to change the type of the read from int to unsigned,
+but this case has been wrong before: negative values are not allowed
+for the modified case.
 
-This fixes the hang on mx6, thanks:
+Cc: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org
 
-Tested-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/pci/xen-pcifront.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index d6ff5e8..8fc2e95 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -1038,10 +1038,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+ 			err = -ENOMEM;
+ 			goto out;
+ 		}
+-		err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend, str, "%d",
+-				   &state);
+-		if (err != 1)
+-			state = XenbusStateUnknown;
++		state = xenbus_read_unsigned(pdev->xdev->otherend, str,
++					     XenbusStateUnknown);
+ 
+ 		if (state != XenbusStateClosing)
+ 			continue;
+-- 
+2.6.6
