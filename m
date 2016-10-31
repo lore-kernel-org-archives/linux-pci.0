@@ -1,28 +1,88 @@
-Return-Path: <roy.zang@nxp.com>
-Return-Path: <roy.zang@nxp.com>
-From: Roy Zang <roy.zang@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Minghuan Lian <minghuan.Lian@freescale.com>, Mingkai Hu
-	<mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH v2 0/7] PCI: layerscape: Cleanups
-Date: Wed, 12 Oct 2016 16:32:03 +0000
-Message-ID: <HE1PR0402MB27482D17579F94B0CC61D4F28BDD0@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-References: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20161012160639.GR4308@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] ARM: BCM5301X: Add back handler ignoring external
+ imprecise aborts
+To: Scott Branden <scott.branden@broadcom.com>,
+ =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+ Florian Fainelli <f.fainelli@gmail.com>, linux-arm-kernel@lists.infradead.org
+References: <20161029111229.26875-1-zajec5@gmail.com>
+ <a491509e-5cfc-fc7d-0011-dfcab3c884ea@broadcom.com>
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <6e252703-0010-83ae-fa14-57352add007a@hauke-m.de>
+Date: Mon, 31 Oct 2016 21:59:08 +0100
 MIME-Version: 1.0
+In-Reply-To: <a491509e-5cfc-fc7d-0011-dfcab3c884ea@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Scott Branden <sbranden@broadcom.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+ =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/2016 11:07 AM, Bjorn Helgaas wrote:=0A=
-> I applied these to pci/host-layerscape for v4.9.  I hope to ask Linus to=
-=0A=
-> pull them tomorrow, so if you see any issues, let me know soon.=0A=
->=0A=
-good to me.=0A=
-=0A=
-Thanks.=0A=
-=0A=
-Roy=0A=
-=0A=
+CgpPbiAxMC8zMS8yMDE2IDA3OjA4IFBNLCBTY290dCBCcmFuZGVuIHdyb3RlOgo+IEhpIFJhZmFs
+LAo+IAo+IAo+IE9uIDE2LTEwLTI5IDA0OjEyIEFNLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+
+IEZyb206IFJhZmHFgiBNacWCZWNraSA8cmFmYWxAbWlsZWNraS5wbD4KPj4KPj4gU2luY2UgZWFy
+bHkgQkNNNTMwMVggZGF5cyB3ZSBnb3QgYWJvcnQgaGFuZGxlciB0aGF0IHdhcyByZW1vdmVkIGJ5
+Cj4+IGNvbW1pdCA5MzdiMTIzMDZlYTc5ICgiQVJNOiBCQ001MzAxWDogcmVtb3ZlIHdvcmthcm91
+bmQgaW1wcmVjaXNlIGFib3J0Cj4+IGZhdWx0IGhhbmRsZXIiKS4gSXQgYXNzdW1lZCB3ZSBuZWVk
+IHRvIGRlYWwgb25seSB3aXRoIHBlbmRpbmcgYWJvcnRzCj4+IGxlZnQgYnkgdGhlIGJvb3Rsb2Fk
+ZXIuIFVuZm9ydHVuYXRlbHkgdGhpcyBpc24ndCB0cnVlIGZvciBCQ001MzAxWC4KPj4KPj4gV2hl
+biBwcm9iaW5nIFBDSSBjb25maWcgc3BhY2UgKGRldmljZSBlbnVtZXJhdGlvbikgaXQgaXMgZXhw
+ZWN0ZWQgdG8KPj4gaGF2ZSBtYXN0ZXIgYWJvcnRzIG9uIHRoZSBQQ0kgYnVzLiBNb3N0IGJyaWRn
+ZXMgZG9uJ3QgZm9yd2FyZCAob3IgdGhleQo+PiBhbGxvdyBkaXNhYmxpbmcgaXQpIHRoZXNlIGVy
+cm9ycyBvbnRvIHRoZSBBWEkvQU1CQSBidXMgYnV0IG5vdCB0aGUKPj4gTm9ydGhzdGFyIChCQ001
+MzAxWCkgb25lLgo+IFNob3VsZCB3ZSBvbmx5IGFkZCB0aGlzIHdvcmthcm91bmQgY29kZSBpZiBD
+T05GSUdfUENJIGlzIG9uIHRoZW4/CgpJIHRoaW5rIGFsbCB0aGUgc3VwcG9ydGVkIG5vcnRoc3Rh
+ciBkZXZpY2VzIGhhdmUgYSBQQ0llIGNvbnRyb2xsZXIuIFdlCmNvdWxkIGFkZCBzdWNoIGEgQ09O
+RklHX1BDSSBjaGVjaywgYnV0IEkgZG8gbm90IHNlZSBhIGJpZyBhZHZhbnRhZ2UuCgo+PiBpUHJv
+YyBQQ0llIGNvbnRyb2xsZXIgb24gTm9ydGhzdGFyIHNlZW1zIHRvIGJlIHNvbWUgb2xkZXIgb25l
+LCB3aXRob3V0Cj4+IGEgY29udHJvbCByZWdpc3RlciBmb3IgZXJyb3JzIGZvcndhcmRpbmcuIEl0
+IG1lYW5zIHdlIG5lZWQgdG8gd29ya2Fyb3VuZAo+PiB0aGlzIGF0IHBsYXRmb3JtIGxldmVsLiBB
+bGwgbmV3ZXIgcGxhdGZvcm1zIGFyZSBub3QgYWZmZWN0ZWQgYnkgdGhpcwo+PiBpc3N1ZS4KPj4K
+Pj4gU2lnbmVkLW9mZi1ieTogUmFmYcWCIE1pxYJlY2tpIDxyYWZhbEBtaWxlY2tpLnBsPgo+PiAt
+LS0KPj4gIGFyY2gvYXJtL21hY2gtYmNtL2JjbV81MzAxeC5jIHwgMjggKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKwo+PiAgMSBmaWxlIGNoYW5nZWQsIDI4IGluc2VydGlvbnMoKykKPj4KPj4g
+ZGlmZiAtLWdpdCBhL2FyY2gvYXJtL21hY2gtYmNtL2JjbV81MzAxeC5jCj4+IGIvYXJjaC9hcm0v
+bWFjaC1iY20vYmNtXzUzMDF4LmMKPj4gaW5kZXggYzg4MzBhMi4uZmUwNjdmNiAxMDA2NDQKPj4g
+LS0tIGEvYXJjaC9hcm0vbWFjaC1iY20vYmNtXzUzMDF4LmMKPj4gKysrIGIvYXJjaC9hcm0vbWFj
+aC1iY20vYmNtXzUzMDF4LmMKPj4gQEAgLTksMTQgKzksNDIgQEAKPj4gICNpbmNsdWRlIDxhc20v
+aGFyZHdhcmUvY2FjaGUtbDJ4MC5oPgo+Pgo+PiAgI2luY2x1ZGUgPGFzbS9tYWNoL2FyY2guaD4K
+Pj4gKyNpbmNsdWRlIDxhc20vc2lnaW5mby5oPgo+PiArI2luY2x1ZGUgPGFzbS9zaWduYWwuaD4K
+Pj4gKwo+PiArI2RlZmluZSBGU1JfRVhURVJOQUwgICAgICAgICgxIDw8IDEyKQo+PiArI2RlZmlu
+ZSBGU1JfUkVBRCAgICAgICAgKDAgPDwgMTApCj4+ICsjZGVmaW5lIEZTUl9JTVBSRUNJU0UgICAg
+ICAgIDB4MDQwNgo+Pgo+PiAgc3RhdGljIGNvbnN0IGNoYXIgKmNvbnN0IGJjbTUzMDF4X2R0X2Nv
+bXBhdFtdIF9faW5pdGNvbnN0ID0gewo+PiAgICAgICJicmNtLGJjbTQ3MDgiLAo+PiAgICAgIE5V
+TEwsCj4+ICB9Owo+Pgo+PiArc3RhdGljIGludCBiY201MzAxeF9hYm9ydF9oYW5kbGVyKHVuc2ln
+bmVkIGxvbmcgYWRkciwgdW5zaWduZWQgaW50IGZzciwKPj4gKyAgICAgICAgICAgICAgICAgIHN0
+cnVjdCBwdF9yZWdzICpyZWdzKQo+PiArewo+PiArICAgIC8qCj4+ICsgICAgICogV2Ugd2FudCB0
+byBpZ25vcmUgYWJvcnRzIGZvcndhcmRlZCBmcm9tIHRoZSBQQ0llIGJ1cyB0aGF0IGFyZQo+PiAr
+ICAgICAqIGV4cGVjdGVkIGFuZCBzaG91bGRuJ3QgcmVhbGx5IGJlIHBhc3NlZCBieSB0aGUgUENJ
+ZSBjb250cm9sbGVyLgo+PiArICAgICAqIFRoZSBiaWdnZXN0IGRpc2FkdmFudGFnZSBpcyB0aGUg
+c2FtZSBGU1IgY29kZSBtYXkgYmUgcmVwb3J0ZWQKPj4gd2hlbgo+PiArICAgICAqIHJlYWRpbmcg
+bm9uLWV4aXN0aW5nIEFQQiByZWdpc3RlciBhbmQgd2Ugc2hvdWxkbid0IGlnbm9yZSB0aGF0Lgo+
+PiArICAgICAqLwo+PiArICAgIGlmIChmc3IgPT0gKEZTUl9FWFRFUk5BTCB8IEZTUl9SRUFEIHwg
+RlNSX0lNUFJFQ0lTRSkpCj4+ICsgICAgICAgIHJldHVybiAwOwoKSG93IG9mdGVuIGRvZXMgdGhp
+cyBoYXBwZW4/IFdvdWxkIGl0IGJlIHVzZWZ1bCB0byBhZGQgYSBsb2cgbWVzc2FnZSBoZXJlPwoK
+Pj4gKwo+PiArICAgIHJldHVybiAxOwo+PiArfQo+PiArCj4+ICtzdGF0aWMgdm9pZCBfX2luaXQg
+YmNtNTMwMXhfaW5pdF9lYXJseSh2b2lkKQo+PiArewo+PiArICAgIGhvb2tfZmF1bHRfY29kZSgx
+NiArIDYsIGJjbTUzMDF4X2Fib3J0X2hhbmRsZXIsIFNJR0JVUywgQlVTX09CSkVSUiwKPj4gKyAg
+ICAgICAgICAgICJpbXByZWNpc2UgZXh0ZXJuYWwgYWJvcnQiKTsKPj4gK30KPj4gKwo+PiAgRFRf
+TUFDSElORV9TVEFSVChCQ001MzAxWCwgIkJDTTUzMDFYIikKPj4gICAgICAubDJjX2F1eF92YWwg
+ICAgPSAwLAo+PiAgICAgIC5sMmNfYXV4X21hc2sgICAgPSB+MCwKPj4gICAgICAuZHRfY29tcGF0
+ICAgID0gYmNtNTMwMXhfZHRfY29tcGF0LAo+PiArICAgIC5pbml0X2Vhcmx5ICAgID0gYmNtNTMw
+MXhfaW5pdF9lYXJseSwKPj4gIE1BQ0hJTkVfRU5ECj4+Cj4gCj4gUmVnYXJkcywKPiBTY290dAoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJt
+LWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
+Cmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtl
+cm5lbAo=
