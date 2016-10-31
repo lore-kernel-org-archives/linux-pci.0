@@ -1,62 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 17 Oct 2016 08:01:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: layerscape: Fix drvdata usage before assignment
-Message-ID: <20161017130145.GB18903@localhost>
-References: <1476700772-18745-1-git-send-email-marc.zyngier@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476700772-18745-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:51570 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S944958AbcJaRIi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Oct 2016 13:08:38 -0400
+Date: Mon, 31 Oct 2016 13:08:31 -0400 (EDT)
+Message-Id: <20161031.130831.2006896157400677867.davem@davemloft.net>
+To: jgross@suse.com
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xen.org,
+        david.vrabel@citrix.com, boris.ostrovsky@oracle.com,
+        konrad.wilk@oracle.com, roger.pau@citrix.com, peterhuewe@gmx.de,
+        tpmdd@selhorst.net, jarkko.sakkinen@linux.intel.com,
+        jgunthorpe@obsidianresearch.com, tpmdd-devel@lists.sourceforge.net,
+        dmitry.torokhov@gmail.com, linux-input@vger.kernel.org,
+        wei.liu2@citrix.com, paul.durrant@citrix.com,
+        netdev@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, tomi.valkeinen@ti.com,
+        linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH 00/12] xen: add common function for reading optional
+ value
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1477932510-28594-1-git-send-email-jgross@suse.com>
+References: <1477932510-28594-1-git-send-email-jgross@suse.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 11:39:32AM +0100, Marc Zyngier wrote:
-> Commit fefe6733e516 ("PCI: layerscape: Move struct pcie_port setup
-> to probe function") changed the init ordering of the pcie structure,
-> but started to use the pcie->drvdata field before initializing it.
-> Mayhem follows.
-> 
-> Fix this by moving the drvdata assignment right before the first use.
-> Tested on LS2085a.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+From: Juergen Gross <jgross@suse.com>
+Date: Mon, 31 Oct 2016 17:48:18 +0100
 
-Applied to for-linus for v4.9, thanks, Marc!
+> There are multiple instances of code reading an optional unsigned
+> parameter from Xenstore via xenbus_scanf(). Instead of repeating the
+> same code over and over add a service function doing the job and
+> replace the call of xenbus_scanf() with the call of the new function
+> where appropriate.
 
-> ---
->  drivers/pci/host/pci-layerscape.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 856d428..27602a3 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -270,6 +270,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  
->  	pp = &pcie->pp;
->  	pp->dev = dev;
-> +	pcie->drvdata = match->data;
->  	pp->ops = pcie->drvdata->ops;
->  
->  	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
-> @@ -279,7 +280,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pcie->pp.dbi_base);
->  	}
->  
-> -	pcie->drvdata = match->data;
->  	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
->  
->  	if (!ls_pcie_is_bridge(pcie))
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As this seems to be a series that will go through some tree other
+than mine, I assume the networking bits will be taken care of that
+way.
