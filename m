@@ -1,70 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Oct 2016 05:42:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [RFC PATCH 02/11] pci: endpoint: introduce configfs entry for
- configuring EP functions
-Message-ID: <20161012124210.GB942@infradead.org>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <1473829927-20466-3-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35844 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755682AbcJaSSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Oct 2016 14:18:53 -0400
+Date: Mon, 31 Oct 2016 13:18:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xen.org,
+        david.vrabel@citrix.com, boris.ostrovsky@oracle.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 08/12] xen: make use of xenbus_read_unsigned() in
+ xen-pcifront
+Message-ID: <20161031181849.GA11486@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477932510-28594-1-git-send-email-jgross@suse.com>
+ <1477932510-28594-9-git-send-email-jgross@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <1473829927-20466-3-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao.Pinto@synopsys.com,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Joao Pinto <jpinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- hch@infradead.org, m-karicheri2@ti.com, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-omap@vger.kernel.org, mingkai.hu@nxp.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477932510-28594-9-git-send-email-jgross@suse.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 10:41:58AM +0530, Kishon Vijay Abraham I wrote:
-> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-> index a6d827c..f1dd206 100644
-> --- a/drivers/pci/endpoint/Kconfig
-> +++ b/drivers/pci/endpoint/Kconfig
-> @@ -13,7 +13,9 @@ config PCI_ENDPOINT
+On Mon, Oct 31, 2016 at 05:48:26PM +0100, Juergen Gross wrote:
+> Use xenbus_read_unsigned() instead of xenbus_scanf() when possible.
+> This requires to change the type of the read from int to unsigned,
+> but this case has been wrong before: negative values are not allowed
+> for the modified case.
+> 
+> Cc: bhelgaas@google.com
+> Cc: linux-pci@vger.kernel.org
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I assume this will be merged with the rest of the series via some tree
+other than mine.
+
+> ---
+>  drivers/pci/xen-pcifront.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index d6ff5e8..8fc2e95 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -1038,10 +1038,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  			err = -ENOMEM;
+>  			goto out;
+>  		}
+> -		err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend, str, "%d",
+> -				   &state);
+> -		if (err != 1)
+> -			state = XenbusStateUnknown;
+> +		state = xenbus_read_unsigned(pdev->xdev->otherend, str,
+> +					     XenbusStateUnknown);
 >  
->  	   Enabling this option will build the endpoint library, which
->  	   includes endpoint controller library and endpoint function
-> -	   library.
-> +	   library. This will also enable the configfs entry required to
-> +	   configure the endpoint function and used to bind the
-> +	   function with a endpoint controller.
->  
->  	   If in doubt, say "N" to disable Endpoint support.
-
-This needs to grow a
-
-	depends on CONFIGFS_FS
-
-> +/**
-> + * pci-ep-cfs.c - configfs to configure the PCI endpoint
-
-Please don't use the file name in the top of the file comment, it's
-only bound to get out of date..
-
-> +struct pci_epf_info {
-> +	struct config_item pci_epf;
-> +	struct pci_epf *epf;
-> +};
-
-Any reason not to simply embedd the config_item into the pci_epf structure?
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  		if (state != XenbusStateClosing)
+>  			continue;
+> -- 
+> 2.6.6
+> 
