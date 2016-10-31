@@ -1,53 +1,67 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V3 1/3] ACPI, PCI IRQ: add PCI_USING penalty for ISA
- interrupts
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1476505867-24599-1-git-send-email-okaya@codeaurora.org>
- <1476505867-24599-2-git-send-email-okaya@codeaurora.org>
- <20161018135912.GD18903@localhost>
- <b4a8995e-1454-3b84-0681-1491788087ec@codeaurora.org>
- <0a82f2ef-b072-d847-104a-320cf804ebd5@codeaurora.org>
- <20161019224405.GA14915@localhost>
- <a418cf9d-5eeb-a588-6653-fd00e0c2693c@codeaurora.org>
- <20161021024111.GA24336@localhost>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- wim@djo.tudelft.nl, linux-arm-kernel@lists.infradead.org,
- Len Brown <lenb@kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <cf80d0a4-c59d-23ff-081a-cf66feea3563@codeaurora.org>
-Date: Thu, 20 Oct 2016 20:01:51 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:57453 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935217AbcJaK7w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Oct 2016 06:59:52 -0400
+Date: Mon, 31 Oct 2016 12:00:40 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv4 next 3/3] pci/msix: Skip disabling removed devices
+Message-ID: <20161031110040.GA9693@wunner.de>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <1477695497-6207-4-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20161021024111.GA24336@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477695497-6207-4-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/20/2016 7:41 PM, Bjorn Helgaas wrote:
-> On Thu, Oct 20, 2016 at 01:01:04PM -0700, Sinan Kaya wrote:
->> On 10/19/2016 3:44 PM, Bjorn Helgaas wrote:
+On Fri, Oct 28, 2016 at 06:58:17PM -0400, Keith Busch wrote:
+> There is no need to disable MSIx interrupts or write message data on a
+> device that isn't present. This patch checks the device removed state
+> prior to executing device shutdown operations so that tear down on
+> removed devices completes quicker.
 > 
->>>   - Maintain a mapping of (IRQ, penalty).  Initially all penalties are
->>>     zero.  This is for *all* IRQs, not just ISA ones.  This could be a
->>>     linked list, but the structure is not important as long as we can
->>>     add things dynamically.
->>
->> Dynamic allocation doesn't work due to early calls from x86 architecture.
->> This is the reason why we iterate the link objects.
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/msi.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> Where exactly is this early penalization?  That seems to be the
-> biggest problem.  Well, maybe the question of ACPI core parsing of
-> _CRS/_PRS is a bigger structural problem, but the dynamic allocation
-> thing at least seems solvable.
-> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index bfdd074..9249ec1 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -317,7 +317,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>  {
+>  	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+>  
+> -	if (dev->current_state != PCI_D0) {
+> +	if (dev->current_state != PCI_D0 || dev->is_removed) {
+>  		/* Don't touch the hardware now */
+>  	} else if (entry->msi_attrib.is_msix) {
+>  		void __iomem *base = pci_msix_desc_addr(entry);
 
-http://marc.info/?l=linux-acpi&m=145580159209240&w=2
+Hm, I don't see __pci_write_msi_msg() being called anywhere on device
+removal.  Am I missing something?  Rest of the patch LGTM.
 
+Thanks,
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Lukas
+
+> @@ -1017,6 +1017,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
+>  	if (!pci_msi_enable || !dev || !dev->msix_enabled)
+>  		return;
+>  
+> +	if (dev->is_removed) {
+> +		dev->msix_enabled = 0;
+> +		return;
+> +	}
+> +
+>  	/* Return the device with MSI-X masked as initial states */
+>  	for_each_pci_msi_entry(entry, dev) {
+>  		/* Keep cached states to be restored */
+> -- 
+> 2.7.2
