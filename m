@@ -1,68 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43024 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:52496 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754902AbcJLN6q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:58:46 -0400
-Subject: [PATCH v2 5/7] PCI: layerscape: Move struct pcie_port setup to
- probe function
-To: Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Wed, 12 Oct 2016 08:58:02 -0500
-Message-ID: <20161012135802.29815.48363.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012135413.29815.75484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S944440AbcJaQso (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Oct 2016 12:48:44 -0400
+From: Juergen Gross <jgross@suse.com>
+To: linux-kernel@vger.kernel.org, xen-devel@lists.xen.org
+Cc: david.vrabel@citrix.com, boris.ostrovsky@oracle.com,
+        Juergen Gross <jgross@suse.com>, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, peterhuewe@gmx.de, tpmdd@selhorst.net,
+        jarkko.sakkinen@linux.intel.com, jgunthorpe@obsidianresearch.com,
+        tpmdd-devel@lists.sourceforge.net, dmitry.torokhov@gmail.com,
+        linux-input@vger.kernel.org, wei.liu2@citrix.com,
+        paul.durrant@citrix.com, netdev@vger.kernel.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        tomi.valkeinen@ti.com, linux-fbdev@vger.kernel.org
+Subject: [PATCH 00/12] xen: add common function for reading optional value
+Date: Mon, 31 Oct 2016 17:48:18 +0100
+Message-Id: <1477932510-28594-1-git-send-email-jgross@suse.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do the basic pcie_port setup in the probe function for consistency with
-other drivers.  No functional change intended.
+There are multiple instances of code reading an optional unsigned
+parameter from Xenstore via xenbus_scanf(). Instead of repeating the
+same code over and over add a service function doing the job and
+replace the call of xenbus_scanf() with the call of the new function
+where appropriate.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-layerscape.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Juergen Gross (12):
+  xen: introduce xenbus_read_unsigned()
+  xen: make use of xenbus_read_unsigned() in xen-blkback
+  xen: make use of xenbus_read_unsigned() in xen-blkfront
+  xen: make use of xenbus_read_unsigned() in xen-tpmfront
+  xen: make use of xenbus_read_unsigned() in xen-kbdfront
+  xen: make use of xenbus_read_unsigned() in xen-netback
+  xen: make use of xenbus_read_unsigned() in xen-netfront
+  xen: make use of xenbus_read_unsigned() in xen-pcifront
+  xen: make use of xenbus_read_unsigned() in xen-scsifront
+  xen: make use of xenbus_read_unsigned() in xen-fbfront
+  xen: make use of xenbus_read_unsigned() in xen-pciback
+  xen: make use of xenbus_read_unsigned() in xenbus
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 2b31296..2d77104 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -216,13 +216,10 @@ static const struct of_device_id ls_pcie_of_match[] = {
- static int __init ls_add_pcie_port(struct ls_pcie *pcie,
- 				   struct platform_device *pdev)
- {
--	struct device *dev = &pdev->dev;
- 	struct pcie_port *pp = &pcie->pp;
-+	struct device *dev = pp->dev;
- 	int ret;
- 
--	pp->dev = dev;
--	pp->ops = pcie->drvdata->ops;
--
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
-@@ -237,6 +234,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	const struct of_device_id *match;
- 	struct ls_pcie *pcie;
-+	struct pcie_port *pp;
- 	struct resource *dbi_base;
- 	int ret;
- 
-@@ -248,6 +246,10 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (!pcie)
- 		return -ENOMEM;
- 
-+	pp = &pcie->pp;
-+	pp->dev = dev;
-+	pp->ops = pcie->drvdata->ops;
-+
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
- 	pcie->pp.dbi_base = devm_ioremap_resource(dev, dbi_base);
- 	if (IS_ERR(pcie->pp.dbi_base)) {
+ drivers/block/xen-blkback/xenbus.c        | 36 ++++++--------
+ drivers/block/xen-blkfront.c              | 81 ++++++++++---------------------
+ drivers/char/tpm/xen-tpmfront.c           |  8 +--
+ drivers/input/misc/xen-kbdfront.c         | 13 ++---
+ drivers/net/xen-netback/xenbus.c          | 50 ++++++-------------
+ drivers/net/xen-netfront.c                | 67 +++++++------------------
+ drivers/pci/xen-pcifront.c                |  6 +--
+ drivers/scsi/xen-scsifront.c              |  6 +--
+ drivers/video/fbdev/xen-fbfront.c         | 13 ++---
+ drivers/xen/xen-pciback/xenbus.c          |  8 ++-
+ drivers/xen/xenbus/xenbus_probe_backend.c |  8 +--
+ drivers/xen/xenbus/xenbus_xs.c            | 22 +++++++--
+ include/xen/xenbus.h                      |  4 ++
+ 13 files changed, 112 insertions(+), 210 deletions(-)
+
+Cc: konrad.wilk@oracle.com
+Cc: roger.pau@citrix.com
+Cc: peterhuewe@gmx.de
+Cc: tpmdd@selhorst.net
+Cc: jarkko.sakkinen@linux.intel.com
+Cc: jgunthorpe@obsidianresearch.com
+Cc: tpmdd-devel@lists.sourceforge.net
+Cc: dmitry.torokhov@gmail.com
+Cc: linux-input@vger.kernel.org
+Cc: wei.liu2@citrix.com
+Cc: paul.durrant@citrix.com
+Cc: netdev@vger.kernel.org
+Cc: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org
+Cc: tomi.valkeinen@ti.com
+Cc: linux-fbdev@vger.kernel.org
+-- 
+2.6.6
 
