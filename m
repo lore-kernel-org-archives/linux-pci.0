@@ -1,87 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:41462 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753975AbcKMDHE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2016 22:07:04 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/2] PCI: rockchip: cleanup bit definition for PCIE_RC_CONFIG_LCS
-Date: Sun, 13 Nov 2016 11:06:13 +0800
-Message-Id: <1479006374-192306-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33245 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbcKAPrl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 11:47:41 -0400
+MIME-Version: 1.0
+In-Reply-To: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Tue, 1 Nov 2016 11:47:39 -0400
+Message-ID: <CADnq5_N5_fyJKDpbaew_1t9jNP3+jja+0dAf0WJVOOQ_pOoJXw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: create revision file in sysfs
+To: Emil Velikov <emil.l.velikov@gmail.com>
+Cc: Maling list - DRI developers <dri-devel@lists.freedesktop.org>,
+        Jammy Zhou <Jammy.Zhou@amd.com>,
+        =?UTF-8?Q?Michel_D=C3=A4nzer?= <michel.daenzer@amd.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIE_RC_CONFIG_LCS contains control and status bits specific
-to the PCIe link. The layout for this register looks the same
-as the existed PCI_EXP_LNKCTL and PCI_EXP_LNKSTA. So let's
-reuse them.
+On Tue, Nov 1, 2016 at 11:42 AM, Emil Velikov <emil.l.velikov@gmail.com> wr=
+ote:
+> From: Emil Velikov <emil.velikov@collabora.com>
+>
+> Currently the revision isn't available via sysfs/libudev thus if one
+> wants to know the value they need to read through the config file.
+>
+> This in itself wakes/powers up the device, causing unwanted delay
+> since it can be quite costly.
+>
+> Expose the revision as a separate file, just like we do for the device,
+> vendor, their subsystem version and class.
+>
+> Cc: Jammy Zhou <Jammy.Zhou@amd.com>
+> Cc: Michel D=C3=A4nzer <michel.daenzer@amd.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
- drivers/pci/host/pcie-rockchip.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 7f238af..1dba698 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -141,12 +141,6 @@
- #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
- #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
--#define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
--#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
--#define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
--#define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
--#define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
--#define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
- #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
- #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
- #define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
-@@ -229,7 +223,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
- 	u32 status;
- 
- 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
-+	status |= (PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- }
- 
-@@ -238,7 +232,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
- 	u32 status;
- 
- 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
-+	status |= (PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS) << 16;
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- }
- 
-@@ -540,7 +534,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 
- 	/* Set RC's clock architecture as common clock */
- 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--	status |= PCIE_RC_CONFIG_LCS_CCC;
-+	status |= PCI_EXP_LNKCTL_CCC;
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
- 	/* Enable Gen1 training */
-@@ -575,7 +569,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		 * gen1 finished.
- 		 */
- 		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
-+		status |= PCI_EXP_LNKCTL_RL;
- 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
- 		timeout = jiffies + msecs_to_jiffies(500);
--- 
-1.9.1
-
-
+> ---
+> Gents, I'm not subscribed to the mailing list so please keep me in the
+> CC chain.
+>
+> Thanks
+> Emil
+> ---
+>  drivers/pci/pci-sysfs.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index bcd10c7..0666287 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -50,6 +50,7 @@ pci_config_attr(vendor, "0x%04x\n");
+>  pci_config_attr(device, "0x%04x\n");
+>  pci_config_attr(subsystem_vendor, "0x%04x\n");
+>  pci_config_attr(subsystem_device, "0x%04x\n");
+> +pci_config_attr(revision, "0x%02x\n");
+>  pci_config_attr(class, "0x%06x\n");
+>  pci_config_attr(irq, "%u\n");
+>
+> @@ -568,6 +569,7 @@ static struct attribute *pci_dev_attrs[] =3D {
+>         &dev_attr_device.attr,
+>         &dev_attr_subsystem_vendor.attr,
+>         &dev_attr_subsystem_device.attr,
+> +       &dev_attr_revision.attr,
+>         &dev_attr_class.attr,
+>         &dev_attr_irq.attr,
+>         &dev_attr_local_cpus.attr,
+> --
+> 2.9.3
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
