@@ -1,143 +1,245 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36527 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753431AbcK3Rsq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2016 12:48:46 -0500
-Date: Wed, 30 Nov 2016 18:48:40 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Mikko Perttunen <cyndis@kapsi.fi>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
-Message-ID: <20161130174840.GB20246@ulmo.ba.sec>
-References: <20161125105718.3866-1-thierry.reding@gmail.com>
- <20161125105718.3866-10-thierry.reding@gmail.com>
- <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47832 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1424274AbcKANGg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 09:06:36 -0400
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>,
+        <mark.rutland@arm.com>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <lorenzo.pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <benh@kernel.crashing.org>,
+        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH/RESEND V4 2/3] ARM64 LPC: Add missing range exception for special ISA
+Date: Tue, 1 Nov 2016 21:28:45 +0800
+Message-ID: <1478006926-240933-3-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1478006926-240933-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1478006926-240933-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="rS8CxjVDS/+yyDmU"
-In-Reply-To: <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Currently if the range property is not specified of_translate_one
+returns an error. There are some special devices that work on a
+range of I/O ports where it's is not correct to specify a range
+property as the cpu addresses are used by special accessors.
+Here we add a new exception in of_translate_one to return
+the cpu address if the range property is not there. The exception
+checks if the parent bus is ISA and if the special accessors are
+defined.
 
---rS8CxjVDS/+yyDmU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ arch/arm64/include/asm/io.h |  7 +++++++
+ arch/arm64/kernel/extio.c   | 24 +++++++++++++++++++++++
+ drivers/of/address.c        | 47 +++++++++++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.c           |  6 +++---
+ include/linux/of_address.h  | 17 ++++++++++++++++
+ 5 files changed, 96 insertions(+), 5 deletions(-)
 
-On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
-> Testing this series with a Jetson TX1 + r8168e PCI-E card, it /almost/
-> works.. Relevant parts of bootlog:
->=20
-> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1 configuration
-> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0, using 4
-> lanes
-> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin chang=
-e,
-> signature: 00000008
-> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1, using 1
-> lanes
-> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin chang=
-e,
-> signature: 00000000
-> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
-> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
-> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
-> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down, ignoring
-> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge to bus
-> 0000:00
-> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> [    3.217343] pci_bus 0000:00: root bus resource [mem
-> 0x13000000-0x1fffffff]
-> [    3.224218] pci_bus 0000:00: root bus resource [mem 0x20000000-0x3ffff=
-fff
-> pref]
-> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00=
-]),
-> reconfiguring
-> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
-> 0x13000000-0x130fffff]
-> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem 0x20000000-0x200ff=
-fff
-> 64bit pref]
-> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
-> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem 0x20000000-0x20003f=
-ff
-> 64bit pref]
-> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem 0x13000000-0x13000f=
-ff
-> 64bit]
-> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
-> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
-> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
-> [    3.307666] pci 0000:00:01.0:   bridge window [mem 0x13000000-0x130fff=
-ff]
-> [    3.314454] pci 0000:00:01.0:   bridge window [mem 0x20000000-0x200fff=
-ff
-> 64bit pref]
-> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host
-> bridge
-> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
-> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
-> interrupt
-> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
-> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
-> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
-> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
-> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames: 9200 byte=
-s,
-> tx checksumming: ko]
->=20
-> then
->=20
-> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
-> @0x000000007a484000: EMEM address decode error (EMEM decode error)
-> [    3.717747] r8169 0000:01:00.0 eth0: link down
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 136735d..e480199 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -175,6 +175,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+ #define outsl outsl
+ 
+ DECLARE_EXTIO(l, u32)
++
++
++#define indirect_io_ison indirect_io_ison
++extern int indirect_io_ison(void);
++
++#define chk_indirect_range chk_indirect_range
++extern int chk_indirect_range(u64 taddr);
+ #endif
+ 
+ 
+diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
+index 80cafd5..55df8dc 100644
+--- a/arch/arm64/kernel/extio.c
++++ b/arch/arm64/kernel/extio.c
+@@ -19,6 +19,30 @@
+ 
+ struct extio_ops *arm64_extio_ops;
+ 
++/**
++ * indirect_io_ison - check whether indirectIO can work well. This function only call
++ *		before the target I/O address was obtained.
++ *
++ * Returns 1 when indirectIO can work.
++ */
++int indirect_io_ison()
++{
++	return arm64_extio_ops ? 1 : 0;
++}
++
++/**
++ * check_indirect_io - check whether the input taddr is for indirectIO.
++ * @taddr: the io address to be checked.
++ *
++ * Returns 1 when taddr is in the range; otherwise return 0.
++ */
++int chk_indirect_range(u64 taddr)
++{
++	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end < taddr)
++		return 0;
++
++	return 1;
++}
+ 
+ BUILD_EXTIO(b, u8)
+ 
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..0bee822 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -479,6 +479,39 @@ static int of_empty_ranges_quirk(struct device_node *np)
+ 	return false;
+ }
+ 
++
++/*
++ * Check whether the current device being translating use indirectIO.
++ *
++ * return 1 if the check is past, or 0 represents fail checking.
++ */
++static int of_isa_indirect_io(struct device_node *parent,
++				struct of_bus *bus, __be32 *addr,
++				int na, u64 *presult)
++{
++	unsigned int flags;
++	unsigned int rlen;
++
++	/* whether support indirectIO */
++	if (!indirect_io_ison())
++		return 0;
++
++	if (!of_bus_isa_match(parent))
++		return 0;
++
++	flags = bus->get_flags(addr);
++	if (!(flags & IORESOURCE_IO))
++		return 0;
++
++	/* there is ranges property, apply the normal translation directly. */
++	if (of_get_property(parent, "ranges", &rlen))
++		return 0;
++
++	*presult = of_read_number(addr + 1, na - 1);
++
++	return chk_indirect_range(*presult);
++}
++
+ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 			    struct of_bus *pbus, __be32 *addr,
+ 			    int na, int ns, int pna, const char *rprop)
+@@ -532,7 +565,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 	}
+ 	memcpy(addr, ranges + na, 4 * pna);
+ 
+- finish:
++finish:
+ 	of_dump_addr("parent translation for:", addr, pna);
+ 	pr_debug("with offset: %llx\n", (unsigned long long)offset);
+ 
+@@ -595,6 +628,15 @@ static u64 __of_translate_address(struct device_node *dev,
+ 			result = of_read_number(addr, na);
+ 			break;
+ 		}
++		/*
++		 * For indirectIO device which has no ranges property, get
++		 * the address from reg directly.
++		 */
++		if (of_isa_indirect_io(dev, bus, addr, na, &result)) {
++			pr_info("isa indirectIO matched(%s)..addr = 0x%llx\n",
++				of_node_full_name(dev), result);
++			break;
++		}
+ 
+ 		/* Get new parent bus and counts */
+ 		pbus = of_match_bus(parent);
+@@ -688,8 +730,9 @@ static int __of_address_to_resource(struct device_node *dev,
+ 	if (taddr == OF_BAD_ADDR)
+ 		return -EINVAL;
+ 	memset(r, 0, sizeof(struct resource));
+-	if (flags & IORESOURCE_IO) {
++	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
+ 		unsigned long port;
++
+ 		port = pci_address_to_pio(taddr);
+ 		if (port == (unsigned long)-1)
+ 			return -EINVAL;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..1a08511 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3263,7 +3263,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+ 
+ #ifdef PCI_IOBASE
+ 	struct io_range *range;
+-	resource_size_t allocated_size = 0;
++	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+ 
+ 	/* check if the range hasn't been previously recorded */
+ 	spin_lock(&io_range_lock);
+@@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 
+ #ifdef PCI_IOBASE
+ 	struct io_range *range;
+-	resource_size_t allocated_size = 0;
++	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+ 
+ 	if (pio > IO_SPACE_LIMIT)
+ 		return address;
+@@ -3335,7 +3335,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+ 	struct io_range *res;
+-	resource_size_t offset = 0;
++	resource_size_t offset = PCIBIOS_MIN_IO;
+ 	unsigned long addr = -1;
+ 
+ 	spin_lock(&io_range_lock);
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 3786473..0ba7e21 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -24,6 +24,23 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
++
++#ifndef indirect_io_ison
++#define indirect_io_ison indirect_io_ison
++static inline int indirect_io_ison(void)
++{
++	return 0;
++}
++#endif
++
++#ifndef chk_indirect_range
++#define chk_indirect_range chk_indirect_range
++static inline int chk_indirect_range(u64 taddr)
++{
++	return 0;
++}
++#endif
++
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
+-- 
+1.9.1
 
-Hmm... that's very odd. It seems like for some reason the PCIe
-controller wants to access memory that's below the DRAM. Do you happen
-to have the SMMU enabled for PCIe? Can you try adding some debug prints
-to the networking driver to find out where this address is coming from?
-
-> The card is alive though, the transfer LED is blinking according to incom=
-ing
-> traffic, I assume; we can also see that the driver is able to access the =
-hw
-> to some extent. The kernel version is 4.9rc7 with just this series on top.
-> The same board/card also works in U-boot.
-
-I've tested this on a recent linux-next, so perhaps that's something
-else to try out. I wouldn't expect v4.9-rc7 to have any issues with a
-PCI network driver, but who knows.
-
-Thanks,
-Thierry
-
---rS8CxjVDS/+yyDmU
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIbBAABCAAGBQJYPxD0AAoJEN0jrNd/PrOh4jAP+MmKg86vQZbvHHbpjLRdg4c6
-I9YC808YWWl0nDFuBSeoYdb66utg3ZhXZJBhvJmnofP9mUwWAL15Dxl/W8rlxqFC
-PcViwqZKXo9pAOLFpUKOD8uzLTe4fA+jiEm8ShwglP+IRWvreLDmAiwm+Do2/sAR
-mWd6kiyJa/iFKPX4Mykv2+8Tv1KdUTd7nlVxq0WhgaZUaobcJdOzkq8zyoIFNDxR
-1DRe4v3VZOwOxcsSDfM1j9F+g4mlEuR9E8Rq9jFVCBvX/SCd53mU+2LurQhBaOds
-gv8ZDCm8u62cOtHmfKG/lG85M+WGwPehiNcbn0tnhWMk1VcuKoh7ajUGyr2rrwL9
-weZjnx7XbZ2I0OJQlduZoCkaeqGp/PpEREu4Q8GJ8FZJdHc/bbgYF2Z15Kko6RRL
-jbtmil4fbOJH8389vrAH/lb34r8j6HDVuzI8vIKgH58giqjVXdBoCzZf9wxp+c3C
-WOcTKVQBg/Uz9Bf46rruGdkzqvjTsN/WEkjBcxNKgrTUIeWWKLuCQasUWukadKmg
-YnCz6Z+LPEzbBESwE3tJcnTaQREEtDM7zfF1YmOVrCrqYLIrKVCHPgtjuQhsUlSf
-V6i9xmZ6w/kLWQ/6drXWe42qiaWy1a768ubgvO4pdZgtkNupZ/xhIs7zOwznax8A
-sxc4zqUEHeuodQQ27xY=
-=jrkW
------END PGP SIGNATURE-----
-
---rS8CxjVDS/+yyDmU--
