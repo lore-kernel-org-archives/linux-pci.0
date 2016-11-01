@@ -1,198 +1,119 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:49167 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1168237AbcKAJ7e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 05:59:34 -0400
+Subject: Re: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit
+ config writes
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: shawn.lin@rock-chips.com, Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Greg Ungerer <gerg@uclinux.org>,
+        Thierry Reding <treding@nvidia.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <08c295a8-e419-862e-36ec-9bef25831ec2@rock-chips.com>
+Date: Tue, 1 Nov 2016 17:59:06 +0800
 MIME-Version: 1.0
-In-Reply-To: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 22 Nov 2016 10:09:50 +0000
-Message-ID: <CAKv+Gu_xW+7KAC8fHquEwHynYzpy6OoO1ZjEm5mVKMo1S8j4Nw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17 November 2016 at 17:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Add a writeup about how PCI host bridges should be described in ACPI
-> using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
+On 2016/11/1 5:39, Bjorn Helgaas wrote:
+> Hardware that supports only 32-bit config writes is not spec-compliant.
+> For example, if software performs a 16-bit write, we must do a 32-bit read,
+> merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+> the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+> to-clear) bits set, we just inadvertently cleared something we shouldn't
+> have.
+>
+> Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+> similar probe-time warnings from some of the affected host bridge drivers.
 >
 > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  Documentation/PCI/00-INDEX      |    2 +
->  Documentation/PCI/acpi-info.txt |  136 +++++++++++++++++++++++++++++++++=
-++++++
->  2 files changed, 138 insertions(+)
->  create mode 100644 Documentation/PCI/acpi-info.txt
+>  drivers/pci/access.c             |   17 +++++++++++++++--
+>  drivers/pci/host/pcie-hisi.c     |    2 --
+>  drivers/pci/host/pcie-rockchip.c |    3 ---
+>  3 files changed, 15 insertions(+), 7 deletions(-)
 >
-> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-> index 147231f..0780280 100644
-> --- a/Documentation/PCI/00-INDEX
-> +++ b/Documentation/PCI/00-INDEX
-> @@ -1,5 +1,7 @@
->  00-INDEX
->         - this file
-> +acpi-info.txt
-> +       - info on how PCI host bridges are represented in ACPI
->  MSI-HOWTO.txt
->         - the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FA=
-Q.
->  PCIEBUS-HOWTO.txt
-> diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-inf=
-o.txt
-> new file mode 100644
-> index 0000000..ccbcfda
-> --- /dev/null
-> +++ b/Documentation/PCI/acpi-info.txt
-> @@ -0,0 +1,136 @@
-> +           ACPI considerations for PCI host bridges
-> +
-> +The basic requirement is that the ACPI namespace should describe
-> +*everything* that consumes address space unless there's another
-> +standard way for the OS to find it [1, 2].  For example, windows that
-> +are forwarded to PCI by a PCI host bridge should be described via ACPI
-> +devices, since the OS can't locate the host bridge by itself.  PCI
-> +devices *below* the host bridge do not need to be described via ACPI,
-> +because the resources they consume are inside the host bridge windows,
-> +and the OS can discover them via the standard PCI enumeration
-> +mechanism (using config accesses to read and size the BARs).
-> +
-> +This ACPI resource description is done via _CRS methods of devices in
-> +the ACPI namespace [2].   _CRS methods are like generalized PCI BARs:
-> +the OS can read _CRS and figure out what resource is being consumed
-> +even if it doesn't have a driver for the device [3].  That's important
-> +because it means an old OS can work correctly even on a system with
-> +new devices unknown to the OS.  The new devices won't do anything, but
-> +the OS can at least make sure no resources conflict with them.
-> +
-> +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-> +reserving address space!  The static tables are for things the OS
-> +needs to know early in boot, before it can parse the ACPI namespace.
-> +If a new table is defined, an old OS needs to operate correctly even
-> +though it ignores the table.  _CRS allows that because it is generic
-> +and understood by the old OS; a static table does not.
-> +
-> +If the OS is expected to manage an ACPI device, that device will have
-> +a specific _HID/_CID that tells the OS what driver to bind to it, and
-> +the _CRS tells the OS and the driver where the device's registers are.
-> +
-> +PNP0C02 "motherboard" devices are basically a catch-all.  There's no
-> +programming model for them other than "don't use these resources for
-> +anything else."  So any address space that is (1) not claimed by some
-> +other ACPI device and (2) should not be assigned by the OS to
-> +something else, should be claimed by a PNP0C02 _CRS method.
-> +
-> +PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-> +describe all the address space they consume.  In principle, this would
-> +be all the windows they forward down to the PCI bus, as well as the
-> +bridge registers themselves.  The bridge registers include things like
-> +secondary/subordinate bus registers that determine the bus range below
-> +the bridge, window registers that describe the apertures, etc.  These
-> +are all device-specific, non-architected things, so the only way a
-> +PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
-> +contain the device-specific details.  These bridge registers also
-> +include ECAM space, since it is consumed by the bridge.
-> +
-> +ACPI defined a Producer/Consumer bit that was intended to distinguish
-> +the bridge apertures from the bridge registers [4, 5].  However,
-> +BIOSes didn't use that bit correctly, and the result is that OSes have
-> +to assume that everything in a PCI host bridge _CRS is a window.  That
-> +leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-> +device itself.
-> +
 
-Is that universally true? Or is it still possible to do the right
-thing here on new ACPI architectures such as arm64?
+For pcie-rockchip,
 
-> +The workaround is to describe the bridge registers (including ECAM
-> +space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
-> +the bridge register space is device-specific anyway, so the generic
-> +PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
-> +ECAM, pci_root.c learns about the space from either MCFG or the _CBA
-> +method.
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d11cdbb..e0cd124 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -142,10 +142,23 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  	if (size == 4) {
+>  		writel(val, addr);
+>  		return PCIBIOS_SUCCESSFUL;
+> -	} else {
+> -		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+>  	}
+>
+> +	/*
+> +	 * N.B.  In general, hardware that supports only 32-bit writes on
+> +	 * PCI is not spec-compliant.  For example, software may perform a
+> +	 * 16-bit write.  If the hardware only supports 32-bit accesses, we
+> +	 * must do a 32-bit read, merge in the 16 bits we intend to write,
+> +	 * followed by a 32-bit write.  If the 16 bits we *don't* intend to
+> +	 * write happen to have any RW1C (write-one-to-clear) bits set, we
+> +	 * just inadvertently cleared something we shouldn't have.
+> +	 */
 > +
-> +Note that the PCIe spec actually does require ECAM unless there's a
-> +standard firmware interface for config access, e.g., the ia64 SAL
-> +interface [7].  One reason is that we want a generic host bridge
-> +driver (pci_root.c), and a generic driver requires a generic way to
-> +access config space.
+> +	dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
+> +			     size, pci_domain_nr(bus), bus->number,
+> +			     PCI_SLOT(devfn), PCI_FUNC(devfn), where);
 > +
-> +
-> +[1] ACPI 6.0, sec 6.1:
-> +    For any device that is on a non-enumerable type of bus (for
-> +    example, an ISA bus), OSPM enumerates the devices' identifier(s)
-> +    and the ACPI system firmware must supply an _HID object ... for
-> +    each device to enable OSPM to do that.
-> +
-> +[2] ACPI 6.0, sec 3.7:
-> +    The OS enumerates motherboard devices simply by reading through
-> +    the ACPI Namespace looking for devices with hardware IDs.
-> +
-> +    Each device enumerated by ACPI includes ACPI-defined objects in
-> +    the ACPI Namespace that report the hardware resources the device
-> +    could occupy [_PRS], an object that reports the resources that are
-> +    currently used by the device [_CRS], and objects for configuring
-> +    those resources [_SRS].  The information is used by the Plug and
-> +    Play OS (OSPM) to configure the devices.
-> +
-> +[3] ACPI 6.0, sec 6.2:
-> +    OSPM uses device configuration objects to configure hardware
-> +    resources for devices enumerated via ACPI.  Device configuration
-> +    objects provide information about current and possible resource
-> +    requirements, the relationship between shared resources, and
-> +    methods for configuring hardware resources.
-> +
-> +    When OSPM enumerates a device, it calls _PRS to determine the
-> +    resource requirements of the device.  It may also call _CRS to
-> +    find the current resource settings for the device.  Using this
-> +    information, the Plug and Play system determines what resources
-> +    the device should consume and sets those resources by calling the
-> +    device=E2=80=99s _SRS control method.
-> +
-> +    In ACPI, devices can consume resources (for example, legacy
-> +    keyboards), provide resources (for example, a proprietary PCI
-> +    bridge), or do both.  Unless otherwise specified, resources for a
-> +    device are assumed to be taken from the nearest matching resource
-> +    above the device in the device hierarchy.
-> +
-> +[4] ACPI 6.0, sec 6.4.3.5.4:
-> +    Extended Address Space Descriptor
-> +    General Flags: Bit [0] Consumer/Producer:
-> +       1=E2=80=93This device consumes this resource
-> +       0=E2=80=93This device produces and consumes this resource
-> +
-> +[5] ACPI 6.0, sec 19.6.43:
-> +    ResourceUsage specifies whether the Memory range is consumed by
-> +    this device (ResourceConsumer) or passed on to child devices
-> +    (ResourceProducer).  If nothing is specified, then
-> +    ResourceConsumer is assumed.
-> +
-> +[6] PCI Firmware 3.0, sec 4.1.2:
-> +    If the operating system does not natively comprehend reserving the
-> +    MMCFG region, the MMCFG region must be reserved by firmware.  The
-> +    address range reported in the MCFG table or by _CBA method (see
-> +    Section 4.1.3) must be reserved by declaring a motherboard
-> +    resource.  For most systems, the motherboard resource would appear
-> +    at the root of the ACPI namespace (under \_SB) in a node with a
-> +    _HID of EISAID (PNP0C02), and the resources in this case should
-> +    not be claimed in the root PCI bus=E2=80=99s _CRS.  The resources ca=
-n
-> +    optionally be returned in Int15 E820 or EFIGetMemoryMap as
-> +    reserved memory but must always be reported through ACPI as a
-> +    motherboard resource.
-> +
-> +[7] PCI Express 3.0, sec 7.2.2:
-> +    For systems that are PC-compatible, or that do not implement a
-> +    processor-architecture-specific firmware interface standard that
-> +    allows access to the Configuration Space, the ECAM is required as
-> +    defined in this section.
+> +	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+>  	tmp = readl(addr) & mask;
+>  	tmp |= val << ((where & 0x3) * 8);
+>  	writel(tmp, addr);
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 56154c2..5b5901d 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -194,8 +194,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>
+> -	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
+> -
+>  	return 0;
+>  }
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index e0b22da..6419d8c 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1187,9 +1187,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		pcie_bus_configure_settings(child);
+>
+>  	pci_bus_add_devices(bus);
+> -
+> -	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
+> -
+>  	return err;
+>
+>  err_vpcie:
 >
 >
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+>
+
+
+-- 
+Best Regards
+Shawn Lin
+
