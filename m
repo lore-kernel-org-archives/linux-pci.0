@@ -1,190 +1,234 @@
-Return-Path: <leedom@chelsio.com>
-Return-Path: <leedom@chelsio.com>
-From: Casey Leedom <leedom@chelsio.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Alexey Kardashevskiy <aik@ozlabs.ru>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Alexander Duyck
-	<alexander.duyck@gmail.com>, Netdev <netdev@vger.kernel.org>, "Santosh
- Rastapur" <santosh@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Arjun
- V. <arjun@chelsio.com>
-Subject: Re: [PATCH kernel v3] PCI: Enable access to custom VPD for Chelsio
- devices (cxgb3)
-Date: Mon, 28 Nov 2016 22:38:08 +0000
-Message-ID: <DM5PR12MB1786F2191D7B5E57707A2234C88A0@DM5PR12MB1786.namprd12.prod.outlook.com>
-References: <1477292657-3021-1-git-send-email-aik@ozlabs.ru>,<20161123223558.GH16033@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161123223558.GH16033@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+ <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <9e91cb41-3034-c1ca-9275-cce3235cc662@arm.com>
+Date: Tue, 1 Nov 2016 16:36:10 +0000
 MIME-Version: 1.0
+In-Reply-To: <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Bikeshed alert...
 
-
-
-
-From: netdev-owner@vger.kernel.org <netdev-owner@vger.kernel.org> on behalf=
- of Bjorn Helgaas <helgaas@kernel.org>
-Sent: Wednesday, November 23, 2016 2:35 PM
-To: Alexey Kardashevskiy
-Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; Alexander Duyc=
-k; Netdev; Santosh Rastapur
-Subject: Re: [PATCH kernel v3] PCI: Enable access to custom VPD for Chelsio=
- devices (cxgb3)
-=A0  =20
-On Mon, Oct 24, 2016 at 06:04:17PM +1100, Alexey Kardashevskiy wrote:
-> There is at least one Chelsio 10Gb card which uses VPD area to store
-> some custom blocks (example below). However pci_vpd_size() returns
-> the length of the first block only assuming that there can be only
-> one VPD "End Tag" and VFIO blocks access beyond that offset
-> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
-> driver fails to probe the device. The host system does not have this
-> problem as the drives accesses the config space directly without
-> pci_read_vpd()/...
->=20
-> This adds a quirk to override the VPD size to a bigger value.
-> The maximum size is taken from EEPROMSIZE in
-> drivers/net/ethernet/chelsio/cxgb3/common.h. We do not read the tag
-> as the cxgb3 driver does as the driver supports writing to EEPROM/VPD
-> and when it writes, it only checks for 8192 bytes boundary. The quirk
-> is registerted for all devices supported by the cxgb3 driver.
->=20
-> This adds a quirk to the PCI layer (not to the cxgb3 driver) as
-> the cxgb3 driver itself accesses VPD directly and the problem only exists
-> with the vfio-pci driver (when cxgb3 is not running on the host and
-> may not be even loaded) which blocks accesses beyond the first block
-> of VPD data. However vfio-pci itself does not have quirks mechanism so
-> we add it to PCI.
->=20
-> This is the controller:
-> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single =
-Port Adapter [1425:0030]
->=20
-> This is what I parsed from its vpd:
-> =3D=3D=3D
-> b'\x82*\x0010 Gigabit Ethernet-SR PCI Express Adapter\x90J\x00EC\x07D7680=
-9 FN\x0746K'
->=A0 0000 Large item 42 bytes; name 0x2 Identifier String
->=A0=A0=A0=A0=A0=A0=A0 b'10 Gigabit Ethernet-SR PCI Express Adapter'
->=A0 002d Large item 74 bytes; name 0x10
->=A0=A0=A0=A0=A0=A0=A0 #00 [EC] len=3D7: b'D76809 '
->=A0=A0=A0=A0=A0=A0=A0 #0a [FN] len=3D7: b'46K7897'
->=A0=A0=A0=A0=A0=A0=A0 #14 [PN] len=3D7: b'46K7897'
->=A0=A0=A0=A0=A0=A0=A0 #1e [MN] len=3D4: b'1037'
->=A0=A0=A0=A0=A0=A0=A0 #25 [FC] len=3D4: b'5769'
->=A0=A0=A0=A0=A0=A0=A0 #2c [SN] len=3D12: b'YL102035603V'
->=A0=A0=A0=A0=A0=A0=A0 #3b [NA] len=3D12: b'00145E992ED1'
->=A0 007a Small item 1 bytes; name 0xf End Tag
->=20
->=A0 0c00 Large item 16 bytes; name 0x2 Identifier String
->=A0=A0=A0=A0=A0=A0=A0 b'S310E-SR-X=A0=A0=A0=A0=A0 '
->=A0 0c13 Large item 234 bytes; name 0x10
->=A0=A0=A0=A0=A0=A0=A0 #00 [PN] len=3D16: b'TBD=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #13 [EC] len=3D16: b'110107730D2=A0=A0=A0=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #26 [SN] len=3D16: b'97YL102035603V=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #39 [NA] len=3D12: b'00145E992ED1'
->=A0=A0=A0=A0=A0=A0=A0 #48 [V0] len=3D6: b'175000'
->=A0=A0=A0=A0=A0=A0=A0 #51 [V1] len=3D6: b'266666'
->=A0=A0=A0=A0=A0=A0=A0 #5a [V2] len=3D6: b'266666'
->=A0=A0=A0=A0=A0=A0=A0 #63 [V3] len=3D6: b'2000=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #6c [V4] len=3D2: b'1 '
->=A0=A0=A0=A0=A0=A0=A0 #71 [V5] len=3D6: b'c2=A0=A0=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #7a [V6] len=3D6: b'0=A0=A0=A0=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #83 [V7] len=3D2: b'1 '
->=A0=A0=A0=A0=A0=A0=A0 #88 [V8] len=3D2: b'0 '
->=A0=A0=A0=A0=A0=A0=A0 #8d [V9] len=3D2: b'0 '
->=A0=A0=A0=A0=A0=A0=A0 #92 [VA] len=3D2: b'0 '
->=A0=A0=A0=A0=A0=A0=A0 #97 [RV] len=3D80: b's\x00\x00\x00\x00\x00\x00\x00\x=
-00\x00\x00\x00\x00\x00\x00\x00'...
->=A0 0d00 Large item 252 bytes; name 0x11
->=A0=A0=A0=A0=A0=A0=A0 #00 [VC] len=3D16: b'122310_1222 dp=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #13 [VD] len=3D16: b'610-0001-00 H1\x00\x00'
->=A0=A0=A0=A0=A0=A0=A0 #26 [VE] len=3D16: b'122310_1353 fp=A0 '
->=A0=A0=A0=A0=A0=A0=A0 #39 [VF] len=3D16: b'610-0001-00 H1\x00\x00'
->=A0=A0=A0=A0=A0=A0=A0 #4c [RW] len=3D173: b'\x00\x00\x00\x00\x00\x00\x00\x=
-00\x00\x00\x00\x00\x00\x00\x00\x00'...
->=A0 0dff Small item 0 bytes; name 0xf End Tag
->=20
-> 10f3 Large item 13315 bytes; name 0x62
-> !!! unknown item name 98: b'\xd0\x03\x00@`\x0c\x08\x00\x00\x00\x00\x00\x0=
-0\x00\x00\x00'
-> =3D=3D=3D
->=20
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-Applied to pci/misc for v4.10, thanks, Alexey!
-
+On 18/10/16 17:04, Lorenzo Pieralisi wrote:
+> The of_iommu_{set/get}_ops() API is used to associate a device
+> tree node with a specific set of IOMMU operations. The same
+> kernel interface is required on systems booting with ACPI, where
+> devices are not associated with a device tree node, therefore
+> the interface requires generalization.
+> 
+> The struct device fwnode member represents the fwnode token
+> associated with the device and the struct it points at is firmware
+> specific; regardless, it is initialized on both ACPI and DT systems
+> and makes an ideal candidate to use it to associate a set of IOMMU
+> operations to a given device, through its struct device.fwnode member
+> pointer.
+> 
+> Convert the DT specific of_iommu_{set/get}_ops() interface to
+> use struct device.fwnode as a look-up token, making the interface
+> usable on ACPI systems.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
 > ---
-> Changes:
-> v3:
-> * unconditionally set VPD size to 8192
->=20
-> v2:
-> * used pci_set_vpd_size() helper
-> * added explicit list of IDs from cxgb3 driver
-> * added a note in the commit log why the quirk is not in cxgb3
-> ---
->=A0 drivers/pci/quirks.c | 19 +++++++++++++++++++
->=A0 1 file changed, 19 insertions(+)
->=20
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index c232729..bc7c541 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3255,6 +3255,25 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_D=
-EVICE_ID_INTEL_CACTUS_RIDGE_4C
->=A0 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_=
-RIDGE,
->=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 quir=
-k_thunderbolt_hotplug_msi);
->=A0=20
-> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+>  drivers/iommu/iommu.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/iommu/of_iommu.c | 39 ---------------------------------------
+>  include/linux/iommu.h    | 14 ++++++++++++++
+>  include/linux/of_iommu.h | 12 ++++++++++--
+>  4 files changed, 67 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index 9a2f196..320eb8c 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -1615,6 +1615,49 @@ int iommu_request_dm_for_dev(struct device *dev)
+>  	return ret;
+>  }
+>  
+> +struct fwnode_iommu_node {
+
+Having just pulled in this patch in isolation for some hacking, I
+realise that by about the fifth time one reads "fwnode_iommu_node" it
+just looks like meaningless gibberish. Can we just call it
+"iommu_instance" instead, as that's what it's representing here?
+
+> +	struct list_head list;
+> +	struct fwnode_handle *fwnode;
+> +	const struct iommu_ops *ops;
+> +};
+> +static LIST_HEAD(fwnode_iommu_list);
+> +static DEFINE_SPINLOCK(fwnode_iommu_lock);
+> +
+> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops)
 > +{
-> +=A0=A0=A0=A0 pci_set_vpd_size(dev, 8192);
+> +	struct fwnode_iommu_node *iommu =
+> +				kzalloc(sizeof(*iommu), GFP_KERNEL);
+
+(plus it shortens this line so it really doesn't the awkward break)
+
+Apologies, (the original rubbish name was my fault anyway)
+Robin.
+
+> +
+> +	if (WARN_ON(!iommu))
+> +		return;
+> +
+> +	if (is_of_node(fwnode))
+> +		of_node_get(to_of_node(fwnode));
+> +
+> +	INIT_LIST_HEAD(&iommu->list);
+> +	iommu->fwnode = fwnode;
+> +	iommu->ops = ops;
+> +	spin_lock(&fwnode_iommu_lock);
+> +	list_add_tail(&iommu->list, &fwnode_iommu_list);
+> +	spin_unlock(&fwnode_iommu_lock);
 > +}
 > +
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x20, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x21, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x22, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x23, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x24, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x25, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x26, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x30, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x31, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x32, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x35, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x36, quirk_chelsio_exten=
-d_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x37, quirk_chelsio_exten=
-d_vpd);
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	struct fwnode_iommu_node *node;
+> +	const struct iommu_ops *ops = NULL;
 > +
->=A0 #ifdef CONFIG_ACPI
->=A0 /*
->=A0=A0 * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-> --=20
-> 2.5.0.rc3
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+> +	spin_lock(&fwnode_iommu_lock);
+> +	list_for_each_entry(node, &fwnode_iommu_list, list)
+> +		if (node->fwnode == fwnode) {
+> +			ops = node->ops;
+> +			break;
+> +		}
+> +	spin_unlock(&fwnode_iommu_lock);
+> +	return ops;
+> +}
+> +
+>  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+>  		      const struct iommu_ops *ops)
+>  {
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 5b82862..0f57ddc 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+>  }
+>  EXPORT_SYMBOL_GPL(of_get_dma_window);
+>  
+> -struct of_iommu_node {
+> -	struct list_head list;
+> -	struct device_node *np;
+> -	const struct iommu_ops *ops;
+> -};
+> -static LIST_HEAD(of_iommu_list);
+> -static DEFINE_SPINLOCK(of_iommu_lock);
+> -
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+> -{
+> -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> -
+> -	if (WARN_ON(!iommu))
+> -		return;
+> -
+> -	of_node_get(np);
+> -	INIT_LIST_HEAD(&iommu->list);
+> -	iommu->np = np;
+> -	iommu->ops = ops;
+> -	spin_lock(&of_iommu_lock);
+> -	list_add_tail(&iommu->list, &of_iommu_list);
+> -	spin_unlock(&of_iommu_lock);
+> -}
+> -
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> -{
+> -	struct of_iommu_node *node;
+> -	const struct iommu_ops *ops = NULL;
+> -
+> -	spin_lock(&of_iommu_lock);
+> -	list_for_each_entry(node, &of_iommu_list, list)
+> -		if (node->np == np) {
+> -			ops = node->ops;
+> -			break;
+> -		}
+> -	spin_unlock(&of_iommu_lock);
+> -	return ops;
+> -}
+> -
+>  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	struct of_phandle_args *iommu_spec = data;
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 436dc21..15d5478 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+>  		      const struct iommu_ops *ops);
+>  void iommu_fwspec_free(struct device *dev);
+>  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops);
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
+>  
+>  #else /* CONFIG_IOMMU_API */
+>  
+> @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+>  	return -ENODEV;
+>  }
+>  
+> +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +					const struct iommu_ops *ops)
+> +{
+> +}
+> +
+> +static inline
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	return NULL;
+> +}
+> +
+>  #endif /* CONFIG_IOMMU_API */
+>  
+>  #endif /* __LINUX_IOMMU_H */
+> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> index e80b9c7..7681007 100644
+> --- a/include/linux/of_iommu.h
+> +++ b/include/linux/of_iommu.h
+> @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+>  
+>  #endif	/* CONFIG_OF_IOMMU */
+>  
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> +static inline void of_iommu_set_ops(struct device_node *np,
+> +				    const struct iommu_ops *ops)
+> +{
+> +	fwnode_iommu_set_ops(&np->fwnode, ops);
+> +}
+> +
+> +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> +{
+> +	return fwnode_iommu_get_ops(&np->fwnode);
+> +}
+>  
+>  extern struct of_device_id __iommu_of_table;
+>  
+> 
 
-  I'm sorry that I missed this when it went by.  Thanks for the work.
-
-  I'm unfamiliar with the vfio-pci driver.  Would a similar quirk be
-required for the adapters managed by cxgb4?  We've modified cxgb4
-to call pci_set_vpd_size(), but you indicate that the "vfio-pci" driver
-can try to access the PCI Device VPD area without a driver loaded.
-
-Casey=
