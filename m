@@ -1,40 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755007AbcJLOAH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:00:07 -0400
-Subject: [PATCH v2 1/4] PCI: qcom: Remove unused platform data
-To: Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 12 Oct 2016 09:00:02 -0500
-Message-ID: <20161012140002.30144.31966.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161012135859.30144.30808.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 09/12] PCI: iproc: Add optional dma-ranges
+Date: Mon, 31 Oct 2016 17:38:38 -0700
+Message-Id: <1477960721-17649-10-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The qcom driver never uses the platform drvdata pointer, so don't bother
-setting it.  No functional change intended.
+Add description for optional device tree property 'dma-ranges' for
+inbound mapping
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Oza Oza <oza.oza@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 ---
- drivers/pci/host/pcie-qcom.c |    2 --
- 1 file changed, 2 deletions(-)
+ Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 5ec2d44..51bb0a9 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -569,8 +569,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index f827b8d..62a0ab9 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -25,6 +25,9 @@ Optional properties:
+ - phys: phandle of the PCIe PHY device
+ - phy-names: must be "pcie-phy"
+ - dma-coherent: present if DMA operations are coherent
++- dma-ranges: Some PAXB based root complexes do not have inbound mapping done
++  by the ASIC after power on reset. In this case, SW is required to configure
++the mapping, based on inbound memory regions specified by this property
  
--	platform_set_drvdata(pdev, pcie);
--
- 	return 0;
- }
- 
-
+ - brcm,pcie-ob: Some iProc SoCs do not have the outbound address mapping done
+ by the ASIC after power on reset. In this case, SW needs to configure it
+-- 
+2.1.4
