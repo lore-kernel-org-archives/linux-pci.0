@@ -1,46 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752824AbcKROD2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:03:28 -0500
-Date: Fri, 18 Nov 2016 08:03:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v2 0/9] PCIe port PM: high gloss polish & hotplug support
-Message-ID: <20161118140319.GD25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1477611126.git.lukas@wunner.de>
- <20161118011515.GB25762@bhelgaas-glaptop.roam.corp.google.com>
- <20161118091057.GA12168@wunner.de>
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:44076 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1168245AbcKAJev (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 05:34:51 -0400
+Date: Tue, 1 Nov 2016 09:34:35 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Greg Ungerer <gerg@uclinux.org>,
+        Thierry Reding <treding@nvidia.com>
+Subject: Re: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit
+ config writes
+Message-ID: <20161101093435.GO1041@n2100.armlinux.org.uk>
+References: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161118091057.GA12168@wunner.de>
+In-Reply-To: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 10:10:57AM +0100, Lukas Wunner wrote:
-> On Thu, Nov 17, 2016 at 07:15:15PM -0600, Bjorn Helgaas wrote:
-> > On Fri, Oct 28, 2016 at 10:52:06AM +0200, Lukas Wunner wrote:
-> > > Respin of this series to polish the runtime PM support for PCIe ports
-> > > that was added with v4.8, and extend it to native hotplug ports:
-> [snip]
-> > I applied these to pci/pm for v4.10, thanks!
-> > 
-> > I did make two changes to the changelog of the last patch: you
-> > mentioned the "subordinate" bus, and I changed it to "secondary".  We
-> > have often used "subordinate" to refer to the immediately-downstream
-> > bus, but that's slightly confusing because in the bridge spec,
-> > "subordinate" means the highest bus number downstream from the bridge,
-> > while "secondary" refers to the immediately-downstream bridge.  Am I
-> > making sense or confusing things more?
+On Mon, Oct 31, 2016 at 04:39:02PM -0500, Bjorn Helgaas wrote:
+> Hardware that supports only 32-bit config writes is not spec-compliant.
+> For example, if software performs a 16-bit write, we must do a 32-bit read,
+> merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+> the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+> to-clear) bits set, we just inadvertently cleared something we shouldn't
+> have.
 > 
-> Indeed the secondary bus was meant here and I used "subordinate" only
-> because the attribute in struct pci_dev is named like this. :-)
+> Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+> similar probe-time warnings from some of the affected host bridge drivers.
 
-Yeah, I wish it weren't named that way, but I guess we're stuck with
-that one.
+Yay, I've been on about this for ages...
+
+Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
