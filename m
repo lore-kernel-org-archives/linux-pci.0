@@ -1,86 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:47423 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753520AbcJUQgY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2016 12:36:24 -0400
-Date: Fri, 21 Oct 2016 18:36:55 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>, Wei Zhang <wzhang@fb.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCHv3 2/5] pci: Add is_removed state
-Message-ID: <20161021163655.GC4221@wunner.de>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
- <1475007815-28354-3-git-send-email-keith.busch@intel.com>
- <20161021153714.GA4221@wunner.de>
- <20161021161515.GA8596@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161021161515.GA8596@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 04/12] PCI: iproc: Fix exception with multi-function devices
+Date: Mon, 31 Oct 2016 17:38:33 -0700
+Message-Id: <1477960721-17649-5-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 12:15:16PM -0400, Keith Busch wrote:
-> On Fri, Oct 21, 2016 at 05:37:14PM +0200, Lukas Wunner wrote:
-> > With your patch above, the is_removed bit is only set on 0000:09:00.0
-> > but not on its children.  Consequently the "tg3" driver tries to
-> > access the hot-removed Broadcom 57762 Ethernet chip as before,
-> > causing a soft lockup.
-> 
-> Is that something that can be fixed in the tg3 driver? I don't think
-> drivers can rely on this patch to fense off their unintended access since
-> we can't stop tg3 from accesses a removed device before 'is_removed'
-> is set.
+During enumeration with multi-function EP devices, access to the
+configuration space of a non-exist function results in an unsupported
+request being returned as expected. By default the PAXB based iProc
+PCIe controller forwards this as an APB error to the host system and
+that causes an exception, which is undesired
 
-I haven't tested yet what happens when the adapter is unplugged while
-packets are in-flight, but at least unplugging works fine when the
-adapter is idle (with your series plus the small changes I outlined).
+This patch disables this undesired behaviour and lets the kernel PCI
+stack deals with an access to the non-exist function, in which case
+a vendor ID of 0xffff is returned and handled gracefully
 
-*Without* your series, I have to set the interface to down with ifconfig
-before unplugging.  If I ever forget that, the machine locks up:
+Reported-by: JD Zheng <jiandong.zheng@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: JD Zheng <jiandong.zheng@broadcom.com>
+Reviewed-by: Oza Oza <oza.oza@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 58 +++++++++++++++++++++++++++++++++++++++++--
+ drivers/pci/host/pcie-iproc.h |  3 +++
+ 2 files changed, 59 insertions(+), 2 deletions(-)
 
-
-NMI watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [kworker/2:2:299]
-...
-Workqueue: pciehp-4 pciehp_power_thread
-RIP: 0010:[<ffffffffa105b01d>]  [<ffffffffa105b01d>] tg3_read32+0xd/0x10 [tg3]
-...
-Call Trace:
- [<ffffffffa1063610>] ? tg3_stop_block.constprop.126+0x80/0x110 [tg3]
- [<ffffffffa1066298>] ? tg3_abort_hw+0x68/0x2f0 [tg3]
- [<ffffffffa106654d>] ? tg3_halt+0x2d/0x180 [tg3]
- [<ffffffffa1072a07>] ? tg3_stop+0x157/0x210 [tg3]
- [<ffffffffa1072aeb>] ? tg3_close+0x2b/0xe0 [tg3]
- [<ffffffff81465ff4>] ? __dev_close_many+0x84/0xd0
- [<ffffffff814660b4>] ? dev_close_many+0x74/0x100
- [<ffffffff8146790b>] ? rollback_registered_many+0xfb/0x2e0
- [<ffffffff81467b19>] ? rollback_registered+0x29/0x40
- [<ffffffff81468950>] ? unregister_netdevice_queue+0x40/0x90
- [<ffffffff814689b8>] ? unregister_netdev+0x18/0x20
- [<ffffffffa106604b>] ? tg3_remove_one+0x8b/0x130 [tg3]
- [<ffffffff8130b556>] ? pci_device_remove+0x36/0xb0
- [<ffffffff813df92a>] ? __device_release_driver+0x9a/0x140
- [<ffffffff813df9ee>] ? device_release_driver+0x1e/0x30
- [<ffffffff81304bf4>] ? pci_stop_bus_device+0x84/0xa0
- [<ffffffff81304b9b>] ? pci_stop_bus_device+0x2b/0xa0
- [<ffffffff81304b9b>] ? pci_stop_bus_device+0x2b/0xa0
- [<ffffffff81304cee>] ? pci_stop_and_remove_bus_device+0xe/0x20
- [<ffffffff8131ecea>] ? pciehp_unconfigure_device+0x9a/0x180
- [<ffffffff8131e7ef>] ? pciehp_disable_slot+0x3f/0xb0
- [<ffffffff8131e8e5>] ? pciehp_power_thread+0x85/0xa0
- [<ffffffff810855df>] ? process_one_work+0x19f/0x3d0
- [<ffffffff8108585d>] ? worker_thread+0x4d/0x450
- [<ffffffff81085810>] ? process_one_work+0x3d0/0x3d0
- [<ffffffff8108b32d>] ? kthread+0xbd/0xe0
- [<ffffffff8108b270>] ? kthread_create_on_node+0x170/0x170
- [<ffffffff8155ee1f>] ? ret_from_fork+0x3f/0x70
- [<ffffffff8108b270>] ? kthread_create_on_node+0x170/0x170
-
-
-Being able to just unplug without having to think of ifconfig is already
-a massive improvement.
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index f3b3340..07ec478 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -58,6 +58,9 @@
+ #define PCIE_DL_ACTIVE_SHIFT         2
+ #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+ 
++#define APB_ERR_EN_SHIFT             0
++#define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
++
+ #define OARR_VALID_SHIFT             0
+ #define OARR_VALID                   BIT(OARR_VALID_SHIFT)
+ #define OARR_SIZE_CFG_SHIFT          1
+@@ -96,6 +99,9 @@ enum iproc_pcie_reg {
+ 	/* link status */
+ 	IPROC_PCIE_LINK_STATUS,
+ 
++	/* enable APB error for unsupported requests */
++	IPROC_PCIE_APB_ERR_EN,
++
+ 	/* total number of core registers */
+ 	IPROC_PCIE_MAX_NUM_REG,
+ };
+@@ -124,6 +130,7 @@ static const u16 iproc_pcie_reg_paxb[] = {
+ 	[IPROC_PCIE_OMAP_LO]      = 0xd40,
+ 	[IPROC_PCIE_OMAP_HI]      = 0xd44,
+ 	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
++	[IPROC_PCIE_APB_ERR_EN]   = 0xf40,
+ };
+ 
+ /* iProc PCIe PAXC v1 registers */
+@@ -181,6 +188,28 @@ static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
+ 	writel(val, pcie->base + offset);
+ }
+ 
++/**
++ * APB error forwarding can be disabled during access of configuration
++ * registers of the endpoint device, to prevent unsupported requests
++ * (typically seen during enumeration with multi-function devices) from
++ * triggering a system exception
++ */
++static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
++					      bool disable)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	u32 val;
++
++	if (bus->number && pcie->has_apb_err_disable) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_APB_ERR_EN);
++		if (disable)
++			val &= ~APB_ERR_EN;
++		else
++			val |= APB_ERR_EN;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_APB_ERR_EN, val);
++	}
++}
++
+ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+ 				       enum iproc_pcie_reg reg,
+ 				       unsigned window, u32 val)
+@@ -244,10 +273,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	int ret;
++
++	iproc_pcie_apb_err_disable(bus, true);
++	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	iproc_pcie_apb_err_disable(bus, false);
++
++	return ret;
++}
++
++static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
++				     int where, int size, u32 val)
++{
++	int ret;
++
++	iproc_pcie_apb_err_disable(bus, true);
++	ret = pci_generic_config_write32(bus, devfn, where, size, val);
++	iproc_pcie_apb_err_disable(bus, false);
++
++	return ret;
++}
++
+ static struct pci_ops iproc_pcie_ops = {
+ 	.map_bus = iproc_pcie_map_cfg_bus,
+-	.read = pci_generic_config_read32,
+-	.write = pci_generic_config_write32,
++	.read = iproc_pcie_config_read32,
++	.write = iproc_pcie_config_write32,
+ };
+ 
+ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+@@ -485,6 +538,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		break;
+ 	case IPROC_PCIE_PAXB:
+ 		regs = iproc_pcie_reg_paxb;
++		pcie->has_apb_err_disable = true;
+ 		break;
+ 	case IPROC_PCIE_PAXC:
+ 		regs = iproc_pcie_reg_paxc;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 768be05..711dd3a 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -57,6 +57,8 @@ struct iproc_msi;
+  * @phy: optional PHY device that controls the Serdes
+  * @map_irq: function callback to map interrupts
+  * @ep_is_internal: indicates an internal emulated endpoint device is connected
++ * @has_apb_err_disable: indicates the controller can be configured to prevent
++ * unsupported request from being forwarded as an APB bus error
+  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+  * @ob: outbound mapping parameters
+  * @msi: MSI data
+@@ -74,6 +76,7 @@ struct iproc_pcie {
+ 	struct phy *phy;
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	bool ep_is_internal;
++	bool has_apb_err_disable;
+ 	bool need_ob_cfg;
+ 	struct iproc_pcie_ob ob;
+ 	struct iproc_msi *msi;
+-- 
+2.1.4
