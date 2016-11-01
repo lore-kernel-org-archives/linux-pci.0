@@ -1,295 +1,309 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 1/3] Revert "ACPI,PCI,IRQ: reduce static IRQ array size
- to 16"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1475615720-31047-1-git-send-email-okaya@codeaurora.org>
- <1475615720-31047-2-git-send-email-okaya@codeaurora.org>
- <20161012221357.GB15116@localhost>
-Cc: linux-acpi@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
- ravikanth.nalla@hpe.com, linux@rainbow-software.org, timur@codeaurora.org,
- cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
- linux-pci@vger.kernel.org, agross@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- wim@djo.tudelft.nl, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <09f93442-89c8-7b2c-467d-d29b857739ff@codeaurora.org>
-Date: Wed, 12 Oct 2016 18:46:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20161012221357.GB15116@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 06/12] PCI: iproc: Add PAXC v2 support
+Date: Mon, 31 Oct 2016 17:38:35 -0700
+Message-Id: <1477960721-17649-7-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Add support for the second generation of the iProc PCIe PAXC host
+controller to the iProc PCIe host driver
 
-On 10/12/2016 6:13 PM, Bjorn Helgaas wrote:
-> Hi Sinan,
-> 
-> I have to apologize because I haven't followed all the discussion and
-> now I'm trying to figure it out from the patches and changelogs.  But
-> I guess that's not all bad, because future interested folks *should*
-> be able to figure things out from that :)
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-platform.c |   3 +
+ drivers/pci/host/pcie-iproc.c          | 176 ++++++++++++++++++++++++++++++++-
+ drivers/pci/host/pcie-iproc.h          |   4 +
+ 3 files changed, 180 insertions(+), 3 deletions(-)
 
-Sure, np. I figured you are busy with the new baseline. Then, I saw a
-series of patches coming from you.
-
-> 
-> On Tue, Oct 04, 2016 at 05:15:17PM -0400, Sinan Kaya wrote:
->> This reverts commit 5c5087a55390 ("ACPI,PCI,IRQ: reduce static IRQ array
->> size to 16").
->>
->> The code maintains a fixed size array for IRQ penalties. The array
->> gets updated by external calls such as acpi_penalize_sci_irq,
->> acpi_penalize_isa_irq to reflect the actual interrupt usage of the
->> system. Since the IRQ distribution is platform specific, this is
->> not known ahead of time. The IRQs get updated based on the SCI
->> interrupt number BIOS has chosen or the ISA IRQs that were assigned
->> to existing peripherals.
->>
->> By the time ACPI gets initialized, this code tries to determine an
->> IRQ number based on penalty values in this array. It will try to locate
->> the IRQ with the least penalty assignment so that interrupt sharing is
->> avoided if possible.
->>
->> A couple of notes about the external APIs:
->> 1. These API can be called before the ACPI is started. Therefore, one
->> cannot assume that the PCI link objects are initialized for calculating
->> penalties.
-> 
-> Which API are you thinking about here?  pcibios_penalize_isa_irq() is
-> called by ACPI and PNP, which should both be after ACPI is started.
-
-Correct, I was talking about acpi_penalize_sci_irq function here.
-
-> 
-> My guess is you're thinking about acpi_penalize_sci_irq() (added back
-> later in this series), which is called here, which is definitely
-> before ACPI objects are available:
-> 
->   setup_arch
->     acpi_boot_init
->       acpi_process_madt
-> 	acpi_parse_madt_ioapic_entries
-> 	  acpi_table_parse_madt
-> 	    acpi_parse_int_src_ovr
-> 	      acpi_sci_ioapic_setup
-> 	        acpi_penalize_sci_irq       # <---
-> 
->> 2. The polarity and trigger information passed via the
->> acpi_penalize_sci_irq from the BIOS may not match what the IRQ subsystem
->> is reporting as the call might have been placed before the IRQ is
->> registered by the interrupt subsystem.
->>
->> The previous change was in the direction to remove these external API and
->> try to calculate the penalties at runtime for the ISA path as well. This
->> didn't work out well with the existing platforms.
->>
->> Restoring the old behavior for IRQ < 256 and the new behavior will remain
->> effective for IRQ >= 256.
-> 
-> IIRC, this all started because we needed more than 256 IRQs, but we
-> didn't know how to size a static table to be large enough without
-> being wasteful.
-
-Correct. We only need 1024 for ARM/ARM64. But, we wanted to remove this
-restriction altogether to be arch proof. One of my earlier proposal was
-to just resize the array to 1024. I was asked if I was wasting resources
-by resizing to 1024.
-
-> 
-> Prior to 5c5087a55390, we tracked penalties for IRQs 0-255.  After it,
-> we only tracked penalties for IRQs 0-15.  I think this patch basically
-> makes it so we track 0-255 again.
-
-Yes, we went back to 256 interrupts after the revert. 
-
-> 
-> *This* patch only increases the range for pcibios_penalize_isa_irq()
-> (and command-line hints, but hopefully nobody cares about those).  A
-> subsequent patch increases it for SCI as well.
-> 
-> The name "ACPI_MAX_IRQS" is now slightly misleading (because we do
-> support more than 256 IRQs) and the 256 value is sort of an
-> unjustified magic number.  16 is explainable as the number of ISA
-> IRQs, but I don't know what 256 is based on (other than historical
-> practice, of course).  ACPI device IRQs can be much larger, and I
-> think the SCI IRQ can be, too (the FADT SCI_INT field is 16 bits).
-> 
-> Can you tie this back to the specific problem on the broken machine
-> somehow?  Do we need a penalty for an IRQ in the 16-255 range?
-
-The problem on the broken machine was SCI IRQ and PCI IRQ happened to be
-same. It was IRQ 11. When SCI IRQ heavily penalized IRQ 11 due to
-wrong interrupt type detection, PCI IRQs no longer worked as this line
-prohibits using the IRQ.
-
-
-	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
-		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
-			    "Try pci=noacpi or acpi=off\n",
-			    acpi_device_name(link->device),
-			    acpi_device_bid(link->device));
-		return -ENODEV;
-	} 
-
-
-> 
-> In a subsequent patch, I see something about the IRQ type not being
-> updated at the right time, but I can't quite connect the dots.
-
-The reason why PCI IRQ 11 didn't work is above. 
-
-When we detected a problem with the SCI IRQ type, we were penalizing
-the IRQ below.
-
-static int acpi_irq_get_penalty(int irq) 
-{
-...
-	if (irq == acpi_gbl_FADT.sci_interrupt) {
-		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
-
-		if (type != IRQ_TYPE_LEVEL_LOW)
-			penalty += PIRQ_PENALTY_ISA_ALWAYS;	<---- here
-		else
-			penalty += PIRQ_PENALTY_PCI_USING;
-	} 
-
-
-
-> 
-> To be clear, I'm not asking for any changes in the patch; I'm just
-> trying to understand what's going on.
-
-Sure, I hope this makes it clear now.
-
-> 
->> Tested-by: Jonathan Liu <net147@gmail.com>
->> Tested-by: Ondrej Zary <linux@rainbow-software.org>
->> Link: http://www.gossamer-threads.com/lists/linux/kernel/2537016#2537016
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/acpi/pci_link.c | 35 ++++++++++++++++++-----------------
->>  1 file changed, 18 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
->> index c983bf7..f3792f4 100644
->> --- a/drivers/acpi/pci_link.c
->> +++ b/drivers/acpi/pci_link.c
->> @@ -438,6 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->>   * enabled system.
->>   */
->>  
->> +#define ACPI_MAX_IRQS		256
->>  #define ACPI_MAX_ISA_IRQS	16
->>  
->>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
->> @@ -446,7 +447,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->>  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
->>  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
->>  
->> -static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
->> +static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
->>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
->>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
->> @@ -511,7 +512,7 @@ static int acpi_irq_get_penalty(int irq)
->>  	}
->>  
->>  	if (irq < ACPI_MAX_ISA_IRQS)
->> -		return penalty + acpi_isa_irq_penalty[irq];
->> +		return penalty + acpi_irq_penalty[irq];
->>  
->>  	penalty += acpi_irq_pci_sharing_penalty(irq);
->>  	return penalty;
->> @@ -538,14 +539,14 @@ int __init acpi_irq_penalty_init(void)
->>  
->>  			for (i = 0; i < link->irq.possible_count; i++) {
->>  				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
->> -					acpi_isa_irq_penalty[link->irq.
->> +					acpi_irq_penalty[link->irq.
->>  							 possible[i]] +=
->>  					    penalty;
->>  			}
->>  
->>  		} else if (link->irq.active &&
->> -				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
->> -			acpi_isa_irq_penalty[link->irq.active] +=
->> +				(link->irq.active < ACPI_MAX_IRQS)) {
->> +			acpi_irq_penalty[link->irq.active] +=
->>  			    PIRQ_PENALTY_PCI_POSSIBLE;
->>  		}
->>  	}
->> @@ -828,7 +829,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
->>  }
->>  
->>  /*
->> - * modify acpi_isa_irq_penalty[] from cmdline
->> + * modify acpi_irq_penalty[] from cmdline
->>   */
->>  static int __init acpi_irq_penalty_update(char *str, int used)
->>  {
->> @@ -837,24 +838,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->>  	for (i = 0; i < 16; i++) {
->>  		int retval;
->>  		int irq;
->> -		int new_penalty;
->>  
->>  		retval = get_option(&str, &irq);
->>  
->>  		if (!retval)
->>  			break;	/* no number found */
->>  
->> -		/* see if this is a ISA IRQ */
->> -		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQS))
->> +		if (irq < 0)
->> +			continue;
->> +
->> +		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
->>  			continue;
->>  
->>  		if (used)
->> -			new_penalty = acpi_irq_get_penalty(irq) +
->> -					PIRQ_PENALTY_ISA_USED;
->> +			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> +				PIRQ_PENALTY_ISA_USED;
->>  		else
->> -			new_penalty = 0;
->> +			acpi_irq_penalty[irq] = 0;
->>  
->> -		acpi_isa_irq_penalty[irq] = new_penalty;
->>  		if (retval != 2)	/* no next number */
->>  			break;
->>  	}
->> @@ -870,14 +871,14 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->>   */
->>  void acpi_penalize_isa_irq(int irq, int active)
->>  {
->> -	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
->> -		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> -		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->> +	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
->> +		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> +		    (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->>  }
->>  
->>  bool acpi_isa_irq_available(int irq)
->>  {
->> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
->> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
->>  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
->>  }
->>  
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index a3de087..f243150 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -33,6 +33,9 @@ static const struct of_device_id iproc_pcie_of_match_table[] = {
+ 	}, {
+ 		.compatible = "brcm,iproc-pcie-paxc",
+ 		.data = (int *)IPROC_PCIE_PAXC,
++	}, {
++		.compatible = "brcm,iproc-pcie-paxc-v2",
++		.data = (int *)IPROC_PCIE_PAXC_V2,
+ 	},
+ 	{ /* sentinel */ }
+ };
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 07ec478..02f3ed3 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -21,6 +21,7 @@
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irqchip/arm-gic-v3.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -38,6 +39,12 @@
+ #define RC_PCIE_RST_OUTPUT           BIT(RC_PCIE_RST_OUTPUT_SHIFT)
+ #define PAXC_RESET_MASK              0x7f
+ 
++#define GIC_V3_CFG_SHIFT             0
++#define GIC_V3_CFG                   BIT(GIC_V3_CFG_SHIFT)
++
++#define MSI_ENABLE_CFG_SHIFT         0
++#define MSI_ENABLE_CFG               BIT(MSI_ENABLE_CFG_SHIFT)
++
+ #define CFG_IND_ADDR_MASK            0x00001ffc
+ 
+ #define CFG_ADDR_BUS_NUM_SHIFT       20
+@@ -79,6 +86,31 @@ enum iproc_pcie_reg {
+ 	/* clock/reset signal control */
+ 	IPROC_PCIE_CLK_CTRL = 0,
+ 
++	/*
++	 * To allow MSI to be steered to an external MSI controller (e.g., ARM
++	 * GICv3 ITS)
++	 */
++	IPROC_PCIE_MSI_GIC_MODE,
++
++	/*
++	 * IPROC_PCIE_MSI_BASE_ADDR and IPROC_PCIE_MSI_WINDOW_SIZE define the
++	 * window where the MSI posted writes are written, for the writes to be
++	 * interpreted as MSI writes
++	 */
++	IPROC_PCIE_MSI_BASE_ADDR,
++	IPROC_PCIE_MSI_WINDOW_SIZE,
++
++	/*
++	 * To hold the address of the register where the MSI writes are
++	 * programed. When ARM GICv3 ITS is used, this should be programmed
++	 * with the address of the GITS_TRANSLATER register
++	 */
++	IPROC_PCIE_MSI_ADDR_LO,
++	IPROC_PCIE_MSI_ADDR_HI,
++
++	/* enable MSI */
++	IPROC_PCIE_MSI_EN_CFG,
++
+ 	/* allow access to root complex configuration space */
+ 	IPROC_PCIE_CFG_IND_ADDR,
+ 	IPROC_PCIE_CFG_IND_DATA,
+@@ -142,6 +174,20 @@ static const u16 iproc_pcie_reg_paxc[] = {
+ 	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
+ };
+ 
++/* iProc PCIe PAXC v2 registers */
++static const u16 iproc_pcie_reg_paxc_v2[] = {
++	[IPROC_PCIE_MSI_GIC_MODE]     = 0x050,
++	[IPROC_PCIE_MSI_BASE_ADDR]    = 0x074,
++	[IPROC_PCIE_MSI_WINDOW_SIZE]  = 0x078,
++	[IPROC_PCIE_MSI_ADDR_LO]      = 0x07c,
++	[IPROC_PCIE_MSI_ADDR_HI]      = 0x080,
++	[IPROC_PCIE_MSI_EN_CFG]       = 0x09c,
++	[IPROC_PCIE_CFG_IND_ADDR]     = 0x1f0,
++	[IPROC_PCIE_CFG_IND_DATA]     = 0x1f4,
++	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
++};
++
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ {
+ 	struct iproc_pcie *pcie;
+@@ -506,13 +552,131 @@ static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
+ 	return 0;
+ }
+ 
++static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
++			       struct device_node *msi_node,
++			       u64 *msi_addr)
++{
++	struct device *dev = pcie->dev;
++	int ret;
++	struct resource res;
++
++	/*
++	 * Check if 'msi-map' points to ARM GICv3 ITS, which is the only
++	 * supported external MSI controller that requires steering
++	 */
++	if (!of_device_is_compatible(msi_node, "arm,gic-v3-its")) {
++		dev_err(dev, "unable to find compatible MSI controller\n");
++		return -ENODEV;
++	}
++
++	/* derive GITS_TRANSLATER address from GICv3 */
++	ret = of_address_to_resource(msi_node, 0, &res);
++	if (ret < 0) {
++		dev_err(dev, "unable to obtain MSI controller resources\n");
++		return ret;
++	}
++
++	*msi_addr = res.start + GITS_TRANSLATER;
++	return 0;
++}
++
++static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
++{
++	u32 val;
++
++	/*
++	 * Program bits [43:13] of address of GITS_TRANSLATER register into
++	 * bits [30:0] of the MSI base address register. In fact, in all iProc
++	 * based SoCs, all I/O register bases are well below the 32-bit
++	 * boundary, so we can safely assume bits [43:32] are always zeros
++	 */
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_BASE_ADDR,
++			     (u32)(msi_addr >> 13));
++
++	/* use a default 8K window size */
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_WINDOW_SIZE, 0);
++
++	/* steering MSI to GICv3 ITS */
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_GIC_MODE);
++	val |= GIC_V3_CFG;
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_GIC_MODE, val);
++
++	/*
++	 * Program bits [43:2] of address of GITS_TRANSLATER register into the
++	 * iProc MSI address registers
++	 */
++	msi_addr >>= 2;
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_ADDR_HI,
++			     upper_32_bits(msi_addr));
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_ADDR_LO,
++			     lower_32_bits(msi_addr));
++
++	/* enable MSI */
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
++	val |= MSI_ENABLE_CFG;
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
++}
++
++static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
++				struct device_node *msi_node)
++{
++	struct device *dev = pcie->dev;
++	int ret;
++	u64 msi_addr;
++
++	ret = iproce_pcie_get_msi(pcie, msi_node, &msi_addr);
++	if (ret < 0) {
++		dev_err(dev, "msi steering failed\n");
++		return ret;
++	}
++
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXC_V2:
++		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
+ {
+ 	struct device_node *msi_node;
++	int ret;
++
++	/*
++	 * Either the "msi-parent" or the "msi-map" phandle needs to exist
++	 * for us to obtain the MSI node
++	 */
+ 
+ 	msi_node = of_parse_phandle(pcie->dev->of_node, "msi-parent", 0);
+-	if (!msi_node)
+-		return -ENODEV;
++	if (!msi_node) {
++		const __be32 *msi_map = NULL;
++		int len;
++		u32 phandle;
++
++		msi_map = of_get_property(pcie->dev->of_node, "msi-map", &len);
++		if (!msi_map)
++			return -ENODEV;
++
++		phandle = be32_to_cpup(msi_map + 1);
++		msi_node = of_find_node_by_phandle(phandle);
++		if (!msi_node)
++			return -ENODEV;
++	}
++
++	/*
++	 * Certain revisions of the iProc PCIe controller require additional
++	 * configurations to steer the MSI writes towards an external MSI
++	 * controller
++	 */
++	if (pcie->need_msi_steer) {
++		ret = iproc_pcie_msi_steer(pcie, msi_node);
++		if (ret)
++			return ret;
++	}
+ 
+ 	/*
+ 	 * If another MSI controller is being used, the call below should fail
+@@ -544,6 +708,11 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		regs = iproc_pcie_reg_paxc;
+ 		pcie->ep_is_internal = true;
+ 		break;
++	case IPROC_PCIE_PAXC_V2:
++		regs = iproc_pcie_reg_paxc_v2;
++		pcie->ep_is_internal = true;
++		pcie->need_msi_steer = true;
++		break;
+ 	default:
+ 		dev_err(dev, "incompatible iProc PCIe interface\n");
+ 		return -EINVAL;
+@@ -556,7 +725,8 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		return -ENOMEM;
+ 
+ 	/* go through the register table and populate all valid registers */
+-	pcie->reg_offsets[0] = regs[0];
++	pcie->reg_offsets[0] = (pcie->type == IPROC_PCIE_PAXC_V2) ?
++		IPROC_PCIE_REG_INVALID : regs[0];
+ 	for (reg_idx = 1; reg_idx < IPROC_PCIE_MAX_NUM_REG; reg_idx++)
+ 		pcie->reg_offsets[reg_idx] = regs[reg_idx] ?
+ 			regs[reg_idx] : IPROC_PCIE_REG_INVALID;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 711dd3a..c2da140 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -27,6 +27,7 @@ enum iproc_pcie_type {
+ 	IPROC_PCIE_PAXB_BCMA = 0,
+ 	IPROC_PCIE_PAXB,
+ 	IPROC_PCIE_PAXC,
++	IPROC_PCIE_PAXC_V2,
+ };
+ 
+ /**
+@@ -61,6 +62,8 @@ struct iproc_msi;
+  * unsupported request from being forwarded as an APB bus error
+  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+  * @ob: outbound mapping parameters
++ * @need_msi_steer: indicates additional configuration of the iProc PCIe
++ * controller is required to steer MSI writes to external interrupt controller
+  * @msi: MSI data
+  */
+ struct iproc_pcie {
+@@ -79,6 +82,7 @@ struct iproc_pcie {
+ 	bool has_apb_err_disable;
+ 	bool need_ob_cfg;
+ 	struct iproc_pcie_ob ob;
++	bool need_msi_steer;
+ 	struct iproc_msi *msi;
+ };
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.1.4
