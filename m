@@ -1,42 +1,232 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46496 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938918AbcJGQYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Oct 2016 12:24:00 -0400
-Subject: [PATCH 5/7] PCI: iproc: Remove redundant null pointer checking
-To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
-Date: Fri, 07 Oct 2016 11:23:44 -0500
-Message-ID: <20161007162344.23015.2449.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20161007162311.23015.37203.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 12/12] PCI: iproc: Add support for the next-gen PAXB controller
+Date: Mon, 31 Oct 2016 17:38:41 -0700
+Message-Id: <1477960721-17649-13-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The callers never pass null pointers here, so remove redundant checking
-here.  No functional change intended.
+This patch adds the support for the next generation of the iProc PAXB
+host controller, used in Stingray
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Oza Oza <oza.oza@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 ---
- drivers/pci/host/pcie-iproc.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/pci/host/pcie-iproc-platform.c |   3 +
+ drivers/pci/host/pcie-iproc.c          | 128 +++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 132 insertions(+)
 
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 47329d3..fd3ed9b 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -31,6 +31,9 @@ static const struct of_device_id iproc_pcie_of_match_table[] = {
+ 		.compatible = "brcm,iproc-pcie",
+ 		.data = (int *)IPROC_PCIE_PAXB,
+ 	}, {
++		.compatible = "brcm,iproc-pcie-paxb-v2",
++		.data = (int *)IPROC_PCIE_PAXB_V2,
++	}, {
+ 		.compatible = "brcm,iproc-pcie-paxc",
+ 		.data = (int *)IPROC_PCIE_PAXC,
+ 	}, {
 diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 3de157a..950622d 100644
+index c4e2211..8ffb9d4 100644
 --- a/drivers/pci/host/pcie-iproc.c
 +++ b/drivers/pci/host/pcie-iproc.c
-@@ -457,9 +457,6 @@ int iproc_pcie_setup(struct iproc_pcie *iproc, struct list_head *res)
- 	void *sysdata;
- 	struct pci_bus *bus;
+@@ -118,6 +118,29 @@ static const struct iproc_pcie_ob_map paxb_ob_map[] = {
+ 	},
+ };
  
--	if (!iproc || !iproc->dev)
--		return -EINVAL;
--
- 	ret = devm_request_pci_bus_resources(iproc->dev, res);
- 	if (ret)
- 		return ret;
-
++static const struct iproc_pcie_ob_map paxb_v2_ob_map[] = {
++	{
++		/* OARR0/OMAP0 */
++		.window_sizes = { 128, 256 },
++		.nr_sizes = 2,
++	},
++	{
++		/* OARR1/OMAP1 */
++		.window_sizes = { 128, 256 },
++		.nr_sizes = 2,
++	},
++	{
++		/* OARR2/OMAP2 */
++		.window_sizes = { 128, 256, 512, 1024 },
++		.nr_sizes = 4,
++	},
++	{
++		/* OARR3/OMAP3 */
++		.window_sizes = { 128, 256, 512, 1024 },
++		.nr_sizes = 4,
++	},
++};
++
+ /**
+  * iProc PCIe inbound mapping type
+  */
+@@ -156,6 +179,54 @@ struct iproc_pcie_ib_map {
+ 	u16 imap_window_offset;
+ };
+ 
++static const struct iproc_pcie_ib_map paxb_v2_ib_map[] = {
++	{
++		/* IARR0/IMAP0 */
++		.type = IPROC_PCIE_IB_MAP_IO,
++		.size_unit = SZ_1K,
++		.region_sizes = { 32 },
++		.nr_sizes = 1,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x40,
++		.imap_window_offset = 0x4,
++	},
++	{
++		/* IARR1/IMAP1 (currently unused) */
++		.type = IPROC_PCIE_IB_MAP_INVALID,
++	},
++	{
++		/* IARR2/IMAP2 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1M,
++		.region_sizes = { 64, 128, 256, 512, 1024, 2048, 4096, 8192,
++				  16384 },
++		.nr_sizes = 9,
++		.nr_windows = 1,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++	{
++		/* IARR3/IMAP3 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1G,
++		.region_sizes = { 1, 2, 4, 8, 16, 32 },
++		.nr_sizes = 6,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++	{
++		/* IARR4/IMAP4 */
++		.type = IPROC_PCIE_IB_MAP_MEM,
++		.size_unit = SZ_1G,
++		.region_sizes = { 32, 64, 128, 256, 512 },
++		.nr_sizes = 5,
++		.nr_windows = 8,
++		.imap_addr_offset = 0x4,
++		.imap_window_offset = 0x8,
++	},
++};
++
+ /*
+  * iProc PCIe host registers
+  */
+@@ -258,6 +329,34 @@ static const u16 iproc_pcie_reg_paxb[] = {
+ 	[IPROC_PCIE_APB_ERR_EN]       = 0xf40,
+ };
+ 
++/* iProc PCIe PAXB v2 registers */
++static const u16 iproc_pcie_reg_paxb_v2[] = {
++	[IPROC_PCIE_CLK_CTRL]         = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR]     = 0x120,
++	[IPROC_PCIE_CFG_IND_DATA]     = 0x124,
++	[IPROC_PCIE_CFG_ADDR]         = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]         = 0x1fc,
++	[IPROC_PCIE_INTX_EN]          = 0x330,
++	[IPROC_PCIE_OARR0]            = 0xd20,
++	[IPROC_PCIE_OMAP0]            = 0xd40,
++	[IPROC_PCIE_OARR1]            = 0xd28,
++	[IPROC_PCIE_OMAP1]            = 0xd48,
++	[IPROC_PCIE_OARR2]            = 0xd60,
++	[IPROC_PCIE_OMAP2]            = 0xd68,
++	[IPROC_PCIE_OARR3]            = 0xdf0,
++	[IPROC_PCIE_OMAP3]            = 0xdf8,
++	[IPROC_PCIE_IARR0]            = 0xd00,
++	[IPROC_PCIE_IMAP0]            = 0xc00,
++	[IPROC_PCIE_IARR2]            = 0xd10,
++	[IPROC_PCIE_IMAP2]            = 0xcc0,
++	[IPROC_PCIE_IARR3]            = 0xe00,
++	[IPROC_PCIE_IMAP3]            = 0xe08,
++	[IPROC_PCIE_IARR4]            = 0xe68,
++	[IPROC_PCIE_IMAP4]            = 0xe70,
++	[IPROC_PCIE_LINK_STATUS]      = 0xf0c,
++	[IPROC_PCIE_APB_ERR_EN]       = 0xf40,
++};
++
+ /* iProc PCIe PAXC v1 registers */
+ static const u16 iproc_pcie_reg_paxc[] = {
+ 	[IPROC_PCIE_CLK_CTRL]         = 0x000,
+@@ -912,6 +1011,19 @@ static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
+ 	return 0;
+ }
+ 
++static int iproc_pcie_paxb_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
++{
++	int ret;
++	struct of_pci_range range;
++
++	memset(&range, 0, sizeof(range));
++	range.size = SZ_32K;
++	range.pci_addr = range.cpu_addr = ALIGN(msi_addr, range.size);
++
++	ret = iproc_pcie_setup_ib(pcie, &range, IPROC_PCIE_IB_MAP_IO);
++	return ret;
++}
++
+ static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
+ {
+ 	u32 val;
+@@ -963,6 +1075,11 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
+ 	}
+ 
+ 	switch (pcie->type) {
++	case IPROC_PCIE_PAXB_V2:
++		ret = iproc_pcie_paxb_v2_msi_steer(pcie, msi_addr);
++		if (ret)
++			return ret;
++		break;
+ 	case IPROC_PCIE_PAXC_V2:
+ 		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+ 		break;
+@@ -1040,6 +1157,17 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 			pcie->ob.nr_windows = ARRAY_SIZE(paxb_ob_map);
+ 		}
+ 		break;
++	case IPROC_PCIE_PAXB_V2:
++		regs = iproc_pcie_reg_paxb_v2;
++		pcie->has_apb_err_disable = true;
++		if (pcie->need_ob_cfg) {
++			pcie->ob_map = paxb_v2_ob_map;
++			pcie->ob.nr_windows = ARRAY_SIZE(paxb_v2_ob_map);
++		}
++		pcie->ib.nr_regions = ARRAY_SIZE(paxb_v2_ib_map);
++		pcie->ib_map = paxb_v2_ib_map;
++		pcie->need_msi_steer = true;
++		break;
+ 	case IPROC_PCIE_PAXC:
+ 		regs = iproc_pcie_reg_paxc;
+ 		pcie->ep_is_internal = true;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 3f2709a..04fed8e 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -26,6 +26,7 @@
+ enum iproc_pcie_type {
+ 	IPROC_PCIE_PAXB_BCMA = 0,
+ 	IPROC_PCIE_PAXB,
++	IPROC_PCIE_PAXB_V2,
+ 	IPROC_PCIE_PAXC,
+ 	IPROC_PCIE_PAXC_V2,
+ };
+-- 
+2.1.4
