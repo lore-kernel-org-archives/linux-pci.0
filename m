@@ -1,49 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:54529 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933385AbcJRBf4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2016 21:35:56 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 3/4] PCI: rockchip: add COMPILE_TEST for Kconfig
-Date: Tue, 18 Oct 2016 09:41:28 +0800
-Message-Id: <1476754889-21804-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Alex Barba <alex.barba@broadcom.com>,
+	Oza Oza <oza.oza@broadcom.com>,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 00/12] Additional iProc PCIe host support/fixes
+Date: Mon, 31 Oct 2016 17:38:29 -0700
+Message-Id: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add this could help build the driver if we enable
-CONFIG_COMPILE_TEST.
+This patch series contains various changes and fixes to the iProc PCIe
+host driver. It also adds support for the next generation of PAXB and
+PAXC based host controllers
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+This patch series was developed based on v4.9-rc1 and tested on both NS2
+SVK and Cygnus wireless audio platform
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+repo: https://github.com/Broadcom/arm64-linux.git
+branch: iproc-pcie-v2
 
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes from v1:
+ - Fixed varioues typos in the commit message
+ - Improved various DT binding patch titles with more specific information
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a..096440e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -276,7 +276,7 @@ config PCIE_ARTPEC6
- 
- config PCIE_ROCKCHIP
- 	bool "Rockchip PCIe controller"
--	depends on ARCH_ROCKCHIP
-+	depends on ARCH_ROCKCHIP || COMPILE_TEST
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
+Ray Jui (12):
+  PCI: iproc: Improve core register population
+  PCI: iproc: Do not reset PAXC when initializing the driver
+  PCI: iproc: Add BCMA type
+  PCI: iproc: Fix exception with multi-function devices
+  PCI: iproc: Added PAXCv2 related binding
+  PCI: iproc: Add PAXC v2 support
+  PCI: iproc: Remove redundant outbound properties
+  PCI: iproc: Making outbound mapping code more generic
+  PCI: iproc: Add optional dma-ranges
+  PCI: iproc: Add inbound DMA mapping support
+  PCI: iproc: Add PAXBv2 binding info
+  PCI: iproc: Add support for the next-gen PAXB controller
+
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  43 +-
+ drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
+ drivers/pci/host/pcie-iproc-msi.c                  |   1 +
+ drivers/pci/host/pcie-iproc-platform.c             |  19 +-
+ drivers/pci/host/pcie-iproc.c                      | 942 ++++++++++++++++++---
+ drivers/pci/host/pcie-iproc.h                      |  45 +-
+ 6 files changed, 916 insertions(+), 135 deletions(-)
+
 -- 
-2.3.7
-
-
+2.1.4
