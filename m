@@ -1,27 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41928 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752340AbcKHPAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 10:00:42 -0500
-Date: Tue, 8 Nov 2016 16:00:40 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de,
-        axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
-        irq_create_affinity_masks()
-Message-ID: <20161108150040.GA13184@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de> <1478544462-9549-4-git-send-email-hch@lst.de> <a7e25633-b9fb-468f-fd33-28dbc0368cc1@suse.de> <20161108145508.GA12519@lst.de> <c9ba9026-8ff8-8717-60dc-92672724d5d8@suse.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 2 Nov 2016 11:08:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: cov@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+        catalin.marinas@arm.com, rafael@kernel.org,
+        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+        jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+Message-ID: <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c9ba9026-8ff8-8717-60dc-92672724d5d8@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 03:59:16PM +0100, Hannes Reinecke wrote:
->
-> Which you don't in this patch:
+On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
+> Hi Bjorn,
+> 
+> On 2016-10-31 15:48, Bjorn Helgaas wrote:
+> >On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
+> >>The Qualcomm Technologies QDF2432 SoC does not support accesses
+> >>smaller
+> >>than 32 bits to the PCI configuration space. Register the appropriate
+> >>quirk.
+> >>
+> >>Signed-off-by: Christopher Covington <cov@codeaurora.org>
+> >
+> >Hi Christopher,
+> >
+> >Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
+> 
+> I apologize for not being clearer. This patch depends on:
+> 
+> PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+> PCI/ACPI: Check platform-specific ECAM quirks
+> 
+> These patches from Tomasz Nowicki were previously in your pci/ecam-v6
+> branch, but that seems to have come and gone. How would you like to
+> proceed?
 
-True.  We will always in the end, but the split isn't right, we'll
-need to pass the non-NULL argument starting in this patch.
+Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
+dropped the ball on that thread, so I went back and read through it
+again.
+
+I *think* the current state is:
+
+  - I'm OK with the first two patches that add the quirk
+    infrastructure.
+
+  - My issue with the last three patches that add ThunderX quirks is
+    that there's no generic description of the ECAM address space.
+
+So if I understand correctly, your Qualcomm patch depends only on the
+first two patches.
+
+Then the question is how the Qualcomm ECAM address space is described.
+Your quirk overrides the default pci_generic_ecam_ops with the
+&pci_32b_ops, but it doesn't touch the address space part, so I assume
+the bus ranges and corresponding address space in your MCFG is
+correct.  So far, so good.
+
+Is there also an ACPI device that contains that space in _CRS?  I
+think we concluded that the standard solution is to describe this with
+a PNP0C02 device.
+
+Would you mind opening a bugzilla at bugzilla.kernel.org and attaching
+the dmesg log, /proc/iomem, and maybe a DSDT dump?  I'd like to have
+something to point at to say "if you need an MCFG quirk, you need the
+MCFG bit and *also* these other related ACPI device bits, and here's
+how it should be done."
+
+Bjorn
