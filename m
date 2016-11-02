@@ -1,321 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v8 13/16] drivers: iommu: arm-smmu: add IORT configuration
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- iommu@lists.linux-foundation.org
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
- <20161116152936.22955-14-lorenzo.pieralisi@arm.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <83df7dba-8d04-96ae-f59b-b0d484085e12@arm.com>
-Date: Fri, 18 Nov 2016 17:36:46 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 2 Nov 2016 11:41:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: cov@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+        catalin.marinas@arm.com, rafael@kernel.org,
+        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+        jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+Message-ID: <20161102164150.GA10528@bhelgaas-glaptop.roam.corp.google.com>
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+ <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161116152936.22955-14-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
- Marc Zyngier <marc.zyngier@arm.com>, Will Deacon <will.deacon@arm.com>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
- Dennis Chen <dennis.chen@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
- Tomasz Nowicki <tn@semihalf.com>, Nate Watterson <nwatters@codeaurora.org>,
- Prem Mallappa <prem.mallappa@broadcom.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/11/16 15:29, Lorenzo Pieralisi wrote:
-> In ACPI bases systems, in order to be able to create platform
-
-          based?
-
-> devices and initialize them for ARM SMMU components, the IORT
-> kernel implementation requires a set of static functions to be
-> used by the IORT kernel layer to configure platform devices for
-> ARM SMMU components.
+On Wed, Nov 02, 2016 at 11:08:20AM -0500, Bjorn Helgaas wrote:
+> On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
+> > Hi Bjorn,
+> > 
+> > On 2016-10-31 15:48, Bjorn Helgaas wrote:
+> > >On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
+> > >>The Qualcomm Technologies QDF2432 SoC does not support accesses
+> > >>smaller
+> > >>than 32 bits to the PCI configuration space. Register the appropriate
+> > >>quirk.
+> > >>
+> > >>Signed-off-by: Christopher Covington <cov@codeaurora.org>
+> > >
+> > >Hi Christopher,
+> > >
+> > >Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
+> > 
+> > I apologize for not being clearer. This patch depends on:
+> > 
+> > PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+> > PCI/ACPI: Check platform-specific ECAM quirks
+> > 
+> > These patches from Tomasz Nowicki were previously in your pci/ecam-v6
+> > branch, but that seems to have come and gone. How would you like to
+> > proceed?
 > 
-> Add static configuration functions to the IORT kernel layer for
-> the ARM SMMU components, so that the ARM SMMU driver can
-> initialize its respective platform device by relying on the IORT
-> kernel infrastructure and by adding a corresponding ACPI device
-> early probe section entry.
+> Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
+> dropped the ball on that thread, so I went back and read through it
+> again.
 > 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/acpi/arm64/iort.c | 81 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/arm-smmu.c  | 83 ++++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/acpi_iort.h |  3 ++
->  3 files changed, 166 insertions(+), 1 deletion(-)
+> I *think* the current state is:
 > 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index fd52e4c..4708806 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -548,6 +548,78 @@ static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
->  	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
->  }
->  
-> +static int __init arm_smmu_count_resources(struct acpi_iort_node *node)
-> +{
-> +	struct acpi_iort_smmu *smmu;
-> +	int num_irqs;
-> +	u64 *glb_irq;
-> +
-> +	/* Retrieve SMMU specific data */
-> +	smmu = (struct acpi_iort_smmu *)node->node_data;
-> +
-> +	glb_irq = ACPI_ADD_PTR(u64, node, smmu->global_interrupt_offset);
-> +	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
-> +		num_irqs = 1;
-> +	else
-> +		num_irqs = 2;
-
-Do we actually need this - I mean, the configuration access interrupt is
-of somewhat limited utility, implementation-defined, and we don't have
-any handling for it. Nor should it, if present, ever happen anyway,
-since it's not like anyone else should be randomly poking our SMMU in
-invalid ways. Can we simply ignore it?
-
-> +
-> +	num_irqs += smmu->context_interrupt_count;
-> +
-> +	return num_irqs + 1;
-> +}
-> +
-> +static void __init arm_smmu_init_resources(struct resource *res,
-> +					   struct acpi_iort_node *node)
-> +{
-> +	struct acpi_iort_smmu *smmu;
-> +	int i, hw_irq, trigger, num_res = 0;
-> +	u64 *ctx_irq, *glb_irq;
-> +
-> +	/* Retrieve SMMU specific data */
-> +	smmu = (struct acpi_iort_smmu *)node->node_data;
-> +
-> +	res[num_res].start = smmu->base_address;
-> +	res[num_res].end = smmu->base_address + smmu->span - 1;
-> +	res[num_res].flags = IORESOURCE_MEM;
-> +	num_res++;
-> +
-> +	glb_irq = ACPI_ADD_PTR(u64, node, smmu->global_interrupt_offset);
-> +	/* Global IRQs */
-> +	hw_irq = IORT_IRQ_MASK(glb_irq[0]);
-> +	trigger = IORT_IRQ_TRIGGER_MASK(glb_irq[0]);
-> +
-> +	acpi_iort_register_irq(hw_irq, "arm-smmu-global", trigger,
-> +				     &res[num_res++]);
-> +
-> +	/* Global IRQs */
-> +	hw_irq = IORT_IRQ_MASK(glb_irq[1]);
-> +	if (hw_irq) {
-> +		trigger = IORT_IRQ_TRIGGER_MASK(glb_irq[1]);
-> +		acpi_iort_register_irq(hw_irq, "arm-smmu-global", trigger,
-> +					     &res[num_res++]);
-> +	}
-
-Related to the above, I think the driver generally assumes these to be
-the global fault interrupt. If we *are* going to claim the config
-interrupt as well, we should probably disambiguate them, although
-admittedly we can't really do that retrospectively on the DT side.
-
-> +
-> +	/* Context IRQs */
-> +	ctx_irq = ACPI_ADD_PTR(u64, node, smmu->context_interrupt_offset);
-> +	for (i = 0; i < smmu->context_interrupt_count; i++) {
-> +		hw_irq = IORT_IRQ_MASK(ctx_irq[i]);
-> +		trigger = IORT_IRQ_TRIGGER_MASK(ctx_irq[i]);
-> +
-> +		acpi_iort_register_irq(hw_irq, "arm-smmu-context", trigger,
-> +				       &res[num_res++]);
-> +	}
-> +}
-> +
-> +static bool __init arm_smmu_is_coherent(struct acpi_iort_node *node)
-> +{
-> +	struct acpi_iort_smmu *smmu;
-> +
-> +	/* Retrieve SMMU specific data */
-> +	smmu = (struct acpi_iort_smmu *)node->node_data;
-> +
-> +	return smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK;
-> +}
-> +
->  struct iort_iommu_config {
->  	const char *name;
->  	int (*iommu_init)(struct acpi_iort_node *node);
-> @@ -564,12 +636,21 @@ static const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
->  	.iommu_init_resources = arm_smmu_v3_init_resources
->  };
->  
-> +static const struct iort_iommu_config iort_arm_smmu_cfg __initconst = {
-> +	.name = "arm-smmu",
-> +	.iommu_is_coherent = arm_smmu_is_coherent,
-> +	.iommu_count_resources = arm_smmu_count_resources,
-> +	.iommu_init_resources = arm_smmu_init_resources
-> +};
-> +
->  static __init
->  const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
->  {
->  	switch (node->type) {
->  	case ACPI_IORT_NODE_SMMU_V3:
->  		return &iort_arm_smmu_v3_cfg;
-> +	case ACPI_IORT_NODE_SMMU:
-> +		return &iort_arm_smmu_cfg;
->  	default:
->  		return NULL;
->  	}
-> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-> index 573b2b6..21d1892 100644
-> --- a/drivers/iommu/arm-smmu.c
-> +++ b/drivers/iommu/arm-smmu.c
-> @@ -28,6 +28,8 @@
->  
->  #define pr_fmt(fmt) "arm-smmu: " fmt
->  
-> +#include <linux/acpi.h>
-> +#include <linux/acpi_iort.h>
->  #include <linux/atomic.h>
->  #include <linux/delay.h>
->  #include <linux/dma-iommu.h>
-> @@ -1904,6 +1906,70 @@ static const struct of_device_id arm_smmu_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
->  
-> +#ifdef CONFIG_ACPI
-> +static int acpi_smmu_get_data(u32 model, u32 *version, u32 *impl)
-> +{
-> +	int ret = 0;
-> +
-> +	switch (model) {
-> +	case ACPI_IORT_SMMU_V1:
-> +	case ACPI_IORT_SMMU_CORELINK_MMU400:
-> +		*version = ARM_SMMU_V1;
-> +		*impl = GENERIC_SMMU;
-
-Further to Will's comment, I'd say just pass the smmu pointer in and set
-the fields explicitly here.
-
-Robin.
-
-> +		break;
-> +	case ACPI_IORT_SMMU_V2:
-> +		*version = ARM_SMMU_V2;
-> +		*impl = GENERIC_SMMU;
-> +		break;
-> +	case ACPI_IORT_SMMU_CORELINK_MMU500:
-> +		*version = ARM_SMMU_V2;
-> +		*impl = ARM_MMU500;
-> +		break;
-> +	default:
-> +		ret = -ENODEV;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +				      struct arm_smmu_device *smmu)
-> +{
-> +	struct device *dev = smmu->dev;
-> +	struct acpi_iort_node *node =
-> +		*(struct acpi_iort_node **)dev_get_platdata(dev);
-> +	struct acpi_iort_smmu *iort_smmu;
-> +	u64 *glb_irq;
-> +	int ret;
-> +
-> +	/* Retrieve SMMU1/2 specific data */
-> +	iort_smmu = (struct acpi_iort_smmu *)node->node_data;
-> +
-> +	ret = acpi_smmu_get_data(iort_smmu->model, &smmu->version,
-> +						   &smmu->model);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	glb_irq = ACPI_ADD_PTR(u64, node, iort_smmu->global_interrupt_offset);
-> +
-> +	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
-> +		smmu->num_global_irqs = 1;
-> +	else
-> +		smmu->num_global_irqs = 2;
-> +
-> +	if (iort_smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK)
-> +		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +					     struct arm_smmu_device *smmu)
-> +{
-> +	return -ENODEV;
-> +}
-> +#endif
-> +
->  static int arm_smmu_device_dt_probe(struct platform_device *pdev,
->  				    struct arm_smmu_device *smmu)
->  {
-> @@ -1955,7 +2021,11 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->  	}
->  	smmu->dev = dev;
->  
-> -	err = arm_smmu_device_dt_probe(pdev, smmu);
-> +	if (dev->of_node)
-> +		err = arm_smmu_device_dt_probe(pdev, smmu);
-> +	else
-> +		err = arm_smmu_device_acpi_probe(pdev, smmu);
-> +
->  	if (err)
->  		return err;
->  
-> @@ -2103,6 +2173,17 @@ IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
->  IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
->  IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
->  
-> +#ifdef CONFIG_ACPI
-> +static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
-> +{
-> +	if (iort_node_match(ACPI_IORT_NODE_SMMU))
-> +		return arm_smmu_init();
-> +
-> +	return 0;
-> +}
-> +IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
-> +#endif
-> +
->  MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
->  MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
->  MODULE_LICENSE("GPL v2");
-> diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-> index 17bb078..79ba1bb 100644
-> --- a/include/linux/acpi_iort.h
-> +++ b/include/linux/acpi_iort.h
-> @@ -23,6 +23,9 @@
->  #include <linux/fwnode.h>
->  #include <linux/irqdomain.h>
->  
-> +#define IORT_IRQ_MASK(irq)		(irq & 0xffffffffULL)
-> +#define IORT_IRQ_TRIGGER_MASK(irq)	((irq >> 32) & 0xffffffffULL)
-> +
->  int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
->  void iort_deregister_domain_token(int trans_id);
->  struct fwnode_handle *iort_find_domain_token(int trans_id);
+>   - I'm OK with the first two patches that add the quirk
+>     infrastructure.
 > 
+>   - My issue with the last three patches that add ThunderX quirks is
+>     that there's no generic description of the ECAM address space.
+> 
+> So if I understand correctly, your Qualcomm patch depends only on the
+> first two patches.
 
+I put those first two patches and yours on pci/ecam-v6 and pushed it
+again, so you can check it out.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
