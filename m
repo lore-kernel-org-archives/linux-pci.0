@@ -1,214 +1,340 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:36347 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754033AbcKPAWW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 19:22:22 -0500
-Received: by mail-it0-f45.google.com with SMTP id l8so36283089iti.1
-        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 16:22:22 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 2 Nov 2016 18:40:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+        tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jcm@redhat.com,
+        gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+        hanjun.guo@linaro.org, linuxarm@huawei.com
+Subject: Re: [PATCH V3 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
+ SoCs Host Controllers
+Message-ID: <20161102234053.GC10528@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
+ <1476933034-46044-3-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Tue, 15 Nov 2016 16:22:21 -0800
-Message-ID: <CAJ+vNU1e4kKPVG3X-e+gUCf+fZynYpEFTdYTOqP7m0=xQZKqtA@mail.gmail.com>
-Subject: Re: [PATCH v6 4/4] PCI: designware: Add iATU Unroll feature
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: jszhang@marvell.com, jingoohan1@gmail.com,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476933034-46044-3-git-send-email-liudongdong3@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 1:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> From: Joao Pinto <Joao.Pinto@synopsys.com>
->
-> Add support for the new iATU Unroll mechanism that will be used from Core
-> version 4.80.  The new Cores can support either iATU Unroll or the "old"
-> iATU method, now called Legacy Mode.  The driver is perfectly capable of
-> performing well for both.
->
-> [bhelgaas: split ATU enable timeout to separate patch]
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Oct 20, 2016 at 11:10:34AM +0800, Dongdong Liu wrote:
+> PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
+> It is non ECAM only for the RC bus config space;for any other bus
+> underneath the root bus we support ECAM access.
+> Add specific quirks for PCI config space accessors.This involves:
+> 1. New initialization call hisi_pcie_init() to obtain rc base
+> addresses from PNP0C02 as subdevice of PNP0A03.
+> 2. New entry in common quirk array.
+> 
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 > ---
->  drivers/pci/host/pcie-designware.c |   97 ++++++++++++++++++++++++++++++++----
->  drivers/pci/host/pcie-designware.h |    1
->  2 files changed, 87 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 947fac3..e489b18 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -80,6 +80,21 @@
->  #define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
->  #define PCIE_ATU_UPPER_TARGET          0x91C
->
+>  MAINTAINERS                       |   1 +
+>  drivers/acpi/pci_mcfg.c           |  15 ++++
+>  drivers/pci/host/Kconfig          |   8 ++
+>  drivers/pci/host/Makefile         |   1 +
+>  drivers/pci/host/pcie-hisi-acpi.c | 170 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-ecam.h          |   4 +
+>  6 files changed, 199 insertions(+)
+>  create mode 100755 drivers/pci/host/pcie-hisi-acpi.c
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1cd38a7..b224caa 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>  F:	drivers/pci/host/pcie-hisi.c
+> +F:	drivers/pci/host/pcie-hisi-acpi.c
+>  
+>  PCIE DRIVER FOR ROCKCHIP
+>  M:	Shawn Lin <shawn.lin@rock-chips.com>
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index bb2c508..135a9b4 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -96,6 +96,21 @@ struct mcfg_fixup {
+>  	THUNDER_ECAM_MCFG(2, 12),
+>  	THUNDER_ECAM_MCFG(2, 13),
+>  #endif
+> +#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
+> +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
+> +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
+> +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
+> +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
+> +
+> +#ifdef CONFIG_PCI_HISI_ACPI
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
+> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
+> +#endif
+> +
+>  };
+>  
+>  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index ae98644..9ff2bcd 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -227,6 +227,14 @@ config PCI_HISI
+>  	  Say Y here if you want PCIe controller support on HiSilicon
+>  	  Hip05 and Hip06 and Hip07 SoCs
+>  
+> +config PCI_HISI_ACPI
+> +	depends on ACPI && ARM64
+> +	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe controllers"
+> +	select PNP
+> +	help
+> +	  Say Y here if you want ACPI PCIe controller support on HiSilicon
+> +	  Hip05 and Hip06 and Hip07 SoCs
+> +
+>  config PCIE_QCOM
+>  	bool "Qualcomm PCIe controller"
+>  	depends on ARCH_QCOM && OF
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 084cb49..9402858 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+>  obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+> +obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+> diff --git a/drivers/pci/host/pcie-hisi-acpi.c b/drivers/pci/host/pcie-hisi-acpi.c
+> new file mode 100755
+> index 0000000..5650d91
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-hisi-acpi.c
+> @@ -0,0 +1,170 @@
 > +/*
-> + * iATU Unroll-specific register definitions
-> + * From 4.80 core version the address translation will be made by unroll
+> + * PCIe host controller driver for HiSilicon HipXX SoCs
+> + *
+> + * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
+> + *
+> + * Author: Dongdong Liu <liudongdong3@huawei.com>
+> + *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
 > + */
-> +#define PCIE_ATU_UNR_REGION_CTRL1      0x00
-> +#define PCIE_ATU_UNR_REGION_CTRL2      0x04
-> +#define PCIE_ATU_UNR_LOWER_BASE                0x08
-> +#define PCIE_ATU_UNR_UPPER_BASE                0x0C
-> +#define PCIE_ATU_UNR_LIMIT             0x10
-> +#define PCIE_ATU_UNR_LOWER_TARGET      0x14
-> +#define PCIE_ATU_UNR_UPPER_TARGET      0x18
+> +#include <linux/pci.h>
+> +#include <linux/pci-acpi.h>
+> +#include <linux/pci-ecam.h>
 > +
-> +/* Register address builder */
-> +#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region << 9)
+> +#define DEBUG0				0x728
+> +#define PCIE_LTSSM_LINKUP_STATE		0x11
+> +#define PCIE_LTSSM_STATE_MASK		0x3F
 > +
->  /* PCIe Port Logic registers */
->  #define PLR_OFFSET                     0x700
->  #define PCIE_PHY_DEBUG_R1              (PLR_OFFSET + 0x2c)
-> @@ -141,6 +156,27 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
->                 writel(val, pp->dbi_base + reg);
->  }
->
-> +static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
+> +static const struct acpi_device_id hisi_pcie_rc_res_ids[] = {
+> +	{"HISI0081", 0},
+> +	{"", 0},
+> +};
+> +
+> +static int hisi_pcie_link_up_acpi(struct pci_config_window *cfg)
 > +{
-> +       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> +	u32 val;
+> +	void __iomem *reg_base = cfg->priv;
 > +
-> +       if (pp->ops->readl_rc)
-> +               return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
+> +	val = readl(reg_base + DEBUG0);
+> +	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+> +}
+
+Maybe reorder this so hisi_pcie_link_up_acpi() is next to the caller,
+without the config accessors in between?
+
+> +static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+> +				  int size, u32 *val)
+> +{
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	int dev = PCI_SLOT(devfn);
 > +
-> +       return readl(pp->dbi_base + offset + reg);
+> +	if (bus->number == cfg->busr.start) {
+> +		/* access only one slot on each root port */
+> +		if (dev > 0)
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		else
+> +			return pci_generic_config_read32(bus, devfn, where,
+> +							 size, val);
+> +	}
+> +
+> +	return pci_generic_config_read(bus, devfn, where, size, val);
 > +}
 > +
-> +static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
-> +                                        u32 val, u32 reg)
+> +static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
+> +				  int where, int size, u32 val)
 > +{
-> +       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	int dev = PCI_SLOT(devfn);
 > +
-> +       if (pp->ops->writel_rc)
-> +               pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
-> +       else
-> +               writel(val, pp->dbi_base + offset + reg);
+> +	if (bus->number == cfg->busr.start) {
+> +		/* access only one slot on each root port */
+> +		if (dev > 0)
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		else
+> +			return pci_generic_config_write32(bus, devfn, where,
+> +							  size, val);
+> +	}
+> +
+> +	return pci_generic_config_write(bus, devfn, where, size, val);
+> +}
+
+Seems like we could *almost* get rid of these and use only the generic
+32-bit accessors:
+
+    struct pci_ecam_ops hisi_pcie_ops = {
+	    .bus_shift    = 20,
+	    .init         =  hisi_pcie_init,
+	    .pci_ops      = {
+		    .map_bus    = hisi_pcie_map_bus,
+		    .read       = pci_generic_config_read32,
+		    .write      = pci_generic_config_write32,
+	    }
+    }
+
+We'd be using the 32-bit accessors on the root bus when it's not
+strictly necessary.  And we'd give up the "dev > 0" check.  Not sure
+how important those are, though.  If "dev > 0" accesses just fail
+naturally, there'd be no need to do the check.
+
+> +static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> +				       int where)
+> +{
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	void __iomem *reg_base = cfg->priv;
+> +
+> +	if (bus->number == cfg->busr.start)
+> +		return reg_base + where;
+> +	else
+> +		return pci_ecam_map_bus(bus, devfn, where);
 > +}
 > +
->  static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->                                u32 *val)
->  {
-> @@ -164,23 +200,49 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
->  {
->         u32 retries, val;
->
-> -       dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-> -                         PCIE_ATU_VIEWPORT);
-> -       dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
-> -       dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
-> -       dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-> -                         PCIE_ATU_LIMIT);
-> -       dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
-> -       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
-> -       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-> -       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> +       if (pp->iatu_unroll_enabled) {
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       type, PCIE_ATU_UNR_REGION_CTRL1);
-> +               dw_pcie_writel_unroll(pp, index,
-> +                       PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
-> +       } else {
-> +               dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-> +                                               PCIE_ATU_VIEWPORT);
-> +               dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
-> +                                               PCIE_ATU_LOWER_BASE);
-> +               dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
-> +                                               PCIE_ATU_UPPER_BASE);
-> +               dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-> +                                               PCIE_ATU_LIMIT);
-> +               dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
-> +                                               PCIE_ATU_LOWER_TARGET);
-> +               dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
-> +                                               PCIE_ATU_UPPER_TARGET);
-> +               dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-> +               dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> +       }
->
->         /*
->          * Make sure ATU enable takes effect before any subsequent config
->          * and I/O accesses.
->          */
->         for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-> -               val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
-> +               if (pp->iatu_unroll_enabled)
-> +                       val = dw_pcie_readl_unroll(pp, index,
-> +                                                  PCIE_ATU_UNR_REGION_CTRL2);
-> +               else
-> +                       val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
-> +
->                 if (val == PCIE_ATU_ENABLE)
->                         return;
->
-> @@ -445,6 +507,17 @@ static const struct irq_domain_ops msi_domain_ops = {
->         .map = dw_pcie_msi_map,
->  };
->
-> +static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
+> +/*
+> + * Retrieve RC base and size from sub-device under the RC
+> + * Device (RES1)
+> + * {
+> + *	Name (_HID, "HISI0081")
+> + *	Name (_CID, "PNP0C02")
+> + *	Name (_CRS, ResourceTemplate (){
+> + *		Memory32Fixed (ReadWrite, 0xb0080000, 0x10000)
+> + *	})
+> + * }
+> + */
+> +static int hisi_pcie_rc_addr_get(struct acpi_device *adev,
+> +				 void __iomem **addr)
 > +{
-> +       u32 val = 0;
+> +	struct acpi_device *child_adev;
+> +	struct list_head list;
+> +	struct resource *res;
+> +	struct resource_entry *entry;
+> +	unsigned long flags;
+> +	int ret;
 > +
-> +       dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
-> +       if (val == 0xffffffff)
-> +               return 1;
+> +	list_for_each_entry(child_adev, &adev->children, node) {
+> +		ret = acpi_match_device_ids(child_adev, hisi_pcie_rc_res_ids);
+> +		if (ret)
+> +			continue;
 > +
-> +       return 0;
+> +		INIT_LIST_HEAD(&list);
+> +		flags = IORESOURCE_MEM;
+> +		ret = acpi_dev_get_resources(child_adev, &list,
+> +					     acpi_dev_filter_resource_type_cb,
+> +					     (void *)flags);
+> +		if (ret < 0) {
+> +			dev_err(&child_adev->dev,
+> +				"failed to parse _CRS method, error code %d\n",
+> +				ret);
+> +			return ret;
+> +		} else if (ret == 0) {
+> +			dev_err(&child_adev->dev,
+> +				"no IO and memory resources present in _CRS\n");
+> +			return -EINVAL;
+> +		}
+> +
+> +		entry = list_first_entry(&list, struct resource_entry, node);
+> +		res = entry->res;
+> +		*addr = devm_ioremap(&child_adev->dev,
+> +				     res->start, resource_size(res));
+> +		acpi_dev_free_resource_list(&list);
+> +		if (IS_ERR(*addr)) {
+> +			dev_err(&child_adev->dev, "error with ioremap\n");
+> +			return -ENOMEM;
+> +		}
+> +
+> +		return 0;
+> +	}
+> +
+> +	return -EINVAL;
 > +}
 > +
->  int dw_pcie_host_init(struct pcie_port *pp)
->  {
->         struct device_node *np = pp->dev->of_node;
-> @@ -561,6 +634,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->                 }
->         }
->
-> +       pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> +static int hisi_pcie_init(struct pci_config_window *cfg)
+> +{
+> +	int ret;
+> +	struct acpi_device *adev = to_acpi_device(cfg->parent);
+> +	void __iomem *reg_base;
 > +
->         if (pp->ops->host_init)
->                 pp->ops->host_init(pp);
->
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 285e1ed..e74cc4a 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -48,6 +48,7 @@ struct pcie_port {
->         int                     msi_irq;
->         struct irq_domain       *irq_domain;
->         unsigned long           msi_data;
-> +       u8                      iatu_unroll_enabled;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	ret = hisi_pcie_rc_addr_get(adev, &reg_base);
+> +	if (ret) {
+> +		dev_err(&adev->dev, "can't get rc base address");
+> +		return ret;
+> +	}
+> +
+> +	cfg->priv = reg_base;
+> +	if (!hisi_pcie_link_up_acpi(cfg)) {
+> +		dev_err(&adev->dev, "link status is down\n");
+> +		return -EINVAL;
+> +	}
 
-Bjorn / Joao,
+How necessary is this link_up check?  The link can go down
+asynchronously anyway, at any time after we do this check, so why
+bother doing it here?
 
-This patch (from commit a0601a47053714eecec726aea5ebcd829f817497) is
-causing a kernel regression in 4.9. I can no longer boot the kernel on
-boards that have a PCIe switch downstream from the IMX6 (ie many of
-the Gateworks Ventana boards) unless PCI is enabled in the bootloader
-(which is not recommended as that causes PCI link in the kernel to
-occasionally fail).
+If we don't need to do it, we don't really need to know the register
+addresses here, do we?  Maybe we can just fall back to the standard
+x86 solution of a PNP0C02 device at the ACPI root that has _CRS to
+cover the host bridge registers?
 
-Regards,
+It'd be nice if we didn't have to grub around in the ACPI devices
+looking for a corresponding device.  That's sort of a new solution to
+a problem that will go away soon anyway (assuming future hardware is
+more spec-conforming as far as ECAM).
 
-Tim
+> +	return 0;
+> +}
+> +
+> +struct pci_ecam_ops hisi_pcie_ops = {
+> +	.bus_shift    = 20,
+> +	.init         =  hisi_pcie_init,
+> +	.pci_ops      = {
+> +		.map_bus    = hisi_pcie_map_bus,
+> +		.read       = hisi_pcie_acpi_rd_conf,
+> +		.write      = hisi_pcie_acpi_wr_conf,
+> +	}
+> +};
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index 35f0e81..2db4db8 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -66,6 +66,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+>  extern struct pci_ecam_ops pci_thunder_ecam_ops;
+>  #endif
+>  
+> +#ifdef CONFIG_PCI_HISI_ACPI
+> +extern struct pci_ecam_ops hisi_pcie_ops;
+> +#endif
+> +
+>  #ifdef CONFIG_PCI_HOST_GENERIC
+>  /* for DT-based PCI controllers that support ECAM */
+>  int pci_host_common_probe(struct platform_device *pdev,
+> -- 
+> 1.9.1
+> 
