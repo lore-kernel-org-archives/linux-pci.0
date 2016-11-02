@@ -1,99 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:37552 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752822AbcKXQnB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Nov 2016 11:43:01 -0500
-Date: Thu, 24 Nov 2016 09:42:49 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161124164249.GD20818@obsidianresearch.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+To: Bjorn Helgaas <helgaas@kernel.org>, cov@codeaurora.org
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+ <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ arnd@arndb.de, hanjun.guo@linaro.org, jchandra@broadcom.com, dhdang@apm.com,
+ ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+ mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+ wangyijing@huawei.com, msalter@redhat.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+ jcm@redhat.com, andrea.gallo@linaro.org, jeremy.linton@arm.com,
+ liudongdong3@huawei.com, gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
+Date: Wed, 2 Nov 2016 12:36:16 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 06:25:21PM -0700, Logan Gunthorpe wrote:
+Hi Bjorn,
+
+On 11/2/2016 12:08 PM, Bjorn Helgaas wrote:
+> On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
+>> Hi Bjorn,
+>>
+>> On 2016-10-31 15:48, Bjorn Helgaas wrote:
+>>> On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
+>>>> The Qualcomm Technologies QDF2432 SoC does not support accesses
+>>>> smaller
+>>>> than 32 bits to the PCI configuration space. Register the appropriate
+>>>> quirk.
+>>>>
+>>>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>>>
+>>> Hi Christopher,
+>>>
+>>> Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
+>>
+>> I apologize for not being clearer. This patch depends on:
+>>
+>> PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+>> PCI/ACPI: Check platform-specific ECAM quirks
+>>
+>> These patches from Tomasz Nowicki were previously in your pci/ecam-v6
+>> branch, but that seems to have come and gone. How would you like to
+>> proceed?
 > 
+> Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
+> dropped the ball on that thread, so I went back and read through it
+> again.
 > 
-> On 23/11/16 02:55 PM, Jason Gunthorpe wrote:
-> >>> Only ODP hardware allows changing the DMA address on the fly, and it
-> >>> works at the page table level. We do not need special handling for
-> >>> RDMA.
-> >>
-> >> I am aware of ODP but, noted by others, it doesn't provide a general
-> >> solution to the points above.
-> > 
-> > How do you mean?
+> I *think* the current state is:
 > 
-> I was only saying it wasn't general in that it wouldn't work for IB
-> hardware that doesn't support ODP or other hardware  that doesn't do
-> similar things (like an NVMe drive).
+>   - I'm OK with the first two patches that add the quirk
+>     infrastructure.
+> 
+>   - My issue with the last three patches that add ThunderX quirks is
+>     that there's no generic description of the ECAM address space.
+> 
+> So if I understand correctly, your Qualcomm patch depends only on the
+> first two patches.
+> 
+> Then the question is how the Qualcomm ECAM address space is described.
+> Your quirk overrides the default pci_generic_ecam_ops with the
+> &pci_32b_ops, but it doesn't touch the address space part, so I assume
+> the bus ranges and corresponding address space in your MCFG is
+> correct.  So far, so good.
 
-There are three cases to worry about:
- - Coherent long lived page table mirroring (RDMA ODP MR)
- - Non-coherent long lived page table mirroring (RDMA MR)
- - Short lived DMA mapping (everything else)
+Qualcomm ECAM space includes both the root port and the endpoint address
+space with a single contiguous 256 MB address space described in MCFG table.
+There is no need to describe additional resources like PNP0C02.
 
-Like you say below we have to handle short lived in the usual way, and
-that covers basically every device except IB MRs, including the
-command queue on a NVMe drive.
+The only thing we missed was 8/16 bits access support on the root port.
+That's why, we need Cov's patch.
 
-> any complex allocators (GPU or otherwise) should respect that. And that
-> seems like it should be the default way most of this works -- and I
-> think it wouldn't actually take too much effort to make it all work now
-> as is. (Our iopmem work is actually quite small and simple.)
+> 
+> Is there also an ACPI device that contains that space in _CRS?  I
+> think we concluded that the standard solution is to describe this with
+> a PNP0C02 device.
+> 
+> Would you mind opening a bugzilla at bugzilla.kernel.org and attaching
+> the dmesg log, /proc/iomem, and maybe a DSDT dump?  I'd like to have
+> something to point at to say "if you need an MCFG quirk, you need the
+> MCFG bit and *also* these other related ACPI device bits, and here's
+> how it should be done."
+> 
+> Bjorn
+> 
 
-Yes, absolutely, some kind of page pinning like locking is a hard
-requirement.
 
-> Yeah, we've had RDMA and O_DIRECT transfers to PCIe backed ZONE_DEVICE
-> memory working for some time. I'd say it's a good fit. The main question
-> we've had is how to expose PCIe bars to userspace to be used as MRs and
-> such.
-
-Is there any progress on that?
-
-I still don't quite get what iopmem was about.. I thought the
-objection to uncachable ZONE_DEVICE & DAX made sense, so running DAX
-over iopmem and still ending up with uncacheable mmaps still seems
-like a non-starter to me...
-
-Serguei, what is your plan in GPU land for migration? Ie if I have a
-CPU mapped page and the GPU moves it to VRAM, it becomes non-cachable
-- do you still allow the CPU to access it? Or do you swap it back to
-cachable memory if the CPU touches it?
-
-One approach might be to mmap the uncachable ZONE_DEVICE memory and
-mark it inaccessible to the CPU - DMA could still translate. If the
-CPU needs it then the kernel migrates it to system memory so it
-becomes cachable. ??
-
-Jason
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
