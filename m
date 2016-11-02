@@ -1,140 +1,87 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
- <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
- <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
-Cc: cov@codeaurora.org, Tomasz Nowicki <tn@semihalf.com>,
- will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
- Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
- jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <aa8bc916-9363-2de7-2997-4ce470562b2c@codeaurora.org>
-Date: Thu, 3 Nov 2016 12:58:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:59564
+        "EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752051AbcKAWdg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Nov 2016 18:33:36 -0400
+From: Long Li <longli@exchange.microsoft.com>
+To: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
+Subject: [PATCH] pci-hyperv: move hypercall buffer from stack to heap
+Date: Tue,  1 Nov 2016 17:26:16 -0700
+Message-Id: <1478046376-7570-1-git-send-email-longli@exchange.microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Long Li <longli@microsoft.com>
 
-On 11/3/2016 10:00 AM, Bjorn Helgaas wrote:
-> On Wed, Nov 02, 2016 at 12:36:16PM -0400, Sinan Kaya wrote:
->> Hi Bjorn,
->>
->> On 11/2/2016 12:08 PM, Bjorn Helgaas wrote:
->>> On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
->>>> Hi Bjorn,
->>>>
->>>> On 2016-10-31 15:48, Bjorn Helgaas wrote:
->>>>> On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
->>>>>> The Qualcomm Technologies QDF2432 SoC does not support accesses
->>>>>> smaller
->>>>>> than 32 bits to the PCI configuration space. Register the appropriate
->>>>>> quirk.
->>>>>>
->>>>>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
->>>>>
->>>>> Hi Christopher,
->>>>>
->>>>> Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
->>>>
->>>> I apologize for not being clearer. This patch depends on:
->>>>
->>>> PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
->>>> PCI/ACPI: Check platform-specific ECAM quirks
->>>>
->>>> These patches from Tomasz Nowicki were previously in your pci/ecam-v6
->>>> branch, but that seems to have come and gone. How would you like to
->>>> proceed?
->>>
->>> Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
->>> dropped the ball on that thread, so I went back and read through it
->>> again.
->>>
->>> I *think* the current state is:
->>>
->>>   - I'm OK with the first two patches that add the quirk
->>>     infrastructure.
->>>
->>>   - My issue with the last three patches that add ThunderX quirks is
->>>     that there's no generic description of the ECAM address space.
->>>
->>> So if I understand correctly, your Qualcomm patch depends only on the
->>> first two patches.
->>>
->>> Then the question is how the Qualcomm ECAM address space is described.
->>> Your quirk overrides the default pci_generic_ecam_ops with the
->>> &pci_32b_ops, but it doesn't touch the address space part, so I assume
->>> the bus ranges and corresponding address space in your MCFG is
->>> correct.  So far, so good.
->>
->> Qualcomm ECAM space includes both the root port and the endpoint address
->> space with a single contiguous 256 MB address space described in MCFG table.
->> There is no need to describe additional resources like PNP0C02.
-> 
-> This is the crucial point I have failed to communicate clearly: the
-> PNP0C02 resource is *always* required, even if the MCFG is correct.
-> 
+We need to pass a segment from a physically continuous buffer to hv_do_hypercall. Buffer allocated on the stack may not work if CONFIG_VMAP_STACK=y is set. Moving the params buffer from stack to buffer returned by kmalloc.
 
-Interesting...
+Signed-off-by: Long Li <longli@microsoft.com>
+Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-It looks like there is a lot of lessons learnt here from history.
-
-I think this requirement is only true if your system DDR space and PCIe
-space overlaps in the memory map. I understand that Intel systems allow
-sharing of these two memory ranges. An OS could potentially reclaim this
-address range.
-
-If there is no overlap and PCI is not enabled, there can't be any SW entity
-to reclaim this space. 
-
-Did I miss something?
-
-> The reason is that MCFG is a PCI-specific table, and it should be
-> possible to boot a kernel with no PCI support.  That kernel will not
-> look at the MCFG.  The PCI hardware will still be present and will
-> still consume the ECAM space, so the OS must be able to discover that
-> the ECAM space is not available for other devices.
-> 
-> The usual way to for the OS to discover that would be via the _CRS of
-> a PNP0A03 or PNP0A08 host bridge device.  _CRS is what I mean by a
-> "generic" way to describe this address space, because the ACPI core
-> can interpret _CRS for all ACPI devices, even if the kernel doesn't
-> contain drivers for all of those devices.
-> 
-> It turns out that we can't use the _CRS of host bridges because of the
-> Producer/Consumer bit screwup [1].  So the fallback is to include the
-> ECAM space in the _CRS of a PNP0C02 device.  This is what the PCI
-> Firmware spec r3.0, Table 4-2, footnote 2 is talking about.
-> 
-> Bjorn
-> 
-> [1] The original ACPI spec intent was that Consumer resources would be
-> space like ECAM that is consumed directly by the bridge, and Producer
-> resources would be the windows forwarded down to PCI.  But BIOSes
-> didn't use the Producer/Consumer bit consistently, so we have to
-> assume that all resources in host bridge _CRS are windows, which
-> leaves us no way to describe the Consumer resources.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 763ff87..97e6daf 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -378,6 +378,7 @@ struct hv_pcibus_device {
+ 	struct msi_domain_info msi_info;
+ 	struct msi_controller msi_chip;
+ 	struct irq_domain *irq_domain;
++	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+ };
+ 
+ /*
+@@ -774,7 +775,7 @@ void hv_irq_unmask(struct irq_data *data)
+ {
+ 	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+-	struct retarget_msi_interrupt params;
++	struct retarget_msi_interrupt *params;
+ 	struct hv_pcibus_device *hbus;
+ 	struct cpumask *dest;
+ 	struct pci_bus *pbus;
+@@ -785,23 +786,24 @@ void hv_irq_unmask(struct irq_data *data)
+ 	pdev = msi_desc_to_pci_dev(msi_desc);
+ 	pbus = pdev->bus;
+ 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+-
+-	memset(&params, 0, sizeof(params));
+-	params.partition_id = HV_PARTITION_ID_SELF;
+-	params.source = 1; /* MSI(-X) */
+-	params.address = msi_desc->msg.address_lo;
+-	params.data = msi_desc->msg.data;
+-	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
++	params = &hbus->retarget_msi_interrupt_params;
++
++	memset(params, 0, sizeof(*params));
++	params->partition_id = HV_PARTITION_ID_SELF;
++	params->source = 1; /* MSI(-X) */
++	params->address = msi_desc->msg.address_lo;
++	params->data = msi_desc->msg.data;
++	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
+ 			   (hbus->hdev->dev_instance.b[4] << 16) |
+ 			   (hbus->hdev->dev_instance.b[7] << 8) |
+ 			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
+ 			   PCI_FUNC(pdev->devfn);
+-	params.vector = cfg->vector;
++	params->vector = cfg->vector;
+ 
+ 	for_each_cpu_and(cpu, dest, cpu_online_mask)
+-		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
++		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
+ 
+-	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
++	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
+ 
+ 	pci_msi_unmask_irq(data);
+ }
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
+
