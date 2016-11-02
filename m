@@ -1,110 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34830 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751783AbcKONWh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 08:22:37 -0500
-Received: by mail-wm0-f51.google.com with SMTP id a197so166637910wmd.0
-        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 05:22:36 -0800 (PST)
-Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
- <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Message-ID: <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
-Date: Tue, 15 Nov 2016 13:22:34 +0000
+Return-Path: <mathias.koehrer@etas.com>
+Return-Path: <mathias.koehrer@etas.com>
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>
+CC: Matthew Garrett <mjg59@coreos.com>, Julia Cartwright <julia@ni.com>,
+	Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>
+Subject: [PATCH] Force to clear ASPM bits if CONFIG_PCIEASPM_PERFORMANCE is
+ set
+Date: Wed, 2 Nov 2016 09:26:55 +0000
+Message-ID: <95e1fc6e84cf42e094d4a8478c37b18e@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On systems that have PCIe ASPM support in the BIOS enabled
+the commit 387d37577fdd05e9472c20885464c2a53b3c945f may lead
+to the situation that accesses to registers of enabled
+PCIe devices are extremely slow.
+This happens if the ACPI FADT declares incorrectly that the
+system doesn't support PCIe ASPM even if this is enabled in
+the BIOS.
+In this case the function pcie_no_aspm() will be called.
+However this sets the aspm_policy to POLICY_DEFAULT even
+if CONFIG_PCIEASPM_PERFORMANCE has been configured.
+As result, the ASPM on a PCIe may still be set even if=20
+this is not expected.
+
+This happens e.g. on a HP workstation 800 G1 together with
+an Intel dual port Ethernet server adapter i350 plugged in.
+Whenever ASPM is enabled in the BIOS the access to the=20
+LAN registers are really slow (read access: slower than 20us).
+In this setup the LnkCap of the two LAN controllers and
+of the integrated PCIe switch is set to "ASPM L1 Enabled"=20
+even if the controller is configured to be up and running.
+There has been a lengthy discussion on this performance issue
+due to this issue on the linux-rt-users list:
+http://marc.info/?l=3Dlinux-rt-users&m=3D147454824515022&w=3D2
 
 
-On 15/11/16 12:24, Stanimir Varbanov wrote:
-> Hi Srini,
->
-> On 11/14/2016 01:15 PM, Srinivas Kandagatla wrote:
->> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
->> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
->> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
->>
->> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
->> pipe clocks are only setup after the phy is powered on.
->> It also adds ltssm_enable callback as it is very much different to other
->> supported SOCs in the driver.
->>
->> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
->
-> With below comments addressed:
->
-> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-Thanks for the ack.
->
->> ---
->>  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
->>  drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
->>  2 files changed, 238 insertions(+), 6 deletions(-)
->>
->
-> <snip>
->
->> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
->> index 3593640..03ba6b1 100644
->> --- a/drivers/pci/host/pcie-qcom.c
->> +++ b/drivers/pci/host/pcie-qcom.c
->> @@ -36,11 +36,19 @@
->>
->>  #include "pcie-designware.h"
->>
->> +#define PCIE20_PARF_DBI_BASE_ADDR	0x168
->
-> This is already defined few rows below, please drop it.
->
-Yep, will remove this.
->> +
->> +#define PCIE20_PARF_SYS_CTRL			0x00
->>  #define PCIE20_PARF_PHY_CTRL			0x40
->>  #define PCIE20_PARF_PHY_REFCLK			0x4C
->>  #define PCIE20_PARF_DBI_BASE_ADDR		0x168
->>  #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
->> +#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
->>  #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
->> +#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
->
-> I don't like MSM8996_ prefix. Could you invent a macro which depending
-> on controller selects proper offset?
+This patch solves this issue by forcing to disable ASPM
+if CONFIG_PCIEASPM_PERFORMANCE has been set.
 
-maybe some like this ??
+Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
 
-#define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
+---
+ drivers/pci/pcie/aspm.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
---srini
->
->> +#define PCIE20_PARF_LTSSM			0x1B0
->> +#define PCIE20_PARF_SID_OFFSET			0x234
->> +#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
->>
->>  #define PCIE20_ELBI_SYS_CTRL			0x04
->>  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
->> @@ -72,9 +80,18 @@ struct qcom_pcie_resources_v1 {
->>  	struct regulator *vdda;
->>  };
->>
->> +struct qcom_pcie_resources_v2 {
->> +	struct clk *aux_clk;
->> +	struct clk *master_clk;
->> +	struct clk *slave_clk;
->> +	struct clk *cfg_clk;
->> +	struct clk *pipe_clk;
->> +};
->
-> <snip>
->
-> regards,
-> Stan
->
+Index: linux-4.8/drivers/pci/pcie/aspm.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-4.8.orig/drivers/pci/pcie/aspm.c
++++ linux-4.8/drivers/pci/pcie/aspm.c
+@@ -79,10 +79,13 @@ static LIST_HEAD(link_list);
+=20
+ #ifdef CONFIG_PCIEASPM_PERFORMANCE
+ static int aspm_policy =3D POLICY_PERFORMANCE;
++static int aspm_default_config_policy =3D POLICY_PERFORMANCE;
+ #elif defined CONFIG_PCIEASPM_POWERSAVE
+ static int aspm_policy =3D POLICY_POWERSAVE;
++static int aspm_default_config_policy =3D POLICY_POWERSAFE;
+ #else
+ static int aspm_policy;
++static int aspm_default_config_policy;
+ #endif
+=20
+ static const char *policy_str[] =3D {
+@@ -946,7 +949,7 @@ void pcie_no_aspm(void)
+ 	 * (b) prevent userspace from changing policy
+ 	 */
+ 	if (!aspm_force) {
+-		aspm_policy =3D POLICY_DEFAULT;
++		aspm_policy =3D aspm_default_config_policy;
+ 		aspm_disabled =3D 1;
+ 	}
+ }
