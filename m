@@ -1,175 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45022 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:48769 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932984AbcK2Osb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Nov 2016 09:48:31 -0500
-Date: Tue, 29 Nov 2016 08:48:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, clsoto@us.ibm.com,
-        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
- updates
-Message-ID: <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129045546.GB20642@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129045546.GB20642@gwshan>
+        id S1751221AbcKBWgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Nov 2016 18:36:04 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alexander Graf <agraf@suse.de>, Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 1/2] pci: export pcie_find_root_port
+Date: Wed,  2 Nov 2016 16:35:51 -0600
+Message-Id: <20161102223552.14776-1-jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
-> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
-> >Previously pci_update_resource() used the same code path for updating
-> >standard BARs and VF BARs in SR-IOV capabilities.
-> >
-> >Split the VF BAR update into a new pci_iov_update_resource() internal
-> >interface, which makes it simpler to compute the BAR address (we can get
-> >rid of pci_resource_bar() and pci_iov_resource_bar()).
-> >
-> >This patch:
-> >
-> >  - Renames pci_update_resource() to pci_std_update_resource(),
-> >  - Adds pci_iov_update_resource(),
-> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
-> >
-> >No functional change intended.
-> >
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> With below minor comments fixed:
-> 
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> >---
-> > drivers/pci/iov.c       |   49 +++++++++++++++++++++++++++++++++++++++++++++++
-> > drivers/pci/pci.h       |    1 +
-> > drivers/pci/setup-res.c |   13 +++++++++++-
-> > 3 files changed, 61 insertions(+), 2 deletions(-)
-> >
-> >diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >index d41ec29..d00ed5c 100644
-> >--- a/drivers/pci/iov.c
-> >+++ b/drivers/pci/iov.c
-> >@@ -571,6 +571,55 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-> > 		4 * (resno - PCI_IOV_RESOURCES);
-> > }
-> >
-> >+/**
-> >+ * pci_iov_update_resource - update a VF BAR
-> >+ * @dev: the PCI device
-> >+ * @resno: the resource number
-> >+ *
-> >+ * Update a VF BAR in the SR-IOV capability of a PF.
-> >+ */
-> >+void pci_iov_update_resource(struct pci_dev *dev, int resno)
-> >+{
-> >+	struct pci_sriov *iov = dev->is_physfn ? dev->sriov : NULL;
-> >+	struct resource *res = dev->resource + resno;
-> >+	int vf_bar = resno - PCI_IOV_RESOURCES;
-> >+	struct pci_bus_region region;
-> >+	u32 new;
-> >+	int reg;
-> >+
-> >+	/*
-> >+	 * The generic pci_restore_bars() path calls this for all devices,
-> >+	 * including VFs and non-SR-IOV devices.  If this is not a PF, we
-> >+	 * have nothing to do.
-> >+	 */
-> >+	if (!iov)
-> >+		return;
-> >+
-> >+	/*
-> >+	 * Ignore unimplemented BARs, unused resource slots for 64-bit
-> >+	 * BARs, and non-movable resources, e.g., those described via
-> >+	 * Enhanced Allocation.
-> >+	 */
-> >+	if (!res->flags)
-> >+		return;
-> >+
-> >+	if (res->flags & IORESOURCE_UNSET)
-> >+		return;
-> >+
-> >+	if (res->flags & IORESOURCE_PCI_FIXED)
-> >+		return;
-> >+
-> >+	pcibios_resource_to_bus(dev->bus, &region, res);
-> >+	new = region.start;
-> >+
-> 
-> The bits indicating the BAR's property (e.g. memory, IO etc) are missed in @new.
+Export pcie_find_root_port() so we can use it outside of PCIe-AER error
+injection.
 
-Hmm, yes.  I omitted those because those bits are supposed to be
-read-only, per spec (PCI r3.0, sec 6.2.5.1).  But I guess it would be
-more conservative to keep them, and this shouldn't be needlessly
-different from pci_std_update_resource().
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/pci/pcie/aer/aer_inject.c | 14 --------------
+ include/linux/pci.h               | 14 ++++++++++++++
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-However, I don't think this code in pci_update_resource() is obviously
-correct:
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index db553dc..2b6a592 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -307,20 +307,6 @@ static int pci_bus_set_aer_ops(struct pci_bus *bus)
+ 	return 0;
+ }
+ 
+-static struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+-{
+-	while (1) {
+-		if (!pci_is_pcie(dev))
+-			break;
+-		if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+-			return dev;
+-		if (!dev->bus->self)
+-			break;
+-		dev = dev->bus->self;
+-	}
+-	return NULL;
+-}
+-
+ static int find_aer_device_iter(struct device *device, void *data)
+ {
+ 	struct pcie_device **result = data;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0e49f70..a38772a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1928,6 +1928,20 @@ static inline int pci_pcie_type(const struct pci_dev *dev)
+ 	return (pcie_caps_reg(dev) & PCI_EXP_FLAGS_TYPE) >> 4;
+ }
+ 
++static inline struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
++{
++	while (1) {
++		if (!pci_is_pcie(dev))
++			break;
++		if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
++			return dev;
++		if (!dev->bus->self)
++			break;
++		dev = dev->bus->self;
++	}
++	return NULL;
++}
++
+ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+-- 
+2.10.0
 
-  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
-
-PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
-property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
-part of the address, so on the face of it, the above could corrupt two
-bits of an I/O address.
-
-It's true that decode_bar() initializes flags correctly, using
-PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
-for memory BARs, but it would take a little more digging to be sure
-that we never set bits 2-3 of flags for an I/O resource elsewhere.
-
-How about this in pci_std_update_resource():
-
-        pcibios_resource_to_bus(dev->bus, &region, res);
-        new = region.start;
-
-        if (res->flags & IORESOURCE_IO) {
-                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
-                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
-        } else {
-                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
-                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
-        }
-
-and this in pci_iov_update_resource():
-
-        pcibios_resource_to_bus(dev->bus, &region, res);
-        new = region.start;
-        new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
-
-It shouldn't fix anything, but I think it is more obvious that we
-can't corrupt bits 2-3 of an I/O BAR.
-
-> >+	reg = iov->pos + PCI_SRIOV_BAR + 4 * vf_bar;
-> >+	pci_write_config_dword(dev, reg, new);
-> >+	if (res->flags & IORESOURCE_MEM_64) {
-> >+		new = region.start >> 16 >> 16;
-> 
-> I think it was copied from pci_update_resource(). Why we can't just have "new = region.start >> 32"? 
-
-Right; I did copy this from pci_update_resource().  The changelog from
-cf7bee5a0bf2 ("[PATCH] Fix restore of 64-bit PCI BAR's") says "Also
-make sure to write high bits - use "x >> 16 >> 16" (rather than the
-simpler ">> 32") to avoid warnings on 32-bit architectures where we're
-not going to have any high bits."
-
-I didn't take the time to revalidate whether that's still applicable.
-
-> >+void pci_update_resource(struct pci_dev *dev, int resno)
-> >+{
-> >+	if (resno <= PCI_ROM_RESOURCE)
-> >+		pci_std_update_resource(dev, resno);
-> >+#ifdef CONFIG_PCI_IOV
-> >+	else if (resno >= PCI_IOV_RESOURCES && resno < PCI_IOV_RESOURCE_END)
-> 
-> The last BAR is missed:
-> 
-> 	else if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
-
-Ah, right, thanks!
-
-> >+		pci_iov_update_resource(dev, resno);
