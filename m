@@ -1,98 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:34813 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756237AbcKVVVg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 16:21:36 -0500
-Received: by mail-oi0-f47.google.com with SMTP id y198so32557689oia.1
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 13:21:05 -0800 (PST)
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:11767 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756600AbcKBRs3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2016 13:48:29 -0400
+Date: Wed, 2 Nov 2016 18:45:53 +0100
+From: Thierry Reding <treding@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        "Scott Branden" <sbranden@broadcom.com>,
+        Russell King <linux@armlinux.org.uk>,
+        "Zhou Wang" <wangzhou1@hisilicon.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        "Greg Ungerer" <gerg@uclinux.org>
+Subject: Re: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit
+ config writes
+Message-ID: <20161102174552.GC29955@ulmo.ba.sec>
+References: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
- <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
- <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com> <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 22 Nov 2016 13:21:03 -0800
-Message-ID: <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="JgQwtEuHJzHdouWu"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 1:03 PM, Daniel Vetter <daniel@ffwll.ch> wrote:
-> On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
-> <serguei.sagalovitch@amd.com> wrote:
->>
->> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
->>>
->>> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com>
->>> wrote:
->>>>
->>>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
->>>> <serguei.sagalovitch@amd.com> wrote:
->>>>>
->>>>> I personally like "device-DAX" idea but my concerns are:
->>>>>
->>>>> -  How well it will co-exists with the  DRM infrastructure /
->>>>> implementations
->>>>>     in part dealing with CPU pointers?
->>>>
->>>> Inside the kernel a device-DAX range is "just memory" in the sense
->>>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
->>>> not migratable. To be honest I do not know how well that co-exists
->>>> with drm infrastructure.
->>>>
->>>>> -  How well we will be able to handle case when we need to
->>>>> "move"/"evict"
->>>>>     memory/data to the new location so CPU pointer should point to the
->>>>> new
->>>>> physical location/address
->>>>>      (and may be not in PCI device memory at all)?
->>>>
->>>> So, device-DAX deliberately avoids support for in-kernel migration or
->>>> overcommit. Those cases are left to the core mm or drm. The device-dax
->>>> interface is for cases where all that is needed is a direct-mapping to
->>>> a statically-allocated physical-address range be it persistent memory
->>>> or some other special reserved memory range.
->>>
->>> For some of the fancy use-cases (e.g. to be comparable to what HMM can
->>> pull off) I think we want all the magic in core mm, i.e. migration and
->>> overcommit. At least that seems to be the very strong drive in all
->>> general-purpose gpu abstractions and implementations, where memory is
->>> allocated with malloc, and then mapped/moved into vram/gpu address
->>> space through some magic,
->>
->> It is possible that there is other way around: memory is requested to be
->> allocated and should be kept in vram for  performance reason but due
->> to possible overcommit case we need at least temporally to "move" such
->> allocation to system memory.
->
-> With migration I meant migrating both ways of course. And with stuff
-> like numactl we can also influence where exactly the malloc'ed memory
-> is allocated originally, at least if we'd expose the vram range as a
-> very special numa node that happens to be far away and not hold any
-> cpu cores.
+--JgQwtEuHJzHdouWu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I don't think we should be using numa distance to reverse engineer a
-certain allocation behavior.  The latency data should be truthful, but
-you're right we'll need a mechanism to keep general purpose
-allocations out of that range by default. Btw, strict isolation is
-another design point of device-dax, but I think in this case we're
-describing something between the two extremes of full isolation and
-full compatibility with existing numactl apis.
+On Mon, Oct 31, 2016 at 04:39:02PM -0500, Bjorn Helgaas wrote:
+> Hardware that supports only 32-bit config writes is not spec-compliant.=
+
+> For example, if software performs a 16-bit write, we must do a 32-bit r=
+ead,
+> merge in the 16 bits we intend to write, followed by a 32-bit write.  I=
+f
+> the 16 bits we *don't* intend to write happen to have any RW1C (write-o=
+ne-
+> to-clear) bits set, we just inadvertently cleared something we shouldn'=
+t
+> have.
+>=20
+> Add a rate-limited warning when we do sub-32 bit config writes.  Remove=
+
+> similar probe-time warnings from some of the affected host bridge drive=
+rs.
+>=20
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/access.c             |   17 +++++++++++++++--
+>  drivers/pci/host/pcie-hisi.c     |    2 --
+>  drivers/pci/host/pcie-rockchip.c |    3 ---
+>  3 files changed, 15 insertions(+), 7 deletions(-)
+
+Yeah, this is a good idea:
+
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+-------------------------------------------------------------------------=
+----------
+This email message is for the sole use of the intended recipient(s) and m=
+ay contain
+confidential information.  Any unauthorized review, use, disclosure or di=
+stribution
+is prohibited.  If you are not the intended recipient, please contact the=
+=20sender by
+reply email and destroy all copies of the original message.
+-------------------------------------------------------------------------=
+----------
+
+--JgQwtEuHJzHdouWu
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJYGiZQAAoJEN0jrNd/PrOhtxIP/3zA4sqyzm3mbPP2lquQvqS6
+HoktgXUczAO63adAuZgJ9UblUjp6Xp5C1Bu1NmlKItymBLyYDJb2OIW9L0fySBMt
+DEraMAsKQGTT9CIMYirT7jHeqG+vj9N3JvdaKBnCZxb/J6ga65DQWkedVnDm6xva
++otle8QdvIQkuiG4QiNU/F/mQcZ3CG4QWax3h1hQuS9Ynk9oVMRK5UJYw5Y0Ug+z
+4EpqB4neYgR0avEunsoqAgJeXxCHavaIdHS7DBrfaMvd6+/Mv0d7FNgIe1eXcxWt
+QvFgVPYTacK58mcGikJ30f+4sKAs/5LunDygsZHFFgiLo9ehyiApNWoCUzJyx3Zp
+/ZkkcewpSV0xPTEq0JNCTnBruZMLQ7RJQPRCHyBM8tLLNpzXBXXBBhP+6pH2TGUv
+BP7YGt0HXOcTtGrbClU8UXUPhQ3omnAfwrIZc0qQ7AAnCM7EzL5lDmjlZi0TQRX/
+2bGEM9Sboz0KAwx7UodnjlgJrsyuRsY+kvfLI/5Owzlt1Ft9GHVymEo6gmCly53H
+NVfh3XzO3AYIICa9/SN7LpLQK9J4J3FHrDF2Cy5de2SyYXfqEuJd0n9LwZur5Kzh
+1wtEyxGMj6fwFVCIHdLFKDwc7O/JCX0SNUCuMtWkn4aj3QsiDRB0Uw6NTqa04tb5
+F7ZlmPA8M+vnXTMhiykO
+=tUC6
+-----END PGP SIGNATURE-----
+
+--JgQwtEuHJzHdouWu--
