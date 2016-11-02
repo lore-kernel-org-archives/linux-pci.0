@@ -1,48 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39612 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754939AbcKJLoD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 06:44:03 -0500
-Date: Thu, 10 Nov 2016 12:44:11 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
-Subject: Re: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
- Networking
-Message-ID: <20161110114411.GA4155@kroah.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
- <20161109160219.GB9111@kroah.com>
- <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:48774 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754086AbcKBWgG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Nov 2016 18:36:06 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alexander Graf <agraf@suse.de>, Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream bridge hasn't
+Date: Wed,  2 Nov 2016 16:35:52 -0600
+Message-Id: <20161102223552.14776-2-jthumshirn@suse.de>
+In-Reply-To: <20161102223552.14776-1-jthumshirn@suse.de>
+References: <20161102223552.14776-1-jthumshirn@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 11:39:19AM +0000, Levy, Amir (Jer) wrote:
-> > And how about getting some internal-Intel kernel developers to review and
-> > sign-off on this code?  Don't make the community do the review when you
-> > have access to resources like this.  You have an internal mailing list for this
-> > very purpose, use it!
-> > 
-> 
-> The review with the internal-Intel kernel developers was done before submitting
-> the first patch set.
+The Read Completion Boundary (RCB) bit must only be set on a device or
+endpoint if it is set on the root complex.
 
-Then why is their signed-off-by:s not on the patchset showing that they
-"bless" this series?
+Certain BIOSes erroneously set the RCB Bit in their ACPI _HPX Tables
+even if it is not set on the root port. This is a violation to the PCIe
+Specification and is known to bring some Mellanox Connect-X 3 HCAs into
+a state where they can't map their firmware and go into error recovery.
 
-thanks,
+BIOS Information
+	Vendor: IBM
+	Version: -[A8E120CUS-1.30]-
+	Release Date: 08/22/2016
 
-greg k-h
+>From PCI Express Base Specification 1.1,
+section 2.3.1.1. Data Return for Read Requests:
+The Read Completion Boundary (RCB) parameter determines the naturally
+aligned address boundaries on which a Read Request may be serviced with
+multiple Completions
+o For a Root Complex, RCB is 64 bytes or 128 bytes
+  o This value is reported through a configuration register
+    (see Section 7.8)
+  Note: Bridges and Endpoints may implement a corresponding command
+  bit which may be set by system software to indicate the RCB value
+  for the Root Complex, allowing the Bridge/Endpoint to optimize its
+  behavior when the Root Complex’s RCB is 128 bytes.
+o For all other system elements, RCB is 128 bytes
+
+Table 7-16: Link Control Register:
+Configuration software must only Set this bit if the Root Port
+Upstream from the Endpoint or Bridge reports an RCB value of
+128 bytes (a value of 1b in the Read Completion Boundary bit).
+Default value of this bit is 0b.
+
+Functions that do not implement this feature must hardwire the
+bit to 0b.
+
+Before commit 7a1562d4f:
+> 41:00.0 Ethernet controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
+>
+> 40:02.0 PCI bridge: Intel Corporation Xeon E7 v2/Xeon E5 v2/Core i7 PCI Express Root Port 2a (rev 07) (prog-if 00 [Normal decode])
+> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
+
+After:
+> 40:02.0 PCI bridge: Intel Corporation Xeon E7 v2/Xeon E5 v2/Core i7 PCI Express Root Port 2a (rev 07) (prog-if 00 [Normal decode])
+> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
+>
+> 41:00.0 Ethernet controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+> 		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- CommClk+
+> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+
+Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/pci/probe.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ab00267..0a4ab9c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1439,6 +1439,19 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+ 		dev_warn(&dev->dev, "PCI-X settings not supported\n");
+ }
+ 
++static bool pcie_get_root_rcb(struct pci_dev *dev)
++{
++	struct pci_dev *rp = pcie_find_root_port(dev);
++	u16 lnkctl;
++
++	if (!rp)
++		return false;
++
++	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
++
++	return lnkctl & PCI_EXP_LNKCTL_RCB;
++}
++
+ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ {
+ 	int pos;
+@@ -1468,9 +1481,21 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+ 
+ 	/* Initialize Link Control Register */
+-	if (pcie_cap_has_lnkctl(dev))
++	if (pcie_cap_has_lnkctl(dev)) {
++		bool rrcb;
++		u16 clear;
++		u16 set;
++
++		rrcb = pcie_get_root_rcb(dev);
++
++		clear = ~hpp->pci_exp_lnkctl_and;
++		set = hpp->pci_exp_lnkctl_or;
++		if (!rrcb)
++			set &= ~PCI_EXP_LNKCTL_RCB;
++
+ 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+-			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
++						  clear, set);
++	}
+ 
+ 	/* Find Advanced Error Reporting Enhanced Capability */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-- 
+2.10.0
+
