@@ -1,67 +1,86 @@
-Return-Path: <shawn.lin@rock-chips.com>
-Return-Path: <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: correct the use of FTS mask
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Brian Norris <briannorris@chromium.org>
-References: <1476832384-10215-1-git-send-email-briannorris@chromium.org>
- <20161111223007.GT9868@bhelgaas-glaptop.roam.corp.google.com>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>,
- Wenrui Li <wenrui.li@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Rajat Jain <rajatja@google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <8d1531a9-2754-07b5-ca7f-f99f5ec0dbad@rock-chips.com>
-Date: Sat, 12 Nov 2016 09:57:56 +0800
-MIME-Version: 1.0
-In-Reply-To: <20161111223007.GT9868@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:36886 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756405AbcKDM7y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Nov 2016 08:59:54 -0400
+Received: by mail-wm0-f48.google.com with SMTP id t79so48423207wmt.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Nov 2016 05:59:53 -0700 (PDT)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH v3 1/3] bus: simple-pm: add support to pm clocks
+Date: Fri,  4 Nov 2016 12:59:45 +0000
+Message-Id: <1478264387-17914-2-git-send-email-srinivas.kandagatla@linaro.org>
+In-Reply-To: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/11/12 6:30, Bjorn Helgaas wrote:
-> On Tue, Oct 18, 2016 at 04:13:04PM -0700, Brian Norris wrote:
->> We're trying to mask out bits[23:8] while retaining [32:24, 7:0], but
->> we're doing the inverse. That doesn't have too much effect, since we're
->> setting all the [23:8] bits to 1, and the other bits are only relevant
->> for modes we're currently not using. But we should get this right.
->>
->> Fixes: ca1989084054 ("PCI: rockchip: Fix wrong transmitted FTS count")
->> Signed-off-by: Brian Norris <briannorris@chromium.org>
->
-> I assume this is correct, but I'm waiting for an ack from Shawn.
+This patch adds support to pm clocks via device tree, so that the clocks
+can be turned on and off during runtime pm. This patch is required for
+Qualcomm msm8996 pcie controller which sits on a bus with its own
+power-domain and clocks.
 
-Thanks for catching this, and it was missing from my inbox somehow...
+Without this patch the clock associated with the bus are never turned on.
 
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ drivers/bus/simple-pm-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
->
->> ---
->>  drivers/pci/host/pcie-rockchip.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index e0b22dab9b7a..5c2e3297a3ff 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -492,7 +492,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->>
->>  	/* Fix the transmitted FTS count desired to exit from L0s. */
->>  	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
->> -	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
->> +	status = (status & ~PCIE_CORE_CTRL_PLC1_FTS_MASK) |
->>  		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
->>  	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
->>
->> --
->> 2.8.0.rc3.226.g39d4020
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+diff --git a/drivers/bus/simple-pm-bus.c b/drivers/bus/simple-pm-bus.c
+index c5eb46c..63b7e8c 100644
+--- a/drivers/bus/simple-pm-bus.c
++++ b/drivers/bus/simple-pm-bus.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_clock.h>
+ #include <linux/pm_runtime.h>
+ 
+ 
+@@ -22,17 +23,26 @@ static int simple_pm_bus_probe(struct platform_device *pdev)
+ 
+ 	pm_runtime_enable(&pdev->dev);
+ 
+-	if (np)
++	if (np) {
++		of_pm_clk_add_clks(&pdev->dev);
+ 		of_platform_populate(np, NULL, NULL, &pdev->dev);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct dev_pm_ops simple_pm_bus_pm_ops = {
++	SET_RUNTIME_PM_OPS(pm_clk_suspend,
++			   pm_clk_resume, NULL)
++};
++
+ static int simple_pm_bus_remove(struct platform_device *pdev)
+ {
+ 	dev_dbg(&pdev->dev, "%s\n", __func__);
+ 
+ 	pm_runtime_disable(&pdev->dev);
++	pm_clk_destroy(&pdev->dev);
++
+ 	return 0;
+ }
+ 
+@@ -48,6 +58,7 @@ static struct platform_driver simple_pm_bus_driver = {
+ 	.driver = {
+ 		.name = "simple-pm-bus",
+ 		.of_match_table = simple_pm_bus_of_match,
++		.pm = &simple_pm_bus_pm_ops,
+ 	},
+ };
+ 
 -- 
-Best Regards
-Shawn Lin
+2.10.1
+
