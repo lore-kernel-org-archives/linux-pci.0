@@ -1,36 +1,403 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47037 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753359AbcKHI1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 03:27:22 -0500
-Date: Tue, 8 Nov 2016 09:27:20 +0100
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/7] pci: Remove the irq_affinity mask from struct pci_dev
-Message-ID: <20161108082720.kr4nwc62xvtjusw7@linux-x5ow.site>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-7-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1478544462-9549-7-git-send-email-hch@lst.de>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:35260 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933990AbcKDM7z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Nov 2016 08:59:55 -0400
+Received: by mail-wm0-f44.google.com with SMTP id a197so49514594wmd.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Nov 2016 05:59:54 -0700 (PDT)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH v3 2/3] PCI: qcom: add support to msm8996 PCIE controller
+Date: Fri,  4 Nov 2016 12:59:46 +0000
+Message-Id: <1478264387-17914-3-git-send-email-srinivas.kandagatla@linaro.org>
+In-Reply-To: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 10:47:41AM -0800, Christoph Hellwig wrote:
-> This has never been used, and now is totally unreferenced.  Nuke it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+legacy interrupts and it conforms to PCI Express Base 2.1 specification.
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+pipe clocks are only setup after the phy is powered on.
+It also adds ltssm_enable callback as it is very much different to other
+supported SOCs in the driver.
 
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  68 +++++++-
+ drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
+ 2 files changed, 239 insertions(+), 6 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 4059a6f..4a0538d 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -7,6 +7,7 @@
+ 			- "qcom,pcie-ipq8064" for ipq8064
+ 			- "qcom,pcie-apq8064" for apq8064
+ 			- "qcom,pcie-apq8084" for apq8084
++			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 
+ - reg:
+ 	Usage: required
+@@ -92,6 +93,16 @@
+ 			- "aux"		Auxiliary (AUX) clock
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
++
++- clock-names:
++	Usage: required for msm8996/apq8096
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "aux"		Auxiliary (AUX) clock.
++			- "bus_master"	Master AXI clock.
++			- "bus_slave"	Slave AXI clock.
++			- "pipe"	Pipe Clock driving internal logic.
++			- "cfg"		Configuration clk.
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -115,7 +126,7 @@
+ 			- "core" Core reset
+ 
+ - power-domains:
+-	Usage: required for apq8084
++	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+ 	Definition: A phandle and power domain specifier pair to the
+ 		    power domain which is responsible for collapsing
+@@ -231,3 +242,58 @@
+ 		pinctrl-0 = <&pcie0_pins_default>;
+ 		pinctrl-names = "default";
+ 	};
++
++* Example for apq8096:
++
++	pcie@00608000{
++		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
++		power-domains = <&gcc PCIE1_GDSC>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++
++		status  = "disabled";
++
++		reg = <0x00608000 0x2000>,
++		      <0x0d000000 0xf1d>,
++		      <0x0d000f20 0xa8>,
++		      <0x0d100000 0x100000>;
++
++		reg-names = "parf", "dbi", "elbi", "config";
++
++		phys = <&pcie_phy 1>;
++		phy-names = "pciephy";
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
++			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
++
++		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++		pinctrl-names = "default", "sleep";
++		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
++		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
++
++		vdda-1p8-supply = <&pm8994_l12>;
++		vdda-supply = <&pm8994_l28>;
++		linux,pci-domain = <1>;
++
++		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
++			<&gcc GCC_PCIE_1_AUX_CLK>,
++			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
++			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
++			<&gcc GCC_PCIE_1_SLV_AXI_CLK>;
++
++		clock-names =  "pipe",
++				"aux",
++				"cfg",
++				"bus_master",
++				"bus_slave";
++	};
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index 3593640..f37c690 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -36,11 +36,19 @@
+ 
+ #include "pcie-designware.h"
+ 
++#define PCIE20_PARF_DBI_BASE_ADDR	0x168
++
++#define PCIE20_PARF_SYS_CTRL			0x00
+ #define PCIE20_PARF_PHY_CTRL			0x40
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+ #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
++#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+ #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
++#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
++#define PCIE20_PARF_LTSSM			0x1B0
++#define PCIE20_PARF_SID_OFFSET			0x234
++#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+ 
+ #define PCIE20_ELBI_SYS_CTRL			0x04
+ #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+@@ -72,9 +80,18 @@ struct qcom_pcie_resources_v1 {
+ 	struct regulator *vdda;
+ };
+ 
++struct qcom_pcie_resources_v2 {
++	struct clk *aux_clk;
++	struct clk *master_clk;
++	struct clk *slave_clk;
++	struct clk *cfg_clk;
++	struct clk *pipe_clk;
++};
++
+ union qcom_pcie_resources {
+ 	struct qcom_pcie_resources_v0 v0;
+ 	struct qcom_pcie_resources_v1 v1;
++	struct qcom_pcie_resources_v2 v2;
+ };
+ 
+ struct qcom_pcie;
+@@ -82,7 +99,9 @@ struct qcom_pcie;
+ struct qcom_pcie_ops {
+ 	int (*get_resources)(struct qcom_pcie *pcie);
+ 	int (*init)(struct qcom_pcie *pcie);
++	int (*post_init)(struct qcom_pcie *pcie);
+ 	void (*deinit)(struct qcom_pcie *pcie);
++	void (*ltssm_enable)(struct qcom_pcie *pcie);
+ };
+ 
+ struct qcom_pcie {
+@@ -116,17 +135,33 @@ static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+ 	return dw_handle_msi_irq(pp);
+ }
+ 
+-static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
++static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+-
+-	if (dw_pcie_link_up(&pcie->pp))
+-		return 0;
+-
+ 	/* enable link training */
+ 	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+ 	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
+ 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
++}
++
++static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
++{
++	u32 val;
++	/* enable link training */
++	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
++	val |= BIT(8);
++	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
++}
++
++static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
++{
++
++	if (dw_pcie_link_up(&pcie->pp))
++		return 0;
++
++	/* Enable Link Training state machine */
++	if (pcie->ops->ltssm_enable)
++		pcie->ops->ltssm_enable(pcie);
+ 
+ 	return dw_pcie_wait_for_link(&pcie->pp);
+ }
+@@ -421,6 +456,113 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
++static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++
++	res->aux_clk = devm_clk_get(dev, "aux");
++	if (IS_ERR(res->aux_clk))
++		return PTR_ERR(res->aux_clk);
++
++	res->cfg_clk = devm_clk_get(dev, "cfg");
++	if (IS_ERR(res->cfg_clk))
++		return PTR_ERR(res->cfg_clk);
++
++	res->master_clk = devm_clk_get(dev, "bus_master");
++	if (IS_ERR(res->master_clk))
++		return PTR_ERR(res->master_clk);
++
++	res->slave_clk = devm_clk_get(dev, "bus_slave");
++	if (IS_ERR(res->slave_clk))
++		return PTR_ERR(res->slave_clk);
++
++	res->pipe_clk = devm_clk_get(dev, "pipe");
++	if (IS_ERR(res->pipe_clk))
++		return PTR_ERR(res->pipe_clk);
++
++	return 0;
++}
++
++static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++	u32 val;
++	int ret = 0;
++
++	ret = clk_prepare_enable(res->aux_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable aux clock\n");
++		return ret;
++	}
++
++	ret = clk_prepare_enable(res->cfg_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable cfg clock\n");
++		goto err_cfg_clk;
++	}
++
++	ret = clk_prepare_enable(res->master_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable master clock\n");
++		goto err_master_clk;
++	}
++
++	ret = clk_prepare_enable(res->slave_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable slave clock\n");
++		goto err_slave_clk;
++	}
++
++	/* enable PCIe clocks and resets */
++	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
++	val &= ~BIT(0);
++	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
++
++	/* change DBI base address */
++	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
++
++	/* MAC PHY_POWERDOWN MUX DISABLE  */
++	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
++	val &= ~BIT(29);
++	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
++
++	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++	val |= BIT(4);
++	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++
++	val = readl(pcie->parf + MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
++	val |= BIT(31);
++	writel(val, pcie->parf + MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
++
++	return 0;
++
++err_slave_clk:
++	clk_disable_unprepare(res->master_clk);
++err_master_clk:
++	clk_disable_unprepare(res->cfg_clk);
++err_cfg_clk:
++	clk_disable_unprepare(res->aux_clk);
++
++	return ret;
++}
++
++static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++	int ret;
++
++	ret = clk_prepare_enable(res->pipe_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable pipe clock\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int qcom_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+@@ -429,6 +571,17 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
+ 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
+ }
+ 
++static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++
++	clk_disable_unprepare(res->slave_clk);
++	clk_disable_unprepare(res->master_clk);
++	clk_disable_unprepare(res->cfg_clk);
++	clk_disable_unprepare(res->aux_clk);
++	clk_disable_unprepare(res->pipe_clk);
++}
++
+ static void qcom_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+@@ -444,6 +597,9 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		goto err_deinit;
+ 
++	if (pcie->ops->post_init)
++		pcie->ops->post_init(pcie);
++
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+@@ -487,12 +643,22 @@ static const struct qcom_pcie_ops ops_v0 = {
+ 	.get_resources = qcom_pcie_get_resources_v0,
+ 	.init = qcom_pcie_init_v0,
+ 	.deinit = qcom_pcie_deinit_v0,
++	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
+ };
+ 
+ static const struct qcom_pcie_ops ops_v1 = {
+ 	.get_resources = qcom_pcie_get_resources_v1,
+ 	.init = qcom_pcie_init_v1,
+ 	.deinit = qcom_pcie_deinit_v1,
++	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++};
++
++static const struct qcom_pcie_ops ops_v2 = {
++	.get_resources = qcom_pcie_get_resources_v2,
++	.init = qcom_pcie_init_v2,
++	.post_init = qcom_pcie_post_init_v2,
++	.deinit = qcom_pcie_deinit_v2,
++	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
+ };
+ 
+ static int qcom_pcie_probe(struct platform_device *pdev)
+@@ -572,6 +738,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
++	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+ 	{ }
+ };
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.10.1
+
