@@ -1,51 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55282 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753891AbcKPWNf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Nov 2016 17:13:35 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 90579203E1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 22:13:34 +0000 (UTC)
-Received: from localhost (unknown [69.71.4.155])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 840E9203C4
-        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 22:13:33 +0000 (UTC)
-Subject: [PATCH 4/4] PCI: Expand "VPD access disabled" quirk message
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Date: Wed, 16 Nov 2016 16:13:32 -0600
-Message-ID: <20161116221332.15842.39092.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36937 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934672AbcKDM74 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Nov 2016 08:59:56 -0400
+Received: by mail-wm0-f46.google.com with SMTP id t79so48425339wmt.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Nov 2016 05:59:55 -0700 (PDT)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH v3 3/3] PCI: qcom: add runtime pm support to pcie_port
+Date: Fri,  4 Nov 2016 12:59:47 +0000
+Message-Id: <1478264387-17914-4-git-send-email-srinivas.kandagatla@linaro.org>
+In-Reply-To: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's not very enlightening to see
+This patch is required when the pcie controller sits on a bus with
+its own power domain and clocks which are controlled via a bus driver
+like simple pm bus. As these bus driver have runtime pm enabled, it makes
+sense to update the usage counter so that the runtime pm does not suspend
+the clks or power domain associated with the bus driver.
 
-  pci 0000:07:00.0: [Firmware Bug]: VPD access disabled
-
-in the dmesg log because there's no clue about what the firmware bug is.
-Expand the message to explain why we're disabling VPD.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 ---
- drivers/pci/quirks.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-qcom.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c232729..7329796 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2156,7 +2156,7 @@ static void quirk_blacklist_vpd(struct pci_dev *dev)
- {
- 	if (dev->vpd) {
- 		dev->vpd->len = 0;
--		dev_warn(&dev->dev, FW_BUG "VPD access disabled\n");
-+		dev_warn(&dev->dev, FW_BUG "disabling VPD access (can't determine size of non-standard VPD format)\n");
- 	}
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index f37c690..3751635 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -587,6 +587,9 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+ 	int ret;
+ 
++
++	pm_runtime_get_sync(pp->dev);
++
+ 	qcom_ep_reset_assert(pcie);
+ 
+ 	ret = pcie->ops->init(pcie);
+@@ -617,6 +620,7 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+ 	phy_power_off(pcie->phy);
+ err_deinit:
+ 	pcie->ops->deinit(pcie);
++	pm_runtime_put_sync(pp->dev);
  }
  
+ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+@@ -669,10 +673,12 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	struct pcie_port *pp;
+ 	int ret;
+ 
++
+ 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
++	pm_runtime_enable(dev);
+ 	pp = &pcie->pp;
+ 	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
+ 
+-- 
+2.10.1
 
