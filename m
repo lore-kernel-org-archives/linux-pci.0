@@ -1,27 +1,26 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 8 Nov 2016 15:40:22 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Hannes Reinecke <hare@suse.de>
-cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in
- irq_calc_affinity_vectors()
-In-Reply-To: <1daf8fb5-d58e-9cf4-5b33-b39de1db4c20@suse.de>
-Message-ID: <alpine.DEB.2.20.1611081538530.3501@nanos>
-References: <1478544462-9549-1-git-send-email-hch@lst.de> <1478544462-9549-3-git-send-email-hch@lst.de> <1daf8fb5-d58e-9cf4-5b33-b39de1db4c20@suse.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0053.outbound.protection.outlook.com ([104.47.2.53]:49632
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751346AbcKFTw2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 6 Nov 2016 14:52:28 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Shouldn't VFIO virtualize the ATS capability?
+Date: Sun, 6 Nov 2016 11:13:09 +0000
+Message-ID: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 Nov 2016, Hannes Reinecke wrote:
-> Shouldn't you check for NULL affd here?
-
-No. The introduction of the default affinity struct should happen in that
-patch and it should be handed down instead of NULL. Ditto for the next
-patch.
+Hi=20
+I've noticed that VFIO doesn't virtualize the ATS capability.
+It seems to me that translation caching and Smallest Translation Unit is so=
+mething you would want to control on the host. Am I wrong?
 
 Thanks,
-
-	tglx
+Ilya
