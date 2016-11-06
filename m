@@ -1,37 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:35758 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752869AbcKIEiP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 23:38:15 -0500
-Received: by mail-pf0-f182.google.com with SMTP id i88so119171028pfk.2
-        for <linux-pci@vger.kernel.org>; Tue, 08 Nov 2016 20:38:14 -0800 (PST)
-Subject: Re: support for partial irq affinity assignment V3
-To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
-References: <1478654107-7384-1-git-send-email-hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 6 Nov 2016 18:12:17 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Thorsten Leemhuis <regressions@leemhuis.info>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bryan O'Donoghue <pure.logic@nexus-software.ie>,
+        Ingo Molnar <mingo@kernel.org>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <f5270fd9-488f-a954-ba3c-1f7800820731@kernel.dk>
-Date: Tue, 8 Nov 2016 21:38:11 -0700
+Subject: Re: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_state hook
+Message-ID: <20161106171217.GA5922@wunner.de>
+References: <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
+ <1477226275.2932.54.camel@nexus-software.ie>
+ <20161023145757.GA4909@wunner.de>
+ <1477300505.6423.41.camel@linux.intel.com>
+ <20161024100940.GB5144@wunner.de>
+ <1477307145.6423.48.camel@linux.intel.com>
+ <20161025061934.GB5630@wunner.de>
+ <1477490807.25812.20.camel@nexus-software.ie>
+ <1477494063.5295.12.camel@linux.intel.com>
+ <92ac10c1-84e4-0e73-a12d-69e66aac9c45@leemhuis.info>
 MIME-Version: 1.0
-In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <92ac10c1-84e4-0e73-a12d-69e66aac9c45@leemhuis.info>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/2016 06:15 PM, Christoph Hellwig wrote:
-> This series adds support for automatic interrupt assignment to devices
-> that have a few vectors that are set aside for admin or config purposes
-> and thus should not fall into the general per-cpu assginment pool.
->
-> The first patch adds that support to the core IRQ and PCI/msi code,
-> and the second is a small tweak to a block layer helper to make use
-> of it.  I'd love to have both go into the same tree so that consumers
-> of this (e.g. the virtio, scsi and rdma trees) only need to pull in
-> one of these trees as dependency.
+On Sun, Nov 06, 2016 at 02:43:33PM +0100, Thorsten Leemhuis wrote:
+> On 26.10.2016 17:01, Andy Shevchenko wrote:
+> > On Wed, 2016-10-26 at 15:06 +0100, Bryan O'Donoghue wrote:
+> >> So the conclusion is to apply this patch now and go and look further @
+> >> locking in a separate series right ? There's not much point in leaving
+> >> Edison not booting as is the case with tip-of-tree right now.
+> >
+> > That's what I think is a summary of the discussion.
+> 
+> Did anything happen after that conclusion? Just wondering, because this
+> bug is on the list of regressions for 4.9 and I think the proposed fix
+> hasn't reached mainline yet (or did I miss it?)
 
-Series looks good to me, you can add my Acked-by to all of them.
+The patch still awaits merging through tip.  I assume the x86 maintainers
+were traveling (KS, LPC) or generally busy.
 
--- 
-Jens Axboe
+Thanks,
 
+Lukas
