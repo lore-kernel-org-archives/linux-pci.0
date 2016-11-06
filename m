@@ -1,111 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55104 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933586AbcKIOTo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:19:44 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 15/16] drivers: acpi: iort: add single mapping function
-Date: Wed,  9 Nov 2016 14:19:47 +0000
-Message-Id: <20161109141948.19244-16-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Received: from basicbox7.server-home.net ([195.137.212.29]:48349 "EHLO
+        basicbox7.server-home.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751660AbcKFNnh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Nov 2016 08:43:37 -0500
+Subject: Re: [PATCH v3 1/1] x86/platform/intel-mid: Retrofit
+ pci_platform_pm_ops ->get_state hook
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bryan O'Donoghue <pure.logic@nexus-software.ie>,
+        Lukas Wunner <lukas@wunner.de>
+References: <cover.1477221514.git.lukas@wunner.de>
+ <7c1567d4c49303a4aada94ba16275cbf56b8976b.1477221514.git.lukas@wunner.de>
+ <1477226275.2932.54.camel@nexus-software.ie>
+ <20161023145757.GA4909@wunner.de> <1477300505.6423.41.camel@linux.intel.com>
+ <20161024100940.GB5144@wunner.de> <1477307145.6423.48.camel@linux.intel.com>
+ <20161025061934.GB5630@wunner.de>
+ <1477490807.25812.20.camel@nexus-software.ie>
+ <1477494063.5295.12.camel@linux.intel.com>
+Cc: Ingo Molnar <mingo@kernel.org>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Message-ID: <92ac10c1-84e4-0e73-a12d-69e66aac9c45@leemhuis.info>
+Date: Sun, 6 Nov 2016 14:43:33 +0100
+MIME-Version: 1.0
+In-Reply-To: <1477494063.5295.12.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current IORT id mapping API requires components to provide
-an input requester ID (a Bus-Device-Function (BDF) identifier for
-PCI devices) to translate an input identifier to an output
-identifier through an IORT range mapping.
+Hi! On 26.10.2016 17:01, Andy Shevchenko wrote:
+> On Wed, 2016-10-26 at 15:06 +0100, Bryan O'Donoghue wrote:
+>> On Tue, 2016-10-25 at 08:19 +0200, Lukas Wunner wrote:
+>
+>> So the conclusion is to apply this patch now and go and look further @
+>> locking in a separate series right ? There's not much point in leaving
+>> Edison not booting as is the case with tip-of-tree right now.
+> That's what I think is a summary of the discussion.
 
-Named components do not have an identifiable source ID therefore
-their respective input/output mapping can only be defined in
-IORT tables through single mappings, that provide a translation
-that does not require any input identifier.
+Did anything happen after that conclusion? Just wondering, because this
+bug is on the list of regressions for 4.9 and I think the proposed fix
+hasn't reached mainline yet (or did I miss it?)
 
-Current IORT interface for requester id mappings (iort_node_map_rid())
-is not suitable for components that do not provide a requester id,
-so it cannot be used for IORT named components.
-
-Add an interface to the IORT API to enable retrieval of id
-by allowing an indexed walk of the single mappings array for
-a given component, therefore completing the IORT mapping API.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 62057c6..7d30605 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -318,6 +318,45 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 	return 0;
- }
- 
-+static
-+struct acpi_iort_node *iort_node_get_id(struct acpi_iort_node *node,
-+					u32 *id_out, u8 type_mask,
-+					int index)
-+{
-+	struct acpi_iort_node *parent;
-+	struct acpi_iort_id_mapping *map;
-+
-+	if (!node->mapping_offset || !node->mapping_count ||
-+				     index >= node->mapping_count)
-+		return NULL;
-+
-+	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-+			   node->mapping_offset);
-+
-+	/* Firmware bug! */
-+	if (!map->output_reference) {
-+		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-+		       node, node->type);
-+		return NULL;
-+	}
-+
-+	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+			       map->output_reference);
-+
-+	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
-+		return NULL;
-+
-+	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-+		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
-+		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-+			*id_out = map[index].output_base;
-+			return parent;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
- 						u8 type_mask)
--- 
-2.10.0
+Ciao, Thorsten (regression tracker for 4.9)
 
