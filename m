@@ -1,245 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45243 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754492AbcKJLsD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 06:48:03 -0500
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
-Subject: RE: [PATCH v9 7/8] thunderbolt: Networking doc
-Date: Thu, 10 Nov 2016 11:47:57 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03B677F516@hasmsx107.ger.corp.intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
- <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
- <20161109160002.GA9111@kroah.com>
-In-Reply-To: <20161109160002.GA9111@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] blk-mq: add a first_vec argument to blk_mq_pci_map_queues
+Date: Sun,  6 Nov 2016 15:07:26 -0800
+Message-Id: <1478473646-12524-3-git-send-email-hch@lst.de>
+In-Reply-To: <1478473646-12524-1-git-send-email-hch@lst.de>
+References: <1478473646-12524-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 9 2016, 06:00 PM, Greg KH wrote:
-> On Wed, Nov 09, 2016 at 04:20:07PM +0200, Amir Levy wrote:
-> > Adding Thunderbolt(TM) networking documentation.
-> >
-> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-> > ---
-> >  Documentation/00-INDEX                   |   2 +
-> >  Documentation/thunderbolt/networking.txt | 132
-> > +++++++++++++++++++++++++++++++
-> 
-> Note, new files should be in .rst format, and live in the new subdirectory for
-> them (somewhere in Documentation, don't know off the top of my head...)
-> 
-> >  2 files changed, 134 insertions(+)
-> >  create mode 100644 Documentation/thunderbolt/networking.txt
-> >
-> > diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX index
-> > 3acc4f1..0239e68 100644
-> > --- a/Documentation/00-INDEX
-> > +++ b/Documentation/00-INDEX
-> > @@ -440,6 +440,8 @@ this_cpu_ops.txt
-> >  	- List rationale behind and the way to use this_cpu operations.
-> >  thermal/
-> >  	- directory with information on managing thermal issues (CPU/temp)
-> > +thunderbolt/
-> > +	- directory with info regarding Thunderbolt.
-> >  trace/
-> >  	- directory with info on tracing technologies within linux
-> > unaligned-memory-access.txt
-> 
-> This change is probably not needed.
-> 
-> > diff --git a/Documentation/thunderbolt/networking.txt
-> > b/Documentation/thunderbolt/networking.txt
-> > new file mode 100644
-> > index 0000000..88d1c12
-> > --- /dev/null
-> > +++ b/Documentation/thunderbolt/networking.txt
-> > @@ -0,0 +1,132 @@
-> > +Intel Thunderbolt(TM) Networking driver
-> > +=======================================
-> > +
-> > +Copyright(c) 2013 - 2016 Intel Corporation.
-> > +
-> > +Contact Information:
-> > +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
-> > +Edited by Amir Levy <amir.jer.levy@intel.com>
-> > +
-> > +Overview
-> > +========
-> > +
-> > +* The Thunderbolt Networking driver enables peer to peer networking
-> > +on non-Apple
-> > +  platforms running Linux.
-> > +
-> > +* The driver creates a virtual Ethernet device that enables computer
-> > +to computer
-> > +  communication over the Thunderbolt cable.
-> > +
-> > +* Using Thunderbolt Networking you can perform high speed file
-> > +transfers between
-> > +  computers, perform PC migrations and/or set up small workgroups
-> > +with shared
-> > +  storage without compromising any other Thunderbolt functionality.
-> > +
-> > +* The driver is located in drivers/thunderbolt/icm.
-> > +
-> > +* This driver will function only on non-Apple platforms with firmware
-> > +based
-> > +  Thunderbolt controllers that support Thunderbolt Networking.
-> > +
-> > +  +----------------+            +----------------+
-> > +  |Host 1          |            |Host 2          |
-> > +  |                |            |                |
-> > +  |   +-------+    |            |    +-------+   |
-> > +  |   |Network|    |            |    |Network|   |
-> > +  |   |Stack  |    |            |    |Stack  |   |
-> > +  |   +-------+    |            |    +-------+   |
-> > +  |       ^        |            |        ^       |
-> > +  |       |        |            |        |       |
-> > +  |       v        |            |        v       |
-> > +  | +-----------+  |            |  +-----------+ |
-> > +  | |Thunderbolt|  |            |  |Thunderbolt| |
-> > +  | |Networking |  |            |  |Networking | |
-> > +  | |Driver     |  |            |  |Driver     | |
-> > +  | +-----------+  |            |  +-----------+ |
-> > +  |       ^        |            |        ^       |
-> > +  |       |        |            |        |       |
-> > +  |       v        |            |        v       |
-> > +  | +-----------+  |            |  +-----------+ |
-> > +  | |Thunderbolt|  |            |  |Thunderbolt| |
-> > +  | |Controller |<-+------------+->|Controller | |
-> > +  | |with ICM   |  |            |  |with ICM   | |
-> > +  | |enabled    |  |            |  |enabled    | |
-> > +  | +-----------+  |            |  +-----------+ |
-> > +  +----------------+            +----------------+
-> > +
-> > +Files
-> > +=====
-> > +
-> > +The following files are located in the drivers/thunderbolt/icm directory:
-> > +
-> > +- icm_nhi.c/h:	These files allow communication with the firmware
-> (Intel
-> > +  Connection Manager) based controller. They also create an interface
-> > +for
-> > +  netlink communication with a user space daemon.
-> > +
-> > +- net.c/net.h:	These files implement the 'eth' interface for the
-> > +  Thunderbolt(TM) Networking.
-> 
-> You don't have to list the files, right?
-> 
-> > +
-> > +Interface to User Space
-> > +=======================
-> > +
-> > +The interface to the user space module is implemented through a Generic
-> Netlink.
-> 
-> Huh?  Not a normal network device?
-> 
-> > +This is the communications protocol between the Thunderbolt driver
-> > +and the user space application.
-> 
-> What userspace application?
-> 
-> > +Note that this interface mediates user space communication with ICM.
-> 
-> What is ICM?
-> 
-> > +(Existing Linux tools can be used to configure the network
-> > +interface.)
-> 
-> Why aren't they sufficient for everything here?
-> 
-> > +
-> > +The Thunderbolt Daemon utilizes this interface to communicate with the
-> driver.
-> 
-> What "Thunderbolt Daemon"?  What is "this"?
-> 
-> > +To be accessed by the user space module, both kernel and user space
-> > +modules have to register with the same GENL_NAME.
-> 
-> What userspace modules?
-> 
-> How do you set GENL_NAME?  What is that?
-> 
-> > +For the purpose of the Thunderbolt Network driver, "thunderbolt" is
-> used.
-> 
-> What do you mean?
-> 
-> > +The registration is done at driver initialization time for all
-> > +instances of the Thunderbolt controllers.
-> 
-> Who does this?
-> 
-> > The communication is carried through pre-defined
-> > +Thunderbolt messages. Each specific message has a callback function
-> > +that is called when the related message is received.
-> 
-> Is this the internal structure of the driver?  If so, why not just put it all in the
-> code itself and build the documentation from it?
-> 
-> > +
-> > +Message Definitions:
-> > +* NHI_CMD_UNSPEC: Not used.
-> > +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to
-> > +open the
-> > +  communication channel.
-> > +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to
-> unsubscribe
-> > +and
-> > +  to close communication channel.
-> > +* NHI_CMD_QUERY_INFORMATION: Request information from the driver
-> such
-> > +as
-> > +  driver version, FW version offset, number of ports in the
-> > +controller
-> > +  and DMA port.
-> > +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
-> > +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
-> > +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as
-> FW
-> > +policy
-> > +  changes or disconnect path.
-> > +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
-> module to
-> > +FW to
-> > +  establish path.
-> > +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered
-> safe mode.
-> > +
-> > +Communication with Intel Connection Manager(ICM) Firmware
-> >
-> +=========================================================
-> > +
-> > +There are several circular buffers in Thunderbolt each using Direct
-> > +Memory Access (DMA).
-> 
-> Again, internal documentation?
-> 
-> Isn't this just a "normal" network device?  Why document any of this in a
-> separate way?  What can a user do with this?  Who is the audience of this
-> file?
-> 
-> still confused,
-> 
-> greg k-h
+This allows skipping the first N IRQ vectors in case they are used for
+control or admin interrupts.
 
-This document was one of the suggestions we got from internal-Intel kernel developers.
-If you think it isn't needed, I'll remove it from next patch set.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-mq-pci.c         | 6 ++++--
+ drivers/nvme/host/pci.c    | 2 +-
+ include/linux/blk-mq-pci.h | 3 ++-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
+index 966c216..03ff7c4 100644
+--- a/block/blk-mq-pci.c
++++ b/block/blk-mq-pci.c
+@@ -21,6 +21,7 @@
+  * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
+  * @set:	tagset to provide the mapping for
+  * @pdev:	PCI device associated with @set.
++ * @first_vec:	first interrupt vectors to use for queues (usually 0)
+  *
+  * This function assumes the PCI device @pdev has at least as many available
+  * interrupt vetors as @set has queues.  It will then queuery the vector
+@@ -28,12 +29,13 @@
+  * that maps a queue to the CPUs that have irq affinity for the corresponding
+  * vector.
+  */
+-int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev)
++int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
++		int first_vec)
+ {
+ 	const struct cpumask *mask;
+ 	unsigned int queue, cpu;
+ 
+-	for (queue = 0; queue < set->nr_hw_queues; queue++) {
++	for (queue = first_vec; queue < set->nr_hw_queues; queue++) {
+ 		mask = pci_irq_get_affinity(pdev, queue);
+ 		if (!mask)
+ 			return -EINVAL;
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 0fc99f0..a05fbaf 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -272,7 +272,7 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
+ {
+ 	struct nvme_dev *dev = set->driver_data;
+ 
+-	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev));
++	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev), 0);
+ }
+ 
+ /**
+diff --git a/include/linux/blk-mq-pci.h b/include/linux/blk-mq-pci.h
+index 6ab5952..fde26d2 100644
+--- a/include/linux/blk-mq-pci.h
++++ b/include/linux/blk-mq-pci.h
+@@ -4,6 +4,7 @@
+ struct blk_mq_tag_set;
+ struct pci_dev;
+ 
+-int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev);
++int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
++		int first_vec);
+ 
+ #endif /* _LINUX_BLK_MQ_PCI_H */
+-- 
+2.1.4
