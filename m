@@ -1,96 +1,245 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:41557
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750857AbcKWTOu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 14:14:50 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
-CC: Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
-Date: Wed, 23 Nov 2016 14:14:40 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 7 Nov 2016 10:56:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v6 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161107105611.GA7183@red-moon>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+ <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
+ <9e91cb41-3034-c1ca-9275-cce3235cc662@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20161123190515.GA12146@obsidianresearch.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9e91cb41-3034-c1ca-9275-cce3235cc662@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Nov 01, 2016 at 04:36:10PM +0000, Robin Murphy wrote:
+> Bikeshed alert...
+> 
+> On 18/10/16 17:04, Lorenzo Pieralisi wrote:
+> > The of_iommu_{set/get}_ops() API is used to associate a device
+> > tree node with a specific set of IOMMU operations. The same
+> > kernel interface is required on systems booting with ACPI, where
+> > devices are not associated with a device tree node, therefore
+> > the interface requires generalization.
+> > 
+> > The struct device fwnode member represents the fwnode token
+> > associated with the device and the struct it points at is firmware
+> > specific; regardless, it is initialized on both ACPI and DT systems
+> > and makes an ideal candidate to use it to associate a set of IOMMU
+> > operations to a given device, through its struct device.fwnode member
+> > pointer.
+> > 
+> > Convert the DT specific of_iommu_{set/get}_ops() interface to
+> > use struct device.fwnode as a look-up token, making the interface
+> > usable on ACPI systems.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> > Cc: Robin Murphy <robin.murphy@arm.com>
+> > Cc: Joerg Roedel <joro@8bytes.org>
+> > ---
+> >  drivers/iommu/iommu.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/iommu/of_iommu.c | 39 ---------------------------------------
+> >  include/linux/iommu.h    | 14 ++++++++++++++
+> >  include/linux/of_iommu.h | 12 ++++++++++--
+> >  4 files changed, 67 insertions(+), 41 deletions(-)
+> > 
+> > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > index 9a2f196..320eb8c 100644
+> > --- a/drivers/iommu/iommu.c
+> > +++ b/drivers/iommu/iommu.c
+> > @@ -1615,6 +1615,49 @@ int iommu_request_dm_for_dev(struct device *dev)
+> >  	return ret;
+> >  }
+> >  
+> > +struct fwnode_iommu_node {
+> 
+> Having just pulled in this patch in isolation for some hacking, I
+> realise that by about the fifth time one reads "fwnode_iommu_node" it
+> just looks like meaningless gibberish. Can we just call it
+> "iommu_instance" instead, as that's what it's representing here?
 
-On 2016-11-23 02:05 PM, Jason Gunthorpe wrote:
-> On Wed, Nov 23, 2016 at 10:13:03AM -0700, Logan Gunthorpe wrote:
->
->> an MR would be very tricky. The MR may be relied upon by another host
->> and the kernel would have to inform user-space the MR was invalid then
->> user-space would have to tell the remote application.
-> As Bart says, it would be best to be combined with something like
-> Mellanox's ODP MRs, which allows a page to be evicted and then trigger
-> a CPU interrupt if a DMA is attempted so it can be brought back.
-Please note that in the general case (including  MR one) we could have
-"page fault" from the different PCIe device. So all  PCIe device must
-be synchronized.
-> includes the usual fencing mechanism so the CPU can block, flush, and
-> then evict a page coherently.
->
-> This is the general direction the industry is going in: Link PCI DMA
-> directly to dynamic user page tabels, including support for demand
-> faulting and synchronicity.
->
-> Mellanox ODP is a rough implementation of mirroring a process's page
-> table via the kernel, while IBM's CAPI (and CCIX, PCI ATS?) is
-> probably a good example of where this is ultimately headed.
->
-> CAPI allows a PCI DMA to directly target an ASID associated with a
-> user process and then use the usual CPU machinery to do the page
-> translation for the DMA. This includes page faults for evicted pages,
-> and obviously allows eviction and migration..
->
-> So, of all the solutions in the original list, I would discard
-> anything that isn't VMA focused. Emulating what CAPI does in hardware
-> with software is probably the best choice, or we have to do it all
-> again when CAPI style hardware broadly rolls out :(
->
-> DAX and GPU allocators should create VMAs and manipulate them in the
-> usual way to achieve migration, windowing, cache&mirror, movement or
-> swap of the potentially peer-peer memory pages. They would have to
-> respect the usual rules for a VMA, including pinning.
->
-> DMA drivers would use the usual approaches for dealing with DMA from
-> a VMA: short term pin or long term coherent translation mirror.
->
-> So, to my view (looking from RDMA), the main problem with peer-peer is
-> how do you DMA translate VMA's that point at non struct page memory?
->
-> Does HMM solve the peer-peer problem? Does it do it generically or
-> only for drivers that are mirroring translation tables?
-In current form HMM doesn't solve peer-peer problem. Currently it allow
-"mirroring" of  "malloc" memory on GPU which is not always what needed.
-Additionally  there is need to have opportunity to share VRAM allocations
-between  different processes.
->  From a RDMA perspective we could use something other than
-> get_user_pages() to pin and DMA translate a VMA if the core community
-> could decide on an API. eg get_user_dma_sg() would probably be quite
-> usable.
->
-> Jason
+Agreed, how about iommu_(fw)entry ? Anyway, I will do, point taken.
 
+> > +	struct list_head list;
+> > +	struct fwnode_handle *fwnode;
+> > +	const struct iommu_ops *ops;
+> > +};
+> > +static LIST_HEAD(fwnode_iommu_list);
+> > +static DEFINE_SPINLOCK(fwnode_iommu_lock);
+> > +
+> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +			  const struct iommu_ops *ops)
+> > +{
+> > +	struct fwnode_iommu_node *iommu =
+> > +				kzalloc(sizeof(*iommu), GFP_KERNEL);
+> 
+> (plus it shortens this line so it really doesn't the awkward break)
+> 
+> Apologies, (the original rubbish name was my fault anyway)
+
+No worries, you have a point, will update for next (hopefully last)
+posting.
+
+Thanks !
+Lorenzo
+
+> Robin.
+> 
+> > +
+> > +	if (WARN_ON(!iommu))
+> > +		return;
+> > +
+> > +	if (is_of_node(fwnode))
+> > +		of_node_get(to_of_node(fwnode));
+> > +
+> > +	INIT_LIST_HEAD(&iommu->list);
+> > +	iommu->fwnode = fwnode;
+> > +	iommu->ops = ops;
+> > +	spin_lock(&fwnode_iommu_lock);
+> > +	list_add_tail(&iommu->list, &fwnode_iommu_list);
+> > +	spin_unlock(&fwnode_iommu_lock);
+> > +}
+> > +
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> > +{
+> > +	struct fwnode_iommu_node *node;
+> > +	const struct iommu_ops *ops = NULL;
+> > +
+> > +	spin_lock(&fwnode_iommu_lock);
+> > +	list_for_each_entry(node, &fwnode_iommu_list, list)
+> > +		if (node->fwnode == fwnode) {
+> > +			ops = node->ops;
+> > +			break;
+> > +		}
+> > +	spin_unlock(&fwnode_iommu_lock);
+> > +	return ops;
+> > +}
+> > +
+> >  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+> >  		      const struct iommu_ops *ops)
+> >  {
+> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> > index 5b82862..0f57ddc 100644
+> > --- a/drivers/iommu/of_iommu.c
+> > +++ b/drivers/iommu/of_iommu.c
+> > @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_get_dma_window);
+> >  
+> > -struct of_iommu_node {
+> > -	struct list_head list;
+> > -	struct device_node *np;
+> > -	const struct iommu_ops *ops;
+> > -};
+> > -static LIST_HEAD(of_iommu_list);
+> > -static DEFINE_SPINLOCK(of_iommu_lock);
+> > -
+> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+> > -{
+> > -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> > -
+> > -	if (WARN_ON(!iommu))
+> > -		return;
+> > -
+> > -	of_node_get(np);
+> > -	INIT_LIST_HEAD(&iommu->list);
+> > -	iommu->np = np;
+> > -	iommu->ops = ops;
+> > -	spin_lock(&of_iommu_lock);
+> > -	list_add_tail(&iommu->list, &of_iommu_list);
+> > -	spin_unlock(&of_iommu_lock);
+> > -}
+> > -
+> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> > -{
+> > -	struct of_iommu_node *node;
+> > -	const struct iommu_ops *ops = NULL;
+> > -
+> > -	spin_lock(&of_iommu_lock);
+> > -	list_for_each_entry(node, &of_iommu_list, list)
+> > -		if (node->np == np) {
+> > -			ops = node->ops;
+> > -			break;
+> > -		}
+> > -	spin_unlock(&of_iommu_lock);
+> > -	return ops;
+> > -}
+> > -
+> >  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> >  {
+> >  	struct of_phandle_args *iommu_spec = data;
+> > diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> > index 436dc21..15d5478 100644
+> > --- a/include/linux/iommu.h
+> > +++ b/include/linux/iommu.h
+> > @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+> >  		      const struct iommu_ops *ops);
+> >  void iommu_fwspec_free(struct device *dev);
+> >  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +			  const struct iommu_ops *ops);
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
+> >  
+> >  #else /* CONFIG_IOMMU_API */
+> >  
+> > @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+> >  	return -ENODEV;
+> >  }
+> >  
+> > +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +					const struct iommu_ops *ops)
+> > +{
+> > +}
+> > +
+> > +static inline
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> > +{
+> > +	return NULL;
+> > +}
+> > +
+> >  #endif /* CONFIG_IOMMU_API */
+> >  
+> >  #endif /* __LINUX_IOMMU_H */
+> > diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> > index e80b9c7..7681007 100644
+> > --- a/include/linux/of_iommu.h
+> > +++ b/include/linux/of_iommu.h
+> > @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+> >  
+> >  #endif	/* CONFIG_OF_IOMMU */
+> >  
+> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> > +static inline void of_iommu_set_ops(struct device_node *np,
+> > +				    const struct iommu_ops *ops)
+> > +{
+> > +	fwnode_iommu_set_ops(&np->fwnode, ops);
+> > +}
+> > +
+> > +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> > +{
+> > +	return fwnode_iommu_get_ops(&np->fwnode);
+> > +}
+> >  
+> >  extern struct of_device_id __iommu_of_table;
+> >  
+> > 
+> 
