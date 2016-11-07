@@ -1,98 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52472 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752561AbcK2E4d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Nov 2016 23:56:33 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT4s62r106465
-        for <linux-pci@vger.kernel.org>; Mon, 28 Nov 2016 23:56:33 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 271158h8jd-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 28 Nov 2016 23:56:32 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Tue, 29 Nov 2016 14:56:30 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-        by d23dlp01.au.ibm.com (Postfix) with ESMTP id 867382CE8056
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 15:56:27 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAT4uRxH50135220
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 15:56:27 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAT4uQGT025561
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 15:56:27 +1100
-Date: Tue, 29 Nov 2016 15:57:47 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
-        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH v4 4/7] PCI: Don't update VF BARs while VF memory space
- is enabled
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20161129045747.GA22347@gwshan>
+Received: from bombadil.infradead.org ([198.137.202.9]:50014 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933040AbcKGSrq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Christogh Hellwig <hch@lst.de>
+Subject: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in irq_calc_affinity_vectors()
+Date: Mon,  7 Nov 2016 10:47:37 -0800
+Message-Id: <1478544462-9549-3-git-send-email-hch@lst.de>
+In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 10:15:21PM -0600, Bjorn Helgaas wrote:
->If we update a VF BAR while it's enabled, there are two potential problems:
->
->  1) Any driver that's using the VF has a cached BAR value that is stale
->     after the update, and
->
->  2) We can't update 64-bit BARs atomically, so the intermediate state
->     (new lower dword with old upper dword) may conflict with another
->     device, and an access by a driver unrelated to the VF may cause a bus
->     error.
->
->Warn about attempts to update VF BARs while they are enabled.  This is a
->programming error, so use dev_WARN() to get a backtrace.
->
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: Christogh Hellwig <hch@lst.de>
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Only calculate the affinity for the main I/O vectors, and skip the
+pre or post vectors specified by struct irq_affinity.
 
->---
-> drivers/pci/iov.c |    8 ++++++++
-> 1 file changed, 8 insertions(+)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index d00ed5c..a800ba2 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -584,6 +584,7 @@ void pci_iov_update_resource(struct pci_dev *dev, int resno)
-> 	struct resource *res = dev->resource + resno;
-> 	int vf_bar = resno - PCI_IOV_RESOURCES;
-> 	struct pci_bus_region region;
->+	u16 cmd;
-> 	u32 new;
-> 	int reg;
->
->@@ -595,6 +596,13 @@ void pci_iov_update_resource(struct pci_dev *dev, int resno)
-> 	if (!iov)
-> 		return;
->
->+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_CTRL, &cmd);
->+	if ((cmd & PCI_SRIOV_CTRL_VFE) && (cmd & PCI_SRIOV_CTRL_MSE)) {
->+		dev_WARN(&dev->dev, "can't update enabled VF BAR%d %pR\n",
->+			 vf_bar, res);
->+		return;
->+	}
->+
-> 	/*
-> 	 * Ignore unimplemented BARs, unused resource slots for 64-bit
-> 	 * BARs, and non-movable resources, e.g., those described via
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Also remove the irq_affinity cpumask argument that has never been used.
+If we ever need it in the future we can pass it through struct
+irq_affinity.
+
+Signed-off-by: Christogh Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c         |  6 ++----
+ include/linux/interrupt.h |  4 ++--
+ kernel/irq/affinity.c     | 24 ++++++++++--------------
+ 3 files changed, 14 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ad70507..c58d3c2 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1091,8 +1091,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 
+ 	for (;;) {
+ 		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
+-					nvec);
++			nvec = irq_calc_affinity_vectors(nvec, NULL);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1140,8 +1139,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ 
+ 	for (;;) {
+ 		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
+-					nvec);
++			nvec = irq_calc_affinity_vectors(nvec, NULL);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 7284bcd..092adfb 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -291,7 +291,7 @@ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+ 
+ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
+-int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec);
++int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
+ 
+ #else /* CONFIG_SMP */
+ 
+@@ -331,7 +331,7 @@ irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
+ }
+ 
+ static inline int
+-irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
++irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+ {
+ 	return maxvec;
+ }
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index 17f51d63..8d92597 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -131,24 +131,20 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+ }
+ 
+ /**
+- * irq_calc_affinity_vectors - Calculate to optimal number of vectors for a given affinity mask
+- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
+- *			is used
+- * @maxvec:		The maximum number of vectors available
++ * irq_calc_affinity_vectors - Calculate the optimal number of vectors
++ * @maxvec:	The maximum number of vectors available
++ * @affd:	Description of the affinity requirements
+  */
+-int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
++int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+ {
+-	int cpus, ret;
++	int resv = affd->pre_vectors + affd->post_vectors;
++	int vecs = maxvec - resv;
++	int cpus;
+ 
+ 	/* Stabilize the cpumasks */
+ 	get_online_cpus();
+-	/* If the supplied affinity mask is NULL, use cpu online mask */
+-	if (!affinity)
+-		affinity = cpu_online_mask;
+-
+-	cpus = cpumask_weight(affinity);
+-	ret = (cpus < maxvec) ? cpus : maxvec;
+-
++	cpus = cpumask_weight(cpu_online_mask);
+ 	put_online_cpus();
+-	return ret;
++
++	return min(cpus, vecs) + resv;
+ }
+-- 
+2.1.4
 
