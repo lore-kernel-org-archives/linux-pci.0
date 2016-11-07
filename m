@@ -1,45 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44360 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752827AbcKGXwC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Nov 2016 18:52:02 -0500
+Subject: [PATCH] PCI: Don't attempt to claim shadow copies of ROM
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Vecu Bosseur <vecu.bosseur@gmail.com>
+Date: Mon, 07 Nov 2016 17:51:58 -0600
+Message-ID: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 29 Nov 2016 15:39:11 -0800
-Message-ID: <CAADWXX_ipJ+pVmV5s2oLCKBrC5qUDASOZf=tpBfJWELExam+hQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
-        linaro-acpi@lists.linaro.org, lkml <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Lv Zheng <lv.zheng@intel.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, this email was marked as spam, because:
+If we're using a shadow copy of a PCI device ROM, the shadow copy is in RAM
+and the device never sees accesses to it and doesn't respond to it.  We
+don't have to route the shadow range to the PCI device, and the device
+doesn't have to claim the range.
 
-  It has a from address in google.com but has failed google.com's
-required tests for authentication
+Previously we treated the shadow copy as though it were the ROM BAR, and we
+failed to claim it because the region wasn't routed to the device:
 
-in particular, it looks like you used a non-google smtp server
-(kernel.org) to send the email, so there is no DKIM hash (or perhaps
-google just uses some other non-standard marker for "this actually
-came from google"). So gmail marks it as spam because dmarc fails:
+  pci 0000:01:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+  pci_bus 0000:01: Allocating resources
+  pci 0000:01:00.0: can't claim BAR 6 [mem 0x000c0000-0x000dffff]: no compatible bridge window
 
-       dmarc=fail (p=REJECT dis=NONE) header.from=google.com
+The failure path of pcibios_allocate_dev_rom_resource() cleared out the
+resource start address, which caused the following ioremap() warning:
 
-Just to let you know. If you use your google.com email, you do need to
-go through the google smtp server.
+  WARNING: CPU: 0 PID: 116 at /build/linux-akdJXO/linux-4.8.0/arch/x86/mm/ioremap.c:121 __ioremap_caller+0x1ec/0x370
+  ioremap on RAM at 0x0000000000000000 - 0x000000000001ffff
 
-This may or may not be new - I didn't go and look at old messages of
-yours, but it is possible that google.com enabled dmarc/dkim recently.
+Handle a shadow copy as RAM, without inserting it into the iomem tree.
 
-             Linus
+This fixes a regression caused by 0c0e0736acad ("PCI: Set ROM shadow
+location in arch code, not in PCI core"), which appeared in v4.6.  The
+effect is failure to initialize video devices, reported on AMD Turks but
+likely to affect others as well.
 
-On Tue, Nov 29, 2016 at 1:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Here's another stab at this writeup.  I'd appreciate any comments!
+Fixes: 0c0e0736acad ("PCI: Set ROM shadow location in arch code, not in PCI core")
+Reported-and-tested-by: Vecu Bosseur <vecu.bosseur@gmail.com>
+Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627496
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=175391
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=1352272
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: stable@vger.kernel.org	# v4.6+
+---
+ drivers/pci/setup-res.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 66c4d8f..9526e34 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -121,6 +121,14 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * If we have a shadow copy in RAM, the PCI device doesn't respond
++	 * to the shadow range, so we don't need to claim it, and upstream
++	 * bridges don't need to route the range to the device.
++	 */
++	if (res->flags & IORESOURCE_ROM_SHADOW)
++		return 0;
++
+ 	root = pci_find_parent_resource(dev, res);
+ 	if (!root) {
+ 		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
+
