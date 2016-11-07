@@ -1,64 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0062.outbound.protection.outlook.com ([104.47.33.62]:17728
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754853AbcKYTuC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 14:50:02 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
- <20161125193410.GD16504@obsidianresearch.com>
-CC: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <80aae3e6-278e-49af-7d09-bea87ffd19e8@amd.com>
-Date: Fri, 25 Nov 2016 14:49:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40083 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752174AbcKGIgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Nov 2016 03:36:42 -0500
+Subject: Re: [PATCH 1/2] irq,pci: allow drivers to specify complex affinity
+ requirement
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478473646-12524-1-git-send-email-hch@lst.de>
+ <1478473646-12524-2-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <249e2534-5a68-9bd0-e0e4-a9d4d42aa51d@suse.de>
+Date: Mon, 7 Nov 2016 09:36:40 +0100
 MIME-Version: 1.0
-In-Reply-To: <20161125193410.GD16504@obsidianresearch.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <1478473646-12524-2-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-11-25 02:34 PM, Jason Gunthorpe wrote:
-> On Fri, Nov 25, 2016 at 12:16:30PM -0500, Serguei Sagalovitch wrote:
->
->> b) Allocation may not  have CPU address  at all - only GPU one.
-> But you don't expect RDMA to work in the case, right?
->
-> GPU people need to stop doing this windowed memory stuff :)
-GPU could perfectly access all VRAM.  It is only issue for p2p without
-special interconnect and CPU access. Strictly speaking as long as we
-have "bus address"  we could have RDMA but  I agreed that for
-RDMA we could/should(?) always "request"  CPU address (I hope that we
-could forget about 32-bit application :-)).
+On 11/07/2016 12:07 AM, Christoph Hellwig wrote:
+> Some drivers (various network and RDMA adapter for example) have a MSI-X
+> vector layout where most of the vectors are used for I/O queues and should
+> have CPU affinity assigned to them, but some (usually 1 but sometimes more)
+> at the beginning or end are used for low-performance admin or configuration
+> work and should not have any explicit affinity assigned to them.
+> 
+> This adds a new irq_affinity structure passed through a variant of
+> pci_irq_alloc_vectors that allows to specify these requirements (and is
+> extensible to any future quirks in that area) so that the core IRQ
+> affinity algorithm can take this quirks into account.
+> 
+> It also removes the unused irq_affinity mask in struct pci_dev.  If we
+> ever need that sort of functionality it should be passed through
+> struct irq_affinity.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c         | 61 ++++++++++++++++++++++++--------------------
+>  include/linux/interrupt.h | 26 ++++++++++++++++---
+>  include/linux/pci.h       | 14 ++++++----
+>  kernel/irq/affinity.c     | 65 ++++++++++++++++++++++++-----------------------
+>  4 files changed, 98 insertions(+), 68 deletions(-)
+> 
+Good idea.
 
-BTW/FYI: About CPU access: Some user-level API is mainly handle based
-so there is no need for CPU access by default.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-About "visible" / non-visible VRAM parts: I assume  that going
-forward we will be able to get rid from it completely as soon as support
-for resizable PCI BAR will be implemented and/or old/current h/w
-will become obsolete.
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
