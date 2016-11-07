@@ -1,41 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:56927 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965914AbcKOIA2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 03:00:28 -0500
-From: Noa Osherovich <noaos@mellanox.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
-        gwshan@linux.vnet.ibm.com, noaos@mellanox.com
-Subject: [PATCH v1 0/3] Unmarking Mellanox devices with broken INTx masking
-Date: Tue, 15 Nov 2016 09:59:57 +0200
-Message-Id: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/2] blk-mq: add a first_vec argument to
+ blk_mq_pci_map_queues
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478473646-12524-1-git-send-email-hch@lst.de>
+ <1478473646-12524-3-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <c9322061-cbd0-8347-6581-d0a91c8b144f@suse.de>
+Date: Mon, 7 Nov 2016 10:37:16 +0100
+MIME-Version: 1.0
+In-Reply-To: <1478473646-12524-3-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following 3 patches unmark some Mellanox devices as having broken
-INTx masking.
+On 11/07/2016 12:07 AM, Christoph Hellwig wrote:
+> This allows skipping the first N IRQ vectors in case they are used for
+> control or admin interrupts.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/blk-mq-pci.c         | 6 ++++--
+>  drivers/nvme/host/pci.c    | 2 +-
+>  include/linux/blk-mq-pci.h | 3 ++-
+>  3 files changed, 7 insertions(+), 4 deletions(-)
+> 
+With this patch smartpqi doesn't compile anymore; it still uses the old
+interface.
+So to get this merged you probably should send a patch for that one, too.
 
-The first patch moves all broken INTx masking to FINAL instead of
-HEADER so that the fixup can execute on all archs.
-The second fixup changes the Mellanox marking to be according to a
-list of devices rather than a general fixup by vendor.
-The third patch excludes some Mellanox devices from the INTx broken
-marking according to device ID / firmware version.
+Cheers,
 
-v0 -> v1
-Fixes according to Gavin Shan's comments:
-- Patch numbering was wrong
-- Fixed logic of mellanox_check_broken_intx_masking
-
-Noa Osherovich (3):
-  PCI: Use FINAL fixup to mark broken INTx masking
-  PCI: Convert Mellanox quirks to be for listed devices only
-  PCI: Add checks to mellanox_check_broken_intx_masking
-
- drivers/pci/quirks.c | 175 ++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 139 insertions(+), 36 deletions(-)
-
+Hannes
 -- 
-1.8.3.1
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
