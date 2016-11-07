@@ -1,73 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36724 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932177AbcKHRKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 12:10:44 -0500
-Date: Tue, 8 Nov 2016 17:10:04 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        bhelgaas@google.com, olof@lixom.net,
-        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org,
-        benh@kernel.crashing.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-Message-ID: <20161108171004.GF15297@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
- <20161108114953.GB15297@leverpostej>
- <2368890.jTbyGqYR0M@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2368890.jTbyGqYR0M@wuerfel>
+Received: from bombadil.infradead.org ([198.137.202.9]:50020 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933094AbcKGSrq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Christogh Hellwig <hch@lst.de>
+Subject: [PATCH 4/7] pci/msi: Propagate irq affinity description through the MSI code
+Date: Mon,  7 Nov 2016 10:47:39 -0800
+Message-Id: <1478544462-9549-5-git-send-email-hch@lst.de>
+In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 05:19:54PM +0100, Arnd Bergmann wrote:
-> On Tuesday, November 8, 2016 11:49:53 AM CET Mark Rutland wrote:
-> > My understanding of ISA (which may be flawed) is that it's not part of
-> > the PCI host bridge, but rather on x86 it happens to share the IO space
-> > with PCI.
-> 
-> On normal systems, ISA or LPC are behind a PCI bridge device, which
-> passes down both low addresses of I/O space and memory space.
+From: Christogh Hellwig <hch@lst.de>
 
-Ok, so the use of those address spaces is an artifact of the ISA
-controller being a device under the PCI host bridge.
+No API change yet, just pass it down all the way from
+pci_alloc_irq_vectors to the core MSI code.
 
-Given we can have multiple domains, surely that implies we can have
-multiple ISA controllers in general?
+Signed-off-by: Christogh Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c | 62 +++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 33 insertions(+), 29 deletions(-)
 
-> > I believe that we could theoretically have multiple independent LPC/ISA
-> > busses, as is possible with PCI on !x86 systems. If the current ISA code
-> > assumes a singleton bus, I think that's something that needs to be fixed
-> > up more generically.
-> > 
-> > I don't see why we should need any architecture-specific code here. Why
-> > can we not fix up the ISA bus code in drivers/of/address.c such that it
-> > handles multiple ISA bus instances, and translates all sub-device
-> > addresses relative to the specific bus instance?
-> 
-> I think it is a relatively safe assumption that there is only one
-> ISA bridge. A lot of old drivers hardcode PIO or memory addresses
-> when talking to an ISA device, so having multiple instances is
-> already problematic.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 1761b8a..512f388 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -551,14 +551,14 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ }
+ 
+ static struct msi_desc *
+-msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
++msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
+ {
+ 	struct cpumask *masks = NULL;
+ 	struct msi_desc *entry;
+ 	u16 control;
+ 
+-	if (affinity) {
+-		masks = irq_create_affinity_masks(nvec, NULL);
++	if (affd) {
++		masks = irq_create_affinity_masks(nvec, affd);
+ 		if (!masks)
+ 			pr_err("Unable to allocate affinity masks, ignoring\n");
+ 	}
+@@ -618,7 +618,8 @@ static int msi_verify_entries(struct pci_dev *dev)
+  * an error, and a positive return value indicates the number of interrupts
+  * which could have been allocated.
+  */
+-static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
++static int msi_capability_init(struct pci_dev *dev, int nvec,
++			       const struct irq_affinity *affd)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -626,7 +627,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
+ 
+ 	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+-	entry = msi_setup_entry(dev, nvec, affinity);
++	entry = msi_setup_entry(dev, nvec, affd);
+ 	if (!entry)
+ 		return -ENOMEM;
+ 
+@@ -690,14 +691,14 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+ 
+ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 			      struct msix_entry *entries, int nvec,
+-			      bool affinity)
++			      const struct irq_affinity *affd)
+ {
+ 	struct cpumask *curmsk, *masks = NULL;
+ 	struct msi_desc *entry;
+ 	int ret, i;
+ 
+-	if (affinity) {
+-		masks = irq_create_affinity_masks(nvec, NULL);
++	if (affd) {
++		masks = irq_create_affinity_masks(nvec, affd);
+ 		if (!masks)
+ 			pr_err("Unable to allocate affinity masks, ignoring\n");
+ 	}
+@@ -753,14 +754,14 @@ static void msix_program_entries(struct pci_dev *dev,
+  * @dev: pointer to the pci_dev data structure of MSI-X device function
+  * @entries: pointer to an array of struct msix_entry entries
+  * @nvec: number of @entries
+- * @affinity: flag to indicate cpu irq affinity mask should be set
++ * @affd: Optional pointer to enable automatic affinity assignement
+  *
+  * Setup the MSI-X capability structure of device function with a
+  * single MSI-X irq. A return of zero indicates the successful setup of
+  * requested MSI-X entries with allocated irqs or non-zero for otherwise.
+  **/
+ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+-				int nvec, bool affinity)
++				int nvec, const struct irq_affinity *affd)
+ {
+ 	int ret;
+ 	u16 control;
+@@ -775,7 +776,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+ 	if (!base)
+ 		return -ENOMEM;
+ 
+-	ret = msix_setup_entries(dev, base, entries, nvec, affinity);
++	ret = msix_setup_entries(dev, base, entries, nvec, affd);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -956,7 +957,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_msix_vec_count);
+ 
+ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+-			     int nvec, bool affinity)
++			     int nvec, const struct irq_affinity *affd)
+ {
+ 	int nr_entries;
+ 	int i, j;
+@@ -988,7 +989,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+ 		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
+ 		return -EINVAL;
+ 	}
+-	return msix_capability_init(dev, entries, nvec, affinity);
++	return msix_capability_init(dev, entries, nvec, affd);
+ }
+ 
+ /**
+@@ -1008,7 +1009,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+  **/
+ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ {
+-	return __pci_enable_msix(dev, entries, nvec, false);
++	return __pci_enable_msix(dev, entries, nvec, NULL);
+ }
+ EXPORT_SYMBOL(pci_enable_msix);
+ 
+@@ -1059,9 +1060,8 @@ int pci_msi_enabled(void)
+ EXPORT_SYMBOL(pci_msi_enabled);
+ 
+ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+-		unsigned int flags)
++				  const struct irq_affinity *affd)
+ {
+-	bool affinity = flags & PCI_IRQ_AFFINITY;
+ 	int nvec;
+ 	int rc;
+ 
+@@ -1090,13 +1090,13 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 		nvec = maxvec;
+ 
+ 	for (;;) {
+-		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(nvec, NULL);
++		if (affd) {
++			nvec = irq_calc_affinity_vectors(nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+ 
+-		rc = msi_capability_init(dev, nvec, affinity);
++		rc = msi_capability_init(dev, nvec, affd);
+ 		if (rc == 0)
+ 			return nvec;
+ 
+@@ -1123,28 +1123,27 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+  **/
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ {
+-	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
++	return __pci_enable_msi_range(dev, minvec, maxvec, NULL);
+ }
+ EXPORT_SYMBOL(pci_enable_msi_range);
+ 
+ static int __pci_enable_msix_range(struct pci_dev *dev,
+-		struct msix_entry *entries, int minvec, int maxvec,
+-		unsigned int flags)
++				   struct msix_entry *entries, int minvec,
++				   int maxvec, const struct irq_affinity *affd)
+ {
+-	bool affinity = flags & PCI_IRQ_AFFINITY;
+ 	int rc, nvec = maxvec;
+ 
+ 	if (maxvec < minvec)
+ 		return -ERANGE;
+ 
+ 	for (;;) {
+-		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(nvec, NULL);
++		if (affd) {
++			nvec = irq_calc_affinity_vectors(nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+ 
+-		rc = __pci_enable_msix(dev, entries, nvec, affinity);
++		rc = __pci_enable_msix(dev, entries, nvec, affd);
+ 		if (rc == 0)
+ 			return nvec;
+ 
+@@ -1175,7 +1174,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ 		int minvec, int maxvec)
+ {
+-	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
++	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
+ }
+ EXPORT_SYMBOL(pci_enable_msix_range);
+ 
+@@ -1199,17 +1198,22 @@ EXPORT_SYMBOL(pci_enable_msix_range);
+ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ 		unsigned int max_vecs, unsigned int flags)
+ {
++	static const struct irq_affinity msi_default_affd;
++	const struct irq_affinity *affd = NULL;
+ 	int vecs = -ENOSPC;
+ 
++	if (flags & PCI_IRQ_AFFINITY)
++		affd = &msi_default_affd;
++
+ 	if (flags & PCI_IRQ_MSIX) {
+ 		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
+-				flags);
++				affd);
+ 		if (vecs > 0)
+ 			return vecs;
+ 	}
+ 
+ 	if (flags & PCI_IRQ_MSI) {
+-		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
++		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
+ 		if (vecs > 0)
+ 			return vecs;
+ 	}
+-- 
+2.1.4
 
-I'm worried that this might not be a safe assumption. Hardware these
-days has a habit of pushing the boundaries of our expectations.
-
-If we're going to assume that, I'd certainly want the kernel to verify
-that it's true for all instanciated ISA/LPC devices. Otherwise, I can
-imagine people relying on (or working around) that assumption in ACPI
-tables and DTs, and that will be a nightmare (at best) to untangle in
-future.
-
-Thanks,
-Mark.
