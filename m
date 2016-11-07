@@ -1,69 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [202.4.237.240] ([202.4.237.240]:50135 "EHLO
+        kirsty.vergenet.net" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1750776AbcKGMT4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 07:19:56 -0500
+Date: Mon, 7 Nov 2016 13:19:24 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH/RFC] PCI: rcar: Restrict pci_fixup_irqs to the same PCI
+ domain
+Message-ID: <20161107121924.GA12319@verge.net.au>
+References: <1478520048-25430-1-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
-In-Reply-To: <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
- <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 22 Nov 2016 12:24:32 -0800
-Message-ID: <CAPcyv4gT8QojYe0__EsR5o59+tAoLAqBWbj=rj-HnqHJo3tYOA@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478520048-25430-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 12:10 PM, Daniel Vetter <daniel@ffwll.ch> wrote:
-> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
->> <serguei.sagalovitch@amd.com> wrote:
->>> I personally like "device-DAX" idea but my concerns are:
->>>
->>> -  How well it will co-exists with the  DRM infrastructure / implementations
->>>    in part dealing with CPU pointers?
->>
->> Inside the kernel a device-DAX range is "just memory" in the sense
->> that you can perform pfn_to_page() on it and issue I/O, but the vma is
->> not migratable. To be honest I do not know how well that co-exists
->> with drm infrastructure.
->>
->>> -  How well we will be able to handle case when we need to "move"/"evict"
->>>    memory/data to the new location so CPU pointer should point to the new
->>> physical location/address
->>>     (and may be not in PCI device memory at all)?
->>
->> So, device-DAX deliberately avoids support for in-kernel migration or
->> overcommit. Those cases are left to the core mm or drm. The device-dax
->> interface is for cases where all that is needed is a direct-mapping to
->> a statically-allocated physical-address range be it persistent memory
->> or some other special reserved memory range.
->
-> For some of the fancy use-cases (e.g. to be comparable to what HMM can
-> pull off) I think we want all the magic in core mm, i.e. migration and
-> overcommit. At least that seems to be the very strong drive in all
-> general-purpose gpu abstractions and implementations, where memory is
-> allocated with malloc, and then mapped/moved into vram/gpu address
-> space through some magic, but still visible on both the cpu and gpu
-> side in some form. Special device to allocate memory, and not being
-> able to migrate stuff around sound like misfeatures from that pov.
+On Mon, Nov 07, 2016 at 01:00:48PM +0100, Simon Horman wrote:
+> From: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> ---
+> 
+> Phil, this is from the 3.3.2 BSP.
+> Is it appropriate for mainline?
 
-Agreed. For general purpose P2P use cases where all you want is
-direct-I/O to a memory range that happens to be on a PCIe device then
-I think a special device fits the bill. For gpu P2P use cases that
-already have migration/overcommit expectations then it is not a good
-fit.
+I see there is also an infrastructure patch (by you) required for this
+change: one to add pci_fixup_irqs_local(). I'll hold off on posting that
+pending your answer to the question above.
+
+> ---
+>  drivers/pci/host/pcie-rcar.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 62700d1896f4..06e7a75094c7 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -472,7 +472,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  		return -ENODEV;
+>  	}
+>  
+> -	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +	pci_fixup_irqs_local(bus, pci_common_swizzle, of_irq_parse_and_map_pci);
+>  
+>  	pci_bus_size_bridges(bus);
+>  	pci_bus_assign_resources(bus);
+> -- 
+> 2.7.0.rc3.207.g0ac5344
+> 
