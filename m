@@ -1,79 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] blk-mq: add a first_vec argument to blk_mq_pci_map_queues
-Date: Sun,  6 Nov 2016 15:07:26 -0800
-Message-Id: <1478473646-12524-3-git-send-email-hch@lst.de>
-In-Reply-To: <1478473646-12524-1-git-send-email-hch@lst.de>
-References: <1478473646-12524-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp02.citrix.com ([66.165.176.63]:60404 "EHLO
+        SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751993AbcKGLIO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 06:08:14 -0500
+Subject: Re: [PATCH 00/12] xen: add common function for reading optional value
+To: Juergen Gross <jgross@suse.com>, <linux-kernel@vger.kernel.org>,
+        <xen-devel@lists.xen.org>
+References: <1477932510-28594-1-git-send-email-jgross@suse.com>
+CC: <boris.ostrovsky@oracle.com>, <konrad.wilk@oracle.com>,
+        <roger.pau@citrix.com>, <peterhuewe@gmx.de>, <tpmdd@selhorst.net>,
+        <jarkko.sakkinen@linux.intel.com>,
+        <jgunthorpe@obsidianresearch.com>,
+        <tpmdd-devel@lists.sourceforge.net>, <dmitry.torokhov@gmail.com>,
+        <linux-input@vger.kernel.org>, <wei.liu2@citrix.com>,
+        <paul.durrant@citrix.com>, <netdev@vger.kernel.org>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <tomi.valkeinen@ti.com>, <linux-fbdev@vger.kernel.org>
+From: David Vrabel <david.vrabel@citrix.com>
+Message-ID: <8d314b86-4a28-5628-2a79-842a2fafc4c1@citrix.com>
+Date: Mon, 7 Nov 2016 11:08:09 +0000
+MIME-Version: 1.0
+In-Reply-To: <1477932510-28594-1-git-send-email-jgross@suse.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This allows skipping the first N IRQ vectors in case they are used for
-control or admin interrupts.
+On 31/10/16 16:48, Juergen Gross wrote:
+> There are multiple instances of code reading an optional unsigned
+> parameter from Xenstore via xenbus_scanf(). Instead of repeating the
+> same code over and over add a service function doing the job and
+> replace the call of xenbus_scanf() with the call of the new function
+> where appropriate.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq-pci.c         | 6 ++++--
- drivers/nvme/host/pci.c    | 2 +-
- include/linux/blk-mq-pci.h | 3 ++-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+Acked-by: David Vrabel <david.vrabel@citrix.com>
 
-diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-index 966c216..03ff7c4 100644
---- a/block/blk-mq-pci.c
-+++ b/block/blk-mq-pci.c
-@@ -21,6 +21,7 @@
-  * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
-  * @set:	tagset to provide the mapping for
-  * @pdev:	PCI device associated with @set.
-+ * @first_vec:	first interrupt vectors to use for queues (usually 0)
-  *
-  * This function assumes the PCI device @pdev has at least as many available
-  * interrupt vetors as @set has queues.  It will then queuery the vector
-@@ -28,12 +29,13 @@
-  * that maps a queue to the CPUs that have irq affinity for the corresponding
-  * vector.
-  */
--int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev)
-+int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
-+		int first_vec)
- {
- 	const struct cpumask *mask;
- 	unsigned int queue, cpu;
- 
--	for (queue = 0; queue < set->nr_hw_queues; queue++) {
-+	for (queue = first_vec; queue < set->nr_hw_queues; queue++) {
- 		mask = pci_irq_get_affinity(pdev, queue);
- 		if (!mask)
- 			return -EINVAL;
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 0fc99f0..a05fbaf 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -272,7 +272,7 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
- {
- 	struct nvme_dev *dev = set->driver_data;
- 
--	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev));
-+	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev), 0);
- }
- 
- /**
-diff --git a/include/linux/blk-mq-pci.h b/include/linux/blk-mq-pci.h
-index 6ab5952..fde26d2 100644
---- a/include/linux/blk-mq-pci.h
-+++ b/include/linux/blk-mq-pci.h
-@@ -4,6 +4,7 @@
- struct blk_mq_tag_set;
- struct pci_dev;
- 
--int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev);
-+int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
-+		int first_vec);
- 
- #endif /* _LINUX_BLK_MQ_PCI_H */
--- 
-2.1.4
+Please queue for the next release.
+
+David
