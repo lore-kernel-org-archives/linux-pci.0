@@ -1,51 +1,99 @@
-Return-Path: <al.stone@linaro.org>
-Return-Path: <al.stone@linaro.org>
-Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-arm-kernel@lists.infradead.org, Al Stone <ahs@redhat.com>,
- Robert Richter <rrichter@cavium.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann
- <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Don Dutile <ddutile@redhat.com>, Christopher Covington <cov@codeaurora.org>,
- Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
-From: Al Stone <al.stone@linaro.org>
-Message-ID: <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
-Date: Thu, 10 Nov 2016 16:18:54 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36302 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753929AbcKHQtr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 11:49:47 -0500
+Date: Tue, 8 Nov 2016 16:49:49 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: John Garry <john.garry@huawei.com>
+Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        benh@kernel.crashing.org, minyard@acm.org, arnd@arndb.de,
+        catalin.marinas@arm.com, gabriele.paoloni@huawei.com,
+        zhichang.yuan02@gmail.com, liviu.dudau@arm.com,
+        linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+        linuxarm@huawei.com, olof@lixom.net, robh+dt@kernel.org,
+        zourongrong@gmail.com, linux-serial@vger.kernel.org,
+        linux-pci@vger.kernel.org, bhelgaas@google.com, kantyzc@163.com,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+Message-ID: <20161108164948.GG20591@arm.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108161245.GD20591@arm.com>
+ <8adfe182-4939-479d-6013-25ec40021b20@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8adfe182-4939-479d-6013-25ec40021b20@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
-> Hi all,
+On Tue, Nov 08, 2016 at 04:33:44PM +0000, John Garry wrote:
+> On 08/11/2016 16:12, Will Deacon wrote:
+> >On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+> >>+static inline void arm64_set_extops(struct extio_ops *ops)
+> >>+{
+> >>+	if (ops)
+> >>+		WRITE_ONCE(arm64_extio_ops, ops);
+> >
+> >Why does this need to be WRITE_ONCE? You don't have READ_ONCE on the reader
+> >side. Also, what if multiple drivers want to set different ops for distinct
+> >address ranges?
 > 
-> We've been working through the details of getting ACPI to work on
-> arm64, and there have been lots of questions about what this means for
-> PCI.  I've outlined this for several people individually, but I'm
-> going to send this separately, apart from a specific patch series, to
-> make sure we're all on the same page.  Please correct my errors and
-> misunderstandings.
-> 
-> Bjorn
-> 
->[snip....]
+> I think that the idea here is that we only have possibly one master in the
+> system which offers indirectIO backend, so another one could not possibly
+> re-set this value.
 
-A big +1 to all of this.  This also looks like something that should
-be added to either PCI, ACPI or arm64 documentation (or even all three).
-What do you think?
+Why is that assumption valid, and why does WRITE_ONCE help there? It's not
+ONCE as in WARN_ONCE, more ONCE as in exactly-once-per-invocation.
 
-Thank you for putting this together, Bjorn.
+> >>diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
+> >>new file mode 100644
+> >>index 0000000..647b3fa
+> >>--- /dev/null
+> >>+++ b/arch/arm64/kernel/extio.c
+> >>@@ -0,0 +1,27 @@
+> >>+/*
+> >>+ * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
+> >>+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> >>+ *
+> >>+ * This program is free software; you can redistribute it and/or modify
+> >>+ * it under the terms of the GNU General Public License version 2 as
+> >>+ * published by the Free Software Foundation.
+> >>+ *
+> >>+ * This program is distributed in the hope that it will be useful,
+> >>+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> >>+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> >>+ * GNU General Public License for more details.
+> >>+ *
+> >>+ * You should have received a copy of the GNU General Public License
+> >>+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> >>+ */
+> >>+
+> >>+#include <linux/io.h>
+> >>+
+> >>+struct extio_ops *arm64_extio_ops;
+> >>+
+> >>+
+> >>+BUILD_EXTIO(b, u8)
+> >>+
+> >>+BUILD_EXTIO(w, u16)
+> >>+
+> >>+BUILD_EXTIO(l, u32)
+> >
+> >Is there no way to make this slightly more generic, so that it can be
+> >re-used elsewhere? For example, if struct extio_ops was common, then
+> >you could have the singleton (which maybe should be an interval tree?),
+> >type definition, setter function and the BUILD_EXTIO invocations
+> >somewhere generic, rather than squirelled away in the arch backend.
+> >
+> The concern would be that some architecture which uses generic higher-level
+> ISA accessor ops, but have IO space, could be affected.
 
+You're already adding a Kconfig symbol for this stuff, so you can keep
+that if you don't want it on other architectures. I'm just arguing that
+plumbing drivers directly into arch code via arm64_set_extops is not
+something I'm particularly fond of, especially when it looks like it
+could be avoided with a small amount of effort.
 
--- 
-ciao,
-al
------------------------------------
-Al Stone
-Software Engineer
-Linaro Enterprise Group
-al.stone@linaro.org
------------------------------------
+Will
