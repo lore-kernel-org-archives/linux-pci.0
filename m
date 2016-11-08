@@ -1,93 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:33005 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756083AbcKWBUK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 20:20:10 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 2/3] PCI: rockchip: move the deassert of pm/aclk/pclk after phy_init
-Date: Wed, 23 Nov 2016 09:19:12 +0800
-Message-Id: <1479863953-123874-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mx2.suse.de ([195.135.220.15]:47024 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932421AbcKHI1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 03:27:05 -0500
+Date: Tue, 8 Nov 2016 09:27:02 +0100
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de,
+        axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/7] pci/msi: Provide pci_alloc_irq_vectors_affinity()
+Message-ID: <20161108082702.jzxyczz5qeyvn7dk@linux-x5ow.site>
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-6-git-send-email-hch@lst.de>
+ <7cf222db-cb37-9ef3-29bf-00f36663ea6d@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <7cf222db-cb37-9ef3-29bf-00f36663ea6d@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move them after phy_init as we want to optimize the logic
-of reset control and reuse rockchip_pcie_init_port later
-which should fully follow the cold boot procedure of ROM
-code.
+On Tue, Nov 08, 2016 at 09:17:33AM +0100, Hannes Reinecke wrote:
+> On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
+> > From: Christogh Hellwig <hch@lst.de>
+> > 
+> > This is a variant of pci_alloc_irq_vectors() that allows passing a
+> > struct irq_affinity to provide fine-grainded IRQ affinity control.
+> > For now this means being able to exclude vectors at the beginning or
+> > end of the MSI vector space, but it could also be used for any other
+> > quirks needed in the future (e.g. more vectors than CPUs, or exluding
+> > CPUs from the spreading).
+> > 
+> > Signed-off-by: Christogh Hellwig <hch@lst.de>
+> > ---
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
- drivers/pci/host/pcie-rockchip.c | 40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 19399fc..71d056d 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -476,26 +476,6 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
--	udelay(10);
--
--	err = reset_control_deassert(rockchip->pm_rst);
--	if (err) {
--		dev_err(dev, "deassert pm_rst err %d\n", err);
--		return err;
--	}
--
--	err = reset_control_deassert(rockchip->aclk_rst);
--	if (err) {
--		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
--		return err;
--	}
--
--	err = reset_control_deassert(rockchip->pclk_rst);
--	if (err) {
--		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
--		return err;
--	}
--
- 	err = phy_init(rockchip->phy);
- 	if (err < 0) {
- 		dev_err(dev, "fail to init phy, err %d\n", err);
-@@ -526,6 +506,26 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
-+	udelay(10);
-+
-+	err = reset_control_deassert(rockchip->pm_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pm_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_deassert(rockchip->aclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert aclk_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_deassert(rockchip->pclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pclk_rst err %d\n", err);
-+		return err;
-+	}
-+
- 	if (rockchip->link_gen == 2)
- 		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
- 				    PCIE_CLIENT_CONFIG);
 -- 
-1.9.1
-
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
