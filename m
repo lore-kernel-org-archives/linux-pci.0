@@ -1,63 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0056.outbound.protection.outlook.com ([104.47.40.56]:38198
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755318AbcK1Vzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 16:55:35 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Haggai Eran <haggaie@mellanox.com>
-References: <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
- <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
- <0d3d56e2-4d2b-85b7-9487-b7ae2aaea610@amd.com>
- <c8c25265-9f59-f3d6-6249-07500e73930e@deltatee.com>
-CC: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Max Gurtovoy <maxg@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <1ac2f9e7-f1ee-a2c9-0134-ffaa28c706af@amd.com>
-Date: Mon, 28 Nov 2016 16:55:23 -0500
-MIME-Version: 1.0
-In-Reply-To: <c8c25265-9f59-f3d6-6249-07500e73930e@deltatee.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:54538
+        "EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751427AbcKHULQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 15:11:16 -0500
+From: Long Li <longli@exchange.microsoft.com>
+To: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
+Subject: [PATCH] pci-hyperv: use kmalloc to allocate hypercall params buffer
+Date: Tue,  8 Nov 2016 14:04:38 -0800
+Message-Id: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Long Li <longli@microsoft.com>
 
-On 2016-11-28 04:36 PM, Logan Gunthorpe wrote:
-> On 28/11/16 12:35 PM, Serguei Sagalovitch wrote:
->> As soon as PeerDirect mapping is called then GPU must not "move" the
->> such memory.  It is by PeerDirect design. It is similar how it is works
->> with system memory and RDMA MR: when "get_user_pages" is called then the
->> memory is pinned.
-> We haven't touch this in a long time and perhaps it changed, but there
-> definitely was a call back in the PeerDirect API to allow the GPU to
-> invalidate the mapping. That's what we don't want.
-I assume that you are talking about "invalidate_peer_memory()' callback?
-I was told that it is the "last resort" because HCA (and driver) is not
-able to handle  it in the safe manner so it is basically "abort" 
-everything.
+hv_do_hypercall assumes that we pass a segment from a physically
+continuous buffer. Buffer allocated on the stack may not work if
+CONFIG_VMAP_STACK=y is set.
+
+Change to use kmalloc to allocate this buffer.
+
+The v2 patch adds locking to access the pre-allocated buffer.
+
+Signed-off-by: Long Li <longli@microsoft.com>
+Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 763ff87..ca553df 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -378,6 +378,8 @@ struct hv_pcibus_device {
+ 	struct msi_domain_info msi_info;
+ 	struct msi_controller msi_chip;
+ 	struct irq_domain *irq_domain;
++	struct retarget_msi_interrupt retarget_msi_interrupt_params;
++	spinlock_t retarget_msi_interrupt_lock;;
+ };
+ 
+ /*
+@@ -774,34 +776,40 @@ void hv_irq_unmask(struct irq_data *data)
+ {
+ 	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+-	struct retarget_msi_interrupt params;
++	struct retarget_msi_interrupt *params;
+ 	struct hv_pcibus_device *hbus;
+ 	struct cpumask *dest;
+ 	struct pci_bus *pbus;
+ 	struct pci_dev *pdev;
+ 	int cpu;
++	unsigned long flags;
+ 
+ 	dest = irq_data_get_affinity_mask(data);
+ 	pdev = msi_desc_to_pci_dev(msi_desc);
+ 	pbus = pdev->bus;
+ 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+ 
+-	memset(&params, 0, sizeof(params));
+-	params.partition_id = HV_PARTITION_ID_SELF;
+-	params.source = 1; /* MSI(-X) */
+-	params.address = msi_desc->msg.address_lo;
+-	params.data = msi_desc->msg.data;
+-	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
++	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
++
++	params = &hbus->retarget_msi_interrupt_params;
++	memset(params, 0, sizeof(*params));
++	params->partition_id = HV_PARTITION_ID_SELF;
++	params->source = 1; /* MSI(-X) */
++	params->address = msi_desc->msg.address_lo;
++	params->data = msi_desc->msg.data;
++	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
+ 			   (hbus->hdev->dev_instance.b[4] << 16) |
+ 			   (hbus->hdev->dev_instance.b[7] << 8) |
+ 			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
+ 			   PCI_FUNC(pdev->devfn);
+-	params.vector = cfg->vector;
++	params->vector = cfg->vector;
+ 
+ 	for_each_cpu_and(cpu, dest, cpu_online_mask)
+-		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
++		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
++
++	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
+ 
+-	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
++	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
+ 
+ 	pci_msi_unmask_irq(data);
+ }
+@@ -2186,6 +2194,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	INIT_LIST_HEAD(&hbus->resources_for_children);
+ 	spin_lock_init(&hbus->config_lock);
+ 	spin_lock_init(&hbus->device_list_lock);
++	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+ 	sema_init(&hbus->enum_sem, 1);
+ 	init_completion(&hbus->remove_event);
+ 
+-- 
+2.7.4
 
