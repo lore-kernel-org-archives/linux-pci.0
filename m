@@ -1,158 +1,279 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53819 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752814AbcKMX0U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 18:26:20 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uADNNOF6095768
-        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:26:19 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26ppvqxm8s-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:26:19 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Mon, 14 Nov 2016 09:26:16 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp01.au.ibm.com (Postfix) with ESMTP id 14AE62CE8054
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:15 +1100 (EST)
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uADNQF5H63373506
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:15 +1100
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uADNQEBc016741
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:14 +1100
-Date: Mon, 14 Nov 2016 10:27:24 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Noa Osherovich <noaos@mellanox.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, majd@mellanox.com
-Subject: Re: [PATCH 1/4] PCI: Use FINAL fixup to mark broken INTx masking
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
- <1479046901-25360-2-git-send-email-noaos@mellanox.com>
+Received: from foss.arm.com ([217.140.101.70]:35134 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932226AbcKHQMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 11:12:50 -0500
+Date: Tue, 8 Nov 2016 16:12:46 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Cc: catalin.marinas@arm.com, robh+dt@kernel.org, bhelgaas@google.com,
+        mark.rutland@arm.com, olof@lixom.net, arnd@arndb.de,
+        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org,
+        benh@kernel.crashing.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+Message-ID: <20161108161245.GD20591@arm.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479046901-25360-2-git-send-email-noaos@mellanox.com>
-Message-Id: <20161113232724.GB12678@gwshan>
+In-Reply-To: <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 13, 2016 at 04:21:39PM +0200, Noa Osherovich wrote:
->Convert all quirk_broken_intx_masking quirks from HEADER to FINAL.
->None of those calls need to be in HEADER but some might need to be
->called as FINAL. Moving them all to FINAL will save time during
->pci_do_fixups.
->
->Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+> For arm64, there is no I/O space as other architectural platforms, such as
+> X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+> such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+> known port addresses are used to control the corresponding target devices, for
+> example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+> normal MMIO mode in using.
+> 
+> To drive these devices, this patch introduces a method named indirect-IO.
+> In this method the in/out pair in arch/arm64/include/asm/io.h will be
+> redefined. When upper layer drivers call in/out with those known legacy port
+> addresses to access the peripherals, the hooking functions corrresponding to
+> those target peripherals will be called. Through this way, those upper layer
+> drivers which depend on in/out can run on Hip06 without any changes.
+> 
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  arch/arm64/Kconfig             |  6 +++
+>  arch/arm64/include/asm/extio.h | 94 ++++++++++++++++++++++++++++++++++++++++++
+>  arch/arm64/include/asm/io.h    | 29 +++++++++++++
+>  arch/arm64/kernel/Makefile     |  1 +
+>  arch/arm64/kernel/extio.c      | 27 ++++++++++++
+>  5 files changed, 157 insertions(+)
+>  create mode 100644 arch/arm64/include/asm/extio.h
+>  create mode 100644 arch/arm64/kernel/extio.c
+> 
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 969ef88..b44070b 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -163,6 +163,12 @@ config ARCH_MMAP_RND_COMPAT_BITS_MIN
+>  config ARCH_MMAP_RND_COMPAT_BITS_MAX
+>         default 16
+>  
+> +config ARM64_INDIRECT_PIO
+> +	bool "access peripherals with legacy I/O port"
+> +	help
+> +	  Support special accessors for ISA I/O devices. This is needed for
+> +	  SoCs that do not support standard read/write for the ISA range.
+> +
+>  config NO_IOPORT_MAP
+>  	def_bool y if !PCI
+>  
+> diff --git a/arch/arm64/include/asm/extio.h b/arch/arm64/include/asm/extio.h
+> new file mode 100644
+> index 0000000..6ae0787
+> --- /dev/null
+> +++ b/arch/arm64/include/asm/extio.h
+> @@ -0,0 +1,94 @@
+> +/*
+> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
+> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#ifndef __LINUX_EXTIO_H
+> +#define __LINUX_EXTIO_H
+> +
+> +struct extio_ops {
+> +	unsigned long start;/* inclusive, sys io addr */
+> +	unsigned long end;/* inclusive, sys io addr */
+> +
+> +	u64 (*pfin)(void *devobj, unsigned long ptaddr,	size_t dlen);
+> +	void (*pfout)(void *devobj, unsigned long ptaddr, u32 outval,
+> +					size_t dlen);
+> +	u64 (*pfins)(void *devobj, unsigned long ptaddr, void *inbuf,
+> +				size_t dlen, unsigned int count);
+> +	void (*pfouts)(void *devobj, unsigned long ptaddr,
+> +				const void *outbuf, size_t dlen,
+> +				unsigned int count);
+> +	void *devpara;
+> +};
+> +
+> +extern struct extio_ops *arm64_extio_ops;
+> +
+> +#define DECLARE_EXTIO(bw, type)						\
+> +extern type in##bw(unsigned long addr);					\
+> +extern void out##bw(type value, unsigned long addr);			\
+> +extern void ins##bw(unsigned long addr, void *buffer, unsigned int count);\
+> +extern void outs##bw(unsigned long addr, const void *buffer, unsigned int count);
+> +
+> +#define BUILD_EXTIO(bw, type)						\
+> +type in##bw(unsigned long addr)						\
+> +{									\
+> +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> +			arm64_extio_ops->end < addr)			\
+> +		return read##bw(PCI_IOBASE + addr);			\
+> +	return arm64_extio_ops->pfin ?					\
+> +		arm64_extio_ops->pfin(arm64_extio_ops->devpara,		\
+> +			addr, sizeof(type)) : -1;			\
+> +}									\
+> +									\
+> +void out##bw(type value, unsigned long addr)				\
+> +{									\
+> +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> +			arm64_extio_ops->end < addr)			\
+> +		write##bw(value, PCI_IOBASE + addr);			\
+> +	else								\
+> +		if (arm64_extio_ops->pfout)				\
+> +			arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
+> +				addr, value, sizeof(type));		\
+> +}									\
+> +									\
+> +void ins##bw(unsigned long addr, void *buffer, unsigned int count)	\
+> +{									\
+> +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> +			arm64_extio_ops->end < addr)			\
+> +		reads##bw(PCI_IOBASE + addr, buffer, count);		\
+> +	else								\
+> +		if (arm64_extio_ops->pfins)				\
+> +			arm64_extio_ops->pfins(arm64_extio_ops->devpara,\
+> +				addr, buffer, sizeof(type), count);	\
+> +}									\
+> +									\
+> +void outs##bw(unsigned long addr, const void *buffer, unsigned int count)	\
+> +{									\
+> +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> +			arm64_extio_ops->end < addr)			\
+> +		writes##bw(PCI_IOBASE + addr, buffer, count);		\
+> +	else								\
+> +		if (arm64_extio_ops->pfouts)				\
+> +			arm64_extio_ops->pfouts(arm64_extio_ops->devpara,\
+> +				addr, buffer, sizeof(type), count);	\
+> +}
+> +
+> +static inline void arm64_set_extops(struct extio_ops *ops)
+> +{
+> +	if (ops)
+> +		WRITE_ONCE(arm64_extio_ops, ops);
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Why does this need to be WRITE_ONCE? You don't have READ_ONCE on the reader
+side. Also, what if multiple drivers want to set different ops for distinct
+address ranges?
 
->---
-> drivers/pci/quirks.c | 72 ++++++++++++++++++++++++++--------------------------
-> 1 file changed, 36 insertions(+), 36 deletions(-)
->
->diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->index c232729f5b1b..85048fdf2474 100644
->--- a/drivers/pci/quirks.c
->+++ b/drivers/pci/quirks.c
->@@ -3146,53 +3146,53 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
-> {
-> 	dev->broken_intx_masking = 1;
-> }
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->-			 quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->+			quirk_broken_intx_masking);
-> /*
->  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
->  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
->  *
->  * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
->  */
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->-			 quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->+			quirk_broken_intx_masking);
->
-> /*
->  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
->  * DisINTx can be set but the interrupt status bit is non-functional.
->  */
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
->-			 quirk_broken_intx_masking);
->-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
->-			 quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1572,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1574,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1580,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1581,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1583,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1584,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1585,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1586,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1587,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1588,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1589,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d0,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d1,
->+			quirk_broken_intx_masking);
->+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d2,
->+			quirk_broken_intx_masking);
->
+> +}
+> +
+> +#endif /* __LINUX_EXTIO_H*/
+> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> index 0bba427..136735d 100644
+> --- a/arch/arm64/include/asm/io.h
+> +++ b/arch/arm64/include/asm/io.h
+> @@ -31,6 +31,7 @@
+>  #include <asm/early_ioremap.h>
+>  #include <asm/alternative.h>
+>  #include <asm/cpufeature.h>
+> +#include <asm/extio.h>
+>  
+>  #include <xen/xen.h>
+>  
+> @@ -149,6 +150,34 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+>  #define IO_SPACE_LIMIT		(PCI_IO_SIZE - 1)
+>  #define PCI_IOBASE		((void __iomem *)PCI_IO_START)
+>  
+> +
+> +/*
+> + * redefine the in(s)b/out(s)b for indirect-IO.
+> + */
+> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+> +#define inb inb
+> +#define outb outb
+> +#define insb insb
+> +#define outsb outsb
+> +/* external declaration */
+> +DECLARE_EXTIO(b, u8)
+> +
+> +#define inw inw
+> +#define outw outw
+> +#define insw insw
+> +#define outsw outsw
+> +
+> +DECLARE_EXTIO(w, u16)
+> +
+> +#define inl inl
+> +#define outl outl
+> +#define insl insl
+> +#define outsl outsl
+> +
+> +DECLARE_EXTIO(l, u32)
+> +#endif
+> +
+> +
+>  /*
+>   * String version of I/O memory access operations.
+>   */
+> diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+> index 7d66bba..60e0482 100644
+> --- a/arch/arm64/kernel/Makefile
+> +++ b/arch/arm64/kernel/Makefile
+> @@ -31,6 +31,7 @@ arm64-obj-$(CONFIG_COMPAT)		+= sys32.o kuser32.o signal32.o 	\
+>  					   sys_compat.o entry32.o
+>  arm64-obj-$(CONFIG_FUNCTION_TRACER)	+= ftrace.o entry-ftrace.o
+>  arm64-obj-$(CONFIG_MODULES)		+= arm64ksyms.o module.o
+> +arm64-obj-$(CONFIG_ARM64_INDIRECT_PIO)	+= extio.o
+>  arm64-obj-$(CONFIG_ARM64_MODULE_PLTS)	+= module-plts.o
+>  arm64-obj-$(CONFIG_PERF_EVENTS)		+= perf_regs.o perf_callchain.o
+>  arm64-obj-$(CONFIG_HW_PERF_EVENTS)	+= perf_event.o
+> diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
+> new file mode 100644
+> index 0000000..647b3fa
+> --- /dev/null
+> +++ b/arch/arm64/kernel/extio.c
+> @@ -0,0 +1,27 @@
+> +/*
+> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
+> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/io.h>
+> +
+> +struct extio_ops *arm64_extio_ops;
+> +
+> +
+> +BUILD_EXTIO(b, u8)
+> +
+> +BUILD_EXTIO(w, u16)
+> +
+> +BUILD_EXTIO(l, u32)
 
-There could be one follow-up patch to combine those intel's
-quirks to one, so that more time can be saved. We don't have
-to cover it in this patchset though.
+Is there no way to make this slightly more generic, so that it can be
+re-used elsewhere? For example, if struct extio_ops was common, then
+you could have the singleton (which maybe should be an interval tree?),
+type definition, setter function and the BUILD_EXTIO invocations
+somewhere generic, rather than squirelled away in the arch backend.
 
-> static void quirk_no_bus_reset(struct pci_dev *dev)
-> {
-
-Thanks,
-Gavin
-
+Will
