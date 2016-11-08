@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35969 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752767AbcKGJWl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 04:22:41 -0500
-From: "Ji-Ze Hong (Peter Hong)" <hpeter@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        tom_tsai@fintek.com.tw, peter_hong@fintek.com.tw,
-        "Ji-Ze Hong (Peter Hong)" <hpeter+linux_kernel@gmail.com>
-Subject: [PATCH 2/2] PCI: Add quirk for Fintek F81504/508/512 D3 issue
-Date: Mon,  7 Nov 2016 17:22:32 +0800
-Message-Id: <1478510552-4883-3-git-send-email-hpeter+linux_kernel@gmail.com>
-In-Reply-To: <1478510552-4883-1-git-send-email-hpeter+linux_kernel@gmail.com>
-References: <1478510552-4883-1-git-send-email-hpeter+linux_kernel@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:46474 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751998AbcKHIR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 03:17:58 -0500
+Subject: Re: [PATCH 6/7] pci: Remove the irq_affinity mask from struct pci_dev
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-7-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <3318118c-d77a-7fda-6b18-94b9db418fbe@suse.de>
+Date: Tue, 8 Nov 2016 09:17:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <1478544462-9549-7-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fintek F81504/508/512 PCIe-to-UART/GPIO will failed to work on Intel
-Skylake platform PEG PCIe port after D0->D3->D0.
+On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
+> This has never been used, and now is totally unreferenced.  Nuke it.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/pci.h | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7090f5f..f2ba6ac 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -333,7 +333,6 @@ struct pci_dev {
+>  	 * directly, use the values stored here. They might be different!
+>  	 */
+>  	unsigned int	irq;
+> -	struct cpumask	*irq_affinity;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>
+>  	bool match_driver;		/* Skip attaching driver */
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-This patch will prevent it into D3 mode.
+Cheers,
 
-Signed-off-by: Ji-Ze Hong (Peter Hong) <hpeter+linux_kernel@gmail.com>
----
- drivers/pci/quirks.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 182712e..ee9402f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4497,3 +4497,18 @@ static void quirk_aer_report(struct pci_dev *pdev)
- 			quirk_aer_report);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81512,
- 			quirk_aer_report);
-+
-+/*
-+ * Fintek F81504/508/512 PCIe-to-UART/GPIO will failed to work on Intel Skylake
-+ * platform PEG PCIe port after D0->D3->D0.
-+ */
-+static void quirk_no_d3(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81504,
-+			quirk_no_d3);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81508,
-+			quirk_no_d3);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81512,
-+			quirk_no_d3);
+Hannes
 -- 
-1.9.1
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
