@@ -1,48 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43164 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934727AbcKKWeJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 17:34:09 -0500
-Date: Fri, 11 Nov 2016 16:34:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        Lukas Wunner <lukas@wunner.de>,
-        Pierre de Villemereuil <flyos@mailoo.org>,
-        linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 2/2] USB: UHCI: report non-PME wakeup signalling for
- Intel hardware
-Message-ID: <20161111223404.GU9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <Pine.LNX.4.44L0.1610211642420.1898-100000@iolanthe.rowland.org>
- <20161022100344.GB16082@kroah.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:9586 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752175AbcKHDWn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 22:22:43 -0500
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <lorenzo.pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <benh@kernel.crashing.org>,
+        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V5 0/3] ARM64 LPC: legacy ISA I/O support
+Date: Tue, 8 Nov 2016 11:47:06 +0800
+Message-ID: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161022100344.GB16082@kroah.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 22, 2016 at 12:03:44PM +0200, Greg KH wrote:
-> On Fri, Oct 21, 2016 at 04:49:07PM -0400, Alan Stern wrote:
-> > The UHCI controllers in Intel chipsets rely on a platform-specific
-> > non-PME mechanism for wakeup signalling.  They can generate wakeup
-> > signals even though they don't support PME.
-> > 
-> > We need to let the USB core know this so that it will enable runtime
-> > suspend for UHCI controllers.
-> > 
-> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > CC: <stable@vger.kernel.org>
-> > 
-> > ---
-> > 
-> > Greg:
-> > 
-> > This patch is somewhat independent of the 1/2 patch I sent to Bjorn.  
-> > Still, it will help to keep them together.  Is it okay to have him
-> > merge both of them through his tree?
-> 
-> Fine with me:
-> 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This patch supports the IPMI-bt device attached to the Low-Pin-Count interface
+implemented on Hisilicon Hip06 SoC.
+	                -----------
+			| LPC host|
+	                |         |
+	                -----------
+	                     |
+ 	        _____________V_______________LPC
+                  |			  |
+                  V	                  V
+			             ------------
+			             |  BT(ipmi)|
+			             ------------
 
-I applied both these patches to pci/pm for v4.10, thanks!
+When master accesses those periperals beneath the Hip06 LPC, a specific LPC
+driver is needed to make LPC host generate the standard LPC I/O cycles with
+the target periperals'I/O port addresses. But on curent arm64 world, there is
+no real I/O accesses. All the I/O operations through in/out pair are based on
+MMIO which is not satisfied the I/O mechanism on Hip06 LPC.
+To solve this issue and keep the relevant existing peripherals' driver
+unchanged, this patch set redefines the in/out pair to support both the IO
+operations for Hip06 LPC and the original MMIO. The way specific to Hip06 is
+named as indirect-IO in this patchset.
+
+Changes from V4:
+  - Some revises based on the comments from Bjorn, Rob on V4;
+  - Fixed the compile error on some platforms, such as openrisc;
+
+Changes from V3:
+  - UART support deferred to a separate patchset; This patchset only support
+  ipmi device under LPC;
+  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
+  from PCI/PCIE PIO space;
+  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
+  added a new fixup function, of_isa_indirect_io(), to get the I/O address
+  directly from LPC dts configurations;
+  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
+  - Decouple the header file dependency on the gerenic io.h by defining in/out
+  as normal functions in c file;
+  - removed unused macro definitions in the LPC driver;
+
+Changes from V2:
+  - Support the PIO retrieval from the linux PIO generated by
+  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
+  - Support the flat-tree earlycon;
+  - Some revises based on Arnd's remarks;
+  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
+  from non-ZERO;
+
+Changes from V1:
+  - Support the ACPI LPC device;
+  - Optimize the dts LPC driver in ISA compatible mode;
+  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
+  IO ranges;
+  - Support the LPC uart and relevant earlycon;
+
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+
+zhichang.yuan (3):
+  ARM64 LPC: Indirect ISA port IO introduced
+  ARM64 LPC: Add missing range exception for special ISA
+  ARM64 LPC: LPC driver implementation on Hip06
+
+ .../arm/hisilicon/hisilicon-low-pin-count.txt      |  31 ++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/Kconfig                                 |   6 +
+ arch/arm64/include/asm/extio.h                     |  94 ++++
+ arch/arm64/include/asm/io.h                        |  35 ++
+ arch/arm64/kernel/Makefile                         |   1 +
+ arch/arm64/kernel/extio.c                          |  52 +++
+ drivers/bus/Kconfig                                |   8 +
+ drivers/bus/Makefile                               |   1 +
+ drivers/bus/hisi_lpc.c                             | 501 +++++++++++++++++++++
+ drivers/of/address.c                               |  56 ++-
+ drivers/pci/pci.c                                  |   6 +-
+ include/linux/of_address.h                         |  17 +
+ include/linux/pci.h                                |   8 +
+ 14 files changed, 820 insertions(+), 4 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+ create mode 100644 arch/arm64/include/asm/extio.h
+ create mode 100644 arch/arm64/kernel/extio.c
+ create mode 100644 drivers/bus/hisi_lpc.c
+
+-- 
+1.9.1
+
