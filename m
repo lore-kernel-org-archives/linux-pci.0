@@ -1,54 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:10873 "EHLO mga04.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:56516 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755514AbcKJLsw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 06:48:52 -0500
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
-Subject: RE: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
- Networking
-Date: Thu, 10 Nov 2016 11:48:45 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03B677F535@hasmsx107.ger.corp.intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
- <20161109160219.GB9111@kroah.com>
- <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
- <20161110114411.GA4155@kroah.com>
-In-Reply-To: <20161110114411.GA4155@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
+        id S1751296AbcKHO7T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 09:59:19 -0500
+Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
+ irq_create_affinity_masks()
+To: Christoph Hellwig <hch@lst.de>
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-4-git-send-email-hch@lst.de>
+ <a7e25633-b9fb-468f-fd33-28dbc0368cc1@suse.de>
+ <20161108145508.GA12519@lst.de>
+Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <c9ba9026-8ff8-8717-60dc-92672724d5d8@suse.de>
+Date: Tue, 8 Nov 2016 15:59:16 +0100
 MIME-Version: 1.0
+In-Reply-To: <20161108145508.GA12519@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10 2016, 01:44 PM, Greg KH wrote:
-> On Thu, Nov 10, 2016 at 11:39:19AM +0000, Levy, Amir (Jer) wrote:
-> > > And how about getting some internal-Intel kernel developers to
-> > > review and sign-off on this code?  Don't make the community do the
-> > > review when you have access to resources like this.  You have an
-> > > internal mailing list for this very purpose, use it!
-> > >
-> >
-> > The review with the internal-Intel kernel developers was done before
-> > submitting the first patch set.
-> 
-> Then why is their signed-off-by:s not on the patchset showing that they
-> "bless" this series?
-> 
+On 11/08/2016 03:55 PM, Christoph Hellwig wrote:
+> [please trim the f***king context in your replies, thanks..]
+>
+> On Tue, Nov 08, 2016 at 09:15:27AM +0100, Hannes Reinecke wrote:
+>>> +irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>>>  {
+>>> -	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
+>>> +	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
+>>> +	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
+>>>  	nodemask_t nodemsk = NODE_MASK_NONE;
+>>>  	struct cpumask *masks;
+>>>  	cpumask_var_t nmsk;
+>> Check for NULL affd?
+>
+> We expect all callers to pass a valid one.
 
-Working on it.
+Which you don't in this patch:
 
-> thanks,
-> 
-> greg k-h
+@@ -697,7 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, 
+void __iomem *base,
+      int ret, i;
 
+      if (affinity) {
+-        masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
++        masks = irq_create_affinity_masks(nvec, NULL);
+          if (!masks)
+              pr_err("Unable to allocate affinity masks, ignoring\n");
+      }
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
