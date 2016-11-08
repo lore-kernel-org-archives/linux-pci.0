@@ -1,93 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:4127 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751021AbcKIMLq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 07:11:46 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        John Garry <john.garry@huawei.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Wed, 9 Nov 2016 12:10:43 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1478647002.7430.69.camel@kernel.crashing.org>
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Mark Rutland <mark.rutland@arm.com>, "zhichang.yuan"
+ <yuanzhichang@hisilicon.com>
+Date: Wed, 09 Nov 2016 10:16:42 +1100
+In-Reply-To: <20161108120323.GC15297@leverpostej>
 References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-4-git-send-email-yuanzhichang@hisilicon.com>
- <1555494.4IFvGxvsfe@wuerfel>
-In-Reply-To: <1555494.4IFvGxvsfe@wuerfel>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108120323.GC15297@leverpostej>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gabriele.paoloni@huawei.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ linuxarm@huawei.com, lorenzo.pieralisi@arm.com, arnd@arndb.de,
+ xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, minyard@acm.org, marc.zyngier@arm.com,
+ liviu.dudau@arm.com, john.garry@huawei.com, zourongrong@gmail.com,
+ robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
+ zhichang.yuan02@gmail.com, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, olof@lixom.net
 Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
-
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 08 November 2016 16:25
-> To: Yuanzhichang
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> bhelgaas@google.com; mark.rutland@arm.com; olof@lixom.net; linux-arm-
-> kernel@lists.infradead.org; lorenzo.pieralisi@arm.com; linux-
-> kernel@vger.kernel.org; Linuxarm; devicetree@vger.kernel.org; linux-
-> pci@vger.kernel.org; linux-serial@vger.kernel.org; minyard@acm.org;
-> benh@kernel.crashing.org; liviu.dudau@arm.com; zourongrong@gmail.com;
-> John Garry; Gabriele Paoloni; zhichang.yuan02@gmail.com;
-> kantyzc@163.com; xuwei (O)
-> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
-> Hip06
+On Tue, 2016-11-08 at 12:03 +0000, Mark Rutland wrote:
+> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+> > 
+> > For arm64, there is no I/O space as other architectural platforms, such as
+> > X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+> > such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+> > known port addresses are used to control the corresponding target devices, for
+> > example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+> > normal MMIO mode in using.
 > 
-> On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
-> > +       /*
-> > +        * The first PCIBIOS_MIN_IO is reserved specifically for
-> indirectIO.
-> > +        * It will separate indirectIO range from pci host bridge to
-> > +        * avoid the possible PIO conflict.
-> > +        * Set the indirectIO range directly here.
-> > +        */
-> > +       lpcdev->io_ops.start = 0;
-> > +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
-> > +       lpcdev->io_ops.devpara = lpcdev;
-> > +       lpcdev->io_ops.pfin = hisilpc_comm_in;
-> > +       lpcdev->io_ops.pfout = hisilpc_comm_out;
-> > +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
-> > +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
+> This has nothing to do with arm64. Hardware with this kind of indirect
+> bus access could be integrated with a variety of CPU architectures. It
+> simply hasn't been, yet.
+
+On some ppc's we also use similar indirect access methods for IOs. We
+have a generic infrastructure for re-routing some memory or IO regions
+to hooks.
+
+On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
+firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
+
+> > To drive these devices, this patch introduces a method named indirect-IO.
+> > In this method the in/out pair in arch/arm64/include/asm/io.h will be
+> > redefined. When upper layer drivers call in/out with those known legacy port
+> > addresses to access the peripherals, the hooking functions corrresponding to
+> > those target peripherals will be called. Through this way, those upper layer
+> > drivers which depend on in/out can run on Hip06 without any changes.
 > 
-> I have to look at patch 2 in more detail again, after missing a few
-> review
-> rounds. I'm still a bit skeptical about hardcoding a logical I/O port
-> range here, and would hope that we can just go through the same
-> assignment of logical port ranges that we have for PCI buses,
-> decoupling
-> the bus addresses from the linux-internal ones.
-
-The point here is that we want to avoid any conflict/overlap between
-the LPC I/O space and the PCI I/O space. With the assignment above
-we make sure that LPC never interfere with PCI I/O space.
-
-Thanks
-
-Gab
-
+> As above, this has nothing to do with arm64, and as such, should live in
+> generic code, exactly as we would do if we had higher-level ISA
+> accessor ops.
 > 
-> 	Arnd
+> Regardless, given the multi-instance case, I don't think this is
+> sufficient in general (and I think we need higher-level ISA accessors
+> to handle the indirection).
+
+Multi-instance with IO is tricky to do generically because archs already
+have all sort of hacks to deal with the fact that inb/outb don't require
+an explicit ioremap, so an IO resource can take all sort of shape depending
+on the arch.
+
+Overall it boils down to applying some kind of per-instance "offset" to
+the IO port number though.
+
+> [...]
+> 
+> > 
+> > diff --git a/arch/arm64/include/asm/extio.h b/arch/arm64/include/asm/extio.h
+> > new file mode 100644
+> > index 0000000..6ae0787
+> > --- /dev/null
+> > +++ b/arch/arm64/include/asm/extio.h
+> 
+> > 
+> > +#ifndef __LINUX_EXTIO_H
+> > +#define __LINUX_EXTIO_H
+> 
+> This doesn't match the file naming, __ASM_EXTIO_H would be consistent
+> with other arm64 headers.
+> 
+> > 
+> > +
+> > +struct extio_ops {
+> > > > +	unsigned long start;/* inclusive, sys io addr */
+> > > > +	unsigned long end;/* inclusive, sys io addr */
+> 
+> Please put whitespace before inline comments.
+> 
+> [...]
+> 
+> > 
+> > > > +type in##bw(unsigned long addr)						\
+> > > > +{									\
+> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> > > > > > +			arm64_extio_ops->end < addr)			\
+> > > > > > +		return read##bw(PCI_IOBASE + addr);			\
+> > > > > > +	return arm64_extio_ops->pfin ?					\
+> > > > > > +		arm64_extio_ops->pfin(arm64_extio_ops->devpara,		\
+> > > > > > +			addr, sizeof(type)) : -1;			\
+> > > > +}									\
+> > > > +									\
+> > > > +void out##bw(type value, unsigned long addr)				\
+> > > > +{									\
+> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> > > > > > +			arm64_extio_ops->end < addr)			\
+> > > > > > +		write##bw(value, PCI_IOBASE + addr);			\
+> > > > > > +	else								\
+> > > > > > +		if (arm64_extio_ops->pfout)				\
+> > > > +			arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
+> > > > > > +				addr, value, sizeof(type));		\
+> > > > +}									\
+> > > > +									\
+> > > > +void ins##bw(unsigned long addr, void *buffer, unsigned int count)	\
+> > > > +{									\
+> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> > > > > > +			arm64_extio_ops->end < addr)			\
+> > > > > > +		reads##bw(PCI_IOBASE + addr, buffer, count);		\
+> > > > > > +	else								\
+> > > > > > +		if (arm64_extio_ops->pfins)				\
+> > > > +			arm64_extio_ops->pfins(arm64_extio_ops->devpara,\
+> > > > > > +				addr, buffer, sizeof(type), count);	\
+> > > > +}									\
+> > > > +									\
+> > > > +void outs##bw(unsigned long addr, const void *buffer, unsigned int count)	\
+> > > > +{									\
+> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
+> > > > > > +			arm64_extio_ops->end < addr)			\
+> > > > > > +		writes##bw(PCI_IOBASE + addr, buffer, count);		\
+> > > > > > +	else								\
+> > > > > > +		if (arm64_extio_ops->pfouts)				\
+> > > > +			arm64_extio_ops->pfouts(arm64_extio_ops->devpara,\
+> > > > > > +				addr, buffer, sizeof(type), count);	\
+> > +}
+> > +
+> 
+> So all PCI I/O will be slowed down by irrelevant checks when this is
+> enabled?
+> 
+> [...]
+> 
+> > 
+> > +static inline void arm64_set_extops(struct extio_ops *ops)
+> > +{
+> > > > +	if (ops)
+> > > > +		WRITE_ONCE(arm64_extio_ops, ops);
+> > +}
+> 
+> Why WRITE_ONCE()?
+> 
+> Is this not protected/propagated by some synchronisation mechanism?
+> 
+> WRITE_ONCE() is not sufficient to ensure that this is consistently
+> observed by readers, and regardless, I don't see READ_ONCE() anywhere in
+> this patch.
+> 
+> This looks very suspicious.
+> 
+> Thanks,
+> Mark.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
