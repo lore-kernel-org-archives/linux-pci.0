@@ -1,71 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42032 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965060AbcKKWYW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 17:24:22 -0500
-Date: Fri, 11 Nov 2016 16:24:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v8 1/3] Documentation/devicetree: Add new property to
- specify the max link speed
-Message-ID: <20161111222416.GR9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:32873 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932329AbcKHRGi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 12:06:38 -0500
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+To: Will Deacon <will.deacon@arm.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108161245.GD20591@arm.com>
+ <8adfe182-4939-479d-6013-25ec40021b20@huawei.com>
+ <20161108164948.GG20591@arm.com>
+CC: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        <mark.rutland@arm.com>, <devicetree@vger.kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
+        <minyard@acm.org>, <arnd@arndb.de>, <catalin.marinas@arm.com>,
+        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
+        <liviu.dudau@arm.com>, <linux-kernel@vger.kernel.org>,
+        <xuwei5@hisilicon.com>, <linuxarm@huawei.com>, <olof@lixom.net>,
+        <robh+dt@kernel.org>, <zourongrong@gmail.com>,
+        <linux-serial@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <bhelgaas@google.com>, <kantyzc@163.com>,
+        <linux-arm-kernel@lists.infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <ecf81900-8116-2ef7-8ebb-e5739cc91de7@huawei.com>
+Date: Tue, 8 Nov 2016 17:05:50 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476755110-22647-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <20161108164948.GG20591@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 18, 2016 at 09:45:08AM +0800, Shawn Lin wrote:
-> Some of the host drivers have the requirement of knowing whether the
-> EP would never train at some link speed at all. For instance, on some
-> boards, the link won't train at 5 GT/s but the host driver still sacrifice
-> some cycle to wait for the resule of training at 5 GT/s as the host could
-> actually support 5 GT/s. So we could parse this new property and make the
-> host drivers be aware of these cases.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On 08/11/2016 16:49, Will Deacon wrote:
+> On Tue, Nov 08, 2016 at 04:33:44PM +0000, John Garry wrote:
+>> On 08/11/2016 16:12, Will Deacon wrote:
+>>> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+>>>> +static inline void arm64_set_extops(struct extio_ops *ops)
+>>>> +{
+>>>> +	if (ops)
+>>>> +		WRITE_ONCE(arm64_extio_ops, ops);
+>>>
+>>> Why does this need to be WRITE_ONCE? You don't have READ_ONCE on the reader
+>>> side. Also, what if multiple drivers want to set different ops for distinct
+>>> address ranges?
+>>
+>> I think that the idea here is that we only have possibly one master in the
+>> system which offers indirectIO backend, so another one could not possibly
+>> re-set this value.
+>
+> Why is that assumption valid, and why does WRITE_ONCE help there? It's not
+> ONCE as in WARN_ONCE, more ONCE as in exactly-once-per-invocation.
 
-Applied all three, with Rob's acks on the first two, to pci/host-rockchip
-for v4.10, thanks!
+It's only valid based on the inherent assumption that all indirectIO is 
+redirected to one backend master, i.e. LPC driver.
 
-> ---
-> 
-> Changes in v8: None
-> Changes in v7: None
-> Changes in v6: None
-> Changes in v5: None
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 08dcfad..e7d97a3 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -18,3 +18,9 @@ driver implementation may support the following properties:
->     host bridges in the system, otherwise potentially conflicting domain numbers
->     may be assigned to root buses behind different host bridges.  The domain
->     number for each host bridge in the system must be unique.
-> +- max-link-speed:
-> +   If present this property specifies PCI gen for link capability. The host drivers
-> +   could add this as a strategy to avoid unnecessary operation for unsupported
-> +   link speed, for instance, trying to do training for unsupported link speed, etc.
-> +   Must be '4' for gen4, '3' for gen3, '2' for gen2, and '1' for gen1. Any other
-> +   values are invalid.
-> -- 
-> 2.3.7
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Anyway, right, I don't think that WRITE_ONCE is correct. Zhichang was 
+looking for something which would only allow the pointer to be written 
+once ever.
+
+>
+>>>> diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
+>>>> new file mode 100644
+>>>> index 0000000..647b3fa
+>>>> --- /dev/null
+>>>> +++ b/arch/arm64/kernel/extio.c
+>>>> @@ -0,0 +1,27 @@
+>>>> +/*
+>>>> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
+>>>> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+>>>> + *
+>>>> + * This program is free software; you can redistribute it and/or modify
+>>>> + * it under the terms of the GNU General Public License version 2 as
+>>>> + * published by the Free Software Foundation.
+>>>> + *
+>>>> + * This program is distributed in the hope that it will be useful,
+>>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>>>> + * GNU General Public License for more details.
+>>>> + *
+>>>> + * You should have received a copy of the GNU General Public License
+>>>> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+>>>> + */
+>>>> +
+>>>> +#include <linux/io.h>
+>>>> +
+>>>> +struct extio_ops *arm64_extio_ops;
+>>>> +
+>>>> +
+>>>> +BUILD_EXTIO(b, u8)
+>>>> +
+>>>> +BUILD_EXTIO(w, u16)
+>>>> +
+>>>> +BUILD_EXTIO(l, u32)
+>>>
+>>> Is there no way to make this slightly more generic, so that it can be
+>>> re-used elsewhere? For example, if struct extio_ops was common, then
+>>> you could have the singleton (which maybe should be an interval tree?),
+>>> type definition, setter function and the BUILD_EXTIO invocations
+>>> somewhere generic, rather than squirelled away in the arch backend.
+>>>
+>> The concern would be that some architecture which uses generic higher-level
+>> ISA accessor ops, but have IO space, could be affected.
+>
+> You're already adding a Kconfig symbol for this stuff, so you can keep
+> that if you don't want it on other architectures. I'm just arguing that
+> plumbing drivers directly into arch code via arm64_set_extops is not
+> something I'm particularly fond of, especially when it looks like it
+> could be avoided with a small amount of effort.
+
+We'll check this.
+
+Cheers,
+John
+
+>
+> Will
+>
+> .
+>
+
+
