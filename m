@@ -1,62 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:43165 "EHLO quartz.orcorp.ca"
+Received: from mail.kernel.org ([198.145.29.136]:48092 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754821AbcKYUTv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 15:19:51 -0500
-Date: Fri, 25 Nov 2016 13:19:39 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161125201939.GJ16504@obsidianresearch.com>
-References: <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
- <20161125193410.GD16504@obsidianresearch.com>
- <80aae3e6-278e-49af-7d09-bea87ffd19e8@amd.com>
+        id S933065AbcKHUtO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 15:49:14 -0500
+Date: Tue, 8 Nov 2016 14:49:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Vecu Bosseur <vecu.bosseur@gmail.com>
+Subject: Re: [PATCH] PCI: Don't attempt to claim shadow copies of ROM
+Message-ID: <20161108204909.GA14322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <80aae3e6-278e-49af-7d09-bea87ffd19e8@amd.com>
+In-Reply-To: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 25, 2016 at 02:49:50PM -0500, Serguei Sagalovitch wrote:
+On Mon, Nov 07, 2016 at 05:51:58PM -0600, Bjorn Helgaas wrote:
+> If we're using a shadow copy of a PCI device ROM, the shadow copy is in RAM
+> and the device never sees accesses to it and doesn't respond to it.  We
+> don't have to route the shadow range to the PCI device, and the device
+> doesn't have to claim the range.
+> 
+> Previously we treated the shadow copy as though it were the ROM BAR, and we
+> failed to claim it because the region wasn't routed to the device:
+> 
+>   pci 0000:01:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+>   pci_bus 0000:01: Allocating resources
+>   pci 0000:01:00.0: can't claim BAR 6 [mem 0x000c0000-0x000dffff]: no compatible bridge window
+> 
+> The failure path of pcibios_allocate_dev_rom_resource() cleared out the
+> resource start address, which caused the following ioremap() warning:
+> 
+>   WARNING: CPU: 0 PID: 116 at /build/linux-akdJXO/linux-4.8.0/arch/x86/mm/ioremap.c:121 __ioremap_caller+0x1ec/0x370
+>   ioremap on RAM at 0x0000000000000000 - 0x000000000001ffff
+> 
+> Handle a shadow copy as RAM, without inserting it into the iomem tree.
+> 
+> This fixes a regression caused by 0c0e0736acad ("PCI: Set ROM shadow
+> location in arch code, not in PCI core"), which appeared in v4.6.  The
+> effect is failure to initialize video devices, reported on AMD Turks but
+> likely to affect others as well.
+> 
+> Fixes: 0c0e0736acad ("PCI: Set ROM shadow location in arch code, not in PCI core")
+> Reported-and-tested-by: Vecu Bosseur <vecu.bosseur@gmail.com>
+> Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627496
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=175391
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1352272
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org	# v4.6+
 
-> GPU could perfectly access all VRAM.  It is only issue for p2p without
-> special interconnect and CPU access. Strictly speaking as long as we
-> have "bus address"  we could have RDMA but  I agreed that for
-> RDMA we could/should(?) always "request"  CPU address (I hope that we
-> could forget about 32-bit application :-)).
+I applied this to for-linus for v4.9.
 
-At least on x86 if you have a bus address you have a CPU address. All
-RDMAable VRAM has to be visible in the BAR.
+I'm surprised we haven't seen more problems from this, given that it's
+been there since v4.6, and anything using the shadow copy should be
+broken.
 
-> BTW/FYI: About CPU access: Some user-level API is mainly handle based
-> so there is no need for CPU access by default.
-
-You mean no need for the memory to be virtually mapped into the
-process?
-
-Do you expect to RDMA from this kind of API? How will that work?
-
-Jason
+> ---
+>  drivers/pci/setup-res.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 66c4d8f..9526e34 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -121,6 +121,14 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
+>  		return -EINVAL;
+>  	}
+>  
+> +	/*
+> +	 * If we have a shadow copy in RAM, the PCI device doesn't respond
+> +	 * to the shadow range, so we don't need to claim it, and upstream
+> +	 * bridges don't need to route the range to the device.
+> +	 */
+> +	if (res->flags & IORESOURCE_ROM_SHADOW)
+> +		return 0;
+> +
+>  	root = pci_find_parent_resource(dev, res);
+>  	if (!root) {
+>  		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
