@@ -1,99 +1,256 @@
-Return-Path: <jthumshirn@suse.de>
-Return-Path: <jthumshirn@suse.de>
-Date: Thu, 17 Nov 2016 10:57:29 +0100
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
- bridge hasn't
-Message-ID: <20161117095729.wzzekurvxmfqpwj7@linux-x5ow.site>
-References: <20161102223552.14776-1-jthumshirn@suse.de>
- <20161102223552.14776-2-jthumshirn@suse.de>
- <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51090 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932661AbcKHVS7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 16:18:59 -0500
+Date: Tue, 8 Nov 2016 15:18:54 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/7] pci/msi: Propagate irq affinity description through
+ the MSI code
+Message-ID: <20161108211854.GD14322@bhelgaas-glaptop.roam.corp.google.com>
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478544462-9549-5-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 12:11:58PM -0600, Bjorn Helgaas wrote:
-> Hi Johannes,
-> 
-> On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
-> > The Read Completion Boundary (RCB) bit must only be set on a device or
-> > endpoint if it is set on the root complex.
-> 
-> I propose the following slightly modified patch.  The interesting
-> difference is that your patch only touches the _HPX "OR" mask, so it
-> refrains from *setting* RCB in some cases, but it never actually
-> *clears* it.  The only time we clear RCB is when the _HPX "AND" mask
-> has RCB == 0.
-> 
-> My intent below is that we completely ignore the _HPX RCB bits, and we
-> set an Endpoint's RCB if and only if the Root Port's RCB is set.
-> 
-> I made an ugly ASCII table to think about the cases:
-> 
->       Root   EP    _HPX  _HPX     Final Endpoint RCB state
->       Port  (init)  AND   OR     (curr)  (yours)  (mine)
->   0)   0     0      0    0          0       0       0
->   1)   0     0      0    1          1       0       0
->   2)   0     0      1    0          0       0       0
->   3)   0     0      1    1          1       0       0
->   4)   0     1      0    0          0       0       0
->   5)   0     1      0    1          1       0       0
->   6)   0     1      1    0          1       1       0
->   7)   0     1      1    1          1       1       0
->   8)   1     0      0    0          0       0       1
->   9)   1     0      0    1          1       1       1
->   A)   1     0      1    0          0       0       1
->   B)   1     0      1    1          1       1       1
->   C)   1     1      0    0          0       0       1
->   D)   1     1      0    1          1       1       1
->   E)   1     1      1    0          1       1       1
->   F)   1     1      1    1          1       1       1
-> 
-> Cases 0-7 should all result in the Endpoint RCB being zero because the
-> Root Port RCB is zero.  Case 1 is the bug you're fixing.  Cases 3 & 5
-> are similar hypothetical bugs your patch also fixes.
-> 
-> Cases 6 & 7, where firmware left the Endpoint RCB set and _HPX didn't
-> tell us to clear it, are hypothetical firmware bugs that your patch
-> wouldn't fix.
-> 
-> In cases 8, A, and C, we currently leave the Endpoint RCB cleared,
-> either because firmware left it clear and _HPX didn't tell us to set
-> it (8 and A), or because firmware set it but _HPX told us to clear it
-> (C).
-> 
-> One could argue that 8, A, and C should stay as they currently are, as
-> a way for _HPX to work around hardware bugs, e.g., a Root Port that
-> advertises a 128-byte RCB but doesn't actually support it.  I didn't
-> bother with that and set the Endpoint's RCB to 128 in all cases when
-> the Root Port claims to support it.
-> 
-> It'd be great if you could test this and comment.
+s|pci/msi|PCI/MSI| (subject)
+s/irq/IRQ/ (subject)
 
-I've lost access to the machines, but I'll try to delegate it to someone who
-has access.
-
+On Mon, Nov 07, 2016 at 10:47:39AM -0800, Christoph Hellwig wrote:
+> From: Christogh Hellwig <hch@lst.de>
 > 
-> If you get a chance, collect the /proc/iomem contents, too.  That's
-> not for this bug; it's because I'm curious about the
+> No API change yet, just pass it down all the way from
+> pci_alloc_irq_vectors to the core MSI code.
+
+pci_alloc_irq_vectors()
+
+> Signed-off-by: Christogh Hellwig <hch@lst.de>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/msi.c | 62 +++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 33 insertions(+), 29 deletions(-)
 > 
->   ERST: Can not request [mem 0xb928b000-0xb928cbff] for ERST
->   
-> problem in your dmesg log.
-
-I'll ask for this as well.
-
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 1761b8a..512f388 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -551,14 +551,14 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  }
+>  
+>  static struct msi_desc *
+> -msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
+> +msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
+>  {
+>  	struct cpumask *masks = NULL;
+>  	struct msi_desc *entry;
+>  	u16 control;
+>  
+> -	if (affinity) {
+> -		masks = irq_create_affinity_masks(nvec, NULL);
+> +	if (affd) {
+> +		masks = irq_create_affinity_masks(nvec, affd);
+>  		if (!masks)
+>  			pr_err("Unable to allocate affinity masks, ignoring\n");
+>  	}
+> @@ -618,7 +618,8 @@ static int msi_verify_entries(struct pci_dev *dev)
+>   * an error, and a positive return value indicates the number of interrupts
+>   * which could have been allocated.
+>   */
+> -static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
+> +static int msi_capability_init(struct pci_dev *dev, int nvec,
+> +			       const struct irq_affinity *affd)
+>  {
+>  	struct msi_desc *entry;
+>  	int ret;
+> @@ -626,7 +627,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
+>  
+>  	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
+>  
+> -	entry = msi_setup_entry(dev, nvec, affinity);
+> +	entry = msi_setup_entry(dev, nvec, affd);
+>  	if (!entry)
+>  		return -ENOMEM;
+>  
+> @@ -690,14 +691,14 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>  
+>  static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  			      struct msix_entry *entries, int nvec,
+> -			      bool affinity)
+> +			      const struct irq_affinity *affd)
+>  {
+>  	struct cpumask *curmsk, *masks = NULL;
+>  	struct msi_desc *entry;
+>  	int ret, i;
+>  
+> -	if (affinity) {
+> -		masks = irq_create_affinity_masks(nvec, NULL);
+> +	if (affd) {
+> +		masks = irq_create_affinity_masks(nvec, affd);
+>  		if (!masks)
+>  			pr_err("Unable to allocate affinity masks, ignoring\n");
+>  	}
+> @@ -753,14 +754,14 @@ static void msix_program_entries(struct pci_dev *dev,
+>   * @dev: pointer to the pci_dev data structure of MSI-X device function
+>   * @entries: pointer to an array of struct msix_entry entries
+>   * @nvec: number of @entries
+> - * @affinity: flag to indicate cpu irq affinity mask should be set
+> + * @affd: Optional pointer to enable automatic affinity assignement
+>   *
+>   * Setup the MSI-X capability structure of device function with a
+>   * single MSI-X irq. A return of zero indicates the successful setup of
+>   * requested MSI-X entries with allocated irqs or non-zero for otherwise.
+>   **/
+>  static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+> -				int nvec, bool affinity)
+> +				int nvec, const struct irq_affinity *affd)
+>  {
+>  	int ret;
+>  	u16 control;
+> @@ -775,7 +776,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+>  	if (!base)
+>  		return -ENOMEM;
+>  
+> -	ret = msix_setup_entries(dev, base, entries, nvec, affinity);
+> +	ret = msix_setup_entries(dev, base, entries, nvec, affd);
+>  	if (ret)
+>  		return ret;
+>  
+> @@ -956,7 +957,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
+>  EXPORT_SYMBOL(pci_msix_vec_count);
+>  
+>  static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+> -			     int nvec, bool affinity)
+> +			     int nvec, const struct irq_affinity *affd)
+>  {
+>  	int nr_entries;
+>  	int i, j;
+> @@ -988,7 +989,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+>  		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
+>  		return -EINVAL;
+>  	}
+> -	return msix_capability_init(dev, entries, nvec, affinity);
+> +	return msix_capability_init(dev, entries, nvec, affd);
+>  }
+>  
+>  /**
+> @@ -1008,7 +1009,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+>   **/
+>  int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+>  {
+> -	return __pci_enable_msix(dev, entries, nvec, false);
+> +	return __pci_enable_msix(dev, entries, nvec, NULL);
+>  }
+>  EXPORT_SYMBOL(pci_enable_msix);
+>  
+> @@ -1059,9 +1060,8 @@ int pci_msi_enabled(void)
+>  EXPORT_SYMBOL(pci_msi_enabled);
+>  
+>  static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> -		unsigned int flags)
+> +				  const struct irq_affinity *affd)
+>  {
+> -	bool affinity = flags & PCI_IRQ_AFFINITY;
+>  	int nvec;
+>  	int rc;
+>  
+> @@ -1090,13 +1090,13 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  		nvec = maxvec;
+>  
+>  	for (;;) {
+> -		if (affinity) {
+> -			nvec = irq_calc_affinity_vectors(nvec, NULL);
+> +		if (affd) {
+> +			nvec = irq_calc_affinity_vectors(nvec, affd);
+>  			if (nvec < minvec)
+>  				return -ENOSPC;
+>  		}
+>  
+> -		rc = msi_capability_init(dev, nvec, affinity);
+> +		rc = msi_capability_init(dev, nvec, affd);
+>  		if (rc == 0)
+>  			return nvec;
+>  
+> @@ -1123,28 +1123,27 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>   **/
+>  int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  {
+> -	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
+> +	return __pci_enable_msi_range(dev, minvec, maxvec, NULL);
+>  }
+>  EXPORT_SYMBOL(pci_enable_msi_range);
+>  
+>  static int __pci_enable_msix_range(struct pci_dev *dev,
+> -		struct msix_entry *entries, int minvec, int maxvec,
+> -		unsigned int flags)
+> +				   struct msix_entry *entries, int minvec,
+> +				   int maxvec, const struct irq_affinity *affd)
+>  {
+> -	bool affinity = flags & PCI_IRQ_AFFINITY;
+>  	int rc, nvec = maxvec;
+>  
+>  	if (maxvec < minvec)
+>  		return -ERANGE;
+>  
+>  	for (;;) {
+> -		if (affinity) {
+> -			nvec = irq_calc_affinity_vectors(nvec, NULL);
+> +		if (affd) {
+> +			nvec = irq_calc_affinity_vectors(nvec, affd);
+>  			if (nvec < minvec)
+>  				return -ENOSPC;
+>  		}
+>  
+> -		rc = __pci_enable_msix(dev, entries, nvec, affinity);
+> +		rc = __pci_enable_msix(dev, entries, nvec, affd);
+>  		if (rc == 0)
+>  			return nvec;
+>  
+> @@ -1175,7 +1174,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+>  int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>  		int minvec, int maxvec)
+>  {
+> -	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
+> +	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
+>  }
+>  EXPORT_SYMBOL(pci_enable_msix_range);
+>  
+> @@ -1199,17 +1198,22 @@ EXPORT_SYMBOL(pci_enable_msix_range);
+>  int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+>  		unsigned int max_vecs, unsigned int flags)
+>  {
+> +	static const struct irq_affinity msi_default_affd;
+> +	const struct irq_affinity *affd = NULL;
+>  	int vecs = -ENOSPC;
+>  
+> +	if (flags & PCI_IRQ_AFFINITY)
+> +		affd = &msi_default_affd;
+> +
+>  	if (flags & PCI_IRQ_MSIX) {
+>  		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
+> -				flags);
+> +				affd);
+>  		if (vecs > 0)
+>  			return vecs;
+>  	}
+>  
+>  	if (flags & PCI_IRQ_MSI) {
+> -		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
+> +		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
+>  		if (vecs > 0)
+>  			return vecs;
+>  	}
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
