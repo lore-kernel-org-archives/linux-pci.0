@@ -1,66 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/9] PCI/PME: Log PME IRQ when claiming Root Port
-Date: Mon, 21 Nov 2016 23:29:20 +0100
-Message-ID: <1531291.6pVMOmFLZP@vostro.rjw.lan>
-In-Reply-To: <20161121214526.21036.73271.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com> <20161121214526.21036.73271.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36724 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932177AbcKHRKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 12:10:44 -0500
+Date: Tue, 8 Nov 2016 17:10:04 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        bhelgaas@google.com, olof@lixom.net,
+        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org,
+        benh@kernel.crashing.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
+Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
+ special ISA
+Message-ID: <20161108171004.GF15297@leverpostej>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108114953.GB15297@leverpostej>
+ <2368890.jTbyGqYR0M@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2368890.jTbyGqYR0M@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 21, 2016 03:45:26 PM Bjorn Helgaas wrote:
-> We already log a "Signaling PME" whenever the PME service driver claims a
-> Root Port.  In fact, we also log the same message for every device in the
-> hierarchy below the Root Port.
+On Tue, Nov 08, 2016 at 05:19:54PM +0100, Arnd Bergmann wrote:
+> On Tuesday, November 8, 2016 11:49:53 AM CET Mark Rutland wrote:
+> > My understanding of ISA (which may be flawed) is that it's not part of
+> > the PCI host bridge, but rather on x86 it happens to share the IO space
+> > with PCI.
 > 
-> Log the "Signaling PME" once (only for the Root Port, since we can
-> trivially find out which devices are below the Root Port), and include the
-> IRQ number in the message to help connect the dots with /proc/interrupts.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pcie/pme.c |   12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 9e8aa9d..7175293 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -300,8 +300,6 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
->   */
->  static int pcie_pme_set_native(struct pci_dev *dev, void *ign)
->  {
-> -	dev_info(&dev->dev, "Signaling PME through PCIe PME interrupt\n");
-> -
->  	device_set_run_wake(&dev->dev, true);
->  	dev->pme_interrupt = true;
->  	return 0;
-> @@ -349,12 +347,14 @@ static int pcie_pme_probe(struct pcie_device *srv)
->  	ret = request_irq(srv->irq, pcie_pme_irq, IRQF_SHARED, "PCIe PME", srv);
->  	if (ret) {
->  		kfree(data);
-> -	} else {
-> -		pcie_pme_mark_devices(port);
-> -		pcie_pme_interrupt_enable(port, true);
-> +		return ret;
->  	}
->  
-> -	return ret;
-> +	dev_info(&port->dev, "Signaling PME with IRQ %d\n", srv->irq);
-> +
-> +	pcie_pme_mark_devices(port);
-> +	pcie_pme_interrupt_enable(port, true);
-> +	return 0;
->  }
->  
->  static bool pcie_pme_check_wakeup(struct pci_bus *bus)
-> 
-> --
+> On normal systems, ISA or LPC are behind a PCI bridge device, which
+> passes down both low addresses of I/O space and memory space.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Ok, so the use of those address spaces is an artifact of the ISA
+controller being a device under the PCI host bridge.
+
+Given we can have multiple domains, surely that implies we can have
+multiple ISA controllers in general?
+
+> > I believe that we could theoretically have multiple independent LPC/ISA
+> > busses, as is possible with PCI on !x86 systems. If the current ISA code
+> > assumes a singleton bus, I think that's something that needs to be fixed
+> > up more generically.
+> > 
+> > I don't see why we should need any architecture-specific code here. Why
+> > can we not fix up the ISA bus code in drivers/of/address.c such that it
+> > handles multiple ISA bus instances, and translates all sub-device
+> > addresses relative to the specific bus instance?
+> 
+> I think it is a relatively safe assumption that there is only one
+> ISA bridge. A lot of old drivers hardcode PIO or memory addresses
+> when talking to an ISA device, so having multiple instances is
+> already problematic.
+
+I'm worried that this might not be a safe assumption. Hardware these
+days has a habit of pushing the boundaries of our expectations.
+
+If we're going to assume that, I'd certainly want the kernel to verify
+that it's true for all instanciated ISA/LPC devices. Otherwise, I can
+imagine people relying on (or working around) that assumption in ACPI
+tables and DTs, and that will be a nightmare (at best) to untangle in
+future.
+
+Thanks,
+Mark.
