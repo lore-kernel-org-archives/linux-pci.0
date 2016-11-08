@@ -1,65 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35709 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934591AbcKKTMe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 14:12:34 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uABJ9CNf056731
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 14:12:34 -0500
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26nk8b302d-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 14:12:34 -0500
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-        Sat, 12 Nov 2016 05:12:31 +1000
-Subject: Re: [PATCH] of/irq: improve error message on irq discovery process
- failure
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
 To: Mark Rutland <mark.rutland@arm.com>
-Cc: devicetree@vger.kernel.org,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        marc.zyngier@arm.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, robh+dt@kernel.org,
-        frowand.list@gmail.com
-Date: Sat, 12 Nov 2016 06:12:27 +1100
-In-Reply-To: <20161111163241.GL11945@leverpostej>
-References: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-         <20161109190457.GC837@leverpostej> <1478813443.2592.2.camel@au1.ibm.com>
-         <20161111163241.GL11945@leverpostej>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1478891547.2592.13.camel@au1.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        bhelgaas@google.com, olof@lixom.net,
+        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org,
+        benh@kernel.crashing.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
+Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for special ISA
+Date: Tue, 08 Nov 2016 17:19:54 +0100
+Message-ID: <2368890.jTbyGqYR0M@wuerfel>
+In-Reply-To: <20161108114953.GB15297@leverpostej>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com> <20161108114953.GB15297@leverpostej>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2016-11-11 at 16:32 +0000, Mark Rutland wrote:
-> On Fri, Nov 11, 2016 at 08:30:43AM +1100, Benjamin Herrenschmidt
-> wrote:
-> > 
-> > On Wed, 2016-11-09 at 19:04 +0000, Mark Rutland wrote:
-> > > 
-> > > 
-> > > If we don't have an interrupt-map on a PCI controller, why don't
-> > > we
-> > > instead log a message regarding that being missing, and give up
-> > > early?
-> > 
-> > Why ? It's legit to not support LSIs.
+On Tuesday, November 8, 2016 11:49:53 AM CET Mark Rutland wrote:
+> On Tue, Nov 08, 2016 at 11:47:08AM +0800, zhichang.yuan wrote:
+> > +Hisilicon Hip06 low-pin-count device
+> > +  Usually LPC controller is part of PCI host bridge, so the legacy ISA ports
+> > +  locate on LPC bus can be accessed direclty. But some SoCs have independent
+> > +  LPC controller, and access the legacy ports by triggering LPC I/O cycles.
+> > +  Hisilicon Hip06 implements this LPC device.
 > 
-> Sure; I had envisioned a message like:
+> s/direclty/directly/
 > 
-> 	pr_info("%s: no interrupt-map, INTx interrupts not possible\n",
-> 		pci_controller_name);
+> My understanding of ISA (which may be flawed) is that it's not part of
+> the PCI host bridge, but rather on x86 it happens to share the IO space
+> with PCI.
+
+On normal systems, ISA or LPC are behind a PCI bridge device, which
+passes down both low addresses of I/O space and memory space.
+
+> So, how about this becomes:
 > 
-> ... Which tells the user exaclty what we know, and doesn't imply
-> either
-> an error or the actual absence of HW support.
+>   Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
+>   provides access to some legacy ISA devices.
+> 
+> I believe that we could theoretically have multiple independent LPC/ISA
+> busses, as is possible with PCI on !x86 systems. If the current ISA code
+> assumes a singleton bus, I think that's something that needs to be fixed
+> up more generically.
+> 
+> I don't see why we should need any architecture-specific code here. Why
+> can we not fix up the ISA bus code in drivers/of/address.c such that it
+> handles multiple ISA bus instances, and translates all sub-device
+> addresses relative to the specific bus instance?
 
-Works for me.
+I think it is a relatively safe assumption that there is only one
+ISA bridge. A lot of old drivers hardcode PIO or memory addresses
+when talking to an ISA device, so having multiple instances is
+already problematic.
 
-Cheers,
-Ben.
+What is odd about ARM64 here is that the PIO space is not shared among
+all ISA and PCI buses in some cases.
 
+	Arnd
