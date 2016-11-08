@@ -1,55 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36389 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751701AbcKOQKb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 11:10:31 -0500
-Received: by mail-wm0-f51.google.com with SMTP id g23so176600861wme.1
-        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 08:10:30 -0800 (PST)
-Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
- <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
- <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
- <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Message-ID: <8d0e9b19-5d6f-8be5-84be-d102817a6b21@linaro.org>
-Date: Tue, 15 Nov 2016 16:10:28 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 1/7] genirq/affinity: Introduce struct irq_affinity
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-2-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <ee7ee373-5048-4e62-3f58-4e1e74edf7e5@suse.de>
+Date: Tue, 8 Nov 2016 09:11:56 +0100
 MIME-Version: 1.0
-In-Reply-To: <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
+In-Reply-To: <1478544462-9549-2-git-send-email-hch@lst.de>
 Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 15/11/16 15:08, Stanimir Varbanov wrote:
->>> I don't like MSM8996_ prefix. Could you invent a macro which depending
->>> >> on controller selects proper offset?
->> >
->> > maybe some like this ??
->> >
->> > #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
-> No, I wanted to preserve the name of the register offset. By that way in
-> the next pcie controller version we do not need to have
-> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V3.
+On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
+> From: Christogh Hellwig <hch@lst.de>
 >
-> I was thinking for something like
+> Some drivers (various network and RDMA adapter for example) have a MSI-X
+> vector layout where most of the vectors are used for I/O queues and should
+> have CPU affinity assigned to them, but some (usually 1 but sometimes more)
+> at the beginning or end are used for low-performance admin or configuration
+> work and should not have any explicit affinity assigned to them.
 >
-> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT(ver)	\
-> 		((ver) == VERSION_1 ? 0x178 : 0x1A8)
+> This adds a new irq_affinity structure, which will be passed through a
+> variant of pci_irq_alloc_vectors that allows to specify these
+> requirements (and is extensible to any future quirks in that area) so that
+> the core IRQ affinity algorithm can take this quirks into account.
 >
-> But you will need to extend qcom_pcie_ops with new member to store the
-> version.
+> Signed-off-by: Christogh Hellwig <hch@lst.de>
+> ---
+>  include/linux/interrupt.h | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 >
-> It's up to you ... or we can fix it when new version of the controller
-> appear.
-TBH, I don't want to add this just for this one case, looks bit over do.
-So I skipped to using V2 Suffix.
-We can fix later if required.
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 72f0721..7284bcd 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -232,6 +232,18 @@ struct irq_affinity_notify {
+>  	void (*release)(struct kref *ref);
+>  };
+>
+> +/**
+> + * struct irq_affinity - Description for auto irq affinity assignements
+> + * @pre_vectors:	Reserved vectors at the beginning of the MSIX
+> + *			vector space
+> + * @post_vectors:	Reserved vectors at the end of the MSIX
+> + *			vector space
+> + */
+> +struct irq_affinity {
+> +	int	pre_vectors;
+> +	int	post_vectors;
+> +};
+> +
+>  #if defined(CONFIG_SMP)
+>
+>  extern cpumask_var_t irq_default_affinity;
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
---srini
+Cheers,
 
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
