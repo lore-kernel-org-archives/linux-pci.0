@@ -1,113 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39498 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:57550 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751225AbcKQXtB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Nov 2016 18:49:01 -0500
-Date: Thu, 17 Nov 2016 17:48:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Daniel Vetter <daniel@ffwll.ch>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        dri-devel@lists.freedesktop.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH v3] PCI: create revision file in sysfs
-Message-ID: <20161117234855.GA25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161111143723.5818-1-emil.l.velikov@gmail.com>
- <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
- <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
- <20161117144402.GB11693@wunner.de>
+        id S1753088AbcKHLud (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 06:50:33 -0500
+Date: Tue, 8 Nov 2016 11:49:53 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        bhelgaas@google.com, olof@lixom.net, arnd@arndb.de,
+        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org,
+        benh@kernel.crashing.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
+Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
+ special ISA
+Message-ID: <20161108114953.GB15297@leverpostej>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161117144402.GB11693@wunner.de>
+In-Reply-To: <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 03:44:02PM +0100, Lukas Wunner wrote:
-> On Wed, Nov 16, 2016 at 02:58:11PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
-> > > On Fri, Nov 11, 2016 at 02:37:23PM +0000, Emil Velikov wrote:
-> > > > From: Emil Velikov <emil.velikov@collabora.com>
-> > > > 
-> > > > Currently the revision isn't available via sysfs/libudev thus if one
-> > > > wants to know the value they need to read through the config file.
-> > > > 
-> > > > This in itself wakes/powers up the device, causing unwanted delay
-> > > > since it can be quite costly.
-> > > > 
-> > > > There are at least two userspace components which could make use the new
-> > > > file libpciaccess and libdrm. The former [used in various places] wakes
-> > > > up _every_ PCI device, which can be observed via glxinfo [when using
-> > > > Mesa 10.0+ drivers]. While the latter [in association with Mesa 13.0]
-> > > > can lead to 2-3 second delays while starting firefox, thunderbird or
-> > > > chromium.
-> > > > 
-> > > > Expose the revision as a separate file, just like we do for the device,
-> > > > vendor, their subsystem version and class.
-> > > > 
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: linux-pci@vger.kernel.org
-> > > > Cc: Greg KH <gregkh@linuxfoundation.org>
-> > > > Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
-> > > > Tested-by: Mauro Santos <registo.mailling@gmail.com>
-> > > > Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
-> > > > Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
-> > > 
-> > > Given that waking a gpu can take somewhere between ages and forever, and
-> > > that we read the pci revisions everytime we launch a new gl app I think
-> > > this is the correct approach. Of course we could just patch libdrm and
-> > > everyone to not look at the pci revision, but that just leads to every
-> > > pci-based driver having a driver-private ioctl/getparam thing to expose
-> > > it. Which also doesn't make much sense.
-> > 
-> > This re-asserts what has already been said, but doesn't address any of
-> > my questions in the v2 discussion, so I'm still looking to continue
-> > that thread.
-> > 
-> > I am curious about this long wakeup issue, though.  Are we talking
-> > about a D3cold -> D0 transition?
-> 
-> Yes, this is about a D3cold -> D0 transition, the bugzilla entry
-> Emil linked talks about a dual GPU notebook.
-> 
-> E.g. the Nvidia Kepler GPU in my MacBook Pro has 5 different power
-> rails which must be brought up in a specific sequence (3.3V, 1.8V, 5V
-> for the GPU, 1.35V for the video RAM and 1.05V for PCIe), something
-> on the order of half a second to one second is reasonable for that.
+On Tue, Nov 08, 2016 at 11:47:08AM +0800, zhichang.yuan wrote:
+> +Hisilicon Hip06 low-pin-count device
+> +  Usually LPC controller is part of PCI host bridge, so the legacy ISA ports
+> +  locate on LPC bus can be accessed direclty. But some SoCs have independent
+> +  LPC controller, and access the legacy ports by triggering LPC I/O cycles.
+> +  Hisilicon Hip06 implements this LPC device.
 
-Ah, OK.  That makes a lot more sense.  Much of the time is actually
-for bringing up other power rails, so the PCIe part I've been
-considering is only the time between applying the 1.05V PCIe power and
-the config read, which is just a fraction of the whole powerup time.
+s/direclty/directly/
 
-Popping the stack all the way back to Emil's Nov 8 message:
+My understanding of ISA (which may be flawed) is that it's not part of
+the PCI host bridge, but rather on x86 it happens to share the IO space
+with PCI.
 
-  When using the Mesa drivers alongside firefox [1] (since Mesa 13.0),
-  glxinfo (Mesa 10.0) and others, all the GPUs* will be awaken,
-  causing unwanted delays and increased power usage.
+So, how about this becomes:
 
-  [1] https://bugs.freedesktop.org/show_bug.cgi?id=98502
+  Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
+  provides access to some legacy ISA devices.
 
-The bug is about a delay in starting firefox, thunderbird, or
-chromium.  I assume the browser starts on the current, powered-up,
-GPU.  I don't understand why we care about the revision of other,
-powered-off, GPUs.  
+I believe that we could theoretically have multiple independent LPC/ISA
+busses, as is possible with PCI on !x86 systems. If the current ISA code
+assumes a singleton bus, I think that's something that needs to be fixed
+up more generically.
 
-The fact that it's slow might be telling us "we need to optimize some
-code that is necessary but slow," or it might be telling us "we're
-doing some unnecessary work that we should stop doing."
+I don't see why we should need any architecture-specific code here. Why
+can we not fix up the ISA bus code in drivers/of/address.c such that it
+handles multiple ISA bus instances, and translates all sub-device
+addresses relative to the specific bus instance?
 
-> And the DRM driver needs a lot of time as well, half a second in
-> the case of nouveau:
-> 
-> [ 1500.780052] nouveau 0000:01:00.0: DRM: resuming kernel object tree...
-> [ 1501.176616] nouveau 0000:01:00.0: DRM: resuming client object trees...
-> [ 1501.176672] nouveau 0000:01:00.0: DRM: resuming display...
-> [ 1501.298985] nouveau 0000:01:00.0: DRM: resuming console...
+> +Required properties:
+> +- compatible: should be "hisilicon,low-pin-count"
 
-I assume this DRM time is unrelated to the sysfs "revision" file
-question.
+This would be better as something like:
 
-Bjorn
+	"hisilicon,hip06-lpc-controller"
+
+If it's reused in other SoCs, we can add more strings as we usually do.
+
+> +- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
+> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
+> +- reg: base memory range where the register set of this device is mapped.
+> +
+> +Note:
+> +  The node name before '@' must be "isa" to represent the binding stick to the
+> +  ISA/EISA binding specification.
+> +
+> +Example:
+> +
+> +isa@a01b0000 {
+> +	compatible = "hisilicom,low-pin-count";
+
+s/hisilicom/hisilicon/
+
+My comment above on the compatible string also applies.
+
+> +	#address-cells = <2>;
+> +	#size-cells = <1>;
+> +	reg = <0x0 0xa01b0000 0x0 0x1000>;
+> +
+> +	ipmi0: bt@e4 {
+> +		compatible = "ipmi-bt";
+> +		device_type = "ipmi";
+> +		reg = <0x01 0xe4 0x04>;
+> +		status = "disabled";
+> +	};
+> +};
+
+Please remove the status property; it's irrelevant to the example.
+
+[...]
+
+> +/**
+> + * indirect_io_enabled - check whether indirectIO is enabled.
+> + *	arm64_extio_ops will be set only when indirectIO mechanism had been
+> + *	initialized.
+> + *
+> + * Returns true when indirectIO is enabled.
+> + */
+> +bool indirect_io_enabled(void)
+> +{
+> +	return arm64_extio_ops ? true : false;
+> +}
+
+	return !!arm64_extio_ops;
+
+> +/**
+> + * addr_is_indirect_io - check whether the input taddr is for indirectIO.
+> + * @taddr: the io address to be checked.
+> + *
+> + * Returns 1 when taddr is in the range; otherwise return 0.
+> + */
+> +int addr_is_indirect_io(u64 taddr)
+> +{
+> +	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end < taddr)
+> +		return 0;
+> +
+> +	return 1;
+> +}
+
+Why not bool?
+
+I don't think this is the right thing to do, regardless.
+
+> + * of_isa_indirect_io - get the IO address from some isa reg property value.
+> + *	For some isa/lpc devices, no ranges property in ancestor node.
+> + *	The device addresses are described directly in their regs property.
+> + *	This fixup function will be called to get the IO address of isa/lpc
+> + *	devices when the normal of_translation failed.
+> + *
+> + * @parent:	points to the parent dts node;
+> + * @bus:		points to the of_bus which can be used to parse address;
+> + * @addr:	the address from reg property;
+> + * @na:		the address cell counter of @addr;
+> + * @presult:	store the address paresed from @addr;
+> + *
+> + * return 1 when successfully get the I/O address;
+> + * 0 will return for some failures.
+> + */
+> +static int of_get_isa_indirect_io(struct device_node *parent,
+> +				struct of_bus *bus, __be32 *addr,
+> +				int na, u64 *presult)
+> +{
+> +	unsigned int flags;
+> +	unsigned int rlen;
+> +
+> +	/* whether support indirectIO */
+> +	if (!indirect_io_enabled())
+> +		return 0;
+> +
+> +	if (!of_bus_isa_match(parent))
+> +		return 0;
+> +
+> +	flags = bus->get_flags(addr);
+> +	if (!(flags & IORESOURCE_IO))
+> +		return 0;
+> +
+> +	/* there is ranges property, apply the normal translation directly. */
+> +	if (of_get_property(parent, "ranges", &rlen))
+> +		return 0;
+> +
+> +	*presult = of_read_number(addr + 1, na - 1);
+> +	/* this fixup is only valid for specific I/O range. */
+> +	return addr_is_indirect_io(*presult);
+> +}
+> +
+>  static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+>  			    struct of_bus *pbus, __be32 *addr,
+>  			    int na, int ns, int pna, const char *rprop)
+> @@ -595,6 +639,15 @@ static u64 __of_translate_address(struct device_node *dev,
+>  			result = of_read_number(addr, na);
+>  			break;
+>  		}
+> +		/*
+> +		 * For indirectIO device which has no ranges property, get
+> +		 * the address from reg directly.
+> +		 */
+> +		if (of_get_isa_indirect_io(dev, bus, addr, na, &result)) {
+> +			pr_debug("isa indirectIO matched(%s)..addr = 0x%llx\n",
+> +				of_node_full_name(dev), result);
+> +			break;
+> +		}
+
+I don't believe this is the right place for this to live. This should
+live in the isa of_bus, matched in the usual way with of_match_bus(),
+and used in pbus->translate() in of_translate_one().
+
+If we need to extend the prototypes of those functions, we should do so.
+
+If we need to be able to register instance-specific translations or
+indirection, we should build the infrastructure for that rather than
+forcing a singleton translation in here.
+
+Thanks,
+Mark.
