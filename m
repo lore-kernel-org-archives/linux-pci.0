@@ -1,31 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34502 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753186AbcKGPku (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 10:40:50 -0500
-Received: by mail-vk0-f66.google.com with SMTP id p9so6229274vkd.1
-        for <linux-pci@vger.kernel.org>; Mon, 07 Nov 2016 07:40:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com>
-References: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com> <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Mon, 7 Nov 2016 13:40:49 -0200
-Message-ID: <CAOMZO5CKJL34BZ6nfjBtxMfmRKqiq4kNw8PWSpjisccwXQyrdg@mail.gmail.com>
-Subject: Re: [PATCH 2/3] MAINTAINERS: PCI: imx6: Use Richard Zhu's NXP email
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from prv-mh.provo.novell.com ([137.65.248.74]:59037 "EHLO
+        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752068AbcKHPP5 (ORCPT
+        <rfc822;groupwise-linux-pci@vger.kernel.org:4:1>);
+        Tue, 8 Nov 2016 10:15:57 -0500
+Message-Id: <5821FA39020000780011D1EE@prv-mh.provo.novell.com>
+Date: Tue, 08 Nov 2016 08:15:53 -0700
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Christoph Hellwig" <hch@lst.de>
+Cc: "Bjorn Helgaas" <bhelgaas@google.com>, <tglx@linutronix.de>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI/MSI: pci_irq_get_affinity() should cope with
+ NULL affinity vector
+References: <5821904A020000780011CF55@prv-mh.provo.novell.com>
+ <20161108145943.GD12817@lst.de>
+In-Reply-To: <20161108145943.GD12817@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
+>>> On 08.11.16 at 15:59, <hch@lst.de> wrote:
+> On Tue, Nov 08, 2016 at 12:43:54AM -0700, Jan Beulich wrote:
+>> msi_setup_entry() only logs a message when the affinity vector can't be
+>> allocated, and hence pci_irq_get_affinity() indexing entry->affinity is
+>> wrong without a prior check.
+> 
+> Looks fine:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> But just curious: did you run into that case in practice?
 
-On Wed, Oct 26, 2016 at 2:27 PM, Fabio Estevam <fabio.estevam@nxp.com> wrote:
-> FSL emails may become invalid soon, so switch to the NXP one.
->
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+No, I've just noticed it while re-basing other changes onto 4.9-rc.
 
-Are you OK with this patch? If so, please send your Acked-by.
+Jan
+
