@@ -1,293 +1,120 @@
-Return-Path: <noaos@mellanox.com>
-Return-Path: <noaos@mellanox.com>
-Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
-References: <1478011644-12080-1-git-send-email-noaos@mellanox.com>
- <20161109182232.GL14322@bhelgaas-glaptop.roam.corp.google.com>
- <20161110034640.GA5341@gwshan>
-To: <gwshan@linux.vnet.ibm.com>
-CC: <helgaas@kernel.org>, <noaos@mellanox.com>, <linux-pci@vger.kernel.org>,
-	<majd@mellanox.com>, <alex.williamson@redhat.com>, <amir@vadai.me>
-From: Noa Osherovich <noaos@mellanox.com>
-Message-ID: <08e3aa80-1d13-7a6e-9133-87a149741993@mellanox.com>
-Date: Thu, 10 Nov 2016 17:56:50 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46339 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751991AbcKHIPa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 03:15:30 -0500
+Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
+ irq_create_affinity_masks()
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478544462-9549-1-git-send-email-hch@lst.de>
+ <1478544462-9549-4-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <a7e25633-b9fb-468f-fd33-28dbc0368cc1@suse.de>
+Date: Tue, 8 Nov 2016 09:15:27 +0100
 MIME-Version: 1.0
-In-Reply-To: <20161110034640.GA5341@gwshan>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1478544462-9549-4-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
-
-On 11/10/2016 5:46 AM, Gavin Shan wrote:
-
-> On Wed, Nov 09, 2016 at 12:22:32PM -0600, Bjorn Helgaas wrote:
->> [+cc Gavin, Amir, Majd, Alex]
->>
->> Hi Noa,
->>
->> On Tue, Nov 01, 2016 at 04:47:24PM +0200, Noa Osherovich wrote:
->>> Mellanox devices were marked as having INTx masking ability broken.
->> This was done by 11e42532ada3 ("PCI: Assume all Mellanox devices have
->> broken INTx masking"), by Gavin Shan.  Possibly that was a little too
->> aggressive.  I cc'd Gavin and Amir so they can comment.
->>
-> I cannot know more HW details than Mellanox guys. So I assume the logic
-> in the code changes are correct. I totally agree with Bjron suggested
-> except one minor point: There will have two quirks for HEADER and FINAL
-> fixup separately as Bjorn suggested. One entry for one combination of
-> vendor/device will be put into section .pci_fixup_{header | final}.
-> The vendor/device IDs in the entries are compared with every PCI deivce
-> and the callbacks are invoked if they match. When number of entries in
-> section .pci_fixup_{header | final} increases, more time used to iterate
-> the section in pci_do_fixups(). The time will be saved if we can just
-> have one FINAL quirk as below, which probably makes code the easier to
-> be maintained.
+On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
+> From: Christogh Hellwig <hch@lst.de>
 >
-> static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
-> {
-> 	if (pdev->device in broken_device_list)
-> 		quirk_broken_intx_masking(pdev);
->         else if (pdev->dev is CONNECT4)
->                 /* Check the firmware version to call quirk_broken_intx_masking() */
-> }
+> Only calculate the affinity for the main I/O vectors, and skip the
+> pre or post vectors specified by struct irq_affinity.
 >
-> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_MELLANOX, PCI_ANY_ID, PCI_ANY_ID,
-> 			mellanox_check_broken_intx_masking);
+> Also remove the irq_affinity cpumask argument that has never been used.
+> If we ever need it in the future we can pass it through struct
+> irq_affinity.
 >
-> Above comment bases on the fact: pdev->broken_intx_masking is used by
-> device driver only. We still need anohter one HEADER quirk for Mellanox
-> (not one for vendor/device ID combination) if we want to see finalized
-> pdev->broken_intx_masking before that point.
+> Signed-off-by: Christogh Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c         |  4 ++--
+>  include/linux/interrupt.h |  4 ++--
+>  kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
+>  3 files changed, 29 insertions(+), 25 deletions(-)
 >
->> This patch is really doing two separate things:
->>
->>  1) Changing from a blanket "all Mellanox devices" have broken INTx to a
->>  specific "only these listed Mellanox devices" have broken INTx, and
->>
->>  2) Checking the firmware version of PCI_DEVICE_ID_MELLANOX_CONNECTX4 and
->>  PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX to see if INTx masking works.
->>
->> I'd like these to be split into two patches: one that sets
->> broken_intx_masking for the list of Mellanox devices (including CONNECTX4),
->> and a second that adds quirk_connectx_4_verify_fw() and calls it instead of
->> quirk_broken_intx_masking() for the CONNECTX4 devices.
->>
->> That way, a hypothetical problem with a new Mellanox device that's not
->> on the list will bisect to the first patch, where the solution is
->> obvious, rather than to the combined patch, which would be much less
->> obvious.
->>
->>> As a result, the VFIO driver fails to start when more than one device
->>> function is passed-through to a VM if both have the same INTx pin.
->>>
-> I don't see how the issue is related to the patch. INTx pin can be shared
-> by multiple functions and it's not going to be changed by the patch. When
-> the functions aren't claimed for capability to mask INTx from device side,
-> the shared INTx (or hardware IRQ) has to be masked from host (IRQ controller)
-> side. It does affect multiple VMs who are sharing thise INTx pin. I'm not
-> sure if it's the problem you have?
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index c58d3c2..1761b8a 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -558,7 +558,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
+>  	u16 control;
+>
+>  	if (affinity) {
+> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
+> +		masks = irq_create_affinity_masks(nvec, NULL);
+>  		if (!masks)
+>  			pr_err("Unable to allocate affinity masks, ignoring\n");
+>  	}
+> @@ -697,7 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  	int ret, i;
+>
+>  	if (affinity) {
+> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
+> +		masks = irq_create_affinity_masks(nvec, NULL);
+>  		if (!masks)
+>  			pr_err("Unable to allocate affinity masks, ignoring\n");
+>  	}
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 092adfb..bca8f1c 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -290,7 +290,7 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
+>  extern int
+>  irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+>
+> -struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
+> +struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+>  int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
+>
+>  #else /* CONFIG_SMP */
+> @@ -325,7 +325,7 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
+>  }
+>
+>  static inline struct cpumask *
+> -irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
+> +irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
+>  {
+>  	return NULL;
+>  }
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index 8d92597..17360bd 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -51,16 +51,16 @@ static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
+>
+>  /**
+>   * irq_create_affinity_masks - Create affinity masks for multiqueue spreading
+> - * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
+> - *			is used
+> - * @nvecs:		The number of vectors
+> + * @nvecs:	The total number of vectors
+> + * @affd:	Description of the affinity requirements
+>   *
+>   * Returns the masks pointer or NULL if allocation failed.
+>   */
+> -struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+> -					  int nvec)
+> +struct cpumask *
+> +irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  {
+> -	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
+> +	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
+> +	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
+>  	nodemask_t nodemsk = NODE_MASK_NONE;
+>  	struct cpumask *masks;
+>  	cpumask_var_t nmsk;
+Check for NULL affd?
 
-VFIO reads the broken_intx_masking field when it's used on the host (VFIO uses a
-variable named pci_2_3). During vfio_intx_set_signal it sets the irqflags
-variable to 0 if the pci_2_3 is 0. When the first function is assigned to the
-guest, everything is OK.
-When a second function with the same INT-x pin is assigned, VFIO checks that they
-can share the IRQ.
-The irqflags variable is then checked to see if IRQF_SHARED is set. If not, which
-is the case here, VFIO fails to request IRQ thus failing and the guest can't start.
+Cheers,
 
->>> Prior to Connect-IB, Mellanox devices exposed to the operating system
->>> one PCI function per all ports.
->>> Starting from Connect-IB, the devices are function-per-port. When
->>> passing the second function to a VM, VFIO will fail to start.
->>>
->>> Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of
->>> Mellanox devices marked as having broken INTx masking:
->>>
->>> - ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
->>>   masking is supported, we unmark the broken INTx masking.
->>> - Connect-IB does not support INTx currently so will not cause any
->>>   problem.
->>>
->>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
->>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
->>> Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
->>> --
->>> Previous patch version can be found here:
->>> https://patchwork.ozlabs.org/patch/612222/
->>> ---
->>>  drivers/pci/quirks.c    | 111 +++++++++++++++++++++++++++++++++++++++++++++++-
->>>  include/linux/pci_ids.h |  16 +++++++
->>>  2 files changed, 126 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index c232729f5b1b..9e6d6aafc2ab 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -3158,8 +3158,117 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
->>>   */
->>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->>>  			 quirk_broken_intx_masking);
->>> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->>> +
->>> +#define CONNECTX_4_CURR_MAX_MINOR 99
->>> +#define CONNECTX_4_INTX_SUPPORT_MINOR 14
->>> +
->>> +/*
->>> + * Checking ConnectX-4/LX FW version to see if it supports legacy interrupts.
->>> + * If so, don't mark it as broken.
->>> + * FW minor > 99 means older FW version format and no INTx masking support.
->>> + * FW minor < 14 means new FW version format and no INTx masking support.
->>> + */
->>> +static void quirk_connectx_4_verify_fw(struct pci_dev *dev)
->>> +{
->>> +	u16 pmcsr;
->>> +	u8 __iomem *fw_ver;
->>> +	u8 fw_minor;
->>> +
->>> +	dev->broken_intx_masking = 1;
->>> +
->>> +	/*
->>> +	 * Check that the device is in the D0 power state. If it's not,
->>> +	 * there is no point to look any further.
->>> +	 */
->>> +	if (dev->pm_cap) {
->>> +		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
->>> +		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0)
->>> +			return;
->>> +	}
->>> +
->>> +	/* Convert from PCI bus to resource space.  */
->>> +	fw_ver = ioremap(pci_resource_start(dev, 0), 2);
->> This is a little problematic.  This is run as a HEADER quirk, and the
->> ioremap() depends on the BAR being initialized.  On x86, the BAR
->> likely has been initialized by the BIOS, but that's not true on all
->> arches, so we can't rely on it.
->>
->> I think you probably should make this a FINAL quirk and call
->> pci_enable_device_mem() first, then use pci_iomap().  That way all the
->> BARs will have been assigned, and it also means you don't need to
->> worry about state D0 above, because pci_enable_device_mem() will make
->> sure that the device is in D0.
->>
->>> +	if (!fw_ver) {
->>> +		dev_warn(&dev->dev, "Can't map ConnectX-4 initialization segment\n");
->>> +		return;
->>> +	}
->>> +
->>> +	fw_minor = readb(fw_ver + 1);
->>> +	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
->>> +	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR)
->>> +		dev_warn(&dev->dev, "ConnectX-4: FW doesn't support INTx masking, disabling. Please upgrade FW for INTx support\n");
->> Can you print the current firmware version and maybe the required one
->> here?  I think that might help the user figure out how to fix the
->> problem.
->>
->>> +	else
->>> +		dev->broken_intx_masking = 0;
->>> +
->>> +	iounmap(fw_ver);
->>> +}
->>> +
->>> +/*
->>> + * Mellanox devices that fail under PCI device assignment using DisINTx masking
->>> + */
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_ARBEL,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_SINAI,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX2,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3,
->>> +			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
->>>  			 quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX4,
->>> +			 quirk_connectx_4_verify_fw);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX,
->>> +			 quirk_connectx_4_verify_fw);
->>>  
->>>  /*
->>>   * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
->>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>> index c58752fe16c4..1c742842e76c 100644
->>> --- a/include/linux/pci_ids.h
->>> +++ b/include/linux/pci_ids.h
->>> @@ -2262,6 +2262,22 @@
->>>  #define PCI_DEVICE_ID_MELLANOX_ARBEL	0x6282
->>>  #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
->>>  #define PCI_DEVICE_ID_MELLANOX_SINAI	0x6274
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX4 0x1013
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX 0x1015
->>>  
->>>  #define PCI_VENDOR_ID_DFI		0x15bd
->>>  
->>> -- 
->>> 1.8.3.1
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
