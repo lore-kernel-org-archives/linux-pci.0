@@ -1,56 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:42017 "EHLO quartz.orcorp.ca"
+Received: from mx2.suse.de ([195.135.220.15]:45164 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756864AbcKXQ0Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Nov 2016 11:26:25 -0500
-Date: Thu, 24 Nov 2016 09:26:20 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161124162620.GC20818@obsidianresearch.com>
-References: <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
- <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+        id S1752653AbcKHHta (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Nov 2016 02:49:30 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Subject: [RFC PATCH] pci: add pci_irq_get_affinity_vector()
+Date: Tue,  8 Nov 2016 08:47:21 +0100
+Message-Id: <1478591241-123356-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 24, 2016 at 10:45:18AM +0100, Christian König wrote:
-> Am 24.11.2016 um 00:25 schrieb Jason Gunthorpe:
-> >There is certainly nothing about the hardware that cares
-> >about ZONE_DEVICE vs System memory.
-> Well that is clearly not so simple. When your ZONE_DEVICE pages describe a
-> PCI BAR and another PCI device initiates a DMA to this address the DMA
-> subsystem must be able to check if the interconnection really works.
+Add a reverse-mapping function to return the interrupt vector for
+any CPU if interrupt affinity is enabled.
 
-I said the hardware doesn't care.. You are right, we still have an
-outstanding problem in Linux of how to generically DMA map a P2P
-address - which is a different issue from getting the P2P address from
-a __user pointer...
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/pci/msi.c   | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 37 insertions(+)
 
-Jason
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index bfdd074..de5ed32 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1302,6 +1302,42 @@ const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
+ }
+ EXPORT_SYMBOL(pci_irq_get_affinity);
+ 
++/**
++ * pci_irq_get_affinity_vector - return the vector number for a given CPU
++ * @dev:	PCI device to operate on
++ * @cpu:	cpu number
++ *
++ * Returns the vector number for CPU @cpu or a negative error number
++ * if interrupt affinity is not set.
++ */
++int pci_irq_get_affinity_vector(struct pci_dev *dev, int cpu)
++{
++	if (dev->msix_enabled) {
++		struct msi_desc *entry;
++
++		for_each_pci_msi_entry(entry, dev) {
++			if (cpumask_test_cpu(cpu, entry->affinity))
++				return entry->irq;
++		}
++		return -EINVAL;
++	} else if (dev->msi_enabled) {
++		struct msi_desc *entry = first_pci_msi_entry(dev);
++		int nr;
++
++		if (!entry)
++			return -ENOENT;
++
++		for (nr = 0; nr < entry->nvec_used; nr++) {
++			if (cpumask_test_cpu(cpu, &entry->affinity[nr]))
++				return dev->irq + nr;
++		}
++		return -EINVAL;
++	} else {
++		return dev->irq;
++	}
++}
++EXPORT_SYMBOL(pci_irq_get_affinity_vector);
++
+ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0e49f70..2dd0817 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1315,6 +1315,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ void pci_free_irq_vectors(struct pci_dev *dev);
+ int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+ const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev, int vec);
++int pci_irq_get_affinity_vector(struct pci_dev *pdev, int cpu);
+ 
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-- 
+1.8.5.6
+
