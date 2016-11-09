@@ -1,121 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:32873 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932329AbcKHRGi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 12:06:38 -0500
-Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
-To: Will Deacon <will.deacon@arm.com>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
- <20161108161245.GD20591@arm.com>
- <8adfe182-4939-479d-6013-25ec40021b20@huawei.com>
- <20161108164948.GG20591@arm.com>
-CC: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        <mark.rutland@arm.com>, <devicetree@vger.kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <minyard@acm.org>, <arnd@arndb.de>, <catalin.marinas@arm.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <liviu.dudau@arm.com>, <linux-kernel@vger.kernel.org>,
-        <xuwei5@hisilicon.com>, <linuxarm@huawei.com>, <olof@lixom.net>,
-        <robh+dt@kernel.org>, <zourongrong@gmail.com>,
-        <linux-serial@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <bhelgaas@google.com>, <kantyzc@163.com>,
-        <linux-arm-kernel@lists.infradead.org>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <ecf81900-8116-2ef7-8ebb-e5739cc91de7@huawei.com>
-Date: Tue, 8 Nov 2016 17:05:50 +0000
-MIME-Version: 1.0
-In-Reply-To: <20161108164948.GG20591@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from foss.arm.com ([217.140.101.70]:54734 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753976AbcKIOTD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 09:19:03 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 02/16] drivers: acpi: iort: introduce linker section for IORT entries probing
+Date: Wed,  9 Nov 2016 14:19:34 +0000
+Message-Id: <20161109141948.19244-3-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2016 16:49, Will Deacon wrote:
-> On Tue, Nov 08, 2016 at 04:33:44PM +0000, John Garry wrote:
->> On 08/11/2016 16:12, Will Deacon wrote:
->>> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
->>>> +static inline void arm64_set_extops(struct extio_ops *ops)
->>>> +{
->>>> +	if (ops)
->>>> +		WRITE_ONCE(arm64_extio_ops, ops);
->>>
->>> Why does this need to be WRITE_ONCE? You don't have READ_ONCE on the reader
->>> side. Also, what if multiple drivers want to set different ops for distinct
->>> address ranges?
->>
->> I think that the idea here is that we only have possibly one master in the
->> system which offers indirectIO backend, so another one could not possibly
->> re-set this value.
->
-> Why is that assumption valid, and why does WRITE_ONCE help there? It's not
-> ONCE as in WARN_ONCE, more ONCE as in exactly-once-per-invocation.
+Since commit e647b532275b ("ACPI: Add early device probing
+infrastructure") the kernel has gained the infrastructure that allows
+adding linker script section entries to execute ACPI driver callbacks
+(ie probe routines) for all subsystems that register a table entry
+in the respective kernel section (eg clocksource, irqchip).
 
-It's only valid based on the inherent assumption that all indirectIO is 
-redirected to one backend master, i.e. LPC driver.
+Since ARM IOMMU devices data is described through IORT tables when
+booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
+callback routines that are called to probe IORT entries and initialize
+the respective IOMMU devices.
 
-Anyway, right, I don't think that WRITE_ONCE is correct. Zhichang was 
-looking for something which would only allow the pointer to be written 
-once ever.
+To avoid adding driver specific hooks into IORT table initialization
+code (breaking therefore code modularity - ie ACPI IORT code must be made
+aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
+that allows ARM SMMU drivers to take advantage of the ACPI early probing
+infrastructure, so that they can add linker script section entries
+containing drivers callback to be executed on IORT tables detection.
 
->
->>>> diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
->>>> new file mode 100644
->>>> index 0000000..647b3fa
->>>> --- /dev/null
->>>> +++ b/arch/arm64/kernel/extio.c
->>>> @@ -0,0 +1,27 @@
->>>> +/*
->>>> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
->>>> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
->>>> + *
->>>> + * This program is free software; you can redistribute it and/or modify
->>>> + * it under the terms of the GNU General Public License version 2 as
->>>> + * published by the Free Software Foundation.
->>>> + *
->>>> + * This program is distributed in the hope that it will be useful,
->>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>> + * GNU General Public License for more details.
->>>> + *
->>>> + * You should have received a copy of the GNU General Public License
->>>> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
->>>> + */
->>>> +
->>>> +#include <linux/io.h>
->>>> +
->>>> +struct extio_ops *arm64_extio_ops;
->>>> +
->>>> +
->>>> +BUILD_EXTIO(b, u8)
->>>> +
->>>> +BUILD_EXTIO(w, u16)
->>>> +
->>>> +BUILD_EXTIO(l, u32)
->>>
->>> Is there no way to make this slightly more generic, so that it can be
->>> re-used elsewhere? For example, if struct extio_ops was common, then
->>> you could have the singleton (which maybe should be an interval tree?),
->>> type definition, setter function and the BUILD_EXTIO invocations
->>> somewhere generic, rather than squirelled away in the arch backend.
->>>
->> The concern would be that some architecture which uses generic higher-level
->> ISA accessor ops, but have IO space, could be affected.
->
-> You're already adding a Kconfig symbol for this stuff, so you can keep
-> that if you don't want it on other architectures. I'm just arguing that
-> plumbing drivers directly into arch code via arm64_set_extops is not
-> something I'm particularly fond of, especially when it looks like it
-> could be avoided with a small amount of effort.
+Since IORT nodes are differentiated by a type, the callback routines
+can easily parse the IORT table entries, check the IORT nodes and
+carry out some actions whenever the IORT node type associated with
+the driver specific callback is matched.
 
-We'll check this.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/acpi/arm64/iort.c         | 13 ++++++++++---
+ include/asm-generic/vmlinux.lds.h |  1 +
+ include/linux/acpi_iort.h         |  3 +++
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-Cheers,
-John
-
->
-> Will
->
-> .
->
-
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 6b81746..2c46ebc 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -361,8 +361,15 @@ void __init acpi_iort_init(void)
+ 	acpi_status status;
+ 
+ 	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
+-	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+-		const char *msg = acpi_format_exception(status);
+-		pr_err("Failed to get table, %s\n", msg);
++	if (ACPI_FAILURE(status)) {
++		if (status != AE_NOT_FOUND) {
++			const char *msg = acpi_format_exception(status);
++
++			pr_err("Failed to get table, %s\n", msg);
++		}
++
++		return;
+ 	}
++
++	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 3074796..f9c9f3c 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -563,6 +563,7 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
++	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index 0e32dac..d16fdda 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -39,4 +39,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+ { return NULL; }
+ #endif
+ 
++#define IORT_ACPI_DECLARE(name, table_id, fn)		\
++	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
++
+ #endif /* __ACPI_IORT_H__ */
+-- 
+2.10.0
 
