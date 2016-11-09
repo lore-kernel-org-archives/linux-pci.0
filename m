@@ -1,157 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55274 "EHLO foss.arm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42170 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753959AbcKPP2s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Nov 2016 10:28:48 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v8 03/16] drivers: acpi: iort: add support for IOMMU fwnode registration
-Date: Wed, 16 Nov 2016 15:29:23 +0000
-Message-Id: <20161116152936.22955-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+        id S933949AbcKIPHr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 10:07:47 -0500
+Date: Wed, 9 Nov 2016 08:07:46 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Adi Menachem <adim@mellanox.com>
+Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+Message-ID: <20161109080746.24dd79dd@t450s.home>
+In-Reply-To: <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        <20161106100832.41e173d5@t450s.home>
+        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
-components that allow creating the kernel data structures required to
-probe and initialize the IOMMU devices.
+On Wed, 9 Nov 2016 14:49:02 +0000
+Ilya Lesokhin <ilyal@mellanox.com> wrote:
 
-This patch provides support in the IORT kernel code to register IOMMU
-components and their respective fwnode.
+> I would virtualize the "ATS Control Register".
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 86 insertions(+)
+And do what?
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 2c46ebc..1ac2720 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -20,7 +20,9 @@
- 
- #include <linux/acpi_iort.h>
- #include <linux/kernel.h>
-+#include <linux/list.h>
- #include <linux/pci.h>
-+#include <linux/slab.h>
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -28,6 +30,90 @@ struct iort_its_msi_chip {
- 	u32			translation_id;
- };
- 
-+struct iort_fwnode {
-+	struct list_head list;
-+	struct acpi_iort_node *iort_node;
-+	struct fwnode_handle *fwnode;
-+};
-+static LIST_HEAD(iort_fwnode_list);
-+static DEFINE_SPINLOCK(iort_fwnode_lock);
-+
-+/**
-+ * iort_set_fwnode() - Create iort_fwnode and use it to register
-+ *		       iommu data in the iort_fwnode_list
-+ *
-+ * @node: IORT table node associated with the IOMMU
-+ * @fwnode: fwnode associated with the IORT node
-+ *
-+ * Returns: 0 on success
-+ *          <0 on failure
-+ */
-+static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
-+				  struct fwnode_handle *fwnode)
-+{
-+	struct iort_fwnode *np;
-+
-+	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
-+
-+	if (WARN_ON(!np))
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&np->list);
-+	np->iort_node = iort_node;
-+	np->fwnode = fwnode;
-+
-+	spin_lock(&iort_fwnode_lock);
-+	list_add_tail(&np->list, &iort_fwnode_list);
-+	spin_unlock(&iort_fwnode_lock);
-+
-+	return 0;
-+}
-+
-+/**
-+ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
-+ *
-+ * @node: IORT table node to be looked-up
-+ *
-+ * Returns: fwnode_handle pointer on success, NULL on failure
-+ */
-+static inline
-+struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
-+{
-+	struct iort_fwnode *curr;
-+	struct fwnode_handle *fwnode = NULL;
-+
-+	spin_lock(&iort_fwnode_lock);
-+	list_for_each_entry(curr, &iort_fwnode_list, list) {
-+		if (curr->iort_node == node) {
-+			fwnode = curr->fwnode;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_fwnode_lock);
-+
-+	return fwnode;
-+}
-+
-+/**
-+ * iort_delete_fwnode() - Delete fwnode associated with an IORT node
-+ *
-+ * @node: IORT table node associated with fwnode to delete
-+ */
-+static inline void iort_delete_fwnode(struct acpi_iort_node *node)
-+{
-+	struct iort_fwnode *curr, *tmp;
-+
-+	spin_lock(&iort_fwnode_lock);
-+	list_for_each_entry_safe(curr, tmp, &iort_fwnode_list, list) {
-+		if (curr->iort_node == node) {
-+			list_del(&curr->list);
-+			kfree(curr);
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_fwnode_lock);
-+}
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
--- 
-2.10.0
+> Regarding poor behavior, I couldn't really find what happens when ATS is misconfigured, but I would assume it can cause problems.
+> The scenarios I'm concerned about are:
+> 	1. The guest enables translation caching, while the hypervisor thinks there are disabled -> Hypervisor won't issue invalidations.
+
+Aren't invalidations issued by the iommu, why does the hypervisor need
+to participate?  How would a software entity induce an invalidation?
+
+> 	2. Smallest Translation Unit misconfiguration. Not sure if it will cause invalid access or only poor caching behavior.
+> 
+> Thanks,
+> Ilya
+> 
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Sunday, November 06, 2016 7:09 PM
+> > To: Ilya Lesokhin <ilyal@mellanox.com>
+> > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com
+> > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+> > 
+> > On Sun, 6 Nov 2016 11:13:09 +0000
+> > Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> >   
+> > > Hi
+> > > I've noticed that VFIO doesn't virtualize the ATS capability.
+> > > It seems to me that translation caching and Smallest Translation Unit is  
+> > something you would want to control on the host. Am I wrong?
+> > 
+> > What about those fields would we virtualize?  Why does the host need to be
+> > an intermediary?  Can the user induce poor behavior with direct access to
+> > them?  Thanks,
+> > 
+> > Alex  
 
