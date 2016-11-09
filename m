@@ -1,69 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51786 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754255AbcKHVZb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 16:25:31 -0500
-Date: Tue, 8 Nov 2016 15:25:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] genirq/affinity: Introduce struct irq_affinity
-Message-ID: <20161108212526.GF14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-2-git-send-email-hch@lst.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V4 0/2] Add ACPI support for HiSilicon SoCs Host Controllers
+Date: Wed, 9 Nov 2016 17:14:55 +0800
+Message-ID: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478544462-9549-2-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 10:47:36AM -0800, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
-> 
-> Some drivers (various network and RDMA adapter for example) have a MSI-X
-> vector layout where most of the vectors are used for I/O queues and should
-> have CPU affinity assigned to them, but some (usually 1 but sometimes more)
-> at the beginning or end are used for low-performance admin or configuration
-> work and should not have any explicit affinity assigned to them.
-> 
-> This adds a new irq_affinity structure, which will be passed through a
-> variant of pci_irq_alloc_vectors that allows to specify these
-> requirements (and is extensible to any future quirks in that area) so that
-> the core IRQ affinity algorithm can take this quirks into account.
-> 
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
+This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
+PCIe controllers.
+The two patches respectively:
+        - rework the current HiSilicon driver to add support for ECAM
+          platforms(not RC).
+        - adds the HiSilicon ACPI specific quirks.
 
-s/Christogh/Christoph/ (also above)
+This patchset is based on branch pci/ecam-v6
+It can be found here:
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-v6)
 
-What tree would you prefer?  I vote for the IRQ tree since that seems
-to be where the interesting parts are, and I think I acked all the PCI
-bits.
+v3 -> v4:
+- rebase on pci/ecam-v6.
+- delete the unnecessary link_up check code. 
 
-> + * struct irq_affinity - Description for auto irq affinity assignements
-> + * @pre_vectors:	Reserved vectors at the beginning of the MSIX
-> + *			vector space
-> + * @post_vectors:	Reserved vectors at the end of the MSIX
-> + *			vector space
+v2 -> v3:
+- rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset. 
+- obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead of
+  hardcode the addresses.
+- modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
+  Arnd comments.
 
-Maybe include something more informative than just "reserved", e.g.,
-"Don't apply affinity to @pre_vectors at beginning of MSI-X vector
-space" or "Vectors at beginning of MSI-X vector space that are exempt
-from affinity"?
+v1 -> v2:
+- rebase against Tomasz RFC V5 quirk mechanism
+- add ACPI support for the HiSilicon Hip07 SoC PCIe controllers
 
-> + */
-> +struct irq_affinity {
-> +	int	pre_vectors;
-> +	int	post_vectors;
-> +};
-> +
->  #if defined(CONFIG_SMP)
->  
->  extern cpumask_var_t irq_default_affinity;
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dongdong Liu (2):
+  PCI: hisi: Add ECAM support for devices that are not RC
+  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
+ MAINTAINERS                                        |   1 +
+ drivers/acpi/pci_mcfg.c                            |  13 ++
+ drivers/pci/host/Kconfig                           |  12 +-
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-designware.c                 |   4 +-
+ drivers/pci/host/pcie-designware.h                 |   2 +
+ drivers/pci/host/pcie-hisi-acpi.c                  | 157 +++++++++++++++++++++
+ drivers/pci/host/pcie-hisi.c                       |  45 ++++++
+ include/linux/pci-ecam.h                           |   5 +
+ 10 files changed, 245 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+
+-- 
+1.9.1
+
