@@ -1,294 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44228 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751337AbcKAQ7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Nov 2016 12:59:40 -0400
-Date: Tue, 1 Nov 2016 11:59:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        bhelgaas@google.com, mark.rutland@arm.com, arnd@arndb.de,
-        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org,
-        benh@kernel.crashing.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com
-Subject: Re: [PATCH/RESEND V4 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-Message-ID: <20161101165934.GA5149@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478006926-240933-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478006926-240933-3-git-send-email-yuanzhichang@hisilicon.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38938 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754939AbcKJLci (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 06:32:38 -0500
+Date: Wed, 9 Nov 2016 17:00:02 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com
+Subject: Re: [PATCH v9 7/8] thunderbolt: Networking doc
+Message-ID: <20161109160002.GA9111@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478006926-240933-3-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 01, 2016 at 09:28:45PM +0800, zhichang.yuan wrote:
-> Currently if the range property is not specified of_translate_one
-> returns an error. There are some special devices that work on a
-> range of I/O ports where it's is not correct to specify a range
-> property as the cpu addresses are used by special accessors.
-> Here we add a new exception in of_translate_one to return
-> the cpu address if the range property is not there. The exception
-> checks if the parent bus is ISA and if the special accessors are
-> defined.
-
-Using "()" after function names helps distinguish them from text.
-
-s/it's is/it's/
-
-I haven't been paying attention, so I missed the context.  But "as the
-cpu addresses are used by special accessors" doesn't really make sense
-to me.  In general, *most* acccessors use CPU addresses, i.e.,
-resource addresses.  Accessors don't use bus addresses because we may
-have multiple instances of a bus, and we may reuse bus address ranges
-on the different instances.
-
-In the patch, I see a check for "parent bus is ISA"
-("of_bus_isa_match(parent)"), but I don't see the check for whether
-the special accessors are defined, so I can't quite connect the dots.
-
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+On Wed, Nov 09, 2016 at 04:20:07PM +0200, Amir Levy wrote:
+> Adding Thunderbolt(TM) networking documentation.
+> 
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 > ---
->  arch/arm64/include/asm/io.h |  7 +++++++
->  arch/arm64/kernel/extio.c   | 24 +++++++++++++++++++++++
->  drivers/of/address.c        | 47 +++++++++++++++++++++++++++++++++++++++++++--
->  drivers/pci/pci.c           |  6 +++---
->  include/linux/of_address.h  | 17 ++++++++++++++++
->  5 files changed, 96 insertions(+), 5 deletions(-)
+>  Documentation/00-INDEX                   |   2 +
+>  Documentation/thunderbolt/networking.txt | 132 +++++++++++++++++++++++++++++++
+
+Note, new files should be in .rst format, and live in the new
+subdirectory for them (somewhere in Documentation, don't know off the
+top of my head...)
+
+>  2 files changed, 134 insertions(+)
+>  create mode 100644 Documentation/thunderbolt/networking.txt
 > 
-> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> index 136735d..e480199 100644
-> --- a/arch/arm64/include/asm/io.h
-> +++ b/arch/arm64/include/asm/io.h
-> @@ -175,6 +175,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
->  #define outsl outsl
->  
->  DECLARE_EXTIO(l, u32)
-> +
-> +
-> +#define indirect_io_ison indirect_io_ison
-> +extern int indirect_io_ison(void);
+> diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+> index 3acc4f1..0239e68 100644
+> --- a/Documentation/00-INDEX
+> +++ b/Documentation/00-INDEX
+> @@ -440,6 +440,8 @@ this_cpu_ops.txt
+>  	- List rationale behind and the way to use this_cpu operations.
+>  thermal/
+>  	- directory with information on managing thermal issues (CPU/temp)
+> +thunderbolt/
+> +	- directory with info regarding Thunderbolt.
+>  trace/
+>  	- directory with info on tracing technologies within linux
+>  unaligned-memory-access.txt
 
-This makes it look like "ison" is some new word I'm not familiar with.
-"indirect_io_is_on()" or even "indirect_io_enabled()" would be more
-readable.
+This change is probably not needed.
+
+> diff --git a/Documentation/thunderbolt/networking.txt b/Documentation/thunderbolt/networking.txt
+> new file mode 100644
+> index 0000000..88d1c12
+> --- /dev/null
+> +++ b/Documentation/thunderbolt/networking.txt
+> @@ -0,0 +1,132 @@
+> +Intel Thunderbolt(TM) Networking driver
+> +=======================================
+> +
+> +Copyright(c) 2013 - 2016 Intel Corporation.
+> +
+> +Contact Information:
+> +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
+> +Edited by Amir Levy <amir.jer.levy@intel.com>
+> +
+> +Overview
+> +========
+> +
+> +* The Thunderbolt Networking driver enables peer to peer networking on non-Apple
+> +  platforms running Linux.
+> +
+> +* The driver creates a virtual Ethernet device that enables computer to computer
+> +  communication over the Thunderbolt cable.
+> +
+> +* Using Thunderbolt Networking you can perform high speed file transfers between
+> +  computers, perform PC migrations and/or set up small workgroups with shared
+> +  storage without compromising any other Thunderbolt functionality.
+> +
+> +* The driver is located in drivers/thunderbolt/icm.
+> +
+> +* This driver will function only on non-Apple platforms with firmware based
+> +  Thunderbolt controllers that support Thunderbolt Networking.
+> +
+> +  +----------------+            +----------------+
+> +  |Host 1          |            |Host 2          |
+> +  |                |            |                |
+> +  |   +-------+    |            |    +-------+   |
+> +  |   |Network|    |            |    |Network|   |
+> +  |   |Stack  |    |            |    |Stack  |   |
+> +  |   +-------+    |            |    +-------+   |
+> +  |       ^        |            |        ^       |
+> +  |       |        |            |        |       |
+> +  |       v        |            |        v       |
+> +  | +-----------+  |            |  +-----------+ |
+> +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> +  | |Networking |  |            |  |Networking | |
+> +  | |Driver     |  |            |  |Driver     | |
+> +  | +-----------+  |            |  +-----------+ |
+> +  |       ^        |            |        ^       |
+> +  |       |        |            |        |       |
+> +  |       v        |            |        v       |
+> +  | +-----------+  |            |  +-----------+ |
+> +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> +  | |Controller |<-+------------+->|Controller | |
+> +  | |with ICM   |  |            |  |with ICM   | |
+> +  | |enabled    |  |            |  |enabled    | |
+> +  | +-----------+  |            |  +-----------+ |
+> +  +----------------+            +----------------+
+> +
+> +Files
+> +=====
+> +
+> +The following files are located in the drivers/thunderbolt/icm directory:
+> +
+> +- icm_nhi.c/h:	These files allow communication with the firmware (Intel
+> +  Connection Manager) based controller. They also create an interface for
+> +  netlink communication with a user space daemon.
+> +
+> +- net.c/net.h:	These files implement the 'eth' interface for the
+> +  Thunderbolt(TM) Networking.
+
+You don't have to list the files, right?
 
 > +
-> +#define chk_indirect_range chk_indirect_range
-> +extern int chk_indirect_range(u64 taddr);
->  #endif
->  
->  
-> diff --git a/arch/arm64/kernel/extio.c b/arch/arm64/kernel/extio.c
-> index 80cafd5..55df8dc 100644
-> --- a/arch/arm64/kernel/extio.c
-> +++ b/arch/arm64/kernel/extio.c
-> @@ -19,6 +19,30 @@
->  
->  struct extio_ops *arm64_extio_ops;
->  
-> +/**
-> + * indirect_io_ison - check whether indirectIO can work well. This function only call
-> + *		before the target I/O address was obtained.
-> + *
-> + * Returns 1 when indirectIO can work.
-> + */
-> +int indirect_io_ison()
-> +{
-> +	return arm64_extio_ops ? 1 : 0;
-> +}
+> +Interface to User Space
+> +=======================
 > +
-> +/**
-> + * check_indirect_io - check whether the input taddr is for indirectIO.
+> +The interface to the user space module is implemented through a Generic Netlink.
 
-Comment name ("check_indirect_io") doesn't match actual function name
-("chk_indirect_range").
+Huh?  Not a normal network device?
 
-One of my pet peeves: "check" is completely worthless as part of a
-function name because it doesn't help the reader figure out the sense
-of the result.  What does a "true" result mean?  Name it something
-like "address_is_indirect()" so it reads naturally when the caller
-does something like "if (address_is_indirect())"
+> +This is the communications protocol between the Thunderbolt driver and the user
+> +space application.
 
-> + * @taddr: the io address to be checked.
-> + *
-> + * Returns 1 when taddr is in the range; otherwise return 0.
-> + */
-> +int chk_indirect_range(u64 taddr)
-> +{
-> +	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end < taddr)
-> +		return 0;
-> +
-> +	return 1;
-> +}
->  
->  BUILD_EXTIO(b, u8)
->  
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 02b2903..0bee822 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -479,6 +479,39 @@ static int of_empty_ranges_quirk(struct device_node *np)
->  	return false;
->  }
->  
-> +
-> +/*
-> + * Check whether the current device being translating use indirectIO.
+What userspace application?
 
-What does "the current device" mean?  I assume you're talking about
-"any device on 'bus'"?  And apparently the caller is inquiring about a
-particular address, too?
+> +Note that this interface mediates user space communication with ICM.
 
-> + * return 1 if the check is past, or 0 represents fail checking.
+What is ICM?
 
-This doesn't really make sense.  I assume you mean something like
-"return 1 if 'address' uses indirectIO; 0 otherwise"?
+> +(Existing Linux tools can be used to configure the network interface.)
 
-> + */
-> +static int of_isa_indirect_io(struct device_node *parent,
-> +				struct of_bus *bus, __be32 *addr,
-> +				int na, u64 *presult)
-> +{
-> +	unsigned int flags;
-> +	unsigned int rlen;
-> +
-> +	/* whether support indirectIO */
-> +	if (!indirect_io_ison())
-> +		return 0;
-> +
-> +	if (!of_bus_isa_match(parent))
-> +		return 0;
-> +
-> +	flags = bus->get_flags(addr);
-> +	if (!(flags & IORESOURCE_IO))
-> +		return 0;
-> +
-> +	/* there is ranges property, apply the normal translation directly. */
-> +	if (of_get_property(parent, "ranges", &rlen))
-> +		return 0;
-> +
-> +	*presult = of_read_number(addr + 1, na - 1);
-> +
-> +	return chk_indirect_range(*presult);
-> +}
-> +
->  static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->  			    struct of_bus *pbus, __be32 *addr,
->  			    int na, int ns, int pna, const char *rprop)
-> @@ -532,7 +565,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->  	}
->  	memcpy(addr, ranges + na, 4 * pna);
->  
-> - finish:
-> +finish:
->  	of_dump_addr("parent translation for:", addr, pna);
->  	pr_debug("with offset: %llx\n", (unsigned long long)offset);
->  
-> @@ -595,6 +628,15 @@ static u64 __of_translate_address(struct device_node *dev,
->  			result = of_read_number(addr, na);
->  			break;
->  		}
-> +		/*
-> +		 * For indirectIO device which has no ranges property, get
-> +		 * the address from reg directly.
-> +		 */
-> +		if (of_isa_indirect_io(dev, bus, addr, na, &result)) {
-> +			pr_info("isa indirectIO matched(%s)..addr = 0x%llx\n",
-> +				of_node_full_name(dev), result);
-> +			break;
-> +		}
->  
->  		/* Get new parent bus and counts */
->  		pbus = of_match_bus(parent);
-> @@ -688,8 +730,9 @@ static int __of_address_to_resource(struct device_node *dev,
->  	if (taddr == OF_BAD_ADDR)
->  		return -EINVAL;
->  	memset(r, 0, sizeof(struct resource));
-> -	if (flags & IORESOURCE_IO) {
-> +	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
->  		unsigned long port;
-> +
->  		port = pci_address_to_pio(taddr);
->  		if (port == (unsigned long)-1)
->  			return -EINVAL;
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ba34907..1a08511 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3263,7 +3263,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->  
->  #ifdef PCI_IOBASE
->  	struct io_range *range;
-> -	resource_size_t allocated_size = 0;
-> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+Why aren't they sufficient for everything here?
 
-I don't understand what's going on here.  PCIBIOS_MIN_IO is an
-*address*, so you're setting a *size* to an address.  Maybe this just
-needs an explanation.  The connection to the rest of this patch isn't
-obvious.  If it could be split to a separate patch, so much the
-better; then you'd have a nice place to describe it.
+> +
+> +The Thunderbolt Daemon utilizes this interface to communicate with the driver.
 
->  	/* check if the range hasn't been previously recorded */
->  	spin_lock(&io_range_lock);
-> @@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
->  
->  #ifdef PCI_IOBASE
->  	struct io_range *range;
-> -	resource_size_t allocated_size = 0;
-> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
->  
->  	if (pio > IO_SPACE_LIMIT)
->  		return address;
-> @@ -3335,7 +3335,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  {
->  #ifdef PCI_IOBASE
->  	struct io_range *res;
-> -	resource_size_t offset = 0;
-> +	resource_size_t offset = PCIBIOS_MIN_IO;
->  	unsigned long addr = -1;
->  
->  	spin_lock(&io_range_lock);
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 3786473..0ba7e21 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -24,6 +24,23 @@ struct of_pci_range {
->  #define for_each_of_pci_range(parser, range) \
->  	for (; of_pci_range_parser_one(parser, range);)
->  
+What "Thunderbolt Daemon"?  What is "this"?
+
+> +To be accessed by the user space module, both kernel and user space modules
+> +have to register with the same GENL_NAME.
+
+What userspace modules?
+
+How do you set GENL_NAME?  What is that?
+
+> +For the purpose of the Thunderbolt Network driver, "thunderbolt" is used.
+
+What do you mean?
+
+> +The registration is done at driver initialization time for all instances
+> +of the Thunderbolt controllers.
+
+Who does this?
+
+> The communication is carried through pre-defined
+> +Thunderbolt messages. Each specific message has a callback function that is
+> +called when the related message is received.
+
+Is this the internal structure of the driver?  If so, why not just put
+it all in the code itself and build the documentation from it?
+
 > +
-> +#ifndef indirect_io_ison
-> +#define indirect_io_ison indirect_io_ison
-> +static inline int indirect_io_ison(void)
-> +{
-> +	return 0;
-> +}
-> +#endif
+> +Message Definitions:
+> +* NHI_CMD_UNSPEC: Not used.
+> +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
+> +  communication channel.
+> +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe and
+> +  to close communication channel.
+> +* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
+> +  driver version, FW version offset, number of ports in the controller
+> +  and DMA port.
+> +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
+> +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
+> +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
+> +  changes or disconnect path.
+> +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space module to FW to
+> +  establish path.
+> +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
 > +
-> +#ifndef chk_indirect_range
-> +#define chk_indirect_range chk_indirect_range
-> +static inline int chk_indirect_range(u64 taddr)
-> +{
-> +	return 0;
-> +}
-> +#endif
+> +Communication with Intel Connection Manager(ICM) Firmware
+> +=========================================================
 > +
->  /* Translate a DMA address from device space to CPU space */
->  extern u64 of_translate_dma_address(struct device_node *dev,
->  				    const __be32 *in_addr);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +There are several circular buffers in Thunderbolt each using Direct Memory
+> +Access (DMA).
+
+Again, internal documentation?
+
+Isn't this just a "normal" network device?  Why document any of this in
+a separate way?  What can a user do with this?  Who is the audience of
+this file?
+
+still confused,
+
+greg k-h
