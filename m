@@ -1,102 +1,130 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2016 15:03:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: Re: [PATCH 1/2 v3] pci-hyperv: properly handle pci bus remove
-Message-ID: <20161111210359.GD9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1475563367-16511-1-git-send-email-longli@exchange.microsoft.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475563367-16511-1-git-send-email-longli@exchange.microsoft.com>
+In-Reply-To: <1478264387-17914-3-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org> <1478264387-17914-3-git-send-email-srinivas.kandagatla@linaro.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Date: Wed, 9 Nov 2016 16:07:21 +0530
+Message-ID: <CAFp+6iF7rspwXvANoz_3XgC33-CwSYzPvdpwsGK8UAfp064Jxg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc: svarbanov@mm-sol.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 03, 2016 at 11:42:47PM -0700, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
-> 
-> hv_pci_devices_present is called in hv_pci_remove when we remove a PCI device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the bus is already removed before the call, so we don't need to rescan the bus in the workqueue scheduled from hv_pci_devices_present. By introducing status hv_pcibus_removed, we can avoid this situation.
-> 
-> Signed-off-by: Long Li <longli@microsoft.com>
-> Tested-by: Cathy Avery <cavery@redhat.com>
-> Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
+Hi,
 
-I need an ack from the Hyper-V maintainers.  I see acks for previous
-versions, but I don't know whether you've changed things that would
-invalidate those acks.  If the acks still apply, please include them
-and repost these patches.
-
-Also, please run "git log --oneline drivers/pci/host/pci-hyperv.c" and make
-your subject line match the previous ones.
-
+On Fri, Nov 4, 2016 at 6:29 PM, Srinivas Kandagatla
+<srinivas.kandagatla@linaro.org> wrote:
+> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+>
+> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+> pipe clocks are only setup after the phy is powered on.
+> It also adds ltssm_enable callback as it is very much different to other
+> supported SOCs in the driver.
+>
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 > ---
->  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index a8deeca..4a37598 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -348,6 +348,7 @@ enum hv_pcibus_state {
->  	hv_pcibus_init = 0,
->  	hv_pcibus_probed,
->  	hv_pcibus_installed,
-> +	hv_pcibus_removed,
->  	hv_pcibus_maximum
->  };
->  
-> @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
->  		put_pcichild(hpdev, hv_pcidev_ref_initial);
->  	}
->  
-> -	/* Tell the core to rescan bus because there may have been changes. */
-> -	if (hbus->state == hv_pcibus_installed) {
-> +	switch (hbus->state) {
-> +	case hv_pcibus_installed:
-> +		/*
-> +		 * Tell the core to rescan bus
-> +		 * because there may have been changes.
-> +		 */
->  		pci_lock_rescan_remove();
->  		pci_scan_child_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> -	} else {
-> +		break;
+
+Few minor nits.
+
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  68 +++++++-
+>  drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
+>  2 files changed, 239 insertions(+), 6 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 4059a6f..4a0538d 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -7,6 +7,7 @@
+>                         - "qcom,pcie-ipq8064" for ipq8064
+>                         - "qcom,pcie-apq8064" for apq8064
+>                         - "qcom,pcie-apq8084" for apq8084
+> +                       - "qcom,pcie-msm8996" for msm8996 or apq8096
+
+Since this works for both apq8096 and msm8996, compatible -
+"qcom,pcie-apq8096" for uniformity ?
+[snip]
+
+> @@ -231,3 +242,58 @@
+>                 pinctrl-0 = <&pcie0_pins_default>;
+>                 pinctrl-names = "default";
+>         };
 > +
-> +	case hv_pcibus_init:
-> +	case hv_pcibus_probed:
->  		survey_child_resources(hbus);
-> +		break;
+> +* Example for apq8096:
 > +
-> +	default:
-> +		break;
->  	}
->  
->  	up(&hbus->enum_sem);
-> @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
->  	if (!hbus)
->  		return -ENOMEM;
-> +	hbus->state = hv_pcibus_init;
->  
->  	/*
->  	 * The PCI bus "domain" is what is called "segment" in ACPI and
-> @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
->  		pci_stop_root_bus(hbus->pci_bus);
->  		pci_remove_root_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> +		hbus->state = hv_pcibus_removed;
->  	}
->  
->  	ret = hv_send_resources_released(hdev);
-> -- 
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +       pcie@00608000{
+> +               compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
+
+this will change accordingly.
+
+> +               power-domains = <&gcc PCIE1_GDSC>;
+> +               bus-range = <0x00 0xff>;
+> +               num-lanes = <1>;
+> +
+
+[snip]
+
+> +
+> +static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
+> +{
+> +       struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> +       struct device *dev = pcie->pp.dev;
+> +       u32 val;
+> +       int ret = 0;
+
+you don't need to initialize ret here.
+
+> +
+> +       ret = clk_prepare_enable(res->aux_clk);
+> +       if (ret) {
+> +               dev_err(dev, "cannot prepare/enable aux clock\n");
+> +               return ret;
+> +       }
+
+[snip]
+
+> @@ -429,6 +571,17 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
+>         return !!(val & PCI_EXP_LNKSTA_DLLLA);
+>  }
+>
+> +static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+> +{
+> +       struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> +
+> +       clk_disable_unprepare(res->slave_clk);
+> +       clk_disable_unprepare(res->master_clk);
+> +       clk_disable_unprepare(res->cfg_clk);
+> +       clk_disable_unprepare(res->aux_clk);
+> +       clk_disable_unprepare(res->pipe_clk);
+
+i am sure, this is not affecting the functionality, but the pipe clock
+is enabled after all the clocks.
+so it makes sense to disable it in the first place. you can just move
+this above slave_clk.
+
+[snip]
+
+> @@ -572,6 +738,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+>         { .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+>         { .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+>         { .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
+> +       { .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+
+this will change according to earlier comment in bindings.
+
+
+Thanks
+Vivek
+
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
