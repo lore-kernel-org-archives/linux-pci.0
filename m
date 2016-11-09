@@ -1,177 +1,130 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCHv2] PCI/VMD: Use SRCU as a local RCU to prevent delaying global RCU
-Date: Fri, 11 Nov 2016 16:08:45 -0700
-Message-Id: <1478905725-219032-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f171.google.com ([209.85.161.171]:33109 "EHLO
+        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752576AbcKIU7n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 15:59:43 -0500
+Received: by mail-yw0-f171.google.com with SMTP id r204so222438417ywb.0
+        for <linux-pci@vger.kernel.org>; Wed, 09 Nov 2016 12:59:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20161109195812.GA7528@wunner.de>
+References: <1478714735-134347-1-git-send-email-ravisadineni@chromium.org> <20161109195812.GA7528@wunner.de>
+From: Rajat Jain <rajatja@google.com>
+Date: Wed, 9 Nov 2016 12:59:01 -0800
+Message-ID: <CACK8Z6EJ45m+_fSNPQGpoTq52vWHwRyDguO6Syau3XFUt-HdkA@mail.gmail.com>
+Subject: Re: [PATCH] pciehp_resume: don't add existing device
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Ravi Chandra Sadineni <ravisadineni@chromium.org>,
+        linux-pci@vger.kernel.org, Todd Broch <tbroch@google.com>,
+        Gwendal Grignou <gwendal@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ravi Chandra Sadineni <ravisadineni@google.com>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        paul.gortmaker@windriver.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SRCU lets synchronize_srcu depend on VMD-local RCU primitives,
-preventing long delays from locking up RCU in other systems. VMD
-performs a synchronize when removing a device, but will hit all irq
-lists if the device uses all VMD vectors. This patch will not help VMD's
-RCU synchronization, but will isolate the read side delays to the VMD
-subsystem. Additionally, the use of SRCU in VMD's isr will keep it
-isolated from any other RCU waiters in the rest of the system.
+On Wed, Nov 9, 2016 at 11:58 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Wed, Nov 09, 2016 at 10:05:35AM -0800, Ravi Chandra Sadineni wrote:
+>> If a slot was occupied before supend, and nothing has changed after
+>> resume, we call pciehp_enable_slot() although it fails a little
+>> later with the message:
+>>    Device XXXX:XX:XX.X already exists at XXXX:XX:XX, cannot hot-add
+>>    Cannot add device at XXXX:XX:XX
+>>
+>> This was partly discussed here: https://lkml.org/lkml/2013/7/9/452
+>> and I'm pulling only the part4 of that patch, since it does not change
+>> anything functionally (or atleast does not seem to make it worse), but
+>> prevents uncomfortable messages pointed above.
 
-The patch was tested using concurrent fio and nvme resets:
-[global]
-rw=read
-bs=4k
-direct=1
-ioengine=libaio
-iodepth=32
-norandommap
-timeout=300
-runtime=1000000000
+Missing "Signed-off-by" :-)
 
-[nvme0]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme0n1
+>> ---
+>>  drivers/pci/hotplug/pciehp_core.c | 10 +++++++---
+>>  1 file changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+>> index 612b21a..873cff8 100644
+>> --- a/drivers/pci/hotplug/pciehp_core.c
+>> +++ b/drivers/pci/hotplug/pciehp_core.c
+>> @@ -290,6 +290,7 @@ static int pciehp_resume(struct pcie_device *dev)
+>>  {
+>>       struct controller *ctrl;
+>>       struct slot *slot;
+>> +     struct pci_bus *pbus = dev->port->subordinate;
+>>       u8 status;
+>>
+>>       ctrl = get_service_data(dev);
+>> @@ -302,10 +303,13 @@ static int pciehp_resume(struct pcie_device *dev)
+>>       /* Check if slot is occupied */
+>>       pciehp_get_adapter_status(slot, &status);
+>>       mutex_lock(&slot->hotplug_lock);
+>> -     if (status)
+>> -             pciehp_enable_slot(slot);
+>> -     else
+>> +     if (status) {
 
-[nvme1]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme1n1
+should be "} else {" (on the same line)
 
-while (true) do
-	for i in /sys/class/nvme/nvme*; do
-		echo "Resetting ${i##*/}"
-		echo 1 > $i/reset_controller;
-		sleep 5
-	done;
-done
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
-v1->v2: Kconfig depends on SRCU
+>> +             if (list_empty(&pbus->devices))
+>> +                     pciehp_enable_slot(slot);
+>> +     }
+>> +     else {
+>>               pciehp_disable_slot(slot);
+>> +     }
+>
+> What if the device plugged in after suspend is a different one
+> and requires e.g. an entirely different driver or different resource
+> allocations?
 
- drivers/pci/host/Kconfig |  2 +-
- drivers/pci/host/vmd.c   | 26 ++++++++++++++++++++------
- 2 files changed, 21 insertions(+), 7 deletions(-)
+I may be missing it completely, but this situation does not seem be
+handled well today (even without this patch). In the cases that you
+mention, it seems to me that the code will bail out (as of today) a
+little later in pciehp_configure_device().
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a..e020359 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -286,7 +286,7 @@ config PCIE_ROCKCHIP
- 	  4 slots.
- 
- config VMD
--	depends on PCI_MSI && X86_64
-+	depends on PCI_MSI && X86_64 && SRCU
- 	tristate "Intel Volume Management Device Driver"
- 	default N
- 	---help---
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 6614b3552..af4eca2 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-+#include <linux/srcu.h>
- #include <linux/rculist.h>
- #include <linux/rcupdate.h>
- 
-@@ -39,7 +40,6 @@
- /**
-  * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
-  * @node:	list item for parent traversal.
-- * @rcu:	RCU callback item for freeing.
-  * @irq:	back pointer to parent.
-  * @enabled:	true if driver enabled IRQ
-  * @virq:	the virtual IRQ value provided to the requesting driver.
-@@ -49,7 +49,6 @@
-  */
- struct vmd_irq {
- 	struct list_head	node;
--	struct rcu_head		rcu;
- 	struct vmd_irq_list	*irq;
- 	bool			enabled;
- 	unsigned int		virq;
-@@ -58,11 +57,13 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-+ * @srcu:	SRCU struct for local synchronization.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
-+	struct srcu_struct	srcu;
- 	unsigned int		count;
- };
- 
-@@ -224,14 +225,14 @@ static void vmd_msi_free(struct irq_domain *domain,
- 	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
- 	unsigned long flags;
- 
--	synchronize_rcu();
-+	synchronize_srcu(&vmdirq->irq->srcu);
- 
- 	/* XXX: Potential optimization to rebalance */
- 	raw_spin_lock_irqsave(&list_lock, flags);
- 	vmdirq->irq->count--;
- 	raw_spin_unlock_irqrestore(&list_lock, flags);
- 
--	kfree_rcu(vmdirq, rcu);
-+	kfree(vmdirq);
- }
- 
- static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
-@@ -646,11 +647,12 @@ static irqreturn_t vmd_irq(int irq, void *data)
- {
- 	struct vmd_irq_list *irqs = data;
- 	struct vmd_irq *vmdirq;
-+	int idx;
- 
--	rcu_read_lock();
-+	idx = srcu_read_lock(&irqs->srcu);
- 	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
- 		generic_handle_irq(vmdirq->virq);
--	rcu_read_unlock();
-+	srcu_read_unlock(&irqs->srcu, idx);
- 
- 	return IRQ_HANDLED;
- }
-@@ -696,6 +698,10 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENOMEM;
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
-+		err = init_srcu_struct(&vmd->irqs[i].srcu);
-+		if (err)
-+			return err;
-+
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-@@ -714,11 +720,19 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	return 0;
- }
- 
-+static void vmd_cleanup_srcu(struct vmd_dev *vmd)
-+{
-+	int i;
-+	for (i = 0; i < vmd->msix_count; i++)
-+		cleanup_srcu_struct(&vmd->irqs[i].srcu);
-+}
-+
- static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
- 	vmd_detach_resources(vmd);
-+	vmd_cleanup_srcu(vmd);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
- 	pci_remove_root_bus(vmd->bus);
--- 
-1.8.3.1
+       dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
+        if (dev) {
+                ctrl_err(ctrl, "Device %s already exists at
+%04x:%02x:00, cannot hot-add\n",
+                         pci_name(dev), pci_domain_nr(parent), parent->number);
+                pci_dev_put(dev);
+                ret = -EEXIST;
+                goto out;
+        }
+
+I wasn't able to figure out that if the device was replaced, how the
+old driver would be notified or the new driver's probe routine get
+called. Or how do the resources get assigned to the new device?
+
+So I'm trying to understand if this patch makes things any worse than
+they are now (since atleast it makes the resume time quite faster
+(avoiding up to 1 second delay in pciehp_check_link_status waiting for
+link))?
+
+>
+> What if the device is the same but child devices have been plugged
+> in during system sleep? (E.g. additional devices attached to a
+> Thunderbolt daisy chain.)
+>
+> At the very least you need to rescan the bus here.
+
+I agree. But how does this work today then?
+
+Thanks,
+
+Rajat
+
+
+
+
+>
+> Thanks,
+>
+> Lukas
+>
+>>       mutex_unlock(&slot->hotplug_lock);
+>>       return 0;
+>>  }
+>> --
+>> 2.6.6
