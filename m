@@ -1,41 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] blk-mq: add a first_vec argument to
- blk_mq_pci_map_queues
-To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
-References: <1478473646-12524-1-git-send-email-hch@lst.de>
- <1478473646-12524-3-git-send-email-hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <c9322061-cbd0-8347-6581-d0a91c8b144f@suse.de>
-Date: Mon, 7 Nov 2016 10:37:16 +0100
-MIME-Version: 1.0
-In-Reply-To: <1478473646-12524-3-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54708 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752427AbcKIOTA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 09:19:00 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 01/16] drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
+Date: Wed,  9 Nov 2016 14:19:33 +0000
+Message-Id: <20161109141948.19244-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/2016 12:07 AM, Christoph Hellwig wrote:
-> This allows skipping the first N IRQ vectors in case they are used for
-> control or admin interrupts.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-mq-pci.c         | 6 ++++--
->  drivers/nvme/host/pci.c    | 2 +-
->  include/linux/blk-mq-pci.h | 3 ++-
->  3 files changed, 7 insertions(+), 4 deletions(-)
-> 
-With this patch smartpqi doesn't compile anymore; it still uses the old
-interface.
-So to get this merged you probably should send a patch for that one, too.
+On systems booting with a device tree, every struct device is associated
+with a struct device_node, that provides its DT firmware representation.
+The device node can be used in generic kernel contexts (eg IRQ
+translation, IOMMU streamid mapping), to retrieve the properties
+associated with the device and carry out kernel operations accordingly.
+Owing to the 1:1 relationship between the device and its device_node,
+the device_node can also be used as a look-up token for the device (eg
+looking up a device through its device_node), to retrieve the device in
+kernel paths where the device_node is available.
 
-Cheers,
+On systems booting with ACPI, the same abstraction provided by
+the device_node is required to provide look-up functionality.
 
-Hannes
+The struct acpi_device, that represents firmware objects in the
+ACPI namespace already includes a struct fwnode_handle of
+type FWNODE_ACPI as their member; the same abstraction is missing
+though for devices that are instantiated out of static ACPI tables
+entries (eg ARM SMMU devices).
+
+Add a new fwnode_handle type to associate devices created out
+of static ACPI table entries to the respective firmware components
+and create a simple ACPI core layer interface to dynamically allocate
+and free the corresponding firmware nodes so that kernel subsystems
+can use it to instantiate the nodes and associate them with the
+respective devices.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ include/linux/acpi.h   | 21 +++++++++++++++++++++
+ include/linux/fwnode.h |  3 ++-
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 689a8b9..6efb13c 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -56,6 +56,27 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
+ 	acpi_fwnode_handle(adev) : NULL)
+ #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
+ 
++static inline struct fwnode_handle *acpi_alloc_fwnode_static(void)
++{
++	struct fwnode_handle *fwnode;
++
++	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
++	if (!fwnode)
++		return NULL;
++
++	fwnode->type = FWNODE_ACPI_STATIC;
++
++	return fwnode;
++}
++
++static inline void acpi_free_fwnode_static(struct fwnode_handle *fwnode)
++{
++	if (WARN_ON(!fwnode || fwnode->type != FWNODE_ACPI_STATIC))
++		return;
++
++	kfree(fwnode);
++}
++
+ /**
+  * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
+  * the PCI-defined class-code information
+diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+index 8516717..8bd28ce 100644
+--- a/include/linux/fwnode.h
++++ b/include/linux/fwnode.h
+@@ -17,8 +17,9 @@ enum fwnode_type {
+ 	FWNODE_OF,
+ 	FWNODE_ACPI,
+ 	FWNODE_ACPI_DATA,
++	FWNODE_ACPI_STATIC,
+ 	FWNODE_PDATA,
+-	FWNODE_IRQCHIP,
++	FWNODE_IRQCHIP
+ };
+ 
+ struct fwnode_handle {
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.10.0
+
