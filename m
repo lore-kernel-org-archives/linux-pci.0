@@ -1,65 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35954 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933209AbcKHL1x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 06:27:53 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 13/16] drivers: iommu: arm-smmu: add IORT configuration
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Eric Auger <eric.auger@redhat.com>
+References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
+ <20161018160414.1228-14-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <f8ec1ef0-9fbd-7dd6-822a-ca91aafe986a@semihalf.com>
+Date: Wed, 9 Nov 2016 14:24:49 +0100
 MIME-Version: 1.0
-In-Reply-To: <CADnq5_N5_fyJKDpbaew_1t9jNP3+jja+0dAf0WJVOOQ_pOoJXw@mail.gmail.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com> <CADnq5_N5_fyJKDpbaew_1t9jNP3+jja+0dAf0WJVOOQ_pOoJXw@mail.gmail.com>
-From: Emil Velikov <emil.l.velikov@gmail.com>
-Date: Tue, 8 Nov 2016 11:27:37 +0000
-Message-ID: <CACvgo53XDqtE9weWHP4zQmhtxNVieNm1G92YbWmgFF-HYnqArQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: create revision file in sysfs
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Maling list - DRI developers <dri-devel@lists.freedesktop.org>,
-        =?UTF-8?Q?Michel_D=C3=A4nzer?= <michel.daenzer@amd.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161018160414.1228-14-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Dropping Jammy since his email bounces]
+Hi Lorenzo,
 
-On 1 November 2016 at 15:47, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On Tue, Nov 1, 2016 at 11:42 AM, Emil Velikov <emil.l.velikov@gmail.com> =
-wrote:
->> From: Emil Velikov <emil.velikov@collabora.com>
->>
->> Currently the revision isn't available via sysfs/libudev thus if one
->> wants to know the value they need to read through the config file.
->>
->> This in itself wakes/powers up the device, causing unwanted delay
->> since it can be quite costly.
->>
->> Expose the revision as a separate file, just like we do for the device,
->> vendor, their subsystem version and class.
->>
->> Cc: Jammy Zhou <Jammy.Zhou@amd.com>
->> Cc: Michel D=C3=A4nzer <michel.daenzer@amd.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+On 18.10.2016 18:04, Lorenzo Pieralisi wrote:
+> In ACPI bases systems, in order to be able to create platform
+> devices and initialize them for ARM SMMU components, the IORT
+> kernel implementation requires a set of static functions to be
+> used by the IORT kernel layer to configure platform devices for
+> ARM SMMU components.
 >
-> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+> Add static configuration functions to the IORT kernel layer for
+> the ARM SMMU components, so that the ARM SMMU driver can
+> initialize its respective platform device by relying on the IORT
+> kernel infrastructure and by adding a corresponding ACPI device
+> early probe section entry.
 >
-Thanks Alex.
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/acpi/arm64/iort.c | 81 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/iommu/arm-smmu.c  | 84 ++++++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/acpi_iort.h |  3 ++
+>  3 files changed, 167 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index ea90bc8..04cc5f7 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -548,6 +548,78 @@ static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
+>  	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
+>  }
+>
+[...]
+> +
+> +static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
+> +				      struct arm_smmu_device *smmu)
+> +{
+> +	struct device *dev = smmu->dev;
+> +	struct acpi_iort_node *node =
+> +		*(struct acpi_iort_node **)dev_get_platdata(dev);
+> +	struct acpi_iort_smmu *iort_smmu;
+> +	u64 *glb_irq;
+> +	int ret;
+> +
+> +	/* Retrieve SMMU1/2 specific data */
+> +	iort_smmu = (struct acpi_iort_smmu *)node->node_data;
+> +
+> +	ret = acpi_smmu_get_data(iort_smmu->model, &smmu->version,
+> +						   &smmu->model);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	glb_irq = ACPI_ADD_PTR(u64, iort_smmu,
+> +			iort_smmu->global_interrupt_offset);
 
-Gents, to elaborate a bit:
+One bug that I found:
 
-When using the Mesa drivers alongside firefox [1] (since Mesa 13.0),
-glxinfo (Mesa 10.0) and others, all the GPUs* will be awaken, causing
-unwanted delays and increased power usage.
->From the userspace POV we have two distinct users who require the
-revision file - libdrm and libpciaccess. * The latter would even wake
-up _all_ the devices located on a PCI bus !
+-	glb_irq = ACPI_ADD_PTR(u64, iort_smmu,
+-			iort_smmu->global_interrupt_offset);
++	glb_irq = ACPI_ADD_PTR(u64, node,
++			iort_smmu->global_interrupt_offset);
 
-Let me know if you'd like the above in the patch summary, meanwhile
-I'll poke and collect a few more ack/r-b/t-b.
+With this fix, I run VM with several PCI devices (NIC, SATA) in 
+passthrough mode successfully on ACPI host using ThunderX 1-socket board.
 
-Thanks
-Emil
+Also, for my tests I used Eric's patches:
+https://github.com/eauger/linux/commits/v4.9-rc3-reserved-rfc-v2
 
-[1] https://bugs.freedesktop.org/show_bug.cgi?id=3D98502
+Including bug fix above:
+Tested-by: Tomasz Nowicki <tn@semihalf.com> for all series.
+
+> +
+> +	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
+> +		smmu->num_global_irqs = 1;
+> +	else
+> +		smmu->num_global_irqs = 2;
+> +
+> +	if (iort_smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK)
+> +		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+> +
+> +	return 0;
+> +}
+> +#else
+> +static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
+> +					     struct arm_smmu_device *smmu)
+> +{
+> +	return -ENODEV;
+> +}
+> +#endif
+> +
+
+Thanks,
+Tomasz
