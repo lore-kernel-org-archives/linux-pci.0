@@ -1,99 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56238 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753299AbcKIOoL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:44:11 -0500
-Subject: Re: [PATCH v7 06/16] drivers: iommu: arm-smmu-v3: convert struct
- device of_node to fwnode usage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-7-lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <5d824cfb-6b38-405d-d5f6-96590247efd8@arm.com>
-Date: Wed, 9 Nov 2016 14:44:07 +0000
-MIME-Version: 1.0
-In-Reply-To: <20161109141948.19244-7-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in irq_calc_affinity_vectors()
+Date: Tue,  8 Nov 2016 17:15:02 -0800
+Message-Id: <1478654107-7384-3-git-send-email-hch@lst.de>
+In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
+References: <1478654107-7384-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/11/16 14:19, Lorenzo Pieralisi wrote:
-> Current ARM SMMU v3 driver rely on the struct device.of_node pointer for
-> device look-up and iommu_ops retrieval.
-> 
-> In preparation for ACPI probing enablement, convert the driver to use
-> the struct device.fwnode member for device and iommu_ops look-up so that
-> the driver infrastructure can be used also on systems that do not
-> associate an of_node pointer to a struct device (eg ACPI), making the
-> device look-up and iommu_ops retrieval firmware agnostic.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Robin Murphy <robin.murphy@arm.com>
+Only calculate the affinity for the main I/O vectors, and skip the
+pre or post vectors specified by struct irq_affinity.
 
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Also remove the irq_affinity cpumask argument that has never been used.
+If we ever need it in the future we can pass it through struct
+irq_affinity.
 
-> ---
->  drivers/iommu/arm-smmu-v3.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index e6f9b2d..fef9f60 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -1723,13 +1723,14 @@ static struct platform_driver arm_smmu_driver;
->  
->  static int arm_smmu_match_node(struct device *dev, void *data)
->  {
-> -	return dev->of_node == data;
-> +	return dev->fwnode == data;
->  }
->  
-> -static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
-> +static
-> +struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
->  {
->  	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
-> -						np, arm_smmu_match_node);
-> +						fwnode, arm_smmu_match_node);
->  	put_device(dev);
->  	return dev ? dev_get_drvdata(dev) : NULL;
->  }
-> @@ -1765,7 +1766,7 @@ static int arm_smmu_add_device(struct device *dev)
->  		master = fwspec->iommu_priv;
->  		smmu = master->smmu;
->  	} else {
-> -		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
-> +		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
->  		if (!smmu)
->  			return -ENODEV;
->  		master = kzalloc(sizeof(*master), GFP_KERNEL);
-> @@ -2634,7 +2635,8 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
->  		return ret;
->  
->  	/* And we're up. Go go go! */
-> -	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
-> +	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
-> +
->  #ifdef CONFIG_PCI
->  	if (pci_bus_type.iommu_ops != &arm_smmu_ops) {
->  		pci_request_acs();
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c         |  8 ++++----
+ include/linux/interrupt.h |  4 ++--
+ kernel/irq/affinity.c     | 24 ++++++++++--------------
+ 3 files changed, 16 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ad70507..dad2da7 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1061,6 +1061,7 @@ EXPORT_SYMBOL(pci_msi_enabled);
+ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 		unsigned int flags)
+ {
++	static const struct irq_affinity default_affd;
+ 	bool affinity = flags & PCI_IRQ_AFFINITY;
+ 	int nvec;
+ 	int rc;
+@@ -1091,8 +1092,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 
+ 	for (;;) {
+ 		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
+-					nvec);
++			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1132,6 +1132,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ 		struct msix_entry *entries, int minvec, int maxvec,
+ 		unsigned int flags)
+ {
++	static const struct irq_affinity default_affd;
+ 	bool affinity = flags & PCI_IRQ_AFFINITY;
+ 	int rc, nvec = maxvec;
+ 
+@@ -1140,8 +1141,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ 
+ 	for (;;) {
+ 		if (affinity) {
+-			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
+-					nvec);
++			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 6b52686..9081f23b 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -291,7 +291,7 @@ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+ 
+ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
+-int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec);
++int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
+ 
+ #else /* CONFIG_SMP */
+ 
+@@ -331,7 +331,7 @@ irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
+ }
+ 
+ static inline int
+-irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
++irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+ {
+ 	return maxvec;
+ }
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index 17f51d63..8d92597 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -131,24 +131,20 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+ }
+ 
+ /**
+- * irq_calc_affinity_vectors - Calculate to optimal number of vectors for a given affinity mask
+- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
+- *			is used
+- * @maxvec:		The maximum number of vectors available
++ * irq_calc_affinity_vectors - Calculate the optimal number of vectors
++ * @maxvec:	The maximum number of vectors available
++ * @affd:	Description of the affinity requirements
+  */
+-int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
++int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+ {
+-	int cpus, ret;
++	int resv = affd->pre_vectors + affd->post_vectors;
++	int vecs = maxvec - resv;
++	int cpus;
+ 
+ 	/* Stabilize the cpumasks */
+ 	get_online_cpus();
+-	/* If the supplied affinity mask is NULL, use cpu online mask */
+-	if (!affinity)
+-		affinity = cpu_online_mask;
+-
+-	cpus = cpumask_weight(affinity);
+-	ret = (cpus < maxvec) ? cpus : maxvec;
+-
++	cpus = cpumask_weight(cpu_online_mask);
+ 	put_online_cpus();
+-	return ret;
++
++	return min(cpus, vecs) + resv;
+ }
+-- 
+2.1.4
