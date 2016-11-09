@@ -1,71 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751674AbcKHXaz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 18:30:55 -0500
-Date: Tue, 8 Nov 2016 17:29:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Serge Semin <fancer.lancer@gmail.com>
-Cc: bhelgaas@google.com, shawn.lin@rock-chips.com, luto@kernel.org,
-        Sergey.Semin@t-platforms.ru, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC] PCI: Fix kernel panic of root-port-less PCIe enum due to
- ASPM
-Message-ID: <20161108232957.GH14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1475746455-20665-1-git-send-email-fancer.lancer@gmail.com>
+Return-Path: <cov@codeaurora.org>
+Return-Path: <cov@codeaurora.org>
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+ <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+ will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+ jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+ jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Christopher Covington <cov@codeaurora.org>
+Message-ID: <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org>
+Date: Wed, 9 Nov 2016 14:25:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475746455-20665-1-git-send-email-fancer.lancer@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Serge,
+Hi Bjorn,
 
-On Thu, Oct 06, 2016 at 12:34:15PM +0300, Serge Semin wrote:
-> Hello linux folks,
+On 11/02/2016 12:08 PM, Bjorn Helgaas wrote:
+> On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
+>> Hi Bjorn,
+>>
+>> On 2016-10-31 15:48, Bjorn Helgaas wrote:
+>>> On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
+>>>> The Qualcomm Technologies QDF2432 SoC does not support accesses
+>>>> smaller
+>>>> than 32 bits to the PCI configuration space. Register the appropriate
+>>>> quirk.
+>>>>
+>>>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>>>
+>>> Hi Christopher,
+>>>
+>>> Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
+>>
+>> I apologize for not being clearer. This patch depends on:
+>>
+>> PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+>> PCI/ACPI: Check platform-specific ECAM quirks
+>>
+>> These patches from Tomasz Nowicki were previously in your pci/ecam-v6
+>> branch, but that seems to have come and gone. How would you like to
+>> proceed?
 > 
->     Sometime ago I discovered a kernel panic popping up when PCI subsystem was
-> trying to enumerate PCI express bus with ASPM service enabled. Here it is:
+> Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
+> dropped the ball on that thread, so I went back and read through it
+> again.
 > 
-> [    5.089667] CPU 0 Unable to handle kernel paging request at virtual
-> address 00000060, epc == 80317004, ra == 80316ac8
-> [    5.120952] Oops[#1]:
->           ...
-> [    5.528438] Call Trace:
-> [    5.535640] [<80317004>] pcie_aspm_init_link_state+0x6c0/0x814
-> [    5.552843] [<80300c44>] pci_scan_slot+0x140/0x148
-> [    5.566957] [<80301dcc>] pci_scan_child_bus+0x50/0x1b0
-> [    5.582096] [<80301944>] pci_scan_bridge+0x25c/0x694
-> [    5.596724] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
-> [    5.611862] [<80301944>] pci_scan_bridge+0x25c/0x694
-> [    5.626488] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
-> [    5.641628] [<8030215c>] pci_scan_root_bus+0x64/0x124
-> [    5.656528] [<804ca298>] pcibios_scanbus+0xa8/0x188
+> I *think* the current state is:
 > 
->     I more than sure you are familiar with the issue, since I've found the
-> mailing discussion: "PCI: avoid NULL deref in alloc_pcie_link_state"
-> https://patchwork.kernel.org/patch/2751651/
-> https://bugzilla.kernel.org/show_bug.cgi?id=60111
+>   - I'm OK with the first two patches that add the quirk
+>     infrastructure.
+> 
+>   - My issue with the last three patches that add ThunderX quirks is
+>     that there's no generic description of the ECAM address space.
+> 
+> So if I understand correctly, your Qualcomm patch depends only on the
+> first two patches.
+> 
+> Then the question is how the Qualcomm ECAM address space is described.
+> Your quirk overrides the default pci_generic_ecam_ops with the
+> &pci_32b_ops, but it doesn't touch the address space part, so I assume
+> the bus ranges and corresponding address space in your MCFG is
+> correct.  So far, so good.
+> 
+> Is there also an ACPI device that contains that space in _CRS?  I
+> think we concluded that the standard solution is to describe this with
+> a PNP0C02 device.
+> 
+> Would you mind opening a bugzilla at bugzilla.kernel.org and attaching
+> the dmesg log, /proc/iomem, and maybe a DSDT dump?  I'd like to have
+> something to point at to say "if you need an MCFG quirk, you need the
+> MCFG bit and *also* these other related ACPI device bits, and here's
+> how it should be done."
 
-I'm trying to puzzle out a few things here.  Maybe you can help me out?
+We're working to add the PNP0C02 resource to future firmware, but it's
+not in the current firmware. Are dmesg and /proc/iomem from the
+current firmware interesting or should we wait for the update to file?
 
-- Does this issue exist in current upstream kernels?  Your dmesg shows a
-  v3.19-based kernel.  c8fc9339409d ("PCI/ASPM: Use dev->has_secondary_link
-  to find downstream links"), which appeared in v4.2, fixes a problem very
-  similar to what you're reporting.
+Thanks,
+Cov
 
-- When we dereference the NULL pointer, which device did we call
-  pcie_aspm_init_link_state() for?
-
-- https://bugzilla.kernel.org/attachment.cgi?id=240981 is the failing dmesg
-  log, and it shows "vgaarb: device added: PCI:0000:04:00.0".
-  
-  Your lspci output (https://bugzilla.kernel.org/attachment.cgi?id=241001)
-  shows 04:00.0 is a downstream port, but vga_arbiter_add_pci_device() only
-  prints that message for VGA class devices.
-
-  https://bugzilla.kernel.org/attachment.cgi?id=240991, the successful
-  dmesg log, shows "vgaarb: device added: PCI:0000:06:00.0".  That makes
-  more sense because 06:00.0 is class 0300, which is a VGA device.
-
-Bjorn
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
+Aurora Forum, a Linux Foundation Collaborative Project.
