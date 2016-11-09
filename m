@@ -1,424 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        T homas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        John Garry <john.garry@huawei.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@go og le.com" <bhelgaas@google.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Thu, 24 Nov 2016 00:23:07 +0100
-Message-ID: <4675465.4Qhqy6WU4X@wuerfel>
-In-Reply-To: <2168980.T3HadihU3R@wuerfel>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E1F931E08@lhreml507-mbx> <2168980.T3HadihU3R@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38542 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751157AbcKIWFL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 17:05:11 -0500
+Date: Wed, 9 Nov 2016 16:05:06 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Al Stone <ahs@redhat.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Christopher Covington <cov@codeaurora.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Duc Dang <dhdang@apm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Mark Salter <msalter@redhat.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Robert Richter <rrichter@cavium.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
+Subject: ACPI namespace details for ARM64
+Message-ID: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 23, 2016 6:07:11 PM CET Arnd Bergmann wrote:
-> On Wednesday, November 23, 2016 3:22:33 PM CET Gabriele Paoloni wrote:
-> > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > On Friday, November 18, 2016 5:03:11 PM CET Gabriele Paoloni wrote:
->
-> Please don't proliferate the use of
-> pci_pio_to_address/pci_address_to_pio here, computing the physical
-> address from the logical address is trivial, you just need to
-> subtract the start of the range that you already use when matching
-> the port number range.
-> 
-> The only thing we need here is to make of_address_to_resource()
-> return the correct logical port number that was registered for
-> a given host device when asked to translate an address that
-> does not have a CPU address associated with it.
+Hi all,
 
-Ok, I admit this was a little harder than I expected, but see below
-for a rough outline of how I think it can be done.
+We've been working through the details of getting ACPI to work on
+arm64, and there have been lots of questions about what this means for
+PCI.  I've outlined this for several people individually, but I'm
+going to send this separately, apart from a specific patch series, to
+make sure we're all on the same page.  Please correct my errors and
+misunderstandings.
 
-This makes it possible to translate bus specific I/O port numbers
-from device nodes into Linux port numbers, and gives a way to register
-them. We could take this further and completely remove pci_pio_to_address
-and pci_address_to_pio if we make the I/O port translation always
-go through the io_range list, looking up up the hostbridge by fwnode,
-but we don't have to do that now.
+Bjorn
 
-The patch is completely untested and probably buggy, it just seemed
-easier to put out a prototype than to keep going in circles with the
-discussion.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+The basic requirement is that the ACPI namespace should describe
+*everything* that consumes address space unless there's another
+standard way for the OS to find it [1, 2].  For example, windows that
+are forwarded to PCI by a PCI host bridge should be described via ACPI
+devices, since the OS can't locate the host bridge by itself.  PCI
+devices *below* the host bridge do not need to be described via ACPI,
+because the resources they consume are inside the host bridge windows,
+and the OS can discover them via the standard PCI enumeration
+mechanism (using config accesses to read and size the BARs).
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index bf601d4df8cf..6cadf0501bb0 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -730,7 +730,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
- 	}
- }
- 
--static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+static void acpi_pci_root_remap_iospace(struct fwnode_handle *node,
-+					struct resource_entry *entry)
- {
- #ifdef PCI_IOBASE
- 	struct resource *res = entry->res;
-@@ -739,11 +740,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
- 	resource_size_t length = resource_size(res);
- 	unsigned long port;
- 
--	if (pci_register_io_range(cpu_addr, length))
--		goto err;
--
--	port = pci_address_to_pio(cpu_addr);
--	if (port == (unsigned long)-1)
-+	if (pci_register_io_range(node, cpu_addr, length, &port))
- 		goto err;
- 
- 	res->start = port;
-@@ -781,7 +778,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
- 			if (entry->res->flags & IORESOURCE_IO)
--				acpi_pci_root_remap_iospace(entry);
-+				acpi_pci_root_remap_iospace(&device->fwnode,
-+							    entry);
- 
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index a50025a3777f..df96955a43f8 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -760,8 +760,10 @@ static int __nbd_ioctl(struct block_device *bdev, struct nbd_device *nbd,
- 		set_bit(NBD_RUNNING, &nbd->runtime_flags);
- 		blk_mq_update_nr_hw_queues(&nbd->tag_set, nbd->num_connections);
- 		args = kcalloc(num_connections, sizeof(*args), GFP_KERNEL);
--		if (!args)
-+		if (!args) {
-+			error = -ENOMEM;
- 			goto out_err;
-+		}
- 		nbd->task_recv = current;
- 		mutex_unlock(&nbd->config_lock);
- 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903fe9d2..5decaba96eed 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -2,6 +2,7 @@
- #define pr_fmt(fmt)	"OF: " fmt
- 
- #include <linux/device.h>
-+#include <linux/fwnode.h>
- #include <linux/io.h>
- #include <linux/ioport.h>
- #include <linux/module.h>
-@@ -323,14 +324,9 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 
- 	if (res->flags & IORESOURCE_IO) {
- 		unsigned long port;
--		err = pci_register_io_range(range->cpu_addr, range->size);
-+		err = pci_register_io_range(&np->fwnode, range->cpu_addr, range->size, &port);
- 		if (err)
- 			goto invalid_range;
--		port = pci_address_to_pio(range->cpu_addr);
--		if (port == (unsigned long)-1) {
--			err = -EINVAL;
--			goto invalid_range;
--		}
- 		res->start = port;
- 	} else {
- 		if ((sizeof(resource_size_t) < 8) &&
-@@ -479,7 +475,7 @@ static int of_empty_ranges_quirk(struct device_node *np)
- 	return false;
- }
- 
--static int of_translate_one(struct device_node *parent, struct of_bus *bus,
-+static u64 of_translate_one(struct device_node *parent, struct of_bus *bus,
- 			    struct of_bus *pbus, __be32 *addr,
- 			    int na, int ns, int pna, const char *rprop)
- {
-@@ -507,7 +503,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
- 	ranges = of_get_property(parent, rprop, &rlen);
- 	if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
- 		pr_debug("no ranges; cannot translate\n");
--		return 1;
-+		return OF_BAD_ADDR;
- 	}
- 	if (ranges == NULL || rlen == 0) {
- 		offset = of_read_number(addr, na);
-@@ -528,7 +524,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
- 	}
- 	if (offset == OF_BAD_ADDR) {
- 		pr_debug("not found !\n");
--		return 1;
-+		return offset;
- 	}
- 	memcpy(addr, ranges + na, 4 * pna);
- 
-@@ -537,7 +533,10 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
- 	pr_debug("with offset: %llx\n", (unsigned long long)offset);
- 
- 	/* Translate it into parent bus space */
--	return pbus->translate(addr, offset, pna);
-+	if (pbus->translate(addr, offset, pna))
-+		return OF_BAD_ADDR;
-+
-+	return offset;
- }
- 
- /*
-@@ -549,9 +548,14 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
-  * that translation is impossible (that is we are not dealing with a value
-  * that can be mapped to a cpu physical address). This is not really specified
-  * that way, but this is traditionally the way IBM at least do things
-+ *
-+ * Whenever the translation fails, the *host pointer will be set to the
-+ * device that lacks a tranlation, and the return code is relative to
-+ * that node.
-  */
- static u64 __of_translate_address(struct device_node *dev,
--				  const __be32 *in_addr, const char *rprop)
-+				  const __be32 *in_addr, const char *rprop,
-+				  struct device_node **host)
- {
- 	struct device_node *parent = NULL;
- 	struct of_bus *bus, *pbus;
-@@ -564,6 +568,7 @@ static u64 __of_translate_address(struct device_node *dev,
- 	/* Increase refcount at current level */
- 	of_node_get(dev);
- 
-+	*host = NULL;
- 	/* Get parent & match bus type */
- 	parent = of_get_parent(dev);
- 	if (parent == NULL)
-@@ -600,8 +605,9 @@ static u64 __of_translate_address(struct device_node *dev,
- 		pbus = of_match_bus(parent);
- 		pbus->count_cells(dev, &pna, &pns);
- 		if (!OF_CHECK_COUNTS(pna, pns)) {
--			pr_err("Bad cell count for %s\n",
--			       of_node_full_name(dev));
-+			pr_debug("Bad cell count for %s\n",
-+				 of_node_full_name(dev));
-+			*host = of_node_get(parent);
- 			break;
- 		}
- 
-@@ -609,7 +615,9 @@ static u64 __of_translate_address(struct device_node *dev,
- 		    pbus->name, pna, pns, of_node_full_name(parent));
- 
- 		/* Apply bus translation */
--		if (of_translate_one(dev, bus, pbus, addr, na, ns, pna, rprop))
-+		result = of_translate_one(dev, bus, pbus, addr, na, ns,
-+					  pna, rprop);
-+		if (result == OF_BAD_ADDR)
- 			break;
- 
- 		/* Complete the move up one level */
-@@ -628,13 +636,32 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret =  __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_address);
- 
- u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "dma-ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret = __of_translate_address(dev, in_addr, "dma-ranges", &host);
-+
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_dma_address);
- 
-@@ -676,29 +703,48 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+extern unsigned long extio_translate(struct fwnode_handle *node, unsigned long offset);
-+
-+u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr)
-+{
-+	u64 taddr;
-+	unsigned long port;
-+	struct device_node *host;
-+
-+	taddr = __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		/* host specific port access */
-+		port = extio_translate(&host->fwnode, taddr);
-+		of_node_put(host);
-+	} else {
-+		/* memory mapped I/O range */
-+		port = pci_address_to_pio(taddr);
-+		if (port == (unsigned long)-1)
-+			return OF_BAD_ADDR;
-+	}
-+
-+	return port;
-+}
-+
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r)
- {
- 	u64 taddr;
- 
--	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
-+	if (flags & IORESOURCE_MEM)
-+		taddr = of_translate_address(dev, addrp);
-+	else if (flags & IORESOURCE_IO)
-+		taddr = of_translate_ioport(dev, addrp);
-+	else
- 		return -EINVAL;
--	taddr = of_translate_address(dev, addrp);
-+
- 	if (taddr == OF_BAD_ADDR)
- 		return -EINVAL;
- 	memset(r, 0, sizeof(struct resource));
--	if (flags & IORESOURCE_IO) {
--		unsigned long port;
--		port = pci_address_to_pio(taddr);
--		if (port == (unsigned long)-1)
--			return -EINVAL;
--		r->start = port;
--		r->end = port + size - 1;
--	} else {
--		r->start = taddr;
--		r->end = taddr + size - 1;
--	}
-+
-+	r->start = taddr;
-+	r->end = taddr + size - 1;
- 	r->flags = flags;
- 	r->name = name ? name : dev->full_name;
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index eda6a7cf0e54..320ab9fbf6af 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3249,6 +3249,7 @@ EXPORT_SYMBOL(pci_request_regions_exclusive);
- #ifdef PCI_IOBASE
- struct io_range {
- 	struct list_head list;
-+	struct fwnode_handle *node;
- 	phys_addr_t start;
- 	resource_size_t size;
- };
-@@ -3257,11 +3258,14 @@ static LIST_HEAD(io_range_list);
- static DEFINE_SPINLOCK(io_range_lock);
- #endif
- 
-+#define IO_RANGE_IOEXT (resource_size_t)(-1ull)
-+
- /*
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int __weak pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-+				 resource_size_t size, unsigned long *port)
- {
- 	int err = 0;
- 
-@@ -3272,7 +3276,12 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 	/* check if the range hasn't been previously recorded */
- 	spin_lock(&io_range_lock);
- 	list_for_each_entry(range, &io_range_list, list) {
--		if (addr >= range->start && addr + size <= range->start + size) {
-+		if (node == range->node)
-+			goto end_register;
-+
-+		if (addr != IO_RANGE_IOEXT &&
-+		    addr >= range->start &&
-+		    addr + size <= range->start + size) {
- 			/* range already registered, bail out */
- 			goto end_register;
- 		}
-@@ -3298,6 +3307,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 		goto end_register;
- 	}
- 
-+	range->node = node;
- 	range->start = addr;
- 	range->size = size;
- 
-@@ -3305,11 +3315,26 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 
- end_register:
- 	spin_unlock(&io_range_lock);
-+
-+	*port = allocated_size;
-+#else
-+	/*
-+	 * powerpc and microblaze have their own registration,
-+	 * just look up the value here
-+	 */
-+	*port = pci_address_to_pio(addr);
- #endif
- 
- 	return err;
- }
- 
-+#ifdef CONFIG_IOEXT
-+int ioext_register_io_range
-+{
-+	return pci_register_io_range(node, IO_RANGE_IOEXT, size, port);
-+}
-+#endif
-+
- phys_addr_t pci_pio_to_address(unsigned long pio)
- {
- 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6bd94a803e8f..b7a8fa3da3ca 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1192,7 +1192,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 			void *alignf_data);
- 
- 
--int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-+int pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-+			  resource_size_t size, unsigned long *port);
- unsigned long pci_address_to_pio(phys_addr_t addr);
- phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+This ACPI resource description is done via _CRS methods of devices in
+the ACPI namespace [2].   _CRS methods are like generalized PCI BARs:
+the OS can read _CRS and figure out what resource is being consumed
+even if it doesn't have a driver for the device [3].  That's important
+because it means an old OS can work correctly even on a system with
+new devices unknown to the OS.  The new devices won't do anything, but
+the OS can at least make sure no resources conflict with them.
+
+Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
+reserving address space!  The static tables are for things the OS
+needs to know early in boot, before it can parse the ACPI namespace.
+If a new table is defined, an old OS needs to operate correctly even
+though it ignores the table.  _CRS allows that because it is generic
+and understood by the old OS; a static table does not.
+
+If the OS is expected to manage an ACPI device, that device will have
+a specific _HID/_CID that tells the OS what driver to bind to it, and
+the _CRS tells the OS and the driver where the device's registers are.
+
+PNP0C02 "motherboard" devices are basically a catch-all.  There's no
+programming model for them other than "don't use these resources for
+anything else."  So any address space that is (1) not claimed by some
+other ACPI device and (2) should not be assigned by the OS to
+something else, should be claimed by a PNP0C02 _CRS method.
+
+PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
+describe all the address space they consume.  In principle, this would
+be all the windows they forward down to the PCI bus, as well as the
+bridge registers themselves.  The bridge registers include things like
+secondary/subordinate bus registers that determine the bus range below
+the bridge, window registers that describe the apertures, etc.  These
+are all device-specific, non-architected things, so the only way a
+PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
+contain the device-specific details.  These bridge registers also
+include ECAM space, since it is consumed by the bridge.
+
+ACPI defined a Producer/Consumer bit that was intended to distinguish
+the bridge apertures from the bridge registers [4, 5].  However,
+BIOSes didn't use that bit correctly, and the result is that OSes have
+to assume that everything in a PCI host bridge _CRS is a window.  That
+leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
+device itself.
+
+The workaround is to describe the bridge registers (including ECAM
+space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
+the bridge register space is device-specific anyway, so the generic
+PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
+ECAM, pci_root.c learns about the space from either MCFG or the _CBA
+method.
+
+Note that the PCIe spec actually does require ECAM unless there's a
+standard firmware interface for config access, e.g., the ia64 SAL
+interface [7].  One reason is that we want a generic host bridge
+driver (pci_root.c), and a generic driver requires a generic way to
+access config space.
+
+
+[1] ACPI 6.0, sec 6.1:
+    For any device that is on a non-enumerable type of bus (for
+    example, an ISA bus), OSPM enumerates the devices' identifier(s)
+    and the ACPI system firmware must supply an _HID object ... for
+    each device to enable OSPM to do that.
+
+[2] ACPI 6.0, sec 3.7:
+    The OS enumerates motherboard devices simply by reading through
+    the ACPI Namespace looking for devices with hardware IDs.
+
+    Each device enumerated by ACPI includes ACPI-defined objects in
+    the ACPI Namespace that report the hardware resources the device
+    could occupy [_PRS], an object that reports the resources that are
+    currently used by the device [_CRS], and objects for configuring
+    those resources [_SRS].  The information is used by the Plug and
+    Play OS (OSPM) to configure the devices.
+
+[3] ACPI 6.0, sec 6.2:
+    OSPM uses device configuration objects to configure hardware
+    resources for devices enumerated via ACPI.  Device configuration
+    objects provide information about current and possible resource
+    requirements, the relationship between shared resources, and
+    methods for configuring hardware resources.
+
+    When OSPM enumerates a device, it calls _PRS to determine the
+    resource requirements of the device.  It may also call _CRS to
+    find the current resource settings for the device.  Using this
+    information, the Plug and Play system determines what resources
+    the device should consume and sets those resources by calling the
+    device’s _SRS control method.
+
+    In ACPI, devices can consume resources (for example, legacy
+    keyboards), provide resources (for example, a proprietary PCI
+    bridge), or do both.  Unless otherwise specified, resources for a
+    device are assumed to be taken from the nearest matching resource
+    above the device in the device hierarchy.
+
+[4] ACPI 6.0, sec 6.4.3.5.4:
+    Extended Address Space Descriptor
+    General Flags: Bit [0] Consumer/Producer:
+	1–This device consumes this resource
+	0–This device produces and consumes this resource
+
+[5] ACPI 6.0, sec 19.6.43:
+    ResourceUsage specifies whether the Memory range is consumed by
+    this device (ResourceConsumer) or passed on to child devices
+    (ResourceProducer).  If nothing is specified, then
+    ResourceConsumer is assumed.
+
+[6] PCI Firmware 3.0, sec 4.1.2:
+    If the operating system does not natively comprehend reserving the
+    MMCFG region, the MMCFG region must be reserved by firmware.  The
+    address range reported in the MCFG table or by _CBA method (see
+    Section 4.1.3) must be reserved by declaring a motherboard
+    resource.  For most systems, the motherboard resource would appear
+    at the root of the ACPI namespace (under \_SB) in a node with a
+    _HID of EISAID (PNP0C02), and the resources in this case should
+    not be claimed in the root PCI bus’s _CRS.  The resources can
+    optionally be returned in Int15 E820 or EFIGetMemoryMap as
+    reserved memory but must always be reported through ACPI as a
+    motherboard resource.
+
+[7] PCI Express 3.0, sec 7.2.2:
+    For systems that are PC-compatible, or that do not implement a
+    processor-architecture-specific firmware interface standard that
+    allows access to the Configuration Space, the ECAM is required as
+    defined in this section.
