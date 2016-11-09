@@ -1,132 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48774 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754086AbcKBWgG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Nov 2016 18:36:06 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alexander Graf <agraf@suse.de>, Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream bridge hasn't
-Date: Wed,  2 Nov 2016 16:35:52 -0600
-Message-Id: <20161102223552.14776-2-jthumshirn@suse.de>
-In-Reply-To: <20161102223552.14776-1-jthumshirn@suse.de>
-References: <20161102223552.14776-1-jthumshirn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 12/16] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
+Date: Wed,  9 Nov 2016 14:19:44 +0000
+Message-Id: <20161109141948.19244-13-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Read Completion Boundary (RCB) bit must only be set on a device or
-endpoint if it is set on the root complex.
+Current ARM SMMU probe functions intermingle HW and DT probing
+in the initialization functions to detect and programme the ARM SMMU
+driver features. In order to allow probing the ARM SMMU with other
+firmwares than DT, this patch splits the ARM SMMU init functions into
+DT and HW specific portions so that other FW interfaces (ie ACPI) can
+reuse the HW probing functions and skip the DT portion accordingly.
 
-Certain BIOSes erroneously set the RCB Bit in their ACPI _HPX Tables
-even if it is not set on the root port. This is a violation to the PCIe
-Specification and is known to bring some Mellanox Connect-X 3 HCAs into
-a state where they can't map their firmware and go into error recovery.
+This patch implements no functional change, only code reshuffling.
 
-BIOS Information
-	Vendor: IBM
-	Version: -[A8E120CUS-1.30]-
-	Release Date: 08/22/2016
-
->From PCI Express Base Specification 1.1,
-section 2.3.1.1. Data Return for Read Requests:
-The Read Completion Boundary (RCB) parameter determines the naturally
-aligned address boundaries on which a Read Request may be serviced with
-multiple Completions
-o For a Root Complex, RCB is 64 bytes or 128 bytes
-  o This value is reported through a configuration register
-    (see Section 7.8)
-  Note: Bridges and Endpoints may implement a corresponding command
-  bit which may be set by system software to indicate the RCB value
-  for the Root Complex, allowing the Bridge/Endpoint to optimize its
-  behavior when the Root Complex’s RCB is 128 bytes.
-o For all other system elements, RCB is 128 bytes
-
-Table 7-16: Link Control Register:
-Configuration software must only Set this bit if the Root Port
-Upstream from the Endpoint or Bridge reports an RCB value of
-128 bytes (a value of 1b in the Read Completion Boundary bit).
-Default value of this bit is 0b.
-
-Functions that do not implement this feature must hardwire the
-bit to 0b.
-
-Before commit 7a1562d4f:
-> 41:00.0 Ethernet controller: Mellanox Technologies MT27500 Family [ConnectX-3]
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
->
-> 40:02.0 PCI bridge: Intel Corporation Xeon E7 v2/Xeon E5 v2/Core i7 PCI Express Root Port 2a (rev 07) (prog-if 00 [Normal decode])
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
-
-After:
-> 40:02.0 PCI bridge: Intel Corporation Xeon E7 v2/Xeon E5 v2/Core i7 PCI Express Root Port 2a (rev 07) (prog-if 00 [Normal decode])
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> 			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
->
-> 41:00.0 Ethernet controller: Mellanox Technologies MT27500 Family [ConnectX-3]
-> 		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-
-Fixes: 7a1562d4f ("PCI: Apply _HPX Link Control settings to all devices with a link")
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/pci/probe.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/iommu/arm-smmu.c | 62 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..0a4ab9c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1439,6 +1439,19 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
- 		dev_warn(&dev->dev, "PCI-X settings not supported\n");
- }
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 8a3c2a4..e1b6951 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1668,7 +1668,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 	unsigned long size;
+ 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
+ 	u32 id;
+-	bool cttw_dt, cttw_reg;
++	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
+ 	int i;
  
-+static bool pcie_get_root_rcb(struct pci_dev *dev)
-+{
-+	struct pci_dev *rp = pcie_find_root_port(dev);
-+	u16 lnkctl;
+ 	dev_notice(smmu->dev, "probing hardware configuration...\n");
+@@ -1713,20 +1713,17 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 
+ 	/*
+ 	 * In order for DMA API calls to work properly, we must defer to what
+-	 * the DT says about coherency, regardless of what the hardware claims.
++	 * the FW says about coherency, regardless of what the hardware claims.
+ 	 * Fortunately, this also opens up a workaround for systems where the
+ 	 * ID register value has ended up configured incorrectly.
+ 	 */
+-	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
+ 	cttw_reg = !!(id & ID0_CTTW);
+-	if (cttw_dt)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+-	if (cttw_dt || cttw_reg)
++	if (cttw_fw || cttw_reg)
+ 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
+-			   cttw_dt ? "" : "non-");
+-	if (cttw_dt != cttw_reg)
++			   cttw_fw ? "" : "non-");
++	if (cttw_fw != cttw_reg)
+ 		dev_notice(smmu->dev,
+-			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
++			   "\t(IDR0.CTTW overridden by FW configuration)\n");
+ 
+ 	/* Max. number of entries we have for stream matching/indexing */
+ 	size = 1 << ((id >> ID0_NUMSIDB_SHIFT) & ID0_NUMSIDB_MASK);
+@@ -1907,15 +1904,25 @@ static const struct of_device_id arm_smmu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
+ {
+ 	const struct arm_smmu_match_data *data;
+-	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+-	int num_irqs, i, err;
+ 	bool legacy_binding;
+ 
++	if (of_property_read_u32(dev->of_node, "#global-interrupts",
++				 &smmu->num_global_irqs)) {
++		dev_err(dev, "missing #global-interrupts property\n");
++		return -ENODEV;
++	}
 +
-+	if (!rp)
-+		return false;
++	data = of_device_get_match_data(dev);
++	smmu->version = data->version;
++	smmu->model = data->model;
 +
-+	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
++	parse_driver_options(smmu);
 +
-+	return lnkctl & PCI_EXP_LNKCTL_RCB;
+ 	legacy_binding = of_find_property(dev->of_node, "mmu-masters", NULL);
+ 	if (legacy_binding && !using_generic_binding) {
+ 		if (!using_legacy_binding)
+@@ -1928,6 +1935,19 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
++	if (of_dma_is_coherent(smmu->dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
++
++	return 0;
 +}
 +
- static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- {
- 	int pos;
-@@ -1468,9 +1481,21 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	int num_irqs, i, err;
++
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+ 		dev_err(dev, "failed to allocate arm_smmu_device\n");
+@@ -1935,9 +1955,9 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	}
+ 	smmu->dev = dev;
  
- 	/* Initialize Link Control Register */
--	if (pcie_cap_has_lnkctl(dev))
-+	if (pcie_cap_has_lnkctl(dev)) {
-+		bool rrcb;
-+		u16 clear;
-+		u16 set;
-+
-+		rrcb = pcie_get_root_rcb(dev);
-+
-+		clear = ~hpp->pci_exp_lnkctl_and;
-+		set = hpp->pci_exp_lnkctl_or;
-+		if (!rrcb)
-+			set &= ~PCI_EXP_LNKCTL_RCB;
-+
- 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
--			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-+						  clear, set);
-+	}
+-	data = of_device_get_match_data(dev);
+-	smmu->version = data->version;
+-	smmu->model = data->model;
++	err = arm_smmu_device_dt_probe(pdev, smmu);
++	if (err)
++		return err;
  
- 	/* Find Advanced Error Reporting Enhanced Capability */
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	smmu->base = devm_ioremap_resource(dev, res);
+@@ -1945,12 +1965,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return PTR_ERR(smmu->base);
+ 	smmu->size = resource_size(res);
+ 
+-	if (of_property_read_u32(dev->of_node, "#global-interrupts",
+-				 &smmu->num_global_irqs)) {
+-		dev_err(dev, "missing #global-interrupts property\n");
+-		return -ENODEV;
+-	}
+-
+ 	num_irqs = 0;
+ 	while ((res = platform_get_resource(pdev, IORESOURCE_IRQ, num_irqs))) {
+ 		num_irqs++;
+@@ -1985,8 +1999,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	parse_driver_options(smmu);
+-
+ 	if (smmu->version == ARM_SMMU_V2 &&
+ 	    smmu->num_context_banks != smmu->num_context_irqs) {
+ 		dev_err(dev,
+@@ -2048,7 +2060,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
 -- 
 2.10.0
 
