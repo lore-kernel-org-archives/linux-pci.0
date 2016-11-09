@@ -1,75 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 14 Nov 2016 10:26:54 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161114102654.GA1677@red-moon>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0083.outbound.protection.outlook.com ([104.47.2.83]:29616
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932282AbcKIPZT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 10:25:19 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Adi Menachem <adim@mellanox.com>
+Subject: RE: Shouldn't VFIO virtualize the ATS capability?
+Date: Wed, 9 Nov 2016 15:25:16 +0000
+Message-ID: <VI1PR0502MB2957CCD1E8EE93A3BC6CE178D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        <20161106100832.41e173d5@t450s.home>
+        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+ <20161109080746.24dd79dd@t450s.home>
+In-Reply-To: <20161109080746.24dd79dd@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin, Joerg,
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Wednesday, November 09, 2016 5:08 PM
+> To: Ilya Lesokhin <ilyal@mellanox.com>
+> Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com;
+> Adi Menachem <adim@mellanox.com>
+> Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+>=20
+> On Wed, 9 Nov 2016 14:49:02 +0000
+> Ilya Lesokhin <ilyal@mellanox.com> wrote:
+>=20
+> > I would virtualize the "ATS Control Register".
+>=20
+> And do what?
+I think it should be read only.
+>=20
+> > Regarding poor behavior, I couldn't really find what happens when ATS i=
+s
+> misconfigured, but I would assume it can cause problems.
+> > The scenarios I'm concerned about are:
+> > 	1. The guest enables translation caching, while the hypervisor thinks
+> there are disabled -> Hypervisor won't issue invalidations.
+>=20
+> Aren't invalidations issued by the iommu, why does the hypervisor need to
+> participate?  How would a software entity induce an invalidation?
+That's what one might expect from a sane design, but
+http://lxr.free-electrons.com/source/drivers/iommu/intel-iommu.c?v=3D4.8#L1=
+549
+seems to imply otherwise :(
+>=20
+> > 	2. Smallest Translation Unit misconfiguration. Not sure if it will cau=
+se
+> invalid access or only poor caching behavior.
+> >
+> > Thanks,
+> > Ilya
+> >
+> > > -----Original Message-----
+> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > Sent: Sunday, November 06, 2016 7:09 PM
+> > > To: Ilya Lesokhin <ilyal@mellanox.com>
+> > > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org;
+> > > bhelgaas@google.com
+> > > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+> > >
+> > > On Sun, 6 Nov 2016 11:13:09 +0000
+> > > Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> > >
+> > > > Hi
+> > > > I've noticed that VFIO doesn't virtualize the ATS capability.
+> > > > It seems to me that translation caching and Smallest Translation
+> > > > Unit is
+> > > something you would want to control on the host. Am I wrong?
+> > >
+> > > What about those fields would we virtualize?  Why does the host need
+> > > to be an intermediary?  Can the user induce poor behavior with
+> > > direct access to them?  Thanks,
+> > >
+> > > Alex
 
-On Fri, Nov 11, 2016 at 05:43:39PM +0000, Robin Murphy wrote:
-> On 11/11/16 16:27, Joerg Roedel wrote:
-> > On Fri, Nov 11, 2016 at 04:17:37PM +0000, Robin Murphy wrote:
-> >> In the original of_iommu_configure design, the thought was that an ops
-> >> structure could be IOMMU-instance-specific (hence the later-removed
-> >> "priv" member), so I suppose right now it is mostly a hangover from
-> >> that. However, it's also what we initialise a device's fwspec with, so
-> >> becomes important again if we're ever going to get past the limitations
-> >> of buses-which-are-not-actually-buses[1].
-> > 
-> > Yeah, I discussed this with a few others at LPC. My current idea is to
-> > tell the iommu-core which hardware-iommus exist in the system and a
-> > seperate iommu_ops ptr for each of them. Then every struct device can
-> > link to the iommu-instance it is translated by.
-> 
-> Er, that sounds very much like a description of what we already have in
-> 4.9-rc. Every struct device now has an iommu_fwspec which encapsulates
-> both an iommu_ops pointer (which can perfectly well be per-instance if
-> the IOMMU driver wants) and a place for the IOMMU-private data to
-> replace the mess of archdata.iommu and driver-internal globals.
-> 
-> > We are not there yet, but this will give you the same per-device
-> > iommu-ops as implemented here.
-> 
-> With those two patches I linked to, which make the bulk of the IOMMU
-> core code per-device-ops-aware off the bat, I'd say we *are* already
-> pretty much there. It's only iommu_domain_alloc() which needs a
-> device-based alternative, and the non-of_xlate-based IOMMU drivers to
-> either call iommu_fwspec_init() for themselves, or perhaps for x86
-> plumbing in DMAR/IVRS equivalents of the IORT parsing to the
-> infrastructure provided by this series.
-
-I think it all boils down to how we end up implementing the per-device
-iommu_ops look-up/binding, question is what do you want me to do with
-this patch, it should be fine to drop it and use dev->bus->iommu_ops
-for the look-up but I should know sooner rather than later to make
-sure the series get another good round of testing.
-
-Please let me know, thank you very much.
-
-Lorenzo
