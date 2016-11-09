@@ -1,46 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51081 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753564AbcKUVJf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2016 16:09:35 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uALL8OLw090155
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:09:35 -0500
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26v5j4rqns-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:09:34 -0500
-Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-        Mon, 21 Nov 2016 16:09:33 -0500
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ian Munsie <imunsie@au1.ibm.com>,
-        Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 0/2] Add device-specific VPD timeout
-Date: Mon, 21 Nov 2016 15:03:45 -0600
-Message-Id: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <prarit@redhat.com>
+Return-Path: <prarit@redhat.com>
+Message-ID: <58237DB8.9030009@redhat.com>
+Date: Wed, 09 Nov 2016 14:49:12 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+MIME-Version: 1.0
+To: Keith Busch <keith.busch@intel.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        alex.williamson@redhat.com, darcari@redhat.com, mstowe@redhat.com,
+        bhelgaas@google.com, lukas@wunner.de, mika.westerberg@linux.intel.com
+Subject: Re: [PATCH] pci: Only disable MSI/X and enable INTx if shutdown function
+ has been called
+References: <1478627867-28795-1-git-send-email-prarit@redhat.com> <20161109170529.GJ14322@bhelgaas-glaptop.roam.corp.google.com> <58237AB7.8080301@redhat.com> <20161109195458.GA3409@localhost.localdomain>
+In-Reply-To: <20161109195458.GA3409@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-This small patch series introduces support for a driver to increase the
-VPD wait timeout for devices with slower interfaces.
 
-The series is based on v4.9-rc6 and is intended for v4.10.
 
-Matthew R. Ochs (2):
-  PCI: Add pci_set_vpd_timeout() to set VPD access timeout
-  cxl: Set VPD timeout to avoid access failures
+On 11/09/2016 02:54 PM, Keith Busch wrote:
+> On Wed, Nov 09, 2016 at 02:36:23PM -0500, Prarit Bhargava wrote:
+>>
+>>
+>> On 11/09/2016 12:05 PM, Bjorn Helgaas wrote:
+>>> Hi Prarit,
+>>>
+>>> Is there a bugzilla or other archive of configuration/dmesg/other info
+>>
+>> [I have only added Bjorn and myself to the BZ below.  Please feel free to add
+>> yourself.]
+>>
+>> Bjorn, unfortunately this won't be caught in a dmesg log because the filesystem
+>> is unmounted by the time we shutdown the PCI devices in the halt/reboot path.
+>>
+>> The trace is only available from serial console, and I have opened up
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=187351
+>>
+>> to track this.
+>>
+>> I have added some additional links to other bugzillas which seem to show the
+>> same behavior, and included a full serial console capture of the boot to the BZ.
+>>  The end of the log shows the unhandled irq stack trace for irq 16.
+> 
+> Just researching where this came from, the behavior to shutdown msi/msix
+> and enable intx was done in commit d52877c7b1 for some kexec issue,
+> and I think that was wrong in the first place. We shouldn't be changing
+> interrupt configuration out from under the drivers.
 
- drivers/misc/cxl/pci.c |  7 +++++++
- drivers/pci/access.c   | 45 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/pci.h      |  2 ++
- include/linux/pci.h    |  1 +
- 4 files changed, 54 insertions(+), 1 deletion(-)
+Yeah .. and it was RHEL specific?  Or at least it seems that way.
 
--- 
-2.1.0
+P.
 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
