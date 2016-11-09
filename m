@@ -1,72 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58685 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753706AbcKUVKP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2016 16:10:15 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uALL8Oxk049993
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:10:14 -0500
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 26v76gkw30-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:10:14 -0500
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-        Mon, 21 Nov 2016 14:10:13 -0700
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ian Munsie <imunsie@au1.ibm.com>,
-        Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 2/2] cxl: Set VPD timeout to avoid access failures
-Date: Mon, 21 Nov 2016 15:10:06 -0600
-In-Reply-To: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
-References: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Message-Id: <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from foss.arm.com ([217.140.101.70]:55074 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933475AbcKIOTk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 09:19:40 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 14/16] drivers: acpi: iort: replace rid map type with type mask
+Date: Wed,  9 Nov 2016 14:19:46 +0000
+Message-Id: <20161109141948.19244-15-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some IBM CXL devices can take up to ~120ms to complete a VPD access
-transaction when under heavy load. With an existing default VPD timeout
-of 50ms, reads/writes can fail despite there not being an issue with the
-underlying hardware.
+IORT tables provide data that allow the kernel to carry out
+device ID mappings between endpoints and system components
+(eg interrupt controllers, IOMMUs). When the mapping for a
+given device ID is carried out, the translation mechanism
+is done on a per-subsystem basis rather than a component
+subtype (ie the IOMMU kernel layer will look for mappings
+from a device to all IORT node types corresponding to IOMMU
+components), therefore the corresponding mapping API should
+work on a range (ie mask) of IORT node types corresponding
+to a common set of components (eg IOMMUs) rather than a
+specific node type.
 
-To avoid these false failures, increase the VPD wait timeout for certain
-CXL devices to a value that allows appropriate VPD access delay when faced
-with a worst-case scenario.
+Upgrade the IORT iort_node_map_rid() API to work with a
+type mask instead of a single node type so that it can
+be used for mappings that span multiple components types
+(ie IOMMUs).
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/misc/cxl/pci.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/acpi/arm64/iort.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
-index e96be9c..56a67cf 100644
---- a/drivers/misc/cxl/pci.c
-+++ b/drivers/misc/cxl/pci.c
-@@ -1675,6 +1675,10 @@ bool cxl_slot_is_supported(struct pci_dev *dev, int flags)
- }
- EXPORT_SYMBOL_GPL(cxl_slot_is_supported);
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 4708806..62057c6 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -26,6 +26,9 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
  
-+static bool cxl_pci_is_slow_vpd_device(struct pci_dev *dev)
-+{
-+	return dev->device == 0x0601;
-+}
- 
- static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
-@@ -1692,6 +1696,9 @@ static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENODEV;
- 	}
- 
-+	if (cxl_pci_is_slow_vpd_device(dev))
-+		pci_set_vpd_timeout(dev, msecs_to_jiffies(125));
++#define IORT_TYPE_MASK(type)	(1 << (type))
++#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
 +
- 	if (cxl_verbose)
- 		dump_cxl_config_space(dev);
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+ 	struct fwnode_handle	*fw_node;
+@@ -317,7 +320,7 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
+ 
+ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
+ 						u32 rid_in, u32 *rid_out,
+-						u8 type)
++						u8 type_mask)
+ {
+ 	u32 rid = rid_in;
+ 
+@@ -326,7 +329,7 @@ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
+ 		struct acpi_iort_id_mapping *map;
+ 		int i;
+ 
+-		if (node->type == type) {
++		if (IORT_TYPE_MASK(node->type) & type_mask) {
+ 			if (rid_out)
+ 				*rid_out = rid;
+ 			return node;
+@@ -399,7 +402,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+ 	if (!node)
+ 		return req_id;
+ 
+-	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
++	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
+ 	return dev_id;
+ }
+ 
+@@ -421,7 +424,7 @@ static int iort_dev_find_its_id(struct device *dev, u32 req_id,
+ 	if (!node)
+ 		return -ENXIO;
+ 
+-	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
++	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
+ 	if (!node)
+ 		return -ENXIO;
  
 -- 
-2.1.0
+2.10.0
 
