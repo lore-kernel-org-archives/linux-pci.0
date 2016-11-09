@@ -1,70 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:32963 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751261AbcKYK56 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:58 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
-Date: Fri, 25 Nov 2016 11:57:18 +0100
-Message-Id: <20161125105718.3866-10-thierry.reding@gmail.com>
-In-Reply-To: <20161125105718.3866-1-thierry.reding@gmail.com>
-References: <20161125105718.3866-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
+Date: Wed,  9 Nov 2016 14:19:37 +0000
+Message-Id: <20161109141948.19244-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Current ARM SMMU driver rely on the struct device.of_node pointer for
+device look-up and iommu_ops retrieval.
 
-Enable the x4 PCIe and M.2 Key E slots on Jetson TX1. The Key E slot is
-currently untested due to lack of hardware.
+In preparation for ACPI probing enablement, convert the driver to use
+the struct device.fwnode member for device and iommu_ops look-up so that
+the driver infrastructure can be used also on systems that do not
+associate an of_node pointer to a struct device (eg ACPI), making the
+device look-up and iommu_ops retrieval firmware agnostic.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
 ---
- arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts | 26 ++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/iommu/arm-smmu.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts b/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
-index 983775e637a4..4c1ea7a08d43 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
-+++ b/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
-@@ -7,6 +7,32 @@
- 	model = "NVIDIA Jetson TX1 Developer Kit";
- 	compatible = "nvidia,p2371-2180", "nvidia,tegra210";
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 8f72814..8a3c2a4 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
  
-+	pcie-controller@01003000 {
-+		status = "okay";
-+
-+		avdd-pll-uerefe-supply = <&avdd_1v05_pll>;
-+		hvddio-pex-supply = <&vdd_1v8>;
-+		dvddio-pex-supply = <&vdd_pex_1v05>;
-+		dvdd-pex-pll-supply = <&vdd_pex_1v05>;
-+		hvdd-pex-pll-e-supply = <&vdd_1v8>;
-+		vddio-pex-ctl-supply = <&vdd_1v8>;
-+
-+		pci@1,0 {
-+			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-0}>,
-+			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-1}>,
-+			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-2}>,
-+			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-3}>;
-+			phy-names = "pcie-0", "pcie-1", "pcie-2", "pcie-3";
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
-+			phy-names = "pcie-0";
-+			status = "okay";
-+		};
-+	};
-+
- 	host1x@50000000 {
- 		dsi@54300000 {
- 			status = "okay";
+ static int arm_smmu_match_node(struct device *dev, void *data)
+ {
+-	return dev->of_node == data;
++	return dev->fwnode == data;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static
++struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+-						np, arm_smmu_match_node);
++						fwnode, arm_smmu_match_node);
+ 	put_device(dev);
+ 	return dev ? dev_get_drvdata(dev) : NULL;
+ }
+@@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 		if (ret)
+ 			goto out_free;
+ 	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
+-		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
++		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+ 	} else {
+ 		return -ENODEV;
+ 	}
+@@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
+ 	platform_set_drvdata(pdev, smmu);
+ 	arm_smmu_device_reset(smmu);
+ 
 -- 
-2.10.2
+2.10.0
 
