@@ -1,99 +1,234 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Ji-Ze Hong (Peter Hong)" <hpeter@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        tom_tsai@fintek.com.tw, peter_hong@fintek.com.tw,
-        "Ji-Ze Hong (Peter Hong)" <hpeter+linux_kernel@gmail.com>
-Subject: [PATCH 1/2] PCI: Add quirk for Fintek F81504/508/512 AER issue
-Date: Mon,  7 Nov 2016 17:22:31 +0800
-Message-Id: <1478510552-4883-2-git-send-email-hpeter+linux_kernel@gmail.com>
-In-Reply-To: <1478510552-4883-1-git-send-email-hpeter+linux_kernel@gmail.com>
-References: <1478510552-4883-1-git-send-email-hpeter+linux_kernel@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <c3136fae-144c-5949-3933-671b783671c8@arm.com>
+Date: Wed, 9 Nov 2016 14:40:08 +0000
+MIME-Version: 1.0
+In-Reply-To: <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fintek F81504/508/512 PCIe-to-UART/GPIO will generate mass AER
-correctable error interrupt message and stop the system boot on Intel
-Skylake platform, AER message like the following link:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
+On 09/11/16 14:19, Lorenzo Pieralisi wrote:
+> The of_iommu_{set/get}_ops() API is used to associate a device
+> tree node with a specific set of IOMMU operations. The same
+> kernel interface is required on systems booting with ACPI, where
+> devices are not associated with a device tree node, therefore
+> the interface requires generalization.
+> 
+> The struct device fwnode member represents the fwnode token
+> associated with the device and the struct it points at is firmware
+> specific; regardless, it is initialized on both ACPI and DT systems
+> and makes an ideal candidate to use it to associate a set of IOMMU
+> operations to a given device, through its struct device.fwnode member
+> pointer.
+> 
+> Convert the DT specific of_iommu_{set/get}_ops() interface to
+> use struct device.fwnode as a look-up token, making the interface
+> usable on ACPI systems.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/iommu/iommu.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  drivers/iommu/of_iommu.c | 39 ---------------------------------------
+>  include/linux/iommu.h    | 14 ++++++++++++++
+>  include/linux/of_iommu.h | 12 ++++++++++--
+>  4 files changed, 66 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index 9a2f196..5c97c01 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -1615,6 +1615,48 @@ int iommu_request_dm_for_dev(struct device *dev)
+>  	return ret;
+>  }
+>  
+> +struct iommu_fwentry {
 
-Due to the error is correctable error, we'll try to mask the parent AER
-interrupt to skip it and preserve generate uncorrectable erro interrupt
-normally.
+:)
 
-Tested and verified on Ganlot PGB-8130 industrial gaming PCB
+> +	struct list_head list;
+> +	struct fwnode_handle *fwnode;
+> +	const struct iommu_ops *ops;
+> +};
+> +static LIST_HEAD(iommu_fwentry_list);
+> +static DEFINE_SPINLOCK(iommu_fwentry_lock);
+> +
+> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops)
+> +{
+> +	struct iommu_fwentry *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> +
+> +	if (WARN_ON(!iommu))
+> +		return;
+> +
+> +	if (is_of_node(fwnode))
 
-Signed-off-by: Ji-Ze Hong (Peter Hong) <hpeter+linux_kernel@gmail.com>
----
- drivers/pci/quirks.c    | 37 +++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h |  5 +++++
- 2 files changed, 42 insertions(+)
+Nit: this check is actually redundant, since to_of_node() already does
+the right thing and of_node_get() is NULL-safe - iommu_fwspec_init()
+already works that way. On the other hand, though, it is perhaps more
+intuitive to see it explicitly, and since to_of_node() is inline it
+ought to result in the same object code (I've not checked, though).
+Either way:
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c232729..182712e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -15,6 +15,7 @@
- #include <linux/kernel.h>
- #include <linux/export.h>
- #include <linux/pci.h>
-+#include <linux/aer.h>
- #include <linux/init.h>
- #include <linux/delay.h>
- #include <linux/acpi.h>
-@@ -4460,3 +4461,39 @@ static void quirk_no_aersid(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-+
-+/*
-+ * Fintek F81504/508/512 PCIe-to-UART/GPIO will generate mass AER
-+ * correctable error interrupt message and stop the system boot on Intel
-+ * Skylake platform, AER message like the following link:
-+ * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
-+ *
-+ * Due to the error is correctable error, we'll try to mask the parent AER
-+ * interrupt to skip it and preserve generate uncorrectable erro interrupt
-+ * normally.
-+ */
-+static void quirk_aer_report(struct pci_dev *pdev)
-+{
-+	struct pci_dev *parent;
-+	int pos;
-+	u32 mask = PCI_ERR_COR_RCVR | PCI_ERR_COR_BAD_TLP |
-+			PCI_ERR_COR_BAD_DLLP | PCI_ERR_COR_REP_TIMER;
-+
-+	parent = pci_upstream_bridge(pdev);
-+	if (!parent)
-+		return;
-+
-+	pos = pci_find_ext_capability(parent, PCI_EXT_CAP_ID_ERR);
-+	if (!pos) {
-+		dev_dbg(&pdev->dev, "%s: bridge not support AER\n", __func__);
-+		return;
-+	}
-+
-+	pci_write_config_dword(parent, pos + PCI_ERR_COR_MASK, mask);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81504,
-+			quirk_aer_report);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81508,
-+			quirk_aer_report);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FINTEK, PCI_DEVICE_ID_F81512,
-+			quirk_aer_report);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..9854cf4 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -3034,4 +3034,9 @@
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_FINTEK		0x1c29
-+#define PCI_DEVICE_ID_F81504		0x1104
-+#define PCI_DEVICE_ID_F81508		0x1108
-+#define PCI_DEVICE_ID_F81512		0x1112
-+
- #endif /* _LINUX_PCI_IDS_H */
--- 
-1.9.1
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+
+> +		of_node_get(to_of_node(fwnode));
+> +
+> +	INIT_LIST_HEAD(&iommu->list);
+> +	iommu->fwnode = fwnode;
+> +	iommu->ops = ops;
+> +	spin_lock(&iommu_fwentry_lock);
+> +	list_add_tail(&iommu->list, &iommu_fwentry_list);
+> +	spin_unlock(&iommu_fwentry_lock);
+> +}
+> +
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	struct iommu_fwentry *node;
+> +	const struct iommu_ops *ops = NULL;
+> +
+> +	spin_lock(&iommu_fwentry_lock);
+> +	list_for_each_entry(node, &iommu_fwentry_list, list)
+> +		if (node->fwnode == fwnode) {
+> +			ops = node->ops;
+> +			break;
+> +		}
+> +	spin_unlock(&iommu_fwentry_lock);
+> +	return ops;
+> +}
+> +
+>  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+>  		      const struct iommu_ops *ops)
+>  {
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 5b82862..0f57ddc 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+>  }
+>  EXPORT_SYMBOL_GPL(of_get_dma_window);
+>  
+> -struct of_iommu_node {
+> -	struct list_head list;
+> -	struct device_node *np;
+> -	const struct iommu_ops *ops;
+> -};
+> -static LIST_HEAD(of_iommu_list);
+> -static DEFINE_SPINLOCK(of_iommu_lock);
+> -
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+> -{
+> -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> -
+> -	if (WARN_ON(!iommu))
+> -		return;
+> -
+> -	of_node_get(np);
+> -	INIT_LIST_HEAD(&iommu->list);
+> -	iommu->np = np;
+> -	iommu->ops = ops;
+> -	spin_lock(&of_iommu_lock);
+> -	list_add_tail(&iommu->list, &of_iommu_list);
+> -	spin_unlock(&of_iommu_lock);
+> -}
+> -
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> -{
+> -	struct of_iommu_node *node;
+> -	const struct iommu_ops *ops = NULL;
+> -
+> -	spin_lock(&of_iommu_lock);
+> -	list_for_each_entry(node, &of_iommu_list, list)
+> -		if (node->np == np) {
+> -			ops = node->ops;
+> -			break;
+> -		}
+> -	spin_unlock(&of_iommu_lock);
+> -	return ops;
+> -}
+> -
+>  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	struct of_phandle_args *iommu_spec = data;
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 436dc21..15d5478 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+>  		      const struct iommu_ops *ops);
+>  void iommu_fwspec_free(struct device *dev);
+>  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops);
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
+>  
+>  #else /* CONFIG_IOMMU_API */
+>  
+> @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+>  	return -ENODEV;
+>  }
+>  
+> +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> +					const struct iommu_ops *ops)
+> +{
+> +}
+> +
+> +static inline
+> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	return NULL;
+> +}
+> +
+>  #endif /* CONFIG_IOMMU_API */
+>  
+>  #endif /* __LINUX_IOMMU_H */
+> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> index e80b9c7..7681007 100644
+> --- a/include/linux/of_iommu.h
+> +++ b/include/linux/of_iommu.h
+> @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+>  
+>  #endif	/* CONFIG_OF_IOMMU */
+>  
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> +static inline void of_iommu_set_ops(struct device_node *np,
+> +				    const struct iommu_ops *ops)
+> +{
+> +	fwnode_iommu_set_ops(&np->fwnode, ops);
+> +}
+> +
+> +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> +{
+> +	return fwnode_iommu_get_ops(&np->fwnode);
+> +}
+>  
+>  extern struct of_device_id __iommu_of_table;
+>  
+> 
+
