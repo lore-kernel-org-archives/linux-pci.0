@@ -1,234 +1,194 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <c3136fae-144c-5949-3933-671b783671c8@arm.com>
-Date: Wed, 9 Nov 2016 14:40:08 +0000
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V4 1/2] PCI: hisi: Add ECAM support for devices that are not RC
+Date: Wed, 9 Nov 2016 17:14:56 +0800
+Message-ID: <1478682897-119874-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
+References: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/11/16 14:19, Lorenzo Pieralisi wrote:
-> The of_iommu_{set/get}_ops() API is used to associate a device
-> tree node with a specific set of IOMMU operations. The same
-> kernel interface is required on systems booting with ACPI, where
-> devices are not associated with a device tree node, therefore
-> the interface requires generalization.
-> 
-> The struct device fwnode member represents the fwnode token
-> associated with the device and the struct it points at is firmware
-> specific; regardless, it is initialized on both ACPI and DT systems
-> and makes an ideal candidate to use it to associate a set of IOMMU
-> operations to a given device, through its struct device.fwnode member
-> pointer.
-> 
-> Convert the DT specific of_iommu_{set/get}_ops() interface to
-> use struct device.fwnode as a look-up token, making the interface
-> usable on ACPI systems.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/iommu/iommu.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/of_iommu.c | 39 ---------------------------------------
->  include/linux/iommu.h    | 14 ++++++++++++++
->  include/linux/of_iommu.h | 12 ++++++++++--
->  4 files changed, 66 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 9a2f196..5c97c01 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -1615,6 +1615,48 @@ int iommu_request_dm_for_dev(struct device *dev)
->  	return ret;
->  }
->  
-> +struct iommu_fwentry {
+This patch modifies the current Hip05/Hip06 PCIe host
+controller driver to add support for 'almost ECAM'
+compliant platforms. Some controllers are ECAM compliant
+for all the devices of the hierarchy except the root
+complex; this patch adds support for such controllers.
 
-:)
+This is needed in preparation for the ACPI based driver
+to allow both DT and ACPI drivers to use the same BIOS
+(that configure the Designware iATUs).
+This commit doesn't break backward compatibility with
+previous non-ECAM platforms.
 
-> +	struct list_head list;
-> +	struct fwnode_handle *fwnode;
-> +	const struct iommu_ops *ops;
-> +};
-> +static LIST_HEAD(iommu_fwentry_list);
-> +static DEFINE_SPINLOCK(iommu_fwentry_lock);
-> +
-> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> +			  const struct iommu_ops *ops)
-> +{
-> +	struct iommu_fwentry *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
-> +
-> +	if (WARN_ON(!iommu))
-> +		return;
-> +
-> +	if (is_of_node(fwnode))
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
+ drivers/pci/host/Kconfig                           |  4 +-
+ drivers/pci/host/pcie-designware.c                 |  4 +-
+ drivers/pci/host/pcie-designware.h                 |  2 +
+ drivers/pci/host/pcie-hisi.c                       | 45 ++++++++++++++++++++++
+ 5 files changed, 60 insertions(+), 10 deletions(-)
 
-Nit: this check is actually redundant, since to_of_node() already does
-the right thing and of_node_get() is NULL-safe - iommu_fwspec_init()
-already works that way. On the other hand, though, it is perhaps more
-intuitive to see it explicitly, and since to_of_node() is inline it
-ought to result in the same object code (I've not checked, though).
-Either way:
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-> +		of_node_get(to_of_node(fwnode));
-> +
-> +	INIT_LIST_HEAD(&iommu->list);
-> +	iommu->fwnode = fwnode;
-> +	iommu->ops = ops;
-> +	spin_lock(&iommu_fwentry_lock);
-> +	list_add_tail(&iommu->list, &iommu_fwentry_list);
-> +	spin_unlock(&iommu_fwentry_lock);
-> +}
-> +
-> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-> +{
-> +	struct iommu_fwentry *node;
-> +	const struct iommu_ops *ops = NULL;
-> +
-> +	spin_lock(&iommu_fwentry_lock);
-> +	list_for_each_entry(node, &iommu_fwentry_list, list)
-> +		if (node->fwnode == fwnode) {
-> +			ops = node->ops;
-> +			break;
-> +		}
-> +	spin_unlock(&iommu_fwentry_lock);
-> +	return ops;
-> +}
-> +
->  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
->  		      const struct iommu_ops *ops)
->  {
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 5b82862..0f57ddc 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
->  }
->  EXPORT_SYMBOL_GPL(of_get_dma_window);
->  
-> -struct of_iommu_node {
-> -	struct list_head list;
-> -	struct device_node *np;
-> -	const struct iommu_ops *ops;
-> -};
-> -static LIST_HEAD(of_iommu_list);
-> -static DEFINE_SPINLOCK(of_iommu_lock);
-> -
-> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
-> -{
-> -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
-> -
-> -	if (WARN_ON(!iommu))
-> -		return;
-> -
-> -	of_node_get(np);
-> -	INIT_LIST_HEAD(&iommu->list);
-> -	iommu->np = np;
-> -	iommu->ops = ops;
-> -	spin_lock(&of_iommu_lock);
-> -	list_add_tail(&iommu->list, &of_iommu_list);
-> -	spin_unlock(&of_iommu_lock);
-> -}
-> -
-> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
-> -{
-> -	struct of_iommu_node *node;
-> -	const struct iommu_ops *ops = NULL;
-> -
-> -	spin_lock(&of_iommu_lock);
-> -	list_for_each_entry(node, &of_iommu_list, list)
-> -		if (node->np == np) {
-> -			ops = node->ops;
-> -			break;
-> -		}
-> -	spin_unlock(&of_iommu_lock);
-> -	return ops;
-> -}
-> -
->  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
->  {
->  	struct of_phandle_args *iommu_spec = data;
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 436dc21..15d5478 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
->  		      const struct iommu_ops *ops);
->  void iommu_fwspec_free(struct device *dev);
->  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
-> +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> +			  const struct iommu_ops *ops);
-> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
->  
->  #else /* CONFIG_IOMMU_API */
->  
-> @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
->  	return -ENODEV;
->  }
->  
-> +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> +					const struct iommu_ops *ops)
-> +{
-> +}
-> +
-> +static inline
-> +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-> +{
-> +	return NULL;
-> +}
-> +
->  #endif /* CONFIG_IOMMU_API */
->  
->  #endif /* __LINUX_IOMMU_H */
-> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-> index e80b9c7..7681007 100644
-> --- a/include/linux/of_iommu.h
-> +++ b/include/linux/of_iommu.h
-> @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
->  
->  #endif	/* CONFIG_OF_IOMMU */
->  
-> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-> +static inline void of_iommu_set_ops(struct device_node *np,
-> +				    const struct iommu_ops *ops)
-> +{
-> +	fwnode_iommu_set_ops(&np->fwnode, ops);
-> +}
-> +
-> +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
-> +{
-> +	return fwnode_iommu_get_ops(&np->fwnode);
-> +}
->  
->  extern struct of_device_id __iommu_of_table;
->  
-> 
-
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index 59c2f47..87a597a 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -9,10 +9,13 @@ Additional properties are described here:
+ 
+ Required properties
+ - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
+-- reg: Should contain rc_dbi, config registers location and length.
+-- reg-names: Must include the following entries:
++- reg: Should contain rc_dbi and  either config or ecam-cfg registers
++       location and length (it depends on the platform BIOS).
++- reg-names: Must include
+   "rc_dbi": controller configuration registers;
+-  "config": PCIe configuration space registers.
++  and one of the following entries:
++    "config": PCIe configuration space registers for non-ECAM platforms.
++    "ecam-cfg": PCIe configuration space registers for ECAM platforms
+ - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+ - port-id: Should be 0, 1, 2 or 3.
+ 
+@@ -23,8 +26,10 @@ Optional properties:
+ Hip05 Example (note that Hip06 is the same except compatible):
+ 	pcie@0xb0080000 {
+ 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+-		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+-		reg-names = "rc_dbi", "config";
++		reg = <0 0xb0080000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>
++		/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
++		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
+ 		bus-range = <0  15>;
+ 		msi-parent = <&its_pcie>;
+ 		#address-cells = <3>;
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d7e7c0a..ae98644 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -219,13 +219,13 @@ config PCIE_ALTERA_MSI
+ 
+ config PCI_HISI
+ 	depends on OF && ARM64
+-	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
++	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+ 	  Say Y here if you want PCIe controller support on HiSilicon
+-	  Hip05 and Hip06 SoCs
++	  Hip05 and Hip06 and Hip07 SoCs
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 035f50c..da11644 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -101,8 +101,6 @@
+ #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
+ #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
+ 
+-static struct pci_ops dw_pcie_ops;
+-
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+ 	if ((uintptr_t)addr & (size - 1)) {
+@@ -800,7 +798,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
+-static struct pci_ops dw_pcie_ops = {
++struct pci_ops dw_pcie_ops = {
+ 	.read = dw_pcie_rd_conf,
+ 	.write = dw_pcie_wr_conf,
+ };
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a567ea2..30d228a 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -83,4 +83,6 @@ struct pcie_host_ops {
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+ 
++extern struct pci_ops dw_pcie_ops;
++
+ #endif /* _PCIE_DESIGNWARE_H */
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 56154c2..555c964 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -43,6 +43,34 @@ struct hisi_pcie {
+ 	struct pcie_soc_ops *soc_ops;
+ };
+ 
++static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++				    unsigned int devfn, int where, int size,
++				    u32 *value)
++{
++	return pci_generic_config_read(bus, devfn, where, size, value);
++}
++
++static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++				    unsigned int devfn, int where, int size,
++				    u32 value)
++{
++	return pci_generic_config_write(bus, devfn, where, size, value);
++}
++
++static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
++					      unsigned int devfn,
++					      int where)
++{
++	void __iomem *addr;
++	struct pcie_port *pp = bus->sysdata;
++
++	addr = pp->va_cfg1_base - (pp->busn->start << 20) +
++		((bus->number << 20) | (devfn << 12)) +
++		where;
++
++	return addr;
++}
++
+ /* HipXX PCIe host only supports 32-bit config access */
+ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+ 			      u32 *val)
+@@ -190,6 +218,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
+ 	}
+ 
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
++	if (reg) {
++		/* ECAM driver version */
++		hisi_pcie->pp.va_cfg0_base =
++		devm_ioremap_resource(&pdev->dev, reg);
++		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
++			dev_err(pp->dev, "cannot get ecam-cfg\n");
++			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
++		}
++		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
++
++		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
++
++		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
++		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
++	}
++
+ 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+ 	if (ret)
+ 		return ret;
+-- 
+1.9.1
