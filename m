@@ -1,347 +1,231 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:4496 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932432AbcKYQ3Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 11:29:16 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        "T homas Petazzoni" <thomas.petazzo.ni@free-electrons.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        John Garry <john.garry@huawei.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@go og le.com" <bhelgaas@google.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan 02@gmail.com" <zhichang.yuan02@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>
-Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Fri, 25 Nov 2016 16:27:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F93B05D@lhreml507-mbx>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <4675465.4Qhqy6WU4X@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F939E0A@lhreml507-mbx>
- <107039805.6PaPa1fbx1@wuerfel>
-In-Reply-To: <107039805.6PaPa1fbx1@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 16/16] drivers: acpi: iort: introduce iort_iommu_configure
+Date: Wed,  9 Nov 2016 14:19:48 +0000
+Message-Id: <20161109141948.19244-17-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+DT based systems have a generic kernel API to configure IOMMUs
+for devices (ie of_iommu_configure()).
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 25 November 2016 12:04
-> To: Gabriele Paoloni
-> Cc: linux-arm-kernel@lists.infradead.org; mark.rutland@arm.com;
-> catalin.marinas@arm.com; linux-pci@vger.kernel.org;
-> liviu.dudau@arm.com; Linuxarm; lorenzo.pieralisi@arm.com; xuwei (O);
-> Jason Gunthorpe; T homas Petazzoni; linux-serial@vger.kernel.org;
-> benh@kernel.crashing.org; devicetree@vger.kernel.org; minyard@acm.org;
-> will.deacon@arm.com; John Garry; olof@lixom.net; robh+dt@kernel.org;
-> bhelgaas@go og le.com; kantyzc@163.com; zhichang.yuan 02@gmail.com;
-> linux-kernel@vger.kernel.org; Yuanzhichang; zourongrong@gmail.com
-> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
-> Hip06
-> 
-> On Friday, November 25, 2016 8:46:11 AM CET Gabriele Paoloni wrote:
-> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > >
-> > > On Wednesday, November 23, 2016 6:07:11 PM CET Arnd Bergmann wrote:
-> > > > On Wednesday, November 23, 2016 3:22:33 PM CET Gabriele Paoloni
-> > > wrote:
-> > > > > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > > > > On Friday, November 18, 2016 5:03:11 PM CET Gabriele Paoloni
-> > >  /*
-> > > @@ -549,9 +548,14 @@ static int of_translate_one(struct device_node
-> > > *parent, struct of_bus *bus,
-> > >   * that translation is impossible (that is we are not dealing with
-> a
-> > > value
-> > >   * that can be mapped to a cpu physical address). This is not
-> really
-> > > specified
-> > >   * that way, but this is traditionally the way IBM at least do
-> things
-> > > + *
-> > > + * Whenever the translation fails, the *host pointer will be set
-> to
-> > > the
-> > > + * device that lacks a tranlation, and the return code is relative
-> to
-> > > + * that node.
-> >
-> > This seems to be wrong to me. We are abusing of the error conditions.
-> > So effectively if there is a buggy DT for an IO resource we end up
-> > assuming that we are using a special IO device with unmapped
-> addresses.
-> >
-> > The patch at the bottom apply on top of this one and I think is a
-> more
-> > reasonable approach
-> 
-> It was meant as a logical extension to the existing interface,
-> translating the address as far as we can, and reporting back
-> how far we got.
-> 
-> Maybe we can return 'of_root' by instead of NULL to signify
-> that we have converted all the way to the root of the DT?
-> That would make it more consistent, but slightly more complicated
-> for the common case.
+On ARM based ACPI systems, the of_iommu_configure() equivalent can
+be implemented atop ACPI IORT kernel API, with the corresponding
+functions to map device identifiers to IOMMUs and retrieve the
+corresponding IOMMU operations necessary for DMA operations set-up.
 
-Mmm not sure really...the point is that now the **host parameter is
-used both as a flag and also in of_translate_ioport...the problem
-that I see is where we set the "host" parameter...I have a proposal
-below...
+By relying on the iommu_fwspec generic kernel infrastructure,
+implement the IORT based IOMMU configuration for ARM ACPI systems
+and hook it up in the ACPI kernel layer that implements DMA
+configuration for a device.
 
-[...]
-
-> pci_bus_alloc_resource(struct
-> > > pci_bus *bus,
-> > >  			void *alignf_data);
-> 
-> [Many lines of reply trimmed here, please make sure you don't quote too
-> much context when you reply, it's really annoying to read through
-> it otherwise]
-
-Sorry! I'll take care of this in the future...
-
-> 
-> >  /*
-> > + * of_isa_indirect_io - get the IO address from some isa reg
-> property value.
-> > + *	For some isa/lpc devices, no ranges property in ancestor node.
-> > + *	The device addresses are described directly in their regs
-> property.
-> > + *	This fixup function will be called to get the IO address of
-> isa/lpc
-> > + *	devices when the normal of_translation failed.
-> > + *
-> > + * @parent:	points to the parent dts node;
-> > + * @bus:		points to the of_bus which can be used to parse
-> address;
-> > + * @addr:	the address from reg property;
-> > + * @na:		the address cell counter of @addr;
-> > + * @presult:	store the address paresed from @addr;
-> > + *
-> > + * return 1 when successfully get the I/O address;
-> > + * 0 will return for some failures.
-> > + */
-> > +static int of_get_isa_indirect_io(struct device_node *parent,
-> > +				struct of_bus *bus, __be32 *addr,
-> > +				int na, u64 *presult)
-> > +{
-> > +	unsigned int flags;
-> > +	unsigned int rlen;
-> > +
-> > +	/* whether support indirectIO */
-> > +	if (!indirect_io_enabled())
-> > +		return 0;
-> > +
-> > +	if (!of_bus_isa_match(parent))
-> > +		return 0;
-> > +
-> > +	flags = bus->get_flags(addr);
-> > +	if (!(flags & IORESOURCE_IO))
-> > +		return 0;
-> > +
-> > +	/* there is ranges property, apply the normal translation
-> directly. */
-> > +	if (of_get_property(parent, "ranges", &rlen))
-> > +		return 0;
-> > +
-> > +	*presult = of_read_number(addr + 1, na - 1);
-> > +	/* this fixup is only valid for specific I/O range. */
-> > +	return addr_is_indirect_io(*presult);
-> > +}
-> 
-> Right, this would work. The reason I didn't go down this route is
-> that I wanted to keep it generic enough to allow doing the same
-> for PCI host bridges with a nonlinear mapping of the I/O space.
-> 
-> There isn't really anything special about ISA here, other than the
-> fact that the one driver that needs it happens to be for ISA rather
-> than PCI.
-
-Yes I see your point please consider the patch at the bottom...
-
-> 
-> > +/*
-> >   * Translate an address from the device-tree into a CPU physical
-> address,
-> >   * this walks up the tree and applies the various bus mappings on
-> the
-> >   * way.
-> > @@ -600,14 +643,23 @@ static u64 __of_translate_address(struct
-> device_node *dev,
-> >  			result = of_read_number(addr, na);
-> >  			break;
-> >  		}
-> > +		/*
-> > +		 * For indirectIO device which has no ranges property, get
-> > +		 * the address from reg directly.
-> > +		 */
-> > +		if (of_get_isa_indirect_io(dev, bus, addr, na, &result)) {
-> > +			pr_debug("isa indirectIO matched(%s)..addr =
-> 0x%llx\n",
-> > +				of_node_full_name(dev), result);
-> > +			*host = of_node_get(parent);
-> > +			break;
-> > +		}
-> >
-> 
-> If we do the special case for ISA as you suggest above, I would still
-> want
-> to keep it in of_translate_ioport(), I think that's a useful change by
-> itself in my patch.
-
-This comes without saying...the patch I proposed here already applied on
-top of your changes and, in fact, you can see that I set 
-"*host = of_node_get(parent);" above in my patch to be used by 
-of_translate_ioport()
- 
-> 
-> 	Arnde
-> 
-> 
-> 
-
-Below I have reworked my patch (that still applies on top of your one) to
-make it not ISA specific.
-Notice that of_translate_ioport() still stands and that in addr_is_indirect_io()
-we make sure the bus address to be in the bus address range that the special
-host operates on...
-
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/of/address.c       | 56 ++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/of_address.h | 17 ++++++++++++++
- 2 files changed, 71 insertions(+), 2 deletions(-)
+ drivers/acpi/arm64/iort.c | 99 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/scan.c       |  7 +++-
+ include/linux/acpi_iort.h |  6 +++
+ 3 files changed, 111 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 5decaba..2b34931 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -540,6 +540,48 @@ static u64 of_translate_one(struct device_node *parent, struct of_bus *bus,
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 7d30605..c129c60 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -28,6 +28,8 @@
+ 
+ #define IORT_TYPE_MASK(type)	(1 << (type))
+ #define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
++#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
++				(1 << ACPI_IORT_NODE_SMMU_V3))
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -501,6 +503,103 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
  }
  
- /*
-+ * of_get_indirect_io - get the IO address from some reg property value.
-+ *	For some special host devices, we have no ranges property node and
-+ *	we directly use the bus addresses of the children regs property.
-+ *	This fixup function will be called to get the IO address of isa/lpc
-+ *	devices when the normal of_translation failed.
-+ *
-+ * @parent:	points to the parent dts node;
-+ * @bus:		points to the of_bus which can be used to parse address;
-+ * @addr:	the address from reg property;
-+ * @na:		the address cell counter of @addr;
-+ * @presult:	store the address parsed from @addr;
-+ *
-+ * return 1 when successfully get the I/O address;
-+ * 0 will return for some failures.
-+ */
-+static int of_get_indirect_io(struct device_node *parent,
-+				struct of_bus *bus, __be32 *addr,
-+				int na, u64 *presult)
++static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
 +{
-+	unsigned int flags;
-+	unsigned int rlen;
++	u32 *rid = data;
 +
-+	/* whether support indirectIO */
-+	if (!indirect_io_enabled())
-+		return 0;
-+
-+	flags = bus->get_flags(addr);
-+	if (!(flags & IORESOURCE_IO))
-+		return 0;
-+
-+	/* there is ranges property, apply the normal translation directly. */
-+	if (of_get_property(parent, "ranges", &rlen))
-+		return 0;
-+
-+	*presult = of_read_number(addr + 1, na - 1);
-+
-+	/* check if the bus address falls into the range of
-+	 * the special host device*/
-+	return addr_is_indirect_io(*presult);
-+}
-+
-+/*
-  * Translate an address from the device-tree into a CPU physical address,
-  * this walks up the tree and applies the various bus mappings on the
-  * way.
-@@ -601,13 +643,23 @@ static u64 __of_translate_address(struct device_node *dev,
- 			break;
- 		}
- 
-+		/*
-+		 * For indirectIO device which has no ranges property, get
-+		 * the address from reg directly.
-+		 */
-+		if (of_get_indirect_io(dev, bus, addr, na, &result)) {
-+			pr_debug("isa indirectIO matched(%s)..addr = 0x%llx\n",
-+				of_node_full_name(dev), result);
-+			*host = of_node_get(parent);
-+			break;
-+		}
-+
- 		/* Get new parent bus and counts */
- 		pbus = of_match_bus(parent);
- 		pbus->count_cells(dev, &pna, &pns);
- 		if (!OF_CHECK_COUNTS(pna, pns)) {
--			pr_debug("Bad cell count for %s\n",
-+			pr_err("Bad cell count for %s\n",
- 				 of_node_full_name(dev));
--			*host = of_node_get(parent);
- 			break;
- 		}
- 
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 3786473..14848d8 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -24,6 +24,23 @@ struct of_pci_range {
- #define for_each_of_pci_range(parser, range) \
- 	for (; of_pci_range_parser_one(parser, range);)
- 
-+#ifndef indirect_io_enabled
-+#define indirect_io_enabled indirect_io_enabled
-+static inline bool indirect_io_enabled(void)
-+{
-+	return false;
-+}
-+#endif
-+
-+#ifndef addr_is_indirect_io
-+#define addr_is_indirect_io addr_is_indirect_io
-+static inline int addr_is_indirect_io(u64 taddr)
-+{
++	*rid = alias;
 +	return 0;
 +}
-+#endif
 +
++static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
++			       struct fwnode_handle *fwnode,
++			       const struct iommu_ops *ops)
++{
++	int ret = iommu_fwspec_init(dev, fwnode, ops);
 +
- /* Translate a DMA address from device space to CPU space */
- extern u64 of_translate_dma_address(struct device_node *dev,
- 				    const __be32 *in_addr);
++	if (!ret)
++		ret = iommu_fwspec_add_ids(dev, &streamid, 1);
++
++	return ret;
++}
++
++static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
++					struct acpi_iort_node *node,
++					u32 streamid)
++{
++	struct fwnode_handle *iort_fwnode = NULL;
++	const struct iommu_ops *ops = NULL;
++	int ret = -ENODEV;
++
++	if (node) {
++		iort_fwnode = iort_get_fwnode(node);
++		if (!iort_fwnode)
++			return NULL;
++
++		ops = fwnode_iommu_get_ops(iort_fwnode);
++		if (!ops)
++			return NULL;
++
++		ret = arm_smmu_iort_xlate(dev, streamid,
++					  iort_fwnode, ops);
++	}
++
++	return ret ? NULL : ops;
++}
++
++/**
++ * iort_iommu_configure - Set-up IOMMU configuration for a device.
++ *
++ * @dev: device to configure
++ *
++ * Returns: iommu_ops pointer on configuration success
++ *          NULL on configuration failure
++ */
++const struct iommu_ops *iort_iommu_configure(struct device *dev)
++{
++	struct acpi_iort_node *node, *parent;
++	const struct iommu_ops *ops = NULL;
++	u32 streamid = 0;
++
++	if (dev_is_pci(dev)) {
++		struct pci_bus *bus = to_pci_dev(dev)->bus;
++		u32 rid;
++
++		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
++				       &rid);
++
++		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
++				      iort_match_node_callback, &bus->dev);
++		if (!node)
++			return NULL;
++
++		parent = iort_node_map_rid(node, rid, &streamid,
++					   IORT_IOMMU_TYPE);
++
++		ops = iort_iommu_xlate(dev, parent, streamid);
++
++	} else {
++		int i = 0;
++
++		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
++				      iort_match_node_callback, dev);
++		if (!node)
++			return NULL;
++
++		parent = iort_node_get_id(node, &streamid,
++					  IORT_IOMMU_TYPE, i++);
++
++		while (parent) {
++			ops = iort_iommu_xlate(dev, parent, streamid);
++
++			parent = iort_node_get_id(node, &streamid,
++						  IORT_IOMMU_TYPE, i++);
++		}
++	}
++
++	return ops;
++}
++
+ static void __init acpi_iort_register_irq(int hwirq, const char *name,
+ 					  int trigger,
+ 					  struct resource *res)
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 694e0b6..e5f7004 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+ #include <linux/acpi.h>
++#include <linux/acpi_iort.h>
+ #include <linux/signal.h>
+ #include <linux/kthread.h>
+ #include <linux/dmi.h>
+@@ -1377,6 +1378,8 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+  */
+ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
++	const struct iommu_ops *iommu;
++
+ 	/*
+ 	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
+ 	 * setup the correct supported mask.
+@@ -1391,11 +1394,13 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ 	if (!dev->dma_mask)
+ 		dev->dma_mask = &dev->coherent_dma_mask;
+ 
++	iommu = iort_iommu_configure(dev);
++
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+-	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
++	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ 			   attr == DEV_DMA_COHERENT);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dma_configure);
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index 79ba1bb..dcb2b60 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -34,6 +34,8 @@ void acpi_iort_init(void);
+ bool iort_node_match(u8 type);
+ u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
++/* IOMMU interface */
++const struct iommu_ops *iort_iommu_configure(struct device *dev);
+ #else
+ static inline void acpi_iort_init(void) { }
+ static inline bool iort_node_match(u8 type) { return false; }
+@@ -42,6 +44,10 @@ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+ 							u32 req_id)
+ { return NULL; }
++/* IOMMU interface */
++static inline
++const struct iommu_ops *iort_iommu_configure(struct device *dev)
++{ return NULL; }
+ #endif
+ 
+ #define IORT_ACPI_DECLARE(name, table_id, fn)		\
 -- 
-2.7.4
-
-
+2.10.0
 
