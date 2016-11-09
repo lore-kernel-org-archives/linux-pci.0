@@ -1,87 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48092 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933065AbcKHUtO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 15:49:14 -0500
-Date: Tue, 8 Nov 2016 14:49:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Vecu Bosseur <vecu.bosseur@gmail.com>
-Subject: Re: [PATCH] PCI: Don't attempt to claim shadow copies of ROM
-Message-ID: <20161108204909.GA14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:4127 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751021AbcKIMLq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 07:11:46 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>
+CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        John Garry <john.garry@huawei.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Wed, 9 Nov 2016 12:10:43 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-4-git-send-email-yuanzhichang@hisilicon.com>
+ <1555494.4IFvGxvsfe@wuerfel>
+In-Reply-To: <1555494.4IFvGxvsfe@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 05:51:58PM -0600, Bjorn Helgaas wrote:
-> If we're using a shadow copy of a PCI device ROM, the shadow copy is in RAM
-> and the device never sees accesses to it and doesn't respond to it.  We
-> don't have to route the shadow range to the PCI device, and the device
-> doesn't have to claim the range.
-> 
-> Previously we treated the shadow copy as though it were the ROM BAR, and we
-> failed to claim it because the region wasn't routed to the device:
-> 
->   pci 0000:01:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
->   pci_bus 0000:01: Allocating resources
->   pci 0000:01:00.0: can't claim BAR 6 [mem 0x000c0000-0x000dffff]: no compatible bridge window
-> 
-> The failure path of pcibios_allocate_dev_rom_resource() cleared out the
-> resource start address, which caused the following ioremap() warning:
-> 
->   WARNING: CPU: 0 PID: 116 at /build/linux-akdJXO/linux-4.8.0/arch/x86/mm/ioremap.c:121 __ioremap_caller+0x1ec/0x370
->   ioremap on RAM at 0x0000000000000000 - 0x000000000001ffff
-> 
-> Handle a shadow copy as RAM, without inserting it into the iomem tree.
-> 
-> This fixes a regression caused by 0c0e0736acad ("PCI: Set ROM shadow
-> location in arch code, not in PCI core"), which appeared in v4.6.  The
-> effect is failure to initialize video devices, reported on AMD Turks but
-> likely to affect others as well.
-> 
-> Fixes: 0c0e0736acad ("PCI: Set ROM shadow location in arch code, not in PCI core")
-> Reported-and-tested-by: Vecu Bosseur <vecu.bosseur@gmail.com>
-> Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627496
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=175391
-> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1352272
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: stable@vger.kernel.org	# v4.6+
+Hi Arnd
 
-I applied this to for-linus for v4.9.
-
-I'm surprised we haven't seen more problems from this, given that it's
-been there since v4.6, and anything using the shadow copy should be
-broken.
-
-> ---
->  drivers/pci/setup-res.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 08 November 2016 16:25
+> To: Yuanzhichang
+> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> bhelgaas@google.com; mark.rutland@arm.com; olof@lixom.net; linux-arm-
+> kernel@lists.infradead.org; lorenzo.pieralisi@arm.com; linux-
+> kernel@vger.kernel.org; Linuxarm; devicetree@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-serial@vger.kernel.org; minyard@acm.org;
+> benh@kernel.crashing.org; liviu.dudau@arm.com; zourongrong@gmail.com;
+> John Garry; Gabriele Paoloni; zhichang.yuan02@gmail.com;
+> kantyzc@163.com; xuwei (O)
+> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
+> Hip06
 > 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 66c4d8f..9526e34 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -121,6 +121,14 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
->  		return -EINVAL;
->  	}
->  
-> +	/*
-> +	 * If we have a shadow copy in RAM, the PCI device doesn't respond
-> +	 * to the shadow range, so we don't need to claim it, and upstream
-> +	 * bridges don't need to route the range to the device.
-> +	 */
-> +	if (res->flags & IORESOURCE_ROM_SHADOW)
-> +		return 0;
-> +
->  	root = pci_find_parent_resource(dev, res);
->  	if (!root) {
->  		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
+> On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
+> > +       /*
+> > +        * The first PCIBIOS_MIN_IO is reserved specifically for
+> indirectIO.
+> > +        * It will separate indirectIO range from pci host bridge to
+> > +        * avoid the possible PIO conflict.
+> > +        * Set the indirectIO range directly here.
+> > +        */
+> > +       lpcdev->io_ops.start = 0;
+> > +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
+> > +       lpcdev->io_ops.devpara = lpcdev;
+> > +       lpcdev->io_ops.pfin = hisilpc_comm_in;
+> > +       lpcdev->io_ops.pfout = hisilpc_comm_out;
+> > +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
+> > +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I have to look at patch 2 in more detail again, after missing a few
+> review
+> rounds. I'm still a bit skeptical about hardcoding a logical I/O port
+> range here, and would hope that we can just go through the same
+> assignment of logical port ranges that we have for PCI buses,
+> decoupling
+> the bus addresses from the linux-internal ones.
+
+The point here is that we want to avoid any conflict/overlap between
+the LPC I/O space and the PCI I/O space. With the assignment above
+we make sure that LPC never interfere with PCI I/O space.
+
+Thanks
+
+Gab
+
+> 
+> 	Arnd
