@@ -1,57 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Nov 2016 17:06:40 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161129170639.GH30283@arm.com>
-References: <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
- <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
- <20161116095615.GA25656@red-moon>
- <20161129160549.GH2078@8bytes.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0047.outbound.protection.outlook.com ([104.47.2.47]:53747
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751203AbcKITWk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 14:22:40 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Adi Menachem <adim@mellanox.com>
+Subject: RE: Shouldn't VFIO virtualize the ATS capability?
+Date: Wed, 9 Nov 2016 14:49:02 +0000
+Message-ID: <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+ <20161106100832.41e173d5@t450s.home>
+In-Reply-To: <20161106100832.41e173d5@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129160549.GH2078@8bytes.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 05:05:49PM +0100, Joerg Roedel wrote:
-> On Wed, Nov 16, 2016 at 09:56:15AM +0000, Lorenzo Pieralisi wrote:
-> > I can easily make the changes Robin suggests above, I need to know
-> > what to do with this patch it is the last blocking point for this
-> > series and time is running out I can revert to using dev->bus to
-> > retrieve iommu_ops (even though I do not think it makes sense given
-> > what Robin outlines below) but I need to know please, we can't gate
-> > an entire series for this patch that is just syntactic sugar.
-> 
-> Well, I didn't really object to the approach per-se, I just wanted to
-> know the rationale behind the need for the iommu-ops pointer. So through
-> which tree should this series be merged?
+I would virtualize the "ATS Control Register".
 
-I was just about to send a pull request to you, since it conflicts with
-my ARM SMMU patches and the PCI/ACPI bits are acked by Rafael and Bjorn.
+Regarding poor behavior, I couldn't really find what happens when ATS is mi=
+sconfigured, but I would assume it can cause problems.
+The scenarios I'm concerned about are:
+	1. The guest enables translation caching, while the hypervisor thinks ther=
+e are disabled -> Hypervisor won't issue invalidations.
+	2. Smallest Translation Unit misconfiguration. Not sure if it will cause i=
+nvalid access or only poor caching behavior.
 
-My for-joerg/arm-smmu/updates is ready to go; just need to write the
-pull request.
+Thanks,
+Ilya
 
-Will
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Sunday, November 06, 2016 7:09 PM
+> To: Ilya Lesokhin <ilyal@mellanox.com>
+> Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com
+> Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+>=20
+> On Sun, 6 Nov 2016 11:13:09 +0000
+> Ilya Lesokhin <ilyal@mellanox.com> wrote:
+>=20
+> > Hi
+> > I've noticed that VFIO doesn't virtualize the ATS capability.
+> > It seems to me that translation caching and Smallest Translation Unit i=
+s
+> something you would want to control on the host. Am I wrong?
+>=20
+> What about those fields would we virtualize?  Why does the host need to b=
+e
+> an intermediary?  Can the user induce poor behavior with direct access to
+> them?  Thanks,
+>=20
+> Alex
