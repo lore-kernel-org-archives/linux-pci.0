@@ -1,63 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:34889 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932810AbcKNLQP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 06:16:15 -0500
-Received: by mail-wm0-f42.google.com with SMTP id a197so91504456wmd.0
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 03:16:14 -0800 (PST)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        srinivas.kandagatla@linaro.org, devicetree@vger.kernel.org
-Subject: [PATCH v4 3/3] PCI: qcom: add runtime pm support to pcie_port
-Date: Mon, 14 Nov 2016 11:15:55 +0000
-Message-Id: <1479122155-13393-4-git-send-email-srinivas.kandagatla@linaro.org>
-In-Reply-To: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+Received: from mga06.intel.com ([134.134.136.31]:43552 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932390AbcKIMVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 07:21:15 -0500
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v9 8/8] thunderbolt: Adding maintainer entry
+Date: Wed,  9 Nov 2016 16:20:08 +0200
+Message-Id: <1478701208-4585-9-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is required when the pcie controller sits on a bus with
-its own power domain and clocks which are controlled via a bus driver
-like simple pm bus. As these bus driver have runtime pm enabled, it makes
-sense to update the usage counter so that the runtime pm does not suspend
-the clks or power domain associated with the bus driver.
+Add Amir Levy as maintainer for Thunderbolt(TM) ICM driver
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 ---
- drivers/pci/host/pcie-qcom.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ MAINTAINERS | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 03ba6b1..c2ca848 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -587,6 +587,8 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
- 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
- 	int ret;
- 
-+	pm_runtime_get_sync(pp->dev);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 411e3b8..87763c44 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10652,7 +10652,13 @@ F:	include/uapi/linux/stm.h
+ THUNDERBOLT DRIVER
+ M:	Andreas Noever <andreas.noever@gmail.com>
+ S:	Maintained
+-F:	drivers/thunderbolt/
++F:	drivers/thunderbolt/*
 +
- 	qcom_ep_reset_assert(pcie);
++THUNDERBOLT ICM DRIVER
++M:	Amir Levy <amir.jer.levy@intel.com>
++S:	Maintained
++F:	drivers/thunderbolt/icm/
++F:	Documentation/thunderbolt/networking.txt
  
- 	ret = pcie->ops->init(pcie);
-@@ -617,6 +619,7 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
-+	pm_runtime_put_sync(pp->dev);
- }
- 
- static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-@@ -673,6 +676,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (!pcie)
- 		return -ENOMEM;
- 
-+	pm_runtime_enable(dev);
- 	pp = &pcie->pp;
- 	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
- 
+ TI BQ27XXX POWER SUPPLY DRIVER
+ R:	Andrew F. Davis <afd@ti.com>
 -- 
-2.10.1
+2.7.4
 
