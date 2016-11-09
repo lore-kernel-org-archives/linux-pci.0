@@ -1,39 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:60404 "EHLO
-        SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751993AbcKGLIO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 06:08:14 -0500
-Subject: Re: [PATCH 00/12] xen: add common function for reading optional value
-To: Juergen Gross <jgross@suse.com>, <linux-kernel@vger.kernel.org>,
-        <xen-devel@lists.xen.org>
-References: <1477932510-28594-1-git-send-email-jgross@suse.com>
-CC: <boris.ostrovsky@oracle.com>, <konrad.wilk@oracle.com>,
-        <roger.pau@citrix.com>, <peterhuewe@gmx.de>, <tpmdd@selhorst.net>,
-        <jarkko.sakkinen@linux.intel.com>,
-        <jgunthorpe@obsidianresearch.com>,
-        <tpmdd-devel@lists.sourceforge.net>, <dmitry.torokhov@gmail.com>,
-        <linux-input@vger.kernel.org>, <wei.liu2@citrix.com>,
-        <paul.durrant@citrix.com>, <netdev@vger.kernel.org>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <tomi.valkeinen@ti.com>, <linux-fbdev@vger.kernel.org>
-From: David Vrabel <david.vrabel@citrix.com>
-Message-ID: <8d314b86-4a28-5628-2a79-842a2fafc4c1@citrix.com>
-Date: Mon, 7 Nov 2016 11:08:09 +0000
+Received: from mx2.suse.de ([195.135.220.15]:50665 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751241AbcKIHEf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 02:04:35 -0500
+Subject: Re: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in
+ irq_calc_affinity_vectors()
+To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
+References: <1478654107-7384-1-git-send-email-hch@lst.de>
+ <1478654107-7384-3-git-send-email-hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <6f4f8e0f-94bf-d9c0-f97e-cd629f4b8122@suse.de>
+Date: Wed, 9 Nov 2016 08:04:32 +0100
 MIME-Version: 1.0
-In-Reply-To: <1477932510-28594-1-git-send-email-jgross@suse.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <1478654107-7384-3-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/10/16 16:48, Juergen Gross wrote:
-> There are multiple instances of code reading an optional unsigned
-> parameter from Xenstore via xenbus_scanf(). Instead of repeating the
-> same code over and over add a service function doing the job and
-> replace the call of xenbus_scanf() with the call of the new function
-> where appropriate.
+On 11/09/2016 02:15 AM, Christoph Hellwig wrote:
+> Only calculate the affinity for the main I/O vectors, and skip the
+> pre or post vectors specified by struct irq_affinity.
+>
+> Also remove the irq_affinity cpumask argument that has never been used.
+> If we ever need it in the future we can pass it through struct
+> irq_affinity.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c         |  8 ++++----
+>  include/linux/interrupt.h |  4 ++--
+>  kernel/irq/affinity.c     | 24 ++++++++++--------------
+>  3 files changed, 16 insertions(+), 20 deletions(-)
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
+Cheers,
 
-Please queue for the next release.
-
-David
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
