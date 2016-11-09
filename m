@@ -1,193 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:57096 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755487AbcKWEQd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 23:16:33 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 1/3] PCI: rockchip: split out rockchip_cfg_atu
-Date: Wed, 23 Nov 2016 12:15:13 +0800
-Message-Id: <1479874515-65872-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 00/16] ACPI IORT ARM SMMU support
+Date: Wed,  9 Nov 2016 14:19:32 +0000
+Message-Id: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We split out a new function, rockchip_cfg_atu, in order to
-re-configure the atu when missing these information after
-wakeup from S3.
+This patch series is v7 of a previous posting:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+https://lkml.org/lkml/2016/10/18/506
 
----
+v6 -> v7
+	- Rebased against v4.9-rc4
+	- Fixed IORT probing on ACPI systems with missing IORT table
+	- Fixed SMMUv1/v2 global interrupt detection
+	- Updated iommu_ops firmware look-up
 
-Changes in v2:
-- remove msg region support
+v5 -> v6
+	- Rebased against v4.9-rc1
+	- Changed FWNODE_IOMMU to FWNODE_ACPI_STATIC
+	- Moved platform devices creation into IORT code
+	- Updated fwnode handling
+	- Added default dma masks initialization
 
- drivers/pci/host/pcie-rockchip.c | 104 +++++++++++++++++++++------------------
- 1 file changed, 55 insertions(+), 49 deletions(-)
+v4 -> v5
+	- Added SMMUv1/v2 support
+	- Rebased against v4.8-rc5 and dependencies series
+	- Consolidated IORT platform devices creation
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index b55037a..9cb84b1 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -210,6 +210,11 @@ struct rockchip_pcie {
- 	int	link_gen;
- 	struct	device *dev;
- 	struct	irq_domain *irq_domain;
-+	u32     io_size;
-+	int     offset;
-+	phys_addr_t io_bus_addr;
-+	u32     mem_size;
-+	phys_addr_t mem_bus_addr;
- };
- 
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-@@ -1149,6 +1154,50 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 	return 0;
- }
- 
-+static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
-+{
-+	int offset;
-+	int err;
-+	int reg_no;
-+
-+	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
-+		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
-+						AXI_WRAPPER_MEM_WRITE,
-+						20 - 1,
-+						rockchip->mem_bus_addr +
-+						(reg_no << 20),
-+						0);
-+		if (err) {
-+			dev_err(rockchip->dev,
-+					"program RC mem outbound ATU failed\n");
-+			return err;
-+		}
-+	}
-+
-+	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
-+	if (err) {
-+		dev_err(rockchip->dev, "program RC mem inbound ATU failed\n");
-+		return err;
-+	}
-+
-+	offset = rockchip->mem_size >> 20;
-+	for (reg_no = 0; reg_no < (rockchip->io_size >> 20); reg_no++) {
-+		err = rockchip_pcie_prog_ob_atu(rockchip,
-+						reg_no + 1 + offset,
-+						AXI_WRAPPER_IO_WRITE,
-+						20 - 1,
-+						rockchip->io_bus_addr +
-+						(reg_no << 20),
-+						0);
-+		if (err) {
-+			dev_err(rockchip->dev,
-+					"program RC io outbound ATU failed\n");
-+			return err;
-+		}
-+	}
-+
-+	return err;
-+}
- static int rockchip_pcie_probe(struct platform_device *pdev)
- {
- 	struct rockchip_pcie *rockchip;
-@@ -1158,13 +1207,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	resource_size_t io_base;
- 	struct resource	*mem;
- 	struct resource	*io;
--	phys_addr_t io_bus_addr = 0;
--	u32 io_size;
--	phys_addr_t mem_bus_addr = 0;
--	u32 mem_size = 0;
--	int reg_no;
- 	int err;
--	int offset;
- 
- 	LIST_HEAD(res);
- 
-@@ -1231,14 +1274,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		goto err_vpcie;
- 
- 	/* Get the I/O and memory ranges from DT */
--	io_size = 0;
- 	resource_list_for_each_entry(win, &res) {
- 		switch (resource_type(win->res)) {
- 		case IORESOURCE_IO:
- 			io = win->res;
- 			io->name = "I/O";
--			io_size = resource_size(io);
--			io_bus_addr = io->start - win->offset;
-+			rockchip->io_size = resource_size(io);
-+			rockchip->io_bus_addr = io->start - win->offset;
- 			err = pci_remap_iospace(io, io_base);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
-@@ -1249,8 +1291,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		case IORESOURCE_MEM:
- 			mem = win->res;
- 			mem->name = "MEM";
--			mem_size = resource_size(mem);
--			mem_bus_addr = mem->start - win->offset;
-+			rockchip->mem_size = resource_size(mem);
-+			rockchip->mem_bus_addr = mem->start - win->offset;
- 			break;
- 		case IORESOURCE_BUS:
- 			rockchip->root_bus_nr = win->res->start;
-@@ -1260,45 +1302,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	if (mem_size) {
--		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
--			err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
--							AXI_WRAPPER_MEM_WRITE,
--							20 - 1,
--							mem_bus_addr +
--							(reg_no << 20),
--							0);
--			if (err) {
--				dev_err(dev, "program RC mem outbound ATU failed\n");
--				goto err_vpcie;
--			}
--		}
--	}
--
--	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
--	if (err) {
--		dev_err(dev, "program RC mem inbound ATU failed\n");
-+	err = rockchip_cfg_atu(rockchip);
-+	if (err)
- 		goto err_vpcie;
--	}
--
--	offset = mem_size >> 20;
--
--	if (io_size) {
--		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
--			err = rockchip_pcie_prog_ob_atu(rockchip,
--							reg_no + 1 + offset,
--							AXI_WRAPPER_IO_WRITE,
--							20 - 1,
--							io_bus_addr +
--							(reg_no << 20),
--							0);
--			if (err) {
--				dev_err(dev, "program RC io outbound ATU failed\n");
--				goto err_vpcie;
--			}
--		}
--	}
--
- 	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
- 	if (!bus) {
- 		err = -ENOMEM;
+v3 -> v4
+	- Added single mapping API (for IORT named components)
+	- Fixed arm_smmu_iort_xlate() return value
+	- Reworked fwnode registration and platform device creation
+	  ordering to fix probe ordering dependencies
+	- Added code to keep device_node ref count with new iommu
+	  fwspec API
+	- Added patch to make iommu_fwspec arch agnostic
+	- Dropped RFC status
+	- Rebased against v4.8-rc2
+
+v2 -> v3
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
+	- Added back reliance on ACPI early probing infrastructure
+	- Patch[1-3] merged through other dependent series
+	- Added back IOMMU fwnode generalization
+	- Move SMMU v3 static functions configuration to IORT code
+	- Implemented generic IOMMU fwspec API
+	- Added code to implement fwnode platform device look-up
+
+v1 -> v2:
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
+	- Removed IOMMU fwnode generalization
+	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
+	  owing to patch series dependencies [1]
+	- Moved platform device creation logic to IORT code to
+	  generalize its usage for ARM SMMU v1-v2-v3 components
+	- Removed reliance on ACPI early device probing
+	- Created IORT specific iommu_xlate() translation hook leaving
+	  OF code unchanged according to v1 reviews
+
+The ACPI IORT table provides information that allows instantiating
+ARM SMMU devices and carrying out id mappings between components on
+ARM based systems (devices, IOMMUs, interrupt controllers).
+
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+
+Building on basic IORT support, this patchset enables ARM SMMUs support
+on ACPI systems.
+
+Most of the code is aimed at building the required generic ACPI
+infrastructure to create and enable IOMMU components and to bring
+the IOMMU infrastructure for ACPI on par with DT, which is going to
+make future ARM SMMU components easier to integrate.
+
+PATCH (1) adds a FWNODE_ACPI_STATIC type to the struct fwnode_handle type.
+          It is required to attach a fwnode identifier to platform
+          devices allocated/detected through static ACPI table entries
+          (ie IORT tables entries).
+          IOMMU devices have to have an identifier to look them up
+          eg IOMMU core layer carrying out id translation. This can be
+          done through a fwnode_handle (ie IOMMU platform devices created
+          out of IORT tables are not ACPI devices hence they can't be
+          allocated as such, otherwise they would have a fwnode_handle of
+          type FWNODE_ACPI).
+
+PATCH (2) makes use of the ACPI early probing API to add a linker script
+          section for probing devices via IORT ACPI kernel code.
+
+PATCH (3) provides IORT support for registering IOMMU IORT node through
+          their fwnode handle.
+
+PATCH (4) make of_iommu_{set/get}_ops() functions DT agnostic.
+
+PATCH (5) convert ARM SMMU driver to use fwnode instead of of_node as
+          look-up and iommu_ops retrieval token.
+
+PATCH (6) convert ARM SMMU v3 driver to use fwnode instead of of_node as
+          look-up and iommu_ops retrieval token.
+
+PATCH (7) implements the of_dma_configure() API in ACPI world -
+          acpi_dma_configure() - and patches PCI and ACPI core code to
+          start making use of it.
+
+PATCH (8) provides an IORT function to detect existence of specific type
+          of IORT components.
+
+PATCH (9) creates the kernel infrastructure required to create ARM SMMU
+          platform devices for IORT nodes.
+
+PATCH (10) refactors the ARM SMMU v3 driver so that the init functions are
+           split in a way that groups together code that probes through DT
+           and code that carries out HW registers FW agnostic probing, in
+           preparation for adding the ACPI probing path.
+
+PATCH (11) adds ARM SMMU v3 IORT IOMMU operations to create and probe
+           ARM SMMU v3 components.
+
+PATCH (12) refactors the ARM SMMU v1/v2 driver so that the init functions
+           are split in a way that groups together code that probes
+           through DT and code that carries out HW registers FW agnostic
+           probing, in preparation for adding the ACPI probing path.
+
+PATCH (13) adds ARM SMMU v1/v2 IORT IOMMU operations to create and
+           probe ARM SMMU v1/v2 components.
+
+PATCH (14) Extend the IORT iort_node_map_rid() to work on a type mask
+           instead of a single type so that the translation API can
+           be used on a range of components.
+
+PATCH (15) Add IORT API to carry out id mappings for components that do
+           do not have an input identifier/RIDs (ie named components).
+
+PATCH (16) provides IORT infrastructure to carry out IOMMU configuration
+           for devices and hook it up to the previously introduced ACPI
+           DMA configure API.
+
+This patchset is provided for review/testing purposes here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v7
+
+Tested on Juno and FVP models for ARM SMMU v1 and v3 probing path.
+
+Lorenzo Pieralisi (16):
+  drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
+  drivers: acpi: iort: introduce linker section for IORT entries probing
+  drivers: acpi: iort: add support for IOMMU fwnode registration
+  drivers: iommu: make of_iommu_set/get_ops() DT agnostic
+  drivers: iommu: arm-smmu: convert struct device of_node to fwnode
+    usage
+  drivers: iommu: arm-smmu-v3: convert struct device of_node to fwnode
+    usage
+  drivers: acpi: implement acpi_dma_configure
+  drivers: acpi: iort: add node match function
+  drivers: acpi: iort: add support for ARM SMMU platform devices
+    creation
+  drivers: iommu: arm-smmu-v3: split probe functions into DT/generic
+    portions
+  drivers: iommu: arm-smmu-v3: add IORT configuration
+  drivers: iommu: arm-smmu: split probe functions into DT/generic
+    portions
+  drivers: iommu: arm-smmu: add IORT configuration
+  drivers: acpi: iort: replace rid map type with type mask
+  drivers: acpi: iort: add single mapping function
+  drivers: acpi: iort: introduce iort_iommu_configure
+
+ drivers/acpi/arm64/iort.c         | 596 +++++++++++++++++++++++++++++++++++++-
+ drivers/acpi/glue.c               |   4 +-
+ drivers/acpi/scan.c               |  45 +++
+ drivers/iommu/arm-smmu-v3.c       | 105 +++++--
+ drivers/iommu/arm-smmu.c          | 154 ++++++++--
+ drivers/iommu/iommu.c             |  42 +++
+ drivers/iommu/of_iommu.c          |  39 ---
+ drivers/pci/probe.c               |   3 +-
+ include/acpi/acpi_bus.h           |   2 +
+ include/asm-generic/vmlinux.lds.h |   1 +
+ include/linux/acpi.h              |  26 ++
+ include/linux/acpi_iort.h         |  14 +
+ include/linux/fwnode.h            |   3 +-
+ include/linux/iommu.h             |  14 +
+ include/linux/of_iommu.h          |  12 +-
+ 15 files changed, 956 insertions(+), 104 deletions(-)
+
 -- 
-1.9.1
-
+2.10.0
 
