@@ -1,60 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36404 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936602AbcKKVVs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 16:21:48 -0500
-Date: Fri, 11 Nov 2016 15:21:43 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Ley Foon Tan <lftan@altera.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: altera: Remove redundant dev_err call in
- altera_pcie_parse_dt()
-Message-ID: <20161111212143.GH9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476716173-31310-1-git-send-email-weiyj.lk@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 05/16] drivers: iommu: arm-smmu: convert struct device
+ of_node to fwnode usage
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-6-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <7ab465a8-f1ae-91ef-12fd-50f498af3d6e@arm.com>
+Date: Wed, 9 Nov 2016 14:43:18 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476716173-31310-1-git-send-email-weiyj.lk@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161109141948.19244-6-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 02:56:13PM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
+On 09/11/16 14:19, Lorenzo Pieralisi wrote:
+> Current ARM SMMU driver rely on the struct device.of_node pointer for
+> device look-up and iommu_ops retrieval.
 > 
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
+> In preparation for ACPI probing enablement, convert the driver to use
+> the struct device.fwnode member for device and iommu_ops look-up so that
+> the driver infrastructure can be used also on systems that do not
+> associate an of_node pointer to a struct device (eg ACPI), making the
+> device look-up and iommu_ops retrieval firmware agnostic.
 > 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
 
-Applied with Ley Foon Tan's ack to pci/host-altera for v4.10, thanks!
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
 > ---
->  drivers/pci/host/pcie-altera.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+>  drivers/iommu/arm-smmu.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index b0ac4df..8be45a8 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -550,10 +550,8 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+> index 8f72814..8a3c2a4 100644
+> --- a/drivers/iommu/arm-smmu.c
+> +++ b/drivers/iommu/arm-smmu.c
+> @@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
 >  
->  	cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
->  	pcie->cra_base = devm_ioremap_resource(dev, cra);
-> -	if (IS_ERR(pcie->cra_base)) {
-> -		dev_err(dev, "failed to map cra memory\n");
-> +	if (IS_ERR(pcie->cra_base))
->  		return PTR_ERR(pcie->cra_base);
-> -	}
+>  static int arm_smmu_match_node(struct device *dev, void *data)
+>  {
+> -	return dev->of_node == data;
+> +	return dev->fwnode == data;
+>  }
 >  
->  	/* setup IRQ */
->  	pcie->irq = platform_get_irq(pdev, 0);
+> -static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
+> +static
+> +struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+>  {
+>  	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+> -						np, arm_smmu_match_node);
+> +						fwnode, arm_smmu_match_node);
+>  	put_device(dev);
+>  	return dev ? dev_get_drvdata(dev) : NULL;
+>  }
+> @@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
+>  		if (ret)
+>  			goto out_free;
+>  	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
+> -		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
+> +		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+>  	} else {
+>  		return -ENODEV;
+>  	}
+> @@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+>  		}
+>  	}
+>  
+> -	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
+> +	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
+>  	platform_set_drvdata(pdev, smmu);
+>  	arm_smmu_device_reset(smmu);
+>  
 > 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
