@@ -1,189 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:46790 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755902AbcKWBUL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 20:20:11 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 3/3] PCI: rockchip: Add system PM support
-Date: Wed, 23 Nov 2016 09:19:13 +0800
-Message-Id: <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+Date: Wed, 09 Nov 2016 22:33:17 +0100
+Message-ID: <2939462.W2yy62pjEE@wuerfel>
+In-Reply-To: <6dee9821-5145-2113-e391-6317e4533c06@huawei.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <2479288.4UmF9SBrq1@wuerfel>
+ <6dee9821-5145-2113-e391-6317e4533c06@huawei.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, catalin.marinas@arm.com, gabriele.paoloni@huawei.com,
+ linux-pci@vger.kernel.org, liviu.dudau@arm.com, linuxarm@huawei.com,
+ lorenzo.pieralisi@arm.com, xuwei5@hisilicon.com, linux-serial@vger.kernel.org,
+ benh@kernel.crashing.org, devicetree@vger.kernel.org, minyard@acm.org,
+ Will Deacon <will.deacon@arm.com>, John Garry <john.garry@huawei.com>,
+ olof@lixom.net, robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
+ zhichang.yuan02@gmail.com, linux-kernel@vger.kernel.org,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, zourongrong@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds system PM support for Rockchip's RC.
-For pre S3, the EP is configured into D3 state which guarantees
-the link state should be in L1. So we could send PME_Turn_Off message
-to the EP and wait for its ACK to make the link state into L2 or L3
-without the aux-supply. This could help save more power which I think
-should be very important for mobile devices.
+On Wednesday, November 9, 2016 11:29:46 AM CET John Garry wrote:
+> On 08/11/2016 22:35, Arnd Bergmann wrote:
+> > On Tuesday, November 8, 2016 4:49:49 PM CET Will Deacon wrote:
+> >> On Tue, Nov 08, 2016 at 04:33:44PM +0000, John Garry wrote:
+> >>> On 08/11/2016 16:12, Will Deacon wrote:
+> >>>> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+> >
+> >>>> Is there no way to make this slightly more generic, so that it can be
+> >>>> re-used elsewhere? For example, if struct extio_ops was common, then
+> >>>> you could have the singleton (which maybe should be an interval tree?),
+> >>>> type definition, setter function and the BUILD_EXTIO invocations
+> >>>> somewhere generic, rather than squirelled away in the arch backend.
+> >>>>
+> >>> The concern would be that some architecture which uses generic higher-level
+> >>> ISA accessor ops, but have IO space, could be affected.
+> >>
+> >> You're already adding a Kconfig symbol for this stuff, so you can keep
+> >> that if you don't want it on other architectures. I'm just arguing that
+> >> plumbing drivers directly into arch code via arm64_set_extops is not
+> >> something I'm particularly fond of, especially when it looks like it
+> >> could be avoided with a small amount of effort.
+> >
+> > Agreed, I initially suggested putting this into arch/arm64/, but there isn't
+> > really a reason why it couldn't just live in lib/ with the header file
+> > bits moved to include/asm-generic/io.h which we already use.
+> >
+> 
+> Right, Zhichang will check the logistics of this. The generic io.h is 
+> quite clean, so as long as you don't mind new build switches of this 
+> nature being added, it should be ok; and we'll plan on moving extio.h 
+> into include/asm-generic as well.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I think all we need is an #ifdef CONFIG_something around the existing
+defintion, with the alternative being "extern" declarations, after that
+all the interesting logic can sit in a file in lib/.
 
- drivers/pci/host/pcie-rockchip.c | 90 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 89 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 71d056d..720535b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -20,6 +20,7 @@
- #include <linux/gpio/consumer.h>
- #include <linux/init.h>
- #include <linux/interrupt.h>
-+#include <linux/iopoll.h>
- #include <linux/irq.h>
- #include <linux/irqchip/chained_irq.h>
- #include <linux/irqdomain.h>
-@@ -55,6 +56,10 @@
- #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
- #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
- #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
-+#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
-+#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
-+#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
-+#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
- #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
- #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
- #define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
-@@ -173,6 +178,7 @@
- 
- #define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
- #define MIN_AXI_ADDR_BITS_PASSED		8
-+#define PCIE_RC_SEND_PME_OFF			0x11960
- #define ROCKCHIP_VENDOR_ID			0x1d87
- #define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
- #define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
-@@ -181,6 +187,9 @@
- #define PCIE_ECAM_ADDR(bus, dev, func, reg) \
- 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
- 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
-+#define PCIE_LINK_IS_L2(x) \
-+		((x & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
-+		 PCIE_CLIENT_DEBUG_LTSSM_L2)
- 
- #define RC_REGION_0_ADDR_TRANS_H		0x00000000
- #define RC_REGION_0_ADDR_TRANS_L		0x00000000
-@@ -1205,9 +1214,80 @@ static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
- 				  AXI_WRAPPER_NOR_MSG,
- 				  20 - 1, 0, 0);
- 	rockchip->msg_region = ioremap(rockchip->mem_bus_addr +
--				       ((reg_no - 1) << 20), SZ_1M);
-+				       ((reg_no + offset) << 20), SZ_1M);
- 	return err;
- }
-+
-+static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
-+{
-+	u32 value;
-+	int err;
-+
-+	/* send PME_TURN_OFF message */
-+	writel(0x0, rockchip->msg_region + PCIE_RC_SEND_PME_OFF);
-+
-+	/* read LTSSM and wait for falling into L2 link state */
-+	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_DEBUG_OUT_0,
-+				 value, PCIE_LINK_IS_L2(value), 20,
-+				 jiffies_to_usecs(5 * HZ));
-+	if (err) {
-+		dev_err(rockchip->dev, "PCIe link enter L2 timeout!\n");
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rockchip_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-+	int ret;
-+
-+	/* disable core and cli int since we don't need to ack PME_ACK */
-+	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
-+			    PCIE_CLIENT_INT_CLI, PCIE_CLIENT_INT_MASK);
-+	rockchip_pcie_write(rockchip, (u32)PCIE_CORE_INT, PCIE_CORE_INT_MASK);
-+
-+	ret = rockchip_pcie_wait_l2(rockchip);
-+	if (ret)
-+		return ret;
-+
-+	phy_power_off(rockchip->phy);
-+	phy_exit(rockchip->phy);
-+
-+	clk_disable_unprepare(rockchip->clk_pcie_pm);
-+	clk_disable_unprepare(rockchip->hclk_pcie);
-+	clk_disable_unprepare(rockchip->aclk_perf_pcie);
-+	clk_disable_unprepare(rockchip->aclk_pcie);
-+
-+	return ret;
-+}
-+
-+static int rockchip_pcie_resume_noirq(struct device *dev)
-+{
-+	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-+	int err;
-+
-+	clk_prepare_enable(rockchip->clk_pcie_pm);
-+	clk_prepare_enable(rockchip->hclk_pcie);
-+	clk_prepare_enable(rockchip->aclk_perf_pcie);
-+	clk_prepare_enable(rockchip->aclk_pcie);
-+
-+	err = rockchip_pcie_init_port(rockchip);
-+	if (err)
-+		return err;
-+
-+	err = rockchip_cfg_atu(rockchip);
-+	if (err)
-+		return err;
-+
-+	/* Need this to enter L1 again */
-+	rockchip_pcie_update_txcredit_mui(rockchip);
-+	rockchip_pcie_enable_interrupts(rockchip);
-+
-+	return 0;
-+}
-+
- static int rockchip_pcie_probe(struct platform_device *pdev)
- {
- 	struct rockchip_pcie *rockchip;
-@@ -1228,6 +1308,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (!rockchip)
- 		return -ENOMEM;
- 
-+	platform_set_drvdata(pdev, rockchip);
-+
- 	rockchip->dev = dev;
- 
- 	err = rockchip_pcie_parse_dt(rockchip);
-@@ -1352,6 +1434,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static const struct dev_pm_ops rockchip_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
-+				      rockchip_pcie_resume_noirq)
-+};
-+
- static const struct of_device_id rockchip_pcie_of_match[] = {
- 	{ .compatible = "rockchip,rk3399-pcie", },
- 	{}
-@@ -1361,6 +1448,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	.driver = {
- 		.name = "rockchip-pcie",
- 		.of_match_table = rockchip_pcie_of_match,
-+		.pm = &rockchip_pcie_pm_ops,
- 	},
- 	.probe = rockchip_pcie_probe,
- 
--- 
-1.9.1
+	Arnd
 
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
