@@ -1,178 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38542 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751157AbcKIWFL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 17:05:11 -0500
-Date: Wed, 9 Nov 2016 16:05:06 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Al Stone <ahs@redhat.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Christopher Covington <cov@codeaurora.org>,
-        Don Dutile <ddutile@redhat.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Duc Dang <dhdang@apm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Mark Salter <msalter@redhat.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Robert Richter <rrichter@cavium.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
-Subject: ACPI namespace details for ARM64
-Message-ID: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38950 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754300AbcKJLcg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 06:32:36 -0500
+Date: Wed, 9 Nov 2016 17:02:19 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com
+Subject: Re: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Message-ID: <20161109160219.GB9111@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Wed, Nov 09, 2016 at 04:20:00PM +0200, Amir Levy wrote:
+> This driver enables Thunderbolt Networking on non-Apple platforms
+> running Linux.
+> 
+> Thunderbolt Networking provides peer-to-peer connections to transfer
+> files between computers, perform PC migrations, and/or set up small
+> workgroups with shared storage.
+> 
+> This is a virtual connection that emulates an Ethernet adapter that
+> enables Ethernet networking with the benefit of Thunderbolt superfast
+> medium capability.
+> 
+> Thunderbolt Networking enables two hosts and several devices that
+> have a Thunderbolt controller to be connected together in a linear
+> (Daisy chain) series from a single port.
+> 
+> Thunderbolt Networking for Linux is compatible with Thunderbolt
+> Networking on systems running macOS or Windows and also supports
+> Thunderbolt generation 2 and 3 controllers.
+> 
+> Note that all pre-existing Thunderbolt generation 3 features, such as
+> USB, Display and other Thunderbolt device connectivity will continue
+> to function exactly as they did prior to enabling Thunderbolt Networking.
+> 
+> Code and Software Specifications:
+> This kernel code creates a virtual ethernet device for computer to
+> computer communication over a Thunderbolt cable.
+> The new driver is a separate driver to the existing Thunderbolt driver.
+> It is designed to work on systems running Linux that
+> interface with Intel Connection Manager (ICM) firmware based
+> Thunderbolt controllers that support Thunderbolt Networking.
+> The kernel code operates in coordination with the Thunderbolt user-
+> space daemon to implement full Thunderbolt networking functionality.
+> 
+> Hardware Specifications:
+> Thunderbolt Hardware specs have not yet been published but are used
+> where necessary for register definitions. 
+> 
+> Acked-by: Andreas Noever <andreas.noever@gmail.com>
+> Tested-by: Mario Limonciello <mario.limonciello@dell.com>
 
-We've been working through the details of getting ACPI to work on
-arm64, and there have been lots of questions about what this means for
-PCI.  I've outlined this for several people individually, but I'm
-going to send this separately, apart from a specific patch series, to
-make sure we're all on the same page.  Please correct my errors and
-misunderstandings.
+This whole series is acked and tested by these people?  If so, why did
+you not include that in each patch?
 
-Bjorn
+And how about getting some internal-Intel kernel developers to review
+and sign-off on this code?  Don't make the community do the review when
+you have access to resources like this.  You have an internal mailing
+list for this very purpose, use it!
 
+thanks,
 
-The basic requirement is that the ACPI namespace should describe
-*everything* that consumes address space unless there's another
-standard way for the OS to find it [1, 2].  For example, windows that
-are forwarded to PCI by a PCI host bridge should be described via ACPI
-devices, since the OS can't locate the host bridge by itself.  PCI
-devices *below* the host bridge do not need to be described via ACPI,
-because the resources they consume are inside the host bridge windows,
-and the OS can discover them via the standard PCI enumeration
-mechanism (using config accesses to read and size the BARs).
-
-This ACPI resource description is done via _CRS methods of devices in
-the ACPI namespace [2].   _CRS methods are like generalized PCI BARs:
-the OS can read _CRS and figure out what resource is being consumed
-even if it doesn't have a driver for the device [3].  That's important
-because it means an old OS can work correctly even on a system with
-new devices unknown to the OS.  The new devices won't do anything, but
-the OS can at least make sure no resources conflict with them.
-
-Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-reserving address space!  The static tables are for things the OS
-needs to know early in boot, before it can parse the ACPI namespace.
-If a new table is defined, an old OS needs to operate correctly even
-though it ignores the table.  _CRS allows that because it is generic
-and understood by the old OS; a static table does not.
-
-If the OS is expected to manage an ACPI device, that device will have
-a specific _HID/_CID that tells the OS what driver to bind to it, and
-the _CRS tells the OS and the driver where the device's registers are.
-
-PNP0C02 "motherboard" devices are basically a catch-all.  There's no
-programming model for them other than "don't use these resources for
-anything else."  So any address space that is (1) not claimed by some
-other ACPI device and (2) should not be assigned by the OS to
-something else, should be claimed by a PNP0C02 _CRS method.
-
-PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-describe all the address space they consume.  In principle, this would
-be all the windows they forward down to the PCI bus, as well as the
-bridge registers themselves.  The bridge registers include things like
-secondary/subordinate bus registers that determine the bus range below
-the bridge, window registers that describe the apertures, etc.  These
-are all device-specific, non-architected things, so the only way a
-PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
-contain the device-specific details.  These bridge registers also
-include ECAM space, since it is consumed by the bridge.
-
-ACPI defined a Producer/Consumer bit that was intended to distinguish
-the bridge apertures from the bridge registers [4, 5].  However,
-BIOSes didn't use that bit correctly, and the result is that OSes have
-to assume that everything in a PCI host bridge _CRS is a window.  That
-leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-device itself.
-
-The workaround is to describe the bridge registers (including ECAM
-space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
-the bridge register space is device-specific anyway, so the generic
-PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
-ECAM, pci_root.c learns about the space from either MCFG or the _CBA
-method.
-
-Note that the PCIe spec actually does require ECAM unless there's a
-standard firmware interface for config access, e.g., the ia64 SAL
-interface [7].  One reason is that we want a generic host bridge
-driver (pci_root.c), and a generic driver requires a generic way to
-access config space.
-
-
-[1] ACPI 6.0, sec 6.1:
-    For any device that is on a non-enumerable type of bus (for
-    example, an ISA bus), OSPM enumerates the devices' identifier(s)
-    and the ACPI system firmware must supply an _HID object ... for
-    each device to enable OSPM to do that.
-
-[2] ACPI 6.0, sec 3.7:
-    The OS enumerates motherboard devices simply by reading through
-    the ACPI Namespace looking for devices with hardware IDs.
-
-    Each device enumerated by ACPI includes ACPI-defined objects in
-    the ACPI Namespace that report the hardware resources the device
-    could occupy [_PRS], an object that reports the resources that are
-    currently used by the device [_CRS], and objects for configuring
-    those resources [_SRS].  The information is used by the Plug and
-    Play OS (OSPM) to configure the devices.
-
-[3] ACPI 6.0, sec 6.2:
-    OSPM uses device configuration objects to configure hardware
-    resources for devices enumerated via ACPI.  Device configuration
-    objects provide information about current and possible resource
-    requirements, the relationship between shared resources, and
-    methods for configuring hardware resources.
-
-    When OSPM enumerates a device, it calls _PRS to determine the
-    resource requirements of the device.  It may also call _CRS to
-    find the current resource settings for the device.  Using this
-    information, the Plug and Play system determines what resources
-    the device should consume and sets those resources by calling the
-    device’s _SRS control method.
-
-    In ACPI, devices can consume resources (for example, legacy
-    keyboards), provide resources (for example, a proprietary PCI
-    bridge), or do both.  Unless otherwise specified, resources for a
-    device are assumed to be taken from the nearest matching resource
-    above the device in the device hierarchy.
-
-[4] ACPI 6.0, sec 6.4.3.5.4:
-    Extended Address Space Descriptor
-    General Flags: Bit [0] Consumer/Producer:
-	1–This device consumes this resource
-	0–This device produces and consumes this resource
-
-[5] ACPI 6.0, sec 19.6.43:
-    ResourceUsage specifies whether the Memory range is consumed by
-    this device (ResourceConsumer) or passed on to child devices
-    (ResourceProducer).  If nothing is specified, then
-    ResourceConsumer is assumed.
-
-[6] PCI Firmware 3.0, sec 4.1.2:
-    If the operating system does not natively comprehend reserving the
-    MMCFG region, the MMCFG region must be reserved by firmware.  The
-    address range reported in the MCFG table or by _CBA method (see
-    Section 4.1.3) must be reserved by declaring a motherboard
-    resource.  For most systems, the motherboard resource would appear
-    at the root of the ACPI namespace (under \_SB) in a node with a
-    _HID of EISAID (PNP0C02), and the resources in this case should
-    not be claimed in the root PCI bus’s _CRS.  The resources can
-    optionally be returned in Int15 E820 or EFIGetMemoryMap as
-    reserved memory but must always be reported through ACPI as a
-    motherboard resource.
-
-[7] PCI Express 3.0, sec 7.2.2:
-    For systems that are PC-compatible, or that do not implement a
-    processor-architecture-specific firmware interface standard that
-    allows access to the Configuration Space, the ECAM is required as
-    defined in this section.
+greg k-h
