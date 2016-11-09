@@ -1,61 +1,120 @@
-Return-Path: <hanjun.guo@linaro.org>
-Return-Path: <hanjun.guo@linaro.org>
-Message-ID: <5825D967.5050505@linaro.org>
-Date: Fri, 11 Nov 2016 22:44:55 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42026 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752065AbcKIWt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 17:49:59 -0500
+Date: Wed, 9 Nov 2016 16:49:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Christopher Covington <cov@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jayachandran C <jchandra@broadcom.com>,
+        Duc Dang <dhdang@apm.com>,
+        Robert Richter <robert.richter@caviumnetworks.com>,
+        Marcin Wojtas <mw@semihalf.com>,
+        Liviu Dudau <Liviu.Dudau@arm.com>,
+        David Daney <ddaney@caviumnetworks.com>,
+        "wangyijing@huawei.com" <wangyijing@huawei.com>,
+        Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Andrea Gallo <andrea.gallo@linaro.org>,
+        Jeremy Linton <jeremy.linton@arm.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Jeff Hugo <jhugo@codeaurora.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+Message-ID: <20161109224955.GO14322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+ <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+ <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org>
+ <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Al Stone <al.stone@linaro.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Al Stone <ahs@redhat.com>,
- Robert Richter <rrichter@cavium.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jon Masters <jcm@redhat.com>,
- linaro-acpi@lists.linaro.org,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Don Dutile <ddutile@redhat.com>,
- Christopher Covington <cov@codeaurora.org>,
- Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com> <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org> <20161111093226.GA13333@red-moon>
-In-Reply-To: <20161111093226.GA13333@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/2016 05:32 PM, Lorenzo Pieralisi wrote:
-> On Thu, Nov 10, 2016 at 04:18:54PM -0700, Al Stone wrote:
->> On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
->>> Hi all,
->>>
->>> We've been working through the details of getting ACPI to work on
->>> arm64, and there have been lots of questions about what this means for
->>> PCI.  I've outlined this for several people individually, but I'm
->>> going to send this separately, apart from a specific patch series, to
->>> make sure we're all on the same page.  Please correct my errors and
->>> misunderstandings.
->>>
->>> Bjorn
->>>
->>> [snip....]
->>
->> A big +1 to all of this.  This also looks like something that should
->> be added to either PCI, ACPI or arm64 documentation (or even all three).
->
-> And to arm64 platforms FW :)
->
->> What do you think?
->
-> I do not think there is anything ARM64 specific in Bjorn's description,
-> but I do think it is very useful to have it in documentation, these
-> bits of information are scattered around ACPI specs and PCI FW specs,
-> having a single source would help and would have prevented asking
-> Bjorn the same questions 100 times.
->
->> Thank you for putting this together, Bjorn.
->
-> +1, Thank you very much for this nice summary Bjorn.
+On Wed, Nov 09, 2016 at 08:29:23PM +0000, Ard Biesheuvel wrote:
+> Hi Bjorn,
+> 
+> On 9 November 2016 at 20:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Wed, Nov 09, 2016 at 02:25:56PM -0500, Christopher Covington wrote:
+> >> Hi Bjorn,
+> >>
+> [...]
+> >>
+> >> We're working to add the PNP0C02 resource to future firmware, but it's
+> >> not in the current firmware. Are dmesg and /proc/iomem from the
+> >> current firmware interesting or should we wait for the update to file?
+> >
+> > Note that the ECAM space is not the only thing that should be
+> > described via these PNP0C02 devices.  *All* non-enumerable resources
+> > should be described by the _CRS method of some ACPI device.  Here's a
+> > sample from my laptop:
+> >
+> >   PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xf8000000-0xfbffffff] (base 0xf8000000)
+> >   system 00:01: [io  0x1800-0x189f] could not be reserved
+> >   system 00:01: [io  0x0800-0x087f] has been reserved
+> >   system 00:01: [io  0x0880-0x08ff] has been reserved
+> >   system 00:01: [io  0x0900-0x097f] has been reserved
+> >   system 00:01: [io  0x0980-0x09ff] has been reserved
+> >   system 00:01: [io  0x0a00-0x0a7f] has been reserved
+> >   system 00:01: [io  0x0a80-0x0aff] has been reserved
+> >   system 00:01: [io  0x0b00-0x0b7f] has been reserved
+> >   system 00:01: [io  0x0b80-0x0bff] has been reserved
+> >   system 00:01: [io  0x15e0-0x15ef] has been reserved
+> >   system 00:01: [io  0x1600-0x167f] has been reserved
+> >   system 00:01: [io  0x1640-0x165f] has been reserved
+> >   system 00:01: [mem 0xf8000000-0xfbffffff] could not be reserved
+> >   system 00:01: [mem 0xfed10000-0xfed13fff] has been reserved
+> >   system 00:01: [mem 0xfed18000-0xfed18fff] has been reserved
+> >   system 00:01: [mem 0xfed19000-0xfed19fff] has been reserved
+> >   system 00:01: [mem 0xfeb00000-0xfebfffff] has been reserved
+> >   system 00:01: [mem 0xfed20000-0xfed3ffff] has been reserved
+> >   system 00:01: [mem 0xfed90000-0xfed93fff] has been reserved
+> >   system 00:01: [mem 0xf7fe0000-0xf7ffffff] has been reserved
+> >   system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
+> >
+> > Do you have firmware in the field that may not get updated?  If so,
+> > I'd like to see the whole solution for that firmware, including the
+> > MCFG quirk (which tells the PCI core where the ECAM region is) and
+> > whatever PNP0C02 quirk you figure out to actually reserve the region.
+> >
+> > I proposed a PNP0C02 quirk to Duc along these lines of the below.  I
+> > don't actually know if it's feasible, but it didn't look as bad as I
+> > expected, so I'd kind of like somebody to try it out.  I think you
+> > would have to call this via a DMI hook (do you have DMI on arm64?),
+> > maybe from pnp_init() or similar.
+> 
+> We do have SMBIOS/DMI on arm64, but we have been successful so far not
+> to rely on it for quirks, and we'd very much like to keep it that way.
+> 
+> Since this ACPI _CRS method has nothing to do with SMBIOS/DMI, surely
+> there is a better way to wire up the reservation code to the
+> information exposed by ACPI?
 
-+1, thanks a lot :)
+I'm open to other ways, feel free to propose one :)
 
-Hanjun
+If you do a quirk, you need some way to identify the machine/firmware
+combination, because you don't want to apply the quirk on every
+machine.  You're trying to work around a firmware issue, so you
+probably want something tied to the firmware version.  On x86, that's
+typically done with DMI.
+
+Bjorn
