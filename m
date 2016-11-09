@@ -1,59 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f194.google.com ([209.85.217.194]:36009 "EHLO
-        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751166AbcKPAa6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 19:30:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU1e4kKPVG3X-e+gUCf+fZynYpEFTdYTOqP7m0=xQZKqtA@mail.gmail.com>
-References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com> <CAJ+vNU1e4kKPVG3X-e+gUCf+fZynYpEFTdYTOqP7m0=xQZKqtA@mail.gmail.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 15 Nov 2016 22:30:56 -0200
-Message-ID: <CAOMZO5BVYzatwQzHdcYwhHP2Pje7wGoX9_L-jQ3_ZN60z9H=UQ@mail.gmail.com>
-Subject: Re: [PATCH v6 4/4] PCI: designware: Add iATU Unroll feature
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jisheng Zhang <jszhang@marvell.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] pci/msi: Provide pci_alloc_irq_vectors_affinity()
+Date: Tue,  8 Nov 2016 17:15:05 -0800
+Message-Id: <1478654107-7384-6-git-send-email-hch@lst.de>
+In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
+References: <1478654107-7384-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+This is a variant of pci_alloc_irq_vectors() that allows passing a
+struct irq_affinity to provide fine-grained IRQ affinity control.
+For now this means being able to exclude vectors at the beginning or
+end of the MSI vector space, but it could also be used for any other
+quirks needed in the future (e.g. more vectors than CPUs, or excluding
+CPUs from the spreading).
 
-On Tue, Nov 15, 2016 at 10:22 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/msi.c   | 20 +++++++++++++-------
+ include/linux/pci.h | 24 +++++++++++++++++++-----
+ 2 files changed, 32 insertions(+), 12 deletions(-)
 
-> Bjorn / Joao,
->
-> This patch (from commit a0601a47053714eecec726aea5ebcd829f817497) is
-> causing a kernel regression in 4.9. I can no longer boot the kernel on
-> boards that have a PCIe switch downstream from the IMX6 (ie many of
-> the Gateworks Ventana boards) unless PCI is enabled in the bootloader
-> (which is not recommended as that causes PCI link in the kernel to
-> occasionally fail).
-
-This has been fixed in 4.9-rc4 by the following commit:
-
-commit 416379f9ebded501eda882e6af0a7aafc1866700
-Author: Niklas Cassel <niklas.cassel@axis.com>
-Date:   Fri Oct 14 23:54:55 2016 +0200
-
-    PCI: designware: Check for iATU unroll support after initializing host
-
-    dw_pcie_iatu_unroll_enabled() reads a dbi_base register.  Reading any
-    dbi_base register before pp->ops->host_init has been called causes
-    "imprecise external abort" on platforms like ARTPEC-6, where the PCIe
-    module is disabled at boot and first enabled in pp->ops->host_init.  Move
-    dw_pcie_iatu_unroll_enabled() to dw_pcie_setup_rc(), since it is after
-    pp->ops->host_init, but before pp->iatu_unroll_enabled is actually used.
-
-    Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
-    Tested-by: James Le Cuirot <chewi@gentoo.org>
-    Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Joao Pinto <jpinto@synopsys.com>
-    Acked-by: Olof Johansson <olof@lixom.net>
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 512f388..dd27f73 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1179,11 +1179,12 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ EXPORT_SYMBOL(pci_enable_msix_range);
+ 
+ /**
+- * pci_alloc_irq_vectors - allocate multiple IRQs for a device
++ * pci_alloc_irq_vectors_affinity - allocate multiple IRQs for a device
+  * @dev:		PCI device to operate on
+  * @min_vecs:		minimum number of vectors required (must be >= 1)
+  * @max_vecs:		maximum (desired) number of vectors
+  * @flags:		flags or quirks for the allocation
++ * @affd:		optional description of the affinity requirements
+  *
+  * Allocate up to @max_vecs interrupt vectors for @dev, using MSI-X or MSI
+  * vectors if available, and fall back to a single legacy vector
+@@ -1195,15 +1196,20 @@ EXPORT_SYMBOL(pci_enable_msix_range);
+  * To get the Linux IRQ number used for a vector that can be passed to
+  * request_irq() use the pci_irq_vector() helper.
+  */
+-int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+-		unsigned int max_vecs, unsigned int flags)
++int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
++				   unsigned int max_vecs, unsigned int flags,
++				   const struct irq_affinity *affd)
+ {
+ 	static const struct irq_affinity msi_default_affd;
+-	const struct irq_affinity *affd = NULL;
+ 	int vecs = -ENOSPC;
+ 
+-	if (flags & PCI_IRQ_AFFINITY)
+-		affd = &msi_default_affd;
++	if (flags & PCI_IRQ_AFFINITY) {
++		if (!affd)
++			affd = &msi_default_affd;
++	} else {
++		if (WARN_ON(affd))
++			affd = NULL;
++	}
+ 
+ 	if (flags & PCI_IRQ_MSIX) {
+ 		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
+@@ -1226,7 +1232,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ 
+ 	return vecs;
+ }
+-EXPORT_SYMBOL(pci_alloc_irq_vectors);
++EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
+ 
+ /**
+  * pci_free_irq_vectors - free previously allocated IRQs for a device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0e49f70..7090f5f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -244,6 +244,7 @@ struct pci_cap_saved_state {
+ 	struct pci_cap_saved_data cap;
+ };
+ 
++struct irq_affinity;
+ struct pcie_link_state;
+ struct pci_vpd;
+ struct pci_sriov;
+@@ -1310,8 +1311,10 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ 		return rc;
+ 	return 0;
+ }
+-int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+-		unsigned int max_vecs, unsigned int flags);
++int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
++				   unsigned int max_vecs, unsigned int flags,
++				   const struct irq_affinity *affd);
++
+ void pci_free_irq_vectors(struct pci_dev *dev);
+ int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+ const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev, int vec);
+@@ -1339,14 +1342,17 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
+ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ 		      struct msix_entry *entries, int nvec)
+ { return -ENOSYS; }
+-static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
+-		unsigned int min_vecs, unsigned int max_vecs,
+-		unsigned int flags)
++
++static inline int
++pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
++			       unsigned int max_vecs, unsigned int flags,
++			       const struct irq_affinity *aff_desc)
+ {
+ 	if (min_vecs > 1)
+ 		return -EINVAL;
+ 	return 1;
+ }
++
+ static inline void pci_free_irq_vectors(struct pci_dev *dev)
+ {
+ }
+@@ -1364,6 +1370,14 @@ static inline const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev,
+ }
+ #endif
+ 
++static inline int
++pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
++		      unsigned int max_vecs, unsigned int flags)
++{
++	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs, flags,
++					      NULL);
++}
++
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+ extern bool pcie_ports_auto;
+-- 
+2.1.4
