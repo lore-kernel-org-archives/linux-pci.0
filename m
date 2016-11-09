@@ -1,73 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35765 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753651AbcKWCph (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 21:45:37 -0500
-Received: by mail-pf0-f174.google.com with SMTP id i88so92162pfk.2
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 18:45:37 -0800 (PST)
-Date: Tue, 22 Nov 2016 18:45:34 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH 3/3] PCI: rockchip: Add system PM support
-Message-ID: <20161123024527.GA18020@google.com>
-References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
- <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
- <20161123020835.GB119441@google.com>
- <1c4bd848-67f7-0d31-6392-d9550e4767a9@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1c4bd848-67f7-0d31-6392-d9550e4767a9@rock-chips.com>
+Received: from mga06.intel.com ([134.134.136.31]:43552 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753196AbcKIMVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 07:21:07 -0500
+From: Amir Levy <amir.jer.levy@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v9 6/8] thunderbolt: Kconfig for Thunderbolt Networking
+Date: Wed,  9 Nov 2016 16:20:06 +0200
+Message-Id: <1478701208-4585-7-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 10:39:30AM +0800, Shawn Lin wrote:
-> 在 2016/11/23 10:08, Brian Norris 写道:
-> >On Wed, Nov 23, 2016 at 09:19:13AM +0800, Shawn Lin wrote:
-> >>diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> >>index 71d056d..720535b 100644
-> >>--- a/drivers/pci/host/pcie-rockchip.c
-> >>+++ b/drivers/pci/host/pcie-rockchip.c
+Update to the Kconfig Thunderbolt description to add
+Thunderbolt networking as an option.
+The menu item "Thunderbolt support" now offers:
+"Apple Hardware Support" (existing)
+        and/or
+"Thunderbolt Networking" (new)
 
-...
+You can choose the driver for your platform or build both drivers -
+each driver will detect if it can run on the specific platform.
+If the Thunderbolt Networking option is chosen, Thunderbolt Networking
+will be enabled between Linux non-Apple systems, macOS and
+Windows based systems.
+Thunderbolt Networking will not affect any other Thunderbolt feature that
+was previous available to Linux users on either Apple or
+non-Apple platforms.
 
-> >>+static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
-> >>+{
-> >>+	u32 value;
-> >>+	int err;
-> >>+
-> >>+	/* send PME_TURN_OFF message */
-> >>+	writel(0x0, rockchip->msg_region + PCIE_RC_SEND_PME_OFF);
-> >>+
-> >>+	/* read LTSSM and wait for falling into L2 link state */
-> >>+	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_DEBUG_OUT_0,
-> >>+				 value, PCIE_LINK_IS_L2(value), 20,
-> >>+				 jiffies_to_usecs(5 * HZ));
-> >
-> >You really want to wait a whole 5 seconds for this? Last I saw, you were
-> >doing testing with about 500ms or less. As I read the spec, there's cap
-> >on per-device time to ACK the request, and I recall that was on the
-> >order of 10s of milliseconds. But technically that can add up if you
-> >have a large hierarchy of devices attached...
-> >
-> 
-> I have no very clear thought about how long we should set up the
-> timeout for PME_ACK. As you point out that a large hierarchy of devices
-> need quite a long time I guess.
-> 
-> A possible work for PCIe core is walk through the hierarchy of devices
-> and calculate the max ACK timeout(including the latency of HUB).. But
-> I guess ACPI-base platforms don't need linux-pci to handle L2 stuff at
-> S3 at all, instead it will be handled by firmware, so still I don't
-> know how they will calculate it.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  3 ++-
+ 2 files changed, 25 insertions(+), 5 deletions(-)
 
-I'm not sure if that's necessary. I was just curious on how this got
-determined, when it seemed that 500ms was plenty.
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..376e5bb 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,32 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt Networking"
++	help
++	  This driver is required if you want Thunderbolt Networking on
++	  non-Apple hardware.
++	  It creates a virtual Ethernet device that enables computer to
++	  computer communication over a Thunderbolt cable.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..b6aa6a3 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,4 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
++obj-${CONFIG_THUNDERBOLT_ICM} += icm/
+-- 
+2.7.4
 
-We shouldn't be hitting this (and if we do, then that means we'd
-probably need to reassess anyway), so maybe "too large" is fine.
-
-Brian
