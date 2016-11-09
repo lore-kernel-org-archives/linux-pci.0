@@ -1,169 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:4135 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754206AbcKKNkX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 08:40:23 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "bhelgaas@googl e.com" <bhelgaas@google.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Fri, 11 Nov 2016 13:39:35 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F900A@lhreml507-mbx>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <17821285.aIcTyCGn5n@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
- <10334260.ztLXZ2Oynd@wuerfel>
-In-Reply-To: <10334260.ztLXZ2Oynd@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from foss.arm.com ([217.140.101.70]:55104 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933586AbcKIOTo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 09:19:44 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 15/16] drivers: acpi: iort: add single mapping function
+Date: Wed,  9 Nov 2016 14:19:47 +0000
+Message-Id: <20161109141948.19244-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+The current IORT id mapping API requires components to provide
+an input requester ID (a Bus-Device-Function (BDF) identifier for
+PCI devices) to translate an input identifier to an output
+identifier through an IORT range mapping.
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 10 November 2016 16:07
-> To: Gabriele Paoloni
-> Cc: linux-arm-kernel@lists.infradead.org; Yuanzhichang;
-> mark.rutland@arm.com; devicetree@vger.kernel.org;
-> lorenzo.pieralisi@arm.com; minyard@acm.org; linux-pci@vger.kernel.org;
-> benh@kernel.crashing.org; John Garry; will.deacon@arm.com; linux-
-> kernel@vger.kernel.org; xuwei (O); Linuxarm; zourongrong@gmail.com;
-> robh+dt@kernel.org; kantyzc@163.com; linux-serial@vger.kernel.org;
-> catalin.marinas@arm.com; olof@lixom.net; liviu.dudau@arm.com;
-> bhelgaas@googl e.com; zhichang.yuan02@gmail.com
-> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
-> Hip06
-> 
-> On Thursday, November 10, 2016 3:36:49 PM CET Gabriele Paoloni wrote:
-> >
-> > Where should we get the range from? For LPC we know that it is going
-> > Work on anything that is not used by PCI I/O space, and this is
-> > why we use [0, PCIBIOS_MIN_IO]
-> 
-> It should be allocated the same way we allocate PCI config space
-> segments. This is currently done with the io_range list in
-> drivers/pci/pci.c, which isn't perfect but could be extended
-> if necessary. Based on what others commented here, I'd rather
-> make the differences between ISA/LPC and PCI I/O ranges smaller
-> than larger.
+Named components do not have an identifiable source ID therefore
+their respective input/output mapping can only be defined in
+IORT tables through single mappings, that provide a translation
+that does not require any input identifier.
 
-I am not sure this would make sense...
+Current IORT interface for requester id mappings (iort_node_map_rid())
+is not suitable for components that do not provide a requester id,
+so it cannot be used for IORT named components.
 
-IMHO all the mechanism around io_range_list is needed to provide the
-"mapping" between I/O tokens and physical CPU addresses.
+Add an interface to the IORT API to enable retrieval of id
+by allowing an indexed walk of the single mappings array for
+a given component, therefore completing the IORT mapping API.
 
-Currently the available tokens range from 0 to IO_SPACE_LIMIT.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-As you know the I/O memory accessors operate on whatever
-__of_address_to_resource sets into the resource (start, end).
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 62057c6..7d30605 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -318,6 +318,45 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
+ 	return 0;
+ }
+ 
++static
++struct acpi_iort_node *iort_node_get_id(struct acpi_iort_node *node,
++					u32 *id_out, u8 type_mask,
++					int index)
++{
++	struct acpi_iort_node *parent;
++	struct acpi_iort_id_mapping *map;
++
++	if (!node->mapping_offset || !node->mapping_count ||
++				     index >= node->mapping_count)
++		return NULL;
++
++	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++			   node->mapping_offset);
++
++	/* Firmware bug! */
++	if (!map->output_reference) {
++		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++		       node, node->type);
++		return NULL;
++	}
++
++	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++			       map->output_reference);
++
++	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
++		return NULL;
++
++	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
++		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
++		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
++			*id_out = map[index].output_base;
++			return parent;
++		}
++	}
++
++	return NULL;
++}
++
+ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
+ 						u32 rid_in, u32 *rid_out,
+ 						u8 type_mask)
+-- 
+2.10.0
 
-With this special device in place we cannot know if a resource is
-assigned with an I/O token or a physical address, unless we forbid
-the I/O tokens to be in a specific range.
-
-So this is why we are changing the offsets of all the functions
-handling io_range_list (to make sure that a range is forbidden to
-the tokens and is available to the physical addresses).
-
-We have chosen this forbidden range to be [0, PCIBIOS_MIN_IO)
-because this is the maximum physical I/O range that a non PCI device
-can operate on and because we believe this does not impose much
-restriction on the available I/O token range; that now is 
-[PCIBIOS_MIN_IO, IO_SPACE_LIMIT].
-So we believe that the chosen forbidden range can accommodate
-any special ISA bus device with no much constraint on the rest
-of I/O tokens...
-
-> 
-> > > Your current version has
-> > >
-> > >         if (arm64_extio_ops->pfout)                             \
-> > >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-> > >                        addr, value, sizeof(type));             \
-> > >
-> > > Instead, just subtract the start of the range from the logical
-> > > port number to transform it back into a bus-local port number:
-> >
-> > These accessors do not operate on IO tokens:
-> >
-> > If (arm64_extio_ops->start > addr || arm64_extio_ops->end < addr)
-> > addr is not going to be an I/O token; in fact patch 2/3 imposes that
-> > the I/O tokens will start at PCIBIOS_MIN_IO. So from 0 to
-> PCIBIOS_MIN_IO
-> > we have free physical addresses that the accessors can operate on.
-> 
-> Ah, I missed that part. I'd rather not use PCIBIOS_MIN_IO to refer to
-> the logical I/O tokens, the purpose of that macro is really meant
-> for allocating PCI I/O port numbers within the address space of
-> one bus.
-
-As I mentioned above, special devices operate on CPU addresses directly,
-not I/O tokens. For them there is no way to distinguish....
-
-> 
-> Note that it's equally likely that whichever next platform needs
-> non-mapped I/O access like this actually needs them for PCI I/O space,
-> and that will use it on addresses registered to a PCI host bridge.
-
-Ok so here you are talking about a platform that has got an I/O range
-under the PCI host controller, right?
-And this I/O range cannot be directly memory mapped but needs special
-redirections for the I/O tokens, right?
-
-In this scenario registering the I/O ranges with the forbidden range
-implemented by the current patch would still allow to redirect I/O
-tokens as long as arm64_extio_ops->start >= PCIBIOS_MIN_IO
-
-So effectively the special PCI host controller
-1) knows the physical range that needs special redirection
-2) register such range
-3) uses pci_pio_to_address() to retrieve the IO tokens for the
-   special accessors
-4) sets arm64_extio_ops->start/end to the IO tokens retrieved in 3)
-
-So to be honest I think this patch can fit well both with
-special PCI controllers that need I/O tokens redirection and with
-special non-PCI controllers that need non-PCI I/O physical
-address redirection...
-
-Thanks (and sorry for the long reply but I didn't know how
-to make the explanation shorter :) )
-
-Gab
-
-> 
-> If we separate the two steps:
-> 
-> a) assign a range of logical I/O port numbers to a bus
-> b) register a set of helpers for redirecting logical I/O
->    port to a helper function
-> 
-> then I think the code will get cleaner and more flexible.
-> It should actually then be able to replace the powerpc
-> specific implementation.
-> 
-> 	Arnd
