@@ -1,127 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35092 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752998AbcKWXVC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 18:21:02 -0500
-Date: Wed, 23 Nov 2016 17:20:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: Re: [PATCH] pci-hyperv: use kmalloc to allocate hypercall params
- buffer
-Message-ID: <20161123232027.GM16033@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 10 Nov 2016 00:36:12 +0100
+Message-ID: <CAJZ5v0j09fsp4Y66v2UANOGnW4FNO7PWxpZY=Pgw=bUccEL_eA@mail.gmail.com>
+Subject: Re: [PATCH v7 00/16] ACPI IORT ARM SMMU support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Eric Auger <eric.auger@redhat.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Dennis Chen <dennis.chen@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Tomasz Nowicki <tn@semihalf.com>, Nate Watterson <nwatters@codeaurora.org>,
+ Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 02:04:38PM -0800, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
-> 
-> hv_do_hypercall assumes that we pass a segment from a physically
-> continuous buffer. Buffer allocated on the stack may not work if
-> CONFIG_VMAP_STACK=y is set.
-> 
-> Change to use kmalloc to allocate this buffer.
-> 
-> The v2 patch adds locking to access the pre-allocated buffer.
-> 
-> Signed-off-by: Long Li <longli@microsoft.com>
-> Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
+Hi Lorenzo,
 
-Waiting for a maintainer ack for this.
+On Wed, Nov 9, 2016 at 3:19 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> This patch series is v7 of a previous posting:
+>
+> https://lkml.org/lkml/2016/10/18/506
 
-$ ./scripts/get_maintainer.pl -f drivers/pci/host/pci-hyperv.c
-"K. Y. Srinivasan" <kys@microsoft.com> (maintainer:Hyper-V CORE AND DRIVERS)
-Haiyang Zhang <haiyangz@microsoft.com> (maintainer:Hyper-V CORE AND DRIVERS)
-...
+I don't see anything objectionable in this series.
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 29 +++++++++++++++++++----------
->  1 file changed, 19 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 763ff87..ca553df 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -378,6 +378,8 @@ struct hv_pcibus_device {
->  	struct msi_domain_info msi_info;
->  	struct msi_controller msi_chip;
->  	struct irq_domain *irq_domain;
-> +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> +	spinlock_t retarget_msi_interrupt_lock;;
->  };
->  
->  /*
-> @@ -774,34 +776,40 @@ void hv_irq_unmask(struct irq_data *data)
->  {
->  	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
->  	struct irq_cfg *cfg = irqd_cfg(data);
-> -	struct retarget_msi_interrupt params;
-> +	struct retarget_msi_interrupt *params;
->  	struct hv_pcibus_device *hbus;
->  	struct cpumask *dest;
->  	struct pci_bus *pbus;
->  	struct pci_dev *pdev;
->  	int cpu;
-> +	unsigned long flags;
->  
->  	dest = irq_data_get_affinity_mask(data);
->  	pdev = msi_desc_to_pci_dev(msi_desc);
->  	pbus = pdev->bus;
->  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
->  
-> -	memset(&params, 0, sizeof(params));
-> -	params.partition_id = HV_PARTITION_ID_SELF;
-> -	params.source = 1; /* MSI(-X) */
-> -	params.address = msi_desc->msg.address_lo;
-> -	params.data = msi_desc->msg.data;
-> -	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
-> +	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
-> +
-> +	params = &hbus->retarget_msi_interrupt_params;
-> +	memset(params, 0, sizeof(*params));
-> +	params->partition_id = HV_PARTITION_ID_SELF;
-> +	params->source = 1; /* MSI(-X) */
-> +	params->address = msi_desc->msg.address_lo;
-> +	params->data = msi_desc->msg.data;
-> +	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
->  			   (hbus->hdev->dev_instance.b[4] << 16) |
->  			   (hbus->hdev->dev_instance.b[7] << 8) |
->  			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
->  			   PCI_FUNC(pdev->devfn);
-> -	params.vector = cfg->vector;
-> +	params->vector = cfg->vector;
->  
->  	for_each_cpu_and(cpu, dest, cpu_online_mask)
-> -		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-> +		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-> +
-> +	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
->  
-> -	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-> +	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
->  
->  	pci_msi_unmask_irq(data);
->  }
-> @@ -2186,6 +2194,7 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	INIT_LIST_HEAD(&hbus->resources_for_children);
->  	spin_lock_init(&hbus->config_lock);
->  	spin_lock_init(&hbus->device_list_lock);
-> +	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
->  	sema_init(&hbus->enum_sem, 1);
->  	init_completion(&hbus->remove_event);
->  
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please let me know which patches in particular to look at in detail.
+
+Thanks,
+Rafael
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
