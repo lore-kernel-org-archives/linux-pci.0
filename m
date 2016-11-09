@@ -1,122 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50014 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933040AbcKGSrq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christogh Hellwig <hch@lst.de>
-Subject: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in irq_calc_affinity_vectors()
-Date: Mon,  7 Nov 2016 10:47:37 -0800
-Message-Id: <1478544462-9549-3-git-send-email-hch@lst.de>
-In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 08/16] drivers: acpi: iort: add node match function
+Date: Wed,  9 Nov 2016 14:19:40 +0000
+Message-Id: <20161109141948.19244-9-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christogh Hellwig <hch@lst.de>
+Device drivers (eg ARM SMMU) need to know if a specific component
+is part of the IORT table, so that kernel data structures are not
+initialized at initcalls time if the respective component is not
+part of the IORT table.
 
-Only calculate the affinity for the main I/O vectors, and skip the
-pre or post vectors specified by struct irq_affinity.
+To this end, this patch adds a trivial function that allows detecting
+if a given IORT node type is present or not in the ACPI table, providing
+an ACPI IORT equivalent for of_find_matching_node().
 
-Also remove the irq_affinity cpumask argument that has never been used.
-If we ever need it in the future we can pass it through struct
-irq_affinity.
-
-Signed-off-by: Christogh Hellwig <hch@lst.de>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/pci/msi.c         |  6 ++----
- include/linux/interrupt.h |  4 ++--
- kernel/irq/affinity.c     | 24 ++++++++++--------------
- 3 files changed, 14 insertions(+), 20 deletions(-)
+ drivers/acpi/arm64/iort.c | 15 +++++++++++++++
+ include/linux/acpi_iort.h |  2 ++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index ad70507..c58d3c2 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1091,8 +1091,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 
- 	for (;;) {
- 		if (affinity) {
--			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
--					nvec);
-+			nvec = irq_calc_affinity_vectors(nvec, NULL);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-@@ -1140,8 +1139,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 
- 	for (;;) {
- 		if (affinity) {
--			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
--					nvec);
-+			nvec = irq_calc_affinity_vectors(nvec, NULL);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 7284bcd..092adfb 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -291,7 +291,7 @@ extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
- struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
--int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec);
-+int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
- 
- #else /* CONFIG_SMP */
- 
-@@ -331,7 +331,7 @@ irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 1ac2720..4bb6acb 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -227,6 +227,21 @@ static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
+ 	return NULL;
  }
  
- static inline int
--irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
-+irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
- {
- 	return maxvec;
- }
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 17f51d63..8d92597 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -131,24 +131,20 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- }
- 
- /**
-- * irq_calc_affinity_vectors - Calculate to optimal number of vectors for a given affinity mask
-- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
-- *			is used
-- * @maxvec:		The maximum number of vectors available
-+ * irq_calc_affinity_vectors - Calculate the optimal number of vectors
-+ * @maxvec:	The maximum number of vectors available
-+ * @affd:	Description of the affinity requirements
-  */
--int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
-+int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
- {
--	int cpus, ret;
-+	int resv = affd->pre_vectors + affd->post_vectors;
-+	int vecs = maxvec - resv;
-+	int cpus;
- 
- 	/* Stabilize the cpumasks */
- 	get_online_cpus();
--	/* If the supplied affinity mask is NULL, use cpu online mask */
--	if (!affinity)
--		affinity = cpu_online_mask;
--
--	cpus = cpumask_weight(affinity);
--	ret = (cpus < maxvec) ? cpus : maxvec;
--
-+	cpus = cpumask_weight(cpu_online_mask);
- 	put_online_cpus();
--	return ret;
++static acpi_status
++iort_match_type_callback(struct acpi_iort_node *node, void *context)
++{
++	return AE_OK;
++}
 +
-+	return min(cpus, vecs) + resv;
- }
++bool iort_node_match(u8 type)
++{
++	struct acpi_iort_node *node;
++
++	node = iort_scan_node(type, iort_match_type_callback, NULL);
++
++	return node != NULL;
++}
++
+ static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
+ 					    void *context)
+ {
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index d16fdda..17bb078 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -28,10 +28,12 @@ void iort_deregister_domain_token(int trans_id);
+ struct fwnode_handle *iort_find_domain_token(int trans_id);
+ #ifdef CONFIG_ACPI_IORT
+ void acpi_iort_init(void);
++bool iort_node_match(u8 type);
+ u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ #else
+ static inline void acpi_iort_init(void) { }
++static inline bool iort_node_match(u8 type) { return false; }
+ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+ { return req_id; }
+ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
 -- 
-2.1.4
+2.10.0
 
