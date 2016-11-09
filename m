@@ -1,119 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
-Cc: Haggai Eran <haggaie@mellanox.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <a98185d9-ffb1-6469-4272-2d1222600825@vodafone.de>
-Date: Fri, 25 Nov 2016 21:40:10 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Wed, 09 Nov 2016 22:34:38 +0100
+Message-ID: <2825537.ADCNsGqGxn@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1555494.4IFvGxvsfe@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
 MIME-Version: 1.0
-In-Reply-To: <20161125193252.GC16504@obsidianresearch.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ John Garry <john.garry@huawei.com>, "olof@lixom.net" <olof@lixom.net>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 25.11.2016 um 20:32 schrieb Jason Gunthorpe:
-> On Fri, Nov 25, 2016 at 02:22:17PM +0100, Christian König wrote:
->
->>> Like you say below we have to handle short lived in the usual way, and
->>> that covers basically every device except IB MRs, including the
->>> command queue on a NVMe drive.
->> Well a problem which wasn't mentioned so far is that while GPUs do have a
->> page table to mirror the CPU page table, they usually can't recover from
->> page faults.
->> So what we do is making sure that all memory accessed by the GPU Jobs stays
->> in place while those jobs run (pretty much the same pinning you do for the
->> DMA).
-> Yes, it is DMA, so this is a valid approach.
->
-> But, you don't need page faults from the GPU to do proper coherent
-> page table mirroring. Basically when the driver submits the work to
-> the GPU it 'faults' the pages into the CPU and mirror translation
-> table (instead of pinning).
->
-> Like in ODP, MMU notifiers/HMM are used to monitor for translation
-> changes. If a change comes in the GPU driver checks if an executing
-> command is touching those pages and blocks the MMU notifier until the
-> command flushes, then unfaults the page (blocking future commands) and
-> unblocks the mmu notifier.
+On Wednesday, November 9, 2016 12:10:43 PM CET Gabriele Paoloni wrote:
+> > On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
+> > > +       /*
+> > > +        * The first PCIBIOS_MIN_IO is reserved specifically for
+> > indirectIO.
+> > > +        * It will separate indirectIO range from pci host bridge to
+> > > +        * avoid the possible PIO conflict.
+> > > +        * Set the indirectIO range directly here.
+> > > +        */
+> > > +       lpcdev->io_ops.start = 0;
+> > > +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
+> > > +       lpcdev->io_ops.devpara = lpcdev;
+> > > +       lpcdev->io_ops.pfin = hisilpc_comm_in;
+> > > +       lpcdev->io_ops.pfout = hisilpc_comm_out;
+> > > +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
+> > > +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
+> > 
+> > I have to look at patch 2 in more detail again, after missing a few
+> > review
+> > rounds. I'm still a bit skeptical about hardcoding a logical I/O port
+> > range here, and would hope that we can just go through the same
+> > assignment of logical port ranges that we have for PCI buses,
+> > decoupling
+> > the bus addresses from the linux-internal ones.
+> 
+> The point here is that we want to avoid any conflict/overlap between
+> the LPC I/O space and the PCI I/O space. With the assignment above
+> we make sure that LPC never interfere with PCI I/O space.
 
-Yeah, we have a function to "import" anonymous pages from a CPU pointer 
-which works exactly that way as well.
+But we already abstract the PCI I/O space using dynamic registration.
+There is no need to hardcode the logical address for ISA, though
+I think we can hardcode the bus address to start at zero here.
 
-We call this "userptr" and it's just a combination of get_user_pages() 
-on command submission and making sure the returned list of pages stays 
-valid using a MMU notifier.
+	Arnd
 
-The "big" problem with this approach is that it is horrible slow. I mean 
-seriously horrible slow so that we actually can't use it for some of the 
-purposes we wanted to use it.
-
-> The code moving the page will move it and the next GPU command that
-> needs it will refault it in the usual way, just like the CPU would.
-
-And here comes the problem. CPU do this on a page by page basis, so they 
-fault only what needed and everything else gets filled in on demand. 
-This results that faulting a page is relatively light weight operation.
-
-But for GPU command submission we don't know which pages might be 
-accessed beforehand, so what we do is walking all possible pages and 
-make sure all of them are present.
-
-Now as far as I understand it the I/O subsystem for example assumes that 
-it can easily change the CPU page tables without much overhead. So for 
-example when a page can't modified it is temporary marked as readonly 
-AFAIK (you are probably way deeper into this than me, so please confirm).
-
-That absolutely kills any performance for GPU command submissions. We 
-have use cases where we practically ended up playing ping/pong between 
-the GPU driver trying to grab the page with get_user_pages() and sombody 
-else in the kernel marking it readonly.
-
-> This might be much more efficient since it optimizes for the common
-> case of unchanging translation tables.
-
-Yeah, completely agree. It works perfectly fine as long as you don't 
-have two drivers trying to mess with the same page.
-
-> This assumes the commands are fairly short lived of course, the
-> expectation of the mmu notifiers is that a flush is reasonably prompt
-
-Correct, this is another problem. GFX command submissions usually don't 
-take longer than a few milliseconds, but compute command submission can 
-easily take multiple hours.
-
-I can easily imagine what would happen when kswapd is blocked by a GPU 
-command submission for an hour or so while the system is under memory 
-pressure :)
-
-I'm thinking on this problem for about a year now and going in circles 
-for quite a while. So if you have ideas on this even if they sound 
-totally crazy, feel free to come up.
-
-Cheers,
-Christian.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
