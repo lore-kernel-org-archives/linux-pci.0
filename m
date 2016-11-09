@@ -1,101 +1,192 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 16 Nov 2016 09:56:15 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>
-Cc: iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161116095615.GA25656@red-moon>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
- <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in irq_create_affinity_masks()
+Date: Tue,  8 Nov 2016 17:15:03 -0800
+Message-Id: <1478654107-7384-4-git-send-email-hch@lst.de>
+In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
+References: <1478654107-7384-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+Only calculate the affinity for the main I/O vectors, and skip the
+pre or post vectors specified by struct irq_affinity.
 
-On Mon, Nov 14, 2016 at 06:25:16PM +0000, Robin Murphy wrote:
-> On 14/11/16 15:52, Joerg Roedel wrote:
-> > On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
-> >> If we've already made the decision to move away from bus ops, I don't
-> >> see that it makes sense to deliberately introduce new dependencies on
-> >> them. Besides, as it stands, this patch literally implements "tell the
-> >> iommu-core which hardware-iommus exist in the system and a seperate
-> >> iommu_ops ptr for each of them" straight off.
-> > 
-> > Not sure which code you are looking at, but as I see it we have only
-> > per-device iommu-ops now (with this patch). That is different from
-> > having core-visible hardware-iommu instances where devices could link
-> > to.
-> 
-> The per-device IOMMU ops are already there since 57f98d2f61e1. This
-> patch generalises the other end, moving the "registering an IOMMU
-> instance" (i.e. iommu_fwentry) bit into the IOMMU core, from being
-> OF-specific. I'd be perfectly happy if we rename iommu_fwentry to
-> iommu_instance, fwnode_iommu_set_ops() to iommu_register_instance(), and
-> such if that makes the design intent clearer.
+Also remove the irq_affinity cpumask argument that has never been used.
+If we ever need it in the future we can pass it through struct
+irq_affinity.
 
-I can easily make the changes Robin suggests above, I need to know
-what to do with this patch it is the last blocking point for this
-series and time is running out I can revert to using dev->bus to
-retrieve iommu_ops (even though I do not think it makes sense given
-what Robin outlines below) but I need to know please, we can't gate
-an entire series for this patch that is just syntactic sugar.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/msi.c         |  6 ++++--
+ include/linux/interrupt.h |  4 ++--
+ kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
+ 3 files changed, 31 insertions(+), 25 deletions(-)
 
-Thanks !
-Lorenzo
-
-> If you'd also prefer to replace iommu_fwspec::ops with an opaque
-> iommu_fwspec::iommu_instance pointer so that things are a bit more
-> centralised (and users are forced to go through the API rather then call
-> ops directly), I'd have no major objection either. My main point is that
-> we've been deliberately putting the relevant building blocks in place -
-> the of_iommu_{get,set}_ops stuff was designed from the start to
-> accommodate per-instance ops, via the ops pointer *being* the instance
-> token; the iommu_fwspec stuff is deliberately intended to provide
-> per-device ops on top of that. The raw functionality is either there in
-> iommu.c already, or moving there in patches already written, so if it
-> doesn't look right all we need to focus on is making it look right.
-> 
-> > Also the rest of iommu-core code still makes use of the per-bus ops. The
-> > per-device ops are only used for the of_xlate fn-ptr.
-> 
-> Hence my aforementioned patches intended for 4.10, directly following on
-> from introducing iommu_fwspec in 4.9:
-> 
-> http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14576.html
-> 
-> ...the purpose being to provide a smooth transition from per-bus ops to
-> per-device, per-instance ops. Apply those and we're 90% of the way there
-> for OF-based IOMMU drivers (not that any of those actually need
-> per-instance ops, admittedly; I did prototype it for the ARM SMMU ages
-> ago, but it didn't seem worth the bother). Lorenzo's series broadens the
-> scope to ACPI-based systems and moves the generically-useful parts into
-> the core where we can easily build on them further if necessary. The
-> major remaining work is to convert external callers of the current
-> bus-dependent functions like iommu_domain_alloc(), iommu_present(), etc.
-> to device-based alternatives.
-> 
-> Robin.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index dad2da7..f4a108b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -553,12 +553,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ static struct msi_desc *
+ msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
+ {
++	static const struct irq_affinity default_affd;
+ 	struct cpumask *masks = NULL;
+ 	struct msi_desc *entry;
+ 	u16 control;
+ 
+ 	if (affinity) {
+-		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
++		masks = irq_create_affinity_masks(nvec, &default_affd);
+ 		if (!masks)
+ 			pr_err("Unable to allocate affinity masks, ignoring\n");
+ 	}
+@@ -692,12 +693,13 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 			      struct msix_entry *entries, int nvec,
+ 			      bool affinity)
+ {
++	static const struct irq_affinity default_affd;
+ 	struct cpumask *curmsk, *masks = NULL;
+ 	struct msi_desc *entry;
+ 	int ret, i;
+ 
+ 	if (affinity) {
+-		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
++		masks = irq_create_affinity_masks(nvec, &default_affd);
+ 		if (!masks)
+ 			pr_err("Unable to allocate affinity masks, ignoring\n");
+ 	}
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 9081f23b..53144e7 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -290,7 +290,7 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
+ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+ 
+-struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
++struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+ int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
+ 
+ #else /* CONFIG_SMP */
+@@ -325,7 +325,7 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
+ }
+ 
+ static inline struct cpumask *
+-irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
++irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
+ {
+ 	return NULL;
+ }
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index 8d92597..17360bd 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -51,16 +51,16 @@ static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
+ 
+ /**
+  * irq_create_affinity_masks - Create affinity masks for multiqueue spreading
+- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
+- *			is used
+- * @nvecs:		The number of vectors
++ * @nvecs:	The total number of vectors
++ * @affd:	Description of the affinity requirements
+  *
+  * Returns the masks pointer or NULL if allocation failed.
+  */
+-struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+-					  int nvec)
++struct cpumask *
++irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ {
+-	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
++	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
++	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
+ 	nodemask_t nodemsk = NODE_MASK_NONE;
+ 	struct cpumask *masks;
+ 	cpumask_var_t nmsk;
+@@ -68,46 +68,46 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+ 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+ 		return NULL;
+ 
+-	masks = kzalloc(nvec * sizeof(*masks), GFP_KERNEL);
++	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
+ 	if (!masks)
+ 		goto out;
+ 
++	/* Fill out vectors at the beginning that don't need affinity */
++	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
++		cpumask_copy(masks + curvec, cpu_possible_mask);
++
+ 	/* Stabilize the cpumasks */
+ 	get_online_cpus();
+-	/* If the supplied affinity mask is NULL, use cpu online mask */
+-	if (!affinity)
+-		affinity = cpu_online_mask;
+-
+-	nodes = get_nodes_in_cpumask(affinity, &nodemsk);
++	nodes = get_nodes_in_cpumask(cpu_online_mask, &nodemsk);
+ 
+ 	/*
+ 	 * If the number of nodes in the mask is less than or equal the
+ 	 * number of vectors we just spread the vectors across the nodes.
+ 	 */
+-	if (nvec <= nodes) {
++	if (affv <= nodes) {
+ 		for_each_node_mask(n, nodemsk) {
+ 			cpumask_copy(masks + curvec, cpumask_of_node(n));
+-			if (++curvec == nvec)
++			if (++curvec == affv)
+ 				break;
+ 		}
+-		goto outonl;
++		goto done;
+ 	}
+ 
+ 	/* Spread the vectors per node */
+-	vecs_per_node = nvec / nodes;
++	vecs_per_node = affv / nodes;
+ 	/* Account for rounding errors */
+-	extra_vecs = nvec - (nodes * vecs_per_node);
++	extra_vecs = affv - (nodes * vecs_per_node);
+ 
+ 	for_each_node_mask(n, nodemsk) {
+ 		int ncpus, v, vecs_to_assign = vecs_per_node;
+ 
+ 		/* Get the cpus on this node which are in the mask */
+-		cpumask_and(nmsk, affinity, cpumask_of_node(n));
++		cpumask_and(nmsk, cpu_online_mask, cpumask_of_node(n));
+ 
+ 		/* Calculate the number of cpus per vector */
+ 		ncpus = cpumask_weight(nmsk);
+ 
+-		for (v = 0; curvec < nvec && v < vecs_to_assign; curvec++, v++) {
++		for (v = 0; curvec < affv && v < vecs_to_assign; curvec++, v++) {
+ 			cpus_per_vec = ncpus / vecs_to_assign;
+ 
+ 			/* Account for extra vectors to compensate rounding errors */
+@@ -119,12 +119,16 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
+ 			irq_spread_init_one(masks + curvec, nmsk, cpus_per_vec);
+ 		}
+ 
+-		if (curvec >= nvec)
++		if (curvec >= affv)
+ 			break;
+ 	}
+ 
+-outonl:
++done:
+ 	put_online_cpus();
++
++	/* Fill out vectors at the end that don't need affinity */
++	for (; curvec < nvecs; curvec++)
++		cpumask_copy(masks + curvec, cpu_possible_mask);
+ out:
+ 	free_cpumask_var(nmsk);
+ 	return masks;
+-- 
+2.1.4
