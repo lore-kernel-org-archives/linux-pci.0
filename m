@@ -1,241 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:55088 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752851AbcKYME7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 07:04:59 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        T homas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        John Garry <john.garry@huawei.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@go og le.com" <bhelgaas@google.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+Received: from mga05.intel.com ([192.55.52.43]:62425 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932531AbcKIPnA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 10:43:00 -0500
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: Simon Guinot <simon.guinot@sequanux.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Fri, 25 Nov 2016 13:03:33 +0100
-Message-ID: <107039805.6PaPa1fbx1@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F939E0A@lhreml507-mbx>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <4675465.4Qhqy6WU4X@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F939E0A@lhreml507-mbx>
-MIME-Version: 1.0
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>,
+        "Jamet, Michael" <michael.jamet@intel.com>
+Subject: RE: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Date: Wed, 9 Nov 2016 15:42:53 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03B677E4C9@hasmsx107.ger.corp.intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <20161109143632.GE6167@kw.sim.vm.gnt>
+In-Reply-To: <20161109143632.GE6167@kw.sim.vm.gnt>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, November 25, 2016 8:46:11 AM CET Gabriele Paoloni wrote:
-> > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > 
-> > On Wednesday, November 23, 2016 6:07:11 PM CET Arnd Bergmann wrote:
-> > > On Wednesday, November 23, 2016 3:22:33 PM CET Gabriele Paoloni
-> > wrote:
-> > > > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > > > On Friday, November 18, 2016 5:03:11 PM CET Gabriele Paoloni
-> >  /*
-> > @@ -549,9 +548,14 @@ static int of_translate_one(struct device_node
-> > *parent, struct of_bus *bus,
-> >   * that translation is impossible (that is we are not dealing with a
-> > value
-> >   * that can be mapped to a cpu physical address). This is not really
-> > specified
-> >   * that way, but this is traditionally the way IBM at least do things
-> > + *
-> > + * Whenever the translation fails, the *host pointer will be set to
-> > the
-> > + * device that lacks a tranlation, and the return code is relative to
-> > + * that node.
+On Wed, Nov 9 2016, 04:36 PM, Simon Guinot wrote:
+> On Wed, Nov 09, 2016 at 04:20:00PM +0200, Amir Levy wrote:
+> > This driver enables Thunderbolt Networking on non-Apple platforms 
+> > running Linux.
+> >
+> > Thunderbolt Networking provides peer-to-peer connections to transfer 
+> > files between computers, perform PC migrations, and/or set up small 
+> > workgroups with shared storage.
+> >
+> > This is a virtual connection that emulates an Ethernet adapter that 
+> > enables Ethernet networking with the benefit of Thunderbolt 
+> > superfast medium capability.
+> >
+> > Thunderbolt Networking enables two hosts and several devices that 
+> > have a Thunderbolt controller to be connected together in a linear 
+> > (Daisy
+> > chain) series from a single port.
+> >
+> > Thunderbolt Networking for Linux is compatible with Thunderbolt 
+> > Networking on systems running macOS or Windows and also supports 
+> > Thunderbolt generation 2 and 3 controllers.
+> >
+> > Note that all pre-existing Thunderbolt generation 3 features, such 
+> > as USB, Display and other Thunderbolt device connectivity will 
+> > continue to function exactly as they did prior to enabling Thunderbolt Networking.
+> >
+> > Code and Software Specifications:
+> > This kernel code creates a virtual ethernet device for computer to 
+> > computer communication over a Thunderbolt cable.
+> > The new driver is a separate driver to the existing Thunderbolt driver.
+> > It is designed to work on systems running Linux that interface with 
+> > Intel Connection Manager (ICM) firmware based Thunderbolt 
+> > controllers that support Thunderbolt Networking.
+> > The kernel code operates in coordination with the Thunderbolt user- 
+> > space daemon to implement full Thunderbolt networking functionality.
+> >
+> > Hardware Specifications:
+> > Thunderbolt Hardware specs have not yet been published but are used 
+> > where necessary for register definitions.
 > 
-> This seems to be wrong to me. We are abusing of the error conditions.
-> So effectively if there is a buggy DT for an IO resource we end up
-> assuming that we are using a special IO device with unmapped addresses.
+> Hi Amir,
 > 
-> The patch at the bottom apply on top of this one and I think is a more
-> reasonable approach
-
-It was meant as a logical extension to the existing interface,
-translating the address as far as we can, and reporting back
-how far we got.
-
-Maybe we can return 'of_root' by instead of NULL to signify
-that we have converted all the way to the root of the DT?
-That would make it more consistent, but slightly more complicated
-for the common case.
-
-> >   */
-> >  static u64 __of_translate_address(struct device_node *dev,
-> > -				  const __be32 *in_addr, const char *rprop)
-> > +				  const __be32 *in_addr, const char *rprop,
-> > +				  struct device_node **host)
-> >  {
-> >  	struct device_node *parent = NULL;
-> >  	struct of_bus *bus, *pbus;
-> > @@ -564,6 +568,7 @@ static u64 __of_translate_address(struct
-> > device_node *dev,
-> >  	/* Increase refcount at current level */
-> >  	of_node_get(dev);
-> > 
-> > +	*host = NULL;
-> >  	/* Get parent & match bus type */
-> >  	parent = of_get_parent(dev);
-> >  	if (parent == NULL)
-> > @@ -600,8 +605,9 @@ static u64 __of_translate_address(struct
-> > device_node *dev,
-> >  		pbus = of_match_bus(parent);
-> >  		pbus->count_cells(dev, &pna, &pns);
-> >  		if (!OF_CHECK_COUNTS(pna, pns)) {
-> > -			pr_err("Bad cell count for %s\n",
-> > -			       of_node_full_name(dev));
-> > +			pr_debug("Bad cell count for %s\n",
-> > +				 of_node_full_name(dev));
-> > +			*host = of_node_get(parent);
-> >  			break;
-> >  		}
-> > 
-> > @@ -609,7 +615,9 @@ static u64 __of_translate_address(struct
-> > device_node *dev,
-> >  		    pbus->name, pna, pns, of_node_full_name(parent));
-> > 
-> >  		/* Apply bus translation */
-> > -		if (of_translate_one(dev, bus, pbus, addr, na, ns, pna,
-> > rprop))
-> > +		result = of_translate_one(dev, bus, pbus, addr, na, ns,
-> > +					  pna, rprop);
-> > +		if (result == OF_BAD_ADDR)
+> I have an ASUS "All Series/Z87-DELUXE/QUAD" motherboard with a 
+> Thunderbolt 2 "Falcon Ridge" chipset (device ID 156d).
 > 
-> It seems to me that here you missed "*host = of_node_get(parent);"..?
+> Is the thunderbolt-icm driver supposed to work with this chipset ?
 > 
 
-Yes, Zhichang also pointed out the same thing, this is not
-right yet. My thought was that we need to check the #address-cells
-and #size-cells of the parent node and return if they are not set,
-but the bus should really have those.
+Yes, the thunderbolt-icm supports Falcon Ridge, device ID 156c.
+156d is the bridge - http://lxr.free-electrons.com/source/include/linux/pci_ids.h#L2619
 
-What we need to do instead is check the "ranges" of the parent
-and fail if there is no translation. Simply setting the host
-here however won't work either because that leads to returning
-OF_BAD_ADDR.
+> I have installed both a 4.8.6 Linux kernel (patched with your v9
+> series) and the thunderbolt-software-daemon (27 october release) 
+> inside a Debian system (Jessie).
+> 
+> If I connect the ASUS motherboard with a MacBook Pro (Thunderbolt 2, 
+> device ID 156c), I can see that the thunderbolt-icm driver is loaded 
+> and that the thunderbolt-software-daemon is well started. But the 
+> Ethernet interface is not created.
+> 
+> I have attached to this email the syslog file. There is the logs from 
+> both the kernel and the daemon inside. Note that the daemon logs are 
+> everything but clear about what could be the issue. Maybe I missed 
+> some kind of configuration ? But I failed to find any valuable 
+> information about configuring the driver and/or the daemon in the various documentation files.
+> 
+> Please, can you provide some guidance ? I'd really like to test your 
+> patch series.
 
+First, thank you very much for willing to test it.
+Thunderbolt Networking support was added during Falcon Ridge, in the latest FR images.
+Do you know which Thunderbolt image version you have on your system?
+Currently I submitted only Thunderbolt Networking feature in Linux, and we plan to add
+more features like reading the image version and updating the image.
+If you don't know the image version, the only thing I can suggest is to load windows, install thunderbolt SW
+and check in the Thunderbolt application the image version.
+To know if image update is needed, you can check - https://thunderbolttechnology.net/updates
 
-> >  		/* Complete the move up one level */
-> > @@ -628,13 +636,32 @@ static u64 __of_translate_address(struct
-> > device_node *dev,
-> > 
-> >  u64 of_translate_address(struct device_node *dev, const __be32
-> > *in_addr)
-> >  {
-> > -	return __of_translate_address(dev, in_addr, "ranges");
-> > +	struct device_node *host;
-...
-> > +
-> >  phys_addr_t pci_pio_to_address(unsigned long pio)
-> >  {
-> >  	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 6bd94a803e8f..b7a8fa3da3ca 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1192,7 +1192,8 @@ int __must_check pci_bus_alloc_resource(struct
-> > pci_bus *bus,
-> >  			void *alignf_data);
+> 
+> Thanks in advance.
+> 
+> Simon
 
-[Many lines of reply trimmed here, please make sure you don't quote too
-much context when you reply, it's really annoying to read through
-it otherwise]
-
->  /*
-> + * of_isa_indirect_io - get the IO address from some isa reg property value.
-> + *	For some isa/lpc devices, no ranges property in ancestor node.
-> + *	The device addresses are described directly in their regs property.
-> + *	This fixup function will be called to get the IO address of isa/lpc
-> + *	devices when the normal of_translation failed.
-> + *
-> + * @parent:	points to the parent dts node;
-> + * @bus:		points to the of_bus which can be used to parse address;
-> + * @addr:	the address from reg property;
-> + * @na:		the address cell counter of @addr;
-> + * @presult:	store the address paresed from @addr;
-> + *
-> + * return 1 when successfully get the I/O address;
-> + * 0 will return for some failures.
-> + */
-> +static int of_get_isa_indirect_io(struct device_node *parent,
-> +				struct of_bus *bus, __be32 *addr,
-> +				int na, u64 *presult)
-> +{
-> +	unsigned int flags;
-> +	unsigned int rlen;
-> +
-> +	/* whether support indirectIO */
-> +	if (!indirect_io_enabled())
-> +		return 0;
-> +
-> +	if (!of_bus_isa_match(parent))
-> +		return 0;
-> +
-> +	flags = bus->get_flags(addr);
-> +	if (!(flags & IORESOURCE_IO))
-> +		return 0;
-> +
-> +	/* there is ranges property, apply the normal translation directly. */
-> +	if (of_get_property(parent, "ranges", &rlen))
-> +		return 0;
-> +
-> +	*presult = of_read_number(addr + 1, na - 1);
-> +	/* this fixup is only valid for specific I/O range. */
-> +	return addr_is_indirect_io(*presult);
-> +}
-
-Right, this would work. The reason I didn't go down this route is
-that I wanted to keep it generic enough to allow doing the same
-for PCI host bridges with a nonlinear mapping of the I/O space.
-
-There isn't really anything special about ISA here, other than the
-fact that the one driver that needs it happens to be for ISA rather
-than PCI.
-
-> +/*
->   * Translate an address from the device-tree into a CPU physical address,
->   * this walks up the tree and applies the various bus mappings on the
->   * way.
-> @@ -600,14 +643,23 @@ static u64 __of_translate_address(struct device_node *dev,
->  			result = of_read_number(addr, na);
->  			break;
->  		}
-> +		/*
-> +		 * For indirectIO device which has no ranges property, get
-> +		 * the address from reg directly.
-> +		 */
-> +		if (of_get_isa_indirect_io(dev, bus, addr, na, &result)) {
-> +			pr_debug("isa indirectIO matched(%s)..addr = 0x%llx\n",
-> +				of_node_full_name(dev), result);
-> +			*host = of_node_get(parent);
-> +			break;
-> +		}
->  
-
-If we do the special case for ISA as you suggest above, I would still want
-to keep it in of_translate_ioport(), I think that's a useful change by
-itself in my patch.
-
-	Arnde
-
-
-
-
+Thanks,
+Amir
