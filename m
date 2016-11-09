@@ -1,198 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34479 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750846AbcK2FAw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 00:00:52 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT4wW65013969
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:00:51 -0500
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 270xsq9gxb-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:00:51 -0500
-Received: from localhost
-        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Tue, 29 Nov 2016 15:00:48 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 737562BB0055
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:45 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAT50jkc6619430
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:45 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAT50iew000421
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:44 +1100
-Date: Tue, 29 Nov 2016 16:02:05 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
-        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH v4 5/7] PCI: Remove pci_resource_bar() and
- pci_iov_resource_bar()
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041542.21453.14468.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129041542.21453.14468.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20161129050205.GA23115@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 06/16] drivers: iommu: arm-smmu-v3: convert struct device of_node to fwnode usage
+Date: Wed,  9 Nov 2016 14:19:38 +0000
+Message-Id: <20161109141948.19244-7-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 10:15:42PM -0600, Bjorn Helgaas wrote:
->pci_std_update_resource() only deals with standard BARs, so we don't have
->to worry about the complications of VF BARs in an SR-IOV capability.
->
->Compute the BAR address inline and remove pci_resource_bar().  That makes
->pci_iov_resource_bar() unused, so remove that as well.
->
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Current ARM SMMU v3 driver rely on the struct device.of_node pointer for
+device look-up and iommu_ops retrieval.
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+In preparation for ACPI probing enablement, convert the driver to use
+the struct device.fwnode member for device and iommu_ops look-up so that
+the driver infrastructure can be used also on systems that do not
+associate an of_node pointer to a struct device (eg ACPI), making the
+device look-up and iommu_ops retrieval firmware agnostic.
 
->---
-> drivers/pci/iov.c       |   18 ------------------
-> drivers/pci/pci.c       |   30 ------------------------------
-> drivers/pci/pci.h       |    6 ------
-> drivers/pci/setup-res.c |   13 +++++++------
-> 4 files changed, 7 insertions(+), 60 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index a800ba2..c9c84ba 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -554,24 +554,6 @@ void pci_iov_release(struct pci_dev *dev)
-> }
->
-> /**
->- * pci_iov_resource_bar - get position of the SR-IOV BAR
->- * @dev: the PCI device
->- * @resno: the resource number
->- *
->- * Returns position of the BAR encapsulated in the SR-IOV capability.
->- */
->-int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->-{
->-	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
->-		return 0;
->-
->-	BUG_ON(!dev->is_physfn);
->-
->-	return dev->sriov->pos + PCI_SRIOV_BAR +
->-		4 * (resno - PCI_IOV_RESOURCES);
->-}
->-
->-/**
->  * pci_iov_update_resource - update a VF BAR
->  * @dev: the PCI device
->  * @resno: the resource number
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 631eac2..ec3f16d 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -4827,36 +4827,6 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags)
-> }
-> EXPORT_SYMBOL(pci_select_bars);
->
->-/**
->- * pci_resource_bar - get position of the BAR associated with a resource
->- * @dev: the PCI device
->- * @resno: the resource number
->- * @type: the BAR type to be filled in
->- *
->- * Returns BAR position in config space, or 0 if the BAR is invalid.
->- */
->-int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
->-{
->-	int reg;
->-
->-	if (resno < PCI_ROM_RESOURCE) {
->-		*type = pci_bar_unknown;
->-		return PCI_BASE_ADDRESS_0 + 4 * resno;
->-	} else if (resno == PCI_ROM_RESOURCE) {
->-		*type = pci_bar_mem32;
->-		return dev->rom_base_reg;
->-	} else if (resno < PCI_BRIDGE_RESOURCES) {
->-		/* device specific resource */
->-		*type = pci_bar_unknown;
->-		reg = pci_iov_resource_bar(dev, resno);
->-		if (reg)
->-			return reg;
->-	}
->-
->-	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
->-	return 0;
->-}
->-
-> /* Some architectures require additional programming to enable VGA */
-> static arch_set_vga_state_t arch_set_vga_state;
->
->diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->index 5bfcb92..a5d37f6 100644
->--- a/drivers/pci/pci.h
->+++ b/drivers/pci/pci.h
->@@ -245,7 +245,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-> int pci_setup_device(struct pci_dev *dev);
-> int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-> 		    struct resource *res, unsigned int reg);
->-int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
-> void pci_configure_ari(struct pci_dev *dev);
-> void __pci_bus_size_bridges(struct pci_bus *bus,
-> 			struct list_head *realloc_head);
->@@ -289,7 +288,6 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
-> #ifdef CONFIG_PCI_IOV
-> int pci_iov_init(struct pci_dev *dev);
-> void pci_iov_release(struct pci_dev *dev);
->-int pci_iov_resource_bar(struct pci_dev *dev, int resno);
-> void pci_iov_update_resource(struct pci_dev *dev, int resno);
-> resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
-> void pci_restore_iov_state(struct pci_dev *dev);
->@@ -304,10 +302,6 @@ static inline void pci_iov_release(struct pci_dev *dev)
->
-> {
-> }
->-static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->-{
->-	return 0;
->-}
-> static inline void pci_restore_iov_state(struct pci_dev *dev)
-> {
-> }
->diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->index ee0be34..09bdff7 100644
->--- a/drivers/pci/setup-res.c
->+++ b/drivers/pci/setup-res.c
->@@ -32,7 +32,6 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
-> 	u16 cmd;
-> 	u32 new, check, mask;
-> 	int reg;
->-	enum pci_bar_type type;
-> 	struct resource *res = dev->resource + resno;
->
-> 	/* Per SR-IOV spec 3.4.1.11, VF BARs are RO zero */
->@@ -65,14 +64,16 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
-> 	else
-> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
->
->-	reg = pci_resource_bar(dev, resno, &type);
->-	if (!reg)
->-		return;
->-	if (type != pci_bar_unknown) {
->+	if (resno < PCI_ROM_RESOURCE) {
->+		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
->+	} else if (resno == PCI_ROM_RESOURCE) {
-> 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
-> 			return;
->+
->+		reg = dev->rom_base_reg;
-> 		new |= PCI_ROM_ADDRESS_ENABLE;
->-	}
->+	} else
->+		return;
->
-> 	/*
-> 	 * We can't update a 64-bit BAR atomically, so when possible,
->
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index e6f9b2d..fef9f60 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1723,13 +1723,14 @@ static struct platform_driver arm_smmu_driver;
+ 
+ static int arm_smmu_match_node(struct device *dev, void *data)
+ {
+-	return dev->of_node == data;
++	return dev->fwnode == data;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static
++struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+-						np, arm_smmu_match_node);
++						fwnode, arm_smmu_match_node);
+ 	put_device(dev);
+ 	return dev ? dev_get_drvdata(dev) : NULL;
+ }
+@@ -1765,7 +1766,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 		master = fwspec->iommu_priv;
+ 		smmu = master->smmu;
+ 	} else {
+-		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
++		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+ 		if (!smmu)
+ 			return -ENODEV;
+ 		master = kzalloc(sizeof(*master), GFP_KERNEL);
+@@ -2634,7 +2635,8 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	/* And we're up. Go go go! */
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
++
+ #ifdef CONFIG_PCI
+ 	if (pci_bus_type.iommu_ops != &arm_smmu_ops) {
+ 		pci_request_acs();
+-- 
+2.10.0
 
