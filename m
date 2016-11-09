@@ -1,53 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53876 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbcKRKGv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 05:06:51 -0500
-Date: Fri, 18 Nov 2016 11:07:00 +0100
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: Simon Guinot <simon.guinot@sequanux.org>,
-        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>,
-        "Jamet, Michael" <michael.jamet@intel.com>,
-        "remi.rerolle@seagate.com" <remi.rerolle@seagate.com>
-Subject: Re: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
- Networking
-Message-ID: <20161118100700.GA7126@kroah.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
- <20161109143632.GE6167@kw.sim.vm.gnt>
- <E607265CB020454880711A6F96C05A03B677E4C9@hasmsx107.ger.corp.intel.com>
- <20161115105920.GH6167@kw.sim.vm.gnt>
- <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33205 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752065AbcKIQ4S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 11:56:18 -0500
+Received: by mail-wm0-f66.google.com with SMTP id u144so30437288wmu.0
+        for <linux-pci@vger.kernel.org>; Wed, 09 Nov 2016 08:56:17 -0800 (PST)
+From: Emil Velikov <emil.l.velikov@gmail.com>
+To: dri-devel@lists.freedesktop.org
+Cc: emil.l.velikov@gmail.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v2] PCI: create revision file in sysfs
+Date: Wed,  9 Nov 2016 16:56:07 +0000
+Message-Id: <20161109165607.26322-1-emil.l.velikov@gmail.com>
+In-Reply-To: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 08:48:36AM +0000, Levy, Amir (Jer) wrote:
-> > BTW, it is quite a shame that the Thunderbolt firmware version can't 
-> > be read from Linux.
-> > 
-> 
-> This is WIP, once this patch will be upstream, we will be able to focus more
-> on aligning Linux with the Thunderbolt features that we have for windows.
+From: Emil Velikov <emil.velikov@collabora.com>
 
-Why is this patch somehow holding that work back?  You aren't just
-sitting around waiting for people to review this and not doing anything
-else, right?  Is there some basic building block in these patches that
-your firmware download code is going to rely on?
+Currently the revision isn't available via sysfs/libudev thus if one
+wants to know the value they need to read through the config file.
 
-confused,
+This in itself wakes/powers up the device, causing unwanted delays.
 
-greg k-h
+There are at least two userspace components which could make use the new
+file - libpciaccess and libdrm. At the moment the former will wake up
+_every_ PCI device for simple invocation of glxinfo [when using Mesa
+10.0+ drivers]. While the latter [in association with Mesa 13.0] can
+lead to 2-3 second delays while starting firefox, thunderbird or
+chromium.
+
+Expose the revision as a separate file, just like we do for the device,
+vendor, their subsystem version and class.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
+Tested-by: Mauro Santos <registo.mailling@gmail.com>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+---
+v2:
+ - Add r-b/t-b tags
+ - Slim down CC list
+ - Add note about userspace.
+
+As before, please keep me in the CC list. Additionally if there's
+anything else I can do to get things going please let me know.
+
+Thanks
+Emil
+---
+ drivers/pci/pci-sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index bcd10c7..0666287 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -50,6 +50,7 @@ pci_config_attr(vendor, "0x%04x\n");
+ pci_config_attr(device, "0x%04x\n");
+ pci_config_attr(subsystem_vendor, "0x%04x\n");
+ pci_config_attr(subsystem_device, "0x%04x\n");
++pci_config_attr(revision, "0x%02x\n");
+ pci_config_attr(class, "0x%06x\n");
+ pci_config_attr(irq, "%u\n");
+ 
+@@ -568,6 +569,7 @@ static struct attribute *pci_dev_attrs[] = {
+ 	&dev_attr_device.attr,
+ 	&dev_attr_subsystem_vendor.attr,
+ 	&dev_attr_subsystem_device.attr,
++	&dev_attr_revision.attr,
+ 	&dev_attr_class.attr,
+ 	&dev_attr_irq.attr,
+ 	&dev_attr_local_cpus.attr,
+-- 
+2.9.3
+
