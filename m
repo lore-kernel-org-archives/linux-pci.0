@@ -1,57 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: Simon Guinot <simon.guinot@sequanux.org>,
-        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>,
-        "Jamet, Michael" <michael.jamet@intel.com>,
-        "remi.rerolle@seagate.com" <remi.rerolle@seagate.com>
-Subject: RE: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
- Networking
-Date: Sun, 20 Nov 2016 06:30:19 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03BE2214E2@hasmsx107.ger.corp.intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
- <20161109143632.GE6167@kw.sim.vm.gnt>
- <E607265CB020454880711A6F96C05A03B677E4C9@hasmsx107.ger.corp.intel.com>
- <20161115105920.GH6167@kw.sim.vm.gnt>
- <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
- <20161118100700.GA7126@kroah.com>
-In-Reply-To: <20161118100700.GA7126@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49930 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751537AbcKIOFZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 09:05:25 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uA9E4T9Z071632
+        for <linux-pci@vger.kernel.org>; Wed, 9 Nov 2016 09:05:24 -0500
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26m2kkmw18-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 09 Nov 2016 09:05:24 -0500
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Wed, 9 Nov 2016 12:05:22 -0200
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: devicetree@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        frowand.list@gmail.com, robh+dt@kernel.org,
+        gpiccoli@linux.vnet.ibm.com
+Subject: [PATCH] of/irq: improve error message on irq discovery process failure
+Date: Wed,  9 Nov 2016 12:05:08 -0200
+Message-Id: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18 2016, 12:07 PM, gregkh@linuxfoundation.org wrote:
-> On Fri, Nov 18, 2016 at 08:48:36AM +0000, Levy, Amir (Jer) wrote:
-> > > BTW, it is quite a shame that the Thunderbolt firmware version can't
-> > > be read from Linux.
-> > >
-> >
-> > This is WIP, once this patch will be upstream, we will be able to
-> > focus more on aligning Linux with the Thunderbolt features that we have
-> for windows.
-> 
-> Why is this patch somehow holding that work back?  You aren't just sitting
-> around waiting for people to review this and not doing anything else, right?
-> Is there some basic building block in these patches that your firmware
-> download code is going to rely on?
-> 
-> confused,
-> 
-> greg k-h
+On PowerPC machines some PCI slots might not have Level-triggered
+interrupts capability (also know as Level Signaled Interrupts - LSI),
+leading of_irq_parse_pci() to complain by presenting error messages
+on the kernel log - in this case, the properties "interrupt-map" and
+"interrupt-map-mask" are not present on the device's node on device
+tree.
 
-All the Thunderbolt SW features (including networking and FW update) depend 
-on the communication with FW, which is patch 3/8 in the series.
-The patch also sets up a generic netlink for user space communication.
-So yes, the communication with Thunderbolt FW is a basic building block.
+This patch introduces a different message for this specific case,
+and it also reduces the level of the message from error to warning.
+Before this patch, when an adapter was plugged in a slot without Level
+interrupts capabilities, we saw generic error messages like this:
+
+    [54.239] pci 002d:70:00.0: of_irq_parse_pci() failed with rc=-22
+
+Now, with this applied, we see the following specific message:
+
+    [19.947] pci 0014:60:00.0: of_irq_parse_pci() gave up. The slot of this
+    device has no Level-triggered Interrupts capability.
+
+No functional changes were introduced.
+
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+---
+ drivers/of/irq.c        | 5 ++++-
+ drivers/of/of_pci_irq.c | 8 +++++++-
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 393fea8..1ad6882 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -275,7 +275,10 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 	of_node_put(ipar);
+ 	of_node_put(newpar);
+ 
+-	return -EINVAL;
++	/* Positive non-zero return means no Level-triggered Interrupts
++	 * capability was found.
++	 */
++	return ENOENT;
+ }
+ EXPORT_SYMBOL_GPL(of_irq_parse_raw);
+ 
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 2306313..9b6f387 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -89,8 +89,14 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+ 	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+ 	laddr[1] = laddr[2] = cpu_to_be32(0);
+ 	rc = of_irq_parse_raw(laddr, out_irq);
+-	if (rc)
++
++	if (rc < 0) {
+ 		goto err;
++	} else if (rc > 0) {
++		dev_warn(&pdev->dev,
++			"of_irq_parse_pci() gave up. The slot of this device has no Level-triggered Interrupts capability.\n");
++		return -rc;
++	}
+ 	return 0;
+ err:
+ 	dev_err(&pdev->dev, "of_irq_parse_pci() failed with rc=%d\n", rc);
+-- 
+2.1.0
+
