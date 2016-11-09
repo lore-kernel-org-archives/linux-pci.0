@@ -1,120 +1,165 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 29 Nov 2016 12:20:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161129182014.GC17112@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <1AE640813FDE7649BE1B193DEA596E886A2949AF@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:57511 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754083AbcKIXBg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 18:01:36 -0500
+Date: Wed, 9 Nov 2016 16:01:31 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gregory CLEMENT <gregory.clement@free-electrons.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: Take control of mbus windows setup by the
+ firmware
+Message-ID: <20161109230131.GA4034@obsidianresearch.com>
+References: <20161026174440.GA24717@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886A2949AF@SHSMSX101.ccr.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026174440.GA24717@obsidianresearch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 03:23:35AM +0000, Zheng, Lv wrote:
-> Hi, Bjorn
-> =
+Hey Thomas,
 
-> Thanks for the documentation.
-> It really helps!
-> =
+Could you take a look at this? Thanks
 
-> However I have a question below.
-> =
+Jason
 
-> > From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.ke=
-rnel.org] On Behalf Of Bjorn
-> > Helgaas
-> > Subject: [PATCH] PCI: Add information about describing PCI in ACPI
-> > =
-
-> > Add a writeup about how PCI host bridges should be described in ACPI
-> > using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
-> > =
-
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  Documentation/PCI/00-INDEX      |    2 +
-> >  Documentation/PCI/acpi-info.txt |  136 +++++++++++++++++++++++++++++++=
-++++++++
-> >  2 files changed, 138 insertions(+)
-> >  create mode 100644 Documentation/PCI/acpi-info.txt
-> > =
-
-> > diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-> > index 147231f..0780280 100644
-> > --- a/Documentation/PCI/00-INDEX
-> > +++ b/Documentation/PCI/00-INDEX
-> > @@ -1,5 +1,7 @@
-> >  00-INDEX
-> >  	- this file
-> > +acpi-info.txt
-> > +	- info on how PCI host bridges are represented in ACPI
-> >  MSI-HOWTO.txt
-> >  	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
-> >  PCIEBUS-HOWTO.txt
-> > diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-i=
-nfo.txt
-> > new file mode 100644
-> > index 0000000..ccbcfda
-> > --- /dev/null
-> > +++ b/Documentation/PCI/acpi-info.txt
-> > @@ -0,0 +1,136 @@
-> > +	    ACPI considerations for PCI host bridges
-> > +
-> > +The basic requirement is that the ACPI namespace should describe
-> > +*everything* that consumes address space unless there's another
-> > +standard way for the OS to find it [1, 2]. =A0For example, windows that
-> > +are forwarded to PCI by a PCI host bridge should be described via ACPI
-> > +devices, since the OS can't locate the host bridge by itself. =A0PCI
-> > +devices *below* the host bridge do not need to be described via ACPI,
-> > +because the resources they consume are inside the host bridge windows,
-> > +and the OS can discover them via the standard PCI enumeration
-> > +mechanism (using config accesses to read and size the BARs).
-> > +
-> > +This ACPI resource description is done via _CRS methods of devices in
-> > +the ACPI namespace [2]. =A0 _CRS methods are like generalized PCI BARs:
-> > +the OS can read _CRS and figure out what resource is being consumed
-> > +even if it doesn't have a driver for the device [3]. =A0That's importa=
-nt
-> > +because it means an old OS can work correctly even on a system with
-> > +new devices unknown to the OS. =A0The new devices won't do anything, b=
-ut
-> > +the OS can at least make sure no resources conflict with them.
-> > +
-> > +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-> > +reserving address space!  The static tables are for things the OS
-> > +needs to know early in boot, before it can parse the ACPI namespace.
-> > +If a new table is defined, an old OS needs to operate correctly even
-> > +though it ignores the table.  _CRS allows that because it is generic
-> > +and understood by the old OS; a static table does not.
-> =
-
-> The entire document doesn't talk about the details of _CBA.
-> There is only one line below mentioned _CBA as an example.
-
-Yes, that's a good point.  I'll add some more details about MCFG
-and _CBA.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Wed, Oct 26, 2016 at 11:44:40AM -0600, Jason Gunthorpe wrote:
+> The firmware may setup the mbus to access PCI-E and indicate this
+> has happened with a ranges mapping for the PCI-E ID. If this happens
+> then the mbus setup and the pci dynamic setup conflict, creating
+> problems.
+> 
+> Have PCI-E assume control of the firmware specified default mapping by
+> setting the value of the bridge window to match the firmware mapping.
+> 
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>  drivers/bus/mvebu-mbus.c     | 36 ++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-mvebu.c | 22 ++++++++++++++++++++++
+>  include/linux/mbus.h         |  3 +++
+>  3 files changed, 61 insertions(+)
+> 
+> In the DT this could look like:
+> 
+> 	mbus {
+> 		ranges = <MBUS_ID(0x04, 0xe8) 0 0xe0000000 0x8000000 /* PEX 0 MEM */
+> 		pex@e0000000 {
+> 			compatible = "marvell,kirkwood-pcie";
+> 			ranges = <0x82000000 0 0x40000 MBUS_ID(0xf0, 0x01) 0x40000 0 0x00002000 /* Controller regs */
+> 				  0x82000000 1 0       MBUS_ID(0x04, 0xe8) 0 1 0 /* Port 0.0 MEM */
+> 				  >;
+> 			pcie@1,0 {
+> 				ranges = <0x82000000 0 0 0x82000000 0x1 0 1 0>;
+> 				reg = <0x0800 0 0  0 0>; // 0000:00:01.0
+> 
+> 				device@0 {
+> 					reg = <0x0 0 0	0 0>; // 0000:01:00.0
+> 					ranges = <0x00000000  0x82000000 0x00000000 0x00000000	0x8000000>;
+> 
+> Which is basically the OF way to describe PCI devices downstream of
+> the interface and give information about what their BARs should be.
+> 
+> This is useful if there is even more DT stuff below the explicitly
+> declared device as it allows standard DT address translation to work
+> properly.
+> 
+> diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+> index c7f396903184..ce0ac5049c1f 100644
+> +++ b/drivers/bus/mvebu-mbus.c
+> @@ -922,6 +922,42 @@ int mvebu_mbus_add_window_by_id(unsigned int target, unsigned int attribute,
+>  						 size, MVEBU_MBUS_NO_REMAP);
+>  }
+>  
+> +/**
+> + * mvebu_mbus_get_single_window_by_id() - return the location of the window if
+> + * the target/attribute has a single enabled mapping.
+> + *
+> + * RETURNS:
+> + *	-ENODEV if no mapping and -E2BIG if there is more than one mapping
+> + */
+> +int mvebu_mbus_get_single_window_by_id(unsigned int target,
+> +				       unsigned int attribute,
+> +				       phys_addr_t *base, phys_addr_t *size)
+> +{
+> +	unsigned int win;
+> +	unsigned int count = 0;
+> +
+> +	for (win = 0; win < mbus_state.soc->num_wins; win++) {
+> +		u64 wbase;
+> +		u32 wsize;
+> +		u8 wtarget, wattr;
+> +		int enabled;
+> +
+> +		mvebu_mbus_read_window(&mbus_state, win, &enabled, &wbase,
+> +				       &wsize, &wtarget, &wattr, NULL);
+> +		if (enabled && wtarget == target && wattr == attribute) {
+> +			*base = wbase;
+> +			*size = wsize;
+> +			count++;
+> +		}
+> +	}
+> +
+> +	if (count == 1)
+> +		return 0;
+> +	if (count == 0)
+> +		return -ENODEV;
+> +	return -E2BIG;
+> +}
+> +
+>  int mvebu_mbus_del_window(phys_addr_t base, size_t size)
+>  {
+>  	int win;
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 307f81d6b479..5d5a2687b73e 100644
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -464,6 +464,8 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+>  static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+>  {
+>  	struct mvebu_sw_pci_bridge *bridge = &port->bridge;
+> +	int rc;
+> +	phys_addr_t base, size;
+>  
+>  	memset(bridge, 0, sizeof(struct mvebu_sw_pci_bridge));
+>  
+> @@ -480,6 +482,26 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+>  
+>  	/* Add capabilities */
+>  	bridge->status = PCI_STATUS_CAP_LIST;
+> +
+> +	/*
+> +	 * If the firmware has already setup a window for PCIe then assume
+> +	 * control of it by defaulting the BAR to the window setting.
+> +	 */
+> +	rc = mvebu_mbus_get_single_window_by_id(port->mem_target,
+> +						port->mem_attr, &base, &size);
+> +	if (rc == -E2BIG)
+> +		pr_err(FW_BUG "%s: Too many pre-existing mbus mappings\n",
+> +		       port->dn->name);
+> +	if (!rc) {
+> +		if ((base & 0xFFFFF) != 0 || ((size + base) & 0xFFFFF) != 0)
+> +			pr_err(FW_BUG "%s: Invalid pre-existing mbus mapping\n",
+> +			       port->dn->name);
+> +		port->memwin_base = base;
+> +		port->memwin_size = size;
+> +		port->bridge.membase = (base >> 16) & 0xFFF0;
+> +		port->bridge.memlimit = ((size - 1 + base) >> 16) & 0xFFF0;
+> +		port->bridge.command |= PCI_COMMAND_MEMORY;
+> +	}
+>  }
+>  
+>  /*
+> diff --git a/include/linux/mbus.h b/include/linux/mbus.h
+> index d610232762e3..dfafc27b41b5 100644
+> +++ b/include/linux/mbus.h
+> @@ -83,5 +83,8 @@ int mvebu_mbus_init(const char *soc, phys_addr_t mbus_phys_base,
+>  		    size_t mbus_size, phys_addr_t sdram_phys_base,
+>  		    size_t sdram_size);
+>  int mvebu_mbus_dt_init(bool is_coherent);
+> +int mvebu_mbus_get_single_window_by_id(unsigned int target,
+> +				       unsigned int attribute,
+> +				       phys_addr_t *base, phys_addr_t *size);
+>  
+>  #endif /* __LINUX_MBUS_H */
