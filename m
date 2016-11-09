@@ -1,286 +1,193 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-Subject: [PATCH V4 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Wed, 9 Nov 2016 17:14:57 +0800
-Message-ID: <1478682897-119874-3-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
-References: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54866 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933184AbcKIOTS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Nov 2016 09:19:18 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v7 07/16] drivers: acpi: implement acpi_dma_configure
+Date: Wed,  9 Nov 2016 14:19:39 +0000
+Message-Id: <20161109141948.19244-8-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
-It is non ECAM only for the RC bus config space;for any other bus
-underneath the root bus we support ECAM access.
-Add specific quirks for PCI config space accessors.This involves:
-1. New initialization call hisi_pcie_init() to obtain rc base
-addresses from PNP0C02 as subdevice of PNP0A03.
-2. New entry in common quirk array.
+On DT based systems, the of_dma_configure() API implements DMA
+configuration for a given device. On ACPI systems an API equivalent to
+of_dma_configure() is missing which implies that it is currently not
+possible to set-up DMA operations for devices through the ACPI generic
+kernel layer.
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+calls that for now are just wrappers around arch_setup_dma_ops() and
+arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+
+Since acpi_dma_configure() is used to configure DMA operations, the
+function initializes the dma/coherent_dma masks to sane default values
+if the current masks are uninitialized (also to keep the default values
+consistent with DT systems) to make sure the device has a complete
+default DMA set-up.
+
+The DMA range size passed to arch_setup_dma_ops() is sized according
+to the device coherent_dma_mask (starting at address 0x0), mirroring the
+DT probing path behaviour when a dma-ranges property is not provided
+for the device being probed; this changes the current arch_setup_dma_ops()
+call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+is a NOP on all architectures but ARM/ARM64 this patch does not change
+the current kernel behaviour on them.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- MAINTAINERS                       |   1 +
- drivers/acpi/pci_mcfg.c           |  13 ++++
- drivers/pci/host/Kconfig          |   8 ++
- drivers/pci/host/Makefile         |   1 +
- drivers/pci/host/pcie-hisi-acpi.c | 157 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-ecam.h          |   5 ++
- 6 files changed, 185 insertions(+)
- create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+ drivers/acpi/glue.c     |  4 ++--
+ drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c     |  3 +--
+ include/acpi/acpi_bus.h |  2 ++
+ include/linux/acpi.h    |  5 +++++
+ 5 files changed, 50 insertions(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1cd38a7..b224caa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/host/pcie-hisi-acpi.c
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index 5ea5dc2..f8d6564 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
  
- PCIE DRIVER FOR ROCKCHIP
- M:	Shawn Lin <shawn.lin@rock-chips.com>
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index ac21db3..b1b6fc7 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -57,6 +57,19 @@ struct mcfg_fixup {
- 	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
- 	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
- 	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
-+#ifdef CONFIG_PCI_HISI_ACPI
-+	#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
-+	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
-+	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-+#endif
- };
+ 	attr = acpi_get_dma_attr(acpi_dev);
+ 	if (attr != DEV_DMA_NOT_SUPPORTED)
+-		arch_setup_dma_ops(dev, 0, 0, NULL,
+-				   attr == DEV_DMA_COHERENT);
++		acpi_dma_configure(dev, attr);
  
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index ae98644..9ff2bcd 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -227,6 +227,14 @@ config PCI_HISI
- 	  Say Y here if you want PCIe controller support on HiSilicon
- 	  Hip05 and Hip06 and Hip07 SoCs
+ 	acpi_physnode_link_name(physical_node_name, node_id);
+ 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+@@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	return 0;
  
-+config PCI_HISI_ACPI
-+	depends on ACPI && ARM64
-+	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe controllers"
-+	select PNP
-+	help
-+	  Say Y here if you want ACPI PCIe controller support on HiSilicon
-+	  Hip05 and Hip06 and Hip07 SoCs
-+
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
- 	depends on ARCH_QCOM && OF
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb49..9402858 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pcie-hisi-acpi.c b/drivers/pci/host/pcie-hisi-acpi.c
-new file mode 100644
-index 0000000..aade4b5
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi-acpi.c
-@@ -0,0 +1,157 @@
-+/*
-+ * PCIe host controller driver for HiSilicon HipXX SoCs
-+ *
-+ * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Dongdong Liu <liudongdong3@huawei.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
+  err:
++	acpi_dma_deconfigure(dev);
+ 	ACPI_COMPANION_SET(dev, NULL);
+ 	put_device(dev);
+ 	put_device(&acpi_dev->dev);
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 035ac64..694e0b6 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 		return DEV_DMA_NON_COHERENT;
+ }
+ 
++/**
++ * acpi_dma_configure - Set-up DMA configuration for the device.
++ * @dev: The pointer to the device
++ * @attr: device dma attributes
 + */
-+#include <linux/pci.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
-+
-+#define DEBUG0				0x728
-+#define PCIE_LTSSM_LINKUP_STATE		0x11
-+#define PCIE_LTSSM_STATE_MASK		0x3F
-+
-+static const struct acpi_device_id hisi_pcie_rc_res_ids[] = {
-+	{"HISI0081", 0},
-+	{"", 0},
-+};
-+
-+static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
-+				  int size, u32 *val)
++void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
 +{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
++	/*
++	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
++	 * setup the correct supported mask.
++	 */
++	if (!dev->coherent_dma_mask)
++		dev->coherent_dma_mask = DMA_BIT_MASK(32);
 +
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_read32(bus, devfn, where,
-+							 size, val);
-+	}
++	/*
++	 * Set it to coherent_dma_mask by default if the architecture
++	 * code has not set it.
++	 */
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
 +
-+	return pci_generic_config_read(bus, devfn, where, size, val);
++	/*
++	 * Assume dma valid range starts at 0 and covers the whole
++	 * coherent_dma_mask.
++	 */
++	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
++			   attr == DEV_DMA_COHERENT);
 +}
++EXPORT_SYMBOL_GPL(acpi_dma_configure);
 +
-+static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
-+				  int where, int size, u32 val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
-+
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_write32(bus, devfn, where,
-+							  size, val);
-+	}
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				       int where)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	void __iomem *reg_base = cfg->priv;
-+
-+	if (bus->number == cfg->busr.start)
-+		return reg_base + where;
-+	else
-+		return pci_ecam_map_bus(bus, devfn, where);
-+}
-+
-+/*
-+ * Retrieve RC base and size from sub-device under the RC
-+ * Device (RES1)
-+ * {
-+ *	Name (_HID, "HISI0081")
-+ *	Name (_CID, "PNP0C02")
-+ *	Name (_CRS, ResourceTemplate (){
-+ *		Memory32Fixed (ReadWrite, 0xb0080000, 0x10000)
-+ *	})
-+ * }
++/**
++ * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
++ * @dev: The pointer to the device
 + */
-+static int hisi_pcie_rc_addr_get(struct acpi_device *adev,
-+				 void __iomem **addr)
++void acpi_dma_deconfigure(struct device *dev)
 +{
-+	struct acpi_device *child_adev;
-+	struct list_head list;
-+	struct resource *res;
-+	struct resource_entry *entry;
-+	unsigned long flags;
-+	int ret;
-+
-+	list_for_each_entry(child_adev, &adev->children, node) {
-+		ret = acpi_match_device_ids(child_adev, hisi_pcie_rc_res_ids);
-+		if (ret)
-+			continue;
-+
-+		INIT_LIST_HEAD(&list);
-+		flags = IORESOURCE_MEM;
-+		ret = acpi_dev_get_resources(child_adev, &list,
-+					     acpi_dev_filter_resource_type_cb,
-+					     (void *)flags);
-+		if (ret < 0) {
-+			dev_err(&child_adev->dev,
-+				"failed to parse _CRS method, error code %d\n",
-+				ret);
-+			return ret;
-+		} else if (ret == 0) {
-+			dev_err(&child_adev->dev,
-+				"no IO and memory resources present in _CRS\n");
-+			return -EINVAL;
-+		}
-+
-+		entry = list_first_entry(&list, struct resource_entry, node);
-+		res = entry->res;
-+		*addr = devm_ioremap(&child_adev->dev,
-+				     res->start, resource_size(res));
-+		acpi_dev_free_resource_list(&list);
-+		if (IS_ERR(*addr)) {
-+			dev_err(&child_adev->dev, "error with ioremap\n");
-+			return -ENOMEM;
-+		}
-+
-+		return 0;
-+	}
-+
-+	return -EINVAL;
++	arch_teardown_dma_ops(dev);
 +}
++EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
 +
-+static int hisi_pcie_init(struct pci_config_window *cfg)
-+{
-+	int ret;
-+	struct acpi_device *adev = to_acpi_device(cfg->parent);
-+	void __iomem *reg_base;
+ static void acpi_init_coherency(struct acpi_device *adev)
+ {
+ 	unsigned long long cca = 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ab00267..c29e07a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
+ 		if (attr == DEV_DMA_NOT_SUPPORTED)
+ 			dev_warn(&dev->dev, "DMA not supported.\n");
+ 		else
+-			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
+-					   attr == DEV_DMA_COHERENT);
++			acpi_dma_configure(&dev->dev, attr);
+ 	}
+ 
+ 	pci_put_host_bridge_device(bridge);
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index c1a524d..4242c31 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -573,6 +573,8 @@ struct acpi_pci_root {
+ 
+ bool acpi_dma_supported(struct acpi_device *adev);
+ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
++void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
++void acpi_dma_deconfigure(struct device *dev);
+ 
+ struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+ 					   u64 address, bool check_children);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 6efb13c..df961f4 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -764,6 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 	return DEV_DMA_NOT_SUPPORTED;
+ }
+ 
++static inline void acpi_dma_configure(struct device *dev,
++				      enum dev_dma_attr attr) { }
 +
-+	ret = hisi_pcie_rc_addr_get(adev, &reg_base);
-+	if (ret) {
-+		dev_err(&adev->dev, "can't get rc base address");
-+		return ret;
-+	}
++static inline void acpi_dma_deconfigure(struct device *dev) { }
 +
-+	cfg->priv = reg_base;
-+
-+	return 0;
-+}
-+
-+struct pci_ecam_ops hisi_pcie_ops = {
-+	.bus_shift    = 20,
-+	.init         =  hisi_pcie_init,
-+	.pci_ops      = {
-+		.map_bus    = hisi_pcie_map_bus,
-+		.read       = hisi_pcie_acpi_rd_conf,
-+		.write      = hisi_pcie_acpi_wr_conf,
-+	}
-+};
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index f5740b7..1b24d97 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -67,4 +67,9 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- int pci_host_common_probe(struct platform_device *pdev,
- 			  struct pci_ecam_ops *ops);
- #endif
-+
-+#ifdef CONFIG_PCI_HISI_ACPI
-+extern struct pci_ecam_ops hisi_pcie_ops;
-+#endif
-+
- #endif
+ #define ACPI_PTR(_ptr)	(NULL)
+ 
+ static inline void acpi_device_set_enumerated(struct acpi_device *adev)
 -- 
-1.9.1
+2.10.0
+
