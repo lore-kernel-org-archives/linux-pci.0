@@ -1,196 +1,356 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:4192 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752007AbcKRQTI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 11:19:08 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-CC: "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        John Garry <john.garry@huawei.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@go og le.com" <bhelgaas@google.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
-        Thomas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "olof@lixom.net" <olof@lixom.net>
-Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Fri, 18 Nov 2016 16:18:07 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F921858@lhreml507-mbx>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30879 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751400AbcKJG0G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 01:26:06 -0500
+Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for special
+ ISA
+To: "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
 References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <2822893.F0LqNAm9bT@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F921283@lhreml507-mbx>
- <2271602.GoSoby0zHK@wuerfel>
-In-Reply-To: <2271602.GoSoby0zHK@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+ <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
+ <20161109113955.GD10219@e106497-lin.cambridge.arm.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F27C0@lhreml507-mbx>
+ <20161109165044.GE10219@e106497-lin.cambridge.arm.com>
+CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        John Garry <john.garry@huawei.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <58241286.1070107@hisilicon.com>
+Date: Thu, 10 Nov 2016 14:24:06 +0800
 MIME-Version: 1.0
+In-Reply-To: <20161109165044.GE10219@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 18 November 2016 13:43
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Gabriele Paoloni; mark.rutland@arm.com; benh@kernel.crashing.org;
-> catalin.marinas@arm.com; liviu.dudau@arm.com; Linuxarm;
-> lorenzo.pieralisi@arm.com; xuwei (O); Jason Gunthorpe; linux-
-> serial@vger.kernel.org; linux-pci@vger.kernel.org;
-> devicetree@vger.kernel.org; minyard@acm.org; will.deacon@arm.com; John
-> Garry; zourongrong@gmail.com; robh+dt@kernel.org; bhelgaas@go og
-> le.com; kantyzc@163.com; zhichang.yuan02@gmail.com; Thomas Petazzoni;
-> linux-kernel@vger.kernel.org; Yuanzhichang; olof@lixom.net
-> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
-> Hip06
+Hi,Liviu,
+
+Thanks for your comments!
+
+
+On 2016/11/10 0:50, liviu.dudau@arm.com wrote:
+> On Wed, Nov 09, 2016 at 04:16:17PM +0000, Gabriele Paoloni wrote:
+>> Hi Liviu
+>>
+>> Thanks for reviewing
+>>
 > 
-> On Friday, November 18, 2016 12:53:08 PM CET Gabriele Paoloni wrote:
-> > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > On Friday, November 18, 2016 12:07:28 PM CET Gabriele Paoloni
-> wrote:
-> > > > > I think there is no need to change a) here, we have
-> PCIBIOS_MIN_IO
-> > > > > today and even if we don't need it, there is no obvious
-> downside.
-> > > > > I would also argue that we can ignore b) for the discussion of
-> > > > > the HiSilicon LPC driver, we just need to assign some range
-> > > > > of logical addresses to each domain.
-> > > > >
-> > > > > That means solving c) is the important problem here, and it
-> > > > > shouldn't be so hard.  We can do this either with a single
-> > > > > special domain as in the v5 patch series, or by generalizing it
-> > > > > so that any I/O space mapping gets looked up through the device
-> > > > > pointer of the bus master.
-> > > >
-> > > > I am not very on the "generalized" multi-domain solution...
-> > > > Currently the IO accessors prototypes have an unsigned long addr
-> > > > as input parameter. If we live in a multi-domain IO system
-> > > > how can we distinguish inside the accessor which domain addr
-> > > > belongs to?
-> > >
-> > > The easiest change compared to the v5 code would be to walk
-> > > a linked list of 'struct extio_ops' structures rather than
-> > > assuming there is only ever one of them. I think one of the
-> > > earlier versions actually did this.
-> >
-> > Right but if my understanding is correct if we live in a multi-
-> > domain I/O space world when you have an input addr in the I/O
-> > accessors this addr can be duplicated (for example for the standard
-> > PCI IO domain and for our special LPC domain).
-> > So effectively even if you walk a linked list there is a problem
-> > of disambiguation...am I right?
+> [removed some irrelevant part of discussion, avoid crazy formatting]
 > 
-> No, unlike the PCI memory space, the PIO addresses are not
-> usually distinct, i.e. every PCI bus has its own 64K I/O
-> addresses starting at zero. We linearize them into the
-> Linux I/O space using the per-domain io_offset value.
-
-I am going to summarize my understanding here below:
-
-It seems to me that what is linearized is the virtual address
-space associated to the IO address space. This address space
-goes from PCI_IOBASE to (PCI_IOBASE + IO_SPACE_LIMIT).
-
-The I/O accessors perform rd/wr operation on this address
-space using a port IO token.
-
-Each token map into a cpu physical address range
-Each cpu physical address range maps to a bus address range
-if the bus controller specifies a range property.
-
-Devices under a bus controller specify the bus addresses that
-they operate on in their reg property.
-
-So each device can use the same bus addresses under two
-separate bus controllers as long as the bus controller
-use the range properties to map the same bus range to different
-cpu address range. 
-
+>>>> +/**
+>>>> + * addr_is_indirect_io - check whether the input taddr is for
+>>> indirectIO.
+>>>> + * @taddr: the io address to be checked.
+>>>> + *
+>>>> + * Returns 1 when taddr is in the range; otherwise return 0.
+>>>> + */
+>>>> +int addr_is_indirect_io(u64 taddr)
+>>>> +{
+>>>> +	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end <
+>>> taddr)
+>>>
+>>> start >= taddr ?
+>>
+>> Nope... if  (taddr < arm64_extio_ops->start || taddr > arm64_extio_ops->end)
+>> then taddr is outside the range [start; end] and will return 0; otherwise
+>> it will return 1...
 > 
-> For the ISA/LPC spaces there are only 4k of addresses, they
-> the bus addresses always overlap, but we can trivially
-> figure out the bus address from Linux I/O port number
-> by subtracting the start of the range.
-
-Are you saying that our LPC controller should specify a
-range property to map bus addresses into a cpu address range? 
-
+> Oops, sorry, did not pay attention to the returned value. The check is
+> correct as it is, no need to change then.
 > 
-> > > Another option the IA64 approach mentioned in another subthread
-> > > today, looking up the operations based on an index from the
-> > > upper bits of the port number. If we do this, we probably
-> > > want to do that for all PIO access and replace the entire
-> > > virtual address remapping logic with that. I think Bjorn
-> > > in the past argued in favor of such an approach, while I
-> > > advocated the current scheme for simplicity based on how
-> > > every I/O space these days is just memory mapped (which now
-> > > turned out to be false, both on powerpc and arm64).
-> >
-> > This seems really complex...I am a bit worried that possibly
-> > we end up in having the maintainers saying that it is not worth
-> > to re-invent the world just for this special LPC device...
+>>
+>>>
+>>>> +		return 0;
+>>>> +
+>>>> +	return 1;
+>>>> +}
+>>>>
+>>>>  BUILD_EXTIO(b, u8)
+>>>>
+>>>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>>>> index 02b2903..cc2a05d 100644
+>>>> --- a/drivers/of/address.c
+>>>> +++ b/drivers/of/address.c
+>>>> @@ -479,6 +479,50 @@ static int of_empty_ranges_quirk(struct
+>>> device_node *np)
+>>>>  	return false;
+>>>>  }
+>>>>
+>>>> +
+>>>> +/*
+>>>> + * of_isa_indirect_io - get the IO address from some isa reg
+>>> property value.
+>>>> + *	For some isa/lpc devices, no ranges property in ancestor node.
+>>>> + *	The device addresses are described directly in their regs
+>>> property.
+>>>> + *	This fixup function will be called to get the IO address of
+>>> isa/lpc
+>>>> + *	devices when the normal of_translation failed.
+>>>> + *
+>>>> + * @parent:	points to the parent dts node;
+>>>> + * @bus:		points to the of_bus which can be used to parse
+>>> address;
+>>>> + * @addr:	the address from reg property;
+>>>> + * @na:		the address cell counter of @addr;
+>>>> + * @presult:	store the address paresed from @addr;
+>>>> + *
+>>>> + * return 1 when successfully get the I/O address;
+>>>> + * 0 will return for some failures.
+>>>
+>>> Bah, you are returning a signed int, why 0 for failure? Return a
+>>> negative value with
+>>> error codes. Otherwise change the return value into a bool.
+>>
+>> Yes we'll move to bool
+>>
+>>>
+>>>> + */
+>>>> +static int of_get_isa_indirect_io(struct device_node *parent,
+>>>> +				struct of_bus *bus, __be32 *addr,
+>>>> +				int na, u64 *presult)
+>>>> +{
+>>>> +	unsigned int flags;
+>>>> +	unsigned int rlen;
+>>>> +
+>>>> +	/* whether support indirectIO */
+>>>> +	if (!indirect_io_enabled())
+>>>> +		return 0;
+>>>> +
+>>>> +	if (!of_bus_isa_match(parent))
+>>>> +		return 0;
+>>>> +
+>>>> +	flags = bus->get_flags(addr);
+>>>> +	if (!(flags & IORESOURCE_IO))
+>>>> +		return 0;
+>>>> +
+>>>> +	/* there is ranges property, apply the normal translation
+>>> directly. */
+>>>
+>>> s/there is ranges/if we have a 'ranges'/
+>>
+>> Thanks for spotting this
+>>
+>>>
+>>>> +	if (of_get_property(parent, "ranges", &rlen))
+>>>> +		return 0;
+>>>> +
+>>>> +	*presult = of_read_number(addr + 1, na - 1);
+>>>> +	/* this fixup is only valid for specific I/O range. */
+>>>> +	return addr_is_indirect_io(*presult);
+>>>> +}
+>>>> +
+>>>>  static int of_translate_one(struct device_node *parent, struct
+>>> of_bus *bus,
+>>>>  			    struct of_bus *pbus, __be32 *addr,
+>>>>  			    int na, int ns, int pna, const char *rprop)
+>>>> @@ -595,6 +639,15 @@ static u64 __of_translate_address(struct
+>>> device_node *dev,
+>>>>  			result = of_read_number(addr, na);
+>>>>  			break;
+>>>>  		}
+>>>> +		/*
+>>>> +		 * For indirectIO device which has no ranges property, get
+>>>> +		 * the address from reg directly.
+>>>> +		 */
+>>>> +		if (of_get_isa_indirect_io(dev, bus, addr, na, &result)) {
+>>>> +			pr_debug("isa indirectIO matched(%s)..addr =
+>>> 0x%llx\n",
+>>>> +				of_node_full_name(dev), result);
+>>>> +			break;
+>>>> +		}
+>>>>
+>>>>  		/* Get new parent bus and counts */
+>>>>  		pbus = of_match_bus(parent);
+>>>> @@ -688,8 +741,9 @@ static int __of_address_to_resource(struct
+>>> device_node *dev,
+>>>>  	if (taddr == OF_BAD_ADDR)
+>>>>  		return -EINVAL;
+>>>>  	memset(r, 0, sizeof(struct resource));
+>>>> -	if (flags & IORESOURCE_IO) {
+>>>> +	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
+>>>>  		unsigned long port;
+>>>> +
+>>>>  		port = pci_address_to_pio(taddr);
+>>>>  		if (port == (unsigned long)-1)
+>>>>  			return -EINVAL;
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index ba34907..1a08511 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -3263,7 +3263,7 @@ int __weak pci_register_io_range(phys_addr_t
+>>> addr, resource_size_t size)
+>>>>
+>>>>  #ifdef PCI_IOBASE
+>>>>  	struct io_range *range;
+>>>> -	resource_size_t allocated_size = 0;
+>>>> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+>>>>
+>>>>  	/* check if the range hasn't been previously recorded */
+>>>>  	spin_lock(&io_range_lock);
+>>>> @@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned long
+>>> pio)
+>>>>
+>>>>  #ifdef PCI_IOBASE
+>>>>  	struct io_range *range;
+>>>> -	resource_size_t allocated_size = 0;
+>>>> +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
+>>>
+>>> Have you checked that pci_pio_to_address still returns valid values
+>>> after this? I know that
+>>> you are trying to take into account PCIBIOS_MIN_IO limit when
+>>> allocating reserving the IO ranges,
+>>> but the values added in the io_range_list are still starting from zero,
+>>> no from PCIBIOS_MIN_IO,
+>>
+>> I think you're wrong here as in pci_address_to_pio we have:
+>> +	resource_size_t offset = PCIBIOS_MIN_IO;
+>>
+>> This should be enough to guarantee that the PIOs start at
+>> PCIBIOS_MIN_IO...right?
 > 
-> It would clearly be a rather invasive change, but the
-> end-result isn't necessarily more complex than what we
-> have today, as we'd kill off the crazy pci_pio_to_address()
-> and pci_address_to_pio() hacks in address translation.
-
-I have to look better into this...can you provide me a reference
-to the Bjorn argument in favor of this approach?
-
+> I don't think you can guarantee that the pio value that gets passed into
+> pci_pio_to_address() always comes from a previously returned value by
+> pci_address_to_pio(). Maybe you can add a check in pci_pio_to_address()
 > 
-> > To be honest with you I would keep things simple for this
-> > LPC and introduce more complex reworks later if more devices
-> > need to be introduced.
-> >
-> > What if we stick on a single domain now where we introduce a
-> > reserved threshold for the IO space (say INDIRECT_MAX_IO).
+> 	if (pio < PCIBIOS_MIN_IO)
+> 		return address;
 > 
-> I said having a single domain is fine, but I still don't
-> like the idea of reserving low port numbers for this hack,
-> it would mean that the numbers change for everyone else.
-
-I don't get this much...I/O tokens that are passed to the I/O
-accessors are not fixed anyway and they vary depending on the order
-of adding ranges to io_range_list...so I don't see a big issue
-with this...
-
+> to avoid adding more checks in the list_for_each_entry() loop.
 > 
-> > We define INDIRECT_MAX_IO as 0 in "include/linux/extio.h" and
-> > we define INDIRECT_MAX_IO as 0x1000 in "arch/arm64/include/asm/io.h"
-> >
-> > So effectively this threshold can change according to the
-> > architecture and so far we only define it for ARM64 as we need
-> > it for ARM64...
+
+I will register some ranges to the list and test it later.
+
+But from my understanding, pci_pio_to_address() should can return the right
+original physical address.
+
+
+According to the algorithm, the output PIO ranges are consecutive， just like this:
+
+
+					input pio of pci_pio_to_address()
+						|
+						V
+|----------------|--------------------------|------|-----------|
+					    ^
+					    |
+					allocated_size is here
+
+
+The change of this patch just make the start PIO from ZERO to PCIBIOS_MIN_IO.
+
+in pci_pio_to_address(), for one input pio which fall into any PIO segment, the
+return address will be:
+
+address = range->start + pio - allocated_size;
+
+Since allocated_size is the total range size of all IO ranges before the one
+where pio belong, then (pio - allocated_size) is the offset to the range start,
+So....
+
+
+Thanks!
+Zhichang
+
+> Best regards,
+> Liviu
 > 
-> I liked the idea of having it done in asm-generic/io.h (in an ifdef)
-> and lib/*.c under an as someone suggested earlier. There is nothing
-> ARM64 specific in the implementation.
-
-Correct and ideally if the INDIRECT_MAX_IO approach was taken then we
-should define INDIRECT_MAX_IO for any architecture that can support the
-special LPC devices. We would define it for ARM64 just because LPC
-is used in our case under ARM64; the idea was to leave other architecture
-to define their own ones as needed...but probably this is wrong and
-we should have defined this for all the architectures.
-
-Many thanks
-
-Gab
-
+>>
+>>
+>>> so the calculation of the address in this function could return
+>>> negative values casted to pci_addr_t.
+>>>
+>>> Maybe you want to adjust the range->start value in
+>>> pci_register_io_range() as well to have it
+>>> offset by PCIBIOS_MIN_IO as well.
+>>>
+>>> Best regards,
+>>> Liviu
+>>>
+>>>>
+>>>>  	if (pio > IO_SPACE_LIMIT)
+>>>>  		return address;
+>>>> @@ -3335,7 +3335,7 @@ unsigned long __weak
+>>> pci_address_to_pio(phys_addr_t address)
+>>>>  {
+>>>>  #ifdef PCI_IOBASE
+>>>>  	struct io_range *res;
+>>>> -	resource_size_t offset = 0;
+>>>> +	resource_size_t offset = PCIBIOS_MIN_IO;
+>>>>  	unsigned long addr = -1;
+>>>>
+>>>>  	spin_lock(&io_range_lock);
+>>>> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+>>>> index 3786473..deec469 100644
+>>>> --- a/include/linux/of_address.h
+>>>> +++ b/include/linux/of_address.h
+>>>> @@ -24,6 +24,23 @@ struct of_pci_range {
+>>>>  #define for_each_of_pci_range(parser, range) \
+>>>>  	for (; of_pci_range_parser_one(parser, range);)
+>>>>
+>>>> +
+>>>> +#ifndef indirect_io_enabled
+>>>> +#define indirect_io_enabled indirect_io_enabled
+>>>> +static inline bool indirect_io_enabled(void)
+>>>> +{
+>>>> +	return false;
+>>>> +}
+>>>> +#endif
+>>>> +
+>>>> +#ifndef addr_is_indirect_io
+>>>> +#define addr_is_indirect_io addr_is_indirect_io
+>>>> +static inline int addr_is_indirect_io(u64 taddr)
+>>>> +{
+>>>> +	return 0;
+>>>> +}
+>>>> +#endif
+>>>> +
+>>>>  /* Translate a DMA address from device space to CPU space */
+>>>>  extern u64 of_translate_dma_address(struct device_node *dev,
+>>>>  				    const __be32 *in_addr);
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index 0e49f70..7f6bbb6 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -2130,4 +2130,12 @@ static inline bool pci_ari_enabled(struct
+>>> pci_bus *bus)
+>>>>  /* provide the legacy pci_dma_* API */
+>>>>  #include <linux/pci-dma-compat.h>
+>>>>
+>>>> +/*
+>>>> + * define this macro here to refrain from compilation error for some
+>>>> + * platforms. Please keep this macro at the end of this header file.
+>>>> + */
+>>>> +#ifndef PCIBIOS_MIN_IO
+>>>> +#define PCIBIOS_MIN_IO		0
+>>>> +#endif
+>>>> +
+>>>>  #endif /* LINUX_PCI_H */
+>>>> --
+>>>> 1.9.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> 	Arnd
+
