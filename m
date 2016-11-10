@@ -1,187 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50015 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933081AbcKGSrq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christogh Hellwig <hch@lst.de>
-Subject: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in irq_create_affinity_masks()
-Date: Mon,  7 Nov 2016 10:47:38 -0800
-Message-Id: <1478544462-9549-4-git-send-email-hch@lst.de>
-In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
+Received: from tex.lwn.net ([70.33.254.29]:49845 "EHLO vena.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933374AbcKJOYj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 09:24:39 -0500
+Date: Thu, 10 Nov 2016 07:24:22 -0700
+From: Jonathan Corbet <corbet@lwn.net>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Amir Levy <amir.jer.levy@intel.com>, andreas.noever@gmail.com,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        linux-doc@vger.kernel.org, mario_limonciello@dell.com,
+        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+        tomas.winkler@intel.com, xiong.y.zhang@intel.com
+Subject: Re: [PATCH v9 7/8] thunderbolt: Networking doc
+Message-ID: <20161110072422.484c89ad@lwn.net>
+In-Reply-To: <20161109160002.GA9111@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+        <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
+        <20161109160002.GA9111@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christogh Hellwig <hch@lst.de>
+On Wed, 9 Nov 2016 17:00:02 +0100
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-Only calculate the affinity for the main I/O vectors, and skip the
-pre or post vectors specified by struct irq_affinity.
+> >  Documentation/00-INDEX                   |   2 +
+> >  Documentation/thunderbolt/networking.txt | 132 +++++++++++++++++++++++++++++++  
+> 
+> Note, new files should be in .rst format, and live in the new
+> subdirectory for them (somewhere in Documentation, don't know off the
+> top of my head...)
 
-Also remove the irq_affinity cpumask argument that has never been used.
-If we ever need it in the future we can pass it through struct
-irq_affinity.
+This one's almost in RST already, happily.
 
-Signed-off-by: Christogh Hellwig <hch@lst.de>
----
- drivers/pci/msi.c         |  4 ++--
- include/linux/interrupt.h |  4 ++--
- kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
- 3 files changed, 29 insertions(+), 25 deletions(-)
+We haven't really figured out a hierarchy for device-specific docs like
+this yet; I should get on that, I guess.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c58d3c2..1761b8a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -558,7 +558,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
- 	u16 control;
- 
- 	if (affinity) {
--		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-+		masks = irq_create_affinity_masks(nvec, NULL);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -697,7 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 	int ret, i;
- 
- 	if (affinity) {
--		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-+		masks = irq_create_affinity_masks(nvec, NULL);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 092adfb..bca8f1c 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -290,7 +290,7 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
- extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
--struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
-+struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
- int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
- 
- #else /* CONFIG_SMP */
-@@ -325,7 +325,7 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
- }
- 
- static inline struct cpumask *
--irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
-+irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
- {
- 	return NULL;
- }
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 8d92597..17360bd 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -51,16 +51,16 @@ static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
- 
- /**
-  * irq_create_affinity_masks - Create affinity masks for multiqueue spreading
-- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
-- *			is used
-- * @nvecs:		The number of vectors
-+ * @nvecs:	The total number of vectors
-+ * @affd:	Description of the affinity requirements
-  *
-  * Returns the masks pointer or NULL if allocation failed.
-  */
--struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
--					  int nvec)
-+struct cpumask *
-+irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
- {
--	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
-+	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
-+	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
- 	nodemask_t nodemsk = NODE_MASK_NONE;
- 	struct cpumask *masks;
- 	cpumask_var_t nmsk;
-@@ -68,46 +68,46 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
- 		return NULL;
- 
--	masks = kzalloc(nvec * sizeof(*masks), GFP_KERNEL);
-+	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
- 	if (!masks)
- 		goto out;
- 
-+	/* Fill out vectors at the beginning that don't need affinity */
-+	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
-+		cpumask_copy(masks + curvec, cpu_possible_mask);
-+
- 	/* Stabilize the cpumasks */
- 	get_online_cpus();
--	/* If the supplied affinity mask is NULL, use cpu online mask */
--	if (!affinity)
--		affinity = cpu_online_mask;
--
--	nodes = get_nodes_in_cpumask(affinity, &nodemsk);
-+	nodes = get_nodes_in_cpumask(cpu_online_mask, &nodemsk);
- 
- 	/*
- 	 * If the number of nodes in the mask is less than or equal the
- 	 * number of vectors we just spread the vectors across the nodes.
- 	 */
--	if (nvec <= nodes) {
-+	if (affv <= nodes) {
- 		for_each_node_mask(n, nodemsk) {
- 			cpumask_copy(masks + curvec, cpumask_of_node(n));
--			if (++curvec == nvec)
-+			if (++curvec == affv)
- 				break;
- 		}
--		goto outonl;
-+		goto done;
- 	}
- 
- 	/* Spread the vectors per node */
--	vecs_per_node = nvec / nodes;
-+	vecs_per_node = affv / nodes;
- 	/* Account for rounding errors */
--	extra_vecs = nvec - (nodes * vecs_per_node);
-+	extra_vecs = affv - (nodes * vecs_per_node);
- 
- 	for_each_node_mask(n, nodemsk) {
- 		int ncpus, v, vecs_to_assign = vecs_per_node;
- 
- 		/* Get the cpus on this node which are in the mask */
--		cpumask_and(nmsk, affinity, cpumask_of_node(n));
-+		cpumask_and(nmsk, cpu_online_mask, cpumask_of_node(n));
- 
- 		/* Calculate the number of cpus per vector */
- 		ncpus = cpumask_weight(nmsk);
- 
--		for (v = 0; curvec < nvec && v < vecs_to_assign; curvec++, v++) {
-+		for (v = 0; curvec < affv && v < vecs_to_assign; curvec++, v++) {
- 			cpus_per_vec = ncpus / vecs_to_assign;
- 
- 			/* Account for extra vectors to compensate rounding errors */
-@@ -119,12 +119,16 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- 			irq_spread_init_one(masks + curvec, nmsk, cpus_per_vec);
- 		}
- 
--		if (curvec >= nvec)
-+		if (curvec >= affv)
- 			break;
- 	}
- 
--outonl:
-+done:
- 	put_online_cpus();
-+
-+	/* Fill out vectors at the end that don't need affinity */
-+	for (; curvec < nvecs; curvec++)
-+		cpumask_copy(masks + curvec, cpu_possible_mask);
- out:
- 	free_cpumask_var(nmsk);
- 	return masks;
--- 
-2.1.4
+I do believe that we should separate documents for end users from those
+aimed at kernel developers; those are two very different audiences
+looking for different kinds of information.
 
+Thanks,
+
+jon
