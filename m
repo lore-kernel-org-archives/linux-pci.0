@@ -1,136 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:35332 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932295AbcKJMhL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 07:37:11 -0500
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-To: Arnd Bergmann <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <2825537.ADCNsGqGxn@wuerfel> <5824165A.4040303@hisilicon.com>
- <17821285.aIcTyCGn5n@wuerfel>
-CC: "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+Received: from mail.kernel.org ([198.145.29.136]:50478 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935217AbcKJR1w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 12:27:52 -0500
+Date: Thu, 10 Nov 2016 11:27:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
         Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Message-ID: <582469C8.9090609@hisilicon.com>
-Date: Thu, 10 Nov 2016 20:36:24 +0800
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Greg Ungerer <gerg@uclinux.org>,
+        Thierry Reding <treding@nvidia.com>
+Subject: Re: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit
+ config writes
+Message-ID: <20161110172748.GB10384@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <17821285.aIcTyCGn5n@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Arnd,
-
-On 2016/11/10 17:12, Arnd Bergmann wrote:
-> On Thursday, November 10, 2016 2:40:26 PM CET zhichang.yuan wrote:
->> On 2016/11/10 5:34, Arnd Bergmann wrote:
->>> On Wednesday, November 9, 2016 12:10:43 PM CET Gabriele Paoloni wrote:
->>>>> On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
->>>>>> +       /*
->>>>>> +        * The first PCIBIOS_MIN_IO is reserved specifically for
->>>>> indirectIO.
->>>>>> +        * It will separate indirectIO range from pci host bridge to
->>>>>> +        * avoid the possible PIO conflict.
->>>>>> +        * Set the indirectIO range directly here.
->>>>>> +        */
->>>>>> +       lpcdev->io_ops.start = 0;
->>>>>> +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
->>>>>> +       lpcdev->io_ops.devpara = lpcdev;
->>>>>> +       lpcdev->io_ops.pfin = hisilpc_comm_in;
->>>>>> +       lpcdev->io_ops.pfout = hisilpc_comm_out;
->>>>>> +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
->>>>>> +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
->>>>>
->>>>> I have to look at patch 2 in more detail again, after missing a few
->>>>> review
->>>>> rounds. I'm still a bit skeptical about hardcoding a logical I/O port
->>>>> range here, and would hope that we can just go through the same
->>>>> assignment of logical port ranges that we have for PCI buses,
->>>>> decoupling
->>>>> the bus addresses from the linux-internal ones.
->>>>
->>>> The point here is that we want to avoid any conflict/overlap between
->>>> the LPC I/O space and the PCI I/O space. With the assignment above
->>>> we make sure that LPC never interfere with PCI I/O space.
->>>
->>> But we already abstract the PCI I/O space using dynamic registration.
->>> There is no need to hardcode the logical address for ISA, though
->>> I think we can hardcode the bus address to start at zero here.
->>
->> Do you means that we can pick up the maximal I/O address from all children's
->> device resources??
+On Mon, Oct 31, 2016 at 04:39:02PM -0500, Bjorn Helgaas wrote:
+> Hardware that supports only 32-bit config writes is not spec-compliant.
+> For example, if software performs a 16-bit write, we must do a 32-bit read,
+> merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+> the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+> to-clear) bits set, we just inadvertently cleared something we shouldn't
+> have.
 > 
-> The driver should not look at the resources of its children, just
-> register a range of addresses dynamically, as I suggested in an
-> earlier review.
->
-Sorry! I can't catch your idea yet:(
-
-When to register the I/O range? Is it done just after the successfully
-of_translate_address() during the children scanning?
-
-If yes, when a child is scanning, there is no range data in arm64_extio_ops. The
-addr_is_indirect_io() calling in of_get_isa_indirect_io() don't need. All we can
-check is just whether the address to be translated is IO and is under a parent
-device which has no 'ranges' property.
-
+> Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+> similar probe-time warnings from some of the affected host bridge drivers.
 > 
-> Your current version has
-> 
->         if (arm64_extio_ops->pfout)                             \
->                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
->                        addr, value, sizeof(type));             \
-> 
-> Instead, just subtract the start of the range from the logical
-> port number to transform it back into a bus-local port number:
-> 
->         if (arm64_extio_ops->pfout)                             \
->                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
->                        addr - arm64_extio_ops->start, value, sizeof(type)); \
-> 
-I think there is some information needed sync.
-In the old patch-set, we don't bypass the pci_address_to_pio() after
-successfully of_translate_address(). In this way, we don't need to reserve any
-PIO space for our LPC since the logical port are from the same mapping
-algorithm. Based on this way, the port number in the device resource is logical
-one, then we need to subtract the start of the resource to get back the
-bus-local port.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
->From V3, we don't apply the mapping based on pci_address_to_pio(), the
-of_translate_address() return the bus-local port directly and store into
-relevant device resource. So, in the current arm64_extio_ops->pfout(), the
-reverse translation don't need anymore. The input "addr" is bus-local port now.
+Applied with acks from Russell, Shawn, and Thierry to pci/enumeration for
+v4.10.
 
-
-Thanks,
-Zhichang
-
-
-> We know that the ISA/LPC bus can only have up to 65536 ports,
-> so you can register all of those, or possibly limit it further to
-> 1024 or 4096 ports, whichever matches the bus implementation.
+> ---
+>  drivers/pci/access.c             |   17 +++++++++++++++--
+>  drivers/pci/host/pcie-hisi.c     |    2 --
+>  drivers/pci/host/pcie-rockchip.c |    3 ---
+>  3 files changed, 15 insertions(+), 7 deletions(-)
 > 
-> 	Arnd
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d11cdbb..e0cd124 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -142,10 +142,23 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  	if (size == 4) {
+>  		writel(val, addr);
+>  		return PCIBIOS_SUCCESSFUL;
+> -	} else {
+> -		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+>  	}
+>  
+> +	/*
+> +	 * N.B.  In general, hardware that supports only 32-bit writes on
+> +	 * PCI is not spec-compliant.  For example, software may perform a
+> +	 * 16-bit write.  If the hardware only supports 32-bit accesses, we
+> +	 * must do a 32-bit read, merge in the 16 bits we intend to write,
+> +	 * followed by a 32-bit write.  If the 16 bits we *don't* intend to
+> +	 * write happen to have any RW1C (write-one-to-clear) bits set, we
+> +	 * just inadvertently cleared something we shouldn't have.
+> +	 */
+> +
+> +	dev_warn_ratelimited(&bus->dev, "%d-byte config write to %04x:%02x:%02x.%d offset %#x may corrupt adjacent RW1C bits\n",
+> +			     size, pci_domain_nr(bus), bus->number,
+> +			     PCI_SLOT(devfn), PCI_FUNC(devfn), where);
+> +
+> +	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+>  	tmp = readl(addr) & mask;
+>  	tmp |= val << ((where & 0x3) * 8);
+>  	writel(tmp, addr);
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 56154c2..5b5901d 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -194,8 +194,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> -	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
+> -
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index e0b22da..6419d8c 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1187,9 +1187,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		pcie_bus_configure_settings(child);
+>  
+>  	pci_bus_add_devices(bus);
+> -
+> -	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
+> -
+>  	return err;
+>  
+>  err_vpcie:
 > 
-> .
-> 
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
