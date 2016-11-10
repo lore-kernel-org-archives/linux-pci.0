@@ -1,118 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([217.30.184.167]:36624 "EHLO mail.kapsi.fi"
+Received: from mga03.intel.com ([134.134.136.65]:53766 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753112AbcK3SGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Nov 2016 13:06:49 -0500
-Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
-To: Thierry Reding <thierry.reding@gmail.com>
-References: <20161125105718.3866-1-thierry.reding@gmail.com>
- <20161125105718.3866-10-thierry.reding@gmail.com>
- <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
- <20161130174840.GB20246@ulmo.ba.sec>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <13197e02-a83a-c9d8-13fa-7b21f664a12c@kapsi.fi>
-Date: Wed, 30 Nov 2016 20:06:45 +0200
+        id S1754806AbcKJLjZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 06:39:25 -0500
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
+Subject: RE: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Date: Thu, 10 Nov 2016 11:39:19 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <20161109160219.GB9111@kroah.com>
+In-Reply-To: <20161109160219.GB9111@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161130174840.GB20246@ulmo.ba.sec>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/30/2016 07:48 PM, Thierry Reding wrote:
-> On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
->> Testing this series with a Jetson TX1 + r8168e PCI-E card, it /almost/
->> works.. Relevant parts of bootlog:
->>
->> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1 configuration
->> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0, using 4
->> lanes
->> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin change,
->> signature: 00000008
->> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1, using 1
->> lanes
->> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin change,
->> signature: 00000000
->> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
->> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
->> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
->> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down, ignoring
->> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge to bus
->> 0000:00
->> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->> [    3.217343] pci_bus 0000:00: root bus resource [mem
->> 0x13000000-0x1fffffff]
->> [    3.224218] pci_bus 0000:00: root bus resource [mem 0x20000000-0x3fffffff
->> pref]
->> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
->> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]),
->> reconfiguring
->> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
->> 0x13000000-0x130fffff]
->> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem 0x20000000-0x200fffff
->> 64bit pref]
->> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
->> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem 0x20000000-0x20003fff
->> 64bit pref]
->> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem 0x13000000-0x13000fff
->> 64bit]
->> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
->> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
->> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
->> [    3.307666] pci 0000:00:01.0:   bridge window [mem 0x13000000-0x130fffff]
->> [    3.314454] pci 0000:00:01.0:   bridge window [mem 0x20000000-0x200fffff
->> 64bit pref]
->> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host
->> bridge
->> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
->> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
->> interrupt
->> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
->> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
->> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
->> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
->> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
->> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames: 9200 bytes,
->> tx checksumming: ko]
->>
->> then
->>
->> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
->> @0x000000007a484000: EMEM address decode error (EMEM decode error)
->> [    3.717747] r8169 0000:01:00.0 eth0: link down
->
-> Hmm... that's very odd. It seems like for some reason the PCIe
-> controller wants to access memory that's below the DRAM. Do you happen
-> to have the SMMU enabled for PCIe? Can you try adding some debug prints
-> to the networking driver to find out where this address is coming from?
+On Wed, Nov 9 2016, 06:02 PM, Greg KH wrote:
+> On Wed, Nov 09, 2016 at 04:20:00PM +0200, Amir Levy wrote:
+> > This driver enables Thunderbolt Networking on non-Apple platforms
+> > running Linux.
+> >
+> > Thunderbolt Networking provides peer-to-peer connections to transfer
+> > files between computers, perform PC migrations, and/or set up small
+> > workgroups with shared storage.
+> >
+> > This is a virtual connection that emulates an Ethernet adapter that
+> > enables Ethernet networking with the benefit of Thunderbolt superfast
+> > medium capability.
+> >
+> > Thunderbolt Networking enables two hosts and several devices that have
+> > a Thunderbolt controller to be connected together in a linear (Daisy
+> > chain) series from a single port.
+> >
+> > Thunderbolt Networking for Linux is compatible with Thunderbolt
+> > Networking on systems running macOS or Windows and also supports
+> > Thunderbolt generation 2 and 3 controllers.
+> >
+> > Note that all pre-existing Thunderbolt generation 3 features, such as
+> > USB, Display and other Thunderbolt device connectivity will continue
+> > to function exactly as they did prior to enabling Thunderbolt Networking.
+> >
+> > Code and Software Specifications:
+> > This kernel code creates a virtual ethernet device for computer to
+> > computer communication over a Thunderbolt cable.
+> > The new driver is a separate driver to the existing Thunderbolt driver.
+> > It is designed to work on systems running Linux that interface with
+> > Intel Connection Manager (ICM) firmware based Thunderbolt controllers
+> > that support Thunderbolt Networking.
+> > The kernel code operates in coordination with the Thunderbolt user-
+> > space daemon to implement full Thunderbolt networking functionality.
+> >
+> > Hardware Specifications:
+> > Thunderbolt Hardware specs have not yet been published but are used
+> > where necessary for register definitions.
+> >
+> > Acked-by: Andreas Noever <andreas.noever@gmail.com>
+> > Tested-by: Mario Limonciello <mario.limonciello@dell.com>
+> 
+> This whole series is acked and tested by these people?  If so, why did you not
+> include that in each patch?
+> 
 
-SMMU is disabled; I'll try adding debug prints. The behavior certainly 
-looks pretty strange.
+Will add in next patch set.
 
->
->> The card is alive though, the transfer LED is blinking according to incoming
->> traffic, I assume; we can also see that the driver is able to access the hw
->> to some extent. The kernel version is 4.9rc7 with just this series on top.
->> The same board/card also works in U-boot.
->
-> I've tested this on a recent linux-next, so perhaps that's something
-> else to try out. I wouldn't expect v4.9-rc7 to have any issues with a
-> PCI network driver, but who knows.
+> And how about getting some internal-Intel kernel developers to review and
+> sign-off on this code?  Don't make the community do the review when you
+> have access to resources like this.  You have an internal mailing list for this
+> very purpose, use it!
+> 
 
-I did test earlier with -next too but with some random set of patches 
-and config options, but I agree that it's not likely to be the reason. I 
-had some IP stack (UDPv6 warnings IIRC?) and lockdep issues or somesuch 
-with recent -next's so I switched to rc7.
+The review with the internal-Intel kernel developers was done before submitting
+the first patch set.
+Version 9 that we have here isn't so different from Version 0.
 
->
-> Thanks,
-> Thierry
->
+> thanks,
+> 
+> greg k-h
 
-Thanks,
-Mikko.
