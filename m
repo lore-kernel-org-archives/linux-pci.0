@@ -1,145 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([217.30.184.167]:59114 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754166AbcK3Tij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Nov 2016 14:38:39 -0500
-Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
-To: Vidya Sagar <vidyas@nvidia.com>,
-        Thierry Reding <thierry.reding@gmail.com>
-References: <20161125105718.3866-1-thierry.reding@gmail.com>
- <20161125105718.3866-10-thierry.reding@gmail.com>
- <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
- <20161130174840.GB20246@ulmo.ba.sec>
- <13197e02-a83a-c9d8-13fa-7b21f664a12c@kapsi.fi>
- <20161130181409.GA29576@ulmo.ba.sec>
- <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <3e8b2b5b-d779-4b3e-65f9-49ce0dcd796c@kapsi.fi>
-Date: Wed, 30 Nov 2016 21:38:36 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:45542 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755560AbcKJSfp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 13:35:45 -0500
+Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, vikrams@codeaurora.org
+References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
+Date: Thu, 10 Nov 2016 13:35:41 -0500
 MIME-Version: 1.0
-In-Reply-To: <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It would seem that it is 64-capable based on lspci and code in the 
-driver. Looks like the memory that is allocated is coming from below 4G 
-as well.
 
-On 11/30/2016 08:39 PM, Vidya Sagar wrote:
-> Is it possible that, this NIC card's DMA is only 32-bit capable (can be
-> confirmed from lspci -vv output) and since SMMU is disabled, allocated
-> memory's physical address happen to fall beyond 0xFFFF_FFFF region, so,
->>32-bits are stripped off by DMA controller of NIC, resulting in
-> accesses to random addresses?
->
->
-> On Wednesday 30 November 2016 11:44 PM, Thierry Reding wrote:
->> * PGP Signed by an unknown key
->>
->> On Wed, Nov 30, 2016 at 08:06:45PM +0200, Mikko Perttunen wrote:
->>> On 11/30/2016 07:48 PM, Thierry Reding wrote:
->>>> On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
->>>>> Testing this series with a Jetson TX1 + r8168e PCI-E card, it /almost/
->>>>> works.. Relevant parts of bootlog:
->>>>>
->>>>> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1
->>>>> configuration
->>>>> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0,
->>>>> using 4
->>>>> lanes
->>>>> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin
->>>>> change,
->>>>> signature: 00000008
->>>>> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1,
->>>>> using 1
->>>>> lanes
->>>>> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin
->>>>> change,
->>>>> signature: 00000000
->>>>> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down,
->>>>> retrying
->>>>> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down,
->>>>> retrying
->>>>> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down,
->>>>> retrying
->>>>> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down,
->>>>> ignoring
->>>>> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge
->>>>> to bus
->>>>> 0000:00
->>>>> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>>>> [    3.217343] pci_bus 0000:00: root bus resource [mem
->>>>> 0x13000000-0x1fffffff]
->>>>> [    3.224218] pci_bus 0000:00: root bus resource [mem
->>>>> 0x20000000-0x3fffffff
->>>>> pref]
->>>>> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
->>>>> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus
->>>>> 00-00]),
->>>>> reconfiguring
->>>>> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
->>>>> 0x13000000-0x130fffff]
->>>>> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem
->>>>> 0x20000000-0x200fffff
->>>>> 64bit pref]
->>>>> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
->>>>> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem
->>>>> 0x20000000-0x20003fff
->>>>> 64bit pref]
->>>>> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem
->>>>> 0x13000000-0x13000fff
->>>>> 64bit]
->>>>> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
->>>>> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
->>>>> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
->>>>> [    3.307666] pci 0000:00:01.0:   bridge window [mem
->>>>> 0x13000000-0x130fffff]
->>>>> [    3.314454] pci 0000:00:01.0:   bridge window [mem
->>>>> 0x20000000-0x200fffff
->>>>> 64bit pref]
->>>>> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate
->>>>> host
->>>>> bridge
->>>>> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
->>>>> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
->>>>> interrupt
->>>>> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME
->>>>> interrupt
->>>>> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
->>>>> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
->>>>> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
->>>>> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
->>>>> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames:
->>>>> 9200 bytes,
->>>>> tx checksumming: ko]
->>>>>
->>>>> then
->>>>>
->>>>> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
->>>>> @0x000000007a484000: EMEM address decode error (EMEM decode error)
->>>>> [    3.717747] r8169 0000:01:00.0 eth0: link down
->>>> Hmm... that's very odd. It seems like for some reason the PCIe
->>>> controller wants to access memory that's below the DRAM. Do you happen
->>>> to have the SMMU enabled for PCIe? Can you try adding some debug prints
->>>> to the networking driver to find out where this address is coming from?
->>> SMMU is disabled; I'll try adding debug prints. The behavior
->>> certainly looks
->>> pretty strange.
->> Maybe you can also find out if at any point in the above the driver is
->> actually accessing the I/O ports. I don't think we've ever tested that
->> particular part very much.
->>
->> I seem to be using a very similar card to yours, which makes it all the
->> more surprising that it isn't working for you.
->>
->> Thierry
->>
->> * Unknown Key
->> * 0x7F3EB3A1
->
+On 9/24/2016 10:10 PM, Sinan Kaya wrote:
+> Each PCIe device can issue up to 32 transactions at a time by default.
+> Each transaction is tracked by a tag number on the bus. 32 outstanding
+> transactions is not enough for some performance critical applications
+> especially when a lot of small sized frames are transmitted.
+> 
+> Extended tags support increases this number to 256. Devices not
+> supporting extended tags tie-off this field to 0. According to ECN, it
+> is safe to enable this feature for all PCIe endpoints.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/probe.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 93f280d..2424f38 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1505,12 +1505,19 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>  	 */
+>  }
+>  
+> +static int pci_configure_extended_tags(struct pci_dev *dev)
+> +{
+
+I should have checked the capability here before trying to enable it. 
+I'll post a follow up patch on this. 
+
+Is there any other feedback?
+
+
+> +	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+> +					 PCI_EXP_DEVCTL_EXT_TAG);
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+>  	int ret;
+>  
+>  	pci_configure_mps(dev);
+> +	pci_configure_extended_tags(dev);
+>  
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
