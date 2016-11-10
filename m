@@ -1,73 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:34876 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:46536 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933194AbcKNQl3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:41:29 -0500
-Date: Mon, 14 Nov 2016 16:42:28 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161114164228.GA31339@red-moon>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
+        id S1755100AbcKJLXE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 06:23:04 -0500
+Date: Thu, 10 Nov 2016 11:22:24 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        bhelgaas@google.com, olof@lixom.net, arnd@arndb.de,
+        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+Message-ID: <20161110112224.GB4418@leverpostej>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108120323.GC15297@leverpostej>
+ <1478647002.7430.69.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161114155222.GZ2078@8bytes.org>
+In-Reply-To: <1478647002.7430.69.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 14, 2016 at 04:52:23PM +0100, Joerg Roedel wrote:
-> On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
-> > If we've already made the decision to move away from bus ops, I don't
-> > see that it makes sense to deliberately introduce new dependencies on
-> > them. Besides, as it stands, this patch literally implements "tell the
-> > iommu-core which hardware-iommus exist in the system and a seperate
-> > iommu_ops ptr for each of them" straight off.
+On Wed, Nov 09, 2016 at 10:16:42AM +1100, Benjamin Herrenschmidt wrote:
+> On Tue, 2016-11-08 at 12:03 +0000, Mark Rutland wrote:
+> > On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+> > > 
+> > > For arm64, there is no I/O space as other architectural platforms, such as
+> > > X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+> > > such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+> > > known port addresses are used to control the corresponding target devices, for
+> > > example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+> > > normal MMIO mode in using.
+> > 
+> > This has nothing to do with arm64. Hardware with this kind of indirect
+> > bus access could be integrated with a variety of CPU architectures. It
+> > simply hasn't been, yet.
 > 
-> Not sure which code you are looking at, but as I see it we have only
-> per-device iommu-ops now (with this patch). That is different from
-> having core-visible hardware-iommu instances where devices could link
-> to.
+> On some ppc's we also use similar indirect access methods for IOs. We
+> have a generic infrastructure for re-routing some memory or IO regions
+> to hooks.
+> 
+> On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
+> firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
 
-This patch enables the IOMMU-OF-node<->device look-up on non-OF (ie
-ACPI) systems by "converting" the of_node to a generic fwnode_handle,
-that's all it does (and move the related look-up code from
-drivers/iommu/of_iommu.c to drivers/iommu/iommu.c so that it does
-not depend on OF_IOMMU any longer).
+Just to check, do you hook that in your inb/outb/etc?
 
-> Also the rest of iommu-core code still makes use of the per-bus ops. The
-> per-device ops are only used for the of_xlate fn-ptr.
+Generally, it would seem nicer if we could have higher-level
+isa_{inb,outb,whatever} accessors that we could hook separately from
+other IO.
 
-I can put this patch on the backburner and retrieve the iommu_ops
-through the dev->bus path in the IORT xlate function (iort_iommu_xlate()
-introduced in the last patch), the change is trivial and should work
-just fine but it deserves a v8 to give everyone a chance to test it.
-
-We would end-up handling the device->iommu_ops look-up differently in DT
-and ACPI for streamid translations though, I am not sure I see a reason
-why.
+We don't necessarily have to move all ISA drivers over to that if we had
+a separate symbol for that interface.
 
 Thanks,
-Lorenzo
+Mark.
