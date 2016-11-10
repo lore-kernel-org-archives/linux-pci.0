@@ -1,74 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35878 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754329AbcK2EOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:14:01 -0500
-Subject: [PATCH v4 0/7] Disable VF's memory space on updating IOV BARs
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:13:41 -0600
-Message-ID: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 10 Nov 2016 11:05:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161110110529.GB20209@red-moon>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <c3136fae-144c-5949-3933-671b783671c8@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <c3136fae-144c-5949-3933-671b783671c8@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+ Marc Zyngier <marc.zyngier@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
+ iommu@lists.linux-foundation.org, Dennis Chen <dennis.chen@arm.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Tomasz Nowicki <tn@semihalf.com>,
+ Nate Watterson <nwatters@codeaurora.org>,
+ Prem Mallappa <prem.mallappa@broadcom.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a v4 of Gavin's series for handling VF BAR updates.  The
-important piece is the first patch ("PCI: Do any VF BAR updates before
-enabling the BARs").  That makes sure that if we update VF BARs, we do
-it before enabling the VFs, and that is unchanged from v3.
+On Wed, Nov 09, 2016 at 02:40:08PM +0000, Robin Murphy wrote:
 
-The second patch in Gavin's series ("PCI: Disable VF's memory space on
-updating IOV BAR in pci_update_resource()") temporarily disabled VF
-memory space during an update.  Since the first patch does the update
-before enabling VFs, this case shouldn't happen in practice.
+[...]
 
-But even if we want to update a VF BAR while VF memory space is
-enabled, I think temporarily disabling it is wrong.  So I replaced
-the second patch with a few patches that make that such an update
-fail.
+> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +			  const struct iommu_ops *ops)
+> > +{
+> > +	struct iommu_fwentry *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> > +
+> > +	if (WARN_ON(!iommu))
+> > +		return;
+> > +
+> > +	if (is_of_node(fwnode))
+> 
+> Nit: this check is actually redundant, since to_of_node() already does
+> the right thing and of_node_get() is NULL-safe - iommu_fwspec_init()
+> already works that way. On the other hand, though, it is perhaps more
+> intuitive to see it explicitly, and since to_of_node() is inline it
+> ought to result in the same object code (I've not checked, though).
 
-Please comment.  These are on my pci/virtualization branch.
+I can easily fold this change in the final code and I think we
+should keep this consistent so I am happy to change my code and
+make the is_of_node() check implicit.
 
-Changelog
-=========
-v4:
-  * Don't disable VF's memory space when IOV BARs are updated; fail the
-    update instead. 
-  * Split IOV BAR updates from standard BAR updates so IOV updates can go
-    in pci/iov.c.
-  * Remove pci_resource_bar() and pci_iov_resource_bar() (the relevant
-    code is simpler when inlined into the callers).
-  * Cleanup IORESOURCE_ROM_ENABLE usage.
-  * Add comments about why ROMs are updated differently.
-v3:
-  * Disable VF's memory space when IOV BARs are updated in
-    pcibios_sriov_enable().
-v2:
-  * Added one patch calling pcibios_sriov_enable() before the VF
-    and VF BARs are enabled.
+> Either way:
+> 
+> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
----
+Thank you !
+Lorenzo
 
-Bjorn Helgaas (6):
-      PCI: Ignore BAR updates on virtual functions
-      PCI: Separate VF BAR updates from standard BAR updates
-      PCI: Don't update VF BARs while VF memory space is enabled
-      PCI: Remove pci_resource_bar() and pci_iov_resource_bar()
-      PCI: Decouple IORESOURCE_ROM_ENABLE and PCI_ROM_ADDRESS_ENABLE
-      PCI: Add comments about ROM BAR updating
+> > +		of_node_get(to_of_node(fwnode));
+> > +
+> > +	INIT_LIST_HEAD(&iommu->list);
+> > +	iommu->fwnode = fwnode;
+> > +	iommu->ops = ops;
+> > +	spin_lock(&iommu_fwentry_lock);
+> > +	list_add_tail(&iommu->list, &iommu_fwentry_list);
+> > +	spin_unlock(&iommu_fwentry_lock);
+> > +}
+> > +
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> > +{
+> > +	struct iommu_fwentry *node;
+> > +	const struct iommu_ops *ops = NULL;
+> > +
+> > +	spin_lock(&iommu_fwentry_lock);
+> > +	list_for_each_entry(node, &iommu_fwentry_list, list)
+> > +		if (node->fwnode == fwnode) {
+> > +			ops = node->ops;
+> > +			break;
+> > +		}
+> > +	spin_unlock(&iommu_fwentry_lock);
+> > +	return ops;
+> > +}
+> > +
+> >  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+> >  		      const struct iommu_ops *ops)
+> >  {
+> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> > index 5b82862..0f57ddc 100644
+> > --- a/drivers/iommu/of_iommu.c
+> > +++ b/drivers/iommu/of_iommu.c
+> > @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_get_dma_window);
+> >  
+> > -struct of_iommu_node {
+> > -	struct list_head list;
+> > -	struct device_node *np;
+> > -	const struct iommu_ops *ops;
+> > -};
+> > -static LIST_HEAD(of_iommu_list);
+> > -static DEFINE_SPINLOCK(of_iommu_lock);
+> > -
+> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+> > -{
+> > -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> > -
+> > -	if (WARN_ON(!iommu))
+> > -		return;
+> > -
+> > -	of_node_get(np);
+> > -	INIT_LIST_HEAD(&iommu->list);
+> > -	iommu->np = np;
+> > -	iommu->ops = ops;
+> > -	spin_lock(&of_iommu_lock);
+> > -	list_add_tail(&iommu->list, &of_iommu_list);
+> > -	spin_unlock(&of_iommu_lock);
+> > -}
+> > -
+> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> > -{
+> > -	struct of_iommu_node *node;
+> > -	const struct iommu_ops *ops = NULL;
+> > -
+> > -	spin_lock(&of_iommu_lock);
+> > -	list_for_each_entry(node, &of_iommu_list, list)
+> > -		if (node->np == np) {
+> > -			ops = node->ops;
+> > -			break;
+> > -		}
+> > -	spin_unlock(&of_iommu_lock);
+> > -	return ops;
+> > -}
+> > -
+> >  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> >  {
+> >  	struct of_phandle_args *iommu_spec = data;
+> > diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> > index 436dc21..15d5478 100644
+> > --- a/include/linux/iommu.h
+> > +++ b/include/linux/iommu.h
+> > @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+> >  		      const struct iommu_ops *ops);
+> >  void iommu_fwspec_free(struct device *dev);
+> >  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +			  const struct iommu_ops *ops);
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
+> >  
+> >  #else /* CONFIG_IOMMU_API */
+> >  
+> > @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+> >  	return -ENODEV;
+> >  }
+> >  
+> > +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
+> > +					const struct iommu_ops *ops)
+> > +{
+> > +}
+> > +
+> > +static inline
+> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
+> > +{
+> > +	return NULL;
+> > +}
+> > +
+> >  #endif /* CONFIG_IOMMU_API */
+> >  
+> >  #endif /* __LINUX_IOMMU_H */
+> > diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> > index e80b9c7..7681007 100644
+> > --- a/include/linux/of_iommu.h
+> > +++ b/include/linux/of_iommu.h
+> > @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+> >  
+> >  #endif	/* CONFIG_OF_IOMMU */
+> >  
+> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> > +static inline void of_iommu_set_ops(struct device_node *np,
+> > +				    const struct iommu_ops *ops)
+> > +{
+> > +	fwnode_iommu_set_ops(&np->fwnode, ops);
+> > +}
+> > +
+> > +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> > +{
+> > +	return fwnode_iommu_get_ops(&np->fwnode);
+> > +}
+> >  
+> >  extern struct of_device_id __iommu_of_table;
+> >  
+> > 
+> 
 
-Gavin Shan (1):
-      PCI: Do any VF BAR updates before enabling the BARs
-
-
- drivers/pci/iov.c       |   69 +++++++++++++++++++++++++++++++++++++----------
- drivers/pci/pci.c       |   34 -----------------------
- drivers/pci/pci.h       |    7 +----
- drivers/pci/probe.c     |    3 +-
- drivers/pci/rom.c       |    5 +++
- drivers/pci/setup-res.c |   37 ++++++++++++++++++-------
- 6 files changed, 88 insertions(+), 67 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
