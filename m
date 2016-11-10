@@ -1,125 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:57005 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965919AbcKOIAi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 03:00:38 -0500
-From: Noa Osherovich <noaos@mellanox.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
-        gwshan@linux.vnet.ibm.com, noaos@mellanox.com
-Subject: [PATCH v1 3/3] PCI: Add checks to mellanox_check_broken_intx_masking
-Date: Tue, 15 Nov 2016 10:00:00 +0200
-Message-Id: <1479196800-32191-4-git-send-email-noaos@mellanox.com>
-In-Reply-To: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
-References: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+To: Arnd Bergmann <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1555494.4IFvGxvsfe@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
+ <2825537.ADCNsGqGxn@wuerfel>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <5824165A.4040303@hisilicon.com>
+Date: Thu, 10 Nov 2016 14:40:26 +0800
+MIME-Version: 1.0
+In-Reply-To: <2825537.ADCNsGqGxn@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mellanox devices were marked as having INTx masking ability broken.
-As a result, the VFIO driver fails to start when more than one device
-function is passed-through to a VM if both have the same INTx pin.
+Hi, Arnd,
 
-Prior to Connect-IB, Mellanox devices exposed to the operating system
-one PCI function per all ports.
-Starting from Connect-IB, the devices are function-per-port. When
-passing the second function to a VM, VFIO will fail to start.
+On 2016/11/10 5:34, Arnd Bergmann wrote:
+> On Wednesday, November 9, 2016 12:10:43 PM CET Gabriele Paoloni wrote:
+>>> On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
+>>>> +       /*
+>>>> +        * The first PCIBIOS_MIN_IO is reserved specifically for
+>>> indirectIO.
+>>>> +        * It will separate indirectIO range from pci host bridge to
+>>>> +        * avoid the possible PIO conflict.
+>>>> +        * Set the indirectIO range directly here.
+>>>> +        */
+>>>> +       lpcdev->io_ops.start = 0;
+>>>> +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
+>>>> +       lpcdev->io_ops.devpara = lpcdev;
+>>>> +       lpcdev->io_ops.pfin = hisilpc_comm_in;
+>>>> +       lpcdev->io_ops.pfout = hisilpc_comm_out;
+>>>> +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
+>>>> +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
+>>>
+>>> I have to look at patch 2 in more detail again, after missing a few
+>>> review
+>>> rounds. I'm still a bit skeptical about hardcoding a logical I/O port
+>>> range here, and would hope that we can just go through the same
+>>> assignment of logical port ranges that we have for PCI buses,
+>>> decoupling
+>>> the bus addresses from the linux-internal ones.
+>>
+>> The point here is that we want to avoid any conflict/overlap between
+>> the LPC I/O space and the PCI I/O space. With the assignment above
+>> we make sure that LPC never interfere with PCI I/O space.
+> 
+> But we already abstract the PCI I/O space using dynamic registration.
+> There is no need to hardcode the logical address for ISA, though
+> I think we can hardcode the bus address to start at zero here.
 
-Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of
-Mellanox devices marked as having broken INTx masking:
+Do you means that we can pick up the maximal I/O address from all children's
+device resources??
 
-- ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
-  masking is supported, we unmark the broken INTx masking.
-- Connect-IB does not support INTx currently so will not cause any
-  problem.
+Thanks,
+Zhichang
 
-Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/quirks.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 55 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 228a4e8a8aeb..112a5fcad2f5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3192,13 +3192,25 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
- 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
- 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
- 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
--	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
--	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
--	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
- };
- 
-+#define CONNECTX_4_CURR_MAX_MINOR 99
-+#define CONNECTX_4_INTX_SUPPORT_MINOR 14
-+
-+/*
-+ * Checking ConnectX-4/LX FW version to see if it supports legacy interrupts.
-+ * If so, don't mark it as broken.
-+ * FW minor > 99 means older FW version format and no INTx masking support.
-+ * FW minor < 14 means new FW version format and no INTx masking support.
-+ */
- static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
- {
-+	__be32 __iomem *fw_ver;
-+	u16 fw_major;
-+	u16 fw_minor;
-+	u16 fw_subminor;
-+	u32 fw_maj_min;
-+	u32 fw_sub_min;
- 	int i;
- 
- 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
-@@ -3207,6 +3219,46 @@ static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
- 			return;
- 		}
- 	}
-+
-+	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
-+	 * support so shouldn't be checked further
-+	 */
-+	if (pdev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
-+		return;
-+
-+	if (pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
-+	    pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX)
-+		return;
-+
-+	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
-+	if (pci_enable_device_mem(pdev)) {
-+		dev_warn(&pdev->dev, "Can't enable device memory\n");
-+		return;
-+	}
-+
-+	/* Convert from PCI bus to resource space. */
-+	fw_ver = ioremap(pci_resource_start(pdev, 0), 4);
-+	if (!fw_ver) {
-+		dev_warn(&pdev->dev, "Can't map ConnectX-4 initialization segment\n");
-+		return;
-+	}
-+
-+	/* Reading from resource space should be 32b aligned */
-+	fw_maj_min = ioread32be(fw_ver);
-+	fw_sub_min = ioread32be(fw_ver + 1);
-+	fw_major = fw_maj_min & 0xffff;
-+	fw_minor = fw_maj_min >> 16;
-+	fw_subminor = fw_sub_min & 0xffff;
-+	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
-+	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR) {
-+		dev_warn(&pdev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
-+			 fw_major, fw_minor, fw_subminor, pdev->device ==
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
-+		pdev->broken_intx_masking = 1;
-+		pci_disable_device(pdev);
-+	}
-+
-+	iounmap(fw_ver);
- }
- 
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
--- 
-1.8.3.1
-
+> 
+> 	Arnd
+> 
+> .
+> 
