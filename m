@@ -1,83 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 14 Nov 2016 15:40:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 13/15] PCI/ASPM: use permission-specific DEVICE_ATTR
- variants
-Message-ID: <20161114214037.GE9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477769829-22230-1-git-send-email-Julia.Lawall@lip6.fr>
- <1477769829-22230-14-git-send-email-Julia.Lawall@lip6.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477769829-22230-14-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:42107 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932302AbcKJVA3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 16:00:29 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCH] pci/vmd: Update maintainers file
+Date: Thu, 10 Nov 2016 16:10:44 -0500
+Message-Id: <1478812244-5519-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 29, 2016 at 09:37:07PM +0200, Julia Lawall wrote:
-> Use DEVICE_ATTR_RW for read-write attributes.  This simplifies the
-> source code, improves readbility, and reduces the chance of
-> inconsistencies.
-> 
-> The semantic patch that makes this change is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @rw@
-> declarer name DEVICE_ATTR;
-> identifier x,x_show,x_store;
-> @@
-> 
-> DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-> 
-> @script:ocaml@
-> x << rw.x;
-> x_show << rw.x_show;
-> x_store << rw.x_store;
-> @@
-> 
-> if not (x^"_show" = x_show && x^"_store" = x_store)
-> then Coccilib.include_match false
-> 
-> @@
-> declarer name DEVICE_ATTR_RW;
-> identifier rw.x,rw.x_show,rw.x_store;
-> @@
-> 
-> - DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-> + DEVICE_ATTR_RW(x);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Updating MAINTAINERS to reflect the new location of the vmd driver.
 
-I applied this to pci/aspm to follow the herd, although it looks
-pretty similar to the ill-fated "Replace numeric parameter like 0444
-with macro" series (http://lwn.net/Articles/696229/).  Maybe this is
-different because everybody except me knows what ATTR_RW means?  To
-me, "0644" contained more information than "_RW" does.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I do certainly like the removal of the "_show" and "_store"
-redundancy.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 906e969..aefa6bf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9318,7 +9318,7 @@ PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
+ M:	Keith Busch <keith.busch@intel.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+-F:	arch/x86/pci/vmd.c
++F:	drivers/pci/host/vmd.c
+ 
+ PCIE DRIVER FOR ST SPEAR13XX
+ M:	Pratyush Anand <pratyush.anand@gmail.com>
+-- 
+2.7.2
 
-> ---
->  drivers/pci/pcie/aspm.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 0ec649d..3b14d9e 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -886,8 +886,8 @@ static ssize_t clk_ctl_store(struct device *dev,
->  	return n;
->  }
->  
-> -static DEVICE_ATTR(link_state, 0644, link_state_show, link_state_store);
-> -static DEVICE_ATTR(clk_ctl, 0644, clk_ctl_show, clk_ctl_store);
-> +static DEVICE_ATTR_RW(link_state);
-> +static DEVICE_ATTR_RW(clk_ctl);
->  
->  static char power_group[] = "power";
->  void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
-> 
