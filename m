@@ -1,107 +1,245 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: arnd@arndb.de,
-	jchandra@broadcom.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	ddaney@caviumnetworks.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jcm@redhat.com,
-	msalter@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V1 2/2] PCI: thunder: Enable ACPI PCI controller for ThunderX pass1.x silicon version
-Date: Tue, 15 Nov 2016 10:14:58 +0100
-Message-Id: <1479201298-25494-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1479201298-25494-1-git-send-email-tn@semihalf.com>
-References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:45243 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754492AbcKJLsD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 06:48:03 -0500
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
+Subject: RE: [PATCH v9 7/8] thunderbolt: Networking doc
+Date: Thu, 10 Nov 2016 11:47:57 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03B677F516@hasmsx107.ger.corp.intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
+ <20161109160002.GA9111@kroah.com>
+In-Reply-To: <20161109160002.GA9111@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ThunderX pass1.x requires to emulate the EA headers for on-chip devices
-hence it has to use custom pci_thunder_ecam_ops for accessing PCI config
-space (pci-thuner-ecam.c). Add new entries to MCFG quirk array where it
-can be applied while probing ACPI based PCI host controller.
+On Wed, Nov 9 2016, 06:00 PM, Greg KH wrote:
+> On Wed, Nov 09, 2016 at 04:20:07PM +0200, Amir Levy wrote:
+> > Adding Thunderbolt(TM) networking documentation.
+> >
+> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> > ---
+> >  Documentation/00-INDEX                   |   2 +
+> >  Documentation/thunderbolt/networking.txt | 132
+> > +++++++++++++++++++++++++++++++
+> 
+> Note, new files should be in .rst format, and live in the new subdirectory for
+> them (somewhere in Documentation, don't know off the top of my head...)
+> 
+> >  2 files changed, 134 insertions(+)
+> >  create mode 100644 Documentation/thunderbolt/networking.txt
+> >
+> > diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX index
+> > 3acc4f1..0239e68 100644
+> > --- a/Documentation/00-INDEX
+> > +++ b/Documentation/00-INDEX
+> > @@ -440,6 +440,8 @@ this_cpu_ops.txt
+> >  	- List rationale behind and the way to use this_cpu operations.
+> >  thermal/
+> >  	- directory with information on managing thermal issues (CPU/temp)
+> > +thunderbolt/
+> > +	- directory with info regarding Thunderbolt.
+> >  trace/
+> >  	- directory with info on tracing technologies within linux
+> > unaligned-memory-access.txt
+> 
+> This change is probably not needed.
+> 
+> > diff --git a/Documentation/thunderbolt/networking.txt
+> > b/Documentation/thunderbolt/networking.txt
+> > new file mode 100644
+> > index 0000000..88d1c12
+> > --- /dev/null
+> > +++ b/Documentation/thunderbolt/networking.txt
+> > @@ -0,0 +1,132 @@
+> > +Intel Thunderbolt(TM) Networking driver
+> > +=======================================
+> > +
+> > +Copyright(c) 2013 - 2016 Intel Corporation.
+> > +
+> > +Contact Information:
+> > +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
+> > +Edited by Amir Levy <amir.jer.levy@intel.com>
+> > +
+> > +Overview
+> > +========
+> > +
+> > +* The Thunderbolt Networking driver enables peer to peer networking
+> > +on non-Apple
+> > +  platforms running Linux.
+> > +
+> > +* The driver creates a virtual Ethernet device that enables computer
+> > +to computer
+> > +  communication over the Thunderbolt cable.
+> > +
+> > +* Using Thunderbolt Networking you can perform high speed file
+> > +transfers between
+> > +  computers, perform PC migrations and/or set up small workgroups
+> > +with shared
+> > +  storage without compromising any other Thunderbolt functionality.
+> > +
+> > +* The driver is located in drivers/thunderbolt/icm.
+> > +
+> > +* This driver will function only on non-Apple platforms with firmware
+> > +based
+> > +  Thunderbolt controllers that support Thunderbolt Networking.
+> > +
+> > +  +----------------+            +----------------+
+> > +  |Host 1          |            |Host 2          |
+> > +  |                |            |                |
+> > +  |   +-------+    |            |    +-------+   |
+> > +  |   |Network|    |            |    |Network|   |
+> > +  |   |Stack  |    |            |    |Stack  |   |
+> > +  |   +-------+    |            |    +-------+   |
+> > +  |       ^        |            |        ^       |
+> > +  |       |        |            |        |       |
+> > +  |       v        |            |        v       |
+> > +  | +-----------+  |            |  +-----------+ |
+> > +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> > +  | |Networking |  |            |  |Networking | |
+> > +  | |Driver     |  |            |  |Driver     | |
+> > +  | +-----------+  |            |  +-----------+ |
+> > +  |       ^        |            |        ^       |
+> > +  |       |        |            |        |       |
+> > +  |       v        |            |        v       |
+> > +  | +-----------+  |            |  +-----------+ |
+> > +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> > +  | |Controller |<-+------------+->|Controller | |
+> > +  | |with ICM   |  |            |  |with ICM   | |
+> > +  | |enabled    |  |            |  |enabled    | |
+> > +  | +-----------+  |            |  +-----------+ |
+> > +  +----------------+            +----------------+
+> > +
+> > +Files
+> > +=====
+> > +
+> > +The following files are located in the drivers/thunderbolt/icm directory:
+> > +
+> > +- icm_nhi.c/h:	These files allow communication with the firmware
+> (Intel
+> > +  Connection Manager) based controller. They also create an interface
+> > +for
+> > +  netlink communication with a user space daemon.
+> > +
+> > +- net.c/net.h:	These files implement the 'eth' interface for the
+> > +  Thunderbolt(TM) Networking.
+> 
+> You don't have to list the files, right?
+> 
+> > +
+> > +Interface to User Space
+> > +=======================
+> > +
+> > +The interface to the user space module is implemented through a Generic
+> Netlink.
+> 
+> Huh?  Not a normal network device?
+> 
+> > +This is the communications protocol between the Thunderbolt driver
+> > +and the user space application.
+> 
+> What userspace application?
+> 
+> > +Note that this interface mediates user space communication with ICM.
+> 
+> What is ICM?
+> 
+> > +(Existing Linux tools can be used to configure the network
+> > +interface.)
+> 
+> Why aren't they sufficient for everything here?
+> 
+> > +
+> > +The Thunderbolt Daemon utilizes this interface to communicate with the
+> driver.
+> 
+> What "Thunderbolt Daemon"?  What is "this"?
+> 
+> > +To be accessed by the user space module, both kernel and user space
+> > +modules have to register with the same GENL_NAME.
+> 
+> What userspace modules?
+> 
+> How do you set GENL_NAME?  What is that?
+> 
+> > +For the purpose of the Thunderbolt Network driver, "thunderbolt" is
+> used.
+> 
+> What do you mean?
+> 
+> > +The registration is done at driver initialization time for all
+> > +instances of the Thunderbolt controllers.
+> 
+> Who does this?
+> 
+> > The communication is carried through pre-defined
+> > +Thunderbolt messages. Each specific message has a callback function
+> > +that is called when the related message is received.
+> 
+> Is this the internal structure of the driver?  If so, why not just put it all in the
+> code itself and build the documentation from it?
+> 
+> > +
+> > +Message Definitions:
+> > +* NHI_CMD_UNSPEC: Not used.
+> > +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to
+> > +open the
+> > +  communication channel.
+> > +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to
+> unsubscribe
+> > +and
+> > +  to close communication channel.
+> > +* NHI_CMD_QUERY_INFORMATION: Request information from the driver
+> such
+> > +as
+> > +  driver version, FW version offset, number of ports in the
+> > +controller
+> > +  and DMA port.
+> > +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
+> > +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
+> > +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as
+> FW
+> > +policy
+> > +  changes or disconnect path.
+> > +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
+> module to
+> > +FW to
+> > +  establish path.
+> > +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered
+> safe mode.
+> > +
+> > +Communication with Intel Connection Manager(ICM) Firmware
+> >
+> +=========================================================
+> > +
+> > +There are several circular buffers in Thunderbolt each using Direct
+> > +Memory Access (DMA).
+> 
+> Again, internal documentation?
+> 
+> Isn't this just a "normal" network device?  Why document any of this in a
+> separate way?  What can a user do with this?  Who is the audience of this
+> file?
+> 
+> still confused,
+> 
+> greg k-h
 
-ThunderX pass1.x is using the same way for accessing off-chip devices
-(so-called PEM) as silicon pass-2.x so we need to add PEM quirk
-entries too.
-
-Quirk is considered for ThunderX silicon pass1.x only which is identified
-via MCFG revision 2.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/pci_mcfg.c             | 15 +++++++++++++++
- drivers/pci/host/pci-thunder-ecam.c |  2 +-
- include/linux/pci-ecam.h            |  3 +++
- 3 files changed, 19 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index e4e2b9b..5e16211 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -76,6 +76,21 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	/* SoC pass2.x */
- 	THUNDER_MCFG_QUIRK(1, 0UL),
- 	THUNDER_MCFG_QUIRK(1, 1UL),
-+
-+	/* SoC pass1.x */
-+	THUNDER_MCFG_QUIRK(2, 0UL),
-+	THUNDER_MCFG_QUIRK(2, 1UL),
-+#endif
-+#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
-+	/* SoC pass1.x */
-+	{ "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
-+	{ "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops },
- #endif
- };
- 
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-index d50a3dc..b6c17e2 100644
---- a/drivers/pci/host/pci-thunder-ecam.c
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -346,7 +346,7 @@ static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return pci_generic_config_write(bus, devfn, where, size, val);
- }
- 
--static struct pci_ecam_ops pci_thunder_ecam_ops = {
-+struct pci_ecam_ops pci_thunder_ecam_ops = {
- 	.bus_shift	= 20,
- 	.pci_ops	= {
- 		.map_bus        = pci_ecam_map_bus,
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 3f2a98f..5a1f291 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,6 +62,9 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
- #ifdef CONFIG_PCI_HOST_THUNDER_PEM
- extern struct pci_ecam_ops pci_thunder_pem_ops;
- #endif
-+#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
-+extern struct pci_ecam_ops pci_thunder_ecam_ops;
-+#endif
- 
- /* ops for buggy ECAM that supports only 32-bit accesses */
- extern struct pci_ecam_ops pci_32b_ops;
--- 
-2.7.4
+This document was one of the suggestions we got from internal-Intel kernel developers.
+If you think it isn't needed, I'll remove it from next patch set.
