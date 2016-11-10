@@ -1,75 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49996 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:48396 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755714AbcKJSjs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 13:39:48 -0500
-Subject: Re: [PATCH V3 1/2] PCI: add CRS support to error handling path
+        with ESMTP id S1752395AbcKJSir (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 13:38:47 -0500
+Subject: Re: [PATCH V2 5/5] PCI: handle CRS returned by device after FLR
 To: linux-pci@vger.kernel.org, timur@codeaurora.org,
         cov@codeaurora.org, alex.williamson@redhat.com,
         vikrams@codeaurora.org
-References: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
- <1475473021-14251-2-git-send-email-okaya@codeaurora.org>
-Cc: Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
+ <1474056395-21843-6-git-send-email-okaya@codeaurora.org>
+Cc: linux-arm-msm@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <695a43f5-68cb-04ee-b4ec-db205e5fd959@codeaurora.org>
-Date: Thu, 10 Nov 2016 13:39:45 -0500
+Message-ID: <f006cd09-f21f-1d3c-d613-0bbca0a2e236@codeaurora.org>
+Date: Thu, 10 Nov 2016 13:38:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <1475473021-14251-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1474056395-21843-6-git-send-email-okaya@codeaurora.org>
 Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/3/2016 1:36 AM, Sinan Kaya wrote:
-> The PCIE spec allows an endpoint device to extend the initialization time
-> beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
-> vendor ID read request.
-> 
-> This basically means "I'm busy now, please call me back later".
-> 
-> There are two moving parts to CRS support from the SW perspective. One part
-> is to determine if CRS is supported or not. The second part is to set the
-> CRS visibility register.
-> 
-> As part of the probe, the Linux kernel sets the above two conditions in
-> pci_enable_crs function. The kernel is also honoring the returned CRS in
-> pci_bus_read_dev_vendor_id function if supported. The function will poll up
-> to specified amount of time while endpoint is returning CRS response.
-> 
-> The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
-> resets.
-> 
-> The hot reset is initiated by starting a secondary bus reset. A bus/device
-> restore follows the reset.  This patch is adding vendor ID read into dev
-> restore function to validate that the device is accessible before writing
-> the register contents. If the device issues CRS, the code might poll up
-> to 60 seconds.
+On 9/16/2016 4:06 PM, Sinan Kaya wrote:
+> An endpoint is allowed to issue CRS following an FLR request to indicate
+> that it is not ready to accept new requests. Changing the polling mechanism
+> in FLR wait function to go read the vendor ID instead of the command/status
+> register. A CRS indication will only be given if the address to be read is
+> vendor ID.
 > 
 > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 > ---
->  drivers/pci/pci.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  drivers/pci/pci.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aab9d51..c8749b9 100644
+> index e913467..1def11e 100644
 > --- a/drivers/pci/pci.c
 > +++ b/drivers/pci/pci.c
-> @@ -4020,6 +4020,12 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
+> @@ -3729,7 +3729,8 @@ static void pci_flr_wait(struct pci_dev *dev)
 >  
->  static void pci_dev_restore(struct pci_dev *dev)
->  {
-> +	u32 l;
-> +
-> +	/* see if the device is accessible first */
-> +	if (!pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 60 * 1000))
-> +		return;
-> +
->  	pci_restore_state(dev);
->  	pci_reset_notify(dev, false);
->  }
-> 
+>  	do {
+>  		msleep(100);
+> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
+> +		pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+> +					   60 * 1000);
 
-Any feedback on this direction?
+We found out during Mellanox CX3 testing that the card returns the vendor
+ID earlier during FLR while other cards are OK with this implementaiton. 
+
+I think we need both of the reads to support the CRS for the endpoints
+and also the command id register read to make sure endpoint init is complete.
+
+
+>  	} while (i++ < 10 && id == ~0);
+>  
+>  	if (id == ~0)
+> 
 
 
 -- 
