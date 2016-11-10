@@ -1,50 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46469 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933927AbcKWWOb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 17:14:31 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uANMESvp039220
-        for <linux-pci@vger.kernel.org>; Wed, 23 Nov 2016 17:14:31 -0500
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26we2y38c9-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 23 Nov 2016 17:14:30 -0500
-Received: from localhost
-        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Thu, 24 Nov 2016 08:14:05 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id BEBE82BB005D
-        for <linux-pci@vger.kernel.org>; Thu, 24 Nov 2016 09:14:02 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-        by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uANME2Dq29622346
-        for <linux-pci@vger.kernel.org>; Thu, 24 Nov 2016 09:14:02 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-        by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uANME26q018737
-        for <linux-pci@vger.kernel.org>; Thu, 24 Nov 2016 09:14:02 +1100
-Date: Thu, 24 Nov 2016 09:15:20 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Muni Sekhar <munisekharrms@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI driver reset function?
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <CAHhAz+jGkc5DQ719zC_A8g1vF7L41Dowh9yTiLkYoHcEaAw+RA@mail.gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:14151 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753743AbcKJIde (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 03:33:34 -0500
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mark Rutland <mark.rutland@arm.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108120323.GC15297@leverpostej>
+ <1478647002.7430.69.camel@kernel.crashing.org>
+CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <olof@lixom.net>,
+        <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
+        <lorenzo.pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>, <marc.zyngier@arm.com>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <582430C6.60307@hisilicon.com>
+Date: Thu, 10 Nov 2016 16:33:10 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHhAz+jGkc5DQ719zC_A8g1vF7L41Dowh9yTiLkYoHcEaAw+RA@mail.gmail.com>
-Message-Id: <20161123221520.GA4783@gwshan>
+In-Reply-To: <1478647002.7430.69.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 06:42:25PM +0530, Muni Sekhar wrote:
->HI All,
->
->Does the PCI driver have any associated reset function?
->
+Hi, Ben,
 
-Please take a look on drivers/pci/pci.c::pci_reset_function().
+
+On 2016/11/9 7:16, Benjamin Herrenschmidt wrote:
+> On Tue, 2016-11-08 at 12:03 +0000, Mark Rutland wrote:
+>> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+>>>
+>>> For arm64, there is no I/O space as other architectural platforms, such as
+>>> X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+>>> such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+>>> known port addresses are used to control the corresponding target devices, for
+>>> example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+>>> normal MMIO mode in using.
+>>
+>> This has nothing to do with arm64. Hardware with this kind of indirect
+>> bus access could be integrated with a variety of CPU architectures. It
+>> simply hasn't been, yet.
+> 
+> On some ppc's we also use similar indirect access methods for IOs. We
+> have a generic infrastructure for re-routing some memory or IO regions
+> to hooks.
+> 
+I am interested on the generic infrastructure on PPC.
+Could you point out where those drivers are?
+want to take a look..
 
 Thanks,
-Gavin
+Zhichang
+
+> On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
+> firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
+> 
+>>> To drive these devices, this patch introduces a method named indirect-IO.
+>>> In this method the in/out pair in arch/arm64/include/asm/io.h will be
+>>> redefined. When upper layer drivers call in/out with those known legacy port
+>>> addresses to access the peripherals, the hooking functions corrresponding to
+>>> those target peripherals will be called. Through this way, those upper layer
+>>> drivers which depend on in/out can run on Hip06 without any changes.
+>>
+>> As above, this has nothing to do with arm64, and as such, should live in
+>> generic code, exactly as we would do if we had higher-level ISA
+>> accessor ops.
+>>
+>> Regardless, given the multi-instance case, I don't think this is
+>> sufficient in general (and I think we need higher-level ISA accessors
+>> to handle the indirection).
+> 
+> Multi-instance with IO is tricky to do generically because archs already
+> have all sort of hacks to deal with the fact that inb/outb don't require
+> an explicit ioremap, so an IO resource can take all sort of shape depending
+> on the arch.
+> 
+> Overall it boils down to applying some kind of per-instance "offset" to
+> the IO port number though.
+> 
 
