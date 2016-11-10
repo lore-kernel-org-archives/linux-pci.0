@@ -1,74 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51976 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752280AbcKBQ0q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Nov 2016 12:26:46 -0400
-Date: Wed, 2 Nov 2016 11:26:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
-        bhelgaas@google.com, Joao.Pinto@synopsys.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Niklas Cassel <niklass@axis.com>
-Subject: Re: [PATCH] PCI: designware: check for iATU unroll support after
- initializing host
-Message-ID: <20161102162639.GB6568@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476482095-26289-1-git-send-email-niklass@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476482095-26289-1-git-send-email-niklass@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1478806353.7430.137.camel@kernel.crashing.org>
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Mark Rutland <mark.rutland@arm.com>
+Date: Fri, 11 Nov 2016 06:32:33 +1100
+In-Reply-To: <20161110112224.GB4418@leverpostej>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108120323.GC15297@leverpostej>
+ <1478647002.7430.69.camel@kernel.crashing.org>
+ <20161110112224.GB4418@leverpostej>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gabriele.paoloni@huawei.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ linuxarm@huawei.com, lorenzo.pieralisi@arm.com, arnd@arndb.de,
+ xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, minyard@acm.org, marc.zyngier@arm.com,
+ liviu.dudau@arm.com, john.garry@huawei.com, zourongrong@gmail.com,
+ robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
+ zhichang.yuan02@gmail.com, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+ olof@lixom.net
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 14, 2016 at 11:54:55PM +0200, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@axis.com>
+On Thu, 2016-11-10 at 11:22 +0000, Mark Rutland wrote:
+> On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
+> > firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
 > 
-> dw_pcie_iatu_unroll_enabled reads a dbi_base register.
-> Reading any dbi_base register before pp->ops->host_init has been called
-> causes "imprecise external abort" on platforms like ARTPEC-6, where the
-> PCIe module is disabled at boot and first enabled in pp->ops->host_init.
-> Move dw_pcie_iatu_unroll_enabled to dw_pcie_setup_rc, since it is after
-> pp->ops->host_init, but before pp->iatu_unroll_enabled is actually used.
-> 
-> Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> Just to check, do you hook that in your inb/outb/etc?
 
-Applied to for-linus for v4.9 with acks and tested-by from Joao, Olof,
-and James, thanks!
+Yes.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 035f50c03281..bed19994c1e9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -637,8 +637,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -
->  	if (pp->ops->host_init)
->  		pp->ops->host_init(pp);
->  
-> @@ -809,6 +807,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
->  
-> +	/* get iATU unroll support */
-> +	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +	dev_dbg(pp->dev, "iATU unroll: %s\n",
-> +		pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> +
->  	/* set the number of lanes */
->  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->  	val &= ~PORT_LINK_MODE_MASK;
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Generally, it would seem nicer if we could have higher-level
+> isa_{inb,outb,whatever} accessors that we could hook separately from
+> other IO.
+
+Maybe but generally speaking, we don't discriminate accessors per bus,
+ie, readl etc... work on all memory mapped busses, inb... works on all
+busses with an "IO space", at least that's been the idea. It probably
+all comes from the fact that PCI IO and ISA are the same space on
+x86 and most other platforms (not all).
+
+> We don't necessarily have to move all ISA drivers over to that if we had
+> a separate symbol for that interface.
+
+What I do on ppc today is that I have a chunk of virtual address space
+that is reserved for "IO space". The first 64k are "reserved" in that
+they route to "the primary" ISA bus (for legacy crap that uses hard
+coded addresses, though I use that for my LPC bus too). I "allocate"
+space for the PCI IO spaces higher in that space. Was I to support more
+LPC busses I could allocate them up there too.
+
+The IO resource of a given device thus becomes the actual IO port plus
+the offset of the base of the segment it's in.
+
+For memory mapped IO, inb/outb will just add the virtual address of
+the base of all IO space to that. The hooking mechanism will pickup
+the stuff that isn't memory mapped.
+
+It's a bit messy but then IO space performance has never been a huge
+worry since IO cycles tend to be very slow to begin with.
+
+Note: We also have the ISA memory and ISA FW spaces that we don't have
+good accessors for. They somewhat exist (I think the fbdev layer uses
+some for vga) but it's messy.
+
+Cheers,
+Ben.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
