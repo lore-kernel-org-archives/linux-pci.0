@@ -1,99 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 22 Nov 2016 17:13:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH V9 11/11] ARM64/PCI: Support for ACPI based PCI host
- controller
-Message-ID: <20161122231321.GA20246@bhelgaas-glaptop.roam.corp.google.com>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
- <1465588519-11334-12-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-In-Reply-To: <1465588519-11334-12-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
- Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org,
- ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, liudongdong3@huawei.com,
- catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
- msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com, dhdang@apm.com,
- linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
- Suravee.Suthikulpanit@amd.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:62867
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934541AbcKJRTe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Nov 2016 12:19:34 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "Stephen Hemminger" <sthemmin@microsoft.com>,
+        Hadden Hoppert <haddenh@microsoft.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/3] PCI: hv: use the correct buffer size in
+ new_pcichild_device()
+Date: Thu, 10 Nov 2016 17:05:08 +0000
+Message-ID: <BLUPR0301MB15875BCF319BBC7F5671F805ABB80@BLUPR0301MB1587.namprd03.prod.outlook.com>
+References: <MWHPR03MB26695762E11D248A4181F43EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+ <BLUPR0301MB1587B92E6F6478DB59F72E2AABB80@BLUPR0301MB1587.namprd03.prod.outlook.com>
+ <MWHPR03MB26690DD8D1756E3202D27820BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB26690DD8D1756E3202D27820BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+> -----Original Message-----
+>=20
+> > From: Jake Oshins
+> > > From: Dexuan Cui
+> > > Sent: Wednesday, November 9, 2016 11:18 PM
+> > > We don't really need such a big on-stack buffer.
+> > > vmbus_sendpacket() here only uses sizeof(struct pci_child_message).
+> > >
+> > > @@ -1271,9 +1271,9 @@ static struct hv_pci_dev
+> > > *new_pcichild_device(struct hv_pcibus_device *hbus,
+> > >  	struct hv_pci_dev *hpdev;
+> > >  	struct pci_child_message *res_req;
+> > >  	struct q_res_req_compl comp_pkt;
+> > > -	union {
+> > > -	struct pci_packet init_packet;
+> > > -		u8 buffer[0x100];
+> > > +	struct {
+> > > +		struct pci_packet init_packet;
+> > > +		u8 buffer[sizeof(struct pci_child_message)];
+> > >  	} pkt;
+> > >  	unsigned long flags;
+> > >  	int ret;
+> >
+> > This change seems good to me, in that it's always a bad idea to use too
+> much
+> > stack.  But this won't fix the problem with VMAP_STACK.  The buffer cou=
+ld
+> still
+> > end up spanning two pages and the physical addresses of those pages
+> would
+> > possibly be discontiguous.  Do you want to just refactor this so that i=
+t uses
+> a
+> > fixed buffer, one that will work with VMAP_STACK?  Or is that coming in=
+ a
+> future
+> > patch?
+>=20
+> Hi Jake, I think the VMAP_STACK issue you mentioned should be another
+> different
+> issue fixed by Long Li: https://patchwork.ozlabs.org/patch/692447/.
+>=20
+> The VMAP_STACK issue is only an issue when we pass the buffer's physical
+> address
+> to the hypercall.
+>=20
+> Here the buffer is not passed to any hypercall. We just use
+> vmbus_sendpacket()
+> to memcpy the buffer into the per-channel ringbuffer.
+>=20
+> Thanks,
+> -- Dexuan
 
-On Fri, Jun 10, 2016 at 09:55:19PM +0200, Tomasz Nowicki wrote:
-> Implement pci_acpi_scan_root and other arch-specific call so that ARM64
-> can start using ACPI to setup and enumerate PCI buses.
-> 
-> Prior to buses enumeration the pci_acpi_scan_root() implementation looks
-> for configuration space start address (obtained through ACPI _CBA method or
-> MCFG interface). If succeed, it uses ECAM library to create new mapping.
-> Then it attaches generic ECAM ops (pci_generic_ecam_ops) which are used
-> for accessing configuration space later on.
-> ...
+Yes, you're right.  This patch looks fine to me.  Sorry for confusing the t=
+wo issues.
 
-> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> +	.release_info = pci_acpi_generic_release_info,
-> +};
-> +
-> +/* Interface called from ACPI code to setup PCI host controller */
->  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
-> -	/* TODO: Should be revisited when implementing PCI on ACPI */
-> -	return NULL;
-> +	int node = acpi_get_node(root->device->handle);
-> +	struct acpi_pci_generic_root_info *ri;
-> +	struct pci_bus *bus, *child;
-> +
-> +	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
-> +	if (!ri)
-> +		return NULL;
-> +
-> +	ri->cfg = pci_acpi_setup_ecam_mapping(root);
-> +	if (!ri->cfg) {
-> +		kfree(ri);
-> +		return NULL;
-> +	}
-> +
-> +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-
-This has already been merged, but this isn't right, is it?  We're
-writing a host controller-specific pointer into the single system-wide
-acpi_pci_root_ops, then passing it on to acpi_pci_root_create().
-
-Today, I think ri->cfg->ops->pci_ops is always &pci_generic_ecam_ops,
-from this path:
-
-  ri->cfg = pci_acpi_setup_ecam_mapping
-    cfg = pci_ecam_create(..., &pci_generic_ecam_ops)
-      cfg = kzalloc(...)
-      cfg->ops = ops             # &pci_generic_ecam_ops
-
-But we're about to merge the ECAM quirks series, which will mean it
-may not be &pci_generic_ecam_ops.  Even apart from the ECAM quirks, we
-should avoid this pattern of putting device-specific info in a single
-shared structure because it's too difficult to verify that it's
-correct.
-
-> +	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
-> +				   ri->cfg);
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- Jake
