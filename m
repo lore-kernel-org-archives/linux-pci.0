@@ -1,59 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ray Jui <ray.jui@broadcom.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: avoid maybe-uninitialized warning
-Date: Tue, 22 Nov 2016 22:15:08 +0100
-Message-ID: <2504851.C6gOdhdaGF@wuerfel>
-In-Reply-To: <31c4c52b-3de5-2277-7a44-2a4231531074@broadcom.com>
-References: <20161122141844.1655574-1-arnd@arndb.de>
- <20161122141844.1655574-2-arnd@arndb.de>
- <31c4c52b-3de5-2277-7a44-2a4231531074@broadcom.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
- Oza Oza <oza.oza@broadcom.com>,
- "Dmitry V. Krivenok" <krivenok.dmitry@gmail.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:55796 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934780AbcKJV2l (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 16:28:41 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAALOXjH012520
+        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2016 16:28:41 -0500
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26mwc6p6xx-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2016 16:28:40 -0500
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Fri, 11 Nov 2016 07:28:38 +1000
+Subject: Re: [PATCH] of/irq: improve error message on irq discovery process
+ failure
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+        devicetree@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, robh+dt@kernel.org,
+        linuxppc-dev@lists.ozlabs.org, frowand.list@gmail.com
+Date: Fri, 11 Nov 2016 08:28:32 +1100
+In-Reply-To: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+References: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1478813312.2592.0.camel@au1.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 22, 2016 9:45:24 AM CET Ray Jui wrote:
-> > diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> > index 857ff5198317..0359569c8d78 100644
-> > --- a/drivers/pci/host/pcie-iproc.c
-> > +++ b/drivers/pci/host/pcie-iproc.c
-> > @@ -936,6 +936,7 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
-> >  
-> >               }
-> >       }
-> > +     ret = -EINVAL;
-> >  err_ib:
-> >       dev_err(dev, "unable to configure inbound mapping\n");
-> >       dev_err(dev, "axi %pap, pci %pap, res size %pap\n",
-> > 
-> 
-> This change is good, but in my opinion, a further improvement for
-> clarity would be to initialize 'ret' to -EINVAL in the beginning of this
-> function when 'ret' is declared. What do you think?
-> 
+On Wed, 2016-11-09 at 12:05 -0200, Guilherme G. Piccoli wrote:
+> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+> index 393fea8..1ad6882 100644
+> --- a/drivers/of/irq.c
+> +++ b/drivers/of/irq.c
+> @@ -275,7 +275,10 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+>         of_node_put(ipar);
+>         of_node_put(newpar);
+>  
+> -       return -EINVAL;
+> +       /* Positive non-zero return means no Level-triggered Interrupts
+> +        * capability was found.
+> +        */
+> +       return ENOENT;
+>  }
+>  EXPORT_SYMBOL_GPL(of_irq_parse_raw);
 
-I never do that, see https://rusty.ozlabs.org/?p=232 for a great
-explanation about why.
+I'm not fan. I'd rather it's -ENOENT and the callers can check for that
+specific code rather than playing with the sign.
 
-	Arnd
+Cheers,
+Ben.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
