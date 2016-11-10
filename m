@@ -1,212 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v7 07/16] drivers: acpi: implement acpi_dma_configure
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- iommu@lists.linux-foundation.org
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-8-lorenzo.pieralisi@arm.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <e25b0ebb-2ae4-cb13-b264-9ab43d8f2934@arm.com>
-Date: Wed, 9 Nov 2016 15:33:27 +0000
+Return-Path: <ard.biesheuvel@linaro.org>
+Return-Path: <ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20161109141948.19244-8-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
- linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
- Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20161109224955.GO14322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20160921173129.GA20006@localhost> <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org> <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+ <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org> <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com> <20161109224955.GO14322@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 10 Nov 2016 18:25:16 +0800
+Message-ID: <CAKv+Gu9_sdcoN7rjQp-R=2vKY3rECt0BC3eWGpse32o2Q4LHXg@mail.gmail.com>
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christopher Covington <cov@codeaurora.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Tomasz Nowicki <tn@semihalf.com>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Jayachandran C <jchandra@broadcom.com>, Duc Dang <dhdang@apm.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>, Jeremy Linton <jeremy.linton@arm.com>,
+	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeff Hugo <jhugo@codeaurora.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/11/16 14:19, Lorenzo Pieralisi wrote:
-> On DT based systems, the of_dma_configure() API implements DMA
-> configuration for a given device. On ACPI systems an API equivalent to
-> of_dma_configure() is missing which implies that it is currently not
-> possible to set-up DMA operations for devices through the ACPI generic
-> kernel layer.
-> 
-> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-> calls that for now are just wrappers around arch_setup_dma_ops() and
-> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
-> 
-> Since acpi_dma_configure() is used to configure DMA operations, the
-> function initializes the dma/coherent_dma masks to sane default values
-> if the current masks are uninitialized (also to keep the default values
-> consistent with DT systems) to make sure the device has a complete
-> default DMA set-up.
-> 
-> The DMA range size passed to arch_setup_dma_ops() is sized according
-> to the device coherent_dma_mask (starting at address 0x0), mirroring the
-> DT probing path behaviour when a dma-ranges property is not provided
-> for the device being probed; this changes the current arch_setup_dma_ops()
-> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-> is a NOP on all architectures but ARM/ARM64 this patch does not change
-> the current kernel behaviour on them.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/glue.c     |  4 ++--
->  drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c     |  3 +--
->  include/acpi/acpi_bus.h |  2 ++
->  include/linux/acpi.h    |  5 +++++
->  5 files changed, 50 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> index 5ea5dc2..f8d6564 100644
-> --- a/drivers/acpi/glue.c
-> +++ b/drivers/acpi/glue.c
-> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  
->  	attr = acpi_get_dma_attr(acpi_dev);
->  	if (attr != DEV_DMA_NOT_SUPPORTED)
-> -		arch_setup_dma_ops(dev, 0, 0, NULL,
-> -				   attr == DEV_DMA_COHERENT);
-> +		acpi_dma_configure(dev, attr);
->  
->  	acpi_physnode_link_name(physical_node_name, node_id);
->  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  	return 0;
->  
->   err:
-> +	acpi_dma_deconfigure(dev);
->  	ACPI_COMPANION_SET(dev, NULL);
->  	put_device(dev);
->  	put_device(&acpi_dev->dev);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 035ac64..694e0b6 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  		return DEV_DMA_NON_COHERENT;
->  }
->  
-> +/**
-> + * acpi_dma_configure - Set-up DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + * @attr: device dma attributes
-> + */
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> +{
-> +	/*
-> +	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-> +	 * setup the correct supported mask.
-> +	 */
-> +	if (!dev->coherent_dma_mask)
-> +		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +
-> +	/*
-> +	 * Set it to coherent_dma_mask by default if the architecture
-> +	 * code has not set it.
-> +	 */
-> +	if (!dev->dma_mask)
-> +		dev->dma_mask = &dev->coherent_dma_mask;
-> +
-> +	/*
-> +	 * Assume dma valid range starts at 0 and covers the whole
-> +	 * coherent_dma_mask.
-> +	 */
-> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-> +			   attr == DEV_DMA_COHERENT);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_dma_configure);
-> +
-> +/**
-> + * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + */
-> +void acpi_dma_deconfigure(struct device *dev)
-> +{
-> +	arch_teardown_dma_ops(dev);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
-> +
->  static void acpi_init_coherency(struct acpi_device *adev)
->  {
->  	unsigned long long cca = 0;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ab00267..c29e07a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
->  		if (attr == DEV_DMA_NOT_SUPPORTED)
->  			dev_warn(&dev->dev, "DMA not supported.\n");
+On 10 November 2016 at 06:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Nov 09, 2016 at 08:29:23PM +0000, Ard Biesheuvel wrote:
+>> Hi Bjorn,
+>>
+>> On 9 November 2016 at 20:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Wed, Nov 09, 2016 at 02:25:56PM -0500, Christopher Covington wrote:
+>> >> Hi Bjorn,
+>> >>
+>> [...]
+>> >>
+>> >> We're working to add the PNP0C02 resource to future firmware, but it's
+>> >> not in the current firmware. Are dmesg and /proc/iomem from the
+>> >> current firmware interesting or should we wait for the update to file?
+>> >
+>> > Note that the ECAM space is not the only thing that should be
+>> > described via these PNP0C02 devices.  *All* non-enumerable resources
+>> > should be described by the _CRS method of some ACPI device.  Here's a
+>> > sample from my laptop:
+>> >
+>> >   PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xf8000000-0xfbffffff] (base 0xf8000000)
+>> >   system 00:01: [io  0x1800-0x189f] could not be reserved
+>> >   system 00:01: [io  0x0800-0x087f] has been reserved
+>> >   system 00:01: [io  0x0880-0x08ff] has been reserved
+>> >   system 00:01: [io  0x0900-0x097f] has been reserved
+>> >   system 00:01: [io  0x0980-0x09ff] has been reserved
+>> >   system 00:01: [io  0x0a00-0x0a7f] has been reserved
+>> >   system 00:01: [io  0x0a80-0x0aff] has been reserved
+>> >   system 00:01: [io  0x0b00-0x0b7f] has been reserved
+>> >   system 00:01: [io  0x0b80-0x0bff] has been reserved
+>> >   system 00:01: [io  0x15e0-0x15ef] has been reserved
+>> >   system 00:01: [io  0x1600-0x167f] has been reserved
+>> >   system 00:01: [io  0x1640-0x165f] has been reserved
+>> >   system 00:01: [mem 0xf8000000-0xfbffffff] could not be reserved
+>> >   system 00:01: [mem 0xfed10000-0xfed13fff] has been reserved
+>> >   system 00:01: [mem 0xfed18000-0xfed18fff] has been reserved
+>> >   system 00:01: [mem 0xfed19000-0xfed19fff] has been reserved
+>> >   system 00:01: [mem 0xfeb00000-0xfebfffff] has been reserved
+>> >   system 00:01: [mem 0xfed20000-0xfed3ffff] has been reserved
+>> >   system 00:01: [mem 0xfed90000-0xfed93fff] has been reserved
+>> >   system 00:01: [mem 0xf7fe0000-0xf7ffffff] has been reserved
+>> >   system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
+>> >
+>> > Do you have firmware in the field that may not get updated?  If so,
+>> > I'd like to see the whole solution for that firmware, including the
+>> > MCFG quirk (which tells the PCI core where the ECAM region is) and
+>> > whatever PNP0C02 quirk you figure out to actually reserve the region.
+>> >
+>> > I proposed a PNP0C02 quirk to Duc along these lines of the below.  I
+>> > don't actually know if it's feasible, but it didn't look as bad as I
+>> > expected, so I'd kind of like somebody to try it out.  I think you
+>> > would have to call this via a DMI hook (do you have DMI on arm64?),
+>> > maybe from pnp_init() or similar.
+>>
+>> We do have SMBIOS/DMI on arm64, but we have been successful so far not
+>> to rely on it for quirks, and we'd very much like to keep it that way.
+>>
+>> Since this ACPI _CRS method has nothing to do with SMBIOS/DMI, surely
+>> there is a better way to wire up the reservation code to the
+>> information exposed by ACPI?
+>
+> I'm open to other ways, feel free to propose one :)
+>
+> If you do a quirk, you need some way to identify the machine/firmware
+> combination, because you don't want to apply the quirk on every
+> machine.  You're trying to work around a firmware issue, so you
+> probably want something tied to the firmware version.  On x86, that's
+> typically done with DMI.
+>
 
-If we're going to check attr for DMA support before each call like this,
-it seems like we may as well put the check at the top of
-acpi_dma_configure() instead. I think it should be viable to predicate
-the warning on dev_is_pci() at this point, if that's the appropriate
-behaviour.
-
-Still, we're likely to be touching this again soon with the
-IOMMU-probe-ordering work, so there's plenty of room for further
-cleanups then:
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
->  		else
-> -			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
-> -					   attr == DEV_DMA_COHERENT);
-> +			acpi_dma_configure(&dev->dev, attr);
->  	}
->  
->  	pci_put_host_bridge_device(bridge);
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index c1a524d..4242c31 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -573,6 +573,8 @@ struct acpi_pci_root {
->  
->  bool acpi_dma_supported(struct acpi_device *adev);
->  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-> +void acpi_dma_deconfigure(struct device *dev);
->  
->  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
->  					   u64 address, bool check_children);
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 6efb13c..df961f4 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -764,6 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  	return DEV_DMA_NOT_SUPPORTED;
->  }
->  
-> +static inline void acpi_dma_configure(struct device *dev,
-> +				      enum dev_dma_attr attr) { }
-> +
-> +static inline void acpi_dma_deconfigure(struct device *dev) { }
-> +
->  #define ACPI_PTR(_ptr)	(NULL)
->  
->  static inline void acpi_device_set_enumerated(struct acpi_device *adev)
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I think I misunderstood the purpose of the example: that should only
+be necessary if the _CRS methods are missing from the firmware, right?
+If we update the firmware to cover all non-enumerable resources by
+such a method, we shouldn't need any such quirks at all IIUC
