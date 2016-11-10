@@ -1,149 +1,258 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35308 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751427AbcKHR5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 12:57:54 -0500
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, alex.williamson@redhat.com,
-        darcari@redhat.com, mstowe@redhat.com, bhelgaas@google.com,
-        lukas@wunner.de, keith.busch@intel.com,
-        mika.westerberg@linux.intel.com
-Subject: [PATCH] pci: Only disable MSI/X and enable INTx if shutdown function has been called
-Date: Tue,  8 Nov 2016 12:57:47 -0500
-Message-Id: <1478627867-28795-1-git-send-email-prarit@redhat.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39896 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754563AbcKJLxM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 06:53:12 -0500
+Date: Thu, 10 Nov 2016 12:53:20 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Cc: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
+Subject: Re: [PATCH v9 7/8] thunderbolt: Networking doc
+Message-ID: <20161110115320.GA5110@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <1478701208-4585-8-git-send-email-amir.jer.levy@intel.com>
+ <20161109160002.GA9111@kroah.com>
+ <E607265CB020454880711A6F96C05A03B677F516@hasmsx107.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E607265CB020454880711A6F96C05A03B677F516@hasmsx107.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+On Thu, Nov 10, 2016 at 11:47:57AM +0000, Levy, Amir (Jer) wrote:
+> On Wed, Nov 9 2016, 06:00 PM, Greg KH wrote:
+> > On Wed, Nov 09, 2016 at 04:20:07PM +0200, Amir Levy wrote:
+> > > Adding Thunderbolt(TM) networking documentation.
+> > >
+> > > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> > > ---
+> > >  Documentation/00-INDEX                   |   2 +
+> > >  Documentation/thunderbolt/networking.txt | 132
+> > > +++++++++++++++++++++++++++++++
+> > 
+> > Note, new files should be in .rst format, and live in the new subdirectory for
+> > them (somewhere in Documentation, don't know off the top of my head...)
+> > 
+> > >  2 files changed, 134 insertions(+)
+> > >  create mode 100644 Documentation/thunderbolt/networking.txt
+> > >
+> > > diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX index
+> > > 3acc4f1..0239e68 100644
+> > > --- a/Documentation/00-INDEX
+> > > +++ b/Documentation/00-INDEX
+> > > @@ -440,6 +440,8 @@ this_cpu_ops.txt
+> > >  	- List rationale behind and the way to use this_cpu operations.
+> > >  thermal/
+> > >  	- directory with information on managing thermal issues (CPU/temp)
+> > > +thunderbolt/
+> > > +	- directory with info regarding Thunderbolt.
+> > >  trace/
+> > >  	- directory with info on tracing technologies within linux
+> > > unaligned-memory-access.txt
+> > 
+> > This change is probably not needed.
+> > 
+> > > diff --git a/Documentation/thunderbolt/networking.txt
+> > > b/Documentation/thunderbolt/networking.txt
+> > > new file mode 100644
+> > > index 0000000..88d1c12
+> > > --- /dev/null
+> > > +++ b/Documentation/thunderbolt/networking.txt
+> > > @@ -0,0 +1,132 @@
+> > > +Intel Thunderbolt(TM) Networking driver
+> > > +=======================================
+> > > +
+> > > +Copyright(c) 2013 - 2016 Intel Corporation.
+> > > +
+> > > +Contact Information:
+> > > +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
+> > > +Edited by Amir Levy <amir.jer.levy@intel.com>
+> > > +
+> > > +Overview
+> > > +========
+> > > +
+> > > +* The Thunderbolt Networking driver enables peer to peer networking
+> > > +on non-Apple
+> > > +  platforms running Linux.
+> > > +
+> > > +* The driver creates a virtual Ethernet device that enables computer
+> > > +to computer
+> > > +  communication over the Thunderbolt cable.
+> > > +
+> > > +* Using Thunderbolt Networking you can perform high speed file
+> > > +transfers between
+> > > +  computers, perform PC migrations and/or set up small workgroups
+> > > +with shared
+> > > +  storage without compromising any other Thunderbolt functionality.
+> > > +
+> > > +* The driver is located in drivers/thunderbolt/icm.
+> > > +
+> > > +* This driver will function only on non-Apple platforms with firmware
+> > > +based
+> > > +  Thunderbolt controllers that support Thunderbolt Networking.
+> > > +
+> > > +  +----------------+            +----------------+
+> > > +  |Host 1          |            |Host 2          |
+> > > +  |                |            |                |
+> > > +  |   +-------+    |            |    +-------+   |
+> > > +  |   |Network|    |            |    |Network|   |
+> > > +  |   |Stack  |    |            |    |Stack  |   |
+> > > +  |   +-------+    |            |    +-------+   |
+> > > +  |       ^        |            |        ^       |
+> > > +  |       |        |            |        |       |
+> > > +  |       v        |            |        v       |
+> > > +  | +-----------+  |            |  +-----------+ |
+> > > +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> > > +  | |Networking |  |            |  |Networking | |
+> > > +  | |Driver     |  |            |  |Driver     | |
+> > > +  | +-----------+  |            |  +-----------+ |
+> > > +  |       ^        |            |        ^       |
+> > > +  |       |        |            |        |       |
+> > > +  |       v        |            |        v       |
+> > > +  | +-----------+  |            |  +-----------+ |
+> > > +  | |Thunderbolt|  |            |  |Thunderbolt| |
+> > > +  | |Controller |<-+------------+->|Controller | |
+> > > +  | |with ICM   |  |            |  |with ICM   | |
+> > > +  | |enabled    |  |            |  |enabled    | |
+> > > +  | +-----------+  |            |  +-----------+ |
+> > > +  +----------------+            +----------------+
+> > > +
+> > > +Files
+> > > +=====
+> > > +
+> > > +The following files are located in the drivers/thunderbolt/icm directory:
+> > > +
+> > > +- icm_nhi.c/h:	These files allow communication with the firmware
+> > (Intel
+> > > +  Connection Manager) based controller. They also create an interface
+> > > +for
+> > > +  netlink communication with a user space daemon.
+> > > +
+> > > +- net.c/net.h:	These files implement the 'eth' interface for the
+> > > +  Thunderbolt(TM) Networking.
+> > 
+> > You don't have to list the files, right?
+> > 
+> > > +
+> > > +Interface to User Space
+> > > +=======================
+> > > +
+> > > +The interface to the user space module is implemented through a Generic
+> > Netlink.
+> > 
+> > Huh?  Not a normal network device?
+> > 
+> > > +This is the communications protocol between the Thunderbolt driver
+> > > +and the user space application.
+> > 
+> > What userspace application?
+> > 
+> > > +Note that this interface mediates user space communication with ICM.
+> > 
+> > What is ICM?
+> > 
+> > > +(Existing Linux tools can be used to configure the network
+> > > +interface.)
+> > 
+> > Why aren't they sufficient for everything here?
+> > 
+> > > +
+> > > +The Thunderbolt Daemon utilizes this interface to communicate with the
+> > driver.
+> > 
+> > What "Thunderbolt Daemon"?  What is "this"?
+> > 
+> > > +To be accessed by the user space module, both kernel and user space
+> > > +modules have to register with the same GENL_NAME.
+> > 
+> > What userspace modules?
+> > 
+> > How do you set GENL_NAME?  What is that?
+> > 
+> > > +For the purpose of the Thunderbolt Network driver, "thunderbolt" is
+> > used.
+> > 
+> > What do you mean?
+> > 
+> > > +The registration is done at driver initialization time for all
+> > > +instances of the Thunderbolt controllers.
+> > 
+> > Who does this?
+> > 
+> > > The communication is carried through pre-defined
+> > > +Thunderbolt messages. Each specific message has a callback function
+> > > +that is called when the related message is received.
+> > 
+> > Is this the internal structure of the driver?  If so, why not just put it all in the
+> > code itself and build the documentation from it?
+> > 
+> > > +
+> > > +Message Definitions:
+> > > +* NHI_CMD_UNSPEC: Not used.
+> > > +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to
+> > > +open the
+> > > +  communication channel.
+> > > +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to
+> > unsubscribe
+> > > +and
+> > > +  to close communication channel.
+> > > +* NHI_CMD_QUERY_INFORMATION: Request information from the driver
+> > such
+> > > +as
+> > > +  driver version, FW version offset, number of ports in the
+> > > +controller
+> > > +  and DMA port.
+> > > +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
+> > > +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
+> > > +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as
+> > FW
+> > > +policy
+> > > +  changes or disconnect path.
+> > > +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
+> > module to
+> > > +FW to
+> > > +  establish path.
+> > > +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered
+> > safe mode.
+> > > +
+> > > +Communication with Intel Connection Manager(ICM) Firmware
+> > >
+> > +=========================================================
+> > > +
+> > > +There are several circular buffers in Thunderbolt each using Direct
+> > > +Memory Access (DMA).
+> > 
+> > Again, internal documentation?
+> > 
+> > Isn't this just a "normal" network device?  Why document any of this in a
+> > separate way?  What can a user do with this?  Who is the audience of this
+> > file?
+> > 
+> > still confused,
+> > 
+> > greg k-h
+> 
+> This document was one of the suggestions we got from internal-Intel kernel developers.
+> If you think it isn't needed, I'll remove it from next patch set.
 
-We have seen this at Red Hat on various drivers: nouveau, ahci, mei_me, and
-pcieport (so far).  Google search for "unhandled irq 16" yields many results
-reporting similar behavior during shutdown indicating that this problem is
-widespread.  I can cause this to happen on a "stable" system by adding a 3
-second delay in pci_device_shutdown() which causes the number of spurious
-interrupts to exceed the 100000 limit and display the warning below for the
-primarily the nouveau driver, and occasionally for the other mentioned drivers.
+I'm not saying it is not needed, I'm saying that if you want it, it
+needs to actually be useful :)
 
-A patch for this was proposed and rejected here for being too risky:
+As it is, look at the questions I asked above, I really don't understand
+this document.  And if I'm not the target audience for this, then great,
+who is?
 
-https://patchwork.kernel.org/patch/5990701/
+thanks,
 
-I also originally posted a patch to resolve this here:
-
-http://marc.info/?l=linux-pci&m=147705209308588&w=2
-
-and several other patch suggestions were made.  The problem with all of these
-solutions is that there is some risk associated with them (kdump, kvm, etc.)
-and they are papering over the real issue that the PCI shutdown should not
-blindly switch to INTx for all devices.
-
-I am reproposing the original suggested patch.  There is some risk associated
-with this but I don't think it is any more or any less than the other patches,
-and it seems like the other patches are only applying band-aids to the problem.
-
-[Aside: Lukas Wunner asked why does this always happen on IRQ 16 (even when the
-legacy device says IRQ 32 in lspci)?
-
-The PCI irq pins A, B, C, and D are routed according to the ACPI _PRT table for
-the device.  _In general_, I have noted a consistent pattern for PCI irq pins
-such that
-
-	irq pin A is IRQ 0x10 (16)
-	irq pin B is IRQ 0x11 (17)
-	irq pin C is IRQ 0x12 (18)
-	irq pin D is IRQ 0x13 (19)
-
-Since the device's IRQ is hooked up to pin A we're seeing the unhandled
-interrupt on IRQ 16.]
-
-I have tested this on various systems with KVM and kdump (and kdump on
-KVM) and didn't see any issues.
-
-NOTE: In my testing this resolves the problem with PCI based serial ports
-cutting off their output during shutdown.  Again, this can be tracked to the
-PCI shutdown path switching between MSI & INTx independently of the driver.
-
-----8<----
-
-The following unhandled IRQ warning is seen during shutdown:
-
-irq 16: nobody cared (try booting with the "irqpoll" option)
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
-Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
- 0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
- ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
- 0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
-Call Trace:
- <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
- [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
- [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
- [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
- [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
- [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
- [<ffffffff8102edfb>] handle_irq+0xab/0x130
- [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
- [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
- [<ffffffff81704502>] common_interrupt+0x82/0x82
- <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
- [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
- [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
- [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
- [<ffffffff816f6da7>] rest_init+0x77/0x80
- [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
- [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
- [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
- [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
- [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
-
-pci_device_shutdown() is called on each PCI device, and does
-
-        if (drv && drv->shutdown)
-                drv->shutdown(pci_dev);
-        pci_msi_shutdown(pci_dev);
-        pci_msix_shutdown(pci_dev);
-
-The pci_msi_shutdown() and pci_msix_shutdown() functions both call
-pci_intx_for_msi() which enables the INTx interrupt asynchronously of the
-driver.
-
-The problem is that the driver may not have a shutdown function and the
-device remains active.  The driver continues to operate the PCI device and the
-device interrupts to generate INTx.  The driver, however, has not registered a
-handler for INTx and the interrupt line remains set which leads to an unhandled
-IRQ warning.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: alex.williamson@redhat.com
-Cc: darcari@redhat.com
-Cc: mstowe@redhat.com
-Cc: bhelgaas@google.com
-Cc: lukas@wunner.de
-Cc: keith.busch@intel.com
-Cc: mika.westerberg@linux.intel.com
----
- drivers/pci/pci-driver.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 1ccce1cd6aca..87c35db5a564 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -461,10 +461,11 @@ static void pci_device_shutdown(struct device *dev)
- 
- 	pm_runtime_resume(dev);
- 
--	if (drv && drv->shutdown)
-+	if (drv && drv->shutdown) {
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
-+		pci_msi_shutdown(pci_dev);
-+		pci_msix_shutdown(pci_dev);
-+	}
- 
- 	/*
- 	 * If this is a kexec reboot, turn off Bus Master bit on the
--- 
-1.7.9.3
-
+greg k-h
