@@ -1,92 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38040 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752861AbcKNSZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 13:25:21 -0500
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-To: Joerg Roedel <joro@8bytes.org>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
-Date: Mon, 14 Nov 2016 18:25:16 +0000
+Received: from mailout3.hostsharing.net ([176.9.242.54]:56203 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965338AbcKJXRB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 18:17:01 -0500
+Date: Fri, 11 Nov 2016 00:18:08 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Check for PCIe capabilities change after
+ resume
+Message-ID: <20161110231808.GA8155@wunner.de>
+References: <20161110185520.19461.9789.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161114155222.GZ2078@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161110185520.19461.9789.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/11/16 15:52, Joerg Roedel wrote:
-> On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
->> If we've already made the decision to move away from bus ops, I don't
->> see that it makes sense to deliberately introduce new dependencies on
->> them. Besides, as it stands, this patch literally implements "tell the
->> iommu-core which hardware-iommus exist in the system and a seperate
->> iommu_ops ptr for each of them" straight off.
+On Thu, Nov 10, 2016 at 12:55:20PM -0600, Bjorn Helgaas wrote:
+> Len Brown reported that resume on a Dell XPS11 laptop takes longer than it
+> should.  The delay is caused by pciehp scanning for a device below a Root
+> Port that has nothing connected to it.
 > 
-> Not sure which code you are looking at, but as I see it we have only
-> per-device iommu-ops now (with this patch). That is different from
-> having core-visible hardware-iommu instances where devices could link
-> to.
+> At boot-time, the 00:1c.0 Root Port's PCI Express Capabilities Register
+> (PCIe spec r3.0, sec 7.8.2) advertises a slot (PCI_EXP_FLAGS_SLOT is set),
+> so pciehp claims the port.
+> 
+> At resume-time, PCI_EXP_FLAGS_SLOT is clear, so the Root Port no longer
+> advertises a slot.  But pciehp doesn't notice that change, and it reads
+> Slot Status to see if anything changed.  Slot Status says a device is
+> present (Ports not connected to slots are required to report "Card Present"
+> per sec 7.8.11), so pciehp tries to bring up the link and scan for the
+> device, which accounts for the delay.
+> 
+> Per sec 7.8.2, the PCIe Capabilities Register is all read-only, so I
+> think the fact that it changes between boot- and resume-time is a
+> firmware defect.
+> 
+> Work around this by re-reading the Capabilites at resume-time and updating
+> the cached copy in pci_dev->pcie_flags_reg.  Then stop using pciehp on the
+> port if it no longer advertises a slot.
+> 
+> Reported-and-tested-by: Len Brown <lenb@kernel.org>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=99751
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/hotplug/pciehp_core.c |   10 ++++++++++
+>  drivers/pci/pci-driver.c          |   13 +++++++++++++
+>  2 files changed, 23 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7d32fa33..f5461cb 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -278,6 +278,9 @@ static void pciehp_remove(struct pcie_device *dev)
+>  {
+>  	struct controller *ctrl = get_service_data(dev);
+>  
+> +	if (!ctrl)
+> +		return;
+> +
+>  	cleanup_slot(ctrl);
+>  	pciehp_release_ctrl(ctrl);
+>  }
+> @@ -296,6 +299,13 @@ static int pciehp_resume(struct pcie_device *dev)
+>  
+>  	ctrl = get_service_data(dev);
+>  
+> +	if (!(pcie_caps_reg(dev->port) & PCI_EXP_FLAGS_SLOT)) {
+> +		dev_info(&dev->port->dev, "No longer supports hotplug\n");
+> +		pciehp_remove(dev);
+> +		set_service_data(dev, NULL);
+> +		return 0;
+> +	}
+> +
+>  	/* reinitialize the chipset's event detection logic */
+>  	pcie_enable_notification(ctrl);
+>  
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 1ccce1c..fe8e964 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -505,7 +505,20 @@ static int pci_restore_standard_config(struct pci_dev *pci_dev)
+>  
+>  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  {
+> +	u16 flags;
+> +
+>  	pci_power_up(pci_dev);
+> +
+> +	if (pci_dev->pcie_cap) {
+> +		pci_read_config_word(pci_dev, pci_dev->pcie_cap + PCI_EXP_FLAGS,
+> +				     &flags);
+> +		if (pci_dev->pcie_flags_reg != flags) {
+> +			dev_info(&pci_dev->dev, "PCIe Capabilities was %#06x, is %#06x after resume (possible firmware defect)\n",
+> +				 pci_dev->pcie_flags_reg, flags);
+> +			pci_dev->pcie_flags_reg = flags;
+> +		}
+> +	}
+> +
 
-The per-device IOMMU ops are already there since 57f98d2f61e1. This
-patch generalises the other end, moving the "registering an IOMMU
-instance" (i.e. iommu_fwentry) bit into the IOMMU core, from being
-OF-specific. I'd be perfectly happy if we rename iommu_fwentry to
-iommu_instance, fwnode_iommu_set_ops() to iommu_register_instance(), and
-such if that makes the design intent clearer.
+Is there a reason that this must happen at ->resume_noirq time rather than
+->resume time?
 
-If you'd also prefer to replace iommu_fwspec::ops with an opaque
-iommu_fwspec::iommu_instance pointer so that things are a bit more
-centralised (and users are forced to go through the API rather then call
-ops directly), I'd have no major objection either. My main point is that
-we've been deliberately putting the relevant building blocks in place -
-the of_iommu_{get,set}_ops stuff was designed from the start to
-accommodate per-instance ops, via the ops pointer *being* the instance
-token; the iommu_fwspec stuff is deliberately intended to provide
-per-device ops on top of that. The raw functionality is either there in
-iommu.c already, or moving there in patches already written, so if it
-doesn't look right all we need to focus on is making it look right.
+If not, you could move this to pciehp_resume(), no?
 
-> Also the rest of iommu-core code still makes use of the per-bus ops. The
-> per-device ops are only used for the of_xlate fn-ptr.
+If yes, I think the above is suboptimal because it is executed for any
+decice, even though it only concerns hotplug ports handled by pciehp.
+(What if pciehp isn't compiled in at all?)  A better way would IMHO be to:
 
-Hence my aforementioned patches intended for 4.10, directly following on
-from introducing iommu_fwspec in 4.9:
+- add a ->resume_noirq callback to struct pcie_port_service_driver,
+- amend pcie_port_resume_noirq() to iterate over all port services and
+  call down to the ->resume_noirq callback of each, just like in
+  pcie_port_device_resume(),
+- declare a ->resume_noirq callback for pciehp containing the above code.
 
-http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14576.html
+Thanks,
 
-...the purpose being to provide a smooth transition from per-bus ops to
-per-device, per-instance ops. Apply those and we're 90% of the way there
-for OF-based IOMMU drivers (not that any of those actually need
-per-instance ops, admittedly; I did prototype it for the ARM SMMU ages
-ago, but it didn't seem worth the bother). Lorenzo's series broadens the
-scope to ACPI-based systems and moves the generically-useful parts into
-the core where we can easily build on them further if necessary. The
-major remaining work is to convert external callers of the current
-bus-dependent functions like iommu_domain_alloc(), iommu_present(), etc.
-to device-based alternatives.
+Lukas
 
-Robin.
+>  	pci_restore_state(pci_dev);
+>  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  }
