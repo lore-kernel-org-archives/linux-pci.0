@@ -1,100 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33508 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935938AbcKKUv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 15:51:26 -0500
-Date: Fri, 11 Nov 2016 14:51:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wang Sheng-Hui <shhuiw@foxmail.com>
-Cc: yu.zhao@intel.com, jbarnes@virtuousgeek.org,
-        alex.williamson@redhat.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: move cfg space size (256/4096) macros to pci_regs.h
-Message-ID: <20161111205119.GB9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1474506346-20873-1-git-send-email-shhuiw@foxmail.com>
+Received: from mout.kundenserver.de ([212.227.126.133]:63938 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934876AbcKJQIj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 11:08:39 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 10 Nov 2016 17:07:21 +0100
+Message-ID: <10334260.ztLXZ2Oynd@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <17821285.aIcTyCGn5n@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474506346-20873-1-git-send-email-shhuiw@foxmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 22, 2016 at 09:05:46AM +0800, Wang Sheng-Hui wrote:
-> This is a cleanup that moves PCI configuration space size
-> macros (PCI_CFG_SPACE_SIZE and PCI_CFG_SPACE_EXP_SIZE) from
-> drivers/pci/pci.h to include/uapi/linux/pci_regs.h
+On Thursday, November 10, 2016 3:36:49 PM CET Gabriele Paoloni wrote:
 > 
-> So that the macros can be used by more drivers and eliminate
-> potential duplicate definition.
-> 
-> Signed-off-by: Wang Sheng-Hui <shhuiw@foxmail.com>
+> Where should we get the range from? For LPC we know that it is going
+> Work on anything that is not used by PCI I/O space, and this is 
+> why we use [0, PCIBIOS_MIN_IO]
 
-Applied to pci/misc for v4.10, thanks!
+It should be allocated the same way we allocate PCI config space
+segments. This is currently done with the io_range list in
+drivers/pci/pci.c, which isn't perfect but could be extended
+if necessary. Based on what others commented here, I'd rather
+make the differences between ISA/LPC and PCI I/O ranges smaller
+than larger.
 
-I updated the comment to include PCI-X details, since the extended config
-space applies to PCI-X Mode 2 devices as well as to PCIe devices:
+> > Your current version has
+> > 
+> >         if (arm64_extio_ops->pfout)                             \
+> >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
+> >                        addr, value, sizeof(type));             \
+> > 
+> > Instead, just subtract the start of the range from the logical
+> > port number to transform it back into a bus-local port number:
+> 
+> These accessors do not operate on IO tokens:
+> 
+> If (arm64_extio_ops->start > addr || arm64_extio_ops->end < addr)
+> addr is not going to be an I/O token; in fact patch 2/3 imposes that
+> the I/O tokens will start at PCIBIOS_MIN_IO. So from 0 to PCIBIOS_MIN_IO
+> we have free physical addresses that the accessors can operate on.
 
-+ * Conventional PCI and PCI-X Mode 1 devices have 256 bytes of
-+ * configuration space.  PCI-X Mode 2 and PCIe devices have 4096 bytes of
-+ * configuration space.
+Ah, I missed that part. I'd rather not use PCIBIOS_MIN_IO to refer to
+the logical I/O tokens, the purpose of that macro is really meant
+for allocating PCI I/O port numbers within the address space of
+one bus.
 
-> ---
->  drivers/pci/pci.h                  | 3 ---
->  drivers/vfio/pci/vfio_pci_config.c | 2 --
->  include/uapi/linux/pci_regs.h      | 7 +++++++
->  3 files changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9730c47..12d651a 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1,9 +1,6 @@
->  #ifndef DRIVERS_PCI_H
->  #define DRIVERS_PCI_H
->  
-> -#define PCI_CFG_SPACE_SIZE	256
-> -#define PCI_CFG_SPACE_EXP_SIZE	4096
-> -
->  #define PCI_FIND_CAP_TTL	48
->  
->  extern const unsigned char pcie_link_speed[];
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index 688691d..8dc8a5a 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -31,8 +31,6 @@
->  
->  #include "vfio_pci_private.h"
->  
-> -#define PCI_CFG_SPACE_SIZE	256
-> -
->  /* Fake capability ID for standard config space */
->  #define PCI_CAP_ID_BASIC	0
->  
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 4040951..a07c53c 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -23,6 +23,13 @@
->  #define LINUX_PCI_REGS_H
->  
->  /*
-> + * Under PCI, each device has 256 bytes of configuration address space.
-> + * Under PCIe, each device has 4096 bytes of configuration address space.
-> + */
-> +#define PCI_CFG_SPACE_SIZE	256
-> +#define PCI_CFG_SPACE_EXP_SIZE	4096
-> +
-> +/*
->   * Under PCI, each device has 256 bytes of configuration address space,
->   * of which the first 64 bytes are standardized as follows:
->   */
-> -- 
-> 2.7.4
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note that it's equally likely that whichever next platform needs
+non-mapped I/O access like this actually needs them for PCI I/O space,
+and that will use it on addresses registered to a PCI host bridge.
+
+If we separate the two steps:
+
+a) assign a range of logical I/O port numbers to a bus
+b) register a set of helpers for redirecting logical I/O
+   port to a helper function
+
+then I think the code will get cleaner and more flexible.
+It should actually then be able to replace the powerpc
+specific implementation.
+
+	Arnd
