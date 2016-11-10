@@ -1,184 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v9 12/16] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
-Date: Mon, 21 Nov 2016 10:01:44 +0000
-Message-Id: <20161121100148.24769-13-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Fri, 11 Nov 2016 10:22:28 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: gwshan@linux.vnet.ibm.com, helgaas@kernel.org, linux-pci@vger.kernel.org,
+        majd@mellanox.com, alex.williamson@redhat.com, amir@vadai.me
+Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1478011644-12080-1-git-send-email-noaos@mellanox.com>
+ <20161109182232.GL14322@bhelgaas-glaptop.roam.corp.google.com>
+ <20161110034640.GA5341@gwshan>
+ <08e3aa80-1d13-7a6e-9133-87a149741993@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <08e3aa80-1d13-7a6e-9133-87a149741993@mellanox.com>
+Message-Id: <20161110232228.GA6798@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMU probe functions intermingle HW and DT probing
-in the initialization functions to detect and programme the ARM SMMU
-driver features. In order to allow probing the ARM SMMU with other
-firmwares than DT, this patch splits the ARM SMMU init functions into
-DT and HW specific portions so that other FW interfaces (ie ACPI) can
-reuse the HW probing functions and skip the DT portion accordingly.
+On Thu, Nov 10, 2016 at 05:56:50PM +0200, Noa Osherovich wrote:
 
-This patch implements no functional change, only code reshuffling.
+.../...
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Will Deacon <will.deacon@arm.com>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/arm-smmu.c | 62 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+>>>> As a result, the VFIO driver fails to start when more than one device
+>>>> function is passed-through to a VM if both have the same INTx pin.
+>>>>
+>> I don't see how the issue is related to the patch. INTx pin can be shared
+>> by multiple functions and it's not going to be changed by the patch. When
+>> the functions aren't claimed for capability to mask INTx from device side,
+>> the shared INTx (or hardware IRQ) has to be masked from host (IRQ controller)
+>> side. It does affect multiple VMs who are sharing thise INTx pin. I'm not
+>> sure if it's the problem you have?
+>
+>VFIO reads the broken_intx_masking field when it's used on the host (VFIO uses a
+>variable named pci_2_3). During vfio_intx_set_signal it sets the irqflags
+>variable to 0 if the pci_2_3 is 0. When the first function is assigned to the
+>guest, everything is OK.
+>When a second function with the same INT-x pin is assigned, VFIO checks that they
+>can share the IRQ.
+>The irqflags variable is then checked to see if IRQF_SHARED is set. If not, which
+>is the case here, VFIO fails to request IRQ thus failing and the guest can't start.
+>
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 339a8d3..573b2b6 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -1668,7 +1668,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
- 	unsigned long size;
- 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
- 	u32 id;
--	bool cttw_dt, cttw_reg;
-+	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
- 	int i;
- 
- 	dev_notice(smmu->dev, "probing hardware configuration...\n");
-@@ -1713,20 +1713,17 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
- 
- 	/*
- 	 * In order for DMA API calls to work properly, we must defer to what
--	 * the DT says about coherency, regardless of what the hardware claims.
-+	 * the FW says about coherency, regardless of what the hardware claims.
- 	 * Fortunately, this also opens up a workaround for systems where the
- 	 * ID register value has ended up configured incorrectly.
- 	 */
--	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
- 	cttw_reg = !!(id & ID0_CTTW);
--	if (cttw_dt)
--		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
--	if (cttw_dt || cttw_reg)
-+	if (cttw_fw || cttw_reg)
- 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
--			   cttw_dt ? "" : "non-");
--	if (cttw_dt != cttw_reg)
-+			   cttw_fw ? "" : "non-");
-+	if (cttw_fw != cttw_reg)
- 		dev_notice(smmu->dev,
--			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
-+			   "\t(IDR0.CTTW overridden by FW configuration)\n");
- 
- 	/* Max. number of entries we have for stream matching/indexing */
- 	size = 1 << ((id >> ID0_NUMSIDB_SHIFT) & ID0_NUMSIDB_MASK);
-@@ -1907,15 +1904,25 @@ static const struct of_device_id arm_smmu_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
- 
--static int arm_smmu_device_dt_probe(struct platform_device *pdev)
-+static int arm_smmu_device_dt_probe(struct platform_device *pdev,
-+				    struct arm_smmu_device *smmu)
- {
- 	const struct arm_smmu_match_data *data;
--	struct resource *res;
--	struct arm_smmu_device *smmu;
- 	struct device *dev = &pdev->dev;
--	int num_irqs, i, err;
- 	bool legacy_binding;
- 
-+	if (of_property_read_u32(dev->of_node, "#global-interrupts",
-+				 &smmu->num_global_irqs)) {
-+		dev_err(dev, "missing #global-interrupts property\n");
-+		return -ENODEV;
-+	}
-+
-+	data = of_device_get_match_data(dev);
-+	smmu->version = data->version;
-+	smmu->model = data->model;
-+
-+	parse_driver_options(smmu);
-+
- 	legacy_binding = of_find_property(dev->of_node, "mmu-masters", NULL);
- 	if (legacy_binding && !using_generic_binding) {
- 		if (!using_legacy_binding)
-@@ -1928,6 +1935,19 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
-+	if (of_dma_is_coherent(dev->of_node))
-+		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
-+
-+	return 0;
-+}
-+
-+static int arm_smmu_device_probe(struct platform_device *pdev)
-+{
-+	struct resource *res;
-+	struct arm_smmu_device *smmu;
-+	struct device *dev = &pdev->dev;
-+	int num_irqs, i, err;
-+
- 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
- 	if (!smmu) {
- 		dev_err(dev, "failed to allocate arm_smmu_device\n");
-@@ -1935,9 +1955,9 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 	}
- 	smmu->dev = dev;
- 
--	data = of_device_get_match_data(dev);
--	smmu->version = data->version;
--	smmu->model = data->model;
-+	err = arm_smmu_device_dt_probe(pdev, smmu);
-+	if (err)
-+		return err;
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	smmu->base = devm_ioremap_resource(dev, res);
-@@ -1945,12 +1965,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 		return PTR_ERR(smmu->base);
- 	smmu->size = resource_size(res);
- 
--	if (of_property_read_u32(dev->of_node, "#global-interrupts",
--				 &smmu->num_global_irqs)) {
--		dev_err(dev, "missing #global-interrupts property\n");
--		return -ENODEV;
--	}
--
- 	num_irqs = 0;
- 	while ((res = platform_get_resource(pdev, IORESOURCE_IRQ, num_irqs))) {
- 		num_irqs++;
-@@ -1985,8 +1999,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	parse_driver_options(smmu);
--
- 	if (smmu->version == ARM_SMMU_V2 &&
- 	    smmu->num_context_banks != smmu->num_context_irqs) {
- 		dev_err(dev,
-@@ -2048,7 +2060,7 @@ static struct platform_driver arm_smmu_driver = {
- 		.name		= "arm-smmu",
- 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
- 	},
--	.probe	= arm_smmu_device_dt_probe,
-+	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
- 
--- 
-2.10.0
+Noa, Thanks for the explanation. It makes sense.
 
+Thanks,
+Gavin
