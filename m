@@ -1,92 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:60549 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932758AbcK3QYJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Nov 2016 11:24:09 -0500
-Date: Wed, 30 Nov 2016 09:23:53 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <John.Bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <Alexander.Deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "logang@deltatee.com" <logang@deltatee.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39612 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754939AbcKJLoD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 06:44:03 -0500
+Date: Thu, 10 Nov 2016 12:44:11 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Cc: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <Paul.Blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161130162353.GA24639@obsidianresearch.com>
-References: <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
- <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com>
- <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
+Subject: Re: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Message-ID: <20161110114411.GA4155@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <20161109160219.GB9111@kroah.com>
+ <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+In-Reply-To: <E607265CB020454880711A6F96C05A03B677F4D9@hasmsx107.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 30, 2016 at 12:45:58PM +0200, Haggai Eran wrote:
-
-> > That just forces applications to handle horrible unexpected
-> > failures. If this sort of thing is needed for correctness then OOM
-> > kill the offending process, don't corrupt its operation.
-
-> Yes, that sounds fine. Can we simply kill the process from the GPU driver?
-> Or do we need to extend the OOM killer to manage GPU pages?
-
-I don't know..
-
-> >>> From what I understand we are not really talking about kernel p2p,
-> >>> everything proposed so far is being mediated by a userspace VMA, so
-> >>> I'd focus on making that work.
+On Thu, Nov 10, 2016 at 11:39:19AM +0000, Levy, Amir (Jer) wrote:
+> > And how about getting some internal-Intel kernel developers to review and
+> > sign-off on this code?  Don't make the community do the review when you
+> > have access to resources like this.  You have an internal mailing list for this
+> > very purpose, use it!
 > > 
-> >> Fair enough, although we will need both eventually, and I hope the
-> >> infrastructure can be shared to some degree.
-> > 
-> > What use case do you see for in kernel?
+> 
+> The review with the internal-Intel kernel developers was done before submitting
+> the first patch set.
 
-> Two cases I can think of are RDMA access to an NVMe device's controller
-> memory buffer,
+Then why is their signed-off-by:s not on the patchset showing that they
+"bless" this series?
 
-I'm not sure on the use model there..
+thanks,
 
-> and O_DIRECT operations that access GPU memory.
-
-This goes through user space so there is still a VMA..
-
-> Also, HMM's migration between two GPUs could use peer to peer in the
-> kernel, although that is intended to be handled by the GPU driver if
-> I understand correctly.
-
-Hum, presumably these migrations are VMA backed as well...
-
-> > Presumably in-kernel could use a vmap or something and the same basic
-> > flow?
-> I think we can achieve the kernel's needs with ZONE_DEVICE and DMA-API support
-> for peer to peer. I'm not sure we need vmap. We need a way to have a scatterlist
-> of MMIO pfns, and ZONE_DEVICE allows that.
-
-Well, if there is no virtual map then we are back to how do you do
-migrations and other things people seem to want to do on these
-pages. Maybe the loose 'struct page' flow is not for those users.
-
-But I think if you want kGPU or similar then you probably need vmaps
-or something similar to represent the GPU pages in kernel memory.
-
-Jason
+greg k-h
