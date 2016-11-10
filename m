@@ -1,40 +1,28 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 10 Nov 2016 13:27:13 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] iommu: Move REQ_ACS_FLAGS out to header and rename
+Message-ID: <20161110122713.GI9996@8bytes.org>
+References: <20161026175156.23495.12980.stgit@gimli.home>
+ <20161026180134.23495.27520.stgit@gimli.home>
 MIME-Version: 1.0
-From: Duc Dang <dhdang@apm.com>
-Date: Fri, 11 Nov 2016 18:49:55 -0800
-Message-ID: <CADaLNDmr6ttvsTnPQG3ixDrJgw4e3LeQp3bTwuuTPd1xbusN=g@mail.gmail.com>
-Subject: PCI: aer: AER correctable status register may be cleared before the
- aer_isr workqueue inspects it
-To: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026180134.23495.27520.stgit@gimli.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[resend in text mode]
+On Wed, Oct 26, 2016 at 12:01:34PM -0600, Alex Williamson wrote:
+> Allow other parts of the kernel to see which PCI ACS flags the IOMMU
+> layer considers necessary for isolation.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/iommu/iommu.c |   18 +++++-------------
+>  include/linux/iommu.h |   11 +++++++++++
+>  2 files changed, 16 insertions(+), 13 deletions(-)
 
-Hi Bjorn and All,
-
-I ran into this error message when testing with my X-Gene Mustang
-board (on kernel 4.9-rc1):
-pcieport 0002:00:00.0: AER: Corrected error received: id=0000
-pcieport 0002:00:00.0: can't find device of ID0000
-
-Looking into aer_isr() code, in case of handling correctable AER
-event, handle_error_source() will be called and it will clear
-Correctable Error Status Register of the device that reports AER
-event. This operation may end up clearing the status bit of the new
-(and same type) correctable AER event that happen when this aer_isr
-worker thread is still running; and cause the next aer_isr worker
-thread find no error status bit get set, so it prints out the above
-warning messages.
-
-I can see a possible solution is we cache all AER status registers of
-both the root port and all of its end-point devices inside interrupt
-handler (aer_irq) and pass these information to the aer_isr worker
-thread. But it seems an expensive operation to be done in interrupt
-context and I am not sure if you've already encountered and thought
-about this issue before?
-
-Regards,
-Duc Dang.
+Applied, thanks Alex.
