@@ -1,120 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46339 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751991AbcKHIPa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 03:15:30 -0500
-Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
- irq_create_affinity_masks()
-To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-4-git-send-email-hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <a7e25633-b9fb-468f-fd33-28dbc0368cc1@suse.de>
-Date: Tue, 8 Nov 2016 09:15:27 +0100
+Received: from lhrrgout.huawei.com ([194.213.3.17]:4136 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755482AbcKKPzi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 10:55:38 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "liviu.dudau@arm.com" <liviu.dudau@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "bhelgaas@googl e.com" <bhelgaas@google.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 11 Nov 2016 15:53:53 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F9909@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <17821285.aIcTyCGn5n@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
+ <10334260.ztLXZ2Oynd@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F900A@lhreml507-mbx>
+ <20161111144539.GL10219@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20161111144539.GL10219@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1478544462-9549-4-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
->
-> Only calculate the affinity for the main I/O vectors, and skip the
-> pre or post vectors specified by struct irq_affinity.
->
-> Also remove the irq_affinity cpumask argument that has never been used.
-> If we ever need it in the future we can pass it through struct
-> irq_affinity.
->
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c         |  4 ++--
->  include/linux/interrupt.h |  4 ++--
->  kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
->  3 files changed, 29 insertions(+), 25 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c58d3c2..1761b8a 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -558,7 +558,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
->  	u16 control;
->
->  	if (affinity) {
-> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-> +		masks = irq_create_affinity_masks(nvec, NULL);
->  		if (!masks)
->  			pr_err("Unable to allocate affinity masks, ignoring\n");
->  	}
-> @@ -697,7 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
->  	int ret, i;
->
->  	if (affinity) {
-> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-> +		masks = irq_create_affinity_masks(nvec, NULL);
->  		if (!masks)
->  			pr_err("Unable to allocate affinity masks, ignoring\n");
->  	}
-> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-> index 092adfb..bca8f1c 100644
-> --- a/include/linux/interrupt.h
-> +++ b/include/linux/interrupt.h
-> @@ -290,7 +290,7 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
->  extern int
->  irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
->
-> -struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
-> +struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
->  int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
->
->  #else /* CONFIG_SMP */
-> @@ -325,7 +325,7 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
->  }
->
->  static inline struct cpumask *
-> -irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
-> +irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
->  {
->  	return NULL;
->  }
-> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-> index 8d92597..17360bd 100644
-> --- a/kernel/irq/affinity.c
-> +++ b/kernel/irq/affinity.c
-> @@ -51,16 +51,16 @@ static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
->
->  /**
->   * irq_create_affinity_masks - Create affinity masks for multiqueue spreading
-> - * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
-> - *			is used
-> - * @nvecs:		The number of vectors
-> + * @nvecs:	The total number of vectors
-> + * @affd:	Description of the affinity requirements
->   *
->   * Returns the masks pointer or NULL if allocation failed.
->   */
-> -struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
-> -					  int nvec)
-> +struct cpumask *
-> +irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  {
-> -	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
-> +	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
-> +	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
->  	nodemask_t nodemsk = NODE_MASK_NONE;
->  	struct cpumask *masks;
->  	cpumask_var_t nmsk;
-Check for NULL affd?
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+SGkgTGl2aXUNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaXZpdS5k
+dWRhdUBhcm0uY29tIFttYWlsdG86bGl2aXUuZHVkYXVAYXJtLmNvbV0NCj4gU2VudDogMTEgTm92
+ZW1iZXIgMjAxNiAxNDo0Ng0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzogQXJuZCBCZXJn
+bWFubjsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBZdWFuemhpY2hhbmc7
+DQo+IG1hcmsucnV0bGFuZEBhcm0uY29tOyBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsNCj4g
+bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgbWlueWFyZEBhY20ub3JnOyBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOw0KPiBiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc7IEpvaG4gR2Fycnk7IHdp
+bGwuZGVhY29uQGFybS5jb207IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyB4dXdl
+aSAoTyk7IExpbnV4YXJtOyB6b3Vyb25ncm9uZ0BnbWFpbC5jb207DQo+IHJvYmgrZHRAa2VybmVs
+Lm9yZzsga2FudHl6Y0AxNjMuY29tOyBsaW51eC1zZXJpYWxAdmdlci5rZXJuZWwub3JnOw0KPiBj
+YXRhbGluLm1hcmluYXNAYXJtLmNvbTsgb2xvZkBsaXhvbS5uZXQ7IGJoZWxnYWFzQGdvb2dsIGUu
+Y29tOw0KPiB6aGljaGFuZy55dWFuMDJAZ21haWwuY29tDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
+VjUgMy8zXSBBUk02NCBMUEM6IExQQyBkcml2ZXIgaW1wbGVtZW50YXRpb24gb24NCj4gSGlwMDYN
+Cj4gDQo+IE9uIEZyaSwgTm92IDExLCAyMDE2IGF0IDAxOjM5OjM1UE0gKzAwMDAsIEdhYnJpZWxl
+IFBhb2xvbmkgd3JvdGU6DQo+ID4gSGkgQXJuZA0KPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogQXJuZCBCZXJnbWFubiBbbWFpbHRvOmFybmRAYXJuZGIu
+ZGVdDQo+ID4gPiBTZW50OiAxMCBOb3ZlbWJlciAyMDE2IDE2OjA3DQo+ID4gPiBUbzogR2Ficmll
+bGUgUGFvbG9uaQ0KPiA+ID4gQ2M6IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9y
+ZzsgWXVhbnpoaWNoYW5nOw0KPiA+ID4gbWFyay5ydXRsYW5kQGFybS5jb207IGRldmljZXRyZWVA
+dmdlci5rZXJuZWwub3JnOw0KPiA+ID4gbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgbWlueWFy
+ZEBhY20ub3JnOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGJlbmhAa2Vy
+bmVsLmNyYXNoaW5nLm9yZzsgSm9obiBHYXJyeTsgd2lsbC5kZWFjb25AYXJtLmNvbTsgbGludXgt
+DQo+ID4gPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyB4dXdlaSAoTyk7IExpbnV4YXJtOyB6b3Vy
+b25ncm9uZ0BnbWFpbC5jb207DQo+ID4gPiByb2JoK2R0QGtlcm5lbC5vcmc7IGthbnR5emNAMTYz
+LmNvbTsgbGludXgtc2VyaWFsQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGNhdGFsaW4ubWFyaW5h
+c0Bhcm0uY29tOyBvbG9mQGxpeG9tLm5ldDsgbGl2aXUuZHVkYXVAYXJtLmNvbTsNCj4gPiA+IGJo
+ZWxnYWFzQGdvb2dsIGUuY29tOyB6aGljaGFuZy55dWFuMDJAZ21haWwuY29tDQo+ID4gPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIFY1IDMvM10gQVJNNjQgTFBDOiBMUEMgZHJpdmVyIGltcGxlbWVudGF0
+aW9uIG9uDQo+ID4gPiBIaXAwNg0KPiA+ID4NCj4gPiA+IE9uIFRodXJzZGF5LCBOb3ZlbWJlciAx
+MCwgMjAxNiAzOjM2OjQ5IFBNIENFVCBHYWJyaWVsZSBQYW9sb25pDQo+IHdyb3RlOg0KPiA+ID4g
+Pg0KPiA+ID4gPiBXaGVyZSBzaG91bGQgd2UgZ2V0IHRoZSByYW5nZSBmcm9tPyBGb3IgTFBDIHdl
+IGtub3cgdGhhdCBpdCBpcw0KPiBnb2luZw0KPiA+ID4gPiBXb3JrIG9uIGFueXRoaW5nIHRoYXQg
+aXMgbm90IHVzZWQgYnkgUENJIEkvTyBzcGFjZSwgYW5kIHRoaXMgaXMNCj4gPiA+ID4gd2h5IHdl
+IHVzZSBbMCwgUENJQklPU19NSU5fSU9dDQo+ID4gPg0KPiA+ID4gSXQgc2hvdWxkIGJlIGFsbG9j
+YXRlZCB0aGUgc2FtZSB3YXkgd2UgYWxsb2NhdGUgUENJIGNvbmZpZyBzcGFjZQ0KPiA+ID4gc2Vn
+bWVudHMuIFRoaXMgaXMgY3VycmVudGx5IGRvbmUgd2l0aCB0aGUgaW9fcmFuZ2UgbGlzdCBpbg0K
+PiA+ID4gZHJpdmVycy9wY2kvcGNpLmMsIHdoaWNoIGlzbid0IHBlcmZlY3QgYnV0IGNvdWxkIGJl
+IGV4dGVuZGVkDQo+ID4gPiBpZiBuZWNlc3NhcnkuIEJhc2VkIG9uIHdoYXQgb3RoZXJzIGNvbW1l
+bnRlZCBoZXJlLCBJJ2QgcmF0aGVyDQo+ID4gPiBtYWtlIHRoZSBkaWZmZXJlbmNlcyBiZXR3ZWVu
+IElTQS9MUEMgYW5kIFBDSSBJL08gcmFuZ2VzIHNtYWxsZXINCj4gPiA+IHRoYW4gbGFyZ2VyLg0K
+PiANCj4gR2FicmllbGUsDQo+IA0KPiA+DQo+ID4gSSBhbSBub3Qgc3VyZSB0aGlzIHdvdWxkIG1h
+a2Ugc2Vuc2UuLi4NCj4gPg0KPiA+IElNSE8gYWxsIHRoZSBtZWNoYW5pc20gYXJvdW5kIGlvX3Jh
+bmdlX2xpc3QgaXMgbmVlZGVkIHRvIHByb3ZpZGUgdGhlDQo+ID4gIm1hcHBpbmciIGJldHdlZW4g
+SS9PIHRva2VucyBhbmQgcGh5c2ljYWwgQ1BVIGFkZHJlc3Nlcy4NCj4gPg0KPiA+IEN1cnJlbnRs
+eSB0aGUgYXZhaWxhYmxlIHRva2VucyByYW5nZSBmcm9tIDAgdG8gSU9fU1BBQ0VfTElNSVQuDQo+
+ID4NCj4gPiBBcyB5b3Uga25vdyB0aGUgSS9PIG1lbW9yeSBhY2Nlc3NvcnMgb3BlcmF0ZSBvbiB3
+aGF0ZXZlcg0KPiA+IF9fb2ZfYWRkcmVzc190b19yZXNvdXJjZSBzZXRzIGludG8gdGhlIHJlc291
+cmNlIChzdGFydCwgZW5kKS4NCj4gPg0KPiA+IFdpdGggdGhpcyBzcGVjaWFsIGRldmljZSBpbiBw
+bGFjZSB3ZSBjYW5ub3Qga25vdyBpZiBhIHJlc291cmNlIGlzDQo+ID4gYXNzaWduZWQgd2l0aCBh
+biBJL08gdG9rZW4gb3IgYSBwaHlzaWNhbCBhZGRyZXNzLCB1bmxlc3Mgd2UgZm9yYmlkDQo+ID4g
+dGhlIEkvTyB0b2tlbnMgdG8gYmUgaW4gYSBzcGVjaWZpYyByYW5nZS4NCj4gPg0KPiA+IFNvIHRo
+aXMgaXMgd2h5IHdlIGFyZSBjaGFuZ2luZyB0aGUgb2Zmc2V0cyBvZiBhbGwgdGhlIGZ1bmN0aW9u
+cw0KPiA+IGhhbmRsaW5nIGlvX3JhbmdlX2xpc3QgKHRvIG1ha2Ugc3VyZSB0aGF0IGEgcmFuZ2Ug
+aXMgZm9yYmlkZGVuIHRvDQo+ID4gdGhlIHRva2VucyBhbmQgaXMgYXZhaWxhYmxlIHRvIHRoZSBw
+aHlzaWNhbCBhZGRyZXNzZXMpLg0KPiA+DQo+ID4gV2UgaGF2ZSBjaG9zZW4gdGhpcyBmb3JiaWRk
+ZW4gcmFuZ2UgdG8gYmUgWzAsIFBDSUJJT1NfTUlOX0lPKQ0KPiA+IGJlY2F1c2UgdGhpcyBpcyB0
+aGUgbWF4aW11bSBwaHlzaWNhbCBJL08gcmFuZ2UgdGhhdCBhIG5vbiBQQ0kgZGV2aWNlDQo+ID4g
+Y2FuIG9wZXJhdGUgb24gYW5kIGJlY2F1c2Ugd2UgYmVsaWV2ZSB0aGlzIGRvZXMgbm90IGltcG9z
+ZSBtdWNoDQo+ID4gcmVzdHJpY3Rpb24gb24gdGhlIGF2YWlsYWJsZSBJL08gdG9rZW4gcmFuZ2U7
+IHRoYXQgbm93IGlzDQo+ID4gW1BDSUJJT1NfTUlOX0lPLCBJT19TUEFDRV9MSU1JVF0uDQo+ID4g
+U28gd2UgYmVsaWV2ZSB0aGF0IHRoZSBjaG9zZW4gZm9yYmlkZGVuIHJhbmdlIGNhbiBhY2NvbW1v
+ZGF0ZQ0KPiA+IGFueSBzcGVjaWFsIElTQSBidXMgZGV2aWNlIHdpdGggbm8gbXVjaCBjb25zdHJh
+aW50IG9uIHRoZSByZXN0DQo+ID4gb2YgSS9PIHRva2Vucy4uLg0KPiANCj4gWW91ciBpZGVhIGlz
+IGEgZ29vZCBvbmUsIGhvd2V2ZXIgeW91IGFyZSBhYnVzaW5nIFBDSUJJT1NfTUlOX0lPIGFuZCB5
+b3UNCj4gYWN0dWFsbHkgbmVlZCBhbm90aGVyIHZhcmlhYmxlIGZvciAicmVzZXJ2aW5nIiBhbiBh
+cmVhIGluIHRoZSBJL08gc3BhY2UNCj4gdGhhdCBjYW4gYmUgdXNlZCBmb3IgcGh5c2ljYWwgYWRk
+cmVzc2VzIHJhdGhlciB0aGFuIEkvTyB0b2tlbnMuDQo+IA0KPiBUaGUgb25lIGdvb2QgZXhhbXBs
+ZSBmb3IgdXNpbmcgUENJQklPU19NSU5fSU8gaXMgd2hlbiB5b3VyDQo+IHBsYXRmb3JtL2FyY2hp
+dGVjdHVyZQ0KPiBkb2VzIG5vdCBzdXBwb3J0IGxlZ2FjeSBJU0Egb3BlcmF0aW9ucyAqYXQgYWxs
+Ki4gSW4gdGhhdCBjYXNlIHNvbWVvbmUNCj4gc2V0cyB0aGUgUENJQklPU19NSU5fSU8gdG8gYSBu
+b24temVybyB2YWx1ZSB0byByZXNlcnZlIHRoYXQgSS9PIHJhbmdlDQo+IHNvIHRoYXQgaXQgZG9l
+c24ndCBnZXQgdXNlZC4gV2l0aCBaaGljaGFuZydzIHBhdGNoIHlvdSBub3cgc3RhcnQNCj4gZm9y
+Y2luZw0KPiB0aG9zZSBwbGF0Zm9ybXMgdG8gaGF2ZSBhIHZhbGlkIGFkZHJlc3MgYmVsb3cgUENJ
+QklPU19NSU5fSU8uDQoNCkJ1dCBpZiBQQ0lCSU9TX01JTl9JTyBpcyAwIHRoZW4gaXQgbWVhbnMg
+dGhhdCBhbGwgSS9PIHNwYWNlIGlzIHRvIGJlIHVzZWQNCmJ5IFBDSSBjb250cm9sbGVycyBvbmx5
+Li4uc28gaWYgeW91IGhhdmUgYSBzcGVjaWFsIGJ1cyBkZXZpY2UgdXNpbmcNCmFuIEkvTyByYW5n
+ZSBpbiB0aGlzIGNhc2Ugc2hvdWxkIGJlIGEgUENJIGNvbnRyb2xsZXIuLi5pLmUuIEkgd291bGQN
+CmV4cGVjdCBpdCB0byBmYWxsIGJhY2sgaW50byB0aGUgY2FzZSBvZiBJL08gdG9rZW5zIHJlZGly
+ZWN0aW9uIHJhdGhlciB0aGFuDQpwaHlzaWNhbCBhZGRyZXNzZXMgcmVkaXJlY3Rpb24gKGFzIG1l
+bnRpb25lZCBiZWxvdyBmcm9tIG15IHByZXZpb3VzIHJlcGx5KS4NCldoYXQgZG8geW91IHRoaW5r
+Pw0KDQpUaGFua3MNCg0KR2FiDQoNCg0KPiANCj4gRm9yIHRoZSBnZW5lcmFsIGNhc2UgeW91IGFs
+c28gaGF2ZSB0byBiZWFyIGluIG1pbmQgdGhhdCBQQ0lCSU9TX01JTl9JTw0KPiBjb3VsZA0KPiBi
+ZSB6ZXJvLiBJbiB0aGF0IGNhc2UsIHdoYXQgaXMgeW91ciAiZm9yYmlkZGVuIiByYW5nZT8gWzAs
+IDApID8gU28gaXQNCj4gbWFrZXMNCj4gc2Vuc2UgdG8gYWRkIGEgbmV3ICNkZWZpbmUgdGhhdCBz
+aG91bGQgb25seSBiZSBkZWZpbmVkIGJ5IHRob3NlDQo+IGFyY2hpdGVjdHVyZXMvDQo+IHBsYXRm
+b3JtcyB0aGF0IHdhbnQgdG8gcmVzZXJ2ZSBvbiB0b3Agb2YgUENJQklPU19NSU5fSU8gYW5vdGhl
+ciByZWdpb24NCj4gd2hlcmUgSS9PIHRva2VucyBjYW4ndCBiZSBnZW5lcmF0ZWQgZm9yLg0KPiAN
+Cj4gQmVzdCByZWdhcmRzLA0KPiBMaXZpdQ0KPiANCj4gPg0KPiA+ID4NCj4gPiA+ID4gPiBZb3Vy
+IGN1cnJlbnQgdmVyc2lvbiBoYXMNCj4gPiA+ID4gPg0KPiA+ID4gPiA+ICAgICAgICAgaWYgKGFy
+bTY0X2V4dGlvX29wcy0+cGZvdXQpDQo+IFwNCj4gPiA+ID4gPiAgICAgICAgICAgICAgICAgYXJt
+NjRfZXh0aW9fb3BzLT5wZm91dChhcm02NF9leHRpb19vcHMtDQo+ID5kZXZwYXJhLFwNCj4gPiA+
+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgIGFkZHIsIHZhbHVlLCBzaXplb2YodHlwZSkpOw0K
+PiBcDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJbnN0ZWFkLCBqdXN0IHN1YnRyYWN0IHRoZSBzdGFy
+dCBvZiB0aGUgcmFuZ2UgZnJvbSB0aGUgbG9naWNhbA0KPiA+ID4gPiA+IHBvcnQgbnVtYmVyIHRv
+IHRyYW5zZm9ybSBpdCBiYWNrIGludG8gYSBidXMtbG9jYWwgcG9ydCBudW1iZXI6DQo+ID4gPiA+
+DQo+ID4gPiA+IFRoZXNlIGFjY2Vzc29ycyBkbyBub3Qgb3BlcmF0ZSBvbiBJTyB0b2tlbnM6DQo+
+ID4gPiA+DQo+ID4gPiA+IElmIChhcm02NF9leHRpb19vcHMtPnN0YXJ0ID4gYWRkciB8fCBhcm02
+NF9leHRpb19vcHMtPmVuZCA8IGFkZHIpDQo+ID4gPiA+IGFkZHIgaXMgbm90IGdvaW5nIHRvIGJl
+IGFuIEkvTyB0b2tlbjsgaW4gZmFjdCBwYXRjaCAyLzMgaW1wb3Nlcw0KPiB0aGF0DQo+ID4gPiA+
+IHRoZSBJL08gdG9rZW5zIHdpbGwgc3RhcnQgYXQgUENJQklPU19NSU5fSU8uIFNvIGZyb20gMCB0
+bw0KPiA+ID4gUENJQklPU19NSU5fSU8NCj4gPiA+ID4gd2UgaGF2ZSBmcmVlIHBoeXNpY2FsIGFk
+ZHJlc3NlcyB0aGF0IHRoZSBhY2Nlc3NvcnMgY2FuIG9wZXJhdGUNCj4gb24uDQo+ID4gPg0KPiA+
+ID4gQWgsIEkgbWlzc2VkIHRoYXQgcGFydC4gSSdkIHJhdGhlciBub3QgdXNlIFBDSUJJT1NfTUlO
+X0lPIHRvIHJlZmVyDQo+IHRvDQo+ID4gPiB0aGUgbG9naWNhbCBJL08gdG9rZW5zLCB0aGUgcHVy
+cG9zZSBvZiB0aGF0IG1hY3JvIGlzIHJlYWxseSBtZWFudA0KPiA+ID4gZm9yIGFsbG9jYXRpbmcg
+UENJIEkvTyBwb3J0IG51bWJlcnMgd2l0aGluIHRoZSBhZGRyZXNzIHNwYWNlIG9mDQo+ID4gPiBv
+bmUgYnVzLg0KPiA+DQo+ID4gQXMgSSBtZW50aW9uZWQgYWJvdmUsIHNwZWNpYWwgZGV2aWNlcyBv
+cGVyYXRlIG9uIENQVSBhZGRyZXNzZXMNCj4gZGlyZWN0bHksDQo+ID4gbm90IEkvTyB0b2tlbnMu
+IEZvciB0aGVtIHRoZXJlIGlzIG5vIHdheSB0byBkaXN0aW5ndWlzaC4uLi4NCj4gPg0KPiA+ID4N
+Cj4gPiA+IE5vdGUgdGhhdCBpdCdzIGVxdWFsbHkgbGlrZWx5IHRoYXQgd2hpY2hldmVyIG5leHQg
+cGxhdGZvcm0gbmVlZHMNCj4gPiA+IG5vbi1tYXBwZWQgSS9PIGFjY2VzcyBsaWtlIHRoaXMgYWN0
+dWFsbHkgbmVlZHMgdGhlbSBmb3IgUENJIEkvTw0KPiBzcGFjZSwNCj4gPiA+IGFuZCB0aGF0IHdp
+bGwgdXNlIGl0IG9uIGFkZHJlc3NlcyByZWdpc3RlcmVkIHRvIGEgUENJIGhvc3QgYnJpZGdlLg0K
+PiA+DQo+ID4gT2sgc28gaGVyZSB5b3UgYXJlIHRhbGtpbmcgYWJvdXQgYSBwbGF0Zm9ybSB0aGF0
+IGhhcyBnb3QgYW4gSS9PIHJhbmdlDQo+ID4gdW5kZXIgdGhlIFBDSSBob3N0IGNvbnRyb2xsZXIs
+IHJpZ2h0Pw0KPiA+IEFuZCB0aGlzIEkvTyByYW5nZSBjYW5ub3QgYmUgZGlyZWN0bHkgbWVtb3J5
+IG1hcHBlZCBidXQgbmVlZHMgc3BlY2lhbA0KPiA+IHJlZGlyZWN0aW9ucyBmb3IgdGhlIEkvTyB0
+b2tlbnMsIHJpZ2h0Pw0KPiA+DQo+ID4gSW4gdGhpcyBzY2VuYXJpbyByZWdpc3RlcmluZyB0aGUg
+SS9PIHJhbmdlcyB3aXRoIHRoZSBmb3JiaWRkZW4gcmFuZ2UNCj4gPiBpbXBsZW1lbnRlZCBieSB0
+aGUgY3VycmVudCBwYXRjaCB3b3VsZCBzdGlsbCBhbGxvdyB0byByZWRpcmVjdCBJL08NCj4gPiB0
+b2tlbnMgYXMgbG9uZyBhcyBhcm02NF9leHRpb19vcHMtPnN0YXJ0ID49IFBDSUJJT1NfTUlOX0lP
+DQo+ID4NCj4gPiBTbyBlZmZlY3RpdmVseSB0aGUgc3BlY2lhbCBQQ0kgaG9zdCBjb250cm9sbGVy
+DQo+ID4gMSkga25vd3MgdGhlIHBoeXNpY2FsIHJhbmdlIHRoYXQgbmVlZHMgc3BlY2lhbCByZWRp
+cmVjdGlvbg0KPiA+IDIpIHJlZ2lzdGVyIHN1Y2ggcmFuZ2UNCj4gPiAzKSB1c2VzIHBjaV9waW9f
+dG9fYWRkcmVzcygpIHRvIHJldHJpZXZlIHRoZSBJTyB0b2tlbnMgZm9yIHRoZQ0KPiA+ICAgIHNw
+ZWNpYWwgYWNjZXNzb3JzDQo+ID4gNCkgc2V0cyBhcm02NF9leHRpb19vcHMtPnN0YXJ0L2VuZCB0
+byB0aGUgSU8gdG9rZW5zIHJldHJpZXZlZCBpbiAzKQ0KPiA+DQo+ID4gU28gdG8gYmUgaG9uZXN0
+IEkgdGhpbmsgdGhpcyBwYXRjaCBjYW4gZml0IHdlbGwgYm90aCB3aXRoDQo+ID4gc3BlY2lhbCBQ
+Q0kgY29udHJvbGxlcnMgdGhhdCBuZWVkIEkvTyB0b2tlbnMgcmVkaXJlY3Rpb24gYW5kIHdpdGgN
+Cj4gPiBzcGVjaWFsIG5vbi1QQ0kgY29udHJvbGxlcnMgdGhhdCBuZWVkIG5vbi1QQ0kgSS9PIHBo
+eXNpY2FsDQo+ID4gYWRkcmVzcyByZWRpcmVjdGlvbi4uLg0KPiA+DQo+ID4gVGhhbmtzIChhbmQg
+c29ycnkgZm9yIHRoZSBsb25nIHJlcGx5IGJ1dCBJIGRpZG4ndCBrbm93IGhvdw0KPiA+IHRvIG1h
+a2UgdGhlIGV4cGxhbmF0aW9uIHNob3J0ZXIgOikgKQ0KPiA+DQo+ID4gR2FiDQo+ID4NCj4gPiA+
+DQo+ID4gPiBJZiB3ZSBzZXBhcmF0ZSB0aGUgdHdvIHN0ZXBzOg0KPiA+ID4NCj4gPiA+IGEpIGFz
+c2lnbiBhIHJhbmdlIG9mIGxvZ2ljYWwgSS9PIHBvcnQgbnVtYmVycyB0byBhIGJ1cw0KPiA+ID4g
+YikgcmVnaXN0ZXIgYSBzZXQgb2YgaGVscGVycyBmb3IgcmVkaXJlY3RpbmcgbG9naWNhbCBJL08N
+Cj4gPiA+ICAgIHBvcnQgdG8gYSBoZWxwZXIgZnVuY3Rpb24NCj4gPiA+DQo+ID4gPiB0aGVuIEkg
+dGhpbmsgdGhlIGNvZGUgd2lsbCBnZXQgY2xlYW5lciBhbmQgbW9yZSBmbGV4aWJsZS4NCj4gPiA+
+IEl0IHNob3VsZCBhY3R1YWxseSB0aGVuIGJlIGFibGUgdG8gcmVwbGFjZSB0aGUgcG93ZXJwYw0K
+PiA+ID4gc3BlY2lmaWMgaW1wbGVtZW50YXRpb24uDQo+ID4gPg0KPiA+ID4gCUFybmQNCj4gDQo+
+IC0tDQo+ID09PT09PT09PT09PT09PT09PT09DQo+IHwgSSB3b3VsZCBsaWtlIHRvIHwNCj4gfCBm
+aXggdGhlIHdvcmxkLCAgfA0KPiB8IGJ1dCB0aGV5J3JlIG5vdCB8DQo+IHwgZ2l2aW5nIG1lIHRo
+ZSAgIHwNCj4gIFwgc291cmNlIGNvZGUhICAvDQo+ICAgLS0tLS0tLS0tLS0tLS0tDQo+ICAgICDC
+r1xfKOODhClfL8KvDQo=
