@@ -1,46 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752565AbcK2EQo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:16:44 -0500
-Subject: [PATCH v4 6/7] PCI: Decouple IORESOURCE_ROM_ENABLE and
- PCI_ROM_ADDRESS_ENABLE
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:16:07 -0600
-Message-ID: <20161129041607.21453.52485.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Fri, 11 Nov 2016 18:10:00 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/VMD: Select SRCU
+Message-ID: <20161111230959.GC10660@localhost.localdomain>
+References: <1478904657-11342-1-git-send-email-jonathan.derrick@intel.com>
+ <1478904657-11342-2-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478904657-11342-2-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the assumption that IORESOURCE_ROM_ENABLE == PCI_ROM_ADDRESS_ENABLE.
-PCI_ROM_ADDRESS_ENABLE is the ROM enable bit defined by the PCI spec, so if
-we're reading or writing a BAR register value, that's what we should use.
-IORESOURCE_ROM_ENABLE is a corresponding bit in struct resource flags.
+On Fri, Nov 11, 2016 at 03:50:57PM -0700, Jon Derrick wrote:
+> VMD now uses SRCU, so we must qualify that it is part of the kernel.
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> ---
+>  drivers/pci/host/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index d7e7c0a..80ffa66 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -287,6 +287,7 @@ config PCIE_ROCKCHIP
+>  
+>  config VMD
+>  	depends on PCI_MSI && X86_64
+> +	select SRCU
+>  	tristate "Intel Volume Management Device Driver"
+>  	default N
+>  	---help---
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I think it'd be better to squash this patch with the first in this series,
+and append SRCU to the 'depends on' section rather than select it.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..cf7670e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -227,7 +227,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			mask64 = (u32)PCI_BASE_ADDRESS_MEM_MASK;
- 		}
- 	} else {
--		res->flags |= (l & IORESOURCE_ROM_ENABLE);
-+		if (l & PCI_ROM_ADDRESS_ENABLE)
-+			res->flags |= IORESOURCE_ROM_ENABLE;
- 		l64 = l & PCI_ROM_ADDRESS_MASK;
- 		sz64 = sz & PCI_ROM_ADDRESS_MASK;
- 		mask64 = (u32)PCI_ROM_ADDRESS_MASK;
-
+I get the feeling that having both 'select' and 'depends on' in the
+Kconfig syntax is not a well loved feature:
+ https://www.linuxplumbersconf.org/2016/ocw/proposals/4605
