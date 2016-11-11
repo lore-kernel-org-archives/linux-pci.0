@@ -1,58 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0047.outbound.protection.outlook.com ([104.47.2.47]:53747
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751203AbcKITWk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 14:22:40 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Adi Menachem <adim@mellanox.com>
-Subject: RE: Shouldn't VFIO virtualize the ATS capability?
-Date: Wed, 9 Nov 2016 14:49:02 +0000
-Message-ID: <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
- <20161106100832.41e173d5@t450s.home>
-In-Reply-To: <20161106100832.41e173d5@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 11 Nov 2016 15:50:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: Re: [PATCH -next] PCI: xilinx: Add missing of_node_put() in
+ xilinx_pcie_init_irq_domain()
+Message-ID: <20161111215037.GM9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476716344-1050-1-git-send-email-weiyj.lk@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1476716344-1050-1-git-send-email-weiyj.lk@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: arnd@arndb.de, bharat.kumar.gogada@xilinx.com, linux-pci@vger.kernel.org,
+ po.liu@nxp.com, michal.simek@xilinx.com, paul.gortmaker@windriver.com,
+ christophe.jaillet@wanadoo.fr, linux-arm-kernel@lists.infradead.org,
+ Wei Yongjun <weiyongjun1@huawei.com>, bhelgaas@google.com, rgummal@xilinx.com,
+ soren.brinkmann@xilinx.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I would virtualize the "ATS Control Register".
+On Mon, Oct 17, 2016 at 02:59:04PM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> This node pointer is returned by of_get_next_child() with refcount
+> incremented in this function. of_node_put() on it before exitting
+> this function on error.
+> 
+> This is detected by Coccinelle semantic patch.
+> 
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
-Regarding poor behavior, I couldn't really find what happens when ATS is mi=
-sconfigured, but I would assume it can cause problems.
-The scenarios I'm concerned about are:
-	1. The guest enables translation caching, while the hypervisor thinks ther=
-e are disabled -> Hypervisor won't issue invalidations.
-	2. Smallest Translation Unit misconfiguration. Not sure if it will cause i=
-nvalid access or only poor caching behavior.
+Applied to pci/host-xilinx for v4.10, thanks!
 
-Thanks,
-Ilya
+See below for another possible issue.
 
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Sunday, November 06, 2016 7:09 PM
-> To: Ilya Lesokhin <ilyal@mellanox.com>
-> Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com
-> Subject: Re: Shouldn't VFIO virtualize the ATS capability?
->=20
-> On Sun, 6 Nov 2016 11:13:09 +0000
-> Ilya Lesokhin <ilyal@mellanox.com> wrote:
->=20
-> > Hi
-> > I've noticed that VFIO doesn't virtualize the ATS capability.
-> > It seems to me that translation caching and Smallest Translation Unit i=
-s
-> something you would want to control on the host. Am I wrong?
->=20
-> What about those fields would we virtualize?  Why does the host need to b=
-e
-> an intermediary?  Can the user induce poor behavior with direct access to
-> them?  Thanks,
->=20
-> Alex
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index c8616fa..7100ee5 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -529,6 +529,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  						 port);
+>  	if (!port->leg_domain) {
+>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> +		of_node_put(pcie_intc_node);
+>  		return -ENODEV;
+>  	}
+>  
+> @@ -540,6 +541,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  							 &xilinx_pcie_msi_chip);
+>  		if (!port->msi_domain) {
+>  			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+> +			of_node_put(pcie_intc_node);
+
+We also leak port->leg_domain here, don't we?
+
+>  			return -ENODEV;
+>  		}
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
