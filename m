@@ -1,178 +1,177 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-kernel@vger.kernel.org
-Subject: [PATCH 07/20] pci/xgene-msi: Convert to hotplug state machine
-Date: Thu, 17 Nov 2016 19:35:28 +0100
-Message-Id: <20161117183541.8588-8-bigeasy@linutronix.de>
-In-Reply-To: <20161117183541.8588-1-bigeasy@linutronix.de>
-References: <20161117183541.8588-1-bigeasy@linutronix.de>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Duc Dang <dhdang@apm.com>,
- rt@linuxtronix.de, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCHv2] PCI/VMD: Use SRCU as a local RCU to prevent delaying global RCU
+Date: Fri, 11 Nov 2016 16:08:45 -0700
+Message-Id: <1478905725-219032-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Install the callbacks via the state machine and let the core invoke
-the callbacks on the already online CPUs.
+SRCU lets synchronize_srcu depend on VMD-local RCU primitives,
+preventing long delays from locking up RCU in other systems. VMD
+performs a synchronize when removing a device, but will hit all irq
+lists if the device uses all VMD vectors. This patch will not help VMD's
+RCU synchronization, but will isolate the read side delays to the VMD
+subsystem. Additionally, the use of SRCU in VMD's isr will keep it
+isolated from any other RCU waiters in the rest of the system.
 
-Cc: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+The patch was tested using concurrent fio and nvme resets:
+[global]
+rw=read
+bs=4k
+direct=1
+ioengine=libaio
+iodepth=32
+norandommap
+timeout=300
+runtime=1000000000
+
+[nvme0]
+cpus_allowed=0-63
+numjobs=8
+filename=/dev/nvme0n1
+
+[nvme1]
+cpus_allowed=0-63
+numjobs=8
+filename=/dev/nvme1n1
+
+while (true) do
+	for i in /sys/class/nvme/nvme*; do
+		echo "Resetting ${i##*/}"
+		echo 1 > $i/reset_controller;
+		sleep 5
+	done;
+done
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/host/pci-xgene-msi.c | 69 +++++++++++-----------------------------
- include/linux/cpuhotplug.h       |  1 +
- 2 files changed, 20 insertions(+), 50 deletions(-)
+v1->v2: Kconfig depends on SRCU
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index a6456b578269..1f38d0836751 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -360,16 +360,16 @@ static void xgene_msi_isr(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
+ drivers/pci/host/Kconfig |  2 +-
+ drivers/pci/host/vmd.c   | 26 ++++++++++++++++++++------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d7e7c0a..e020359 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -286,7 +286,7 @@ config PCIE_ROCKCHIP
+ 	  4 slots.
+ 
+ config VMD
+-	depends on PCI_MSI && X86_64
++	depends on PCI_MSI && X86_64 && SRCU
+ 	tristate "Intel Volume Management Device Driver"
+ 	default N
+ 	---help---
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 6614b3552..af4eca2 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/pci.h>
++#include <linux/srcu.h>
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
+ 
+@@ -39,7 +40,6 @@
+ /**
+  * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
+  * @node:	list item for parent traversal.
+- * @rcu:	RCU callback item for freeing.
+  * @irq:	back pointer to parent.
+  * @enabled:	true if driver enabled IRQ
+  * @virq:	the virtual IRQ value provided to the requesting driver.
+@@ -49,7 +49,6 @@
+  */
+ struct vmd_irq {
+ 	struct list_head	node;
+-	struct rcu_head		rcu;
+ 	struct vmd_irq_list	*irq;
+ 	bool			enabled;
+ 	unsigned int		virq;
+@@ -58,11 +57,13 @@ struct vmd_irq {
+ /**
+  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
+  * @irq_list:	the list of irq's the VMD one demuxes to.
++ * @srcu:	SRCU struct for local synchronization.
+  * @count:	number of child IRQs assigned to this vector; used to track
+  *		sharing.
+  */
+ struct vmd_irq_list {
+ 	struct list_head	irq_list;
++	struct srcu_struct	srcu;
+ 	unsigned int		count;
+ };
+ 
+@@ -224,14 +225,14 @@ static void vmd_msi_free(struct irq_domain *domain,
+ 	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
+ 	unsigned long flags;
+ 
+-	synchronize_rcu();
++	synchronize_srcu(&vmdirq->irq->srcu);
+ 
+ 	/* XXX: Potential optimization to rebalance */
+ 	raw_spin_lock_irqsave(&list_lock, flags);
+ 	vmdirq->irq->count--;
+ 	raw_spin_unlock_irqrestore(&list_lock, flags);
+ 
+-	kfree_rcu(vmdirq, rcu);
++	kfree(vmdirq);
  }
  
-+static enum cpuhp_state pci_xgene_online;
-+
- static int xgene_msi_remove(struct platform_device *pdev)
+ static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
+@@ -646,11 +647,12 @@ static irqreturn_t vmd_irq(int irq, void *data)
  {
--	int virq, i;
- 	struct xgene_msi *msi = platform_get_drvdata(pdev);
+ 	struct vmd_irq_list *irqs = data;
+ 	struct vmd_irq *vmdirq;
++	int idx;
  
--	for (i = 0; i < NR_HW_IRQS; i++) {
--		virq = msi->msi_groups[i].gic_irq;
--		if (virq != 0)
--			irq_set_chained_handler_and_data(virq, NULL, NULL);
--	}
-+	if (pci_xgene_online)
-+		cpuhp_remove_state(pci_xgene_online);
-+	cpuhp_remove_state(CPUHP_PCI_XGENE_DEAD);
+-	rcu_read_lock();
++	idx = srcu_read_lock(&irqs->srcu);
+ 	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+ 		generic_handle_irq(vmdirq->virq);
+-	rcu_read_unlock();
++	srcu_read_unlock(&irqs->srcu, idx);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -696,6 +698,10 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < vmd->msix_count; i++) {
++		err = init_srcu_struct(&vmd->irqs[i].srcu);
++		if (err)
++			return err;
 +
- 	kfree(msi->msi_groups);
- 
- 	kfree(msi->bitmap);
-@@ -427,7 +427,7 @@ static int xgene_msi_hwirq_alloc(unsigned int cpu)
+ 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+ 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
+ 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
+@@ -714,11 +720,19 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
  	return 0;
  }
  
--static void xgene_msi_hwirq_free(unsigned int cpu)
-+static int xgene_msi_hwirq_free(unsigned int cpu)
++static void vmd_cleanup_srcu(struct vmd_dev *vmd)
++{
++	int i;
++	for (i = 0; i < vmd->msix_count; i++)
++		cleanup_srcu_struct(&vmd->irqs[i].srcu);
++}
++
+ static void vmd_remove(struct pci_dev *dev)
  {
- 	struct xgene_msi *msi = &xgene_msi_ctrl;
- 	struct xgene_msi_group *msi_group;
-@@ -441,33 +441,9 @@ static void xgene_msi_hwirq_free(unsigned int cpu)
- 		irq_set_chained_handler_and_data(msi_group->gic_irq, NULL,
- 						 NULL);
- 	}
-+	return 0;
- }
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
  
--static int xgene_msi_cpu_callback(struct notifier_block *nfb,
--				  unsigned long action, void *hcpu)
--{
--	unsigned cpu = (unsigned long)hcpu;
--
--	switch (action) {
--	case CPU_ONLINE:
--	case CPU_ONLINE_FROZEN:
--		xgene_msi_hwirq_alloc(cpu);
--		break;
--	case CPU_DEAD:
--	case CPU_DEAD_FROZEN:
--		xgene_msi_hwirq_free(cpu);
--		break;
--	default:
--		break;
--	}
--
--	return NOTIFY_OK;
--}
--
--static struct notifier_block xgene_msi_cpu_notifier = {
--	.notifier_call = xgene_msi_cpu_callback,
--};
--
- static const struct of_device_id xgene_msi_match_table[] = {
- 	{.compatible = "apm,xgene1-msi"},
- 	{},
-@@ -478,7 +454,6 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 	struct resource *res;
- 	int rc, irq_index;
- 	struct xgene_msi *xgene_msi;
--	unsigned int cpu;
- 	int virt_msir;
- 	u32 msi_val, msi_idx;
- 
-@@ -540,28 +515,22 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	cpu_notifier_register_begin();
--
--	for_each_online_cpu(cpu)
--		if (xgene_msi_hwirq_alloc(cpu)) {
--			dev_err(&pdev->dev, "failed to register MSI handlers\n");
--			cpu_notifier_register_done();
--			goto error;
--		}
--
--	rc = __register_hotcpu_notifier(&xgene_msi_cpu_notifier);
--	if (rc) {
--		dev_err(&pdev->dev, "failed to add CPU MSI notifier\n");
--		cpu_notifier_register_done();
--		goto error;
--	}
--
--	cpu_notifier_register_done();
-+	rc = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "pci/xgene:online",
-+			       xgene_msi_hwirq_alloc, NULL);
-+	if (rc)
-+		goto err_cpuhp;
-+	pci_xgene_online = rc;
-+	rc = cpuhp_setup_state(CPUHP_PCI_XGENE_DEAD, "pci/xgene:dead", NULL,
-+			       xgene_msi_hwirq_free);
-+	if (rc)
-+		goto err_cpuhp;
- 
- 	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
- 
- 	return 0;
- 
-+err_cpuhp:
-+	dev_err(&pdev->dev, "failed to add CPU MSI notifier\n");
- error:
- 	xgene_msi_remove(pdev);
- 	return rc;
-diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
-index 6506dce8343a..fd5598b8353a 100644
---- a/include/linux/cpuhotplug.h
-+++ b/include/linux/cpuhotplug.h
-@@ -38,6 +38,7 @@ enum cpuhp_state {
- 	CPUHP_RADIX_DEAD,
- 	CPUHP_PAGE_ALLOC_DEAD,
- 	CPUHP_NET_DEV_DEAD,
-+	CPUHP_PCI_XGENE_DEAD,
- 	CPUHP_WORKQUEUE_PREP,
- 	CPUHP_POWER_NUMA_PREPARE,
- 	CPUHP_HRTIMERS_PREPARE,
+ 	vmd_detach_resources(vmd);
++	vmd_cleanup_srcu(vmd);
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+ 	pci_stop_root_bus(vmd->bus);
+ 	pci_remove_root_bus(vmd->bus);
 -- 
-2.10.2
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.8.3.1
