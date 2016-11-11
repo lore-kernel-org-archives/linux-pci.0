@@ -1,93 +1,55 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "liudongdong (C)" <liudongdong3@huawei.com>,
-        "arnd@arndb.de"
-	<arnd@arndb.de>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "tn@semihalf.com"
-	<tn@semihalf.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "Chenxin (Charles)"
-	<charles.chenxin@huawei.com>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: RE: [PATCH V5 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-Date: Tue, 22 Nov 2016 07:43:39 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F92B77E@lhreml507-mbx>
-References: <1479460951-49281-1-git-send-email-liudongdong3@huawei.com>
- <1479460951-49281-3-git-send-email-liudongdong3@huawei.com>
- <20161118170821.GH25762@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F9270ED@lhreml507-mbx>
- <20161121223145.GC4832@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161121223145.GC4832@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44410 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965001AbcKKWyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 17:54:18 -0500
+Date: Fri, 11 Nov 2016 16:54:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: bhelgaas@google.com, l.stach@pengutronix.de, hongxing.zhu@nxp.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] MAINTAINERS: PCI: imx6: Use Richard Zhu's NXP email
+Message-ID: <20161111225414.GW9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
+ <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 21 November 2016 22:32
-> To: Gabriele Paoloni
-> Cc: liudongdong (C); arnd@arndb.de; rafael@kernel.org;
-> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; Wangzhou (B);
-> pratyush.anand@gmail.com; linux-pci@vger.kernel.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com;
-> Chenxin (Charles); hanjun.guo@linaro.org; Linuxarm
-> Subject: Re: [PATCH V5 2/2] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
->=20
-> On Mon, Nov 21, 2016 at 09:09:28AM +0000, Gabriele Paoloni wrote:
->=20
-> > > > +config PCI_HISI_ACPI
-> > > > +	depends on ACPI && ARM64
-> > > > +	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe
-> > > controllers"
-> > > > +	select PNP
-> > > > +	help
-> > > > +	  Say Y here if you want ACPI PCIe controller support on
-> > > HiSilicon
-> > > > +	  Hip05 and Hip06 and Hip07 SoCs
-> > >
-> > > I'm not sure about this Kconfig setup.  Do we really want to force
-> > > people to enable a special config option to get this support?
-> > >
-> > > I'm comparing it in my mind with other PCI quirks.  They're all
-> > > enabled as a group by CONFIG_PCI_QUIRKS.  Ultimately we want an
-> ACPI
-> > > kernel to work without requiring any platform-specific config
-> options.
-> > >
-> > > I'm wondering if we should consolidate all the ECAM quirk code in a
-> > > single place (maybe pci/ecam-quirks.c, pci/ecam.c, or pci/pci-
-> acpi.c),
-> > > under a config option like CONFIG_PCI_ECAM_QUIRKS or maybe even
-> plain
-> > > CONFIG_PCI_QUIRKS (of course, it could still be qualified by
-> > > CONFIG_ACPI and CONFIG_ARM64).
-> >
-> > What about having a single config options but keeping separate files
-> > for each vendors (at least as first step)?
->=20
-> That sounds fine.  The main thing is that we're trying to build a
-> generic kernel that can run on any ACPI arm64 platform, so we really
-> shouldn't have to turn on platform-specific config options.
+On Wed, Oct 26, 2016 at 02:27:23PM -0200, Fabio Estevam wrote:
+> FSL emails may become invalid soon, so switch to the NXP one.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 
-Ok great we'll do so then
+I applied patches 2 & 3 (MAINTAINERS updates) with acks from Richard and
+Lucas.  I put these on for-linus, so they should go in v4.9 if I have any
+more stuff to send to Linus before then.  I probably won't ask him to pull
+*just* these, so if by some chance I don't have any more v4.9 material,
+they will appear in v4.10.
 
-Thanks
-
-Gab
-
->=20
-> > Maybe if we see that we can consolidate all the vendors in one file
-> > we can do it as a second step...
+> ---
+>  MAINTAINERS | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8544cd6..cf828f4 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9257,7 +9257,7 @@ S:	Maintained
+>  F:	drivers/pci/host/*layerscape*
+>  
+>  PCI DRIVER FOR IMX6
+> -M:	Richard Zhu <Richard.Zhu@freescale.com>
+> +M:	Richard Zhu <hongxing.zhu@nxp.com>
+>  M:	Lucas Stach <l.stach@pengutronix.de>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
