@@ -1,58 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:55077 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752601AbcKHOu7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 09:50:59 -0500
-Date: Tue, 8 Nov 2016 15:48:25 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Hannes Reinecke <hare@suse.de>
-cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [RFC PATCH] pci: add pci_irq_get_affinity_vector()
-In-Reply-To: <1478591241-123356-1-git-send-email-hare@suse.de>
-Message-ID: <alpine.DEB.2.20.1611081547530.3501@nanos>
-References: <1478591241-123356-1-git-send-email-hare@suse.de>
+Return-Path: <festevam@gmail.com>
+Return-Path: <festevam@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161111225414.GW9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477499244-10640-1-git-send-email-fabio.estevam@nxp.com>
+ <1477499244-10640-2-git-send-email-fabio.estevam@nxp.com> <20161111225414.GW9868@bhelgaas-glaptop.roam.corp.google.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Fri, 11 Nov 2016 21:02:56 -0200
+Message-ID: <CAOMZO5D83bNtUbxy_9u9Dnz9X2NvZ271_=CrCaSfquhEqmUeqw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] MAINTAINERS: PCI: imx6: Use Richard Zhu's NXP email
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 Nov 2016, Hannes Reinecke wrote:
+Hi Bjorn,
 
-> Add a reverse-mapping function to return the interrupt vector for
-> any CPU if interrupt affinity is enabled.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/pci/msi.c   | 36 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 37 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index bfdd074..de5ed32 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1302,6 +1302,42 @@ const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
->  }
->  EXPORT_SYMBOL(pci_irq_get_affinity);
->  
-> +/**
-> + * pci_irq_get_affinity_vector - return the vector number for a given CPU
-> + * @dev:	PCI device to operate on
-> + * @cpu:	cpu number
-> + *
-> + * Returns the vector number for CPU @cpu or a negative error number
-> + * if interrupt affinity is not set.
-> + */
-> +int pci_irq_get_affinity_vector(struct pci_dev *dev, int cpu)
-> +{
-> +	if (dev->msix_enabled) {
-> +		struct msi_desc *entry;
-> +
-> +		for_each_pci_msi_entry(entry, dev) {
-> +			if (cpumask_test_cpu(cpu, entry->affinity))
+On Fri, Nov 11, 2016 at 8:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-entry->affinity can be NULL
+> I applied patches 2 & 3 (MAINTAINERS updates) with acks from Richard and
+> Lucas.  I put these on for-linus, so they should go in v4.9 if I have any
+> more stuff to send to Linus before then.  I probably won't ask him to pull
+> *just* these, so if by some chance I don't have any more v4.9 material,
+> they will appear in v4.10.
 
+Sounds good, thanks.
