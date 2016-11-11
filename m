@@ -1,80 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36574 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934630AbcKXBZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 20:25:25 -0500
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+Received: from lhrrgout.huawei.com ([194.213.3.17]:4135 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754206AbcKKNkX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 08:40:23 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
-Date: Wed, 23 Nov 2016 18:25:21 -0700
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "bhelgaas@googl e.com" <bhelgaas@google.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 11 Nov 2016 13:39:35 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F900A@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <17821285.aIcTyCGn5n@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
+ <10334260.ztLXZ2Oynd@wuerfel>
+In-Reply-To: <10334260.ztLXZ2Oynd@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161123215510.GA16311@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Arnd
 
-
-On 23/11/16 02:55 PM, Jason Gunthorpe wrote:
->>> Only ODP hardware allows changing the DMA address on the fly, and it
->>> works at the page table level. We do not need special handling for
->>> RDMA.
->>
->> I am aware of ODP but, noted by others, it doesn't provide a general
->> solution to the points above.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 10 November 2016 16:07
+> To: Gabriele Paoloni
+> Cc: linux-arm-kernel@lists.infradead.org; Yuanzhichang;
+> mark.rutland@arm.com; devicetree@vger.kernel.org;
+> lorenzo.pieralisi@arm.com; minyard@acm.org; linux-pci@vger.kernel.org;
+> benh@kernel.crashing.org; John Garry; will.deacon@arm.com; linux-
+> kernel@vger.kernel.org; xuwei (O); Linuxarm; zourongrong@gmail.com;
+> robh+dt@kernel.org; kantyzc@163.com; linux-serial@vger.kernel.org;
+> catalin.marinas@arm.com; olof@lixom.net; liviu.dudau@arm.com;
+> bhelgaas@googl e.com; zhichang.yuan02@gmail.com
+> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
+> Hip06
 > 
-> How do you mean?
-
-I was only saying it wasn't general in that it wouldn't work for IB
-hardware that doesn't support ODP or other hardware  that doesn't do
-similar things (like an NVMe drive).
-
-It makes sense for hardware that supports ODP to allow MRs to not pin
-the underlying memory and provide for migrations that the hardware can
-follow. But most DMA engines will require the memory to be pinned and
-any complex allocators (GPU or otherwise) should respect that. And that
-seems like it should be the default way most of this works -- and I
-think it wouldn't actually take too much effort to make it all work now
-as is. (Our iopmem work is actually quite small and simple.)
-
->> It's also worth noting that #4 makes use of ZONE_DEVICE (#2) so they are
->> really the same option. iopmem is really just one way to get BAR
->> addresses to user-space while inside the kernel it's ZONE_DEVICE.
+> On Thursday, November 10, 2016 3:36:49 PM CET Gabriele Paoloni wrote:
+> >
+> > Where should we get the range from? For LPC we know that it is going
+> > Work on anything that is not used by PCI I/O space, and this is
+> > why we use [0, PCIBIOS_MIN_IO]
 > 
-> Seems fine for RDMA?
+> It should be allocated the same way we allocate PCI config space
+> segments. This is currently done with the io_range list in
+> drivers/pci/pci.c, which isn't perfect but could be extended
+> if necessary. Based on what others commented here, I'd rather
+> make the differences between ISA/LPC and PCI I/O ranges smaller
+> than larger.
 
-Yeah, we've had RDMA and O_DIRECT transfers to PCIe backed ZONE_DEVICE
-memory working for some time. I'd say it's a good fit. The main question
-we've had is how to expose PCIe bars to userspace to be used as MRs and
-such.
+I am not sure this would make sense...
 
+IMHO all the mechanism around io_range_list is needed to provide the
+"mapping" between I/O tokens and physical CPU addresses.
 
-Logan
+Currently the available tokens range from 0 to IO_SPACE_LIMIT.
+
+As you know the I/O memory accessors operate on whatever
+__of_address_to_resource sets into the resource (start, end).
+
+With this special device in place we cannot know if a resource is
+assigned with an I/O token or a physical address, unless we forbid
+the I/O tokens to be in a specific range.
+
+So this is why we are changing the offsets of all the functions
+handling io_range_list (to make sure that a range is forbidden to
+the tokens and is available to the physical addresses).
+
+We have chosen this forbidden range to be [0, PCIBIOS_MIN_IO)
+because this is the maximum physical I/O range that a non PCI device
+can operate on and because we believe this does not impose much
+restriction on the available I/O token range; that now is 
+[PCIBIOS_MIN_IO, IO_SPACE_LIMIT].
+So we believe that the chosen forbidden range can accommodate
+any special ISA bus device with no much constraint on the rest
+of I/O tokens...
+
+> 
+> > > Your current version has
+> > >
+> > >         if (arm64_extio_ops->pfout)                             \
+> > >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
+> > >                        addr, value, sizeof(type));             \
+> > >
+> > > Instead, just subtract the start of the range from the logical
+> > > port number to transform it back into a bus-local port number:
+> >
+> > These accessors do not operate on IO tokens:
+> >
+> > If (arm64_extio_ops->start > addr || arm64_extio_ops->end < addr)
+> > addr is not going to be an I/O token; in fact patch 2/3 imposes that
+> > the I/O tokens will start at PCIBIOS_MIN_IO. So from 0 to
+> PCIBIOS_MIN_IO
+> > we have free physical addresses that the accessors can operate on.
+> 
+> Ah, I missed that part. I'd rather not use PCIBIOS_MIN_IO to refer to
+> the logical I/O tokens, the purpose of that macro is really meant
+> for allocating PCI I/O port numbers within the address space of
+> one bus.
+
+As I mentioned above, special devices operate on CPU addresses directly,
+not I/O tokens. For them there is no way to distinguish....
+
+> 
+> Note that it's equally likely that whichever next platform needs
+> non-mapped I/O access like this actually needs them for PCI I/O space,
+> and that will use it on addresses registered to a PCI host bridge.
+
+Ok so here you are talking about a platform that has got an I/O range
+under the PCI host controller, right?
+And this I/O range cannot be directly memory mapped but needs special
+redirections for the I/O tokens, right?
+
+In this scenario registering the I/O ranges with the forbidden range
+implemented by the current patch would still allow to redirect I/O
+tokens as long as arm64_extio_ops->start >= PCIBIOS_MIN_IO
+
+So effectively the special PCI host controller
+1) knows the physical range that needs special redirection
+2) register such range
+3) uses pci_pio_to_address() to retrieve the IO tokens for the
+   special accessors
+4) sets arm64_extio_ops->start/end to the IO tokens retrieved in 3)
+
+So to be honest I think this patch can fit well both with
+special PCI controllers that need I/O tokens redirection and with
+special non-PCI controllers that need non-PCI I/O physical
+address redirection...
+
+Thanks (and sorry for the long reply but I didn't know how
+to make the explanation shorter :) )
+
+Gab
+
+> 
+> If we separate the two steps:
+> 
+> a) assign a range of logical I/O port numbers to a bus
+> b) register a set of helpers for redirecting logical I/O
+>    port to a helper function
+> 
+> then I think the code will get cleaner and more flexible.
+> It should actually then be able to replace the powerpc
+> specific implementation.
+> 
+> 	Arnd
