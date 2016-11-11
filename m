@@ -1,327 +1,125 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [PATCH V4 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
- <1478682897-119874-3-git-send-email-liudongdong3@huawei.com>
- <20161114233320.GB30262@bhelgaas-glaptop.roam.corp.google.com>
- <a3dc9785-9a6f-3106-2edb-4f5443a35ca6@huawei.com>
- <20161116193108.GD26600@bhelgaas-glaptop.roam.corp.google.com>
-CC: <arnd@arndb.de>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>,
-        <tn@semihalf.com>, <wangzhou1@hisilicon.com>,
-        <pratyush.anand@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <c7af6b8f-fd2e-c88d-31d9-928e1b40c28d@huawei.com>
-Date: Thu, 17 Nov 2016 09:53:46 +0800
+Return-Path: <emil.l.velikov@gmail.com>
+Return-Path: <emil.l.velikov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161116193108.GD26600@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20161111144917.GA5138@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161109165607.26322-1-emil.l.velikov@gmail.com> <20161110071327.GA30661@kroah.com>
+ <CACvgo50m+nNhfUOmB_vw1ScMXDteG+fXU6D5G6D+suiH85Digw@mail.gmail.com>
+ <20161110235931.GB12055@bhelgaas-glaptop.roam.corp.google.com>
+ <CACvgo53i4zTROE7=6_=G4ryVVBoUZLDZ=arQjpmzk2A62kEqbA@mail.gmail.com> <20161111144917.GA5138@bhelgaas-glaptop.roam.corp.google.com>
+From: Emil Velikov <emil.l.velikov@gmail.com>
+Date: Fri, 11 Nov 2016 18:56:51 +0000
+Message-ID: <CACvgo50V+wcibUHkpdsFJa_q+K2=k1T2UzsJ2gmdc3NGo+7qUQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: create revision file in sysfs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Hi Bjorn,
 
-在 2016/11/17 3:31, Bjorn Helgaas 写道:
-> On Wed, Nov 16, 2016 at 07:59:38PM +0800, Dongdong Liu wrote:
->> Hi Bjorn
+On 11 November 2016 at 14:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Nov 11, 2016 at 12:31:47AM +0000, Emil Velikov wrote:
+>> On 10 November 2016 at 23:59, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > Hi Emil,
+>> >
+>> > On Thu, Nov 10, 2016 at 01:14:35PM +0000, Emil Velikov wrote:
+>> >> On 10 November 2016 at 07:13, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> >> > On Wed, Nov 09, 2016 at 04:56:07PM +0000, Emil Velikov wrote:
+>> >> >> From: Emil Velikov <emil.velikov@collabora.com>
+>> >> >>
+>> >> >> Currently the revision isn't available via sysfs/libudev thus if one
+>> >> >> wants to know the value they need to read through the config file.
+>> >> >>
+>> >> >> This in itself wakes/powers up the device, causing unwanted delays.
+>> >> >>
+>> >> >> There are at least two userspace components which could make use the new
+>> >> >> file - libpciaccess and libdrm. At the moment the former will wake up
+>> >> >> _every_ PCI device for simple invocation of glxinfo [when using Mesa
+>> >> >> 10.0+ drivers]. While the latter [in association with Mesa 13.0] can
+>> >> >> lead to 2-3 second delays while starting firefox, thunderbird or
+>> >> >> chromium.
+>> >
+>> > I agree, these unwanted delays are completely unacceptable.  My
+>> > question is whether we should fix them by exporting more information
+>> > from the kernel, or by changing the way the userspace components work.
+>> >
+>> > It should not take anywhere near 2 seconds to wake up a PCI device.
+>> > That makes me think there's a more serious problem than just a lack of
+>> > caching for the revision field, e.g., maybe we're looking at far more
+>> > PCI devices than we need to, or we're doing it many times to the same
+>> > device, or ...
+>> >
+>> > If I understand correctly, the delay was bisected to
+>> > https://cgit.freedesktop.org/mesa/mesa/commit/?id=be239326aa4f, which
+>> > removed a bunch of code that looked up the vendor and device IDs, and
+>> > replaced it with drmGetDevice().  And apparently drmGetDevice(), in
+>> > this path:
+>> >
+>> >   drmGetDevice
+>> >     drmProcessPciDevice
+>> >       drmParsePciDeviceInfo
+>> >
+>> > is a little more thorough in that it looks up the *revision* in
+>> > addition to the vendor and device IDs.  So we pay the cost for the
+>> > revision even though in this instance we don't care about the revision
+>> > at all.
+>> >
+>> Above all, apologies for all the "lovely" code that you had to go
+>> through for these.
+>> And yes, you've got it spot on.
 >>
->> Many Thanks for your review
+>> > drmParsePciDeviceInfo() currently reads the whole config header from
+>> > sysfs (https://cgit.freedesktop.org/drm/libdrm/tree/xf86drm.c#n2949),
+>> > but I think you're extending that to try the vendor, device,
+>> > subsystem_vendor, subsystem_device, and (if present) revision sysfs
+>> > files first (http://www.spinics.net/lists/dri-devel/msg122319.html).
+>> >
+>> Yes, making the revision file optional and "faking it" was my first
+>> thought, esp. since we don't have any users of it (yet).
+>> Although people are not too keen on it, so we'll likely opt for
+>> revision-less API.
 >>
->> 在 2016/11/15 7:33, Bjorn Helgaas 写道:
->>> On Wed, Nov 09, 2016 at 05:14:57PM +0800, Dongdong Liu wrote:
->>>> PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
->>>> It is non ECAM only for the RC bus config space;for any other bus
->>>> underneath the root bus we support ECAM access.
->>>> Add specific quirks for PCI config space accessors.This involves:
->>>> 1. New initialization call hisi_pcie_init() to obtain rc base
->>>> addresses from PNP0C02 as subdevice of PNP0A03.
->>>> 2. New entry in common quirk array.
->>>>
->>>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>>> ---
->>>> MAINTAINERS                       |   1 +
->>>> drivers/acpi/pci_mcfg.c           |  13 ++++
->>>> drivers/pci/host/Kconfig          |   8 ++
->>>> drivers/pci/host/Makefile         |   1 +
->>>> drivers/pci/host/pcie-hisi-acpi.c | 157 ++++++++++++++++++++++++++++++++++++++
->>>> include/linux/pci-ecam.h          |   5 ++
->>>> 6 files changed, 185 insertions(+)
->>>> create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
->>>>
->>>> diff --git a/MAINTAINERS b/MAINTAINERS
->>>> index 1cd38a7..b224caa 100644
->>>> --- a/MAINTAINERS
->>>> +++ b/MAINTAINERS
->>>> @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
->>>> S:	Maintained
->>>> F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>>> F:	drivers/pci/host/pcie-hisi.c
->>>> +F:	drivers/pci/host/pcie-hisi-acpi.c
->>>>
->>>> PCIE DRIVER FOR ROCKCHIP
->>>> M:	Shawn Lin <shawn.lin@rock-chips.com>
->>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->>>> index ac21db3..b1b6fc7 100644
->>>> --- a/drivers/acpi/pci_mcfg.c
->>>> +++ b/drivers/acpi/pci_mcfg.c
->>>> @@ -57,6 +57,19 @@ struct mcfg_fixup {
->>>> 	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
->>>> 	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
->>>> 	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
->>>> +#ifdef CONFIG_PCI_HISI_ACPI
->>>> +	#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
->>>> +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
->>>> +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
->>>> +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
->>>> +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
->>>> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
->>>> +#endif
->>>> };
->>>>
->>>> static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
->>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->>>> index ae98644..9ff2bcd 100644
->>>> --- a/drivers/pci/host/Kconfig
->>>> +++ b/drivers/pci/host/Kconfig
->>>> @@ -227,6 +227,14 @@ config PCI_HISI
->>>> 	  Say Y here if you want PCIe controller support on HiSilicon
->>>> 	  Hip05 and Hip06 and Hip07 SoCs
->>>>
->>>> +config PCI_HISI_ACPI
->>>> +	depends on ACPI && ARM64
->>>> +	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe controllers"
->>>> +	select PNP
->>>> +	help
->>>> +	  Say Y here if you want ACPI PCIe controller support on HiSilicon
->>>> +	  Hip05 and Hip06 and Hip07 SoCs
->>>> +
->>>> config PCIE_QCOM
->>>> 	bool "Qualcomm PCIe controller"
->>>> 	depends on ARCH_QCOM && OF
->>>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->>>> index 084cb49..9402858 100644
->>>> --- a/drivers/pci/host/Makefile
->>>> +++ b/drivers/pci/host/Makefile
->>>> @@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->>>> obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
->>>> obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
->>>> obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
->>>> +obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o
->>>> obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
->>>> obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
->>>> obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
->>>> diff --git a/drivers/pci/host/pcie-hisi-acpi.c b/drivers/pci/host/pcie-hisi-acpi.c
->>>> new file mode 100644
->>>> index 0000000..aade4b5
->>>> --- /dev/null
->>>> +++ b/drivers/pci/host/pcie-hisi-acpi.c
->>>> @@ -0,0 +1,157 @@
->>>> +/*
->>>> + * PCIe host controller driver for HiSilicon HipXX SoCs
->>>> + *
->>>> + * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
->>>> + *
->>>> + * Author: Dongdong Liu <liudongdong3@huawei.com>
->>>> + *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>>> + *
->>>> + * This program is free software; you can redistribute it and/or modify
->>>> + * it under the terms of the GNU General Public License version 2 as
->>>> + * published by the Free Software Foundation.
->>>> + */
->>>> +#include <linux/pci.h>
->>>> +#include <linux/pci-acpi.h>
->>>> +#include <linux/pci-ecam.h>
->>>> +
->>>> +#define DEBUG0				0x728
->>>> +#define PCIE_LTSSM_LINKUP_STATE		0x11
->>>> +#define PCIE_LTSSM_STATE_MASK		0x3F
->>>
->>> These are now unused.
->>
->> Thanks for pointing that, will delete them.
->>
->>>
->>>> +static const struct acpi_device_id hisi_pcie_rc_res_ids[] = {
->>>> +	{"HISI0081", 0},
->>>> +	{"", 0},
->>>> +};
->>>> +
->>>> +static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->>>> +				  int size, u32 *val)
->>>> +{
->>>> +	struct pci_config_window *cfg = bus->sysdata;
->>>> +	int dev = PCI_SLOT(devfn);
->>>> +
->>>> +	if (bus->number == cfg->busr.start) {
->>>> +		/* access only one slot on each root port */
->>>> +		if (dev > 0)
->>>> +			return PCIBIOS_DEVICE_NOT_FOUND;
->>>> +		else
->>>> +			return pci_generic_config_read32(bus, devfn, where,
->>>> +							 size, val);
->>>> +	}
->>>> +
->>>> +	return pci_generic_config_read(bus, devfn, where, size, val);
->>>> +}
->>>> +
->>>> +static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
->>>> +				  int where, int size, u32 val)
->>>> +{
->>>> +	struct pci_config_window *cfg = bus->sysdata;
->>>> +	int dev = PCI_SLOT(devfn);
->>>> +
->>>> +	if (bus->number == cfg->busr.start) {
->>>> +		/* access only one slot on each root port */
->>>> +		if (dev > 0)
->>>> +			return PCIBIOS_DEVICE_NOT_FOUND;
->>>> +		else
->>>> +			return pci_generic_config_write32(bus, devfn, where,
->>>> +							  size, val);
->>>> +	}
->>>> +
->>>> +	return pci_generic_config_write(bus, devfn, where, size, val);
->>>> +}
->>>> +
->>>> +static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->>>> +				       int where)
->>>> +{
->>>> +	struct pci_config_window *cfg = bus->sysdata;
->>>> +	void __iomem *reg_base = cfg->priv;
->>>> +
->>>> +	if (bus->number == cfg->busr.start)
->>>> +		return reg_base + where;
->>>> +	else
->>>> +		return pci_ecam_map_bus(bus, devfn, where);
->>>> +}
->>>> +
->>>> +/*
->>>> + * Retrieve RC base and size from sub-device under the RC
->>>> + * Device (RES1)
->>>> + * {
->>>> + *	Name (_HID, "HISI0081")
->>>> + *	Name (_CID, "PNP0C02")
->>>> + *	Name (_CRS, ResourceTemplate (){
->>>> + *		Memory32Fixed (ReadWrite, 0xb0080000, 0x10000)
->>>> + *	})
->>>> + * }
->>>> + */
->>>> +static int hisi_pcie_rc_addr_get(struct acpi_device *adev,
->>>> +				 void __iomem **addr)
->>>> +{
->>>> +	struct acpi_device *child_adev;
->>>> +	struct list_head list;
->>>> +	struct resource *res;
->>>> +	struct resource_entry *entry;
->>>> +	unsigned long flags;
->>>> +	int ret;
->>>> +
->>>> +	list_for_each_entry(child_adev, &adev->children, node) {
->>>> +		ret = acpi_match_device_ids(child_adev, hisi_pcie_rc_res_ids);
->>>> +		if (ret)
->>>> +			continue;
->>>> +
->>>> +		INIT_LIST_HEAD(&list);
->>>> +		flags = IORESOURCE_MEM;
->>>> +		ret = acpi_dev_get_resources(child_adev, &list,
->>>> +					     acpi_dev_filter_resource_type_cb,
->>>> +					     (void *)flags);
->>>> +		if (ret < 0) {
->>>> +			dev_err(&child_adev->dev,
->>>> +				"failed to parse _CRS method, error code %d\n",
->>>> +				ret);
->>>> +			return ret;
->>>> +		} else if (ret == 0) {
->>>> +			dev_err(&child_adev->dev,
->>>> +				"no IO and memory resources present in _CRS\n");
->>>> +			return -EINVAL;
->>>> +		}
->>>> +
->>>> +		entry = list_first_entry(&list, struct resource_entry, node);
->>>> +		res = entry->res;
->>>> +		*addr = devm_ioremap(&child_adev->dev,
->>>> +				     res->start, resource_size(res));
->>>> +		acpi_dev_free_resource_list(&list);
->>>> +		if (IS_ERR(*addr)) {
->>>> +			dev_err(&child_adev->dev, "error with ioremap\n");
->>>> +			return -ENOMEM;
->>>> +		}
->>>> +
->>>> +		return 0;
->>>> +	}
->>>> +
->>>> +	return -EINVAL;
->>>> +}
->>>
->>> OK, so MCFG (with the possible help of quirks) tells us where *most*
->>> of this RC's ECAM space is, but it doesn't tell us where the root bus
->>> ECAM space is, which is why we need this block of ugly code.  Right?
->> Yes, correct.
->>>
->>> Is there any way we can compute the root bus reg_base from the address
->>> we got from MCFG?
->>
->> No, we can not,because RC base addresses are sequntial and MCFG impose a 4k boundaries.
+>> > Bottom line, I guess I'm not super opposed to this, but I do feel like
+>> > we're making a kernel change to cover up a userspace problem, and I
+>> > think it would be better to push on that userspace problem a little
+>> > more.
+>> >
+>> Yes, definitely we can beat some sense into userspace. Yet that
+>> shouldn't be a deterrent for exposing the revision.
 >
-> I understand the "no" part, but not the "because ..." part :)
+> Maybe.  If we speed things up by extending this kernel ABI, there's
+> much less incentive to optimize the userspace stuff.  I feel a little
+> bit like an enabler for undesirable userspace behavior :)
 >
-> I think the regions described by MCFG are aligned on 1MB boundaries,
-> not 4K, because MCFG tells you about ECAM space for a given bus number
-> range.  Each bus can have 256 devices (5 bit device number + 3 bit
-> function number), and each device has 4K of config space.  256 * 4KB =
-> 1MB.
+Yes, fixing userspace to not do silly things is the goal. But at the
+same time even if userspace is perfect, there is no reason to power on
+the device just to get the revision field, is it ?
+Especially since everything else is readily available.
 
-Yes, your are right, thanks for your explanation.
-
+>> As hinted before the other prominent user libpciaccess wakes up probes
+>> _every_ pci device.
 >
-> In any case, it wouldn't have to be a simple function like this:
+> Is it really necessary to probe *every* PCI device?  That doesn't
+> sound like a scalable design.
 >
->   reg_base = pci_mcfg_lookup(seg, [bus 01]) - 1MB
+> As you can tell, the argument that "we should add this kernel ABI to
+> make suboptimal userspace algorithms go faster" doesn't feel very
+> compelling to me.
 >
-> It could be *anything*, e.g.,
->
->   reg_base = 0x00100000 + (bus_num * 4096);
+"Don't shoot the messenger" comes to mind. I'm just the stupid^Wnice
+person who's trying to untangle unfortunate design decisions - don't
+force me to rewrite more than a dozen pieces of software, please ?
+Even then, I wonder how long it'll take for those to hit end users.
 
-Our hip06 SoC has 4 RCs. Each RCs has one root port. The RCs base addresses are as below.
-
-RC0 0xa0090000~0xa009ffff
-RC2 0xa00a0000~0xa00affff
-RC3 0xa00b0000~0xa00bffff
-RC1 0xa0200000~0xa020ffff
-
-The size is 64K ,the base addresses can be changed by UEFI but the size is fixed.
-4k is for RC itself config space, the left 60K spaces are for other uses.
-
-The regions described by MCFG are aligned on 1MB boundaries,
-So we can not get our RC base adreses from MCFG.
->
->>> Is it a constant that realistically is not going to be modified?
->>
->> Yes, this is a hardware limitation
->
-> If there's only one RC and the address is a constant, maybe you can
-> just hard-code the address in the .map_bus() function?
-
-As above said, the base adresses can be changed by UEFI but the size is fixed.
-hard-code maybe not a good way.
+Yes I see your concern - userspace does do stupid stuff. Yet it
+[sometimes] must know the information and the current way of
+retrieving it (waking up the device) is quite sub-optimal.
 
 Thanks
-Dongdong
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> .
->
+Emil
+P.S. Some drivers have custom ioctls to retrieve the device info
+(incl. revision). Surely we won't want to continue promoting/assisting
+that ?
