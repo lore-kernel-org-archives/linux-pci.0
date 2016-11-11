@@ -1,55 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:57204 "EHLO theia.8bytes.org"
+Received: from mail.kernel.org ([198.145.29.136]:38378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752357AbcKNMsG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 07:48:06 -0500
-Date: Mon, 14 Nov 2016 13:48:03 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/5] iommu: Move REQ_ACS_FLAGS out to header and rename
-Message-ID: <20161114124803.GW2078@8bytes.org>
-References: <20161026175156.23495.12980.stgit@gimli.home>
- <20161026180134.23495.27520.stgit@gimli.home>
- <20161110122713.GI9996@8bytes.org>
- <20161111225740.GX9868@bhelgaas-glaptop.roam.corp.google.com>
+        id S934319AbcKKVpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 16:45:32 -0500
+Date: Fri, 11 Nov 2016 15:45:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH -next] PCI: rockchip: Add missing of_node_put() in
+ rockchip_pcie_init_irq_domain()
+Message-ID: <20161111214528.GL9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161111225740.GX9868@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1476716242-31684-1-git-send-email-weiyj.lk@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 11, 2016 at 04:57:40PM -0600, Bjorn Helgaas wrote:
-> On Thu, Nov 10, 2016 at 01:27:13PM +0100, Joerg Roedel wrote:
-> > On Wed, Oct 26, 2016 at 12:01:34PM -0600, Alex Williamson wrote:
-> > > Allow other parts of the kernel to see which PCI ACS flags the IOMMU
-> > > layer considers necessary for isolation.
-> > > 
-> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > > Cc: Joerg Roedel <joro@8bytes.org>
-> > > ---
-> > >  drivers/iommu/iommu.c |   18 +++++-------------
-> > >  include/linux/iommu.h |   11 +++++++++++
-> > >  2 files changed, 16 insertions(+), 13 deletions(-)
-> > 
-> > Applied, thanks Alex.
+On Mon, Oct 17, 2016 at 02:57:22PM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
 > 
-> Hi Joerg, did you apply just this one (4/5), or the whole series?  If the
-> former, is it safe for me to apply 1, 2, 3, and 5?  I assumed these were
-> meant to go as a group.
+> This node pointer is returned by of_get_next_child() with refcount
+> incremented in this function. of_node_put() on it before exitting
+> this function on error.
+> 
+> This is detected by Coccinelle semantic patch.
+> 
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
-Ah yes, I missed that this patch was part of a series and applied it. I
-can still remove it, as the tree is not yet pushed. Will you take the
-while series? Then you can add my
+Applied with Shawn's ack to pci/host-rockchip for v4.10, thanks!
 
-	Acked-by: Joerg Roedel <jroedel@suse.de>
-
-to this patch.
-
-
-Thanks,
-
-	Joerg
-
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index e0b22da..ab88859 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -949,6 +949,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
+>  						    &intx_domain_ops, rockchip);
+>  	if (!rockchip->irq_domain) {
+>  		dev_err(dev, "failed to get a INTx IRQ domain\n");
+> +		of_node_put(intc);
+>  		return -EINVAL;
+>  	}
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
