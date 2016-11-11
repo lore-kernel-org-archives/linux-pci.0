@@ -1,107 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v9 14/16] drivers: acpi: iort: replace rid map type with type mask
-Date: Mon, 21 Nov 2016 10:01:46 +0000
-Message-Id: <20161121100148.24769-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40620 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935022AbcKKWJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 17:09:09 -0500
+Date: Fri, 11 Nov 2016 16:09:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: Re: [PATCH v4 2/4] PCI: rockchip: Mark RC as common clock
+ architecture
+Message-ID: <20161111220905.GQ9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
+ <1476754889-21804-2-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476754889-21804-2-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORT tables provide data that allow the kernel to carry out
-device ID mappings between endpoints and system components
-(eg interrupt controllers, IOMMUs). When the mapping for a
-given device ID is carried out, the translation mechanism
-is done on a per-subsystem basis rather than a component
-subtype (ie the IOMMU kernel layer will look for mappings
-from a device to all IORT node types corresponding to IOMMU
-components), therefore the corresponding mapping API should
-work on a range (ie mask) of IORT node types corresponding
-to a common set of components (eg IOMMUs) rather than a
-specific node type.
+On Tue, Oct 18, 2016 at 09:41:27AM +0800, Shawn Lin wrote:
+> The default value of common clock configuration is
+> zero indicating Rockchip's RC is using asynchronous
+> clock architecture but actually we are using common
+> clock. This will confuses some EP drivers if they
+> need some different settings referring to this value.
+> So let's fix it.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+> Changes in v4:
+> - rebase on the next branch
+> 
+> Changes in v3:
+> - rebase the code since it isn't cleanly applied again
+> 
+> Changes in v2:
+> - rebase the code since it isn't cleanly applied after Bjorn's cleanup
+> 
+>  drivers/pci/host/pcie-rockchip.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 3ede865..8e260d2 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -141,6 +141,7 @@
+>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+>  #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+> +#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+>  #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+>  #define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+>  #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
 
-Upgrade the IORT iort_node_map_rid() API to work with a
-type mask instead of a single node type so that it can
-be used for mappings that span multiple components types
-(ie IOMMUs).
+These look an awful lot like these generic PCIe definitions:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+  #define PCI_EXP_LNKCTL          16      /* Link Control */
+  #define  PCI_EXP_LNKCTL_ASPMC   0x0003  /* ASPM Control */
+  #define  PCI_EXP_LNKCTL_ASPM_L0S 0x0001 /* L0s Enable */
+  #define  PCI_EXP_LNKCTL_ASPM_L1  0x0002 /* L1 Enable */
+  #define  PCI_EXP_LNKCTL_RCB     0x0008  /* Read Completion Boundary */
+  #define  PCI_EXP_LNKCTL_LD      0x0010  /* Link Disable */
+  #define  PCI_EXP_LNKCTL_RL      0x0020  /* Retrain Link */
+  #define  PCI_EXP_LNKCTL_CCC     0x0040  /* Common Clock Configuration */
+  #define  PCI_EXP_LNKCTL_ES      0x0080  /* Extended Synch */
+  #define  PCI_EXP_LNKCTL_CLKREQ_EN 0x0100 /* Enable clkreq */
+  #define  PCI_EXP_LNKCTL_HAWD    0x0200  /* Hardware Autonomous Width Disable */
+  #define  PCI_EXP_LNKCTL_LBMIE   0x0400  /* Link Bandwidth Management Interrupt Enable */
+  #define  PCI_EXP_LNKCTL_LABIE   0x0800  /* Link Autonomous Bandwidth Interrupt Enable */
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 8a8ae5e..f3bbef8 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -26,6 +26,9 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#define IORT_TYPE_MASK(type)	(1 << (type))
-+#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+
- struct iort_its_msi_chip {
- 	struct list_head	list;
- 	struct fwnode_handle	*fw_node;
-@@ -317,7 +320,7 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
--						u8 type)
-+						u8 type_mask)
- {
- 	u32 rid = rid_in;
- 
-@@ -326,7 +329,7 @@ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 		struct acpi_iort_id_mapping *map;
- 		int i;
- 
--		if (node->type == type) {
-+		if (IORT_TYPE_MASK(node->type) & type_mask) {
- 			if (rid_out)
- 				*rid_out = rid;
- 			return node;
-@@ -399,7 +402,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- 	if (!node)
- 		return req_id;
- 
--	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
- 	return dev_id;
- }
- 
-@@ -421,7 +424,7 @@ static int iort_dev_find_its_id(struct device *dev, u32 req_id,
- 	if (!node)
- 		return -ENXIO;
- 
--	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
- 	if (!node)
- 		return -ENXIO;
- 
--- 
-2.10.0
+If these are indeed the same, I'd really like it if you could use the
+generic definitions, e.g., by something like:
 
+  #define PCIE_RC_PCIE_CAP_BASE    (PCIE_RC_CONFIG_BASE + 0xc0)
+
+  status = rockchip_pcie_read(rockchip, PCIE_RC_PCIE_CAP_BASE + PCI_EXP_LNKCTL);
+  status |= PCI_EXP_LNKCTL_CCC;
+
+That way grep has a chance to find related pieces.
+
+If they only *look* similar but are not really the same, then
+disregard this, of course.
+
+> @@ -536,6 +537,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  
+>  	rockchip_pcie_set_power_limit(rockchip);
+>  
+> +	/* Set RC's clock architecture as common clock */
+> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> +	status |= PCIE_RC_CONFIG_LCS_CCC;
+> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +
+>  	/* Enable Gen1 training */
+>  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+>  			    PCIE_CLIENT_CONFIG);
+> -- 
+> 2.3.7
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
