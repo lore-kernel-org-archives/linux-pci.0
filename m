@@ -1,37 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.194]:62315 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756301AbcK3SPL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2016 13:15:11 -0500
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: "clsoto@us.ibm.com" <clsoto@us.ibm.com>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v4 4/7] PCI: Don't update VF BARs while VF memory space
- is enabled
-Date: Wed, 30 Nov 2016 17:56:05 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB02307B5@AcuExch.aculab.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49451 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935328AbcKKW2C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 17:28:02 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uABMNmbt129355
+        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 17:27:48 -0500
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26nn8wn9ya-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 17:27:48 -0500
+Received: from localhost
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Fri, 11 Nov 2016 20:27:46 -0200
+Subject: Re: [PATCH] of/irq: improve error message on irq discovery process
+ failure
+To: benh@au1.ibm.com, Mark Rutland <mark.rutland@arm.com>
+References: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <20161109190457.GC837@leverpostej> <1478813443.2592.2.camel@au1.ibm.com>
+ <20161111163241.GL11945@leverpostej> <1478891547.2592.13.camel@au1.ibm.com>
+Cc: devicetree@vger.kernel.org, marc.zyngier@arm.com,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        robh+dt@kernel.org, frowand.list@gmail.com
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Date: Fri, 11 Nov 2016 20:27:34 -0200
 MIME-Version: 1.0
+In-Reply-To: <1478891547.2592.13.camel@au1.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <582645D6.3040102@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2Fhcw0KPiBTZW50OiAyOSBOb3ZlbWJlciAyMDE2IDA0OjE1DQo+IElm
-IHdlIHVwZGF0ZSBhIFZGIEJBUiB3aGlsZSBpdCdzIGVuYWJsZWQsIHRoZXJlIGFyZSB0d28gcG90
-ZW50aWFsIHByb2JsZW1zOg0KPiANCj4gICAxKSBBbnkgZHJpdmVyIHRoYXQncyB1c2luZyB0aGUg
-VkYgaGFzIGEgY2FjaGVkIEJBUiB2YWx1ZSB0aGF0IGlzIHN0YWxlDQo+ICAgICAgYWZ0ZXIgdGhl
-IHVwZGF0ZSwgYW5kDQo+IA0KPiAgIDIpIFdlIGNhbid0IHVwZGF0ZSA2NC1iaXQgQkFScyBhdG9t
-aWNhbGx5LCBzbyB0aGUgaW50ZXJtZWRpYXRlIHN0YXRlDQo+ICAgICAgKG5ldyBsb3dlciBkd29y
-ZCB3aXRoIG9sZCB1cHBlciBkd29yZCkgbWF5IGNvbmZsaWN0IHdpdGggYW5vdGhlcg0KPiAgICAg
-IGRldmljZSwgYW5kIGFuIGFjY2VzcyBieSBhIGRyaXZlciB1bnJlbGF0ZWQgdG8gdGhlIFZGIG1h
-eSBjYXVzZSBhIGJ1cw0KPiAgICAgIGVycm9yLg0KDQpDYW4gdGhlIGhpZ2ggd29yZCBiZSBmaXJz
-dCBzZXQgdG8gYSB2YWx1ZSB0aGF0IGlzIGludmFsaWQgKGllIGEgNEcgYmxvY2sNCnRoYXQgaGFz
-IG5vIHZhbGlkIFBDSWUgc2xhdmVzKSBiZWZvcmUgdXBkYXRpbmcgdGhlIGxvdyB3b3JkIGFuZCBm
-aW5hbGx5DQp0aGUgY29ycmVjdCBoaWdoIHdvcmQuDQoNCk5vdGUgdGhhdCB0aGUgYWRkcmVzcyBv
-bmx5IGhhcyB0byBiZSBvdXRzaWRlIHRoZSByYW5nZSB0aGF0IHRoZSBicmlkZ2UNCmZvcndhcmRz
-IG9udG8gdGhhdCBzcGVjaWZpYyBidXMuDQoNCglEYXZpZA0KDQo=
+On 11/11/2016 05:12 PM, Benjamin Herrenschmidt wrote:
+> On Fri, 2016-11-11 at 16:32 +0000, Mark Rutland wrote:
+>> On Fri, Nov 11, 2016 at 08:30:43AM +1100, Benjamin Herrenschmidt
+>> wrote:
+>>>
+>>> On Wed, 2016-11-09 at 19:04 +0000, Mark Rutland wrote:
+>>>>
+>>>>
+>>>> If we don't have an interrupt-map on a PCI controller, why don't
+>>>> we
+>>>> instead log a message regarding that being missing, and give up
+>>>> early?
+>>>
+>>> Why ? It's legit to not support LSIs.
+>>
+>> Sure; I had envisioned a message like:
+>>
+>> 	pr_info("%s: no interrupt-map, INTx interrupts not possible\n",
+>> 		pci_controller_name);
+>>
+>> ... Which tells the user exaclty what we know, and doesn't imply
+>> either
+>> an error or the actual absence of HW support.
+> 
+> Works for me.
+> 
+> Cheers,
+> Ben.
+> 
+
+Thanks very much Ben and Mark, for the good suggestions you gave me.
+I was talking on IRC today with Mark, about showing a message once per
+device (and not in all its functions) about LSI being not available in
+that slot, besides the simple/small messages per function, saying
+interrupt-map wasn't found.
+
+I'm working on V2, but will delay a bit to send - I'm out next 20 days.
+When I'm back, I'll send the improved version. Oh, I removed positive
+return value - never will use it again, noticed isn't that popular heheh
+
+Thanks,
+
+
+Guilherme
+
