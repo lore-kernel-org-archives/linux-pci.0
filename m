@@ -1,109 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51589 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752306AbcK2FES (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 00:04:18 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT4wVwM072088
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:03:54 -0500
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2712rw2m78-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:03:54 -0500
-Received: from localhost
-        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Tue, 29 Nov 2016 15:03:51 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6AC962BB0045
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100 (EST)
-Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
-        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAT53nwm5177656
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100
-Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
-        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAT53m1o026945
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100
-Date: Tue, 29 Nov 2016 16:05:10 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
-        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH v4 7/7] PCI: Add comments about ROM BAR updating
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041648.21453.94596.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 11 Nov 2016 14:58:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, vikrams@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
+Message-ID: <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
+ <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129041648.21453.94596.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20161129050510.GA23688@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 10:16:48PM -0600, Bjorn Helgaas wrote:
->pci_update_resource() updates a hardware BAR so its address matches the
->kernel's struct resource UNLESS it's a disabled ROM BAR.  We only update
->those when we enable the ROM.
->
->It's not obvious from the code why ROM BARs should be handled specially.
->Apparently there are Matrox devices with defective ROM BARs that read as
->zero when disabled.  That means that if pci_enable_rom() reads the disabled
->BAR, sets PCI_ROM_ADDRESS_ENABLE (without re-inserting the address), and
->writes it back, it would enable the ROM at address zero.
->
->Add comments and references to explain why we can't make the code look more
->rational.
->
->The code changes are from 755528c860b0 ("Ignore disabled ROM resources at
->setup") and 8085ce084c0f ("[PATCH] Fix PCI ROM mapping").
->
->Link: https://lkml.org/lkml/2005/8/30/138
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Nov 10, 2016 at 01:35:41PM -0500, Sinan Kaya wrote:
+> On 9/24/2016 10:10 PM, Sinan Kaya wrote:
+> > Each PCIe device can issue up to 32 transactions at a time by default.
+> > Each transaction is tracked by a tag number on the bus. 32 outstanding
+> > transactions is not enough for some performance critical applications
+> > especially when a lot of small sized frames are transmitted.
+> > 
+> > Extended tags support increases this number to 256. Devices not
+> > supporting extended tags tie-off this field to 0. According to ECN, it
+> > is safe to enable this feature for all PCIe endpoints.
+> > 
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > ---
+> >  drivers/pci/probe.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 93f280d..2424f38 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1505,12 +1505,19 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+> >  	 */
+> >  }
+> >  
+> > +static int pci_configure_extended_tags(struct pci_dev *dev)
+> > +{
+> 
+> I should have checked the capability here before trying to enable it. 
+> I'll post a follow up patch on this. 
+> 
+> Is there any other feedback?
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+If this were completely safe to enable for every device that supported
+it, why would there be an enable bit in Device Control?
 
->---
-> drivers/pci/rom.c       |    5 +++++
-> drivers/pci/setup-res.c |    6 ++++++
-> 2 files changed, 11 insertions(+)
->
->diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
->index 06663d3..b6edb18 100644
->--- a/drivers/pci/rom.c
->+++ b/drivers/pci/rom.c
->@@ -35,6 +35,11 @@ int pci_enable_rom(struct pci_dev *pdev)
-> 	if (res->flags & IORESOURCE_ROM_SHADOW)
-> 		return 0;
->
->+	/*
->+	 * Ideally pci_update_resource() would update the ROM BAR address,
->+	 * and we would only set the enable bit here.  But apparently some
->+	 * devices have buggy ROM BARs that read as zero when disabled.
->+	 */
-> 	pcibios_resource_to_bus(pdev->bus, &region, res);
-> 	pci_read_config_dword(pdev, pdev->rom_base_reg, &rom_addr);
-> 	rom_addr &= ~PCI_ROM_ADDRESS_MASK;
->diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->index 09bdff7..57d7041 100644
->--- a/drivers/pci/setup-res.c
->+++ b/drivers/pci/setup-res.c
->@@ -67,6 +67,12 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
-> 	if (resno < PCI_ROM_RESOURCE) {
-> 		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
-> 	} else if (resno == PCI_ROM_RESOURCE) {
->+
->+		/*
->+		 * Apparently some Matrox devices have ROM BARs that read
->+		 * as zero when disabled, so don't update ROM BARs unless
->+		 * they're enabled.  See https://lkml.org/lkml/2005/8/30/138.
->+		 */
-> 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
-> 			return;
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I don't know anything about extended tags, but it worries me a little
+when there's a "go-fast" switch and no explanation about when and why
+we might need to go slow.
 
+> > +	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+> > +					 PCI_EXP_DEVCTL_EXT_TAG);
+> > +}
+> > +
+> >  static void pci_configure_device(struct pci_dev *dev)
+> >  {
+> >  	struct hotplug_params hpp;
+> >  	int ret;
+> >  
+> >  	pci_configure_mps(dev);
+> > +	pci_configure_extended_tags(dev);
+> >  
+> >  	memset(&hpp, 0, sizeof(hpp));
+> >  	ret = pci_get_hp_params(dev, &hpp);
+> > 
+> 
+> 
+> -- 
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
