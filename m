@@ -1,79 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49451 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935328AbcKKW2C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2016 17:28:02 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uABMNmbt129355
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 17:27:48 -0500
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26nn8wn9ya-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2016 17:27:48 -0500
-Received: from localhost
-        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Fri, 11 Nov 2016 20:27:46 -0200
-Subject: Re: [PATCH] of/irq: improve error message on irq discovery process
- failure
-To: benh@au1.ibm.com, Mark Rutland <mark.rutland@arm.com>
-References: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20161109190457.GC837@leverpostej> <1478813443.2592.2.camel@au1.ibm.com>
- <20161111163241.GL11945@leverpostej> <1478891547.2592.13.camel@au1.ibm.com>
-Cc: devicetree@vger.kernel.org, marc.zyngier@arm.com,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        robh+dt@kernel.org, frowand.list@gmail.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Date: Fri, 11 Nov 2016 20:27:34 -0200
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 11 Nov 2016 11:28:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Al Stone <ahs@redhat.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Christopher Covington <cov@codeaurora.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Dongdong Liu <liudongdong3@huawei.com>, Duc Dang <dhdang@apm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Jon Masters <jcm@redhat.com>, Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Robert Richter <rrichter@cavium.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
+Subject: Re: ACPI namespace details for ARM64
+Message-ID: <20161111112829.GB13333@red-moon>
+References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1478891547.2592.13.camel@au1.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <582645D6.3040102@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/2016 05:12 PM, Benjamin Herrenschmidt wrote:
-> On Fri, 2016-11-11 at 16:32 +0000, Mark Rutland wrote:
->> On Fri, Nov 11, 2016 at 08:30:43AM +1100, Benjamin Herrenschmidt
->> wrote:
->>>
->>> On Wed, 2016-11-09 at 19:04 +0000, Mark Rutland wrote:
->>>>
->>>>
->>>> If we don't have an interrupt-map on a PCI controller, why don't
->>>> we
->>>> instead log a message regarding that being missing, and give up
->>>> early?
->>>
->>> Why ? It's legit to not support LSIs.
->>
->> Sure; I had envisioned a message like:
->>
->> 	pr_info("%s: no interrupt-map, INTx interrupts not possible\n",
->> 		pci_controller_name);
->>
->> ... Which tells the user exaclty what we know, and doesn't imply
->> either
->> an error or the actual absence of HW support.
-> 
-> Works for me.
-> 
-> Cheers,
-> Ben.
-> 
+On Wed, Nov 09, 2016 at 04:05:06PM -0600, Bjorn Helgaas wrote:
 
-Thanks very much Ben and Mark, for the good suggestions you gave me.
-I was talking on IRC today with Mark, about showing a message once per
-device (and not in all its functions) about LSI being not available in
-that slot, besides the simple/small messages per function, saying
-interrupt-map wasn't found.
+[...]
 
-I'm working on V2, but will delay a bit to send - I'm out next 20 days.
-When I'm back, I'll send the improved version. Oh, I removed positive
-return value - never will use it again, noticed isn't that popular heheh
+> ACPI defined a Producer/Consumer bit that was intended to distinguish
+> the bridge apertures from the bridge registers [4, 5]. However, BIOSes
+> didn't use that bit correctly, and the result is that OSes have to
+> assume that everything in a PCI host bridge _CRS is a window. That
+> leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
+> device itself.
 
-Thanks,
+ACPI 6.1 states that in the revision changes 4.0a Apr.2010 (xiii)
+"Consumer/Producer bit is ignored (Restored 2.0C change that had
+been lost)" and still that bit is marked as valid. If it is not
+reliable it should be set as "ignored" in the specs (as it was
+on ACPI 2.0C, BTW), as it is it is just a source of confusion.
 
-
-Guilherme
-
+Thanks again !
+Lorenzo
