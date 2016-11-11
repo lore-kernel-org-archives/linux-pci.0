@@ -1,80 +1,56 @@
-Return-Path: <heiko@sntech.de>
-Return-Path: <heiko@sntech.de>
-From: Heiko Stuebner <heiko@sntech.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Wei Yongjun <weiyj.lk@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, Wei Yongjun <weiyongjun1@huawei.com>, linux-omap@vger.kernel.org, linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, michal.simek@xilinx.com, soren.brinkmann@xilinx.com, bharat.kumar.gogada@xilinx.com, robh@kernel.org, Frank Rowand <frowand.list@gmail.com>, devicetree@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: dra7xx: Add missing of_node_put() in dra7xx_pcie_init_irq_domain()
-Date: Mon, 14 Nov 2016 22:37:29 +0100
-Message-ID: <6132489.PMT7H6dWFM@phil>
-In-Reply-To: <20161114211928.GD9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476716077-30379-1-git-send-email-weiyj.lk@gmail.com> <1d95b915-ddc0-b48f-270b-fffb60ecfe5e@ti.com> <20161114211928.GD9868@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
+To: Al Stone <al.stone@linaro.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-pci@vger.kernel.org
+References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
+ <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, Al Stone <ahs@redhat.com>,
+ Robert Richter <rrichter@cavium.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann
+ <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Don Dutile <ddutile@redhat.com>, Christopher Covington <cov@codeaurora.org>,
+ Tomasz Nowicki <tn@semihalf.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <98c9564d-17f9-f549-6dd4-5c6abc1ba1a3@codeaurora.org>
+Date: Fri, 11 Nov 2016 09:24:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, 14. November 2016, 15:19:28 CET schrieb Bjorn Helgaas:
-> [+cc Shawn, Heiko, Michal, Soren, Bharat, Rob H, Frank, devicetree@vger]
+On 11/10/2016 6:18 PM, Al Stone wrote:
+> On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
+>> Hi all,
+>>
+>> We've been working through the details of getting ACPI to work on
+>> arm64, and there have been lots of questions about what this means for
+>> PCI.  I've outlined this for several people individually, but I'm
+>> going to send this separately, apart from a specific patch series, to
+>> make sure we're all on the same page.  Please correct my errors and
+>> misunderstandings.
+>>
+>> Bjorn
+>>
+>> [snip....]
 > 
-> On Sat, Nov 12, 2016 at 12:39:01PM +0530, Kishon Vijay Abraham I wrote:
-> > Hi,
-> > 
-> > On Saturday 12 November 2016 03:08 AM, Bjorn Helgaas wrote:
-> > > On Mon, Oct 17, 2016 at 02:54:37PM +0000, Wei Yongjun wrote:
-> > >> From: Wei Yongjun <weiyongjun1@huawei.com>
-> > >> 
-> > >> This node pointer is returned by of_get_next_child() with refcount
-> > >> incremented in this function. of_node_put() on it before exitting
-> > >> this function on error.
-> > >> 
-> > >> This is detected by Coccinelle semantic patch.
-> > >> 
-> > >> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> > > 
-> > > Kishon, this looks correct to me, so I applied it to pci/host-dra7xx for
-> > > v4.10.  Let me know if you have any issue with it.
-> > > 
-> > >> ---
-> > >> 
-> > >>  drivers/pci/host/pci-dra7xx.c | 1 +
-> > >>  1 file changed, 1 insertion(+)
-> > >> 
-> > >> diff --git a/drivers/pci/host/pci-dra7xx.c
-> > >> b/drivers/pci/host/pci-dra7xx.c
-> > >> index 9595fad..79297e9 100644
-> > >> --- a/drivers/pci/host/pci-dra7xx.c
-> > >> +++ b/drivers/pci/host/pci-dra7xx.c
-> > >> @@ -177,6 +177,7 @@ static int dra7xx_pcie_init_irq_domain(struct
-> > >> pcie_port *pp)> >> 
-> > >>  					       &intx_domain_ops, pp);
-> > >>  	
-> > >>  	if (!pp->irq_domain) {
-> > >>  	
-> > >>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> > >> 
-> > >> +		of_node_put(pcie_intc_node);
-> > 
-> > I think of_node_put should be used for both the error case and non-error
-> > case.
-> Hmm, OK.  I don't know what the rules are.  Certainly if we made these
-> drivers modular, I don't think we'd want to leak these references
-> every time we unload/reload the module.  Should we do the put
-> immediately here, or in the module remove path, or ...?
+> A big +1 to all of this.  This also looks like something that should
+> be added to either PCI, ACPI or arm64 documentation (or even all three).
+> What do you think?
+
+
+I agree. In order to have compliant systems, we have to make PNP0C02 required
+in the PCIe appendix of the SBSA specification.
+
 > 
-> Adding other driver and DT folks for comment.
-
-I think the function above (dra7xx_pcie_init_irq_domain) can do the 
-of_node_put at its end in all cases as suggested by Kishon.
-
-of_get_next_child() will increment the refcount
-	irq_domain_add_linear()
-		__irq_domain_add() also increments the refcount
+> Thank you for putting this together, Bjorn.
+> 
+> 
 
 
-irq_domain_remove() will decrement the refcount
-
-So it should be safe to decrement the refcount in 
-dra7xx_pcie_init_irq_domain() in all cases as the irq-domain internals will 
-always keep it above 1 as long as the node is used.
-
-
-Heiko
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
