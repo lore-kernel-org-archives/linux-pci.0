@@ -1,41 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 3/9] PCI/AER: Remove unused version macros
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
-Date: Mon, 21 Nov 2016 15:45:34 -0600
-Message-ID: <20161121214533.21036.70162.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39344 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752140AbcKKOtW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 09:49:22 -0500
+Date: Fri, 11 Nov 2016 08:49:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Emil Velikov <emil.l.velikov@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        ML dri-devel <dri-devel@lists.freedesktop.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: create revision file in sysfs
+Message-ID: <20161111144917.GA5138@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161109165607.26322-1-emil.l.velikov@gmail.com>
+ <20161110071327.GA30661@kroah.com>
+ <CACvgo50m+nNhfUOmB_vw1ScMXDteG+fXU6D5G6D+suiH85Digw@mail.gmail.com>
+ <20161110235931.GB12055@bhelgaas-glaptop.roam.corp.google.com>
+ <CACvgo53i4zTROE7=6_=G4ryVVBoUZLDZ=arQjpmzk2A62kEqbA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACvgo53i4zTROE7=6_=G4ryVVBoUZLDZ=arQjpmzk2A62kEqbA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the unused DRIVER_VERSION, DRIVER_AUTHOR, and DRIVER_DESC macros.
-The author information is already included in a comment above.
+On Fri, Nov 11, 2016 at 12:31:47AM +0000, Emil Velikov wrote:
+> On 10 November 2016 at 23:59, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > Hi Emil,
+> >
+> > On Thu, Nov 10, 2016 at 01:14:35PM +0000, Emil Velikov wrote:
+> >> On 10 November 2016 at 07:13, Greg KH <gregkh@linuxfoundation.org> wrote:
+> >> > On Wed, Nov 09, 2016 at 04:56:07PM +0000, Emil Velikov wrote:
+> >> >> From: Emil Velikov <emil.velikov@collabora.com>
+> >> >>
+> >> >> Currently the revision isn't available via sysfs/libudev thus if one
+> >> >> wants to know the value they need to read through the config file.
+> >> >>
+> >> >> This in itself wakes/powers up the device, causing unwanted delays.
+> >> >>
+> >> >> There are at least two userspace components which could make use the new
+> >> >> file - libpciaccess and libdrm. At the moment the former will wake up
+> >> >> _every_ PCI device for simple invocation of glxinfo [when using Mesa
+> >> >> 10.0+ drivers]. While the latter [in association with Mesa 13.0] can
+> >> >> lead to 2-3 second delays while starting firefox, thunderbird or
+> >> >> chromium.
+> >
+> > I agree, these unwanted delays are completely unacceptable.  My
+> > question is whether we should fix them by exporting more information
+> > from the kernel, or by changing the way the userspace components work.
+> >
+> > It should not take anywhere near 2 seconds to wake up a PCI device.
+> > That makes me think there's a more serious problem than just a lack of
+> > caching for the revision field, e.g., maybe we're looking at far more
+> > PCI devices than we need to, or we're doing it many times to the same
+> > device, or ...
+> >
+> > If I understand correctly, the delay was bisected to
+> > https://cgit.freedesktop.org/mesa/mesa/commit/?id=be239326aa4f, which
+> > removed a bunch of code that looked up the vendor and device IDs, and
+> > replaced it with drmGetDevice().  And apparently drmGetDevice(), in
+> > this path:
+> >
+> >   drmGetDevice
+> >     drmProcessPciDevice
+> >       drmParsePciDeviceInfo
+> >
+> > is a little more thorough in that it looks up the *revision* in
+> > addition to the vendor and device IDs.  So we pay the cost for the
+> > revision even though in this instance we don't care about the revision
+> > at all.
+> >
+> Above all, apologies for all the "lovely" code that you had to go
+> through for these.
+> And yes, you've got it spot on.
+> 
+> > drmParsePciDeviceInfo() currently reads the whole config header from
+> > sysfs (https://cgit.freedesktop.org/drm/libdrm/tree/xf86drm.c#n2949),
+> > but I think you're extending that to try the vendor, device,
+> > subsystem_vendor, subsystem_device, and (if present) revision sysfs
+> > files first (http://www.spinics.net/lists/dri-devel/msg122319.html).
+> >
+> Yes, making the revision file optional and "faking it" was my first
+> thought, esp. since we don't have any users of it (yet).
+> Although people are not too keen on it, so we'll likely opt for
+> revision-less API.
+> 
+> > Bottom line, I guess I'm not super opposed to this, but I do feel like
+> > we're making a kernel change to cover up a userspace problem, and I
+> > think it would be better to push on that userspace problem a little
+> > more.
+> >
+> Yes, definitely we can beat some sense into userspace. Yet that
+> shouldn't be a deterrent for exposing the revision.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aer/aerdrv.c |    7 -------
- 1 file changed, 7 deletions(-)
+Maybe.  If we speed things up by extending this kernel ABI, there's
+much less incentive to optimize the userspace stuff.  I feel a little
+bit like an enabler for undesirable userspace behavior :)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 139150b..1c189e6 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -30,13 +30,6 @@
- #include "aerdrv.h"
- #include "../../pci.h"
- 
--/*
-- * Version Information
-- */
--#define DRIVER_VERSION "v1.0"
--#define DRIVER_AUTHOR "tom.l.nguyen@intel.com"
--#define DRIVER_DESC "Root Port Advanced Error Reporting Driver"
--
- static int aer_probe(struct pcie_device *dev);
- static void aer_remove(struct pcie_device *dev);
- static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
+> As hinted before the other prominent user libpciaccess wakes up probes
+> _every_ pci device.
+
+Is it really necessary to probe *every* PCI device?  That doesn't
+sound like a scalable design.
+
+As you can tell, the argument that "we should add this kernel ABI to
+make suboptimal userspace algorithms go faster" doesn't feel very
+compelling to me.
+
+> Atm that library is used by Xorg, Spice, libvirt and a few others.
+> Amongst which are the Intel GL drivers (via libdrm_intel.so), [only]
+> when GLX_MESA_query_renderer is used.
+> 
+> Or in other words - if Firefox/other GL app wants to use the
+> extension, they'll get similar delays.
+> We should look into that one as well, but it will be more picky to
+> address (read "slower to reach end users").
