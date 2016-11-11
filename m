@@ -1,36 +1,26 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dehamd003.servertools24.de ([31.47.254.18]:53436 "EHLO
-        dehamd003.servertools24.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753027AbcKYI4M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 03:56:12 -0500
-Subject: Re: Multiple problems with the Linux kernel on an AMD desktop
-To: =?UTF-8?Q?Rog=c3=a9rio_Brito?= <rbrito@ime.usp.br>
-References: <20161124233957.k2twr352kna6ukd2@ime.usp.br>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-From: Clemens Ladisch <clemens@ladisch.de>
-Message-ID: <5e4a6800-251f-23e7-11f5-9993280fe8d5@ladisch.de>
-Date: Fri, 25 Nov 2016 09:47:40 +0100
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Fri, 11 Nov 2016 07:47:45 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Check for PCIe capabilities change after
+ resume
+Message-ID: <20161111064745.GB8178@wunner.de>
+References: <20161110185520.19461.9789.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161110231808.GA8155@wunner.de>
+ <20161111002448.GC12055@bhelgaas-glaptop.roam.corp.google.com>
+ <20161111064417.GA8178@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20161124233957.k2twr352kna6ukd2@ime.usp.br>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161111064417.GA8178@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Rogério Brito wrote:
-> * I have never been able to boot this computer of mine without the option
->   irqpoll---otherwise, I get the nobody cared message.
+On Fri, Nov 11, 2016 at 07:44:17AM +0100, Lukas Wunner wrote:
+> That quirk needs to be executed after is_hotplug_bridge is set
+> and before pciehp_resume() is called for the first time.
 
-The "nobody cared" message indicates that there were too many interrupts
-that no driver felt responsible for, so the kernel has disabled that
-interrupt vector.  The irqpoll option is a workaround to get the devices
-on that interrupt vector to work, but it's not perfect.
+Sorry I meant "before pcie portdrv binds to the port".
 
-It's possible that most of your problems are caused by the irqpoll option.
-
-What IRQ is the problematic one (see the "nobody cared" message)?  What
-devices are connected to it (see /proc/interrupts)?  Does the problem go
-away when you prevent the corresponding driver(s) from loading?
-
-
-Regards,
-Clemens
+Lukas
