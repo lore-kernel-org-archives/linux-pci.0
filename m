@@ -1,99 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM) Networking
-Date: Wed,  9 Nov 2016 16:20:00 +0200
-Message-Id: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 11 Nov 2016 16:46:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Minghuan Lian <Minghuan.Lian@nxp.com>
+Subject: Re: [PATCH] pci: layerscape: add LS1046a support
+Message-ID: <20161111224633.GV9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
+MIME-Version: 1.0
+In-Reply-To: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ linux-pci@vger.kernel.org, Stuart Yoder <stuart.yoder@nxp.com>,
+ Yang-Leo Li <leoyang.li@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver enables Thunderbolt Networking on non-Apple platforms
-running Linux.
+On Tue, Oct 25, 2016 at 08:36:56PM +0800, Minghuan Lian wrote:
+> From: "mingkai.hu@nxp.com" <mingkai.hu@nxp.com>
+> 
+> 1. LS1046a PCIe controller has a different LUT_DBG offset.
+> Available "lut_dbg" is added to ls_pcie_drvdata to describe
+> this difference.
+> 2. Match LS1046 PCIe compatible
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> Signed-off-by: Mingkai Hu <mingkai.hu@nxp.com>
 
-Thunderbolt Networking provides peer-to-peer connections to transfer
-files between computers, perform PC migrations, and/or set up small
-workgroups with shared storage.
+Applied to pci/host-layerscape for v4.10, thanks!
 
-This is a virtual connection that emulates an Ethernet adapter that
-enables Ethernet networking with the benefit of Thunderbolt superfast
-medium capability.
+I removed the now-unused PCIE_LUT_DBG definition for you.
 
-Thunderbolt Networking enables two hosts and several devices that
-have a Thunderbolt controller to be connected together in a linear
-(Daisy chain) series from a single port.
+> ---
+>  Documentation/devicetree/bindings/pci/layerscape-pci.txt |  1 +
+>  drivers/pci/host/pci-layerscape.c                        | 13 ++++++++++++-
+>  2 files changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> index 41e9f55..ee1c72d5 100644
+> --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> @@ -15,6 +15,7 @@ Required properties:
+>  - compatible: should contain the platform identifier such as:
+>          "fsl,ls1021a-pcie", "snps,dw-pcie"
+>          "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
+> +        "fsl,ls1046a-pcie"
+>  - reg: base addresses and lengths of the PCIe controller
+>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>    entry for each entry in the interrupt-names property.
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 958187f..8cebf9a 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -41,6 +41,7 @@
+>  struct ls_pcie_drvdata {
+>  	u32 lut_offset;
+>  	u32 ltssm_shift;
+> +	u32 lut_dbg;
+>  	struct pcie_host_ops *ops;
+>  };
+>  
+> @@ -134,7 +135,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+>  	struct ls_pcie *pcie = to_ls_pcie(pp);
+>  	u32 state;
+>  
+> -	state = (ioread32(pcie->lut + PCIE_LUT_DBG) >>
+> +	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
+>  		 pcie->drvdata->ltssm_shift) &
+>  		 LTSSM_STATE_MASK;
+>  
+> @@ -196,18 +197,28 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+>  static struct ls_pcie_drvdata ls1043_drvdata = {
+>  	.lut_offset = 0x10000,
+>  	.ltssm_shift = 24,
+> +	.lut_dbg = 0x7fc,
+> +	.ops = &ls_pcie_host_ops,
+> +};
+> +
+> +static struct ls_pcie_drvdata ls1046_drvdata = {
+> +	.lut_offset = 0x80000,
+> +	.ltssm_shift = 24,
+> +	.lut_dbg = 0x407fc,
+>  	.ops = &ls_pcie_host_ops,
+>  };
+>  
+>  static struct ls_pcie_drvdata ls2080_drvdata = {
+>  	.lut_offset = 0x80000,
+>  	.ltssm_shift = 0,
+> +	.lut_dbg = 0x7fc,
+>  	.ops = &ls_pcie_host_ops,
+>  };
+>  
+>  static const struct of_device_id ls_pcie_of_match[] = {
+>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+>  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+> +	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
+>  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+>  	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+>  	{ },
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Thunderbolt Networking for Linux is compatible with Thunderbolt
-Networking on systems running macOS or Windows and also supports
-Thunderbolt generation 2 and 3 controllers.
-
-Note that all pre-existing Thunderbolt generation 3 features, such as
-USB, Display and other Thunderbolt device connectivity will continue
-to function exactly as they did prior to enabling Thunderbolt Networking.
-
-Code and Software Specifications:
-This kernel code creates a virtual ethernet device for computer to
-computer communication over a Thunderbolt cable.
-The new driver is a separate driver to the existing Thunderbolt driver.
-It is designed to work on systems running Linux that
-interface with Intel Connection Manager (ICM) firmware based
-Thunderbolt controllers that support Thunderbolt Networking.
-The kernel code operates in coordination with the Thunderbolt user-
-space daemon to implement full Thunderbolt networking functionality.
-
-Hardware Specifications:
-Thunderbolt Hardware specs have not yet been published but are used
-where necessary for register definitions. 
-
-Acked-by: Andreas Noever <andreas.noever@gmail.com>
-Tested-by: Mario Limonciello <mario.limonciello@dell.com>
-
-Changes since v8:
- - Added support for more Thunderbolt device IDs
-
-These patches were pushed to GitHub where they can be reviewed more
-comfortably with green/red highlighting:
-	https://github.com/01org/thunderbolt-software-kernel-tree
-
-Daemon code:
-	https://github.com/01org/thunderbolt-software-daemon
-
-For reference, here's a link to version 8:
-[v8]:	https://lkml.org/lkml/2016/9/28/378
-
-Amir Levy (8):
-  thunderbolt: Macro rename
-  thunderbolt: Updating the register definitions
-  thunderbolt: Communication with the ICM (firmware)
-  thunderbolt: Networking state machine
-  thunderbolt: Networking transmit and receive
-  thunderbolt: Kconfig for Thunderbolt Networking
-  thunderbolt: Networking doc
-  thunderbolt: Adding maintainer entry
-
- Documentation/00-INDEX                   |    2 +
- Documentation/thunderbolt/networking.txt |  132 ++
- MAINTAINERS                              |    8 +-
- drivers/thunderbolt/Kconfig              |   27 +-
- drivers/thunderbolt/Makefile             |    3 +-
- drivers/thunderbolt/icm/Makefile         |    2 +
- drivers/thunderbolt/icm/icm_nhi.c        | 1520 ++++++++++++++++++++
- drivers/thunderbolt/icm/icm_nhi.h        |   85 ++
- drivers/thunderbolt/icm/net.c            | 2254 ++++++++++++++++++++++++++++++
- drivers/thunderbolt/icm/net.h            |  287 ++++
- drivers/thunderbolt/nhi_regs.h           |  115 +-
- 11 files changed, 4426 insertions(+), 9 deletions(-)
- create mode 100644 Documentation/thunderbolt/networking.txt
- create mode 100644 drivers/thunderbolt/icm/Makefile
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
- create mode 100644 drivers/thunderbolt/icm/net.c
- create mode 100644 drivers/thunderbolt/icm/net.h
-
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
