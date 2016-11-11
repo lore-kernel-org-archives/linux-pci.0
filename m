@@ -1,66 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:51367 "EHLO ale.deltatee.com"
+Received: from 8bytes.org ([81.169.241.247]:40729 "EHLO theia.8bytes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751120AbcK1SUh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 13:20:37 -0500
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Haggai Eran <haggaie@mellanox.com>
-References: <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
-Cc: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Max Gurtovoy <maxg@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
-Date: Mon, 28 Nov 2016 11:20:27 -0700
+        id S1755629AbcKKQ1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 11:27:38 -0500
+Date: Fri, 11 Nov 2016 17:27:36 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161111162736.GV2078@8bytes.org>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20161128165751.GB28381@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Nov 11, 2016 at 04:17:37PM +0000, Robin Murphy wrote:
+> In the original of_iommu_configure design, the thought was that an ops
+> structure could be IOMMU-instance-specific (hence the later-removed
+> "priv" member), so I suppose right now it is mostly a hangover from
+> that. However, it's also what we initialise a device's fwspec with, so
+> becomes important again if we're ever going to get past the limitations
+> of buses-which-are-not-actually-buses[1].
+
+Yeah, I discussed this with a few others at LPC. My current idea is to
+tell the iommu-core which hardware-iommus exist in the system and a
+seperate iommu_ops ptr for each of them. Then every struct device can
+link to the iommu-instance it is translated by.
+
+We are not there yet, but this will give you the same per-device
+iommu-ops as implemented here.
 
 
-On 28/11/16 09:57 AM, Jason Gunthorpe wrote:
->> On PeerDirect, we have some kind of a middle-ground solution for pinning
->> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
->> user-space and the GPU not to migrate it. If they do, the MR gets
->> destroyed immediately.
-> 
-> That sounds horrible. How can that possibly work? What if the MR is
-> being used when the GPU decides to migrate? I would not support that
-> upstream without a lot more explanation..
 
-Yup, this was our experience when playing around with PeerDirect. There
-was nothing we could do if the GPU decided to invalidate the P2P
-mapping. It just meant the application would fail or need complicated
-logic to detect this and redo just about everything. And given that it
-was a reasonably rare occurrence during development it probably means
-not a lot of applications will be developed to handle it and most would
-end up being randomly broken in environments with memory pressure.
-
-Logan
+	Joerg
 
