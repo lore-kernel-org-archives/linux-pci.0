@@ -1,385 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39772 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751606AbcKKKh6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 05:37:58 -0500
-Date: Fri, 11 Nov 2016 10:37:53 +0000
-From: "liviu.dudau@arm.com" <liviu.dudau@arm.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Received: from mail-by2nam01on0133.outbound.protection.outlook.com ([104.47.34.133]:8506
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934919AbcKLAoL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 19:44:11 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        John Garry <john.garry@huawei.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-Message-ID: <20161111103753.GG10219@e106497-lin.cambridge.arm.com>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
- <20161109113955.GD10219@e106497-lin.cambridge.arm.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8F27C0@lhreml507-mbx>
- <20161109165044.GE10219@e106497-lin.cambridge.arm.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5F06@lhreml507-mbx>
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "Stephen Hemminger" <sthemmin@microsoft.com>,
+        Hadden Hoppert <haddenh@microsoft.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 3/3] PCI: hv: delete the device earlier from
+ hbus->children for hot-remove
+Date: Sat, 12 Nov 2016 00:44:06 +0000
+Message-ID: <SN1PR0301MB15983C33ABB735E7976C0C0CABBA0@SN1PR0301MB1598.namprd03.prod.outlook.com>
+References: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5F06@lhreml507-mbx>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 04:06:40PM +0000, Gabriele Paoloni wrote:
-> Hi Liviu
-> 
-> > -----Original Message-----
-> > From: liviu.dudau@arm.com [mailto:liviu.dudau@arm.com]
-> > Sent: 09 November 2016 16:51
-> > To: Gabriele Paoloni
-> > Cc: Yuanzhichang; catalin.marinas@arm.com; will.deacon@arm.com;
-> > robh+dt@kernel.org; bhelgaas@google.com; mark.rutland@arm.com;
-> > olof@lixom.net; arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> > lorenzo.pieralisi@arm.com; linux-kernel@vger.kernel.org; Linuxarm;
-> > devicetree@vger.kernel.org; linux-pci@vger.kernel.org; linux-
-> > serial@vger.kernel.org; minyard@acm.org; benh@kernel.crashing.org;
-> > zourongrong@gmail.com; John Garry; zhichang.yuan02@gmail.com;
-> > kantyzc@163.com; xuwei (O)
-> > Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
-> > special ISA
-> > 
-> > On Wed, Nov 09, 2016 at 04:16:17PM +0000, Gabriele Paoloni wrote:
-> > > Hi Liviu
-> > >
-> > > Thanks for reviewing
-> > >
-> > 
-> > [removed some irrelevant part of discussion, avoid crazy formatting]
-> > 
-> > > > > +/**
-> > > > > + * addr_is_indirect_io - check whether the input taddr is for
-> > > > indirectIO.
-> > > > > + * @taddr: the io address to be checked.
-> > > > > + *
-> > > > > + * Returns 1 when taddr is in the range; otherwise return 0.
-> > > > > + */
-> > > > > +int addr_is_indirect_io(u64 taddr)
-> > > > > +{
-> > > > > +	if (arm64_extio_ops->start > taddr || arm64_extio_ops->end
-> > <
-> > > > taddr)
-> > > >
-> > > > start >= taddr ?
-> > >
-> > > Nope... if  (taddr < arm64_extio_ops->start || taddr >
-> > arm64_extio_ops->end)
-> > > then taddr is outside the range [start; end] and will return 0;
-> > otherwise
-> > > it will return 1...
-> > 
-> > Oops, sorry, did not pay attention to the returned value. The check is
-> > correct as it is, no need to change then.
-> > 
-> > >
-> > > >
-> > > > > +		return 0;
-> > > > > +
-> > > > > +	return 1;
-> > > > > +}
-> > > > >
-> > > > >  BUILD_EXTIO(b, u8)
-> > > > >
-> > > > > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > > > > index 02b2903..cc2a05d 100644
-> > > > > --- a/drivers/of/address.c
-> > > > > +++ b/drivers/of/address.c
-> > > > > @@ -479,6 +479,50 @@ static int of_empty_ranges_quirk(struct
-> > > > device_node *np)
-> > > > >  	return false;
-> > > > >  }
-> > > > >
-> > > > > +
-> > > > > +/*
-> > > > > + * of_isa_indirect_io - get the IO address from some isa reg
-> > > > property value.
-> > > > > + *	For some isa/lpc devices, no ranges property in ancestor
-> > node.
-> > > > > + *	The device addresses are described directly in their regs
-> > > > property.
-> > > > > + *	This fixup function will be called to get the IO address of
-> > > > isa/lpc
-> > > > > + *	devices when the normal of_translation failed.
-> > > > > + *
-> > > > > + * @parent:	points to the parent dts node;
-> > > > > + * @bus:		points to the of_bus which can be used to parse
-> > > > address;
-> > > > > + * @addr:	the address from reg property;
-> > > > > + * @na:		the address cell counter of @addr;
-> > > > > + * @presult:	store the address paresed from @addr;
-> > > > > + *
-> > > > > + * return 1 when successfully get the I/O address;
-> > > > > + * 0 will return for some failures.
-> > > >
-> > > > Bah, you are returning a signed int, why 0 for failure? Return a
-> > > > negative value with
-> > > > error codes. Otherwise change the return value into a bool.
-> > >
-> > > Yes we'll move to bool
-> > >
-> > > >
-> > > > > + */
-> > > > > +static int of_get_isa_indirect_io(struct device_node *parent,
-> > > > > +				struct of_bus *bus, __be32 *addr,
-> > > > > +				int na, u64 *presult)
-> > > > > +{
-> > > > > +	unsigned int flags;
-> > > > > +	unsigned int rlen;
-> > > > > +
-> > > > > +	/* whether support indirectIO */
-> > > > > +	if (!indirect_io_enabled())
-> > > > > +		return 0;
-> > > > > +
-> > > > > +	if (!of_bus_isa_match(parent))
-> > > > > +		return 0;
-> > > > > +
-> > > > > +	flags = bus->get_flags(addr);
-> > > > > +	if (!(flags & IORESOURCE_IO))
-> > > > > +		return 0;
-> > > > > +
-> > > > > +	/* there is ranges property, apply the normal translation
-> > > > directly. */
-> > > >
-> > > > s/there is ranges/if we have a 'ranges'/
-> > >
-> > > Thanks for spotting this
-> > >
-> > > >
-> > > > > +	if (of_get_property(parent, "ranges", &rlen))
-> > > > > +		return 0;
-> > > > > +
-> > > > > +	*presult = of_read_number(addr + 1, na - 1);
-> > > > > +	/* this fixup is only valid for specific I/O range. */
-> > > > > +	return addr_is_indirect_io(*presult);
-> > > > > +}
-> > > > > +
-> > > > >  static int of_translate_one(struct device_node *parent, struct
-> > > > of_bus *bus,
-> > > > >  			    struct of_bus *pbus, __be32 *addr,
-> > > > >  			    int na, int ns, int pna, const char *rprop)
-> > > > > @@ -595,6 +639,15 @@ static u64 __of_translate_address(struct
-> > > > device_node *dev,
-> > > > >  			result = of_read_number(addr, na);
-> > > > >  			break;
-> > > > >  		}
-> > > > > +		/*
-> > > > > +		 * For indirectIO device which has no ranges
-> > property, get
-> > > > > +		 * the address from reg directly.
-> > > > > +		 */
-> > > > > +		if (of_get_isa_indirect_io(dev, bus, addr, na,
-> > &result)) {
-> > > > > +			pr_debug("isa indirectIO matched(%s)..addr =
-> > > > 0x%llx\n",
-> > > > > +				of_node_full_name(dev), result);
-> > > > > +			break;
-> > > > > +		}
-> > > > >
-> > > > >  		/* Get new parent bus and counts */
-> > > > >  		pbus = of_match_bus(parent);
-> > > > > @@ -688,8 +741,9 @@ static int __of_address_to_resource(struct
-> > > > device_node *dev,
-> > > > >  	if (taddr == OF_BAD_ADDR)
-> > > > >  		return -EINVAL;
-> > > > >  	memset(r, 0, sizeof(struct resource));
-> > > > > -	if (flags & IORESOURCE_IO) {
-> > > > > +	if (flags & IORESOURCE_IO && taddr >= PCIBIOS_MIN_IO) {
-> > > > >  		unsigned long port;
-> > > > > +
-> > > > >  		port = pci_address_to_pio(taddr);
-> > > > >  		if (port == (unsigned long)-1)
-> > > > >  			return -EINVAL;
-> > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > > index ba34907..1a08511 100644
-> > > > > --- a/drivers/pci/pci.c
-> > > > > +++ b/drivers/pci/pci.c
-> > > > > @@ -3263,7 +3263,7 @@ int __weak
-> > pci_register_io_range(phys_addr_t
-> > > > addr, resource_size_t size)
-> > > > >
-> > > > >  #ifdef PCI_IOBASE
-> > > > >  	struct io_range *range;
-> > > > > -	resource_size_t allocated_size = 0;
-> > > > > +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
-> > > > >
-> > > > >  	/* check if the range hasn't been previously recorded */
-> > > > >  	spin_lock(&io_range_lock);
-> > > > > @@ -3312,7 +3312,7 @@ phys_addr_t pci_pio_to_address(unsigned
-> > long
-> > > > pio)
-> > > > >
-> > > > >  #ifdef PCI_IOBASE
-> > > > >  	struct io_range *range;
-> > > > > -	resource_size_t allocated_size = 0;
-> > > > > +	resource_size_t allocated_size = PCIBIOS_MIN_IO;
-> > > >
-> > > > Have you checked that pci_pio_to_address still returns valid values
-> > > > after this? I know that
-> > > > you are trying to take into account PCIBIOS_MIN_IO limit when
-> > > > allocating reserving the IO ranges,
-> > > > but the values added in the io_range_list are still starting from
-> > zero,
-> > > > no from PCIBIOS_MIN_IO,
-> > >
-> > > I think you're wrong here as in pci_address_to_pio we have:
-> > > +	resource_size_t offset = PCIBIOS_MIN_IO;
-> > >
-> > > This should be enough to guarantee that the PIOs start at
-> > > PCIBIOS_MIN_IO...right?
-> > 
-> > I don't think you can guarantee that the pio value that gets passed
-> > into
-> > pci_pio_to_address() always comes from a previously returned value by
-> > pci_address_to_pio(). Maybe you can add a check in pci_pio_to_address()
-> 
-> Maybe I am missing something...could you make an exampleof a case
-> where an IO toke doesn’t come from pci_address_to_pio() ?
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Wednesday, November 9, 2016 11:20 PM
+> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> devel@linuxdriverproject.org
+> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
+> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
+> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
+> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
+> olaf@aepfle.de; linux-kernel@vger.kernel.org
+> Subject: [PATCH 3/3] PCI: hv: delete the device earlier from hbus->childr=
+en
+> for hot-remove
+>=20
+> After we send a PCI_EJECTION_COMPLETE message to the host, the host will
+> immediately send us a PCI_BUS_RELATIONS message with
+> relations->device_count =3D=3D 0, so pci_devices_present_work(), running =
+on
+> another thread, can find the being-ejected device, mark
+> the hpdev->reported_missing to true, and run list_move_tail()/list_del()
+> for the device -- this races hv_eject_device_work() -> list_del().
+>=20
+> The patch moves the list_del() in hv_eject_device_work() to an earlier
+> place, i.e. before we send PCI_EJECTION_COMPLETE, so later the
+> pci_devices_present_work() can't see the device.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> CC: Jake Oshins <jakeo@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>
+> CC: Haiyang Zhang <haiyangz@microsoft.com>
+> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
+c
+> index 7590ad0..fe5179d 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1582,6 +1582,10 @@ static void hv_eject_device_work(struct
+> work_struct *work)
+>  		pci_dev_put(pdev);
+>  	}
+>=20
+> +	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
+> +	list_del(&hpdev->list_entry);
+> +	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+> +
+>  	memset(&ctxt, 0, sizeof(ctxt));
+>  	ejct_pkt =3D (struct pci_eject_response *)&ctxt.pkt.message;
+>  	ejct_pkt->message_type.type =3D PCI_EJECTION_COMPLETE;
+> @@ -1590,10 +1594,6 @@ static void hv_eject_device_work(struct
+> work_struct *work)
+>  			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
+>  			 VM_PKT_DATA_INBAND, 0);
+>=20
+> -	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
+> -	list_del(&hpdev->list_entry);
+> -	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+> -
+>  	put_pcichild(hpdev, hv_pcidev_ref_childlist);
+>  	put_pcichild(hpdev, hv_pcidev_ref_pnp);
+>  	put_hvpcibus(hpdev->hbus);
+> --
+> 2.7.4
 
-Don't know, maybe it is coming from some DT or platform data? I was just
-asking for confirmation that no one has seen issues there, I'm not saying
-I've seen it happening.
+This looks good, too.
 
-Best regards,
-Liviu
-
-> 
-> Thanks
-> 
-> Gab
-> 
-> 
-> > 
-> > 	if (pio < PCIBIOS_MIN_IO)
-> > 		return address;
-> > 
-> > to avoid adding more checks in the list_for_each_entry() loop.
-> > 
-> > Best regards,
-> > Liviu
-> > 
-> > >
-> > >
-> > > > so the calculation of the address in this function could return
-> > > > negative values casted to pci_addr_t.
-> > > >
-> > > > Maybe you want to adjust the range->start value in
-> > > > pci_register_io_range() as well to have it
-> > > > offset by PCIBIOS_MIN_IO as well.
-> > > >
-> > > > Best regards,
-> > > > Liviu
-> > > >
-> > > > >
-> > > > >  	if (pio > IO_SPACE_LIMIT)
-> > > > >  		return address;
-> > > > > @@ -3335,7 +3335,7 @@ unsigned long __weak
-> > > > pci_address_to_pio(phys_addr_t address)
-> > > > >  {
-> > > > >  #ifdef PCI_IOBASE
-> > > > >  	struct io_range *res;
-> > > > > -	resource_size_t offset = 0;
-> > > > > +	resource_size_t offset = PCIBIOS_MIN_IO;
-> > > > >  	unsigned long addr = -1;
-> > > > >
-> > > > >  	spin_lock(&io_range_lock);
-> > > > > diff --git a/include/linux/of_address.h
-> > b/include/linux/of_address.h
-> > > > > index 3786473..deec469 100644
-> > > > > --- a/include/linux/of_address.h
-> > > > > +++ b/include/linux/of_address.h
-> > > > > @@ -24,6 +24,23 @@ struct of_pci_range {
-> > > > >  #define for_each_of_pci_range(parser, range) \
-> > > > >  	for (; of_pci_range_parser_one(parser, range);)
-> > > > >
-> > > > > +
-> > > > > +#ifndef indirect_io_enabled
-> > > > > +#define indirect_io_enabled indirect_io_enabled
-> > > > > +static inline bool indirect_io_enabled(void)
-> > > > > +{
-> > > > > +	return false;
-> > > > > +}
-> > > > > +#endif
-> > > > > +
-> > > > > +#ifndef addr_is_indirect_io
-> > > > > +#define addr_is_indirect_io addr_is_indirect_io
-> > > > > +static inline int addr_is_indirect_io(u64 taddr)
-> > > > > +{
-> > > > > +	return 0;
-> > > > > +}
-> > > > > +#endif
-> > > > > +
-> > > > >  /* Translate a DMA address from device space to CPU space */
-> > > > >  extern u64 of_translate_dma_address(struct device_node *dev,
-> > > > >  				    const __be32 *in_addr);
-> > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > > index 0e49f70..7f6bbb6 100644
-> > > > > --- a/include/linux/pci.h
-> > > > > +++ b/include/linux/pci.h
-> > > > > @@ -2130,4 +2130,12 @@ static inline bool pci_ari_enabled(struct
-> > > > pci_bus *bus)
-> > > > >  /* provide the legacy pci_dma_* API */
-> > > > >  #include <linux/pci-dma-compat.h>
-> > > > >
-> > > > > +/*
-> > > > > + * define this macro here to refrain from compilation error for
-> > some
-> > > > > + * platforms. Please keep this macro at the end of this header
-> > file.
-> > > > > + */
-> > > > > +#ifndef PCIBIOS_MIN_IO
-> > > > > +#define PCIBIOS_MIN_IO		0
-> > > > > +#endif
-> > > > > +
-> > > > >  #endif /* LINUX_PCI_H */
-> > > > > --
-> > > > > 1.9.1
-> > > > >
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-
-> > pci"
-> > > > in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-
-> > info.html
-> > 
-> > --
-> > ====================
-> > | I would like to |
-> > | fix the world,  |
-> > | but they're not |
-> > | giving me the   |
-> >  \ source code!  /
-> >   ---------------
-> >     ¯\_(ツ)_/¯
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+-- Jake Oshins
