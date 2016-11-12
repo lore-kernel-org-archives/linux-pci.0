@@ -1,51 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57035 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754553AbcKYTeQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 14:34:16 -0500
-Date: Fri, 25 Nov 2016 12:34:10 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161125193410.GD16504@obsidianresearch.com>
-References: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+From: Duc Dang <dhdang@apm.com>
+Date: Fri, 11 Nov 2016 18:49:55 -0800
+Message-ID: <CADaLNDmr6ttvsTnPQG3ixDrJgw4e3LeQp3bTwuuTPd1xbusN=g@mail.gmail.com>
+Subject: PCI: aer: AER correctable status register may be cleared before the
+ aer_isr workqueue inspects it
+To: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 25, 2016 at 12:16:30PM -0500, Serguei Sagalovitch wrote:
+[resend in text mode]
 
-> b) Allocation may not  have CPU address  at all - only GPU one.
+Hi Bjorn and All,
 
-But you don't expect RDMA to work in the case, right?
+I ran into this error message when testing with my X-Gene Mustang
+board (on kernel 4.9-rc1):
+pcieport 0002:00:00.0: AER: Corrected error received: id=0000
+pcieport 0002:00:00.0: can't find device of ID0000
 
-GPU people need to stop doing this windowed memory stuff :)
+Looking into aer_isr() code, in case of handling correctable AER
+event, handle_error_source() will be called and it will clear
+Correctable Error Status Register of the device that reports AER
+event. This operation may end up clearing the status bit of the new
+(and same type) correctable AER event that happen when this aer_isr
+worker thread is still running; and cause the next aer_isr worker
+thread find no error status bit get set, so it prints out the above
+warning messages.
 
-Jason
+I can see a possible solution is we cache all AER status registers of
+both the root port and all of its end-point devices inside interrupt
+handler (aer_irq) and pass these information to the aer_isr worker
+thread. But it seems an expensive operation to be done in interrupt
+context and I am not sure if you've already encountered and thought
+about this issue before?
+
+Regards,
+Duc Dang.
