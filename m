@@ -1,130 +1,166 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/7] genirq/affinity: Handle pre/post vectors in irq_calc_affinity_vectors()
-Date: Tue,  8 Nov 2016 17:15:02 -0800
-Message-Id: <1478654107-7384-3-git-send-email-hch@lst.de>
-In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
-References: <1478654107-7384-1-git-send-email-hch@lst.de>
+From: Jake Oshins <jakeo@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "Stephen Hemminger" <sthemmin@microsoft.com>,
+        Hadden Hoppert <haddenh@microsoft.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
+Date: Sat, 12 Nov 2016 00:40:11 +0000
+Message-ID: <SN1PR0301MB1598BC04BEBF6BD373668FDEABBA0@SN1PR0301MB1598.namprd03.prod.outlook.com>
+References: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only calculate the affinity for the main I/O vectors, and skip the
-pre or post vectors specified by struct irq_affinity.
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Wednesday, November 9, 2016 11:19 PM
+> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> devel@linuxdriverproject.org
+> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
+> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
+> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
+> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
+> olaf@aepfle.de; linux-kernel@vger.kernel.org
+> Subject: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
+>=20
+> 1. We don't really need such a big on-stack buffer when sending
+> the teardown_packet: vmbus_sendpacket() here only uses
+> sizeof(struct pci_message).
+>=20
+> 2. In the hot-remove case (PCI_EJECT), after we send
+> PCI_EJECTION_COMPLETE
+> to the host, the host will send a RESCIND_CHANNEL message to us and the
+> host won't access the per-channel ringbuffer any longer, so we needn't
+> send PCI_RESOURCES_RELEASED/PCI_BUS_D0EXIT to the host, and we
+> shouldn't
+> expect the host's completion message of PCI_BUS_D0EXIT, which will never
+> come.
+>=20
+> 3. We should send PCI_BUS_D0EXIT after hv_send_resources_released().
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> CC: Jake Oshins <jakeo@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>
+> CC: Haiyang Zhang <haiyangz@microsoft.com>
+> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+>=20
+> ---
+>=20
+> I made the patch based on discussions with Jake Oshins and others.
+>=20
+>  drivers/pci/host/pci-hyperv.c | 53 +++++++++++++++++++++++++++--------
+> --------
+>  1 file changed, 33 insertions(+), 20 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
+c
+> index 93ed64a..7590ad0 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -2266,24 +2266,32 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	return ret;
+>  }
+>=20
+> -/**
+> - * hv_pci_remove() - Remove routine for this VMBus channel
+> - * @hdev:	VMBus's tracking struct for this root PCI bus
+> - *
+> - * Return: 0 on success, -errno on failure
+> - */
+> -static int hv_pci_remove(struct hv_device *hdev)
+> +static void hv_pci_bus_exit(struct hv_device *hdev)
+>  {
+> -	int ret;
+> -	struct hv_pcibus_device *hbus;
+> -	union {
+> +	struct hv_pcibus_device *hbus =3D hv_get_drvdata(hdev);
+> +	struct {
+>  		struct pci_packet teardown_packet;
+> -		u8 buffer[0x100];
+> +		u8 buffer[sizeof(struct pci_message)];
+>  	} pkt;
+>  	struct pci_bus_relations relations;
+>  	struct hv_pci_compl comp_pkt;
+> +	int ret;
+>=20
+> -	hbus =3D hv_get_drvdata(hdev);
+> +	/*
+> +	 * After the host sends the RESCIND_CHANNEL message, it doesn't
+> +	 * access the per-channel ringbuffer any longer.
+> +	 */
+> +	if (hdev->channel->rescind)
+> +		return;
+> +
+> +	/* Delete any children which might still exist. */
+> +	memset(&relations, 0, sizeof(relations));
+> +	hv_pci_devices_present(hbus, &relations);
+> +
+> +	ret =3D hv_send_resources_released(hdev);
+> +	if (ret)
+> +		dev_err(&hdev->device,
+> +			"Couldn't send resources released packet(s)\n");
+>=20
+>  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
+>  	init_completion(&comp_pkt.host_event);
+> @@ -2298,7 +2306,19 @@ static int hv_pci_remove(struct hv_device *hdev)
+>=20
+> VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+>  	if (!ret)
+>  		wait_for_completion_timeout(&comp_pkt.host_event, 10 *
+> HZ);
+> +}
+> +
+> +/**
+> + * hv_pci_remove() - Remove routine for this VMBus channel
+> + * @hdev:	VMBus's tracking struct for this root PCI bus
+> + *
+> + * Return: 0 on success, -errno on failure
+> + */
+> +static int hv_pci_remove(struct hv_device *hdev)
+> +{
+> +	struct hv_pcibus_device *hbus;
+>=20
+> +	hbus =3D hv_get_drvdata(hdev);
+>  	if (hbus->state =3D=3D hv_pcibus_installed) {
+>  		/* Remove the bus from PCI's point of view. */
+>  		pci_lock_rescan_remove();
+> @@ -2307,17 +2327,10 @@ static int hv_pci_remove(struct hv_device
+> *hdev)
+>  		pci_unlock_rescan_remove();
+>  	}
+>=20
+> -	ret =3D hv_send_resources_released(hdev);
+> -	if (ret)
+> -		dev_err(&hdev->device,
+> -			"Couldn't send resources released packet(s)\n");
+> +	hv_pci_bus_exit(hdev);
+>=20
+>  	vmbus_close(hdev->channel);
+>=20
+> -	/* Delete any children which might still exist. */
+> -	memset(&relations, 0, sizeof(relations));
+> -	hv_pci_devices_present(hbus, &relations);
+> -
+>  	iounmap(hbus->cfg_addr);
+>  	hv_free_config_window(hbus);
+>  	pci_free_resource_list(&hbus->resources_for_children);
+> --
+> 2.7.4
 
-Also remove the irq_affinity cpumask argument that has never been used.
-If we ever need it in the future we can pass it through struct
-irq_affinity.
+This looks fine to me.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/msi.c         |  8 ++++----
- include/linux/interrupt.h |  4 ++--
- kernel/irq/affinity.c     | 24 ++++++++++--------------
- 3 files changed, 16 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index ad70507..dad2da7 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1061,6 +1061,7 @@ EXPORT_SYMBOL(pci_msi_enabled);
- static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 		unsigned int flags)
- {
-+	static const struct irq_affinity default_affd;
- 	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int nvec;
- 	int rc;
-@@ -1091,8 +1092,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 
- 	for (;;) {
- 		if (affinity) {
--			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
--					nvec);
-+			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-@@ -1132,6 +1132,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 		struct msix_entry *entries, int minvec, int maxvec,
- 		unsigned int flags)
- {
-+	static const struct irq_affinity default_affd;
- 	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int rc, nvec = maxvec;
- 
-@@ -1140,8 +1141,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 
- 	for (;;) {
- 		if (affinity) {
--			nvec = irq_calc_affinity_vectors(dev->irq_affinity,
--					nvec);
-+			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 6b52686..9081f23b 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -291,7 +291,7 @@ extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
- struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
--int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec);
-+int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
- 
- #else /* CONFIG_SMP */
- 
-@@ -331,7 +331,7 @@ irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
- }
- 
- static inline int
--irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
-+irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
- {
- 	return maxvec;
- }
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 17f51d63..8d92597 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -131,24 +131,20 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- }
- 
- /**
-- * irq_calc_affinity_vectors - Calculate to optimal number of vectors for a given affinity mask
-- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
-- *			is used
-- * @maxvec:		The maximum number of vectors available
-+ * irq_calc_affinity_vectors - Calculate the optimal number of vectors
-+ * @maxvec:	The maximum number of vectors available
-+ * @affd:	Description of the affinity requirements
-  */
--int irq_calc_affinity_vectors(const struct cpumask *affinity, int maxvec)
-+int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
- {
--	int cpus, ret;
-+	int resv = affd->pre_vectors + affd->post_vectors;
-+	int vecs = maxvec - resv;
-+	int cpus;
- 
- 	/* Stabilize the cpumasks */
- 	get_online_cpus();
--	/* If the supplied affinity mask is NULL, use cpu online mask */
--	if (!affinity)
--		affinity = cpu_online_mask;
--
--	cpus = cpumask_weight(affinity);
--	ret = (cpus < maxvec) ? cpus : maxvec;
--
-+	cpus = cpumask_weight(cpu_online_mask);
- 	put_online_cpus();
--	return ret;
-+
-+	return min(cpus, vecs) + resv;
- }
--- 
-2.1.4
+-- Jake Oshins
