@@ -1,54 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Nov 2016 17:05:49 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161129160549.GH2078@8bytes.org>
-References: <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
- <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
- <20161116095615.GA25656@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161116095615.GA25656@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtpbg65.qq.com ([103.7.28.233]:18445 "EHLO smtpbg65.qq.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933992AbcKLBZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Nov 2016 20:25:34 -0500
+In-Reply-To: <20161111205119.GB9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1474506346-20873-1-git-send-email-shhuiw@foxmail.com>
+        <20161111205119.GB9868@bhelgaas-glaptop.roam.corp.google.com>
+From: "=?ISO-8859-1?B?V2FuZyBTaGVuZy1IdWk=?=" <shhuiw@foxmail.com>
+To: "=?ISO-8859-1?B?Qmpvcm4gSGVsZ2Fhcw==?=" <helgaas@kernel.org>
+Cc: "=?ISO-8859-1?B?eXUuemhhbw==?=" <yu.zhao@intel.com>,
+        "=?ISO-8859-1?B?amJhcm5lcw==?=" <jbarnes@virtuousgeek.org>,
+        "=?ISO-8859-1?B?YWxleC53aWxsaWFtc29u?=" <alex.williamson@redhat.com>,
+        "=?ISO-8859-1?B?YmhlbGdhYXM=?=" <bhelgaas@google.com>,
+        "=?ISO-8859-1?B?bGludXgtcGNp?=" <linux-pci@vger.kernel.org>,
+        "=?ISO-8859-1?B?a3Zt?=" <kvm@vger.kernel.org>,
+        "=?ISO-8859-1?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>
+Subject: Re:  [PATCH] PCI: move cfg space size (256/4096) macros to pci_regs.h
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="ISO-8859-1"
+Date: Sat, 12 Nov 2016 09:25:25 +0800
+Message-ID: <tencent_1B35162D751A41943FDD0AE1@qq.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 09:56:15AM +0000, Lorenzo Pieralisi wrote:
-> I can easily make the changes Robin suggests above, I need to know
-> what to do with this patch it is the last blocking point for this
-> series and time is running out I can revert to using dev->bus to
-> retrieve iommu_ops (even though I do not think it makes sense given
-> what Robin outlines below) but I need to know please, we can't gate
-> an entire series for this patch that is just syntactic sugar.
+VGhhbmtzIQoKUmVnYXJkcywKV2FuZyBTaGVuZy1IdWkKCgotLS0tLS0tLS0tLS0tLS0tLS0g
+T3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tCkZyb206ICAiQmpvcm4gSGVsZ2FhcyI7PGhl
+bGdhYXNAa2VybmVsLm9yZz47CkRhdGU6ICBTYXQsIE5vdiAxMiwgMjAxNiAwNDo1MSBBTQpU
+bzogICJXYW5nIFNoZW5nLUh1aSI8c2hodWl3QGZveG1haWwuY29tPjsgCkNjOiAgInl1Lnpo
+YW8iPHl1LnpoYW9AaW50ZWwuY29tPjsgImpiYXJuZXMiPGpiYXJuZXNAdmlydHVvdXNnZWVr
+Lm9yZz47ICJhbGV4LndpbGxpYW1zb24iPGFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPjsg
+ImJoZWxnYWFzIjxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgImxpbnV4LXBjaSI8bGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZz47ICJrdm0iPGt2bUB2Z2VyLmtlcm5lbC5vcmc+OyAibGludXgt
+a2VybmVsIjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgClN1YmplY3Q6ICBSZTog
+W1BBVENIXSBQQ0k6IG1vdmUgY2ZnIHNwYWNlIHNpemUgKDI1Ni80MDk2KSBtYWNyb3MgdG8g
+cGNpX3JlZ3MuaAoKCgpPbiBUaHUsIFNlcCAyMiwgMjAxNiBhdCAwOTowNTo0NkFNICswODAw
+LCBXYW5nIFNoZW5nLUh1aSB3cm90ZToKPiBUaGlzIGlzIGEgY2xlYW51cCB0aGF0IG1vdmVz
+IFBDSSBjb25maWd1cmF0aW9uIHNwYWNlIHNpemUKPiBtYWNyb3MgKFBDSV9DRkdfU1BBQ0Vf
+U0laRSBhbmQgUENJX0NGR19TUEFDRV9FWFBfU0laRSkgZnJvbQo+IGRyaXZlcnMvcGNpL3Bj
+aS5oIHRvIGluY2x1ZGUvdWFwaS9saW51eC9wY2lfcmVncy5oCj4gCj4gU28gdGhhdCB0aGUg
+bWFjcm9zIGNhbiBiZSB1c2VkIGJ5IG1vcmUgZHJpdmVycyBhbmQgZWxpbWluYXRlCj4gcG90
+ZW50aWFsIGR1cGxpY2F0ZSBkZWZpbml0aW9uLgo+IAo+IFNpZ25lZC1vZmYtYnk6IFdhbmcg
+U2hlbmctSHVpIDxzaGh1aXdAZm94bWFpbC5jb20+CgpBcHBsaWVkIHRvIHBjaS9taXNjIGZv
+ciB2NC4xMCwgdGhhbmtzIQoKSSB1cGRhdGVkIHRoZSBjb21tZW50IHRvIGluY2x1ZGUgUENJ
+LVggZGV0YWlscywgc2luY2UgdGhlIGV4dGVuZGVkIGNvbmZpZwpzcGFjZSBhcHBsaWVzIHRv
+IFBDSS1YIE1vZGUgMiBkZXZpY2VzIGFzIHdlbGwgYXMgdG8gUENJZSBkZXZpY2VzOgoKKyAq
+IENvbnZlbnRpb25hbCBQQ0kgYW5kIFBDSS1YIE1vZGUgMSBkZXZpY2VzIGhhdmUgMjU2IGJ5
+dGVzIG9mCisgKiBjb25maWd1cmF0aW9uIHNwYWNlLiAgUENJLVggTW9kZSAyIGFuZCBQQ0ll
+IGRldmljZXMgaGF2ZSA0MDk2IGJ5dGVzIG9mCisgKiBjb25maWd1cmF0aW9uIHNwYWNlLgoK
+PiAtLS0KPiAgZHJpdmVycy9wY2kvcGNpLmggICAgICAgICAgICAgICAgICB8IDMgLS0tCj4g
+IGRyaXZlcnMvdmZpby9wY2kvdmZpb19wY2lfY29uZmlnLmMgfCAyIC0tCj4gIGluY2x1ZGUv
+dWFwaS9saW51eC9wY2lfcmVncy5oICAgICAgfCA3ICsrKysrKysKPiAgMyBmaWxlcyBjaGFu
+Z2VkLCA3IGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvcGNpL3BjaS5oIGIvZHJpdmVycy9wY2kvcGNpLmgKPiBpbmRleCA5NzMwYzQ3
+Li4xMmQ2NTFhIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL3BjaS5oCj4gKysrIGIvZHJp
+dmVycy9wY2kvcGNpLmgKPiBAQCAtMSw5ICsxLDYgQEAKPiAgI2lmbmRlZiBEUklWRVJTX1BD
+SV9ICj4gICNkZWZpbmUgRFJJVkVSU19QQ0lfSAo+ICAKPiAtI2RlZmluZSBQQ0lfQ0ZHX1NQ
+QUNFX1NJWkUgMjU2Cj4gLSNkZWZpbmUgUENJX0NGR19TUEFDRV9FWFBfU0laRSA0MDk2Cj4g
+LQo+ICAjZGVmaW5lIFBDSV9GSU5EX0NBUF9UVEwgNDgKPiAgCj4gIGV4dGVybiBjb25zdCB1
+bnNpZ25lZCBjaGFyIHBjaWVfbGlua19zcGVlZFtdOwo+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L3ZmaW8vcGNpL3ZmaW9fcGNpX2NvbmZpZy5jIGIvZHJpdmVycy92ZmlvL3BjaS92ZmlvX3Bj
+aV9jb25maWcuYwo+IGluZGV4IDY4ODY5MWQuLjhkYzhhNWEgMTAwNjQ0Cj4gLS0tIGEvZHJp
+dmVycy92ZmlvL3BjaS92ZmlvX3BjaV9jb25maWcuYwo+ICsrKyBiL2RyaXZlcnMvdmZpby9w
+Y2kvdmZpb19wY2lfY29uZmlnLmMKPiBAQCAtMzEsOCArMzEsNiBAQAo+ICAKPiAgI2luY2x1
+ZGUgInZmaW9fcGNpX3ByaXZhdGUuaCIKPiAgCj4gLSNkZWZpbmUgUENJX0NGR19TUEFDRV9T
+SVpFIDI1Ngo+IC0KPiAgLyogRmFrZSBjYXBhYmlsaXR5IElEIGZvciBzdGFuZGFyZCBjb25m
+aWcgc3BhY2UgKi8KPiAgI2RlZmluZSBQQ0lfQ0FQX0lEX0JBU0lDIDAKPiAgCj4gZGlmZiAt
+LWdpdCBhL2luY2x1ZGUvdWFwaS9saW51eC9wY2lfcmVncy5oIGIvaW5jbHVkZS91YXBpL2xp
+bnV4L3BjaV9yZWdzLmgKPiBpbmRleCA0MDQwOTUxLi5hMDdjNTNjIDEwMDY0NAo+IC0tLSBh
+L2luY2x1ZGUvdWFwaS9saW51eC9wY2lfcmVncy5oCj4gKysrIGIvaW5jbHVkZS91YXBpL2xp
+bnV4L3BjaV9yZWdzLmgKPiBAQCAtMjMsNiArMjMsMTMgQEAKPiAgI2RlZmluZSBMSU5VWF9Q
+Q0lfUkVHU19ICj4gIAo+ICAvKgo+ICsgKiBVbmRlciBQQ0ksIGVhY2ggZGV2aWNlIGhhcyAy
+NTYgYnl0ZXMgb2YgY29uZmlndXJhdGlvbiBhZGRyZXNzIHNwYWNlLgo+ICsgKiBVbmRlciBQ
+Q0llLCBlYWNoIGRldmljZSBoYXMgNDA5NiBieXRlcyBvZiBjb25maWd1cmF0aW9uIGFkZHJl
+c3Mgc3BhY2UuCj4gKyAqLwo+ICsjZGVmaW5lIFBDSV9DRkdfU1BBQ0VfU0laRSAyNTYKPiAr
+I2RlZmluZSBQQ0lfQ0ZHX1NQQUNFX0VYUF9TSVpFIDQwOTYKPiArCj4gKy8qCj4gICAqIFVu
+ZGVyIFBDSSwgZWFjaCBkZXZpY2UgaGFzIDI1NiBieXRlcyBvZiBjb25maWd1cmF0aW9uIGFk
+ZHJlc3Mgc3BhY2UsCj4gICAqIG9mIHdoaWNoIHRoZSBmaXJzdCA2NCBieXRlcyBhcmUgc3Rh
+bmRhcmRpemVkIGFzIGZvbGxvd3M6Cj4gICAqLwo+IC0tIAo+IDIuNy40Cj4gCj4gCj4gCj4g
+LS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5z
+dWJzY3JpYmUgbGludXgtcGNpIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
 
-Well, I didn't really object to the approach per-se, I just wanted to
-know the rationale behind the need for the iommu-ops pointer. So through
-which tree should this series be merged?
-I think I can live with the pointer for now, we can later convert it to
-an iommu-instance pointer.
 
-
-	Joerg
 
