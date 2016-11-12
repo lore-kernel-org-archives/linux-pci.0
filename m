@@ -1,60 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55078 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751359AbcKRCkP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Nov 2016 21:40:15 -0500
-Date: Thu, 17 Nov 2016 20:40:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michel =?iso-8859-1?Q?D=E4nzer?= <michel@daenzer.net>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3] PCI: create revision file in sysfs
-Message-ID: <20161118024010.GC25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161111143723.5818-1-emil.l.velikov@gmail.com>
- <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
- <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
- <20161117144402.GB11693@wunner.de>
- <20161117234855.GA25762@bhelgaas-glaptop.roam.corp.google.com>
- <b011e277-7e96-d2ea-216b-f65a6129bc50@daenzer.net>
+Return-Path: <shawn.lin@rock-chips.com>
+Return-Path: <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: correct the use of FTS mask
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Brian Norris <briannorris@chromium.org>
+References: <1476832384-10215-1-git-send-email-briannorris@chromium.org>
+ <20161111223007.GT9868@bhelgaas-glaptop.roam.corp.google.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>,
+ Wenrui Li <wenrui.li@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Rajat Jain <rajatja@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <8d1531a9-2754-07b5-ca7f-f99f5ec0dbad@rock-chips.com>
+Date: Sat, 12 Nov 2016 09:57:56 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <b011e277-7e96-d2ea-216b-f65a6129bc50@daenzer.net>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161111223007.GT9868@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 10:42:20AM +0900, Michel Dänzer wrote:
-> On 18/11/16 08:48 AM, Bjorn Helgaas wrote:
-> > 
-> > Popping the stack all the way back to Emil's Nov 8 message:
-> > 
-> >   When using the Mesa drivers alongside firefox [1] (since Mesa 13.0),
-> >   glxinfo (Mesa 10.0) and others, all the GPUs* will be awaken,
-> >   causing unwanted delays and increased power usage.
-> > 
-> >   [1] https://bugs.freedesktop.org/show_bug.cgi?id=98502
-> > 
-> > The bug is about a delay in starting firefox, thunderbird, or
-> > chromium.  I assume the browser starts on the current, powered-up,
-> > GPU.  I don't understand why we care about the revision of other,
-> > powered-off, GPUs.
-> 
-> We don't. The problem is that the current libdrm API unconditionally
-> provides the revision. The plan is to address this in two ways:
-> 
-> * Add new libdrm API which allows the caller to say "I don't need the
-> revision", and make Mesa use that. Users having those changes will not
-> run into the problem even on older kernels.
-> 
-> * Add the separate revision file in sysfs and make libdrm use that for
-> its current API. This means that even callers of the current libdrm API
-> will not run into the problem with newer kernels.
+On 2016/11/12 6:30, Bjorn Helgaas wrote:
+> On Tue, Oct 18, 2016 at 04:13:04PM -0700, Brian Norris wrote:
+>> We're trying to mask out bits[23:8] while retaining [32:24, 7:0], but
+>> we're doing the inverse. That doesn't have too much effect, since we're
+>> setting all the [23:8] bits to 1, and the other bits are only relevant
+>> for modes we're currently not using. But we should get this right.
+>>
+>> Fixes: ca1989084054 ("PCI: rockchip: Fix wrong transmitted FTS count")
+>> Signed-off-by: Brian Norris <briannorris@chromium.org>
+>
+> I assume this is correct, but I'm waiting for an ack from Shawn.
 
-Why do we care about *anything* for the other, powered-off, GPUs?
-Even users of the new libdrm API who say "I don't need the revision"
-are still getting the vendor/device/etc for those other GPUs.
+Thanks for catching this, and it was missing from my inbox somehow...
+
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+>
+>> ---
+>>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index e0b22dab9b7a..5c2e3297a3ff 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -492,7 +492,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>
+>>  	/* Fix the transmitted FTS count desired to exit from L0s. */
+>>  	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
+>> -	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
+>> +	status = (status & ~PCIE_CORE_CTRL_PLC1_FTS_MASK) |
+>>  		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
+>>  	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
+>>
+>> --
+>> 2.8.0.rc3.226.g39d4020
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+-- 
+Best Regards
+Shawn Lin
