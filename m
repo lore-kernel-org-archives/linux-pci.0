@@ -1,145 +1,87 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V9 11/11] ARM64/PCI: Support for ACPI based PCI host
- controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
- <1465588519-11334-12-git-send-email-tn@semihalf.com>
- <20161122231321.GA20246@bhelgaas-glaptop.roam.corp.google.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
- okaya@codeaurora.org, jchandra@broadcom.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
- cov@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <edf72769-e9c8-4617-8dc4-8f3d05a678e7@semihalf.com>
-Date: Wed, 23 Nov 2016 12:21:03 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161122231321.GA20246@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:41462 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753975AbcKMDHE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2016 22:07:04 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 1/2] PCI: rockchip: cleanup bit definition for PCIE_RC_CONFIG_LCS
+Date: Sun, 13 Nov 2016 11:06:13 +0800
+Message-Id: <1479006374-192306-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+PCIE_RC_CONFIG_LCS contains control and status bits specific
+to the PCIe link. The layout for this register looks the same
+as the existed PCI_EXP_LNKCTL and PCI_EXP_LNKSTA. So let's
+reuse them.
 
-On 23.11.2016 00:13, Bjorn Helgaas wrote:
-> Hi Tomasz,
->
-> On Fri, Jun 10, 2016 at 09:55:19PM +0200, Tomasz Nowicki wrote:
->> Implement pci_acpi_scan_root and other arch-specific call so that ARM64
->> can start using ACPI to setup and enumerate PCI buses.
->>
->> Prior to buses enumeration the pci_acpi_scan_root() implementation looks
->> for configuration space start address (obtained through ACPI _CBA method or
->> MCFG interface). If succeed, it uses ECAM library to create new mapping.
->> Then it attaches generic ECAM ops (pci_generic_ecam_ops) which are used
->> for accessing configuration space later on.
->> ...
->
->> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
->> +	.release_info = pci_acpi_generic_release_info,
->> +};
->> +
->> +/* Interface called from ACPI code to setup PCI host controller */
->>  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>  {
->> -	/* TODO: Should be revisited when implementing PCI on ACPI */
->> -	return NULL;
->> +	int node = acpi_get_node(root->device->handle);
->> +	struct acpi_pci_generic_root_info *ri;
->> +	struct pci_bus *bus, *child;
->> +
->> +	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->> +	if (!ri)
->> +		return NULL;
->> +
->> +	ri->cfg = pci_acpi_setup_ecam_mapping(root);
->> +	if (!ri->cfg) {
->> +		kfree(ri);
->> +		return NULL;
->> +	}
->> +
->> +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
->
-> This has already been merged, but this isn't right, is it?  We're
-> writing a host controller-specific pointer into the single system-wide
-> acpi_pci_root_ops, then passing it on to acpi_pci_root_create().
->
-> Today, I think ri->cfg->ops->pci_ops is always &pci_generic_ecam_ops,
-> from this path:
->
->   ri->cfg = pci_acpi_setup_ecam_mapping
->     cfg = pci_ecam_create(..., &pci_generic_ecam_ops)
->       cfg = kzalloc(...)
->       cfg->ops = ops             # &pci_generic_ecam_ops
->
-> But we're about to merge the ECAM quirks series, which will mean it
-> may not be &pci_generic_ecam_ops.  Even apart from the ECAM quirks, we
-> should avoid this pattern of putting device-specific info in a single
-> shared structure because it's too difficult to verify that it's
-> correct.
->
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Well spotted. I agree, we need to fix this. How about this:
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index fb439c7..31c0e1c 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -152,33 +152,35 @@ static void pci_acpi_generic_release_info(struct 
-acpi_pci_root_info *ci)
+ drivers/pci/host/pcie-rockchip.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-         ri = container_of(ci, struct acpi_pci_generic_root_info, common);
-         pci_ecam_free(ri->cfg);
-+       kfree(ci->ops);
-         kfree(ri);
-  }
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 7f238af..1dba698 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -141,12 +141,6 @@
+ #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+ #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+-#define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+-#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+-#define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+-#define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+-#define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+-#define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
+ #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+ #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+ #define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
+@@ -229,7 +223,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+ 	u32 status;
+ 
+ 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
++	status |= (PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ }
+ 
+@@ -238,7 +232,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+ 	u32 status;
+ 
+ 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
++	status |= (PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS) << 16;
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ }
+ 
+@@ -540,7 +534,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 
+ 	/* Set RC's clock architecture as common clock */
+ 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= PCIE_RC_CONFIG_LCS_CCC;
++	status |= PCI_EXP_LNKCTL_CCC;
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ 
+ 	/* Enable Gen1 training */
+@@ -575,7 +569,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		 * gen1 finished.
+ 		 */
+ 		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
++		status |= PCI_EXP_LNKCTL_RL;
+ 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ 
+ 		timeout = jiffies + msecs_to_jiffies(500);
+-- 
+1.9.1
 
--static struct acpi_pci_root_ops acpi_pci_root_ops = {
--       .release_info = pci_acpi_generic_release_info,
--};
--
-  /* Interface called from ACPI code to setup PCI host controller */
-  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-  {
-         int node = acpi_get_node(root->device->handle);
-         struct acpi_pci_generic_root_info *ri;
-         struct pci_bus *bus, *child;
-+       struct acpi_pci_root_ops *root_ops;
 
-         ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
-         if (!ri)
-                 return NULL;
-
-+       root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
-+       if (!root_ops)
-+               return NULL;
-+
-         ri->cfg = pci_acpi_setup_ecam_mapping(root);
-         if (!ri->cfg) {
-                 kfree(ri);
-+               kfree(root_ops);
-                 return NULL;
-         }
-
--       acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
--       bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
--                                  ri->cfg);
-+       root_ops->release_info = pci_acpi_generic_release_info;
-+       root_ops->pci_ops = &ri->cfg->ops->pci_ops;
-+       bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
-         if (!bus)
-                 return NULL;
-
-Of course, this should be the part of ECAM quirks core patches.
-
-The other option we have is to remove "struct pci_ops *pci_ops;" from 
-acpi_pci_root_ops structure and pass struct pci_ops as an extra argument 
-to acpi_pci_root_create(). What do you think?
-
-Thanks,
-Tomasz
