@@ -1,161 +1,129 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI/VMD: Use SRCU as a local RCU to prevent delaying global RCU
-Date: Fri, 11 Nov 2016 15:50:56 -0700
-Message-Id: <1478904657-11342-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35607 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935190AbcKMXiU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 18:38:20 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uADNXxqA110451
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:38:20 -0500
+Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26ppvqxy30-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:38:19 -0500
+Received: from localhost
+        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Mon, 14 Nov 2016 09:38:17 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 973FD2BB0055
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:38:14 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uADNcEgs7668060
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:38:14 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+        by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uADNcENx003014
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:38:14 +1100
+Date: Mon, 14 Nov 2016 10:39:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, majd@mellanox.com
+Subject: Re: [PATCH 2/4] PCI: Convert Mellanox quirks to be for listed
+ devices only
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
+ <1479046901-25360-3-git-send-email-noaos@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479046901-25360-3-git-send-email-noaos@mellanox.com>
+Message-Id: <20161113233924.GA14481@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SRCU lets synchronize_srcu depend on VMD-local RCU primitives,
-preventing long delays from locking up RCU in other systems. VMD
-performs a synchronize when removing a device, but will hit all irq
-lists if the device uses all VMD vectors. This patch will not help VMD's
-RCU synchronization, but will isolate the read side delays to the VMD
-subsystem. Additionally, the use of SRCU in VMD's isr will keep it
-isolated from any other RCU waiters in the rest of the system.
+On Sun, Nov 13, 2016 at 04:21:40PM +0200, Noa Osherovich wrote:
+>Change Mellanox's broken_intx_masking quirk from an "all Mellanox
+>devices" to a quirk for listed devices only.
+>
+>Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+>Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
 
-The patch was tested using concurrent fio and nvme resets:
-[global]
-rw=read
-bs=4k
-direct=1
-ioengine=libaio
-iodepth=32
-norandommap
-timeout=300
-runtime=1000000000
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-[nvme0]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme0n1
+>---
+> drivers/pci/quirks.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+> 1 file changed, 52 insertions(+), 1 deletion(-)
+>
+>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>index 85048fdf2474..d3977c847e1f 100644
+>--- a/drivers/pci/quirks.c
+>+++ b/drivers/pci/quirks.c
+>@@ -3158,8 +3158,59 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+>  */
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
+> 			quirk_broken_intx_masking);
+>+
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
+>+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTIB 0x1011
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX4 0x1013
+>+#define PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX 0x1015
+>+
+>+static u16 mellanox_broken_intx_devs[] = {
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_EN,
+>+	PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
+>+	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
+>+};
+>+
+>+static void mellanox_check_broken_intx_masking(struct pci_dev *dev)
+>+{
+>+	int i;
+>+
+>+	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
+>+		if (dev->device == mellanox_broken_intx_devs[i]) {
+>+			dev->broken_intx_masking = 1;
+>+			return;
+>+		}
+>+	}
+>+}
+>+
 
-[nvme1]
-cpus_allowed=0-63
-numjobs=8
-filename=/dev/nvme1n1
+@dev might be replaced with @pdev. Usually, @dev means "struct device"
+instance while @pdev represents "struct pci_dev" instance. The older
+PCI code seems using them interchangeably.
 
-while (true) do
-	for i in /sys/class/nvme/nvme*; do
-		echo "Resetting ${i##*/}"
-		echo 1 > $i/reset_controller;
-		sleep 5
-	done;
-done
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>-			quirk_broken_intx_masking);
+>+			mellanox_check_broken_intx_masking);
+>
+> /*
+>  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/host/vmd.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
+Thanks,
+Gavin
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 6614b3552..af4eca2 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-+#include <linux/srcu.h>
- #include <linux/rculist.h>
- #include <linux/rcupdate.h>
- 
-@@ -39,7 +40,6 @@
- /**
-  * struct vmd_irq - private data to map driver IRQ to the VMD shared vector
-  * @node:	list item for parent traversal.
-- * @rcu:	RCU callback item for freeing.
-  * @irq:	back pointer to parent.
-  * @enabled:	true if driver enabled IRQ
-  * @virq:	the virtual IRQ value provided to the requesting driver.
-@@ -49,7 +49,6 @@
-  */
- struct vmd_irq {
- 	struct list_head	node;
--	struct rcu_head		rcu;
- 	struct vmd_irq_list	*irq;
- 	bool			enabled;
- 	unsigned int		virq;
-@@ -58,11 +57,13 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-+ * @srcu:	SRCU struct for local synchronization.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
-+	struct srcu_struct	srcu;
- 	unsigned int		count;
- };
- 
-@@ -224,14 +225,14 @@ static void vmd_msi_free(struct irq_domain *domain,
- 	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
- 	unsigned long flags;
- 
--	synchronize_rcu();
-+	synchronize_srcu(&vmdirq->irq->srcu);
- 
- 	/* XXX: Potential optimization to rebalance */
- 	raw_spin_lock_irqsave(&list_lock, flags);
- 	vmdirq->irq->count--;
- 	raw_spin_unlock_irqrestore(&list_lock, flags);
- 
--	kfree_rcu(vmdirq, rcu);
-+	kfree(vmdirq);
- }
- 
- static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
-@@ -646,11 +647,12 @@ static irqreturn_t vmd_irq(int irq, void *data)
- {
- 	struct vmd_irq_list *irqs = data;
- 	struct vmd_irq *vmdirq;
-+	int idx;
- 
--	rcu_read_lock();
-+	idx = srcu_read_lock(&irqs->srcu);
- 	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
- 		generic_handle_irq(vmdirq->virq);
--	rcu_read_unlock();
-+	srcu_read_unlock(&irqs->srcu, idx);
- 
- 	return IRQ_HANDLED;
- }
-@@ -696,6 +698,10 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENOMEM;
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
-+		err = init_srcu_struct(&vmd->irqs[i].srcu);
-+		if (err)
-+			return err;
-+
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-@@ -714,11 +720,19 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	return 0;
- }
- 
-+static void vmd_cleanup_srcu(struct vmd_dev *vmd)
-+{
-+	int i;
-+	for (i = 0; i < vmd->msix_count; i++)
-+		cleanup_srcu_struct(&vmd->irqs[i].srcu);
-+}
-+
- static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
- 	vmd_detach_resources(vmd);
-+	vmd_cleanup_srcu(vmd);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
- 	pci_remove_root_bus(vmd->bus);
--- 
-1.8.3.1
