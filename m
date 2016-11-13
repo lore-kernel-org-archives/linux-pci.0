@@ -1,111 +1,158 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: arnd@arndb.de,
-	hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	Liviu.Dudau@arm.com,
-	msalter@redhat.com,
-	wangyijing@huawei.com,
-	jchandra@broadcom.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	ddaney@caviumnetworks.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jcm@redhat.com,
-	jhugo@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 1/1] ARM64/PCI: Manage controller-specific information on the host controller basis
-Date: Thu, 24 Nov 2016 12:05:23 +0100
-Message-Id: <1479985523-10006-1-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473449047-10499-1-git-send-email-tn@semihalf.com>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53819 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752814AbcKMX0U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 18:26:20 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uADNNOF6095768
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:26:19 -0500
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26ppvqxm8s-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:26:19 -0500
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Mon, 14 Nov 2016 09:26:16 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id 14AE62CE8054
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:15 +1100 (EST)
+Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uADNQF5H63373506
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:15 +1100
+Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
+        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uADNQEBc016741
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:26:14 +1100
+Date: Mon, 14 Nov 2016 10:27:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, majd@mellanox.com
+Subject: Re: [PATCH 1/4] PCI: Use FINAL fixup to mark broken INTx masking
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
+ <1479046901-25360-2-git-send-email-noaos@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479046901-25360-2-git-send-email-noaos@mellanox.com>
+Message-Id: <20161113232724.GB12678@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we use one shared global acpi_pci_root_ops structure to keep
-controller-specific ops. Then its pointer is passed to acpi_pci_root_create()
-and associated with host bridge instance for good. Such design implies
-serious drawback. Any potential manipulation on the single system-wide
-acpi_pci_root_ops leads to kernel crash. The structure content is not
-really changing even across multiple host bridges creation thus it was not
-the issue so far.
+On Sun, Nov 13, 2016 at 04:21:39PM +0200, Noa Osherovich wrote:
+>Convert all quirk_broken_intx_masking quirks from HEADER to FINAL.
+>None of those calls need to be in HEADER but some might need to be
+>called as FINAL. Moving them all to FINAL will save time during
+>pci_do_fixups.
+>
+>Signed-off-by: Noa Osherovich <noaos@mellanox.com>
 
-In preparation for adding ECAM quirks mechanism (where controller-specific
-PCI ops may be different for each host bridge) allocate new
-acpi_pci_root_ops and fill in with data for each bridge. Now it is safe
-to have different controller-specific info. As a consequence free
-acpi_pci_root_ops when host bridge is released.
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-No functional changes in this patch.
+>---
+> drivers/pci/quirks.c | 72 ++++++++++++++++++++++++++--------------------------
+> 1 file changed, 36 insertions(+), 36 deletions(-)
+>
+>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>index c232729f5b1b..85048fdf2474 100644
+>--- a/drivers/pci/quirks.c
+>+++ b/drivers/pci/quirks.c
+>@@ -3146,53 +3146,53 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+> {
+> 	dev->broken_intx_masking = 1;
+> }
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+>-			 quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+>+			quirk_broken_intx_masking);
+> /*
+>  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+>  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+>  *
+>  * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
+>  */
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>-			 quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>+			quirk_broken_intx_masking);
+>
+> /*
+>  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
+>  * DisINTx can be set but the interrupt status bit is non-functional.
+>  */
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
+>-			 quirk_broken_intx_masking);
+>-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
+>-			 quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1572,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1574,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1580,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1581,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1583,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1584,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1585,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1586,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1587,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1588,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1589,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d0,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d1,
+>+			quirk_broken_intx_masking);
+>+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d2,
+>+			quirk_broken_intx_masking);
+>
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/arm64/kernel/pci.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+There could be one follow-up patch to combine those intel's
+quirks to one, so that more time can be saved. We don't have
+to cover it in this patchset though.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index fb439c7..5c08baf 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -152,33 +152,36 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
- 
- 	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
- 	pci_ecam_free(ri->cfg);
-+	kfree(ci->ops);
- 	kfree(ri);
- }
- 
--static struct acpi_pci_root_ops acpi_pci_root_ops = {
--	.release_info = pci_acpi_generic_release_info,
--};
--
- /* Interface called from ACPI code to setup PCI host controller */
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	int node = acpi_get_node(root->device->handle);
- 	struct acpi_pci_generic_root_info *ri;
- 	struct pci_bus *bus, *child;
-+	struct acpi_pci_root_ops *root_ops;
- 
- 	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
- 	if (!ri)
- 		return NULL;
- 
-+	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
-+	if (!root_ops)
-+		return NULL;
-+
- 	ri->cfg = pci_acpi_setup_ecam_mapping(root);
- 	if (!ri->cfg) {
- 		kfree(ri);
-+		kfree(root_ops);
- 		return NULL;
- 	}
- 
--	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
--	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
--				   ri->cfg);
-+	root_ops->release_info = pci_acpi_generic_release_info;
-+	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
-+	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
- 	if (!bus)
- 		return NULL;
- 
--- 
-2.7.4
+> static void quirk_no_bus_reset(struct pci_dev *dev)
+> {
+
+Thanks,
+Gavin
+
