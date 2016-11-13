@@ -1,100 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "Jake Oshins" <jakeo@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        "Vitaly Kuznetsov" <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/3] PCI: hv: delete the device earlier from
- hbus->children for hot-remove
-Date: Mon, 14 Nov 2016 23:08:02 +0000
-Message-ID: <DM5PR03MB24909D15D44948C4E9526848A0BC0@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-In-Reply-To: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60235 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752814AbcKMXW7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 18:22:59 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uADNIb1D089761
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:22:58 -0500
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26pqqu4p31-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2016 18:22:58 -0500
+Received: from localhost
+        by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Mon, 14 Nov 2016 09:22:55 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 0F5E92BB0057
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:22:52 +1100 (EST)
+Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uADNMp5Y49545442
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:22:51 +1100
+Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
+        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uADNMpt8013924
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:22:51 +1100
+Date: Mon, 14 Nov 2016 10:24:01 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, majd@mellanox.com
+Subject: Re: [PATCH 0/4] Cover letter
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
+Message-Id: <20161113232401.GA12678@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sun, Nov 13, 2016 at 04:21:38PM +0200, Noa Osherovich wrote:
+>The following 3 patches unmark some Mellanox devices as having broken
+>INTx masking.
+>
+>The first patch moves all broken INTx masking to FINAL instead of
+>HEADER so that the fixup can execute on all archs.
+>The second fixup changes the Mellanox marking to be according to a
+>list of devices rather than a general fixup by vendor.
+>The third patch excludes some Mellanox devices from the INTx broken
+>marking according to device ID / firmware version.
+>
 
+Noa, some of your script might be broken. As the subject, which is
+"[PATCH 0/4] Cover letter", there are 4 patches in total. However,
+I just saw 3 patches.
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Wednesday, November 9, 2016 11:20 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
-> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
-> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
-> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
-> olaf@aepfle.de; linux-kernel@vger.kernel.org
-> Subject: [PATCH 3/3] PCI: hv: delete the device earlier from hbus->childr=
-en
-> for hot-remove
->=20
-> After we send a PCI_EJECTION_COMPLETE message to the host, the host will
-> immediately send us a PCI_BUS_RELATIONS message with
-> relations->device_count =3D=3D 0, so pci_devices_present_work(), running =
-on
-> another thread, can find the being-ejected device, mark
-> the hpdev->reported_missing to true, and run list_move_tail()/list_del()
-> for the device -- this races hv_eject_device_work() -> list_del().
->=20
-> The patch moves the list_del() in hv_eject_device_work() to an earlier
-> place, i.e. before we send PCI_EJECTION_COMPLETE, so later the
-> pci_devices_present_work() can't see the device.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> CC: Jake Oshins <jakeo@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>
-> CC: Haiyang Zhang <haiyangz@microsoft.com>
-> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+Thanks,
+Gavin
 
-Thanks Dexuan.
+>Noa Osherovich (3):
+>  PCI: Use FINAL fixup to mark broken INTx masking
+>  PCI: Convert Mellanox quirks to be for listed devices only
+>  PCI: Add checks to mellanox_check_broken_intx_masking
+>
+> drivers/pci/quirks.c | 172 ++++++++++++++++++++++++++++++++++++++++-----------
+> 1 file changed, 136 insertions(+), 36 deletions(-)
+>
+>-- 
+>1.8.3.1
+>
 
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 7590ad0..fe5179d 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1582,6 +1582,10 @@ static void hv_eject_device_work(struct
-> work_struct *work)
->  		pci_dev_put(pdev);
->  	}
->=20
-> +	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
-> +	list_del(&hpdev->list_entry);
-> +	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
-> +
->  	memset(&ctxt, 0, sizeof(ctxt));
->  	ejct_pkt =3D (struct pci_eject_response *)&ctxt.pkt.message;
->  	ejct_pkt->message_type.type =3D PCI_EJECTION_COMPLETE;
-> @@ -1590,10 +1594,6 @@ static void hv_eject_device_work(struct
-> work_struct *work)
->  			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
->  			 VM_PKT_DATA_INBAND, 0);
->=20
-> -	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
-> -	list_del(&hpdev->list_entry);
-> -	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
-> -
->  	put_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	put_pcichild(hpdev, hv_pcidev_ref_pnp);
->  	put_hvpcibus(hpdev->hbus);
-> --
-> 2.7.4
