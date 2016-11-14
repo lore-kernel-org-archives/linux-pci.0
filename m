@@ -1,222 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57518 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:38040 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934108AbcKNXHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 18:07:21 -0500
-Date: Mon, 14 Nov 2016 17:07:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
-        tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jcm@redhat.com,
-        gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
-        hanjun.guo@linaro.org, linuxarm@huawei.com,
-        Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH V4 1/2] PCI: hisi: Add ECAM support for devices that are
- not RC
-Message-ID: <20161114230711.GA30262@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
- <1478682897-119874-2-git-send-email-liudongdong3@huawei.com>
+        id S1752861AbcKNSZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 13:25:21 -0500
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+To: Joerg Roedel <joro@8bytes.org>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
+ <20161111162736.GV2078@8bytes.org>
+ <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+ <20161114102654.GA1677@red-moon>
+ <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+ <20161114155222.GZ2078@8bytes.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
+Date: Mon, 14 Nov 2016 18:25:16 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478682897-119874-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <20161114155222.GZ2078@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo]
-
-On Wed, Nov 09, 2016 at 05:14:56PM +0800, Dongdong Liu wrote:
-> This patch modifies the current Hip05/Hip06 PCIe host
-> controller driver to add support for 'almost ECAM'
-> compliant platforms. Some controllers are ECAM compliant
-> for all the devices of the hierarchy except the root
-> complex; this patch adds support for such controllers.
+On 14/11/16 15:52, Joerg Roedel wrote:
+> On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
+>> If we've already made the decision to move away from bus ops, I don't
+>> see that it makes sense to deliberately introduce new dependencies on
+>> them. Besides, as it stands, this patch literally implements "tell the
+>> iommu-core which hardware-iommus exist in the system and a seperate
+>> iommu_ops ptr for each of them" straight off.
 > 
-> This is needed in preparation for the ACPI based driver
-> to allow both DT and ACPI drivers to use the same BIOS
-> (that configure the Designware iATUs).
-> This commit doesn't break backward compatibility with
-> previous non-ECAM platforms.
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> ---
->  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
->  drivers/pci/host/Kconfig                           |  4 +-
->  drivers/pci/host/pcie-designware.c                 |  4 +-
->  drivers/pci/host/pcie-designware.h                 |  2 +
->  drivers/pci/host/pcie-hisi.c                       | 45 ++++++++++++++++++++++
->  5 files changed, 60 insertions(+), 10 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> index 59c2f47..87a597a 100644
-> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> @@ -9,10 +9,13 @@ Additional properties are described here:
->  
->  Required properties
->  - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
-> -- reg: Should contain rc_dbi, config registers location and length.
-> -- reg-names: Must include the following entries:
-> +- reg: Should contain rc_dbi and  either config or ecam-cfg registers
-> +       location and length (it depends on the platform BIOS).
-> +- reg-names: Must include
->    "rc_dbi": controller configuration registers;
-> -  "config": PCIe configuration space registers.
-> +  and one of the following entries:
-> +    "config": PCIe configuration space registers for non-ECAM platforms.
-> +    "ecam-cfg": PCIe configuration space registers for ECAM platforms
->  - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
->  - port-id: Should be 0, 1, 2 or 3.
->  
-> @@ -23,8 +26,10 @@ Optional properties:
->  Hip05 Example (note that Hip06 is the same except compatible):
->  	pcie@0xb0080000 {
->  		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-> -		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
-> -		reg-names = "rc_dbi", "config";
-> +		reg = <0 0xb0080000 0 0x10000>,
-> +		      <0x220 0x00000000 0 0x2000>
-> +		/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
+> Not sure which code you are looking at, but as I see it we have only
+> per-device iommu-ops now (with this patch). That is different from
+> having core-visible hardware-iommu instances where devices could link
+> to.
 
-Add space before closing "*/".
+The per-device IOMMU ops are already there since 57f98d2f61e1. This
+patch generalises the other end, moving the "registering an IOMMU
+instance" (i.e. iommu_fwentry) bit into the IOMMU core, from being
+OF-specific. I'd be perfectly happy if we rename iommu_fwentry to
+iommu_instance, fwnode_iommu_set_ops() to iommu_register_instance(), and
+such if that makes the design intent clearer.
 
-> +		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
->  		bus-range = <0  15>;
->  		msi-parent = <&its_pcie>;
->  		#address-cells = <3>;
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index d7e7c0a..ae98644 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -219,13 +219,13 @@ config PCIE_ALTERA_MSI
->  
->  config PCI_HISI
->  	depends on OF && ARM64
-> -	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-> +	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs PCIe controllers"
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW
->  	help
->  	  Say Y here if you want PCIe controller support on HiSilicon
-> -	  Hip05 and Hip06 SoCs
-> +	  Hip05 and Hip06 and Hip07 SoCs
->  
->  config PCIE_QCOM
->  	bool "Qualcomm PCIe controller"
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 035f50c..da11644 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -101,8 +101,6 @@
->  #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
->  #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
->  
-> -static struct pci_ops dw_pcie_ops;
-> -
->  int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
->  {
->  	if ((uintptr_t)addr & (size - 1)) {
-> @@ -800,7 +798,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
->  	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
->  }
->  
-> -static struct pci_ops dw_pcie_ops = {
-> +struct pci_ops dw_pcie_ops = {
->  	.read = dw_pcie_rd_conf,
->  	.write = dw_pcie_wr_conf,
->  };
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index a567ea2..30d228a 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -83,4 +83,6 @@ struct pcie_host_ops {
->  void dw_pcie_setup_rc(struct pcie_port *pp);
->  int dw_pcie_host_init(struct pcie_port *pp);
->  
-> +extern struct pci_ops dw_pcie_ops;
-> +
->  #endif /* _PCIE_DESIGNWARE_H */
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 56154c2..555c964 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -43,6 +43,34 @@ struct hisi_pcie {
->  	struct pcie_soc_ops *soc_ops;
->  };
->  
-> +static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-> +				    unsigned int devfn, int where, int size,
-> +				    u32 *value)
-> +{
-> +	return pci_generic_config_read(bus, devfn, where, size, value);
-> +}
-> +
-> +static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-> +				    unsigned int devfn, int where, int size,
-> +				    u32 value)
-> +{
-> +	return pci_generic_config_write(bus, devfn, where, size, value);
-> +}
-> +
-> +static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
-> +					      unsigned int devfn,
-> +					      int where)
-> +{
-> +	void __iomem *addr;
-> +	struct pcie_port *pp = bus->sysdata;
-> +
-> +	addr = pp->va_cfg1_base - (pp->busn->start << 20) +
-> +		((bus->number << 20) | (devfn << 12)) +
-> +		where;
-> +
-> +	return addr;
-> +}
-> +
->  /* HipXX PCIe host only supports 32-bit config access */
->  static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
->  			      u32 *val)
-> @@ -190,6 +218,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pp->dbi_base);
->  	}
->  
-> +	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
-> +	if (reg) {
-> +		/* ECAM driver version */
-> +		hisi_pcie->pp.va_cfg0_base =
-> +		devm_ioremap_resource(&pdev->dev, reg);
-> +		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
-> +			dev_err(pp->dev, "cannot get ecam-cfg\n");
-> +			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
-> +		}
-> +		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
-> +
-> +		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
+If you'd also prefer to replace iommu_fwspec::ops with an opaque
+iommu_fwspec::iommu_instance pointer so that things are a bit more
+centralised (and users are forced to go through the API rather then call
+ops directly), I'd have no major objection either. My main point is that
+we've been deliberately putting the relevant building blocks in place -
+the of_iommu_{get,set}_ops stuff was designed from the start to
+accommodate per-instance ops, via the ops pointer *being* the instance
+token; the iommu_fwspec stuff is deliberately intended to provide
+per-device ops on top of that. The raw functionality is either there in
+iommu.c already, or moving there in patches already written, so if it
+doesn't look right all we need to focus on is making it look right.
 
-I don't really like this part.  We're scribbling on dw_pcie_ops, which this
-driver does not own.  That breaks the encapsulation and means that using
-two different DW-based drivers in the same system (admittedly unlikely)
-would fail mysteriously.
+> Also the rest of iommu-core code still makes use of the per-bus ops. The
+> per-device ops are only used for the of_xlate fn-ptr.
 
-I wonder if this could be solved by allowing the DW-based drivers to supply
-their own pci_ops.  If we did that, it might let us get rid of the
-rd_own_conf, wr_own_conf, rd_other_conf, and wr_other_conf function
-pointers.  I haven't worked through it, but it's possible the result would
-be easier to read.
+Hence my aforementioned patches intended for 4.10, directly following on
+from introducing iommu_fwspec in 4.9:
 
-It's also possible it would be a lot of code churn for no real gain, and
-breaking the encapsulation makes the most sense.  What do you think?
+http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14576.html
 
-> +
-> +		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
-> +		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
-> +	}
-> +
->  	ret = hisi_add_pcie_port(hisi_pcie, pdev);
->  	if (ret)
->  		return ret;
-> -- 
-> 1.9.1
-> 
+...the purpose being to provide a smooth transition from per-bus ops to
+per-device, per-instance ops. Apply those and we're 90% of the way there
+for OF-based IOMMU drivers (not that any of those actually need
+per-instance ops, admittedly; I did prototype it for the ARM SMMU ages
+ago, but it didn't seem worth the bother). Lorenzo's series broadens the
+scope to ACPI-based systems and moves the generically-useful parts into
+the core where we can easily build on them further if necessary. The
+major remaining work is to convert external callers of the current
+bus-dependent functions like iommu_domain_alloc(), iommu_present(), etc.
+to device-based alternatives.
+
+Robin.
