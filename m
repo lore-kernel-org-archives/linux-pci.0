@@ -1,74 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45542 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755560AbcKJSfp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 13:35:45 -0500
-Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, vikrams@codeaurora.org
-References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
-Date: Thu, 10 Nov 2016 13:35:41 -0500
+Received: from mail.kernel.org ([198.145.29.136]:49244 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752842AbcKNVwN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 16:52:13 -0500
+Date: Mon, 14 Nov 2016 15:52:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        Alex Barba <alex.barba@broadcom.com>,
+        Oza Oza <oza.oza@broadcom.com>
+Subject: Re: [PATCH v2 04/12] PCI: iproc: Fix exception with multi-function
+ devices
+Message-ID: <20161114215208.GF9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477960721-17649-1-git-send-email-ray.jui@broadcom.com>
+ <1477960721-17649-5-git-send-email-ray.jui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477960721-17649-5-git-send-email-ray.jui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On 9/24/2016 10:10 PM, Sinan Kaya wrote:
-> Each PCIe device can issue up to 32 transactions at a time by default.
-> Each transaction is tracked by a tag number on the bus. 32 outstanding
-> transactions is not enough for some performance critical applications
-> especially when a lot of small sized frames are transmitted.
+On Mon, Oct 31, 2016 at 05:38:33PM -0700, Ray Jui wrote:
+> During enumeration with multi-function EP devices, access to the
+> configuration space of a non-exist function results in an unsupported
+> request being returned as expected. By default the PAXB based iProc
+> PCIe controller forwards this as an APB error to the host system and
+> that causes an exception, which is undesired
 > 
-> Extended tags support increases this number to 256. Devices not
-> supporting extended tags tie-off this field to 0. According to ECN, it
-> is safe to enable this feature for all PCIe endpoints.
+> This patch disables this undesired behaviour and lets the kernel PCI
+> stack deals with an access to the non-exist function, in which case
+> a vendor ID of 0xffff is returned and handled gracefully
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Reported-by: JD Zheng <jiandong.zheng@broadcom.com>
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: JD Zheng <jiandong.zheng@broadcom.com>
+> Reviewed-by: Oza Oza <oza.oza@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 > ---
->  drivers/pci/probe.c | 7 +++++++
->  1 file changed, 7 insertions(+)
+>  drivers/pci/host/pcie-iproc.c | 58 +++++++++++++++++++++++++++++++++++++++++--
+>  drivers/pci/host/pcie-iproc.h |  3 +++
+>  2 files changed, 59 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 93f280d..2424f38 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1505,12 +1505,19 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  	 */
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index f3b3340..07ec478 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -58,6 +58,9 @@
+>  #define PCIE_DL_ACTIVE_SHIFT         2
+>  #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+>  
+> +#define APB_ERR_EN_SHIFT             0
+> +#define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+> +
+>  #define OARR_VALID_SHIFT             0
+>  #define OARR_VALID                   BIT(OARR_VALID_SHIFT)
+>  #define OARR_SIZE_CFG_SHIFT          1
+> @@ -96,6 +99,9 @@ enum iproc_pcie_reg {
+>  	/* link status */
+>  	IPROC_PCIE_LINK_STATUS,
+>  
+> +	/* enable APB error for unsupported requests */
+> +	IPROC_PCIE_APB_ERR_EN,
+> +
+>  	/* total number of core registers */
+>  	IPROC_PCIE_MAX_NUM_REG,
+>  };
+> @@ -124,6 +130,7 @@ static const u16 iproc_pcie_reg_paxb[] = {
+>  	[IPROC_PCIE_OMAP_LO]      = 0xd40,
+>  	[IPROC_PCIE_OMAP_HI]      = 0xd44,
+>  	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
+> +	[IPROC_PCIE_APB_ERR_EN]   = 0xf40,
+>  };
+>  
+>  /* iProc PCIe PAXC v1 registers */
+> @@ -181,6 +188,28 @@ static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
+>  	writel(val, pcie->base + offset);
 >  }
 >  
-> +static int pci_configure_extended_tags(struct pci_dev *dev)
+> +/**
+> + * APB error forwarding can be disabled during access of configuration
+> + * registers of the endpoint device, to prevent unsupported requests
+> + * (typically seen during enumeration with multi-function devices) from
+> + * triggering a system exception
+> + */
+> +static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+> +					      bool disable)
 > +{
-
-I should have checked the capability here before trying to enable it. 
-I'll post a follow up patch on this. 
-
-Is there any other feedback?
-
-
-> +	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-> +					 PCI_EXP_DEVCTL_EXT_TAG);
+> +	struct iproc_pcie *pcie = iproc_data(bus);
+> +	u32 val;
+> +
+> +	if (bus->number && pcie->has_apb_err_disable) {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_APB_ERR_EN);
+> +		if (disable)
+> +			val &= ~APB_ERR_EN;
+> +		else
+> +			val |= APB_ERR_EN;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_APB_ERR_EN, val);
+> +	}
 > +}
 > +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	struct hotplug_params hpp;
->  	int ret;
+>  static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+>  				       enum iproc_pcie_reg reg,
+>  				       unsigned window, u32 val)
+> @@ -244,10 +273,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  		return (pcie->base + offset);
+>  }
 >  
->  	pci_configure_mps(dev);
-> +	pci_configure_extended_tags(dev);
+> +static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+> +				    int where, int size, u32 *val)
+> +{
+> +	int ret;
+> +
+> +	iproc_pcie_apb_err_disable(bus, true);
+> +	ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> +	iproc_pcie_apb_err_disable(bus, false);
+
+I guess this means that any other APB errors (unrelated to this config
+access, e.g., a driver doing MMIo to a device at the same time the user is
+doing "lspci") that happen to occur during this window will also be
+ignored.
+
+> +
+> +	return ret;
+> +}
+> +
+> +static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+> +				     int where, int size, u32 val)
+> +{
+> +	int ret;
+> +
+> +	iproc_pcie_apb_err_disable(bus, true);
+> +	ret = pci_generic_config_write32(bus, devfn, where, size, val);
+> +	iproc_pcie_apb_err_disable(bus, false);
+> +
+> +	return ret;
+> +}
+> +
+>  static struct pci_ops iproc_pcie_ops = {
+>  	.map_bus = iproc_pcie_map_cfg_bus,
+> -	.read = pci_generic_config_read32,
+> -	.write = pci_generic_config_write32,
+> +	.read = iproc_pcie_config_read32,
+> +	.write = iproc_pcie_config_write32,
+>  };
 >  
->  	memset(&hpp, 0, sizeof(hpp));
->  	ret = pci_get_hp_params(dev, &hpp);
+>  static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> @@ -485,6 +538,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+>  		break;
+>  	case IPROC_PCIE_PAXB:
+>  		regs = iproc_pcie_reg_paxb;
+> +		pcie->has_apb_err_disable = true;
+>  		break;
+>  	case IPROC_PCIE_PAXC:
+>  		regs = iproc_pcie_reg_paxc;
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 768be05..711dd3a 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -57,6 +57,8 @@ struct iproc_msi;
+>   * @phy: optional PHY device that controls the Serdes
+>   * @map_irq: function callback to map interrupts
+>   * @ep_is_internal: indicates an internal emulated endpoint device is connected
+> + * @has_apb_err_disable: indicates the controller can be configured to prevent
+> + * unsupported request from being forwarded as an APB bus error
+>   * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+>   * @ob: outbound mapping parameters
+>   * @msi: MSI data
+> @@ -74,6 +76,7 @@ struct iproc_pcie {
+>  	struct phy *phy;
+>  	int (*map_irq)(const struct pci_dev *, u8, u8);
+>  	bool ep_is_internal;
+> +	bool has_apb_err_disable;
+>  	bool need_ob_cfg;
+>  	struct iproc_pcie_ob ob;
+>  	struct iproc_msi *msi;
+> -- 
+> 2.1.4
 > 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
