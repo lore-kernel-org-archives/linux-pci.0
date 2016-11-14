@@ -1,193 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54866 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933184AbcKIOTS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:19:18 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 07/16] drivers: acpi: implement acpi_dma_configure
-Date: Wed,  9 Nov 2016 14:19:39 +0000
-Message-Id: <20161109141948.19244-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org, "Brian Gerst" <brgerst@gmail.com>,
+        "Denys Vlasenko" <dvlasenk@redhat.com>, linux-pci@vger.kernel.org,
+        "Borislav Petkov" <bp@alien8.de>, "Lukas Wunner" <lukas@wunner.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        "Thomas Gleixner" <tglx@linutronix.de>,
+        "Linus Torvalds" <torvalds@linux-foundation.org>,
+        "Josh Poimboeuf" <jpoimboe@redhat.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        "Yinghai Lu" <yinghai@kernel.org>,
+        "Ingo Molnar" <mingo@kernel.org>,
+        "Peter Zijlstra" <peterz@infradead.org>
+Date: Mon, 14 Nov 2016 00:14:07 +0000
+Message-ID: <lsq.1479082447.363074961@decadent.org.uk>
+Subject: [PATCH 3.2 016/152] x86/quirks: Reintroduce scanning of secondary
+ buses
+In-Reply-To: <lsq.1479082446.271293126@decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On DT based systems, the of_dma_configure() API implements DMA
-configuration for a given device. On ACPI systems an API equivalent to
-of_dma_configure() is missing which implies that it is currently not
-possible to set-up DMA operations for devices through the ACPI generic
-kernel layer.
+3.2.84-rc1 review patch.  If anyone has any objections, please let me know.
 
-This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-calls that for now are just wrappers around arch_setup_dma_ops() and
-arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+------------------
 
-Since acpi_dma_configure() is used to configure DMA operations, the
-function initializes the dma/coherent_dma masks to sane default values
-if the current masks are uninitialized (also to keep the default values
-consistent with DT systems) to make sure the device has a complete
-default DMA set-up.
+From: Lukas Wunner <lukas@wunner.de>
 
-The DMA range size passed to arch_setup_dma_ops() is sized according
-to the device coherent_dma_mask (starting at address 0x0), mirroring the
-DT probing path behaviour when a dma-ranges property is not provided
-for the device being probed; this changes the current arch_setup_dma_ops()
-call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-is a NOP on all architectures but ARM/ARM64 this patch does not change
-the current kernel behaviour on them.
+commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
+We used to scan secondary buses until the following commit that
+was applied in 2009:
+
+  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
+
+which commit constrained early quirks to the root bus only. Its
+motivation was to prevent application of the nvidia_bugs quirk
+on secondary buses.
+
+We're about to add a quirk to reset the Broadcom 4331 wireless card on
+2011/2012 Macs, which is located on a secondary bus behind a PCIe root
+port. To facilitate that, reintroduce scanning of secondary buses.
+
+The commit message of 8659c406ade3 notes that scanning only the root bus
+"saves quite some unnecessary scanning work". The algorithm used prior
+to 8659c406ade3 was particularly time consuming because it scanned
+buses 0 to 31 brute force. To avoid lengthening boot time, employ a
+recursive strategy which only scans buses that are actually reachable
+from the root bus.
+
+Yinghai Lu pointed out that the secondary bus number read from a
+bridge's config space may be invalid, in particular a value of 0 would
+cause an infinite loop. The PCI core goes beyond that and recurses to a
+child bus only if its bus number is greater than the parent bus number
+(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
+that secondary buses may not be 0. Do the same on early scanning.
+
+If this algorithm is found to significantly impact boot time or cause
+infinite loops on broken hardware, it would be possible to limit its
+recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
+at depth 0, so the bus need not be scanned deeper than that for now. An
+alternative approach would be to revert to scanning only the root bus,
+and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
+and 8086:1e16. Apple always positioned the card behind either of these
+three ports. The quirk would then check presence of the card in slot 0
+below the root port and do its deed.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Andy Lutomirski <luto@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/acpi/glue.c     |  4 ++--
- drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c     |  3 +--
- include/acpi/acpi_bus.h |  2 ++
- include/linux/acpi.h    |  5 +++++
- 5 files changed, 50 insertions(+), 4 deletions(-)
+ arch/x86/kernel/early-quirks.c | 34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 5ea5dc2..f8d6564 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -211,12 +211,6 @@ struct chipset {
+ 	void (*f)(int num, int slot, int func);
+ };
  
- 	attr = acpi_get_dma_attr(acpi_dev);
- 	if (attr != DEV_DMA_NOT_SUPPORTED)
--		arch_setup_dma_ops(dev, 0, 0, NULL,
--				   attr == DEV_DMA_COHERENT);
-+		acpi_dma_configure(dev, attr);
+-/*
+- * Only works for devices on the root bus. If you add any devices
+- * not on bus 0 readd another loop level in early_quirks(). But
+- * be careful because at least the Nvidia quirk here relies on
+- * only matching on bus 0.
+- */
+ static struct chipset early_qrk[] __initdata = {
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
+@@ -231,6 +225,8 @@ static struct chipset early_qrk[] __init
+ 	{}
+ };
  
- 	acpi_physnode_link_name(physical_node_name, node_id);
- 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-@@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
++static void __init early_pci_scan_bus(int bus);
++
+ /**
+  * check_dev_quirk - apply early quirks to a given PCI device
+  * @num: bus number
+@@ -239,7 +235,7 @@ static struct chipset early_qrk[] __init
+  *
+  * Check the vendor & device ID against the early quirks table.
+  *
+- * If the device is single function, let early_quirks() know so we don't
++ * If the device is single function, let early_pci_scan_bus() know so we don't
+  * poke at this device again.
+  */
+ static int __init check_dev_quirk(int num, int slot, int func)
+@@ -248,6 +244,7 @@ static int __init check_dev_quirk(int nu
+ 	u16 vendor;
+ 	u16 device;
+ 	u8 type;
++	u8 sec;
+ 	int i;
+ 
+ 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+@@ -275,25 +272,36 @@ static int __init check_dev_quirk(int nu
+ 
+ 	type = read_pci_config_byte(num, slot, func,
+ 				    PCI_HEADER_TYPE);
++
++	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
++		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
++		if (sec > num)
++			early_pci_scan_bus(sec);
++	}
++
+ 	if (!(type & 0x80))
+ 		return -1;
+ 
  	return 0;
- 
-  err:
-+	acpi_dma_deconfigure(dev);
- 	ACPI_COMPANION_SET(dev, NULL);
- 	put_device(dev);
- 	put_device(&acpi_dev->dev);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 035ac64..694e0b6 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 		return DEV_DMA_NON_COHERENT;
  }
  
-+/**
-+ * acpi_dma_configure - Set-up DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ * @attr: device dma attributes
-+ */
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-+{
-+	/*
-+	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-+	 * setup the correct supported mask.
-+	 */
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	/*
-+	 * Assume dma valid range starts at 0 and covers the whole
-+	 * coherent_dma_mask.
-+	 */
-+	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-+			   attr == DEV_DMA_COHERENT);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_configure);
-+
-+/**
-+ * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ */
-+void acpi_dma_deconfigure(struct device *dev)
-+{
-+	arch_teardown_dma_ops(dev);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
-+
- static void acpi_init_coherency(struct acpi_device *adev)
+-void __init early_quirks(void)
++static void __init early_pci_scan_bus(int bus)
  {
- 	unsigned long long cca = 0;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..c29e07a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
- 		if (attr == DEV_DMA_NOT_SUPPORTED)
- 			dev_warn(&dev->dev, "DMA not supported.\n");
- 		else
--			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
--					   attr == DEV_DMA_COHERENT);
-+			acpi_dma_configure(&dev->dev, attr);
- 	}
+ 	int slot, func;
  
- 	pci_put_host_bridge_device(bridge);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index c1a524d..4242c31 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -573,6 +573,8 @@ struct acpi_pci_root {
- 
- bool acpi_dma_supported(struct acpi_device *adev);
- enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-+void acpi_dma_deconfigure(struct device *dev);
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
- 					   u64 address, bool check_children);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 6efb13c..df961f4 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -764,6 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 	return DEV_DMA_NOT_SUPPORTED;
+-	if (!early_pci_allowed())
+-		return;
+-
+ 	/* Poor man's PCI discovery */
+-	/* Only scan the root bus */
+ 	for (slot = 0; slot < 32; slot++)
+ 		for (func = 0; func < 8; func++) {
+ 			/* Only probe function 0 on single fn devices */
+-			if (check_dev_quirk(0, slot, func))
++			if (check_dev_quirk(bus, slot, func))
+ 				break;
+ 		}
  }
- 
-+static inline void acpi_dma_configure(struct device *dev,
-+				      enum dev_dma_attr attr) { }
 +
-+static inline void acpi_dma_deconfigure(struct device *dev) { }
++void __init early_quirks(void)
++{
++	if (!early_pci_allowed())
++		return;
 +
- #define ACPI_PTR(_ptr)	(NULL)
- 
- static inline void acpi_device_set_enumerated(struct acpi_device *adev)
--- 
-2.10.0
-
++	early_pci_scan_bus(0);
++}
