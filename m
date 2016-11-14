@@ -1,48 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:44076 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168245AbcKAJev (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 05:34:51 -0400
-Date: Tue, 1 Nov 2016 09:34:35 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>,
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:32790 "EHLO
+        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753423AbcKNLIP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 06:08:15 -0500
+Date: Mon, 14 Nov 2016 11:06:45 +0000
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
         Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Greg Ungerer <gerg@uclinux.org>,
-        Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH] PCI: Warn on possible RW1C corruption for sub-32 bit
- config writes
-Message-ID: <20161101093435.GO1041@n2100.armlinux.org.uk>
-References: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Message-ID: <20161114110645.0763092b@lxorguk.ukuu.org.uk>
+In-Reply-To: <2825537.ADCNsGqGxn@wuerfel>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+        <1555494.4IFvGxvsfe@wuerfel>
+        <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
+        <2825537.ADCNsGqGxn@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 31, 2016 at 04:39:02PM -0500, Bjorn Helgaas wrote:
-> Hardware that supports only 32-bit config writes is not spec-compliant.
-> For example, if software performs a 16-bit write, we must do a 32-bit read,
-> merge in the 16 bits we intend to write, followed by a 32-bit write.  If
-> the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
-> to-clear) bits set, we just inadvertently cleared something we shouldn't
-> have.
+On Wed, 09 Nov 2016 22:34:38 +0100
+Arnd Bergmann <arnd@arndb.de> wrote:
+
+> On Wednesday, November 9, 2016 12:10:43 PM CET Gabriele Paoloni wrote:
+> > > On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:  
+> > > > +       /*
+> > > > +        * The first PCIBIOS_MIN_IO is reserved specifically for  
+> > > indirectIO.  
+> > > > +        * It will separate indirectIO range from pci host bridge to
+> > > > +        * avoid the possible PIO conflict.
+> > > > +        * Set the indirectIO range directly here.
+> > > > +        */
+> > > > +       lpcdev->io_ops.start = 0;
+> > > > +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
+> > > > +       lpcdev->io_ops.devpara = lpcdev;
+> > > > +       lpcdev->io_ops.pfin = hisilpc_comm_in;
+> > > > +       lpcdev->io_ops.pfout = hisilpc_comm_out;
+> > > > +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
+> > > > +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;  
+> > > 
+> > > I have to look at patch 2 in more detail again, after missing a few
+> > > review
+> > > rounds. I'm still a bit skeptical about hardcoding a logical I/O port
+> > > range here, and would hope that we can just go through the same
+> > > assignment of logical port ranges that we have for PCI buses,
+> > > decoupling
+> > > the bus addresses from the linux-internal ones.  
+> > 
+> > The point here is that we want to avoid any conflict/overlap between
+> > the LPC I/O space and the PCI I/O space. With the assignment above
+> > we make sure that LPC never interfere with PCI I/O space.  
 > 
-> Add a rate-limited warning when we do sub-32 bit config writes.  Remove
-> similar probe-time warnings from some of the affected host bridge drivers.
+> But we already abstract the PCI I/O space using dynamic registration.
+> There is no need to hardcode the logical address for ISA, though
+> I think we can hardcode the bus address to start at zero here.
 
-Yay, I've been on about this for ages...
+Pedantically ISA starts at 0x100. The LPC may start at 0x00 as it also
+covers motherboard devices (0x00-0xFF). It is also possible that the
+'LPC' space is only partially routed to the PCI bridges because some if
+it magially disappears on CPU die (at least on x86) and has done since
+the era of socket 7 (eg the Cyrix 6x86 doesn't route 0x22/0x23 out of the
+CPU).
 
-Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+Assuming LPC starts at 0 ought to be ok given the PCI root bridge
+shouldn't see the transactions.
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+The LPC or it's equivalent may also not be routed via the PCI bridges at
+all, so you could have an LPC mapping that is unused or partially used
+with another bus actually getting some classes of LPC traffic - on x86 at
+least.
+
+Alan
