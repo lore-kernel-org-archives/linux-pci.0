@@ -1,74 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 28 Nov 2016 09:57:51 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Max Gurtovoy <maxg@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161128165751.GB28381@obsidianresearch.com>
-References: <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36400 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753242AbcKNLQK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 06:16:10 -0500
+Received: by mail-wm0-f46.google.com with SMTP id g23so91575664wme.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 03:16:10 -0800 (PST)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        srinivas.kandagatla@linaro.org, devicetree@vger.kernel.org
+Subject: [PATCH v4 1/3] bus: simple-pm: add support to pm clocks
+Date: Mon, 14 Nov 2016 11:15:53 +0000
+Message-Id: <1479122155-13393-2-git-send-email-srinivas.kandagatla@linaro.org>
+In-Reply-To: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 27, 2016 at 04:02:16PM +0200, Haggai Eran wrote:
+This patch adds support to pm clocks via device tree, so that the clocks
+can be turned on and off during runtime pm. This patch is required for
+Qualcomm msm8996 pcie controller which sits on a bus with its own
+power-domain and clocks.
 
-> > Like in ODP, MMU notifiers/HMM are used to monitor for translation
-> > changes. If a change comes in the GPU driver checks if an executing
-> > command is touching those pages and blocks the MMU notifier until the
-> > command flushes, then unfaults the page (blocking future commands) and
-> > unblocks the mmu notifier.
+Without this patch the clock associated with the bus are never turned on.
 
-> I think blocking mmu notifiers against something that is basically
-> controlled by user-space can be problematic. This can block things like
-> memory reclaim. If you have user-space access to the device's queues,
-> user-space can block the mmu notifier forever.
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ drivers/bus/simple-pm-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Right, I mentioned that..
+diff --git a/drivers/bus/simple-pm-bus.c b/drivers/bus/simple-pm-bus.c
+index c5eb46c..63b7e8c 100644
+--- a/drivers/bus/simple-pm-bus.c
++++ b/drivers/bus/simple-pm-bus.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_clock.h>
+ #include <linux/pm_runtime.h>
+ 
+ 
+@@ -22,17 +23,26 @@ static int simple_pm_bus_probe(struct platform_device *pdev)
+ 
+ 	pm_runtime_enable(&pdev->dev);
+ 
+-	if (np)
++	if (np) {
++		of_pm_clk_add_clks(&pdev->dev);
+ 		of_platform_populate(np, NULL, NULL, &pdev->dev);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct dev_pm_ops simple_pm_bus_pm_ops = {
++	SET_RUNTIME_PM_OPS(pm_clk_suspend,
++			   pm_clk_resume, NULL)
++};
++
+ static int simple_pm_bus_remove(struct platform_device *pdev)
+ {
+ 	dev_dbg(&pdev->dev, "%s\n", __func__);
+ 
+ 	pm_runtime_disable(&pdev->dev);
++	pm_clk_destroy(&pdev->dev);
++
+ 	return 0;
+ }
+ 
+@@ -48,6 +58,7 @@ static struct platform_driver simple_pm_bus_driver = {
+ 	.driver = {
+ 		.name = "simple-pm-bus",
+ 		.of_match_table = simple_pm_bus_of_match,
++		.pm = &simple_pm_bus_pm_ops,
+ 	},
+ };
+ 
+-- 
+2.10.1
 
-> On PeerDirect, we have some kind of a middle-ground solution for pinning
-> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
-> user-space and the GPU not to migrate it. If they do, the MR gets
-> destroyed immediately.
-
-That sounds horrible. How can that possibly work? What if the MR is
-being used when the GPU decides to migrate? I would not support that
-upstream without a lot more explanation..
-
-I know people don't like requiring new hardware, but in this case we
-really do need ODP hardware to get all the semantics people want..
-
-> Another thing I think is that while HMM is good for user-space
-> applications, for kernel p2p use there is no need for that. Using
-
->From what I understand we are not really talking about kernel p2p,
-everything proposed so far is being mediated by a userspace VMA, so
-I'd focus on making that work.
-
-Jason
