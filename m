@@ -1,102 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40262 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751800AbcKHG7x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 01:59:53 -0500
-Date: Tue, 8 Nov 2016 08:00:01 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [Resend] [PATCH] pci-hyperv: use kmalloc to allocate hypercall
- params buffer
-Message-ID: <20161108070001.GA13866@kroah.com>
-References: <1478592854-17303-1-git-send-email-longli@exchange.microsoft.com>
+Received: from mail.kernel.org ([198.145.29.136]:55948 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938977AbcKNWue (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 17:50:34 -0500
+Date: Mon, 14 Nov 2016 16:50:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RESEND PATCH 1/2] PCI: rockchip: cleanup bit definition for
+ PCIE_RC_CONFIG_LCS
+Message-ID: <20161114225019.GM9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478592854-17303-1-git-send-email-longli@exchange.microsoft.com>
+In-Reply-To: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 12:14:14AM -0800, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
+On Mon, Nov 14, 2016 at 12:11:05PM +0800, Shawn Lin wrote:
+> PCIE_RC_CONFIG_LCS contains control and status bits specific
+> to the PCIe link. The layout for this register looks the same
+> as the existed PCI_EXP_LNKCTL and PCI_EXP_LNKSTA. So let's
+> reuse them.
 > 
-> hv_do_hypercall assumes that we pass a segment from a physically continuous buffer. Buffer allocated on the stack may not work if CONFIG_VMAP_STACK=y is set. Use kmalloc to allocate this buffer.
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Please wrap your changelog at 72 columns.
+I applied both to pci/host-rockchip, thanks!
 
-> 
-> Signed-off-by: Long Li <longli@microsoft.com>
-> Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
 > ---
->  drivers/pci/host/pci-hyperv.c | 24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 763ff87..97e6daf 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -378,6 +378,7 @@ struct hv_pcibus_device {
->  	struct msi_domain_info msi_info;
->  	struct msi_controller msi_chip;
->  	struct irq_domain *irq_domain;
-> +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-
-Can you handle potentially unaligned accesses like this?  Is there some
-lock preventing you from using this structure more than once at the same
-time?
-
->  };
+>  drivers/pci/host/pcie-rockchip.c | 14 ++++----------
+>  1 file changed, 4 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 7f238af..1dba698 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -141,12 +141,6 @@
+>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+> -#define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+> -#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+> -#define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+> -#define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+> -#define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+> -#define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
+>  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+>  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+>  #define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
+> @@ -229,7 +223,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+>  	u32 status;
 >  
->  /*
-> @@ -774,7 +775,7 @@ void hv_irq_unmask(struct irq_data *data)
->  {
->  	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
->  	struct irq_cfg *cfg = irqd_cfg(data);
-> -	struct retarget_msi_interrupt params;
-> +	struct retarget_msi_interrupt *params;
->  	struct hv_pcibus_device *hbus;
->  	struct cpumask *dest;
->  	struct pci_bus *pbus;
-> @@ -785,23 +786,24 @@ void hv_irq_unmask(struct irq_data *data)
->  	pdev = msi_desc_to_pci_dev(msi_desc);
->  	pbus = pdev->bus;
->  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
-> -
-> -	memset(&params, 0, sizeof(params));
-> -	params.partition_id = HV_PARTITION_ID_SELF;
-> -	params.source = 1; /* MSI(-X) */
-> -	params.address = msi_desc->msg.address_lo;
-> -	params.data = msi_desc->msg.data;
-> -	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
-> +	params = &hbus->retarget_msi_interrupt_params;
-> +
-> +	memset(params, 0, sizeof(*params));
-> +	params->partition_id = HV_PARTITION_ID_SELF;
-> +	params->source = 1; /* MSI(-X) */
-> +	params->address = msi_desc->msg.address_lo;
-> +	params->data = msi_desc->msg.data;
-> +	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
->  			   (hbus->hdev->dev_instance.b[4] << 16) |
->  			   (hbus->hdev->dev_instance.b[7] << 8) |
->  			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
->  			   PCI_FUNC(pdev->devfn);
-> -	params.vector = cfg->vector;
-> +	params->vector = cfg->vector;
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
+> +	status |= (PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  }
 >  
->  	for_each_cpu_and(cpu, dest, cpu_online_mask)
-> -		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-> +		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
+> @@ -238,7 +232,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+>  	u32 status;
 >  
-> -	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-> +	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
-
-As you only use this in one spot, why not just allocate it here and then
-free it?  Why add it to the pcibus device structure?
-
-thanks,
-
-greg k-h
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
+> +	status |= (PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS) << 16;
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  }
+>  
+> @@ -540,7 +534,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  
+>  	/* Set RC's clock architecture as common clock */
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCIE_RC_CONFIG_LCS_CCC;
+> +	status |= PCI_EXP_LNKCTL_CCC;
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+>  	/* Enable Gen1 training */
+> @@ -575,7 +569,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		 * gen1 finished.
+>  		 */
+>  		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> +		status |= PCI_EXP_LNKCTL_RL;
+>  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+>  		timeout = jiffies + msecs_to_jiffies(500);
+> -- 
+> 1.9.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
