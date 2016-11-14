@@ -1,88 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:63938 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934876AbcKJQIj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 11:08:39 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Thu, 10 Nov 2016 17:07:21 +0100
-Message-ID: <10334260.ztLXZ2Oynd@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <17821285.aIcTyCGn5n@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F8F5D75@lhreml507-mbx>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34558 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754085AbcKNSkK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 13:40:10 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g23so17836646wme.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 10:40:09 -0800 (PST)
+Date: Mon, 14 Nov 2016 19:40:03 +0100
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Emil Velikov <emil.l.velikov@gmail.com>
+Cc: dri-devel@lists.freedesktop.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v3] PCI: create revision file in sysfs
+Message-ID: <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161111143723.5818-1-emil.l.velikov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20161111143723.5818-1-emil.l.velikov@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 10, 2016 3:36:49 PM CET Gabriele Paoloni wrote:
+On Fri, Nov 11, 2016 at 02:37:23PM +0000, Emil Velikov wrote:
+> From: Emil Velikov <emil.velikov@collabora.com>
 > 
-> Where should we get the range from? For LPC we know that it is going
-> Work on anything that is not used by PCI I/O space, and this is 
-> why we use [0, PCIBIOS_MIN_IO]
-
-It should be allocated the same way we allocate PCI config space
-segments. This is currently done with the io_range list in
-drivers/pci/pci.c, which isn't perfect but could be extended
-if necessary. Based on what others commented here, I'd rather
-make the differences between ISA/LPC and PCI I/O ranges smaller
-than larger.
-
-> > Your current version has
-> > 
-> >         if (arm64_extio_ops->pfout)                             \
-> >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-> >                        addr, value, sizeof(type));             \
-> > 
-> > Instead, just subtract the start of the range from the logical
-> > port number to transform it back into a bus-local port number:
+> Currently the revision isn't available via sysfs/libudev thus if one
+> wants to know the value they need to read through the config file.
 > 
-> These accessors do not operate on IO tokens:
+> This in itself wakes/powers up the device, causing unwanted delay
+> since it can be quite costly.
 > 
-> If (arm64_extio_ops->start > addr || arm64_extio_ops->end < addr)
-> addr is not going to be an I/O token; in fact patch 2/3 imposes that
-> the I/O tokens will start at PCIBIOS_MIN_IO. So from 0 to PCIBIOS_MIN_IO
-> we have free physical addresses that the accessors can operate on.
+> There are at least two userspace components which could make use the new
+> file libpciaccess and libdrm. The former [used in various places] wakes
+> up _every_ PCI device, which can be observed via glxinfo [when using
+> Mesa 10.0+ drivers]. While the latter [in association with Mesa 13.0]
+> can lead to 2-3 second delays while starting firefox, thunderbird or
+> chromium.
+> 
+> Expose the revision as a separate file, just like we do for the device,
+> vendor, their subsystem version and class.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Greg KH <gregkh@linuxfoundation.org>
+> Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
+> Tested-by: Mauro Santos <registo.mailling@gmail.com>
+> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
 
-Ah, I missed that part. I'd rather not use PCIBIOS_MIN_IO to refer to
-the logical I/O tokens, the purpose of that macro is really meant
-for allocating PCI I/O port numbers within the address space of
-one bus.
+Given that waking a gpu can take somewhere between ages and forever, and
+that we read the pci revisions everytime we launch a new gl app I think
+this is the correct approach. Of course we could just patch libdrm and
+everyone to not look at the pci revision, but that just leads to every
+pci-based driver having a driver-private ioctl/getparam thing to expose
+it. Which also doesn't make much sense.
 
-Note that it's equally likely that whichever next platform needs
-non-mapped I/O access like this actually needs them for PCI I/O space,
-and that will use it on addresses registered to a PCI host bridge.
+Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
-If we separate the two steps:
+Björn, if you're all ok with this we'd like to start landing at least
+libdrm patches before this patch hits a released kernel, just to shorten
+the pain window for users waiting for upgrades.
 
-a) assign a range of logical I/O port numbers to a bus
-b) register a set of helpers for redirecting logical I/O
-   port to a helper function
+Thanks, Daniel
 
-then I think the code will get cleaner and more flexible.
-It should actually then be able to replace the powerpc
-specific implementation.
+> ---
+> v2: Add r-b/t-b tags, slim down CC list, add note about userspace.
+> 
+> v3: Add Documentation/ bits (Greg KH)
+> 
+> Gents, please keep me in the CC list.
+> 
+> Thanks
+> Emil
+> ---
+>  Documentation/ABI/testing/sysfs-bus-pci | 7 +++++++
+>  Documentation/filesystems/sysfs-pci.txt | 2 ++
+>  drivers/pci/pci-sysfs.c                 | 2 ++
+>  3 files changed, 11 insertions(+)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index b3bc50f..5a1732b 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -294,3 +294,10 @@ Description:
+>  		a firmware bug to the system vendor.  Writing to this file
+>  		taints the kernel with TAINT_FIRMWARE_WORKAROUND, which
+>  		reduces the supportability of your system.
+> +
+> +What:		/sys/bus/pci/devices/.../revision
+> +Date:		November 2016
+> +Contact:	Emil Velikov <emil.l.velikov@gmail.com>
+> +Description:
+> +		This file contains the revision field of the the PCI device.
+> +		The value comes from device config space. The file is read only.
+> diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
+> index 74eaac2..6ea1ced 100644
+> --- a/Documentation/filesystems/sysfs-pci.txt
+> +++ b/Documentation/filesystems/sysfs-pci.txt
+> @@ -17,6 +17,7 @@ that support it.  For example, a given bus might look like this:
+>       |   |-- resource0
+>       |   |-- resource1
+>       |   |-- resource2
+> +     |   |-- revision
+>       |   |-- rom
+>       |   |-- subsystem_device
+>       |   |-- subsystem_vendor
+> @@ -41,6 +42,7 @@ files, each with their own function.
+>         resource		   PCI resource host addresses (ascii, ro)
+>         resource0..N	   PCI resource N, if present (binary, mmap, rw[1])
+>         resource0_wc..N_wc  PCI WC map resource N, if prefetchable (binary, mmap)
+> +       revision		   PCI revision (ascii, ro)
+>         rom		   PCI ROM resource, if present (binary, ro)
+>         subsystem_device	   PCI subsystem device (ascii, ro)
+>         subsystem_vendor	   PCI subsystem vendor (ascii, ro)
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index bcd10c7..0666287 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -50,6 +50,7 @@ pci_config_attr(vendor, "0x%04x\n");
+>  pci_config_attr(device, "0x%04x\n");
+>  pci_config_attr(subsystem_vendor, "0x%04x\n");
+>  pci_config_attr(subsystem_device, "0x%04x\n");
+> +pci_config_attr(revision, "0x%02x\n");
+>  pci_config_attr(class, "0x%06x\n");
+>  pci_config_attr(irq, "%u\n");
+>  
+> @@ -568,6 +569,7 @@ static struct attribute *pci_dev_attrs[] = {
+>  	&dev_attr_device.attr,
+>  	&dev_attr_subsystem_vendor.attr,
+>  	&dev_attr_subsystem_device.attr,
+> +	&dev_attr_revision.attr,
+>  	&dev_attr_class.attr,
+>  	&dev_attr_irq.attr,
+>  	&dev_attr_local_cpus.attr,
+> -- 
+> 2.9.3
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
 
-	Arnd
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
