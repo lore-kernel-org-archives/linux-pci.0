@@ -1,59 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50210 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753066AbcK2SBE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 13:01:04 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uATHwuGx103773
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 13:01:03 -0500
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 271a7vsj31-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 13:01:02 -0500
-Received: from localhost
-        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-        Tue, 29 Nov 2016 13:01:02 -0500
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH] PCI: Increase VPD access timeout
-Date: Tue, 29 Nov 2016 12:00:40 -0600
-Message-Id: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: KY Srinivasan <kys@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "Jake Oshins" <jakeo@microsoft.com>,
+        Hadden Hoppert <haddenh@microsoft.com>,
+        "Vitaly Kuznetsov" <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 3/3] PCI: hv: delete the device earlier from
+ hbus->children for hot-remove
+Date: Mon, 14 Nov 2016 23:08:02 +0000
+Message-ID: <DM5PR03MB24909D15D44948C4E9526848A0BC0@DM5PR03MB2490.namprd03.prod.outlook.com>
+References: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
-complete. When an access does not complete within this period, a warning
-is logged and an error returned to the caller.
 
-While this default timeout is valid for most hardware, some devices can
-experience longer access delays under certain circumstances. For example,
-one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
-scenario. These types of devices can benefit from an extended timeout.
 
-To support devices with a longer access delay, increase the timeout in
-pci_vpd_wait() to 125ms. The PCI specification is silent with respect to
-VPD delays, therefore there is no concern for violating a threshold.
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Wednesday, November 9, 2016 11:20 PM
+> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> devel@linuxdriverproject.org
+> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
+> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
+> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
+> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
+> olaf@aepfle.de; linux-kernel@vger.kernel.org
+> Subject: [PATCH 3/3] PCI: hv: delete the device earlier from hbus->childr=
+en
+> for hot-remove
+>=20
+> After we send a PCI_EJECTION_COMPLETE message to the host, the host will
+> immediately send us a PCI_BUS_RELATIONS message with
+> relations->device_count =3D=3D 0, so pci_devices_present_work(), running =
+on
+> another thread, can find the being-ejected device, mark
+> the hpdev->reported_missing to true, and run list_move_tail()/list_del()
+> for the device -- this races hv_eject_device_work() -> list_del().
+>=20
+> The patch moves the list_del() in hv_eject_device_work() to an earlier
+> place, i.e. before we send PCI_EJECTION_COMPLETE, so later the
+> pci_devices_present_work() can't see the device.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> CC: Jake Oshins <jakeo@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>
+> CC: Haiyang Zhang <haiyangz@microsoft.com>
+> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
- drivers/pci/access.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks Dexuan.
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d11cdbb..61b5a6b 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -355,7 +355,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
- static int pci_vpd_wait(struct pci_dev *dev)
- {
- 	struct pci_vpd *vpd = dev->vpd;
--	unsigned long timeout = jiffies + msecs_to_jiffies(50);
-+	unsigned long timeout = jiffies + msecs_to_jiffies(125);
- 	unsigned long max_sleep = 16;
- 	u16 status;
- 	int ret;
--- 
-2.1.0
-
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
+c
+> index 7590ad0..fe5179d 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1582,6 +1582,10 @@ static void hv_eject_device_work(struct
+> work_struct *work)
+>  		pci_dev_put(pdev);
+>  	}
+>=20
+> +	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
+> +	list_del(&hpdev->list_entry);
+> +	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+> +
+>  	memset(&ctxt, 0, sizeof(ctxt));
+>  	ejct_pkt =3D (struct pci_eject_response *)&ctxt.pkt.message;
+>  	ejct_pkt->message_type.type =3D PCI_EJECTION_COMPLETE;
+> @@ -1590,10 +1594,6 @@ static void hv_eject_device_work(struct
+> work_struct *work)
+>  			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
+>  			 VM_PKT_DATA_INBAND, 0);
+>=20
+> -	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
+> -	list_del(&hpdev->list_entry);
+> -	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+> -
+>  	put_pcichild(hpdev, hv_pcidev_ref_childlist);
+>  	put_pcichild(hpdev, hv_pcidev_ref_pnp);
+>  	put_hvpcibus(hpdev->hbus);
+> --
+> 2.7.4
