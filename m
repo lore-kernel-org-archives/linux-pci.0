@@ -1,147 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0134.outbound.protection.outlook.com ([104.47.41.134]:15184
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752771AbcKJIxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 03:53:00 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        "Hadden Hoppert" <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
-Date: Thu, 10 Nov 2016 07:18:47 +0000
-Message-ID: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 14 Nov 2016 16:52:23 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161114155222.GZ2078@8bytes.org>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
+ <20161111162736.GV2078@8bytes.org>
+ <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+ <20161114102654.GA1677@red-moon>
+ <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. We don't really need such a big on-stack buffer when sending
-the teardown_packet: vmbus_sendpacket() here only uses
-sizeof(struct pci_message).
+On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
+> If we've already made the decision to move away from bus ops, I don't
+> see that it makes sense to deliberately introduce new dependencies on
+> them. Besides, as it stands, this patch literally implements "tell the
+> iommu-core which hardware-iommus exist in the system and a seperate
+> iommu_ops ptr for each of them" straight off.
 
-2. In the hot-remove case (PCI_EJECT), after we send PCI_EJECTION_COMPLETE
-to the host, the host will send a RESCIND_CHANNEL message to us and the
-host won't access the per-channel ringbuffer any longer, so we needn't
-send PCI_RESOURCES_RELEASED/PCI_BUS_D0EXIT to the host, and we shouldn't
-expect the host's completion message of PCI_BUS_D0EXIT, which will never
-come.
+Not sure which code you are looking at, but as I see it we have only
+per-device iommu-ops now (with this patch). That is different from
+having core-visible hardware-iommu instances where devices could link
+to.
 
-3. We should send PCI_BUS_D0EXIT after hv_send_resources_released().
+Also the rest of iommu-core code still makes use of the per-bus ops. The
+per-device ops are only used for the of_xlate fn-ptr.
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-CC: Jake Oshins <jakeo@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>
-CC: Haiyang Zhang <haiyangz@microsoft.com>
-CC: Vitaly Kuznetsov <vkuznets@redhat.com>
 
----
 
-I made the patch based on discussions with Jake Oshins and others.
-
- drivers/pci/host/pci-hyperv.c | 53 +++++++++++++++++++++++++++------------=
-----
- 1 file changed, 33 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 93ed64a..7590ad0 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -2266,24 +2266,32 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	return ret;
- }
-=20
--/**
-- * hv_pci_remove() - Remove routine for this VMBus channel
-- * @hdev:	VMBus's tracking struct for this root PCI bus
-- *
-- * Return: 0 on success, -errno on failure
-- */
--static int hv_pci_remove(struct hv_device *hdev)
-+static void hv_pci_bus_exit(struct hv_device *hdev)
- {
--	int ret;
--	struct hv_pcibus_device *hbus;
--	union {
-+	struct hv_pcibus_device *hbus =3D hv_get_drvdata(hdev);
-+	struct {
- 		struct pci_packet teardown_packet;
--		u8 buffer[0x100];
-+		u8 buffer[sizeof(struct pci_message)];
- 	} pkt;
- 	struct pci_bus_relations relations;
- 	struct hv_pci_compl comp_pkt;
-+	int ret;
-=20
--	hbus =3D hv_get_drvdata(hdev);
-+	/*
-+	 * After the host sends the RESCIND_CHANNEL message, it doesn't
-+	 * access the per-channel ringbuffer any longer.
-+	 */
-+	if (hdev->channel->rescind)
-+		return;
-+
-+	/* Delete any children which might still exist. */
-+	memset(&relations, 0, sizeof(relations));
-+	hv_pci_devices_present(hbus, &relations);
-+
-+	ret =3D hv_send_resources_released(hdev);
-+	if (ret)
-+		dev_err(&hdev->device,
-+			"Couldn't send resources released packet(s)\n");
-=20
- 	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
- 	init_completion(&comp_pkt.host_event);
-@@ -2298,7 +2306,19 @@ static int hv_pci_remove(struct hv_device *hdev)
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 	if (!ret)
- 		wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ);
-+}
-+
-+/**
-+ * hv_pci_remove() - Remove routine for this VMBus channel
-+ * @hdev:	VMBus's tracking struct for this root PCI bus
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int hv_pci_remove(struct hv_device *hdev)
-+{
-+	struct hv_pcibus_device *hbus;
-=20
-+	hbus =3D hv_get_drvdata(hdev);
- 	if (hbus->state =3D=3D hv_pcibus_installed) {
- 		/* Remove the bus from PCI's point of view. */
- 		pci_lock_rescan_remove();
-@@ -2307,17 +2327,10 @@ static int hv_pci_remove(struct hv_device *hdev)
- 		pci_unlock_rescan_remove();
- 	}
-=20
--	ret =3D hv_send_resources_released(hdev);
--	if (ret)
--		dev_err(&hdev->device,
--			"Couldn't send resources released packet(s)\n");
-+	hv_pci_bus_exit(hdev);
-=20
- 	vmbus_close(hdev->channel);
-=20
--	/* Delete any children which might still exist. */
--	memset(&relations, 0, sizeof(relations));
--	hv_pci_devices_present(hbus, &relations);
--
- 	iounmap(hbus->cfg_addr);
- 	hv_free_config_window(hbus);
- 	pci_free_resource_list(&hbus->resources_for_children);
---=20
-2.7.4
+	Joerg
 
