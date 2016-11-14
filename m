@@ -1,55 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50954 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933845AbcKILUk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 06:20:40 -0500
-Date: Wed, 9 Nov 2016 11:20:00 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        bhelgaas@google.com, olof@lixom.net, arnd@arndb.de,
-        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-Message-ID: <20161109111959.GB17020@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
- <20161108114953.GB15297@leverpostej>
- <1478646779.7430.66.camel@kernel.crashing.org>
+Return-Path: <ddutile@redhat.com>
+Return-Path: <ddutile@redhat.com>
+Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
+ bridge hasn't
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+        Bjorn Helgaas <helgaas@kernel.org>
+References: <20161102223552.14776-1-jthumshirn@suse.de>
+ <20161102223552.14776-2-jthumshirn@suse.de>
+ <20161109171140.GK14322@bhelgaas-glaptop.roam.corp.google.com>
+ <20161114115604.gzxjstjj7vb4ytno@linux-x5ow.site>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
+        Hannes Reinecke <hare@suse.de>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <5829E373.1070901@redhat.com>
+Date: Mon, 14 Nov 2016 11:16:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478646779.7430.66.camel@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161114115604.gzxjstjj7vb4ytno@linux-x5ow.site>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 10:12:59AM +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2016-11-08 at 11:49 +0000, Mark Rutland wrote:
-> > I believe that we could theoretically have multiple independent LPC/ISA
-> > busses, as is possible with PCI on !x86 systems. If the current ISA code
-> > assumes a singleton bus, I think that's something that needs to be fixed
-> > up more generically.
-> > 
-> > I don't see why we should need any architecture-specific code here. Why
-> > can we not fix up the ISA bus code in drivers/of/address.c such that it
-> > handles multiple ISA bus instances, and translates all sub-device
-> > addresses relative to the specific bus instance?
-> 
-> What in that code prevents that today ?
+On 11/14/2016 06:56 AM, Johannes Thumshirn wrote:
+> On Wed, Nov 09, 2016 at 11:11:40AM -0600, Bjorn Helgaas wrote:
+>> Hi Johannes,
+>>
+>> On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
+>>> The Read Completion Boundary (RCB) bit must only be set on a device or
+>>> endpoint if it is set on the root complex.
+>>>
+>>> Certain BIOSes erroneously set the RCB Bit in their ACPI _HPX Tables
+>>> even if it is not set on the root port. This is a violation to the PCIe
+>>> Specification and is known to bring some Mellanox Connect-X 3 HCAs into
+>>> a state where they can't map their firmware and go into error recovery.
+>>>
+>>> BIOS Information
+>>> 	Vendor: IBM
+>>> 	Version: -[A8E120CUS-1.30]-
+>>> 	Release Date: 08/22/2016
+>>
+>> This seems like a pretty serious problem (sounds like maybe the HCA is
+>> completely useless?)
+>
+> Correct.
+>
+>>
+>> Can you point us at a bugzilla or other problem report?  It's nice to
+>> have details of what this looks like to a user, so people who trip
+>> over this problem have a little more chance of finding the solution.
+>
+> As we already said, our bugzilla entry for this is not accessible from the
+> outside, but I know Red Hat does have a bugzilla entry for the same issue as
+> well. Maybe this is reachable from the outside (adding Don for this, as I know
+> he has worked on this problem as well).
+>
+RHEL bz's are not accessible from the outside.
+I suggest capturing the content of the RH bz issue and creating a k.o. bz
+with the information.
 
-It appears I was mistaken w.r.t. the singleton comment. We can already
-translate MMIO->MMIO addresses per-instance (in the presence of a ranges
-property).
-
-The big change would be to handle !MMIO translations, for which we'd
-need a runtime registry of ISA bus instance to find the relevant
-accessor ops and instance-specific data.
-
-Thanks,
-Mark.
+>>
+>> 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices
+>> with a link") appeared in v3.18, so it's probably not a *new* problem,
+>> so my guess is that this is v4.10 material.
+>
+> Yes 4.10 sounds good to me. I personally think, this problem hasn't
+> materialized yet, as this is the kind of hardware you run on a rather /stable/
+> kernel either you built on your own or get from an enterprise distribution and
+> until recently these kernels haven't been updated to something newer than
+> 3.18.
+>
+> Thanks,
+> 	Johannes
+>
