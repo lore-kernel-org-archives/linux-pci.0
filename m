@@ -1,288 +1,281 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v8 13/16] drivers: iommu: arm-smmu: add IORT configuration
-Date: Wed, 16 Nov 2016 15:29:33 +0000
-Message-Id: <20161116152936.22955-14-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:47372 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933497AbcKNCeK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 21:34:10 -0500
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org, "Denys Vlasenko" <dvlasenk@redhat.com>,
+        "Peter Zijlstra" <peterz@infradead.org>,
+        "Brian Gerst" <brgerst@gmail.com>, "Michael Buesch" <m@bues.ch>,
+        "Lukas Wunner" <lukas@wunner.de>,
+        "Chris Milsted" <cmilsted@redhat.com>,
+        "Yinghai Lu" <yinghai@kernel.org>,
+        "Linus Torvalds" <torvalds@linux-foundation.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "Matthew Garrett" <mjg59@srcf.ucam.org>,
+        "=?UTF-8?Q?Rafa=C5=82=20?= =?UTF-8?Q?Mi=C5=82ecki?="
+        <zajec5@gmail.com>, "Thomas Gleixner" <tglx@linutronix.de>,
+        linux-pci@vger.kernel.org, "Ingo Molnar" <mingo@kernel.org>,
+        linux-wireless@vger.kernel.org, "Borislav Petkov" <bp@alien8.de>,
+        "Josh Poimboeuf" <jpoimboe@redhat.com>,
+        b43-dev@lists.infradead.org,
+        "Matt Fleming" <matt@codeblueprint.co.uk>,
+        "Konstantin Simanov" <k.simanov@stlk.ru>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        "Andrew Worsley" <amworsley@gmail.com>,
+        "Bryan Paradis" <bryan.paradis@gmail.com>,
+        "Chris Bainbridge" <chris.bainbridge@gmail.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>
+Date: Mon, 14 Nov 2016 00:14:20 +0000
+Message-ID: <lsq.1479082460.127832746@decadent.org.uk>
+Subject: [PATCH 3.16 057/346] x86/quirks: Add early quirk to reset Apple
+ AirPort card
+In-Reply-To: <lsq.1479082458.755945576@decadent.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In ACPI bases systems, in order to be able to create platform
-devices and initialize them for ARM SMMU components, the IORT
-kernel implementation requires a set of static functions to be
-used by the IORT kernel layer to configure platform devices for
-ARM SMMU components.
+3.16.39-rc1 review patch.  If anyone has any objections, please let me know.
 
-Add static configuration functions to the IORT kernel layer for
-the ARM SMMU components, so that the ARM SMMU driver can
-initialize its respective platform device by relying on the IORT
-kernel infrastructure and by adding a corresponding ACPI device
-early probe section entry.
+------------------
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
+From: Lukas Wunner <lukas@wunner.de>
+
+commit abb2bafd295fe962bbadc329dbfb2146457283ac upstream.
+
+The EFI firmware on Macs contains a full-fledged network stack for
+downloading OS X images from osrecovery.apple.com. Unfortunately
+on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+wireless card on every boot and leaves it enabled even after
+ExitBootServices has been called. The card continues to assert its IRQ
+line, causing spurious interrupts if the IRQ is shared. It also corrupts
+memory by DMAing received packets, allowing for remote code execution
+over the air. This only stops when a driver is loaded for the wireless
+card, which may be never if the driver is not installed or blacklisted.
+
+The issue seems to be constrained to the Broadcom 4331. Chris Milsted
+has verified that the newer Broadcom 4360 built into the MacBookPro11,3
+(2013/2014) does not exhibit this behaviour. The chances that Apple will
+ever supply a firmware fix for the older machines appear to be zero.
+
+The solution is to reset the card on boot by writing to a reset bit in
+its mmio space. This must be done as an early quirk and not as a plain
+vanilla PCI quirk to successfully combat memory corruption by DMAed
+packets: Matthew Garrett found out in 2012 that the packets are written
+to EfiBootServicesData memory (http://mjg59.dreamwidth.org/11235.html).
+This type of memory is made available to the page allocator by
+efi_free_boot_services(). Plain vanilla PCI quirks run much later, in
+subsys initcall level. In-between a time window would be open for memory
+corruption. Random crashes occurring in this time window and attributed
+to DMAed packets have indeed been observed in the wild by Chris
+Bainbridge.
+
+When Matthew Garrett analyzed the memory corruption issue in 2012, he
+sought to fix it with a grub quirk which transitions the card to D3hot:
+http://git.savannah.gnu.org/cgit/grub.git/commit/?id=9d34bb85da56
+
+This approach does not help users with other bootloaders and while it
+may prevent DMAed packets, it does not cure the spurious interrupts
+emanating from the card. Unfortunately the card's mmio space is
+inaccessible in D3hot, so to reset it, we have to undo the effect of
+Matthew's grub patch and transition the card back to D0.
+
+Note that the quirk takes a few shortcuts to reduce the amount of code:
+The size of BAR 0 and the location of the PM capability is identical
+on all affected machines and therefore hardcoded. Only the address of
+BAR 0 differs between models. Also, it is assumed that the BCMA core
+currently mapped is the 802.11 core. The EFI driver seems to always take
+care of this.
+
+Michael Büsch, Bjorn Helgaas and Matt Fleming contributed feedback
+towards finding the best solution to this problem.
+
+The following should be a comprehensive list of affected models:
+    iMac13,1        2012  21.5"       [Root Port 00:1c.3 = 8086:1e16]
+    iMac13,2        2012  27"         [Root Port 00:1c.3 = 8086:1e16]
+    Macmini5,1      2011  i5 2.3 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,2      2011  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,3      2011  i7 2.0 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini6,1      2012  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    Macmini6,2      2012  i7 2.3 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro8,1   2011  13"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,2   2011  15"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,3   2011  17"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro9,1   2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro9,2   2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,1  2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,2  2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+
+For posterity, spurious interrupts caused by the Broadcom 4331 wireless
+card resulted in splats like this (stacktrace omitted):
+
+    irq 17: nobody cared (try booting with the "irqpoll" option)
+    handlers:
+    [<ffffffff81374370>] pcie_isr
+    [<ffffffffc0704550>] sdhci_irq [sdhci] threaded [<ffffffffc07013c0>] sdhci_thread_irq [sdhci]
+    [<ffffffffc0a0b960>] azx_interrupt [snd_hda_codec]
+    Disabling IRQ #17
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
+Tested-by: Konstantin Simanov <k.simanov@stlk.ru>        # [MacBookPro8,1]
+Tested-by: Lukas Wunner <lukas@wunner.de>                # [MacBookPro9,1]
+Tested-by: Bryan Paradis <bryan.paradis@gmail.com>       # [MacBookPro9,2]
+Tested-by: Andrew Worsley <amworsley@gmail.com>          # [MacBookPro10,1]
+Tested-by: Chris Bainbridge <chris.bainbridge@gmail.com> # [MacBookPro10,2]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Chris Milsted <cmilsted@redhat.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Michael Buesch <m@bues.ch>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: b43-dev@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Link: http://lkml.kernel.org/r/48d0972ac82a53d460e5fce77a07b2560db95203.1465690253.git.lukas@wunner.de
+[ Did minor readability edits. ]
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/acpi/arm64/iort.c | 81 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/iommu/arm-smmu.c  | 83 ++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/acpi_iort.h |  3 ++
- 3 files changed, 166 insertions(+), 1 deletion(-)
+ arch/x86/kernel/early-quirks.c | 64 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/bcma/bcma_private.h    |  2 --
+ include/linux/bcma/bcma.h      |  1 +
+ 3 files changed, 65 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index fd52e4c..4708806 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -548,6 +548,78 @@ static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
- 	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -11,7 +11,11 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
++#include <linux/delay.h>
++#include <linux/dmi.h>
+ #include <linux/pci_ids.h>
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_regs.h>
+ #include <drm/i915_drm.h>
+ #include <asm/pci-direct.h>
+ #include <asm/dma.h>
+@@ -21,6 +25,9 @@
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
+ #include <asm/irq_remapping.h>
++#include <asm/early_ioremap.h>
++
++#define dev_err(msg)  pr_err("pci 0000:%02x:%02x.%d: %s", bus, slot, func, msg)
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -572,6 +579,61 @@ static void __init force_disable_hpet(in
+ #endif
  }
  
-+static int __init arm_smmu_count_resources(struct acpi_iort_node *node)
++#define BCM4331_MMIO_SIZE	16384
++#define BCM4331_PM_CAP		0x40
++#define bcma_aread32(reg)	ioread32(mmio + 1 * BCMA_CORE_SIZE + reg)
++#define bcma_awrite32(reg, val)	iowrite32(val, mmio + 1 * BCMA_CORE_SIZE + reg)
++
++static void __init apple_airport_reset(int bus, int slot, int func)
 +{
-+	struct acpi_iort_smmu *smmu;
-+	int num_irqs;
-+	u64 *glb_irq;
++	void __iomem *mmio;
++	u16 pmcsr;
++	u64 addr;
++	int i;
 +
-+	/* Retrieve SMMU specific data */
-+	smmu = (struct acpi_iort_smmu *)node->node_data;
++	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc."))
++		return;
 +
-+	glb_irq = ACPI_ADD_PTR(u64, node, smmu->global_interrupt_offset);
-+	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
-+		num_irqs = 1;
-+	else
-+		num_irqs = 2;
++	/* Card may have been put into PCI_D3hot by grub quirk */
++	pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
 +
-+	num_irqs += smmu->context_interrupt_count;
++	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
++		write_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
++		mdelay(10);
 +
-+	return num_irqs + 1;
-+}
-+
-+static void __init arm_smmu_init_resources(struct resource *res,
-+					   struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu *smmu;
-+	int i, hw_irq, trigger, num_res = 0;
-+	u64 *ctx_irq, *glb_irq;
-+
-+	/* Retrieve SMMU specific data */
-+	smmu = (struct acpi_iort_smmu *)node->node_data;
-+
-+	res[num_res].start = smmu->base_address;
-+	res[num_res].end = smmu->base_address + smmu->span - 1;
-+	res[num_res].flags = IORESOURCE_MEM;
-+	num_res++;
-+
-+	glb_irq = ACPI_ADD_PTR(u64, node, smmu->global_interrupt_offset);
-+	/* Global IRQs */
-+	hw_irq = IORT_IRQ_MASK(glb_irq[0]);
-+	trigger = IORT_IRQ_TRIGGER_MASK(glb_irq[0]);
-+
-+	acpi_iort_register_irq(hw_irq, "arm-smmu-global", trigger,
-+				     &res[num_res++]);
-+
-+	/* Global IRQs */
-+	hw_irq = IORT_IRQ_MASK(glb_irq[1]);
-+	if (hw_irq) {
-+		trigger = IORT_IRQ_TRIGGER_MASK(glb_irq[1]);
-+		acpi_iort_register_irq(hw_irq, "arm-smmu-global", trigger,
-+					     &res[num_res++]);
++		pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
++		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++			dev_err("Cannot power up Apple AirPort card\n");
++			return;
++		}
 +	}
 +
-+	/* Context IRQs */
-+	ctx_irq = ACPI_ADD_PTR(u64, node, smmu->context_interrupt_offset);
-+	for (i = 0; i < smmu->context_interrupt_count; i++) {
-+		hw_irq = IORT_IRQ_MASK(ctx_irq[i]);
-+		trigger = IORT_IRQ_TRIGGER_MASK(ctx_irq[i]);
++	addr  =      read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_0);
++	addr |= (u64)read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_1) << 32;
++	addr &= PCI_BASE_ADDRESS_MEM_MASK;
 +
-+		acpi_iort_register_irq(hw_irq, "arm-smmu-context", trigger,
-+				       &res[num_res++]);
++	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
++	if (!mmio) {
++		dev_err("Cannot iomap Apple AirPort card\n");
++		return;
 +	}
++
++	pr_info("Resetting Apple AirPort card (left enabled by EFI)\n");
++
++	for (i = 0; bcma_aread32(BCMA_RESET_ST) && i < 30; i++)
++		udelay(10);
++
++	bcma_awrite32(BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(1);
++
++	bcma_awrite32(BCMA_RESET_CTL, 0);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(10);
++
++	early_iounmap(mmio, BCM4331_MMIO_SIZE);
 +}
-+
-+static bool __init arm_smmu_is_coherent(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu *smmu;
-+
-+	/* Retrieve SMMU specific data */
-+	smmu = (struct acpi_iort_smmu *)node->node_data;
-+
-+	return smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK;
-+}
-+
- struct iort_iommu_config {
- 	const char *name;
- 	int (*iommu_init)(struct acpi_iort_node *node);
-@@ -564,12 +636,21 @@ static const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
- 	.iommu_init_resources = arm_smmu_v3_init_resources
+ 
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+@@ -610,6 +672,8 @@ static struct chipset early_qrk[] __init
+ 	 */
+ 	{ PCI_VENDOR_ID_INTEL, 0x0f00,
+ 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
++	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
++	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
+ 	{}
  };
  
-+static const struct iort_iommu_config iort_arm_smmu_cfg __initconst = {
-+	.name = "arm-smmu",
-+	.iommu_is_coherent = arm_smmu_is_coherent,
-+	.iommu_count_resources = arm_smmu_count_resources,
-+	.iommu_init_resources = arm_smmu_init_resources
-+};
-+
- static __init
- const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
- {
- 	switch (node->type) {
- 	case ACPI_IORT_NODE_SMMU_V3:
- 		return &iort_arm_smmu_v3_cfg;
-+	case ACPI_IORT_NODE_SMMU:
-+		return &iort_arm_smmu_cfg;
- 	default:
- 		return NULL;
- 	}
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 573b2b6..21d1892 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -28,6 +28,8 @@
- 
- #define pr_fmt(fmt) "arm-smmu: " fmt
- 
-+#include <linux/acpi.h>
-+#include <linux/acpi_iort.h>
- #include <linux/atomic.h>
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -8,8 +8,6 @@
+ #include <linux/bcma/bcma.h>
  #include <linux/delay.h>
- #include <linux/dma-iommu.h>
-@@ -1904,6 +1906,70 @@ static const struct of_device_id arm_smmu_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
  
-+#ifdef CONFIG_ACPI
-+static int acpi_smmu_get_data(u32 model, u32 *version, u32 *impl)
-+{
-+	int ret = 0;
-+
-+	switch (model) {
-+	case ACPI_IORT_SMMU_V1:
-+	case ACPI_IORT_SMMU_CORELINK_MMU400:
-+		*version = ARM_SMMU_V1;
-+		*impl = GENERIC_SMMU;
-+		break;
-+	case ACPI_IORT_SMMU_V2:
-+		*version = ARM_SMMU_V2;
-+		*impl = GENERIC_SMMU;
-+		break;
-+	case ACPI_IORT_SMMU_CORELINK_MMU500:
-+		*version = ARM_SMMU_V2;
-+		*impl = ARM_MMU500;
-+		break;
-+	default:
-+		ret = -ENODEV;
-+	}
-+
-+	return ret;
-+}
-+
-+static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+				      struct arm_smmu_device *smmu)
-+{
-+	struct device *dev = smmu->dev;
-+	struct acpi_iort_node *node =
-+		*(struct acpi_iort_node **)dev_get_platdata(dev);
-+	struct acpi_iort_smmu *iort_smmu;
-+	u64 *glb_irq;
-+	int ret;
-+
-+	/* Retrieve SMMU1/2 specific data */
-+	iort_smmu = (struct acpi_iort_smmu *)node->node_data;
-+
-+	ret = acpi_smmu_get_data(iort_smmu->model, &smmu->version,
-+						   &smmu->model);
-+	if (ret < 0)
-+		return ret;
-+
-+	glb_irq = ACPI_ADD_PTR(u64, node, iort_smmu->global_interrupt_offset);
-+
-+	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
-+		smmu->num_global_irqs = 1;
-+	else
-+		smmu->num_global_irqs = 2;
-+
-+	if (iort_smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK)
-+		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
-+
-+	return 0;
-+}
-+#else
-+static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+					     struct arm_smmu_device *smmu)
-+{
-+	return -ENODEV;
-+}
-+#endif
-+
- static int arm_smmu_device_dt_probe(struct platform_device *pdev,
- 				    struct arm_smmu_device *smmu)
- {
-@@ -1955,7 +2021,11 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	}
- 	smmu->dev = dev;
+-#define BCMA_CORE_SIZE		0x1000
+-
+ #define bcma_err(bus, fmt, ...) \
+ 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
+ #define bcma_warn(bus, fmt, ...) \
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -153,6 +153,7 @@ struct bcma_host_ops {
+ #define BCMA_CORE_DEFAULT		0xFFF
  
--	err = arm_smmu_device_dt_probe(pdev, smmu);
-+	if (dev->of_node)
-+		err = arm_smmu_device_dt_probe(pdev, smmu);
-+	else
-+		err = arm_smmu_device_acpi_probe(pdev, smmu);
-+
- 	if (err)
- 		return err;
+ #define BCMA_MAX_NR_CORES		16
++#define BCMA_CORE_SIZE			0x1000
  
-@@ -2103,6 +2173,17 @@ IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
- IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
- IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
- 
-+#ifdef CONFIG_ACPI
-+static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
-+{
-+	if (iort_node_match(ACPI_IORT_NODE_SMMU))
-+		return arm_smmu_init();
-+
-+	return 0;
-+}
-+IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
-+#endif
-+
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
- MODULE_LICENSE("GPL v2");
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 17bb078..79ba1bb 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -23,6 +23,9 @@
- #include <linux/fwnode.h>
- #include <linux/irqdomain.h>
- 
-+#define IORT_IRQ_MASK(irq)		(irq & 0xffffffffULL)
-+#define IORT_IRQ_TRIGGER_MASK(irq)	((irq >> 32) & 0xffffffffULL)
-+
- int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
- void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_find_domain_token(int trans_id);
--- 
-2.10.0
+ /* Chip IDs of PCIe devices */
+ #define BCMA_CHIP_ID_BCM4313	0x4313
+
