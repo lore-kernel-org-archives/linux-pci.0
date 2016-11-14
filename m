@@ -1,175 +1,290 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 21 Nov 2016 10:47:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161121164700.GL25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F921A88@lhreml507-mbx>
- <20161118175404.GI25762@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F927053@lhreml507-mbx>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F927053@lhreml507-mbx>
-Sender: linux-acpi-owner@vger.kernel.org
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org, "Denys Vlasenko" <dvlasenk@redhat.com>,
+        linux-wireless@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        "Thomas Gleixner" <tglx@linutronix.de>,
+        "Matt Fleming" <matt@codeblueprint.co.uk>,
+        "Peter Zijlstra" <peterz@infradead.org>,
+        "Konstantin Simanov" <k.simanov@stlk.ru>,
+        "Borislav Petkov" <bp@alien8.de>, linux-pci@vger.kernel.org,
+        "Brian Gerst" <brgerst@gmail.com>, "Michael Buesch" <m@bues.ch>,
+        "Andrew Worsley" <amworsley@gmail.com>,
+        "Lukas Wunner" <lukas@wunner.de>,
+        "=?UTF-8?Q?Rafa=C5=82=20?= =?UTF-8?Q?Mi=C5=82ecki?="
+        <zajec5@gmail.com>,
+        "Chris Bainbridge" <chris.bainbridge@gmail.com>,
+        b43-dev@lists.infradead.org,
+        "Bryan Paradis" <bryan.paradis@gmail.com>,
+        "Linus Torvalds" <torvalds@linux-foundation.org>,
+        "Josh Poimboeuf" <jpoimboe@redhat.com>,
+        "Chris Milsted" <cmilsted@redhat.com>,
+        "Matthew Garrett" <mjg59@srcf.ucam.org>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        "Yinghai Lu" <yinghai@kernel.org>, "Ingo Molnar" <mingo@kernel.org>
+Date: Mon, 14 Nov 2016 00:14:07 +0000
+Message-ID: <lsq.1479082447.295446131@decadent.org.uk>
+Subject: [PATCH 3.2 017/152] x86/quirks: Add early quirk to reset Apple
+ AirPort card
+In-Reply-To: <lsq.1479082446.271293126@decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 21, 2016 at 08:52:52AM +0000, Gabriele Paoloni wrote:
-> Hi Bjorn
-> 
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: 18 November 2016 17:54
-> > To: Gabriele Paoloni
-> > Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
-> > acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> > kernel@lists.infradead.org; linaro-acpi@lists.linaro.org
-> > Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-> > 
-> > On Fri, Nov 18, 2016 at 05:17:34PM +0000, Gabriele Paoloni wrote:
-> > > > -----Original Message-----
-> > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> > > > Sent: 17 November 2016 18:00
-> > 
-> > > > +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms
-> > for
-> > > > +reserving address space!  The static tables are for things the OS
-> > > > +needs to know early in boot, before it can parse the ACPI
-> > namespace.
-> > > > +If a new table is defined, an old OS needs to operate correctly
-> > even
-> > > > +though it ignores the table.  _CRS allows that because it is
-> > generic
-> > > > +and understood by the old OS; a static table does not.
-> > >
-> > > Right so if my understanding is correct you are saying that resources
-> > > described in the MCFG table should also be declared in PNP0C02
-> > devices
-> > > so that the PNP driver can reserve these resources.
-> > 
-> > Yes.
-> > 
-> > > On the other side the PCI Root bridge driver should not reserve such
-> > > resources.
-> > >
-> > > Well if my understanding is correct I think we have a problem here:
-> > > http://lxr.free-electrons.com/source/drivers/pci/ecam.c#L74
-> > >
-> > > As you can see pci_ecam_create() will conflict with the pnp driver
-> > > as it will try to reserve the resources from the MCFG table...
-> > >
-> > > Maybe we need to rework pci_ecam_create() ?
-> > 
-> > I think it's OK as it is.
-> > 
-> > The pnp/system.c driver does try to reserve PNP0C02 resources, and it
-> > marks them as "not busy".  That way they appear in /proc/iomem and
-> > won't be allocated for anything else, but they can still be requested
-> > by drivers, e.g., pci/ecam.c, which will mark them "busy".
-> > 
-> > This is analogous to what the PCI core does in pci_claim_resource().
-> > This is really a function of the ACPI/PNP *core*, which should reserve
-> > all _CRS resources for all devices (not just PNP0C02 devices).  But
-> > it's done by pnp/system.c, and only for PNP0C02, because there's a
-> > bunch of historical baggage there.
-> > 
-> > You'll also notice that in this case, things are out of order:
-> > logically the pnp/system.c reservation should happen first, but in
-> > fact the pci/ecam.c request happens *before* the pnp/system.c one.
-> > That means the pnp/system.c one might fail and complain "[mem ...]
-> > could not be reserved".
-> 
-> Correct me if I am wrong...
-> 
-> So currently we are relying on the fact that pci_ecam_create() is called
-> before the pnp driver.
-> If the pnp driver came first we would end up in pci_ecam_create() failing
-> here:
-> http://lxr.free-electrons.com/source/drivers/pci/ecam.c#L76
-> 
-> I am not sure but it seems to me like a bit weak condition to rely on...
-> what about removing the error condition in pci_ecam_create() and logging
-> just a dev_info()?
+3.2.84-rc1 review patch.  If anyone has any objections, please let me know.
 
-Huh.  I'm confused.  I *thought* it would be safe to reverse the
-order, which would effectively be this:
+------------------
 
-  system_pnp_probe
-    reserve_resources_of_dev
-      reserve_range
-        request_mem_region([mem 0xb0000000-0xb1ffffff])
-  ...
-  pci_ecam_create
-    request_resource_conflict([mem 0xb0000000-0xb1ffffff])
+From: Lukas Wunner <lukas@wunner.de>
 
+commit abb2bafd295fe962bbadc329dbfb2146457283ac upstream.
 
-but I experimented with the patch below on qemu, and it failed as you
-predicted:
+The EFI firmware on Macs contains a full-fledged network stack for
+downloading OS X images from osrecovery.apple.com. Unfortunately
+on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+wireless card on every boot and leaves it enabled even after
+ExitBootServices has been called. The card continues to assert its IRQ
+line, causing spurious interrupts if the IRQ is shared. It also corrupts
+memory by DMAing received packets, allowing for remote code execution
+over the air. This only stops when a driver is loaded for the wireless
+card, which may be never if the driver is not installed or blacklisted.
 
-  ** res test **
-  requested [mem 0xa0000000-0xafffffff]
-  can't claim ECAM area [mem 0xa0000000-0xafffffff]: conflict with ECAM PNP [mem 0xa0000000-0xafffffff]
+The issue seems to be constrained to the Broadcom 4331. Chris Milsted
+has verified that the newer Broadcom 4360 built into the MacBookPro11,3
+(2013/2014) does not exhibit this behaviour. The chances that Apple will
+ever supply a firmware fix for the older machines appear to be zero.
 
-I expected the request_resource_conflict() to succeed since it's
-completely contained in the "ECAM PNP" region.  But I guess I don't
-understand kernel/resource.c well enough.
+The solution is to reset the card on boot by writing to a reset bit in
+its mmio space. This must be done as an early quirk and not as a plain
+vanilla PCI quirk to successfully combat memory corruption by DMAed
+packets: Matthew Garrett found out in 2012 that the packets are written
+to EfiBootServicesData memory (http://mjg59.dreamwidth.org/11235.html).
+This type of memory is made available to the page allocator by
+efi_free_boot_services(). Plain vanilla PCI quirks run much later, in
+subsys initcall level. In-between a time window would be open for memory
+corruption. Random crashes occurring in this time window and attributed
+to DMAed packets have indeed been observed in the wild by Chris
+Bainbridge.
 
-I'm not sure we need to fix anything yet, since we currently do the
-ecam.c request before the system.c one, and any change there would be
-a long ways off.  If/when that *does* change, I think the correct fix
-would be to change ecam.c so its request succeeds (by changing the way
-it does the request, fixing kernel/resource.c, or whatever) rather
-than to reduce the log level and ignore the failure.
+When Matthew Garrett analyzed the memory corruption issue in 2012, he
+sought to fix it with a grub quirk which transitions the card to D3hot:
+http://git.savannah.gnu.org/cgit/grub.git/commit/?id=9d34bb85da56
 
-Bjorn
+This approach does not help users with other bootloaders and while it
+may prevent DMAed packets, it does not cure the spurious interrupts
+emanating from the card. Unfortunately the card's mmio space is
+inaccessible in D3hot, so to reset it, we have to undo the effect of
+Matthew's grub patch and transition the card back to D0.
 
+Note that the quirk takes a few shortcuts to reduce the amount of code:
+The size of BAR 0 and the location of the PM capability is identical
+on all affected machines and therefore hardcoded. Only the address of
+BAR 0 differs between models. Also, it is assumed that the BCMA core
+currently mapped is the 802.11 core. The EFI driver seems to always take
+care of this.
 
-diff --git a/arch/x86/pci/init.c b/arch/x86/pci/init.c
-index adb62aa..5a35638 100644
---- a/arch/x86/pci/init.c
-+++ b/arch/x86/pci/init.c
-@@ -7,6 +7,8 @@
-    in the right sequence from here. */
- static __init int pci_arch_init(void)
+Michael Büsch, Bjorn Helgaas and Matt Fleming contributed feedback
+towards finding the best solution to this problem.
+
+The following should be a comprehensive list of affected models:
+    iMac13,1        2012  21.5"       [Root Port 00:1c.3 = 8086:1e16]
+    iMac13,2        2012  27"         [Root Port 00:1c.3 = 8086:1e16]
+    Macmini5,1      2011  i5 2.3 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,2      2011  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,3      2011  i7 2.0 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini6,1      2012  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    Macmini6,2      2012  i7 2.3 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro8,1   2011  13"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,2   2011  15"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,3   2011  17"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro9,1   2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro9,2   2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,1  2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,2  2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+
+For posterity, spurious interrupts caused by the Broadcom 4331 wireless
+card resulted in splats like this (stacktrace omitted):
+
+    irq 17: nobody cared (try booting with the "irqpoll" option)
+    handlers:
+    [<ffffffff81374370>] pcie_isr
+    [<ffffffffc0704550>] sdhci_irq [sdhci] threaded [<ffffffffc07013c0>] sdhci_thread_irq [sdhci]
+    [<ffffffffc0a0b960>] azx_interrupt [snd_hda_codec]
+    Disabling IRQ #17
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
+Tested-by: Konstantin Simanov <k.simanov@stlk.ru>        # [MacBookPro8,1]
+Tested-by: Lukas Wunner <lukas@wunner.de>                # [MacBookPro9,1]
+Tested-by: Bryan Paradis <bryan.paradis@gmail.com>       # [MacBookPro9,2]
+Tested-by: Andrew Worsley <amworsley@gmail.com>          # [MacBookPro10,1]
+Tested-by: Chris Bainbridge <chris.bainbridge@gmail.com> # [MacBookPro10,2]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Chris Milsted <cmilsted@redhat.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Michael Buesch <m@bues.ch>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: b43-dev@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Link: http://lkml.kernel.org/r/48d0972ac82a53d460e5fce77a07b2560db95203.1465690253.git.lukas@wunner.de
+[ Did minor readability edits. ]
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+[bwh: Backported to 3.2:
+ - early_ioremap() is declared in <asm/io.h> not <asm/early_ioremap.h>
+ - Add definition of BCMA_RESET_ST
+ - Adjust context]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ arch/x86/kernel/early-quirks.c | 64 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/bcma/bcma_private.h    |  2 --
+ include/linux/bcma/bcma.h      |  1 +
+ 3 files changed, 65 insertions(+), 2 deletions(-)
+
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -11,13 +11,20 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
++#include <linux/delay.h>
++#include <linux/dmi.h>
+ #include <linux/pci_ids.h>
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_regs.h>
+ #include <asm/pci-direct.h>
+ #include <asm/dma.h>
+ #include <asm/io_apic.h>
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/io.h>
++
++#define dev_err(msg)  pr_err("pci 0000:%02x:%02x.%d: %s", bus, slot, func, msg)
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
  {
-+	struct resource *res, *conflict;
-+	static struct resource cfg;
- #ifdef CONFIG_PCI_DIRECT
- 	int type = 0;
- 
-@@ -39,6 +41,26 @@ static __init int pci_arch_init(void)
- 
- 	dmi_check_skip_isa_align();
- 
-+	printk("\n** res test **\n");
-+
-+	res = request_mem_region(0xa0000000, 0x10000000, "ECAM PNP");
-+	printk("requested %pR\n", res);
-+	if (!res)
-+		return 0;
-+	res->flags &= ~IORESOURCE_BUSY;
-+
-+	cfg.start = 0xa0000000;
-+	cfg.end = 0xafffffff;
-+	cfg.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-+	cfg.name = "PCI ECAM";
-+
-+	conflict = request_resource_conflict(&iomem_resource, &cfg);
-+	if (conflict)
-+		printk("can't claim ECAM area %pR: conflict with %s %pR\n",
-+		    &cfg, conflict->name, conflict);
-+
-+	printk("\n");
-+
- 	return 0;
+@@ -199,6 +206,62 @@ static void __init ati_bugs_contd(int nu
  }
- arch_initcall(pci_arch_init);
-
+ #endif
+ 
++#define BCM4331_MMIO_SIZE	16384
++#define BCM4331_PM_CAP		0x40
++#define bcma_aread32(reg)	ioread32(mmio + 1 * BCMA_CORE_SIZE + reg)
++#define bcma_awrite32(reg, val)	iowrite32(val, mmio + 1 * BCMA_CORE_SIZE + reg)
++
++static void __init apple_airport_reset(int bus, int slot, int func)
++{
++	void __iomem *mmio;
++	u16 pmcsr;
++	u64 addr;
++	int i;
++
++	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc."))
++		return;
++
++	/* Card may have been put into PCI_D3hot by grub quirk */
++	pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
++
++	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
++		write_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
++		mdelay(10);
++
++		pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
++		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++			dev_err("Cannot power up Apple AirPort card\n");
++			return;
++		}
++	}
++
++	addr  =      read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_0);
++	addr |= (u64)read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_1) << 32;
++	addr &= PCI_BASE_ADDRESS_MEM_MASK;
++
++	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
++	if (!mmio) {
++		dev_err("Cannot iomap Apple AirPort card\n");
++		return;
++	}
++
++	pr_info("Resetting Apple AirPort card (left enabled by EFI)\n");
++
++	for (i = 0; bcma_aread32(BCMA_RESET_ST) && i < 30; i++)
++		udelay(10);
++
++	bcma_awrite32(BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(1);
++
++	bcma_awrite32(BCMA_RESET_CTL, 0);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(10);
++
++	early_iounmap(mmio, BCM4331_MMIO_SIZE);
++}
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -222,6 +285,8 @@ static struct chipset early_qrk[] __init
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
++	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
+ 	{}
+ };
+ 
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -8,8 +8,6 @@
+ #include <linux/bcma/bcma.h>
+ #include <linux/delay.h>
+ 
+-#define BCMA_CORE_SIZE		0x1000
+-
+ struct bcma_bus;
+ 
+ /* main.c */
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -124,6 +124,7 @@ struct bcma_host_ops {
+ #define BCMA_CORE_DEFAULT		0xFFF
+ 
+ #define BCMA_MAX_NR_CORES		16
++#define BCMA_CORE_SIZE			0x1000
+ 
+ struct bcma_device {
+ 	struct bcma_bus *bus;
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -35,6 +35,7 @@
+ #define  BCMA_IOST_BIST_DONE		0x8000
+ #define BCMA_RESET_CTL			0x0800
+ #define  BCMA_RESET_CTL_RESET		0x0001
++#define BCMA_RESET_ST			0x0804
+ 
+ /* BCMA PCI config space registers. */
+ #define BCMA_PCI_PMCSR			0x44
