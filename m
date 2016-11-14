@@ -1,62 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50011 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932837AbcKGSrq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christogh Hellwig <hch@lst.de>
-Subject: [PATCH 1/7] genirq/affinity: Introduce struct irq_affinity
-Date: Mon,  7 Nov 2016 10:47:36 -0800
-Message-Id: <1478544462-9549-2-git-send-email-hch@lst.de>
-In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.136]:43806 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933166AbcKNU7y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 15:59:54 -0500
+Date: Mon, 14 Nov 2016 14:59:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] PCI: Make pci_std_enable_acs() non-static
+Message-ID: <20161114205950.GA9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161026175156.23495.12980.stgit@gimli.home>
+ <20161026180116.23495.77322.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026180116.23495.77322.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christogh Hellwig <hch@lst.de>
+On Wed, Oct 26, 2016 at 12:01:16PM -0600, Alex Williamson wrote:
+> For use by quirks.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c   |    2 +-
+>  include/linux/pci.h |    1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index aab9d51..b901ee7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2728,7 +2728,7 @@ void pci_request_acs(void)
+>   * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+>   * @dev: the PCI device
+>   */
+> -static void pci_std_enable_acs(struct pci_dev *dev)
+> +void pci_std_enable_acs(struct pci_dev *dev)
+>  {
+>  	int pos;
+>  	u16 cap;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0ab8359..c3248d5 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1900,6 +1900,7 @@ static inline int pci_pcie_type(const struct pci_dev *dev)
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +void pci_std_enable_acs(struct pci_dev *dev);
 
-Some drivers (various network and RDMA adapter for example) have a MSI-X
-vector layout where most of the vectors are used for I/O queues and should
-have CPU affinity assigned to them, but some (usually 1 but sometimes more)
-at the beginning or end are used for low-performance admin or configuration
-work and should not have any explicit affinity assigned to them.
+I think putting this in drivers/pci/pci.h would be sufficient for what
+you need, wouldn't it?  Same for pcie_get_link() and pcie_retrain_link().
 
-This adds a new irq_affinity structure, which will be passed through a
-variant of pci_irq_alloc_vectors that allows to specify these
-requirements (and is extensible to any future quirks in that area) so that
-the core IRQ affinity algorithm can take this quirks into account.
-
-Signed-off-by: Christogh Hellwig <hch@lst.de>
----
- include/linux/interrupt.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 72f0721..7284bcd 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -232,6 +232,18 @@ struct irq_affinity_notify {
- 	void (*release)(struct kref *ref);
- };
- 
-+/**
-+ * struct irq_affinity - Description for auto irq affinity assignements
-+ * @pre_vectors:	Reserved vectors at the beginning of the MSIX
-+ *			vector space
-+ * @post_vectors:	Reserved vectors at the end of the MSIX
-+ *			vector space
-+ */
-+struct irq_affinity {
-+	int	pre_vectors;
-+	int	post_vectors;
-+};
-+
- #if defined(CONFIG_SMP)
- 
- extern cpumask_var_t irq_default_affinity;
--- 
-2.1.4
-
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> 
