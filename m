@@ -1,83 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36400 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753242AbcKNLQK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 06:16:10 -0500
-Received: by mail-wm0-f46.google.com with SMTP id g23so91575664wme.1
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2016 03:16:10 -0800 (PST)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        srinivas.kandagatla@linaro.org, devicetree@vger.kernel.org
-Subject: [PATCH v4 1/3] bus: simple-pm: add support to pm clocks
-Date: Mon, 14 Nov 2016 11:15:53 +0000
-Message-Id: <1479122155-13393-2-git-send-email-srinivas.kandagatla@linaro.org>
-In-Reply-To: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:46912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938697AbcKNVYE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 16:24:04 -0500
+Date: Mon, 14 Nov 2016 15:24:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nsekhar@ti.com,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH 3/4] PCI: dra7xx: Add support to force RC to work in GEN1
+ mode
+Message-ID: <20161114212400.GA19092@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476190715-16884-1-git-send-email-kishon@ti.com>
+ <1476190715-16884-4-git-send-email-kishon@ti.com>
+ <20161111211528.GF9868@bhelgaas-glaptop.roam.corp.google.com>
+ <8ecc1325-365d-bdec-d435-729e0ea49d20@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8ecc1325-365d-bdec-d435-729e0ea49d20@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support to pm clocks via device tree, so that the clocks
-can be turned on and off during runtime pm. This patch is required for
-Qualcomm msm8996 pcie controller which sits on a bus with its own
-power-domain and clocks.
+[+cc Shawn]
 
-Without this patch the clock associated with the bus are never turned on.
+On Sat, Nov 12, 2016 at 12:40:10PM +0530, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Saturday 12 November 2016 02:45 AM, Bjorn Helgaas wrote:
+> > Hi Kishon,
+> > 
+> > On Tue, Oct 11, 2016 at 06:28:34PM +0530, Kishon Vijay Abraham I wrote:
+> >> PCIe in AM57x/DRA7x devices is by default
+> >> configured to work in GEN2 mode.  However there
+> >> may be situations when working in GEN1 mode is
+> >> desired. One example is limitation i925 (PCIe GEN2
+> >> mode not supported at junction temperatures < 0C).
+> >>
+> >> Add support to force Root Complex to work in GEN1
+> >> mode if so desired, but don't force GEN1 mode on
+> >> any board just yet.
+> >>
+> >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> >> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+> >> ---
+> >>  Documentation/devicetree/bindings/pci/ti-pci.txt |    1 +
+> >>  drivers/pci/host/pci-dra7xx.c                    |   27 ++++++++++++++++++++++
+> >>  2 files changed, 28 insertions(+)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> index 60e2516..a3d6ca3 100644
+> >> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> @@ -25,6 +25,7 @@ PCIe Designware Controller
+> >>  
+> >>  Optional Property:
+> >>   - gpios : Should be added if a gpio line is required to drive PERST# line
+> >> + - ti,pcie-is-gen1 : Force the PCIe controller to work in GEN1 (2.5 GT/s).
+> > 
+> > Can we use "max-link-speed" so it's similar to imx6?
+> 
+> yeah, maybe we should make it a generic PCI property?
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
- drivers/bus/simple-pm-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+I forgot that Shawn has already done this!  I had already merged those
+patches on pci/host-rockchip, but I moved them to pci/host since
+they're not Rockchip-specific.  Can you take a look at that and see if
+you can do what you need based on that pci/host branch?
 
-diff --git a/drivers/bus/simple-pm-bus.c b/drivers/bus/simple-pm-bus.c
-index c5eb46c..63b7e8c 100644
---- a/drivers/bus/simple-pm-bus.c
-+++ b/drivers/bus/simple-pm-bus.c
-@@ -11,6 +11,7 @@
- #include <linux/module.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_clock.h>
- #include <linux/pm_runtime.h>
- 
- 
-@@ -22,17 +23,26 @@ static int simple_pm_bus_probe(struct platform_device *pdev)
- 
- 	pm_runtime_enable(&pdev->dev);
- 
--	if (np)
-+	if (np) {
-+		of_pm_clk_add_clks(&pdev->dev);
- 		of_platform_populate(np, NULL, NULL, &pdev->dev);
-+	}
- 
- 	return 0;
- }
- 
-+static const struct dev_pm_ops simple_pm_bus_pm_ops = {
-+	SET_RUNTIME_PM_OPS(pm_clk_suspend,
-+			   pm_clk_resume, NULL)
-+};
-+
- static int simple_pm_bus_remove(struct platform_device *pdev)
- {
- 	dev_dbg(&pdev->dev, "%s\n", __func__);
- 
- 	pm_runtime_disable(&pdev->dev);
-+	pm_clk_destroy(&pdev->dev);
-+
- 	return 0;
- }
- 
-@@ -48,6 +58,7 @@ static struct platform_driver simple_pm_bus_driver = {
- 	.driver = {
- 		.name = "simple-pm-bus",
- 		.of_match_table = simple_pm_bus_of_match,
-+		.pm = &simple_pm_bus_pm_ops,
- 	},
- };
- 
--- 
-2.10.1
-
+Bjorn
