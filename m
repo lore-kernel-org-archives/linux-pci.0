@@ -1,64 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53002 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:46266 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935282AbcKWRgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 12:36:33 -0500
-Date: Wed, 23 Nov 2016 11:36:24 -0600
+        id S938697AbcKNVTc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Nov 2016 16:19:32 -0500
+Date: Mon, 14 Nov 2016 15:19:28 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/9] PCI: Tidy up messages
-Message-ID: <20161123173624.GD16033@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Wei Yongjun <weiyj.lk@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, michal.simek@xilinx.com,
+        soren.brinkmann@xilinx.com, bharat.kumar.gogada@xilinx.com,
+        robh@kernel.org, Frank Rowand <frowand.list@gmail.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH -next] PCI: dra7xx: Add missing of_node_put() in
+ dra7xx_pcie_init_irq_domain()
+Message-ID: <20161114211928.GD9868@bhelgaas-glaptop.roam.corp.google.com>
+References: <1476716077-30379-1-git-send-email-weiyj.lk@gmail.com>
+ <20161111213806.GI9868@bhelgaas-glaptop.roam.corp.google.com>
+ <1d95b915-ddc0-b48f-270b-fffb60ecfe5e@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1d95b915-ddc0-b48f-270b-fffb60ecfe5e@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 21, 2016 at 03:45:11PM -0600, Bjorn Helgaas wrote:
-> Remove a few messages that don't contain any useful information, e.g.,
-> 
->   pcie_pme 0000:00:02.0:pcie01: service driver pcie_pme loaded
->   pci_hotplug: PCI Hot Plug PCI Core version: 0.5
->   pciehp 0000:80:02.0:pcie04: service driver pciehp loaded
->   pciehp: PCI Express Hot Plug Controller Driver version: 0.4
-> 
-> NOTE: I added a patch to drop Root Complex Event Collector PME support.  I
-> suspect that we really want to keep that, but it looks like it's currently
-> broken.  I would welcome opinions and some help to test it if we fix the
-> current breakage.
-> 
-> Changes from v1->v2:
->   - Drop Root Complex Event Collector PME support
->   - Add PME IRQ to existing log message
->   - Log PME message once per hierarchy, not once per device
->   - Log AER probe errors with plain PCI device, not PCIe service device
->   - Add new AER claim message, including IRQ
->   - Remove unused AER version macros
-> 
-> ---
-> 
-> Bjorn Helgaas (9):
->       PCI/PME: Drop unused support for PMEs from Root Complex Event Collectors
->       PCI/PME: Log PME IRQ when claiming Root Port
->       PCI/AER: Remove unused version macros
->       PCI/AER: Log errors with PCI device, not PCIe service device
->       PCI/AER: Log AER IRQ when claiming Root Port
->       PCI: Remove service driver load/unload messages
->       PCI: hotplug: Remove hotplug core message
->       PCI: pciehp: Remove loading message
->       PCI: Expand "VPD access disabled" quirk message
-> 
-> 
->  drivers/pci/hotplug/pci_hotplug_core.c |   10 +++-------
->  drivers/pci/hotplug/pciehp_core.c      |    9 ++++-----
->  drivers/pci/pcie/aer/aerdrv.c          |   18 ++++++------------
->  drivers/pci/pcie/pme.c                 |   29 +++++++----------------------
->  drivers/pci/pcie/portdrv_core.c        |    3 ---
->  drivers/pci/quirks.c                   |    2 +-
->  6 files changed, 21 insertions(+), 50 deletions(-)
+[+cc Shawn, Heiko, Michal, Soren, Bharat, Rob H, Frank, devicetree@vger]
 
-I applied these (with Rafael's ack on the first two) to pci/misc for v4.10.
+On Sat, Nov 12, 2016 at 12:39:01PM +0530, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Saturday 12 November 2016 03:08 AM, Bjorn Helgaas wrote:
+> > On Mon, Oct 17, 2016 at 02:54:37PM +0000, Wei Yongjun wrote:
+> >> From: Wei Yongjun <weiyongjun1@huawei.com>
+> >>
+> >> This node pointer is returned by of_get_next_child() with refcount
+> >> incremented in this function. of_node_put() on it before exitting
+> >> this function on error.
+> >>
+> >> This is detected by Coccinelle semantic patch.
+> >>
+> >> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > 
+> > Kishon, this looks correct to me, so I applied it to pci/host-dra7xx for
+> > v4.10.  Let me know if you have any issue with it.
+> > 
+> >> ---
+> >>  drivers/pci/host/pci-dra7xx.c | 1 +
+> >>  1 file changed, 1 insertion(+)
+> >>
+> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> >> index 9595fad..79297e9 100644
+> >> --- a/drivers/pci/host/pci-dra7xx.c
+> >> +++ b/drivers/pci/host/pci-dra7xx.c
+> >> @@ -177,6 +177,7 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+> >>  					       &intx_domain_ops, pp);
+> >>  	if (!pp->irq_domain) {
+> >>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> >> +		of_node_put(pcie_intc_node);
+> 
+> I think of_node_put should be used for both the error case and non-error case.
+
+Hmm, OK.  I don't know what the rules are.  Certainly if we made these
+drivers modular, I don't think we'd want to leak these references
+every time we unload/reload the module.  Should we do the put
+immediately here, or in the module remove path, or ...?
+
+Adding other driver and DT folks for comment.
+
+I dropped these patches for now (dra7xx, rockchip, xilinx-nwl,
+xilinx).
