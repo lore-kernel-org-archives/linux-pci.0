@@ -1,112 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0051.outbound.protection.outlook.com ([104.47.42.51]:58000
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934820AbcKXAnG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 19:43:06 -0500
-From: "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Date: Thu, 24 Nov 2016 00:40:37 +0000
-Message-ID: <SN1PR12MB0703CE07F4878243164299C4FEB70@SN1PR12MB0703.namprd12.prod.outlook.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>,<20161123215510.GA16311@obsidianresearch.com>
-In-Reply-To: <20161123215510.GA16311@obsidianresearch.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <shawn.lin@rock-chips.com>
+Return-Path: <shawn.lin@rock-chips.com>
+Subject: Re: [RESEND PATCH 1/2] PCI: rockchip: cleanup bit definition for
+ PCIE_RC_CONFIG_LCS
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
+ <20161114222604.GJ9868@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Wenrui Li <wenrui.li@rock-chips.com>, Brian Norris
+ <briannorris@chromium.org>, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ devicetree@vger.kernel.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6279a593-2a86-220c-98b9-c930f4502513@rock-chips.com>
+Date: Tue, 15 Nov 2016 09:09:37 +0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161114222604.GJ9868@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 02:11:29PM -0700, Logan Gunthorpe wrote:
+Hi Bjorn,
 
-> Perhaps I am not following what Serguei is asking for, but I
-> understood the desire was for a complex GPU allocator that could
-> migrate pages between GPU and CPU memory under control of the GPU
-> driver, among other things. The desire is for DMA to continue to work
-> even after these migrations happen.
+On 2016/11/15 6:26, Bjorn Helgaas wrote:
+> On Mon, Nov 14, 2016 at 12:11:05PM +0800, Shawn Lin wrote:
+>> PCIE_RC_CONFIG_LCS contains control and status bits specific
+>> to the PCIe link. The layout for this register looks the same
+>> as the existed PCI_EXP_LNKCTL and PCI_EXP_LNKSTA. So let's
+>> reuse them.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>
+> Did something change since the version you posted yesterday?
+> Resending a patch with no changes or with no hint about what changed
+> doesn't speed things up; in fact, it slows things down.
+>
 
-The main issue is to  how to solve use cases when p2p is=20
-requested/initiated via CPU pointers where such pointers could=20
-point to non-system memory location e.g.  VRAM. =20
+Sorry for that, mea culpa. I was finding I had sent a wrong patch which
+couldn't be compiled cleanly, so I resent a new one. I should directly
+respin a new version for that case.
 
-It will allow to provide consistent working model for user to deal only
-with pointers (HSA, CUDA, OpenCL 2.0 SVM) as well as provide=20
-performance optimization avoiding double-buffering and extra special code=20
-when dealing with PCIe device memory.
+>> ---
+>>
+>>  drivers/pci/host/pcie-rockchip.c | 14 ++++----------
+>>  1 file changed, 4 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index 7f238af..1dba698 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -141,12 +141,6 @@
+>>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+>>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+>>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+>> -#define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+>> -#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
+>> -#define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+>> -#define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
+>> -#define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+>> -#define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
+>>  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+>>  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+>>  #define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
+>> @@ -229,7 +223,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+>>  	u32 status;
+>>
+>>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+>> -	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
+>> +	status |= (PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
+>>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>>  }
+>>
+>> @@ -238,7 +232,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+>>  	u32 status;
+>>
+>>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+>> -	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
+>> +	status |= (PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS) << 16;
+>>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>>  }
+>>
+>> @@ -540,7 +534,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>
+>>  	/* Set RC's clock architecture as common clock */
+>>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+>> -	status |= PCIE_RC_CONFIG_LCS_CCC;
+>> +	status |= PCI_EXP_LNKCTL_CCC;
+>>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>>
+>>  	/* Enable Gen1 training */
+>> @@ -575,7 +569,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>  		 * gen1 finished.
+>>  		 */
+>>  		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+>> -		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+>> +		status |= PCI_EXP_LNKCTL_RL;
+>>  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>>
+>>  		timeout = jiffies + msecs_to_jiffies(500);
+>> --
+>> 1.9.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
- Examples are:
 
- - RDMA Network operations.  RDMA MRs where registered memory=20
-could be e.g. VRAM.  Currently it is solved using so called PeerDirect =20
-interface which  is currently out-of-tree and  provided as part of OFED.
-- File operations (fread/fwrite) when user wants to transfer file data dire=
-ctly=20
-to/from e.g. VRAM
-
-
-Challenges are:
-- Because graphics sub-system must support overcomit (at least each=20
-application/process should independently see all resources) ideally=20
-such memory should be movable without changing CPU pointer value
-as well as "paged-out" supporting "page fault" at least on access from=20
-CPU.
- - We must co-exist with existing DRM infrastructure, as well as=20
-support sharing VRAM memory between different processes
-- We should be able to deal with large allocations: tens, hundreds of=20
-MBs or may be GBs.
-- We may have PCIe devices where p2p may not work
-- Potentially any GPU memory should be supported including=20
-memory carved out from system RAM (e.g. allocated via
-get_free_pages()).
-
-
-Note:
--  In the case of RDMA MRs life-span of "pinning"=20
-(get_user_pages"/put_page) may be defined/controlled by=20
-application not kernel which  may be should=20
-treated differently as special case.=20
- =20
-
-Original proposal was to create "struct pages" for VRAM memory=20
-to allow "get_user_pages"  to work transparently similar=20
-how it is/was done for "DAX Device" case. Unfortunately=20
-based on my understanding "DAX Device" implementation=20
-deal only with permanently  "locked" memory  (fixed location)=20
-unrelated to "get_user_pages"/"put_page" scope =20
-which doesn't satisfy requirements  for "eviction" / "moving" of=20
-memory keeping CPU address intact. =20
-
-> The desire is for DMA to continue to work
-> even after these migrations happen
-At least some kind of mm notifier callback to inform about changing=20
-in location (pre- and post-) similar how it is done for system pages.=20
-My understanding is that It will not solve RDMA MR issue where "lock"=20
-could be during the whole  application life but  (a) it will not make=20
-RDMA MR case worse  (b) should be enough for all other cases for=20
-"get_user_pages"/"put_page" controlled by  kernel.
-=20
- =
+-- 
+Best Regards
+Shawn Lin
