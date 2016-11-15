@@ -1,88 +1,66 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 15 Nov 2016 14:07:51 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
         Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
         Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <joro@8bytes.org>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
         Eric Auger <eric.auger@redhat.com>,
         Sinan Kaya <okaya@codeaurora.org>,
         Nate Watterson <nwatters@codeaurora.org>,
         Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
-Date: Wed,  9 Nov 2016 14:19:37 +0000
-Message-Id: <20161109141948.19244-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+        Dennis Chen <dennis.chen@arm.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v7 00/16] ACPI IORT ARM SMMU support
+Message-ID: <20161115140751.GA16710@red-moon>
 References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <CAJZ5v0j09fsp4Y66v2UANOGnW4FNO7PWxpZY=Pgw=bUccEL_eA@mail.gmail.com>
+ <20161115101257.GB16261@red-moon>
+ <CAJZ5v0gh9qB41zcnvnETDA-5ho577uhxE4rehZqEXorFViY__w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0gh9qB41zcnvnETDA-5ho577uhxE4rehZqEXorFViY__w@mail.gmail.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMU driver rely on the struct device.of_node pointer for
-device look-up and iommu_ops retrieval.
+On Tue, Nov 15, 2016 at 02:04:09PM +0100, Rafael J. Wysocki wrote:
+> On Tue, Nov 15, 2016 at 11:12 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > Hi Rafael,
+> >
+> > On Thu, Nov 10, 2016 at 12:36:12AM +0100, Rafael J. Wysocki wrote:
+> >> Hi Lorenzo,
+> >>
+> >> On Wed, Nov 9, 2016 at 3:19 PM, Lorenzo Pieralisi
+> >> <lorenzo.pieralisi@arm.com> wrote:
+> >> > This patch series is v7 of a previous posting:
+> >> >
+> >> > https://lkml.org/lkml/2016/10/18/506
+> >>
+> >> I don't see anything objectionable in this series.
+> >>
+> >> Please let me know which patches in particular to look at in detail.
+> >
+> > Are patches 7 and consequently 16 (that builds on top of 7) ok with
+> > you ? They should be equivalent to nop on anything other than ARM64
+> > but they touch ACPI core so they require an ACK if they are ok please.
+> 
+> Yes, they are.  Please feel free to add my ACKs to those or I will
+> send them separately later today.
 
-In preparation for ACPI probing enablement, convert the driver to use
-the struct device.fwnode member for device and iommu_ops look-up so that
-the driver infrastructure can be used also on systems that do not
-associate an of_node pointer to a struct device (eg ACPI), making the
-device look-up and iommu_ops retrieval firmware agnostic.
+Thank you very much, I will add them to v8 that should be final,
+I will send it when the dust has settled on patch 4, which looks
+like the last bit to sort out (we may not even need a v8 at all).
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/arm-smmu.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 8f72814..8a3c2a4 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
- 
- static int arm_smmu_match_node(struct device *dev, void *data)
- {
--	return dev->of_node == data;
-+	return dev->fwnode == data;
- }
- 
--static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
-+static
-+struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
- {
- 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
--						np, arm_smmu_match_node);
-+						fwnode, arm_smmu_match_node);
- 	put_device(dev);
- 	return dev ? dev_get_drvdata(dev) : NULL;
- }
-@@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
- 		if (ret)
- 			goto out_free;
- 	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
--		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
-+		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
- 	} else {
- 		return -ENODEV;
- 	}
-@@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
-+	fwnode_iommu_set_ops(dev->fwnode, &arm_smmu_ops);
- 	platform_set_drvdata(pdev, smmu);
- 	arm_smmu_device_reset(smmu);
- 
--- 
-2.10.0
-
+Thanks !
+Lorenzo
