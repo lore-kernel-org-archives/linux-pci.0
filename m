@@ -1,135 +1,180 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 29 Nov 2016 12:19:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161129181927.GB17112@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_xW+7KAC8fHquEwHynYzpy6OoO1ZjEm5mVKMo1S8j4Nw@mail.gmail.com>
- <20161123010600.GF4832@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu-TW__+eZFS2p=1ZLN7fBs7pqQ+SitbEX46Z4JiS64egA@mail.gmail.com>
- <20161123150632.GA16033@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <noaos@mellanox.com>
+Return-Path: <noaos@mellanox.com>
+Subject: Re: [PATCH 3/4] PCI: Add checks to mellanox_check_broken_intx_masking
+To: Bjorn Helgaas <helgaas@kernel.org>, Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
+ <1479046901-25360-4-git-send-email-noaos@mellanox.com>
+ <20161114001535.GB14481@gwshan>
+ <20161114223508.GK9868@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <majd@mellanox.com>
+From: Noa Osherovich <noaos@mellanox.com>
+Message-ID: <9cca6012-df7f-c6f4-5b90-da14aecd1828@mellanox.com>
+Date: Tue, 15 Nov 2016 08:11:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <20161123150632.GA16033@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- linux-pci@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20161114223508.GK9868@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 09:06:33AM -0600, Bjorn Helgaas wrote:
-> On Wed, Nov 23, 2016 at 07:28:12AM +0000, Ard Biesheuvel wrote:
-> > On 23 November 2016 at 01:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Tue, Nov 22, 2016 at 10:09:50AM +0000, Ard Biesheuvel wrote:
-> > >> On 17 November 2016 at 17:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >
-> > >> > +PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-> > >> > +describe all the address space they consume.  In principle, this would
-> > >> > +be all the windows they forward down to the PCI bus, as well as the
-> > >> > +bridge registers themselves.  The bridge registers include things like
-> > >> > +secondary/subordinate bus registers that determine the bus range below
-> > >> > +the bridge, window registers that describe the apertures, etc.  These
-> > >> > +are all device-specific, non-architected things, so the only way a
-> > >> > +PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
-> > >> > +contain the device-specific details.  These bridge registers also
-> > >> > +include ECAM space, since it is consumed by the bridge.
-> > >> > +
-> > >> > +ACPI defined a Producer/Consumer bit that was intended to distinguish
-> > >> > +the bridge apertures from the bridge registers [4, 5].  However,
-> > >> > +BIOSes didn't use that bit correctly, and the result is that OSes have
-> > >> > +to assume that everything in a PCI host bridge _CRS is a window.  That
-> > >> > +leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-> > >> > +device itself.
-> > >>
-> > >> Is that universally true? Or is it still possible to do the right
-> > >> thing here on new ACPI architectures such as arm64?
-> > >
-> > > That's a very good question.  I had thought that the ACPI spec had
-> > > given up on Consumer/Producer completely, but I was wrong.  In the 6.0
-> > > spec, the Consumer/Producer bit is still documented in the Extended
-> > > Address Space Descriptor (sec 6.4.3.5.4).  It is documented as
-> > > "ignored" in the QWord, DWord, and Word descriptors (sec 6.4.3.5.1,2,3).
-> > >
-> > > Linux looks at the producer_consumer bit in acpi_decode_space(), which
-> > > I think is used for all these descriptors (QWord, DWord, Word, and
-> > > Extended).  This doesn't quite follow the spec -- we probably should
-> > > ignore it except for Extended.  In any event, acpi_decode_space() sets
-> > > IORESOURCE_WINDOW for Producer descriptors, but we don't test
-> > > IORESOURCE_WINDOW in the PCI host bridge code.
-> > >
-> > > x86 and ia64 supply their own pci_acpi_root_prepare_resources()
-> > > functions that call acpi_pci_probe_root_resources(), which parses _CRS
-> > > and looks at producer_consumer.  Then they do a little arch-specific
-> > > stuff on the result.
-> > >
-> > > On arm64 we use acpi_pci_probe_root_resources() directly, with no
-> > > arch-specific stuff.
-> > >
-> > > On all three arches, we ignore the Consumer/Producer bit, so all the
-> > > resources are treated as Producers, e.g., as bridge windows.
-> > >
-> > > I think we *could* implement an arm64 version of
-> > > pci_acpi_root_prepare_resources() that would pay attention to the
-> > > Consumer/Producer bit by checking IORESOURCE_WINDOW.  To be spec
-> > > compliant, we would have to use Extended descriptors for all bridge
-> > > windows, even if they would fit in a DWord or QWord.
-> > >
-> > > Should we do that?  I dunno.  I'd like to hear your opinion(s).
-> > >
-> > 
-> > Yes, I think we should. If the spec allows for a way for a PNP0A03
-> > device to describe all of its resources unambiguously, we should not
-> > be relying on workarounds that were designed for another architecture
-> > in another decade (for, presumably, another OS)
-> > 
-> > Just for my understanding, we will need to use extended descriptors
-> > for all consumed *and* produced regions, even though dword/qword are
-> > implicitly produced-only, due to the fact that the bit is ignored?
-> 
-> From an ACPI spec point of view, I would say QWord/DWord/Word
-> descriptors are implicitly *consumer*-only because ResourceConsumer
-> is the default and they don't have a bit to indicate otherwise.
-> 
-> The current code assumes all PNP0A03 resources are producers.  If we
-> implement an arm64 pci_acpi_root_prepare_resources() that pays
-> attention to the Consumer/Producer bit, we would have to:
-> 
->   - Reserve all producer regions in the iomem/ioport trees.  This is
->     already done via pci_acpi_root_add_resources(), but we might need
->     a new check to handle consumers differently.
-> 
->   - Reserve all consumer regions.  This corresponds to what
->     pnp/system.c does for PNP0C02 devices.  This is similar to the
->     producer regions, but I think the consumer ones should be marked
->     IORESOURCE_BUSY.
-> 
->   - Use every producer (IORESOURCE_WINDOW) as a host bridge window.
-> 
-> I think it's a bug that acpi_decode_space() looks at producer_consumer
-> for QWord/DWord/Word descriptors, but I think QWord/DWord/Word
-> descriptors for consumed regions should be safe, as long as they don't
-> set the Consumer/Producer bit.
+Hi Bjorn, Gavin,
 
-I'm going to post a couple very lightly-tested patches that should
-make us ignore the Consumer/Producer bit for QWord/DWord/Word.  I'd
-appreciate any discussion about whether that's the right approach.
+On 11/15/2016 12:35 AM, Bjorn Helgaas wrote:
 
-Bjorn
+> On Mon, Nov 14, 2016 at 11:15:35AM +1100, Gavin Shan wrote:
+>> On Sun, Nov 13, 2016 at 04:21:41PM +0200, Noa Osherovich wrote:
+>>> Mellanox devices were marked as having INTx masking ability broken.
+>>> As a result, the VFIO driver fails to start when more than one device
+>>> function is passed-through to a VM if both have the same INTx pin.
+>>>
+>>> Prior to Connect-IB, Mellanox devices exposed to the operating system
+>>> one PCI function per all ports.
+>>> Starting from Connect-IB, the devices are function-per-port. When
+>>> passing the second function to a VM, VFIO will fail to start.
+>>>
+>>> Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of
+>>> Mellanox devices marked as having broken INTx masking:
+>>>
+>>> - ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
+>>>  masking is supported, we unmark the broken INTx masking.
+>>> - Connect-IB does not support INTx currently so will not cause any
+>>>  problem.
+>>>
+>>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
+>>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+>>> Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
+>> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>
+>> With below comments addressed:
+> Noa, would you mind refreshing this to address Gavin's comments?
+> I don't want to risk doing it myself and breaking something.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The series is ready after Gavin's fixes, I'll send it after an internal
+
+review.
+
+>>> ---
+>>> drivers/pci/quirks.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++------
+>>> 1 file changed, 55 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index d3977c847e1f..cbd6776e70e6 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -3192,21 +3192,70 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+>>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
+>>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
+>>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
+>>> -	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
+>>> -	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
+>>> -	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
+>>> };
+>>>
+>>> +#define CONNECTX_4_CURR_MAX_MINOR 99
+>>> +#define CONNECTX_4_INTX_SUPPORT_MINOR 14
+>>> +
+>>> +/*
+>>> + * Checking ConnectX-4/LX FW version to see if it supports legacy interrupts.
+>>> + * If so, don't mark it as broken.
+>>> + * FW minor > 99 means older FW version format and no INTx masking support.
+>>> + * FW minor < 14 means new FW version format and no INTx masking support.
+>>> + */
+>>> static void mellanox_check_broken_intx_masking(struct pci_dev *dev)
+>>> {
+>>> +	__be32 __iomem *fw_ver;
+>>> +	u16 fw_major;
+>>> +	u16 fw_minor;
+>>> +	u16 fw_subminor;
+>>> +	u32 fw_maj_min;
+>>> +	u32 fw_sub_min;
+>>> 	int i;
+>>>
+>>> +	dev->broken_intx_masking = 1;
+>>> +
+>>> 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
+>>> -		if (dev->device == mellanox_broken_intx_devs[i]) {
+>>> -			dev->broken_intx_masking = 1;
+>>> +		if (dev->device == mellanox_broken_intx_devs[i])
+>>> 			return;
+>>> -		}
+>>> 	}
+>>> +
+>>> +	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
+>>> +	 * support so shouldn't be checked further
+>>> +	 */
+>>> +	if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB) {
+>>> +		dev->broken_intx_masking = 0;
+>>> +		return;
+>>> +	}
+>>> +
+>>> +	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
+>>> +	if (pci_enable_device_mem(dev)) {
+>>> +		dev_warn(&dev->dev, "Can't enable device memory\n");
+>>> +		return;
+>>> +	}
+>> It might be safer to set @broken_intx_masking in the failing path. On the
+>> following exit or failing path, the device needs to be disabled with function
+>> pci_disable_device(). Otherwise, &dev->enable_cnt, tracking if the device is
+>> enabled or not, will be unbalanced.
+>>
+>>> +
+>>> +	/* Convert from PCI bus to resource space. */
+>>> +	fw_ver = ioremap(pci_resource_start(dev, 0), 4);
+>>> +	if (!fw_ver) {
+>>> +		dev_warn(&dev->dev, "Can't map ConnectX-4 initialization segment\n");
+>>> +		return;
+>>> +	}
+>>> +
+>>> +	/* Reading from resource space should be 32b aligned */
+>>> +	fw_maj_min = ioread32be(fw_ver);
+>>> +	fw_sub_min = ioread32be(fw_ver + 1);
+>>> +	fw_major = fw_maj_min & 0xffff;
+>>> +	fw_minor = fw_maj_min >> 16;
+>>> +	fw_subminor = fw_sub_min & 0xffff;
+>>> +	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
+>>> +	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR)
+>>> +		dev_warn(&dev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
+>>> +			 fw_major, fw_minor, fw_subminor, dev->device ==
+>>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
+>>> +	else
+>>> +		dev->broken_intx_masking = 0;
+>>> +
+>>> +	iounmap(fw_ver);
+>>> }
+>> Noa, it doesn't look quite correct: when a device ID doesn't match with
+>> anyone in the list, CONNECTIB, CONNECT4 or CONNECTX4_LX. The code goes
+>> though as it's CONNECT4 or CONNECT4_LX. The firmware version retrieved
+>> from MMIO register (BAR 0, offset 0/4) are checked. I don't think it's
+>> assured that the registers are for firmware version on the device. It
+>> seems you need more checks here: @broken_intx_masking is untouched and
+>> kept as 0 by default when the device ID isn't in the intrest list, which
+>> is the policy you introduced in PATCH[2/3]. Something like below would
+>> work:
+>>
+>> static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
+>> {
+>>      /*
+>>       * Set @broken_intx_masking to 1 when device ID matches with
+>>       * anyone in the list. No code change to PATCH[2/3] is needed.
+>>       */
+>>      if (pdev->device in mellanox_broken_intx_devs) {
+>>          pdev->broken_intx_masking = 1;
+>>          return;
+>>      }
+>>
+>>      if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
+>>          return;
+>>
+>>      if (dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
+>>          dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LE)
+>>          return;
+>>
+>>      /* Check firmware version on CONNECT4 or CONNECT4_LE */
+>> }
+>>
+>>> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>> Thanks,
+>> Gavin
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
