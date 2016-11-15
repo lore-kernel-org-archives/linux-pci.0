@@ -1,84 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-To: Arnd Bergmann <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1555494.4IFvGxvsfe@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8F1A7A@lhreml507-mbx>
- <2825537.ADCNsGqGxn@wuerfel>
-CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Message-ID: <5824165A.4040303@hisilicon.com>
-Date: Thu, 10 Nov 2016 14:40:26 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34830 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751783AbcKONWh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 08:22:37 -0500
+Received: by mail-wm0-f51.google.com with SMTP id a197so166637910wmd.0
+        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 05:22:36 -0800 (PST)
+Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+ <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Message-ID: <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
+Date: Tue, 15 Nov 2016 13:22:34 +0000
 MIME-Version: 1.0
-In-Reply-To: <2825537.ADCNsGqGxn@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Arnd,
 
-On 2016/11/10 5:34, Arnd Bergmann wrote:
-> On Wednesday, November 9, 2016 12:10:43 PM CET Gabriele Paoloni wrote:
->>> On Tuesday, November 8, 2016 11:47:09 AM CET zhichang.yuan wrote:
->>>> +       /*
->>>> +        * The first PCIBIOS_MIN_IO is reserved specifically for
->>> indirectIO.
->>>> +        * It will separate indirectIO range from pci host bridge to
->>>> +        * avoid the possible PIO conflict.
->>>> +        * Set the indirectIO range directly here.
->>>> +        */
->>>> +       lpcdev->io_ops.start = 0;
->>>> +       lpcdev->io_ops.end = PCIBIOS_MIN_IO - 1;
->>>> +       lpcdev->io_ops.devpara = lpcdev;
->>>> +       lpcdev->io_ops.pfin = hisilpc_comm_in;
->>>> +       lpcdev->io_ops.pfout = hisilpc_comm_out;
->>>> +       lpcdev->io_ops.pfins = hisilpc_comm_ins;
->>>> +       lpcdev->io_ops.pfouts = hisilpc_comm_outs;
->>>
->>> I have to look at patch 2 in more detail again, after missing a few
->>> review
->>> rounds. I'm still a bit skeptical about hardcoding a logical I/O port
->>> range here, and would hope that we can just go through the same
->>> assignment of logical port ranges that we have for PCI buses,
->>> decoupling
->>> the bus addresses from the linux-internal ones.
+
+On 15/11/16 12:24, Stanimir Varbanov wrote:
+> Hi Srini,
+>
+> On 11/14/2016 01:15 PM, Srinivas Kandagatla wrote:
+>> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+>> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+>> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
 >>
->> The point here is that we want to avoid any conflict/overlap between
->> the LPC I/O space and the PCI I/O space. With the assignment above
->> we make sure that LPC never interfere with PCI I/O space.
-> 
-> But we already abstract the PCI I/O space using dynamic registration.
-> There is no need to hardcode the logical address for ISA, though
-> I think we can hardcode the bus address to start at zero here.
+>> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+>> pipe clocks are only setup after the phy is powered on.
+>> It also adds ltssm_enable callback as it is very much different to other
+>> supported SOCs in the driver.
+>>
+>> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+>
+> With below comments addressed:
+>
+> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Thanks for the ack.
+>
+>> ---
+>>  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
+>>  drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
+>>  2 files changed, 238 insertions(+), 6 deletions(-)
+>>
+>
+> <snip>
+>
+>> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+>> index 3593640..03ba6b1 100644
+>> --- a/drivers/pci/host/pcie-qcom.c
+>> +++ b/drivers/pci/host/pcie-qcom.c
+>> @@ -36,11 +36,19 @@
+>>
+>>  #include "pcie-designware.h"
+>>
+>> +#define PCIE20_PARF_DBI_BASE_ADDR	0x168
+>
+> This is already defined few rows below, please drop it.
+>
+Yep, will remove this.
+>> +
+>> +#define PCIE20_PARF_SYS_CTRL			0x00
+>>  #define PCIE20_PARF_PHY_CTRL			0x40
+>>  #define PCIE20_PARF_PHY_REFCLK			0x4C
+>>  #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+>>  #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
+>> +#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+>>  #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
+>> +#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
+>
+> I don't like MSM8996_ prefix. Could you invent a macro which depending
+> on controller selects proper offset?
 
-Do you means that we can pick up the maximal I/O address from all children's
-device resources??
+maybe some like this ??
 
-Thanks,
-Zhichang
+#define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
 
-> 
-> 	Arnd
-> 
-> .
-> 
+
+--srini
+>
+>> +#define PCIE20_PARF_LTSSM			0x1B0
+>> +#define PCIE20_PARF_SID_OFFSET			0x234
+>> +#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+>>
+>>  #define PCIE20_ELBI_SYS_CTRL			0x04
+>>  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+>> @@ -72,9 +80,18 @@ struct qcom_pcie_resources_v1 {
+>>  	struct regulator *vdda;
+>>  };
+>>
+>> +struct qcom_pcie_resources_v2 {
+>> +	struct clk *aux_clk;
+>> +	struct clk *master_clk;
+>> +	struct clk *slave_clk;
+>> +	struct clk *cfg_clk;
+>> +	struct clk *pipe_clk;
+>> +};
+>
+> <snip>
+>
+> regards,
+> Stan
+>
