@@ -1,112 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32778 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755466AbcK3AGg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Nov 2016 19:06:36 -0500
-Date: Tue, 29 Nov 2016 18:06:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, clsoto@us.ibm.com,
-        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
- updates
-Message-ID: <20161130000605.GC7375@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129045546.GB20642@gwshan>
- <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
- <20161129232028.GA8143@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161129232028.GA8143@gwshan>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:57000 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965920AbcKOIAi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 03:00:38 -0500
+From: Noa Osherovich <noaos@mellanox.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
+        gwshan@linux.vnet.ibm.com, noaos@mellanox.com
+Subject: [PATCH v1 2/3] PCI: Convert Mellanox quirks to be for listed devices only
+Date: Tue, 15 Nov 2016 09:59:59 +0200
+Message-Id: <1479196800-32191-3-git-send-email-noaos@mellanox.com>
+In-Reply-To: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
+References: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 30, 2016 at 10:20:28AM +1100, Gavin Shan wrote:
-> On Tue, Nov 29, 2016 at 08:48:26AM -0600, Bjorn Helgaas wrote:
-> >On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
-> >> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
-> >> >Previously pci_update_resource() used the same code path for updating
-> >> >standard BARs and VF BARs in SR-IOV capabilities.
-> >> >
-> >> >Split the VF BAR update into a new pci_iov_update_resource() internal
-> >> >interface, which makes it simpler to compute the BAR address (we can get
-> >> >rid of pci_resource_bar() and pci_iov_resource_bar()).
-> >> >
-> >> >This patch:
-> >> >
-> >> >  - Renames pci_update_resource() to pci_std_update_resource(),
-> >> >  - Adds pci_iov_update_resource(),
-> >> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
-> >> >
-> >> >No functional change intended.
+Change Mellanox's broken_intx_masking quirk from an "all Mellanox
+devices" to a quirk for listed devices only.
 
-> >However, I don't think this code in pci_update_resource() is obviously
-> >correct:
-> >
-> >  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
-> >
-> >PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
-> >property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
-> >part of the address, so on the face of it, the above could corrupt two
-> >bits of an I/O address.
-> >
-> >It's true that decode_bar() initializes flags correctly, using
-> >PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
-> >for memory BARs, but it would take a little more digging to be sure
-> >that we never set bits 2-3 of flags for an I/O resource elsewhere.
-> >
-> 
-> The BAR's property bits are probed from device-tree, not hardware
-> on some platforms (e.g. pSeries). Also, there is only one (property)
-> bit if it's a ROM BAR. So more check as below might be needed because
-> the code (without the enhancement) should also work fine.
+Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com> 
+---
+ drivers/pci/quirks.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 52 insertions(+), 1 deletion(-)
 
-Ah, right, I forgot about that.  I didn't do enough digging :)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85048fdf2474..228a4e8a8aeb 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3158,8 +3158,59 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+  */
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
+ 			quirk_broken_intx_masking);
++
++#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
++#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
++#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
++#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
++#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
++#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
++#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
++#define PCI_DEVICE_ID_MELLANOX_CONNECTIB 0x1011
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX4 0x1013
++#define PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX 0x1015
++
++static u16 mellanox_broken_intx_devs[] = {
++	PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
++	PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
++	PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
++	PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
++	PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
++	PCI_DEVICE_ID_MELLANOX_HERMON_EN,
++	PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
++	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
++	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
++};
++
++static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
++		if (pdev->device == mellanox_broken_intx_devs[i]) {
++			pdev->broken_intx_masking = 1;
++			return;
++		}
++	}
++}
++
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+-			quirk_broken_intx_masking);
++			mellanox_check_broken_intx_masking);
+ 
+ /*
+  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
+-- 
+1.8.3.1
 
-> >How about this in pci_std_update_resource():
-> >
-> >        pcibios_resource_to_bus(dev->bus, &region, res);
-> >        new = region.start;
-> >
-> >        if (res->flags & IORESOURCE_IO) {
-> >                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
-> >                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
-> >        } else {
-> >                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
-> >                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
-> >        }
-> >
-> 
-> 	if (res->flags & IORESOURCE_IO) {
-> 		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
-> 		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
-> 	} else if (resno < PCI_ROM_RESOURCE) {
-> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
-> 		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
-> 	} else if (resno == PCI_ROM_RESOURCE) {
-> 		mask = ~((u32)IORESOURCE_ROM_ENABLE);
-> 		new |= res->flags & IORESOURCE_ROM_ENABLE);
-> 	} else {
-> 		dev_warn(&dev->dev, "BAR#%d out of range\n", resno);
-> 		return;
-> 	}
-
-After this patch, the only thing we OR into a ROM BAR value is
-PCI_ROM_ADDRESS_ENABLE, and that's done below, only if the ROM is
-already enabled.
-
-I did update the ROM mask (to PCI_ROM_ADDRESS_MASK).  I'm not 100%
-sure about doing that -- it follows the spec, but it is a change from
-what we've been doing before.  I guess it should be safe because it
-means we're checking fewer bits than before (only the top 21 bits for
-ROMs, where we used check the top 28), so the only possible difference
-is that we might not warn about "error updating" in some case where we
-used to.
-
-I'm not really sure about the value of the "error updating" checks to
-begin with, though I guess it does help us find broken devices that
-put non-BARs where BARs are supposed to be.
-
-Bjorn
