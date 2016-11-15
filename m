@@ -1,66 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36088 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932199AbcK2EPi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:15:38 -0500
-Subject: [PATCH v4 4/7] PCI: Don't update VF BARs while VF memory space is
- enabled
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:15:21 -0600
-Message-ID: <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 15 Nov 2016 10:07:01 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161115100701.GA16261@red-moon>
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+ <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
+ <20161111162736.GV2078@8bytes.org>
+ <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+ <20161114102654.GA1677@red-moon>
+ <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+ <20161114155222.GZ2078@8bytes.org>
+ <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we update a VF BAR while it's enabled, there are two potential problems:
+On Mon, Nov 14, 2016 at 06:25:16PM +0000, Robin Murphy wrote:
+> On 14/11/16 15:52, Joerg Roedel wrote:
+> > On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
+> >> If we've already made the decision to move away from bus ops, I don't
+> >> see that it makes sense to deliberately introduce new dependencies on
+> >> them. Besides, as it stands, this patch literally implements "tell the
+> >> iommu-core which hardware-iommus exist in the system and a seperate
+> >> iommu_ops ptr for each of them" straight off.
+> > 
+> > Not sure which code you are looking at, but as I see it we have only
+> > per-device iommu-ops now (with this patch). That is different from
+> > having core-visible hardware-iommu instances where devices could link
+> > to.
+> 
+> The per-device IOMMU ops are already there since 57f98d2f61e1. This
+> patch generalises the other end, moving the "registering an IOMMU
+> instance" (i.e. iommu_fwentry) bit into the IOMMU core, from being
+> OF-specific. I'd be perfectly happy if we rename iommu_fwentry to
+> iommu_instance, fwnode_iommu_set_ops() to iommu_register_instance(), and
+> such if that makes the design intent clearer.
 
-  1) Any driver that's using the VF has a cached BAR value that is stale
-     after the update, and
+I second that and I need to know what to do with this patch sooner
+rather than later so it is time we make a decision please.
 
-  2) We can't update 64-bit BARs atomically, so the intermediate state
-     (new lower dword with old upper dword) may conflict with another
-     device, and an access by a driver unrelated to the VF may cause a bus
-     error.
+Joerg, what's your opinion ?
 
-Warn about attempts to update VF BARs while they are enabled.  This is a
-programming error, so use dev_WARN() to get a backtrace.
+Thanks,
+Lorenzo
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index d00ed5c..a800ba2 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -584,6 +584,7 @@ void pci_iov_update_resource(struct pci_dev *dev, int resno)
- 	struct resource *res = dev->resource + resno;
- 	int vf_bar = resno - PCI_IOV_RESOURCES;
- 	struct pci_bus_region region;
-+	u16 cmd;
- 	u32 new;
- 	int reg;
- 
-@@ -595,6 +596,13 @@ void pci_iov_update_resource(struct pci_dev *dev, int resno)
- 	if (!iov)
- 		return;
- 
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_CTRL, &cmd);
-+	if ((cmd & PCI_SRIOV_CTRL_VFE) && (cmd & PCI_SRIOV_CTRL_MSE)) {
-+		dev_WARN(&dev->dev, "can't update enabled VF BAR%d %pR\n",
-+			 vf_bar, res);
-+		return;
-+	}
-+
- 	/*
- 	 * Ignore unimplemented BARs, unused resource slots for 64-bit
- 	 * BARs, and non-movable resources, e.g., those described via
-
+> If you'd also prefer to replace iommu_fwspec::ops with an opaque
+> iommu_fwspec::iommu_instance pointer so that things are a bit more
+> centralised (and users are forced to go through the API rather then call
+> ops directly), I'd have no major objection either. My main point is that
+> we've been deliberately putting the relevant building blocks in place -
+> the of_iommu_{get,set}_ops stuff was designed from the start to
+> accommodate per-instance ops, via the ops pointer *being* the instance
+> token; the iommu_fwspec stuff is deliberately intended to provide
+> per-device ops on top of that. The raw functionality is either there in
+> iommu.c already, or moving there in patches already written, so if it
+> doesn't look right all we need to focus on is making it look right.
+> 
+> > Also the rest of iommu-core code still makes use of the per-bus ops. The
+> > per-device ops are only used for the of_xlate fn-ptr.
+> 
+> Hence my aforementioned patches intended for 4.10, directly following on
+> from introducing iommu_fwspec in 4.9:
+> 
+> http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14576.html
+> 
+> ...the purpose being to provide a smooth transition from per-bus ops to
+> per-device, per-instance ops. Apply those and we're 90% of the way there
+> for OF-based IOMMU drivers (not that any of those actually need
+> per-instance ops, admittedly; I did prototype it for the ARM SMMU ages
+> ago, but it didn't seem worth the bother). Lorenzo's series broadens the
+> scope to ACPI-based systems and moves the generically-useful parts into
+> the core where we can easily build on them further if necessary. The
+> major remaining work is to convert external callers of the current
+> bus-dependent functions like iommu_domain_alloc(), iommu_present(), etc.
+> to device-based alternatives.
+> 
+> Robin.
