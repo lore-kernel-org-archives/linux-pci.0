@@ -1,57 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:40606 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754980AbcK1WZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 17:25:03 -0500
-Date: Mon, 28 Nov 2016 15:24:52 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        Christian K??nig <christian.koenig@amd.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Max Gurtovoy <maxg@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161128222452.GA744@obsidianresearch.com>
-References: <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
- <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
- <0d3d56e2-4d2b-85b7-9487-b7ae2aaea610@amd.com>
- <c8c25265-9f59-f3d6-6249-07500e73930e@deltatee.com>
- <1ac2f9e7-f1ee-a2c9-0134-ffaa28c706af@amd.com>
+Return-Path: <jthumshirn@suse.de>
+Return-Path: <jthumshirn@suse.de>
+Date: Tue, 15 Nov 2016 13:58:22 +0100
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alexander Graf <agraf@suse.de>, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
+ bridge hasn't
+Message-ID: <20161115125822.sna3oz56prmrelgc@linux-x5ow.site>
+References: <20161102223552.14776-1-jthumshirn@suse.de>
+ <20161102223552.14776-2-jthumshirn@suse.de>
+ <20161109171140.GK14322@bhelgaas-glaptop.roam.corp.google.com>
+ <20161114115604.gzxjstjj7vb4ytno@linux-x5ow.site>
+ <5829E373.1070901@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ac2f9e7-f1ee-a2c9-0134-ffaa28c706af@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5829E373.1070901@redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 04:55:23PM -0500, Serguei Sagalovitch wrote:
+On Mon, Nov 14, 2016 at 11:16:51AM -0500, Don Dutile wrote:
+> On 11/14/2016 06:56 AM, Johannes Thumshirn wrote:
+> > On Wed, Nov 09, 2016 at 11:11:40AM -0600, Bjorn Helgaas wrote:
+> > > Hi Johannes,
+> > > 
+> > > On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
+> > > > The Read Completion Boundary (RCB) bit must only be set on a device or
+> > > > endpoint if it is set on the root complex.
+> > > > 
+> > > > Certain BIOSes erroneously set the RCB Bit in their ACPI _HPX Tables
+> > > > even if it is not set on the root port. This is a violation to the PCIe
+> > > > Specification and is known to bring some Mellanox Connect-X 3 HCAs into
+> > > > a state where they can't map their firmware and go into error recovery.
+> > > > 
+> > > > BIOS Information
+> > > > 	Vendor: IBM
+> > > > 	Version: -[A8E120CUS-1.30]-
+> > > > 	Release Date: 08/22/2016
+> > > 
+> > > This seems like a pretty serious problem (sounds like maybe the HCA is
+> > > completely useless?)
+> > 
+> > Correct.
+> > 
+> > > 
+> > > Can you point us at a bugzilla or other problem report?  It's nice to
+> > > have details of what this looks like to a user, so people who trip
+> > > over this problem have a little more chance of finding the solution.
+> > 
+> > As we already said, our bugzilla entry for this is not accessible from the
+> > outside, but I know Red Hat does have a bugzilla entry for the same issue as
+> > well. Maybe this is reachable from the outside (adding Don for this, as I know
+> > he has worked on this problem as well).
+> > 
+> RHEL bz's are not accessible from the outside.
+> I suggest capturing the content of the RH bz issue and creating a k.o. bz
+> with the information.
 
-> >We haven't touch this in a long time and perhaps it changed, but there
-> >definitely was a call back in the PeerDirect API to allow the GPU to
-> >invalidate the mapping. That's what we don't want.
+I've created https://bugzilla.kernel.org/show_bug.cgi?id=187781 to track this
+on b.k.o. Feel free to add any information you have.
 
-> I assume that you are talking about "invalidate_peer_memory()' callback?
-> I was told that it is the "last resort" because HCA (and driver) is not
-> able to handle  it in the safe manner so it is basically "abort" everything.
+@Bjorn anything else I can provide in order to get the fix applied?
 
-If it is a last resort to save system stability then kill the impacted
-process, that will release the MRs.
+Byte,
+ 	Johannes
 
-Jason
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
