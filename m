@@ -1,113 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:9586 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752175AbcKHDWn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 22:22:43 -0500
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <lorenzo.pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
-        <minyard@acm.org>, <benh@kernel.crashing.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V5 0/3] ARM64 LPC: legacy ISA I/O support
-Date: Tue, 8 Nov 2016 11:47:06 +0800
-Message-ID: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+Received: from ns.mm-sol.com ([37.157.136.199]:42682 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751981AbcKOQaX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Nov 2016 11:30:23 -0500
+Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+ <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+ <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
+ <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
+ <8d0e9b19-5d6f-8be5-84be-d102817a6b21@linaro.org>
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <3fc1b0b1-5f48-ebce-e7f1-d4c06e9ee28d@mm-sol.com>
+Date: Tue, 15 Nov 2016 18:30:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <8d0e9b19-5d6f-8be5-84be-d102817a6b21@linaro.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch supports the IPMI-bt device attached to the Low-Pin-Count interface
-implemented on Hisilicon Hip06 SoC.
-	                -----------
-			| LPC host|
-	                |         |
-	                -----------
-	                     |
- 	        _____________V_______________LPC
-                  |			  |
-                  V	                  V
-			             ------------
-			             |  BT(ipmi)|
-			             ------------
 
-When master accesses those periperals beneath the Hip06 LPC, a specific LPC
-driver is needed to make LPC host generate the standard LPC I/O cycles with
-the target periperals'I/O port addresses. But on curent arm64 world, there is
-no real I/O accesses. All the I/O operations through in/out pair are based on
-MMIO which is not satisfied the I/O mechanism on Hip06 LPC.
-To solve this issue and keep the relevant existing peripherals' driver
-unchanged, this patch set redefines the in/out pair to support both the IO
-operations for Hip06 LPC and the original MMIO. The way specific to Hip06 is
-named as indirect-IO in this patchset.
+On 11/15/2016 06:10 PM, Srinivas Kandagatla wrote:
+> 
+> 
+> On 15/11/16 15:08, Stanimir Varbanov wrote:
+>>>> I don't like MSM8996_ prefix. Could you invent a macro which depending
+>>>> >> on controller selects proper offset?
+>>> >
+>>> > maybe some like this ??
+>>> >
+>>> > #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
+>> No, I wanted to preserve the name of the register offset. By that way in
+>> the next pcie controller version we do not need to have
+>> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V3.
+>>
+>> I was thinking for something like
+>>
+>> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT(ver)    \
+>>         ((ver) == VERSION_1 ? 0x178 : 0x1A8)
+>>
+>> But you will need to extend qcom_pcie_ops with new member to store the
+>> version.
+>>
+>> It's up to you ... or we can fix it when new version of the controller
+>> appear.
+> TBH, I don't want to add this just for this one case, looks bit over do.
+> So I skipped to using V2 Suffix.
+> We can fix later if required.
 
-Changes from V4:
-  - Some revises based on the comments from Bjorn, Rob on V4;
-  - Fixed the compile error on some platforms, such as openrisc;
+OK, sounds good.
 
-Changes from V3:
-  - UART support deferred to a separate patchset; This patchset only support
-  ipmi device under LPC;
-  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
-  from PCI/PCIE PIO space;
-  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
-  added a new fixup function, of_isa_indirect_io(), to get the I/O address
-  directly from LPC dts configurations;
-  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
-  - Decouple the header file dependency on the gerenic io.h by defining in/out
-  as normal functions in c file;
-  - removed unused macro definitions in the LPC driver;
-
-Changes from V2:
-  - Support the PIO retrieval from the linux PIO generated by
-  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
-  - Support the flat-tree earlycon;
-  - Some revises based on Arnd's remarks;
-  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
-  from non-ZERO;
-
-Changes from V1:
-  - Support the ACPI LPC device;
-  - Optimize the dts LPC driver in ISA compatible mode;
-  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
-  IO ranges;
-  - Support the LPC uart and relevant earlycon;
-
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-
-zhichang.yuan (3):
-  ARM64 LPC: Indirect ISA port IO introduced
-  ARM64 LPC: Add missing range exception for special ISA
-  ARM64 LPC: LPC driver implementation on Hip06
-
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  31 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/Kconfig                                 |   6 +
- arch/arm64/include/asm/extio.h                     |  94 ++++
- arch/arm64/include/asm/io.h                        |  35 ++
- arch/arm64/kernel/Makefile                         |   1 +
- arch/arm64/kernel/extio.c                          |  52 +++
- drivers/bus/Kconfig                                |   8 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 501 +++++++++++++++++++++
- drivers/of/address.c                               |  56 ++-
- drivers/pci/pci.c                                  |   6 +-
- include/linux/of_address.h                         |  17 +
- include/linux/pci.h                                |   8 +
- 14 files changed, 820 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 arch/arm64/include/asm/extio.h
- create mode 100644 arch/arm64/kernel/extio.c
- create mode 100644 drivers/bus/hisi_lpc.c
-
--- 
-1.9.1
-
+regards,
+Stan
