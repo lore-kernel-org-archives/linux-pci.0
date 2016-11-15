@@ -1,97 +1,125 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 15 Nov 2016 10:07:01 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161115100701.GA16261@red-moon>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
- <20161114155222.GZ2078@8bytes.org>
- <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:56970 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965917AbcKOIAd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 03:00:33 -0500
+From: Noa Osherovich <noaos@mellanox.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
+        gwshan@linux.vnet.ibm.com, noaos@mellanox.com
+Subject: [PATCH v1 1/3] PCI: Use FINAL fixup to mark broken INTx masking
+Date: Tue, 15 Nov 2016 09:59:58 +0200
+Message-Id: <1479196800-32191-2-git-send-email-noaos@mellanox.com>
+In-Reply-To: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
+References: <1479196800-32191-1-git-send-email-noaos@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 14, 2016 at 06:25:16PM +0000, Robin Murphy wrote:
-> On 14/11/16 15:52, Joerg Roedel wrote:
-> > On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
-> >> If we've already made the decision to move away from bus ops, I don't
-> >> see that it makes sense to deliberately introduce new dependencies on
-> >> them. Besides, as it stands, this patch literally implements "tell the
-> >> iommu-core which hardware-iommus exist in the system and a seperate
-> >> iommu_ops ptr for each of them" straight off.
-> > 
-> > Not sure which code you are looking at, but as I see it we have only
-> > per-device iommu-ops now (with this patch). That is different from
-> > having core-visible hardware-iommu instances where devices could link
-> > to.
-> 
-> The per-device IOMMU ops are already there since 57f98d2f61e1. This
-> patch generalises the other end, moving the "registering an IOMMU
-> instance" (i.e. iommu_fwentry) bit into the IOMMU core, from being
-> OF-specific. I'd be perfectly happy if we rename iommu_fwentry to
-> iommu_instance, fwnode_iommu_set_ops() to iommu_register_instance(), and
-> such if that makes the design intent clearer.
+Convert all quirk_broken_intx_masking quirks from HEADER to FINAL.
+None of those calls need to be in HEADER but some might need to be
+called as FINAL. Moving them all to FINAL will save time during
+pci_do_fixups.
 
-I second that and I need to know what to do with this patch sooner
-rather than later so it is time we make a decision please.
+Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/quirks.c | 72 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
 
-Joerg, what's your opinion ?
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c232729f5b1b..85048fdf2474 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3146,53 +3146,53 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+ {
+ 	dev->broken_intx_masking = 1;
+ }
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
++			quirk_broken_intx_masking);
+ /*
+  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+  *
+  * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
+  */
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
++			quirk_broken_intx_masking);
+ 
+ /*
+  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
+  * DisINTx can be set but the interrupt status bit is non-functional.
+  */
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1572,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1574,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1580,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1581,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1583,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1584,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1585,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1586,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1587,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1588,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1589,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d0,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d1,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d2,
++			quirk_broken_intx_masking);
+ 
+ static void quirk_no_bus_reset(struct pci_dev *dev)
+ {
+-- 
+1.8.3.1
 
-Thanks,
-Lorenzo
-
-> If you'd also prefer to replace iommu_fwspec::ops with an opaque
-> iommu_fwspec::iommu_instance pointer so that things are a bit more
-> centralised (and users are forced to go through the API rather then call
-> ops directly), I'd have no major objection either. My main point is that
-> we've been deliberately putting the relevant building blocks in place -
-> the of_iommu_{get,set}_ops stuff was designed from the start to
-> accommodate per-instance ops, via the ops pointer *being* the instance
-> token; the iommu_fwspec stuff is deliberately intended to provide
-> per-device ops on top of that. The raw functionality is either there in
-> iommu.c already, or moving there in patches already written, so if it
-> doesn't look right all we need to focus on is making it look right.
-> 
-> > Also the rest of iommu-core code still makes use of the per-bus ops. The
-> > per-device ops are only used for the of_xlate fn-ptr.
-> 
-> Hence my aforementioned patches intended for 4.10, directly following on
-> from introducing iommu_fwspec in 4.9:
-> 
-> http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14576.html
-> 
-> ...the purpose being to provide a smooth transition from per-bus ops to
-> per-device, per-instance ops. Apply those and we're 90% of the way there
-> for OF-based IOMMU drivers (not that any of those actually need
-> per-instance ops, admittedly; I did prototype it for the ARM SMMU ages
-> ago, but it didn't seem worth the bother). Lorenzo's series broadens the
-> scope to ACPI-based systems and moves the generically-useful parts into
-> the core where we can easily build on them further if necessary. The
-> major remaining work is to convert external callers of the current
-> bus-dependent functions like iommu_domain_alloc(), iommu_present(), etc.
-> to device-based alternatives.
-> 
-> Robin.
