@@ -1,92 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 08/16] drivers: acpi: iort: add node match function
-Date: Wed,  9 Nov 2016 14:19:40 +0000
-Message-Id: <20161109141948.19244-9-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	jchandra@broadcom.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	ddaney@caviumnetworks.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jcm@redhat.com,
+	msalter@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 0/2] Add support for ThunderX SoCs ACPI Host Controllers
+Date: Tue, 15 Nov 2016 10:14:56 +0100
+Message-Id: <1479201298-25494-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Device drivers (eg ARM SMMU) need to know if a specific component
-is part of the IORT table, so that kernel data structures are not
-initialized at initcalls time if the respective component is not
-part of the IORT table.
+These patches were part of https://lkml.org/lkml/2016/9/9/666 series,
+however, only core part (first two patches) was approved. ThunderX quirk
+example had some comments which are address in this series (resetting version
+numbering).
 
-To this end, this patch adds a trivial function that allows detecting
-if a given IORT node type is present or not in the ACPI table, providing
-an ACPI IORT equivalent for of_find_matching_node().
+Add ACPI PCI host controler support for ThunderX SoCs pass1.x & pass2.x using
+ACPI quirk mechanism [1]. Patches rework ThunderX ECAM and PEM driver to work
+with ACPI & DT boot method.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 15 +++++++++++++++
- include/linux/acpi_iort.h |  2 ++
- 2 files changed, 17 insertions(+)
+Patch set can be found here:
+git@github.com:semihalf-nowicki-tomasz/linux.git (pci-quirks-thunderx-v1)
+It is based on branch pci/ecam-v6 which can be found here:
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git (pci/ecam-v6)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 1ac2720..4bb6acb 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -227,6 +227,21 @@ static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
- 	return NULL;
- }
- 
-+static acpi_status
-+iort_match_type_callback(struct acpi_iort_node *node, void *context)
-+{
-+	return AE_OK;
-+}
-+
-+bool iort_node_match(u8 type)
-+{
-+	struct acpi_iort_node *node;
-+
-+	node = iort_scan_node(type, iort_match_type_callback, NULL);
-+
-+	return node != NULL;
-+}
-+
- static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
- 					    void *context)
- {
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index d16fdda..17bb078 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -28,10 +28,12 @@ void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_ACPI_IORT
- void acpi_iort_init(void);
-+bool iort_node_match(u8 type);
- u32 iort_msi_map_rid(struct device *dev, u32 req_id);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- #else
- static inline void acpi_iort_init(void) { }
-+static inline bool iort_node_match(u8 type) { return false; }
- static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- { return req_id; }
- static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+Tomasz Nowicki (2):
+  PCI: thunder: Enable ACPI PCI controller for ThunderX pass2.x silicon
+    version
+  PCI: thunder: Enable ACPI PCI controller for ThunderX pass1.x silicon
+    version
+
+ drivers/acpi/pci_mcfg.c             |  35 ++++++++++++
+ drivers/pci/host/pci-thunder-ecam.c |   2 +-
+ drivers/pci/host/pci-thunder-pem.c  | 107 +++++++++++++++++++++++++++++++-----
+ include/linux/pci-ecam.h            |   7 +++
+ 4 files changed, 136 insertions(+), 15 deletions(-)
+
 -- 
-2.10.0
-
+2.7.4
