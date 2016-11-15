@@ -1,67 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753016AbcK2ElB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:41:01 -0500
-Date: Mon, 28 Nov 2016 22:40:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
-Message-ID: <20161129044056.GA22896@bhelgaas-glaptop.roam.corp.google.com>
-References: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
- <20161128192530.GO16033@bhelgaas-glaptop.roam.corp.google.com>
- <20161128223859.GA4571@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161128223859.GA4571@wunner.de>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:57161 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750998AbcKOQK5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 11:10:57 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, CARLOS.PALMINHA@synopsys.com,
+        Jose.Abreu@synopsys.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>
+Subject: [PATCH 1/2] pci: pcie-designware: Change Maintenance
+Date: Tue, 15 Nov 2016 16:10:46 +0000
+Message-Id: <c4b8fcc50069ce8ea2091100e52a68dcc30e1021.1479224720.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 11:38:59PM +0100, Lukas Wunner wrote:
-> On Mon, Nov 28, 2016 at 01:25:30PM -0600, Bjorn Helgaas wrote:
-> > On Sun, Oct 09, 2016 at 01:12:55PM +0200, Lukas Wunner wrote:
-> > > -.data          56
-> > > +.data           0
-> > > -.rodata        32
-> > > +.rodata        88
-> > > 
-> > > Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > It'd be nice if this had a changelog.  I'm happy if this goes via the
-> > x86 tree.
-> 
-> Thanks, I'll resend with your ack.
-> 
-> As for the changelog, to be honest I can't think of much more to write
-> there.  One important motivation of constifying structs that are never
-> modified, and particularly structs containing function pointers like
-> this one, is to prevent their modification and subsequent usage by an
-> attacker.  However constification patches are submitted all the
-> time by Julia Lawall and others, and I've never seen this rationale
-> spelled out in a commit message, so the assumption seems to be that
-> it's common knowledge.  I could probably add something like
-> 
-> 	Size of pci-mid.o ELF sections:
-> 
-> to clarify what the numbers in the changelog refer to.
+I accepted the invitation from Pratyush to replace him in the
+pcie-designware maintenance. This patch makes the maintainer replacement
+and symplifies a bit the pcie-designware* maintenance structure.
 
-Part of this is an artifact of my workflow.  I read and review patches
-in mutt, and then all I see is the body of the changelog, not the
-subject line.  So in this case, all I see is:
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Jose Abreu <Jose.Abreu@synopsys.com>
+---
+ MAINTAINERS | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-  -.data          56
-  +.data           0
-  -.rodata        32
-  +.rodata        88
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aefa6bf..2c64d7c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9293,17 +9293,11 @@ F:	drivers/pci/host/pci-exynos.c
+ 
+ PCI DRIVER FOR SYNOPSIS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+-M:	Pratyush Anand <pratyush.anand@gmail.com>
+-L:	linux-pci@vger.kernel.org
+-S:	Maintained
+-F:	drivers/pci/host/*designware*
+-
+-PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
+-M:	Jose Abreu <Jose.Abreu@synopsys.com>
++M:	Joao Pinto <Joao.Pinto@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+-F:	drivers/pci/host/pcie-designware-plat.c
++F:	drivers/pci/host/*designware*
+ 
+ PCI DRIVER FOR GENERIC OF HOSTS
+ M:	Will Deacon <will.deacon@arm.com>
+-- 
+1.8.3.1
 
-which isn't much.  I mean, I can guess that you're reducing the size of
-things.  But apparently even that isn't the reason you're doing this.
-Something as simple as "make mid_pci_platform_pm const because it
-never needs to be modified" might be enough.
 
-Bjorn
