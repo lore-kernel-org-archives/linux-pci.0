@@ -1,121 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 11 Nov 2016 16:46:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Minghuan Lian <Minghuan.Lian@nxp.com>
-Subject: Re: [PATCH] pci: layerscape: add LS1046a support
-Message-ID: <20161111224633.GV9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:50387 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750890AbcKOMYt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Nov 2016 07:24:49 -0500
+Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+Date: Tue, 15 Nov 2016 14:24:44 +0200
 MIME-Version: 1.0
-In-Reply-To: <1477399016-22826-1-git-send-email-Minghuan.Lian@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- linux-pci@vger.kernel.org, Stuart Yoder <stuart.yoder@nxp.com>,
- Yang-Leo Li <leoyang.li@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 25, 2016 at 08:36:56PM +0800, Minghuan Lian wrote:
-> From: "mingkai.hu@nxp.com" <mingkai.hu@nxp.com>
-> 
-> 1. LS1046a PCIe controller has a different LUT_DBG offset.
-> Available "lut_dbg" is added to ls_pcie_drvdata to describe
-> this difference.
-> 2. Match LS1046 PCIe compatible
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-> Signed-off-by: Mingkai Hu <mingkai.hu@nxp.com>
+Hi Srini,
 
-Applied to pci/host-layerscape for v4.10, thanks!
+On 11/14/2016 01:15 PM, Srinivas Kandagatla wrote:
+> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+> 
+> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+> pipe clocks are only setup after the phy is powered on.
+> It also adds ltssm_enable callback as it is very much different to other
+> supported SOCs in the driver.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 
-I removed the now-unused PCIE_LUT_DBG definition for you.
+With below comments addressed:
+
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 
 > ---
->  Documentation/devicetree/bindings/pci/layerscape-pci.txt |  1 +
->  drivers/pci/host/pci-layerscape.c                        | 13 ++++++++++++-
->  2 files changed, 13 insertions(+), 1 deletion(-)
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
+>  drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
+>  2 files changed, 238 insertions(+), 6 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> index 41e9f55..ee1c72d5 100644
-> --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> @@ -15,6 +15,7 @@ Required properties:
->  - compatible: should contain the platform identifier such as:
->          "fsl,ls1021a-pcie", "snps,dw-pcie"
->          "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
-> +        "fsl,ls1046a-pcie"
->  - reg: base addresses and lengths of the PCIe controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 958187f..8cebf9a 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -41,6 +41,7 @@
->  struct ls_pcie_drvdata {
->  	u32 lut_offset;
->  	u32 ltssm_shift;
-> +	u32 lut_dbg;
->  	struct pcie_host_ops *ops;
->  };
->  
-> @@ -134,7 +135,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
->  	struct ls_pcie *pcie = to_ls_pcie(pp);
->  	u32 state;
->  
-> -	state = (ioread32(pcie->lut + PCIE_LUT_DBG) >>
-> +	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
->  		 pcie->drvdata->ltssm_shift) &
->  		 LTSSM_STATE_MASK;
->  
-> @@ -196,18 +197,28 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
->  static struct ls_pcie_drvdata ls1043_drvdata = {
->  	.lut_offset = 0x10000,
->  	.ltssm_shift = 24,
-> +	.lut_dbg = 0x7fc,
-> +	.ops = &ls_pcie_host_ops,
-> +};
-> +
-> +static struct ls_pcie_drvdata ls1046_drvdata = {
-> +	.lut_offset = 0x80000,
-> +	.ltssm_shift = 24,
-> +	.lut_dbg = 0x407fc,
->  	.ops = &ls_pcie_host_ops,
->  };
->  
->  static struct ls_pcie_drvdata ls2080_drvdata = {
->  	.lut_offset = 0x80000,
->  	.ltssm_shift = 0,
-> +	.lut_dbg = 0x7fc,
->  	.ops = &ls_pcie_host_ops,
->  };
->  
->  static const struct of_device_id ls_pcie_of_match[] = {
->  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
->  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
-> +	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
->  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
->  	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
->  	{ },
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+<snip>
+
+> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+> index 3593640..03ba6b1 100644
+> --- a/drivers/pci/host/pcie-qcom.c
+> +++ b/drivers/pci/host/pcie-qcom.c
+> @@ -36,11 +36,19 @@
+>  
+>  #include "pcie-designware.h"
+>  
+> +#define PCIE20_PARF_DBI_BASE_ADDR	0x168
+
+This is already defined few rows below, please drop it.
+
+> +
+> +#define PCIE20_PARF_SYS_CTRL			0x00
+>  #define PCIE20_PARF_PHY_CTRL			0x40
+>  #define PCIE20_PARF_PHY_REFCLK			0x4C
+>  #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+>  #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
+> +#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+>  #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
+> +#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
+
+I don't like MSM8996_ prefix. Could you invent a macro which depending
+on controller selects proper offset?
+
+> +#define PCIE20_PARF_LTSSM			0x1B0
+> +#define PCIE20_PARF_SID_OFFSET			0x234
+> +#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+>  
+>  #define PCIE20_ELBI_SYS_CTRL			0x04
+>  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+> @@ -72,9 +80,18 @@ struct qcom_pcie_resources_v1 {
+>  	struct regulator *vdda;
+>  };
+>  
+> +struct qcom_pcie_resources_v2 {
+> +	struct clk *aux_clk;
+> +	struct clk *master_clk;
+> +	struct clk *slave_clk;
+> +	struct clk *cfg_clk;
+> +	struct clk *pipe_clk;
+> +};
+
+<snip>
+
+regards,
+Stan
