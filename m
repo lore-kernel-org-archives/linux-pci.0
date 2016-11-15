@@ -1,84 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57027 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751758AbcK2XYl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 18:24:41 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uATNO8Cu087530
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 18:24:40 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 271gckr4qa-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 18:24:40 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Wed, 30 Nov 2016 09:24:38 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8F1682BB0057
-        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uATNOZiv50593894
-        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uATNOZJe023971
-        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100
-Date: Wed, 30 Nov 2016 10:25:58 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH] PCI: Increase VPD access timeout
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from ns.mm-sol.com ([37.157.136.199]:35871 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932141AbcKOPIi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Nov 2016 10:08:38 -0500
+Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+ <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+ <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
+Date: Tue, 15 Nov 2016 17:08:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Message-Id: <20161129232558.GA14170@gwshan>
+In-Reply-To: <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 12:00:40PM -0600, Matthew R. Ochs wrote:
->The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
->complete. When an access does not complete within this period, a warning
->is logged and an error returned to the caller.
->
->While this default timeout is valid for most hardware, some devices can
->experience longer access delays under certain circumstances. For example,
->one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
->scenario. These types of devices can benefit from an extended timeout.
->
->To support devices with a longer access delay, increase the timeout in
->pci_vpd_wait() to 125ms. The PCI specification is silent with respect to
->VPD delays, therefore there is no concern for violating a threshold.
->
->Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Srini,
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 11/15/2016 03:22 PM, Srinivas Kandagatla wrote:
+> 
+> 
+> On 15/11/16 12:24, Stanimir Varbanov wrote:
+>> Hi Srini,
+>>
+>> On 11/14/2016 01:15 PM, Srinivas Kandagatla wrote:
+>>> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+>>> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+>>> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+>>>
+>>> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+>>> pipe clocks are only setup after the phy is powered on.
+>>> It also adds ltssm_enable callback as it is very much different to other
+>>> supported SOCs in the driver.
+>>>
+>>> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+>>
+>> With below comments addressed:
+>>
+>> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> Thanks for the ack.
+>>
+>>> ---
+>>>  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
+>>>  drivers/pci/host/pcie-qcom.c                       | 177
+>>> ++++++++++++++++++++-
+>>>  2 files changed, 238 insertions(+), 6 deletions(-)
+>>>
+>>
+>> <snip>
+>>
+>>> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+>>> index 3593640..03ba6b1 100644
+>>> --- a/drivers/pci/host/pcie-qcom.c
+>>> +++ b/drivers/pci/host/pcie-qcom.c
+>>> @@ -36,11 +36,19 @@
+>>>
+>>>  #include "pcie-designware.h"
+>>>
+>>> +#define PCIE20_PARF_DBI_BASE_ADDR    0x168
+>>
+>> This is already defined few rows below, please drop it.
+>>
+> Yep, will remove this.
+>>> +
+>>> +#define PCIE20_PARF_SYS_CTRL            0x00
+>>>  #define PCIE20_PARF_PHY_CTRL            0x40
+>>>  #define PCIE20_PARF_PHY_REFCLK            0x4C
+>>>  #define PCIE20_PARF_DBI_BASE_ADDR        0x168
+>>>  #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE        0x16c
+>>> +#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL    0x174
+>>>  #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT    0x178
+>>> +#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
+>>
+>> I don't like MSM8996_ prefix. Could you invent a macro which depending
+>> on controller selects proper offset?
+> 
+> maybe some like this ??
+> 
+> #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
 
->---
-> drivers/pci/access.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->
->diff --git a/drivers/pci/access.c b/drivers/pci/access.c
->index d11cdbb..61b5a6b 100644
->--- a/drivers/pci/access.c
->+++ b/drivers/pci/access.c
->@@ -355,7 +355,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
-> static int pci_vpd_wait(struct pci_dev *dev)
-> {
-> 	struct pci_vpd *vpd = dev->vpd;
->-	unsigned long timeout = jiffies + msecs_to_jiffies(50);
->+	unsigned long timeout = jiffies + msecs_to_jiffies(125);
-> 	unsigned long max_sleep = 16;
-> 	u16 status;
-> 	int ret;
->-- 
->2.1.0
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+No, I wanted to preserve the name of the register offset. By that way in
+the next pcie controller version we do not need to have
+PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V3.
 
+I was thinking for something like
+
+PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT(ver)	\
+		((ver) == VERSION_1 ? 0x178 : 0x1A8)
+
+But you will need to extend qcom_pcie_ops with new member to store the
+version.
+
+It's up to you ... or we can fix it when new version of the controller
+appear.
+
+regards,
+Stan
