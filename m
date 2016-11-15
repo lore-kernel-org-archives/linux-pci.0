@@ -1,77 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Dennis Chen <dennis.chen@arm.com>
-To: <linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not enough
-Date: Thu, 1 Dec 2016 10:15:04 +0800
-Message-ID: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36389 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751701AbcKOQKb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 11:10:31 -0500
+Received: by mail-wm0-f51.google.com with SMTP id g23so176600861wme.1
+        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 08:10:30 -0800 (PST)
+Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
+ <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
+ <f0d9884c-b5f6-e9a8-e814-6dfd632466fc@linaro.org>
+ <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Message-ID: <8d0e9b19-5d6f-8be5-84be-d102817a6b21@linaro.org>
+Date: Tue, 15 Nov 2016 16:10:28 +0000
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
- Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>,
- Dennis Chen <dennis.chen@arm.com>, nd@arm.com, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <ea5858f3-19d6-c746-2e95-a64d6a436b38@mm-sol.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
-when the device doesn't have enough vectors as required, just as the 
-MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
-some drivers depending on that return value will probably fallback to
-the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
-("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
-ahci driver will fallback to single MSI mode only when the return value
-is -ENOSPC in case of required vectors is not enough, else the driver will
-use legacy interrupt which has been observed on a x86 box with 6-port SATA
-controller.
-
-With this patch, when a MSI-capable device doesn't have enough MSI
-vectors as requested, it will fallback to single MSI mode while not
-legacy interrupt.
-
-Signed-off-by: Dennis Chen <dennis.chen@arm.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Steve Capper <steve.capper@arm.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
----
- drivers/pci/msi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index ad70507..da37113 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 	if (nvec < 0)
- 		return nvec;
- 	if (nvec < minvec)
--		return -EINVAL;
-+		return -ENOSPC;
- 
- 	if (nvec > maxvec)
- 		nvec = maxvec;
--- 
-2.7.4
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 15/11/16 15:08, Stanimir Varbanov wrote:
+>>> I don't like MSM8996_ prefix. Could you invent a macro which depending
+>>> >> on controller selects proper offset?
+>> >
+>> > maybe some like this ??
+>> >
+>> > #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2    0x1A8
+> No, I wanted to preserve the name of the register offset. By that way in
+> the next pcie controller version we do not need to have
+> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V3.
+>
+> I was thinking for something like
+>
+> PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT(ver)	\
+> 		((ver) == VERSION_1 ? 0x178 : 0x1A8)
+>
+> But you will need to extend qcom_pcie_ops with new member to store the
+> version.
+>
+> It's up to you ... or we can fix it when new version of the controller
+> appear.
+TBH, I don't want to add this just for this one case, looks bit over do.
+So I skipped to using V2 Suffix.
+We can fix later if required.
+
+--srini
+
