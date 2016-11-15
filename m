@@ -1,344 +1,248 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wj0-f179.google.com ([209.85.210.179]:33507 "EHLO
-        mail-wj0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932263AbcKVKug (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 05:50:36 -0500
-Received: by mail-wj0-f179.google.com with SMTP id xy5so40451184wjc.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 02:50:35 -0800 (PST)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        srinivas.kandagatla@linaro.org, devicetree@vger.kernel.org
-Subject: [PATCH v7] PCI: qcom: add support to msm8996 PCIe controller
-Date: Tue, 22 Nov 2016 10:43:29 +0000
-Message-Id: <1479811409-22375-1-git-send-email-srinivas.kandagatla@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	jchandra@broadcom.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	ddaney@caviumnetworks.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jcm@redhat.com,
+	msalter@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI controller for ThunderX pass2.x silicon version
+Date: Tue, 15 Nov 2016 10:14:57 +0100
+Message-Id: <1479201298-25494-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support to msm8996/apq8096 PCIe, MSM8996 supports
-Gen 1/2, One lane, 3 PCIe root-complex with support to MSI and
-legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
+compliant with ECAM standard. It uses non-standard configuration space
+accessors (see pci_thunder_pem_ops) and custom configuration space granulation
+(see bus_shift = 24). In order to access configuration space and
+probe PEM as ACPI based PCI host controller we need to add MCFG quirk
+infrastructure. This involves:
+1. thunder_pem_init() ACPI extension so that we can probe PEM-specific
+   register ranges analogously to DT
+2. Export PEM pci_thunder_pem_ops structure so it is visible to MCFG quirk
+   code.
+3. New quirk entries for each PEM segment. Each contains platform IDs,
+   mentioned pci_thunder_pem_ops and CFG resources.
 
-This patch adds post_init callback to qcom_pcie_ops, as this is PCIe
-pipe clocks are only setup after the phy is powered on.
-It also adds ltssm_enable callback as it is very much different to other
-supported SOCs in the driver.
+Quirk is considered for ThunderX silicon pass2.x only which is identified
+via MCFG revision 1.
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- Changes since v5/v6:
- 	- No code changes.
-	- s/pcie/PCIe in change log based on Rob's comments.
-	- Removed DT example for 8996 as requested by Rob.
+ drivers/acpi/pci_mcfg.c            |  20 +++++++
+ drivers/pci/host/pci-thunder-pem.c | 107 ++++++++++++++++++++++++++++++++-----
+ include/linux/pci-ecam.h           |   4 ++
+ 3 files changed, 117 insertions(+), 14 deletions(-)
 
- .../devicetree/bindings/pci/qcom,pcie.txt          |  14 +-
- drivers/pci/host/pcie-qcom.c                       | 175 ++++++++++++++++++++-
- 2 files changed, 183 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 4059a6f..15ced03 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -7,6 +7,7 @@
- 			- "qcom,pcie-ipq8064" for ipq8064
- 			- "qcom,pcie-apq8064" for apq8064
- 			- "qcom,pcie-apq8084" for apq8084
-+			- "qcom,pcie-msm8996" for msm8996 or apq8096
- 
- - reg:
- 	Usage: required
-@@ -92,6 +93,17 @@
- 			- "aux"		Auxiliary (AUX) clock
- 			- "bus_master"	Master AXI clock
- 			- "bus_slave"	Slave AXI clock
-+
-+- clock-names:
-+	Usage: required for msm8996/apq8096
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "pipe"	Pipe Clock driving internal logic.
-+			- "aux"		Auxiliary (AUX) clock.
-+			- "cfg"		Configuration clk.
-+			- "bus_master"	Master AXI clock.
-+			- "bus_slave"	Slave AXI clock.
-+
- - resets:
- 	Usage: required
- 	Value type: <prop-encoded-array>
-@@ -115,7 +127,7 @@
- 			- "core" Core reset
- 
- - power-domains:
--	Usage: required for apq8084
-+	Usage: required for apq8084 and msm8996/apq8096
- 	Value type: <prop-encoded-array>
- 	Definition: A phandle and power domain specifier pair to the
- 		    power domain which is responsible for collapsing
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 3593640..25c5556 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -36,11 +36,17 @@
- 
- #include "pcie-designware.h"
- 
-+#define PCIE20_PARF_SYS_CTRL			0x00
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PCIE20_PARF_PHY_REFCLK			0x4C
- #define PCIE20_PARF_DBI_BASE_ADDR		0x168
- #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
-+#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
- #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
-+#define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2	0x1A8
-+#define PCIE20_PARF_LTSSM			0x1B0
-+#define PCIE20_PARF_SID_OFFSET			0x234
-+#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
- 
- #define PCIE20_ELBI_SYS_CTRL			0x04
- #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
-@@ -72,9 +78,18 @@ struct qcom_pcie_resources_v1 {
- 	struct regulator *vdda;
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index ac21db3..e4e2b9b 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -57,6 +57,26 @@ static struct mcfg_fixup mcfg_quirks[] = {
+ 	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
+ 	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
+ 	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++#define THUNDER_MCFG_RES(addr, node) \
++	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
++#define THUNDER_MCFG_QUIRK(rev, node) \
++	{ "CAVIUM", "THUNDERX", rev, 4 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x88001f000000UL, node) }, \
++	{ "CAVIUM", "THUNDERX", rev, 5 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x884057000000UL, node) }, \
++	{ "CAVIUM", "THUNDERX", rev, 6 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x88808f000000UL, node) }, \
++	{ "CAVIUM", "THUNDERX", rev, 7 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x89001f000000UL, node) }, \
++	{ "CAVIUM", "THUNDERX", rev, 8 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x894057000000UL, node) }, \
++	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, \
++	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x89808f000000UL, node) }
++	/* SoC pass2.x */
++	THUNDER_MCFG_QUIRK(1, 0UL),
++	THUNDER_MCFG_QUIRK(1, 1UL),
++#endif
  };
  
-+struct qcom_pcie_resources_v2 {
-+	struct clk *aux_clk;
-+	struct clk *master_clk;
-+	struct clk *slave_clk;
-+	struct clk *cfg_clk;
-+	struct clk *pipe_clk;
+ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 6abaf80..7bdc4cd 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -18,6 +18,7 @@
+ #include <linux/init.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+@@ -284,6 +285,84 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
+ 
++#ifdef CONFIG_ACPI
++
++/*
++ * Retrieve PEM bridge register base and size from PNP0C02 sub-device under
++ * the RC.
++ *
++ * Device (RES0)
++ * {
++ *	Name (_HID, "THRX0002")
++ *	Name (_CID, "PNP0C02")
++ *	Name (_CRS, ResourceTemplate () {
++ *		// Device specific registers range
++ *		QWordMemory(ResourceConsumer, PosDecode, MinFixed,
++ *		MaxFixed, Cacheable, ReadWrite, 0,
++ *		0x87e0c2000000, 0x87E0C2FFFFFF, 0, 0x1000000)
++ *	})
++ * }
++ */
++
++static const struct acpi_device_id thunder_pem_reg_ids[] = {
++	{"THRX0002", 0},
++	{"", 0},
 +};
 +
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_v0 v0;
- 	struct qcom_pcie_resources_v1 v1;
-+	struct qcom_pcie_resources_v2 v2;
- };
- 
- struct qcom_pcie;
-@@ -82,7 +97,9 @@ struct qcom_pcie;
- struct qcom_pcie_ops {
- 	int (*get_resources)(struct qcom_pcie *pcie);
- 	int (*init)(struct qcom_pcie *pcie);
-+	int (*post_init)(struct qcom_pcie *pcie);
- 	void (*deinit)(struct qcom_pcie *pcie);
-+	void (*ltssm_enable)(struct qcom_pcie *pcie);
- };
- 
- struct qcom_pcie {
-@@ -116,17 +133,33 @@ static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
- 	return dw_handle_msi_irq(pp);
- }
- 
--static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
-+static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
++static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
++{
++	struct device *dev = cfg->parent;
++	struct acpi_device *adev = to_acpi_device(dev);
++	struct acpi_device *child_adev;
++	struct resource *res_pem;
++
++	res_pem = devm_kzalloc(dev, sizeof(*res_pem), GFP_KERNEL);
++	if (!res_pem) {
++		dev_err(dev, "failed to allocate PEM resource\n");
++		return NULL;
++	}
++
++	list_for_each_entry(child_adev, &adev->children, node) {
++		struct resource_entry *entry;
++		struct list_head list;
++		unsigned long flags;
++		int ret;
++
++		ret = acpi_match_device_ids(child_adev, thunder_pem_reg_ids);
++		if (ret)
++			continue;
++
++		INIT_LIST_HEAD(&list);
++		flags = IORESOURCE_MEM;
++		ret = acpi_dev_get_resources(child_adev, &list,
++					     acpi_dev_filter_resource_type_cb,
++					     (void *)flags);
++		if (ret < 0) {
++			dev_err(&child_adev->dev,
++				"failed to parse _CRS method, error code %d\n",
++				ret);
++			return NULL;
++		} else if (ret == 0) {
++			dev_err(&child_adev->dev,
++				"no memory resources present in _CRS\n");
++			return NULL;
++		}
++
++		entry = list_first_entry(&list, struct resource_entry, node);
++		*res_pem = *entry->res;
++		acpi_dev_free_resource_list(&list);
++		return res_pem;
++	}
++
++	return NULL;
++}
++#else
++static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
++{
++	return NULL;
++}
++#endif
++
+ static int thunder_pem_init(struct pci_config_window *cfg)
  {
- 	u32 val;
+ 	struct device *dev = cfg->parent;
+@@ -292,24 +371,24 @@ static int thunder_pem_init(struct pci_config_window *cfg)
+ 	struct thunder_pem_pci *pem_pci;
+ 	struct platform_device *pdev;
+ 
+-	/* Only OF support for now */
+-	if (!dev->of_node)
+-		return -EINVAL;
 -
--	if (dw_pcie_link_up(&pcie->pp))
--		return 0;
+ 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
+ 	if (!pem_pci)
+ 		return -ENOMEM;
+ 
+-	pdev = to_platform_device(dev);
 -
- 	/* enable link training */
- 	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
- 	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
- 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+}
+-	/*
+-	 * The second register range is the PEM bridge to the PCIe
+-	 * bus.  It has a different config access method than those
+-	 * devices behind the bridge.
+-	 */
+-	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (acpi_disabled) {
++		pdev = to_platform_device(dev);
 +
-+static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
-+{
-+	u32 val;
-+	/* enable link training */
-+	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
-+	val |= BIT(8);
-+	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
-+}
-+
-+static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
-+{
-+
-+	if (dw_pcie_link_up(&pcie->pp))
-+		return 0;
-+
-+	/* Enable Link Training state machine */
-+	if (pcie->ops->ltssm_enable)
-+		pcie->ops->ltssm_enable(pcie);
++		/*
++		 * The second register range is the PEM bridge to the PCIe
++		 * bus.  It has a different config access method than those
++		 * devices behind the bridge.
++		 */
++		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	} else {
++		res_pem = thunder_pem_acpi_res(cfg);
++	}
+ 	if (!res_pem) {
+-		dev_err(dev, "missing \"reg[1]\"property\n");
++		dev_err(dev, "missing configuration region\n");
+ 		return -EINVAL;
+ 	}
  
- 	return dw_pcie_wait_for_link(&pcie->pp);
- }
-@@ -421,6 +454,113 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
- 	return ret;
+@@ -332,7 +411,7 @@ static int thunder_pem_init(struct pci_config_window *cfg)
+ 	return 0;
  }
  
-+static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-+	struct device *dev = pcie->pp.dev;
-+
-+	res->aux_clk = devm_clk_get(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	res->cfg_clk = devm_clk_get(dev, "cfg");
-+	if (IS_ERR(res->cfg_clk))
-+		return PTR_ERR(res->cfg_clk);
-+
-+	res->master_clk = devm_clk_get(dev, "bus_master");
-+	if (IS_ERR(res->master_clk))
-+		return PTR_ERR(res->master_clk);
-+
-+	res->slave_clk = devm_clk_get(dev, "bus_slave");
-+	if (IS_ERR(res->slave_clk))
-+		return PTR_ERR(res->slave_clk);
-+
-+	res->pipe_clk = devm_clk_get(dev, "pipe");
-+	if (IS_ERR(res->pipe_clk))
-+		return PTR_ERR(res->pipe_clk);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-+	struct device *dev = pcie->pp.dev;
-+	u32 val;
-+	int ret;
-+
-+	ret = clk_prepare_enable(res->aux_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		return ret;
-+	}
-+
-+	ret = clk_prepare_enable(res->cfg_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable cfg clock\n");
-+		goto err_cfg_clk;
-+	}
-+
-+	ret = clk_prepare_enable(res->master_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable master clock\n");
-+		goto err_master_clk;
-+	}
-+
-+	ret = clk_prepare_enable(res->slave_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable slave clock\n");
-+		goto err_slave_clk;
-+	}
-+
-+	/* enable PCIe clocks and resets */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	/* change DBI base address */
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	/* MAC PHY_POWERDOWN MUX DISABLE  */
-+	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	val &= ~BIT(29);
-+	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	val |= BIT(4);
-+	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+	val |= BIT(31);
-+	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+
-+	return 0;
-+
-+err_slave_clk:
-+	clk_disable_unprepare(res->master_clk);
-+err_master_clk:
-+	clk_disable_unprepare(res->cfg_clk);
-+err_cfg_clk:
-+	clk_disable_unprepare(res->aux_clk);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-+	struct device *dev = pcie->pp.dev;
-+	int ret;
-+
-+	ret = clk_prepare_enable(res->pipe_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable pipe clock\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int qcom_pcie_link_up(struct pcie_port *pp)
- {
- 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-@@ -429,6 +569,17 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
- 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
- }
+-static struct pci_ecam_ops pci_thunder_pem_ops = {
++struct pci_ecam_ops pci_thunder_pem_ops = {
+ 	.bus_shift	= 24,
+ 	.init		= thunder_pem_init,
+ 	.pci_ops	= {
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index f5740b7..3f2a98f 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -58,6 +58,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			       int where);
+ /* default ECAM ops */
+ extern struct pci_ecam_ops pci_generic_ecam_ops;
++/* ECAM ops for known quirks */
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++extern struct pci_ecam_ops pci_thunder_pem_ops;
++#endif
  
-+static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-+
-+	clk_disable_unprepare(res->pipe_clk);
-+	clk_disable_unprepare(res->slave_clk);
-+	clk_disable_unprepare(res->master_clk);
-+	clk_disable_unprepare(res->cfg_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+}
-+
- static void qcom_pcie_host_init(struct pcie_port *pp)
- {
- 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-@@ -444,6 +595,9 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		goto err_deinit;
- 
-+	if (pcie->ops->post_init)
-+		pcie->ops->post_init(pcie);
-+
- 	dw_pcie_setup_rc(pp);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
-@@ -487,12 +641,22 @@ static const struct qcom_pcie_ops ops_v0 = {
- 	.get_resources = qcom_pcie_get_resources_v0,
- 	.init = qcom_pcie_init_v0,
- 	.deinit = qcom_pcie_deinit_v0,
-+	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
- };
- 
- static const struct qcom_pcie_ops ops_v1 = {
- 	.get_resources = qcom_pcie_get_resources_v1,
- 	.init = qcom_pcie_init_v1,
- 	.deinit = qcom_pcie_deinit_v1,
-+	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
-+};
-+
-+static const struct qcom_pcie_ops ops_v2 = {
-+	.get_resources = qcom_pcie_get_resources_v2,
-+	.init = qcom_pcie_init_v2,
-+	.post_init = qcom_pcie_post_init_v2,
-+	.deinit = qcom_pcie_deinit_v2,
-+	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
- };
- 
- static int qcom_pcie_probe(struct platform_device *pdev)
-@@ -572,6 +736,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
- 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
- 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
-+	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
- 	{ }
- };
- 
+ /* ops for buggy ECAM that supports only 32-bit accesses */
+ extern struct pci_ecam_ops pci_32b_ops;
 -- 
-2.10.1
-
+2.7.4
