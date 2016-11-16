@@ -1,182 +1,263 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54388 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:55476 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933841AbcKNWfM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 17:35:12 -0500
-Date: Mon, 14 Nov 2016 16:35:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Noa Osherovich <noaos@mellanox.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, majd@mellanox.com
-Subject: Re: [PATCH 3/4] PCI: Add checks to mellanox_check_broken_intx_masking
-Message-ID: <20161114223508.GK9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
- <1479046901-25360-4-git-send-email-noaos@mellanox.com>
- <20161114001535.GB14481@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161114001535.GB14481@gwshan>
+        id S934130AbcKPP3N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Nov 2016 10:29:13 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 11/16] drivers: iommu: arm-smmu-v3: add IORT configuration
+Date: Wed, 16 Nov 2016 15:29:31 +0000
+Message-Id: <20161116152936.22955-12-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 14, 2016 at 11:15:35AM +1100, Gavin Shan wrote:
-> On Sun, Nov 13, 2016 at 04:21:41PM +0200, Noa Osherovich wrote:
-> >Mellanox devices were marked as having INTx masking ability broken.
-> >As a result, the VFIO driver fails to start when more than one device
-> >function is passed-through to a VM if both have the same INTx pin.
-> >
-> >Prior to Connect-IB, Mellanox devices exposed to the operating system
-> >one PCI function per all ports.
-> >Starting from Connect-IB, the devices are function-per-port. When
-> >passing the second function to a VM, VFIO will fail to start.
-> >
-> >Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of
-> >Mellanox devices marked as having broken INTx masking:
-> >
-> >- ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
-> >  masking is supported, we unmark the broken INTx masking.
-> >- Connect-IB does not support INTx currently so will not cause any
-> >  problem.
-> >
-> >Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
-> >Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-> >Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
-> 
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> With below comments addressed:
+In ACPI bases systems, in order to be able to create platform
+devices and initialize them for ARM SMMU v3 components, the IORT
+kernel implementation requires a set of static functions to be
+used by the IORT kernel layer to configure platform devices for
+ARM SMMU v3 components.
 
-Noa, would you mind refreshing this to address Gavin's comments?
-I don't want to risk doing it myself and breaking something.
+Add static configuration functions to the IORT kernel layer for
+the ARM SMMU v3 components, so that the ARM SMMU v3 driver can
+initialize its respective platform device by relying on the IORT
+kernel infrastructure and by adding a corresponding ACPI device
+early probe section entry.
 
-> >---
-> > drivers/pci/quirks.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++------
-> > 1 file changed, 55 insertions(+), 6 deletions(-)
-> >
-> >diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >index d3977c847e1f..cbd6776e70e6 100644
-> >--- a/drivers/pci/quirks.c
-> >+++ b/drivers/pci/quirks.c
-> >@@ -3192,21 +3192,70 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
-> > };
-> >
-> >+#define CONNECTX_4_CURR_MAX_MINOR 99
-> >+#define CONNECTX_4_INTX_SUPPORT_MINOR 14
-> >+
-> >+/*
-> >+ * Checking ConnectX-4/LX FW version to see if it supports legacy interrupts.
-> >+ * If so, don't mark it as broken.
-> >+ * FW minor > 99 means older FW version format and no INTx masking support.
-> >+ * FW minor < 14 means new FW version format and no INTx masking support.
-> >+ */
-> > static void mellanox_check_broken_intx_masking(struct pci_dev *dev)
-> > {
-> >+	__be32 __iomem *fw_ver;
-> >+	u16 fw_major;
-> >+	u16 fw_minor;
-> >+	u16 fw_subminor;
-> >+	u32 fw_maj_min;
-> >+	u32 fw_sub_min;
-> > 	int i;
-> >
-> >+	dev->broken_intx_masking = 1;
-> >+
-> > 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
-> >-		if (dev->device == mellanox_broken_intx_devs[i]) {
-> >-			dev->broken_intx_masking = 1;
-> >+		if (dev->device == mellanox_broken_intx_devs[i])
-> > 			return;
-> >-		}
-> > 	}
-> >+
-> >+	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
-> >+	 * support so shouldn't be checked further
-> >+	 */
-> >+	if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB) {
-> >+		dev->broken_intx_masking = 0;
-> >+		return;
-> >+	}
-> >+
-> >+	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
-> >+	if (pci_enable_device_mem(dev)) {
-> >+		dev_warn(&dev->dev, "Can't enable device memory\n");
-> >+		return;
-> >+	}
-> 
-> It might be safer to set @broken_intx_masking in the failing path. On the
-> following exit or failing path, the device needs to be disabled with function
-> pci_disable_device(). Otherwise, &dev->enable_cnt, tracking if the device is
-> enabled or not, will be unbalanced.
-> 
-> >+
-> >+	/* Convert from PCI bus to resource space. */
-> >+	fw_ver = ioremap(pci_resource_start(dev, 0), 4);
-> >+	if (!fw_ver) {
-> >+		dev_warn(&dev->dev, "Can't map ConnectX-4 initialization segment\n");
-> >+		return;
-> >+	}
-> >+
-> >+	/* Reading from resource space should be 32b aligned */
-> >+	fw_maj_min = ioread32be(fw_ver);
-> >+	fw_sub_min = ioread32be(fw_ver + 1);
-> >+	fw_major = fw_maj_min & 0xffff;
-> >+	fw_minor = fw_maj_min >> 16;
-> >+	fw_subminor = fw_sub_min & 0xffff;
-> >+	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
-> >+	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR)
-> >+		dev_warn(&dev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
-> >+			 fw_major, fw_minor, fw_subminor, dev->device ==
-> >+			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
-> >+	else
-> >+		dev->broken_intx_masking = 0;
-> >+
-> >+	iounmap(fw_ver);
-> > }
-> 
-> Noa, it doesn't look quite correct: when a device ID doesn't match with
-> anyone in the list, CONNECTIB, CONNECT4 or CONNECTX4_LX. The code goes
-> though as it's CONNECT4 or CONNECT4_LX. The firmware version retrieved
-> from MMIO register (BAR 0, offset 0/4) are checked. I don't think it's
-> assured that the registers are for firmware version on the device. It
-> seems you need more checks here: @broken_intx_masking is untouched and
-> kept as 0 by default when the device ID isn't in the intrest list, which
-> is the policy you introduced in PATCH[2/3]. Something like below would
-> work:
-> 
-> static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
-> {
->      /*
->       * Set @broken_intx_masking to 1 when device ID matches with
->       * anyone in the list. No code change to PATCH[2/3] is needed.
->       */
->      if (pdev->device in mellanox_broken_intx_devs) {
->          pdev->broken_intx_masking = 1;
->          return;
->      }
-> 
->      if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
->          return;
-> 
->      if (dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
->          dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LE)
->          return;
-> 
->      /* Check firmware version on CONNECT4 or CONNECT4_LE */
-> }
-> 
-> >
-> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-> 
-> Thanks,
-> Gavin
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/acpi/arm64/iort.c   | 103 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/iommu/arm-smmu-v3.c |  49 ++++++++++++++++++++-
+ 2 files changed, 150 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index ddf83b5..fd52e4c 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -459,6 +459,95 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+ }
+ 
++static void __init acpi_iort_register_irq(int hwirq, const char *name,
++					  int trigger,
++					  struct resource *res)
++{
++	int irq = acpi_register_gsi(NULL, hwirq, trigger,
++				    ACPI_ACTIVE_HIGH);
++
++	if (irq <= 0) {
++		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
++								      name);
++		return;
++	}
++
++	res->start = irq;
++	res->end = irq;
++	res->flags = IORESOURCE_IRQ;
++	res->name = name;
++}
++
++static int __init arm_smmu_v3_count_resources(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	/* Always present mem resource */
++	int num_res = 1;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (smmu->event_gsiv)
++		num_res++;
++
++	if (smmu->pri_gsiv)
++		num_res++;
++
++	if (smmu->gerr_gsiv)
++		num_res++;
++
++	if (smmu->sync_gsiv)
++		num_res++;
++
++	return num_res;
++}
++
++static void __init arm_smmu_v3_init_resources(struct resource *res,
++					      struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	int num_res = 0;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	res[num_res].start = smmu->base_address;
++	res[num_res].end = smmu->base_address + SZ_128K - 1;
++	res[num_res].flags = IORESOURCE_MEM;
++
++	num_res++;
++
++	if (smmu->event_gsiv)
++		acpi_iort_register_irq(smmu->event_gsiv, "eventq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->pri_gsiv)
++		acpi_iort_register_irq(smmu->pri_gsiv, "priq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->gerr_gsiv)
++		acpi_iort_register_irq(smmu->gerr_gsiv, "gerror",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->sync_gsiv)
++		acpi_iort_register_irq(smmu->sync_gsiv, "cmdq-sync",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++}
++
++static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
++}
++
+ struct iort_iommu_config {
+ 	const char *name;
+ 	int (*iommu_init)(struct acpi_iort_node *node);
+@@ -468,10 +557,22 @@ struct iort_iommu_config {
+ 				     struct acpi_iort_node *node);
+ };
+ 
++static const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
++	.name = "arm-smmu-v3",
++	.iommu_is_coherent = arm_smmu_v3_is_coherent,
++	.iommu_count_resources = arm_smmu_v3_count_resources,
++	.iommu_init_resources = arm_smmu_v3_init_resources
++};
++
+ static __init
+ const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
+ {
+-	return NULL;
++	switch (node->type) {
++	case ACPI_IORT_NODE_SMMU_V3:
++		return &iort_arm_smmu_v3_cfg;
++	default:
++		return NULL;
++	}
+ }
+ 
+ /**
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index ed563307..9315bf3 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -20,6 +20,8 @@
+  * This driver is powered by bad coffee and bombay mix.
+  */
+ 
++#include <linux/acpi.h>
++#include <linux/acpi_iort.h>
+ #include <linux/delay.h>
+ #include <linux/dma-iommu.h>
+ #include <linux/err.h>
+@@ -2559,6 +2561,36 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++				      struct arm_smmu_device *smmu,
++				      bool *bypass)
++{
++	struct acpi_iort_smmu_v3 *iort_smmu;
++	struct device *dev = smmu->dev;
++	struct acpi_iort_node *node;
++
++	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
++
++	/* Retrieve SMMUv3 specific data */
++	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
++	*bypass = false;
++
++	return 0;
++}
++#else
++static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++					     struct arm_smmu_device *smmu,
++					     bool *bypass)
++{
++	return -ENODEV;
++}
++#endif
++
+ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
+ 				    struct arm_smmu_device *smmu,
+ 				    bool *bypass)
+@@ -2626,7 +2658,11 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	if (irq > 0)
+ 		smmu->gerr_irq = irq;
+ 
+-	ret = arm_smmu_device_dt_probe(pdev, smmu, &bypass);
++	if (dev->of_node)
++		ret = arm_smmu_device_dt_probe(pdev, smmu, &bypass);
++	else
++		ret = arm_smmu_device_acpi_probe(pdev, smmu, &bypass);
++
+ 	if (ret)
+ 		return ret;
+ 
+@@ -2731,6 +2767,17 @@ static int __init arm_smmu_of_init(struct device_node *np)
+ }
+ IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+ 
++#ifdef CONFIG_ACPI
++static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
++{
++	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
++		return arm_smmu_init();
++
++	return 0;
++}
++IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
++#endif
++
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+ MODULE_LICENSE("GPL v2");
+-- 
+2.10.0
+
