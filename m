@@ -1,82 +1,209 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:35959 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755788AbcKWVLe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 16:11:34 -0500
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
-Date: Wed, 23 Nov 2016 14:11:29 -0700
-MIME-Version: 1.0
-In-Reply-To: <20161123203332.GA15062@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 00/16] ACPI IORT ARM SMMU support
+Date: Wed, 16 Nov 2016 15:29:20 +0000
+Message-Id: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch series is v8 of a previous posting:
 
+https://lkml.org/lkml/2016/11/9/422
 
-On 23/11/16 01:33 PM, Jason Gunthorpe wrote:
-> On Wed, Nov 23, 2016 at 02:58:38PM -0500, Serguei Sagalovitch wrote:
-> 
->>    We do not want to have "highly" dynamic translation due to
->>    performance cost.  We need to support "overcommit" but would
->>    like to minimize impact.  To support RDMA MRs for GPU/VRAM/PCIe
->>    device memory (which is must) we need either globally force
->>    pinning for the scope of "get_user_pages() / "put_pages" or have
->>    special handling for RDMA MRs and similar cases.
-> 
-> As I said, there is no possible special handling. Standard IB hardware
-> does not support changing the DMA address once a MR is created. Forget
-> about doing that.
+v7 -> v8
+	- Renamed fwnode iommu_ops registration API according to review
+	- Minor change in ARM SMMU driver DT/ACPI split
+	- Added review tags
 
-Yeah, that's essentially the point I was trying to make. Not to mention
-all the other unrelated hardware that can't DMA to an address that might
-disappear mid-transfer.
+v6 -> v7
+	- Rebased against v4.9-rc4
+	- Fixed IORT probing on ACPI systems with missing IORT table
+	- Fixed SMMUv1/v2 global interrupt detection
+	- Updated iommu_ops firmware look-up
 
-> Only ODP hardware allows changing the DMA address on the fly, and it
-> works at the page table level. We do not need special handling for
-> RDMA.
+v5 -> v6
+	- Rebased against v4.9-rc1
+	- Changed FWNODE_IOMMU to FWNODE_ACPI_STATIC
+	- Moved platform devices creation into IORT code
+	- Updated fwnode handling
+	- Added default dma masks initialization
 
-I am aware of ODP but, noted by others, it doesn't provide a general
-solution to the points above.
+v4 -> v5
+	- Added SMMUv1/v2 support
+	- Rebased against v4.8-rc5 and dependencies series
+	- Consolidated IORT platform devices creation
 
-> Like I said, this is the direction the industry seems to be moving in,
-> so any solution here should focus on VMAs/page tables as the way to link
-> the peer-peer devices.
+v3 -> v4
+	- Added single mapping API (for IORT named components)
+	- Fixed arm_smmu_iort_xlate() return value
+	- Reworked fwnode registration and platform device creation
+	  ordering to fix probe ordering dependencies
+	- Added code to keep device_node ref count with new iommu
+	  fwspec API
+	- Added patch to make iommu_fwspec arch agnostic
+	- Dropped RFC status
+	- Rebased against v4.8-rc2
 
-Yes, this was the appeal to us of using ZONE_DEVICE.
+v2 -> v3
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
+	- Added back reliance on ACPI early probing infrastructure
+	- Patch[1-3] merged through other dependent series
+	- Added back IOMMU fwnode generalization
+	- Move SMMU v3 static functions configuration to IORT code
+	- Implemented generic IOMMU fwspec API
+	- Added code to implement fwnode platform device look-up
 
-> To me this means at least items #1 and #3 should be removed from
-> Alexander's list.
+v1 -> v2:
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
+	- Removed IOMMU fwnode generalization
+	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
+	  owing to patch series dependencies [1]
+	- Moved platform device creation logic to IORT code to
+	  generalize its usage for ARM SMMU v1-v2-v3 components
+	- Removed reliance on ACPI early device probing
+	- Created IORT specific iommu_xlate() translation hook leaving
+	  OF code unchanged according to v1 reviews
 
-It's also worth noting that #4 makes use of ZONE_DEVICE (#2) so they are
-really the same option. iopmem is really just one way to get BAR
-addresses to user-space while inside the kernel it's ZONE_DEVICE.
+The ACPI IORT table provides information that allows instantiating
+ARM SMMU devices and carrying out id mappings between components on
+ARM based systems (devices, IOMMUs, interrupt controllers).
 
-Logan
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+
+Building on basic IORT support, this patchset enables ARM SMMUs support
+on ACPI systems.
+
+Most of the code is aimed at building the required generic ACPI
+infrastructure to create and enable IOMMU components and to bring
+the IOMMU infrastructure for ACPI on par with DT, which is going to
+make future ARM SMMU components easier to integrate.
+
+PATCH (1) adds a FWNODE_ACPI_STATIC type to the struct fwnode_handle type.
+          It is required to attach a fwnode identifier to platform
+          devices allocated/detected through static ACPI table entries
+          (ie IORT tables entries).
+          IOMMU devices have to have an identifier to look them up
+          eg IOMMU core layer carrying out id translation. This can be
+          done through a fwnode_handle (ie IOMMU platform devices created
+          out of IORT tables are not ACPI devices hence they can't be
+          allocated as such, otherwise they would have a fwnode_handle of
+          type FWNODE_ACPI).
+
+PATCH (2) makes use of the ACPI early probing API to add a linker script
+          section for probing devices via IORT ACPI kernel code.
+
+PATCH (3) provides IORT support for registering IOMMU IORT node through
+          their fwnode handle.
+
+PATCH (4) make of_iommu_{set/get}_ops() functions DT agnostic and
+          rename the registration API.
+
+PATCH (5) convert ARM SMMU driver to use fwnode instead of of_node as
+          look-up and iommu_ops retrieval token.
+
+PATCH (6) convert ARM SMMU v3 driver to use fwnode instead of of_node as
+          look-up and iommu_ops retrieval token.
+
+PATCH (7) implements the of_dma_configure() API in ACPI world -
+          acpi_dma_configure() - and patches PCI and ACPI core code to
+          start making use of it.
+
+PATCH (8) provides an IORT function to detect existence of specific type
+          of IORT components.
+
+PATCH (9) creates the kernel infrastructure required to create ARM SMMU
+          platform devices for IORT nodes.
+
+PATCH (10) refactors the ARM SMMU v3 driver so that the init functions are
+           split in a way that groups together code that probes through DT
+           and code that carries out HW registers FW agnostic probing, in
+           preparation for adding the ACPI probing path.
+
+PATCH (11) adds ARM SMMU v3 IORT IOMMU operations to create and probe
+           ARM SMMU v3 components.
+
+PATCH (12) refactors the ARM SMMU v1/v2 driver so that the init functions
+           are split in a way that groups together code that probes
+           through DT and code that carries out HW registers FW agnostic
+           probing, in preparation for adding the ACPI probing path.
+
+PATCH (13) adds ARM SMMU v1/v2 IORT IOMMU operations to create and
+           probe ARM SMMU v1/v2 components.
+
+PATCH (14) Extend the IORT iort_node_map_rid() to work on a type mask
+           instead of a single type so that the translation API can
+           be used on a range of components.
+
+PATCH (15) Add IORT API to carry out id mappings for components that do
+           do not have an input identifier/RIDs (ie named components).
+
+PATCH (16) provides IORT infrastructure to carry out IOMMU configuration
+           for devices and hook it up to the previously introduced ACPI
+           DMA configure API.
+
+This patchset is provided for review/testing purposes here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v8
+
+Tested on Juno and FVP models for ARM SMMU v1 and v3 probing path.
+
+Lorenzo Pieralisi (16):
+  drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
+  drivers: acpi: iort: introduce linker section for IORT entries probing
+  drivers: acpi: iort: add support for IOMMU fwnode registration
+  drivers: iommu: make of_iommu_set/get_ops() DT agnostic
+  drivers: iommu: arm-smmu: convert struct device of_node to fwnode
+    usage
+  drivers: iommu: arm-smmu-v3: convert struct device of_node to fwnode
+    usage
+  drivers: acpi: implement acpi_dma_configure
+  drivers: acpi: iort: add node match function
+  drivers: acpi: iort: add support for ARM SMMU platform devices
+    creation
+  drivers: iommu: arm-smmu-v3: split probe functions into DT/generic
+    portions
+  drivers: iommu: arm-smmu-v3: add IORT configuration
+  drivers: iommu: arm-smmu: split probe functions into DT/generic
+    portions
+  drivers: iommu: arm-smmu: add IORT configuration
+  drivers: acpi: iort: replace rid map type with type mask
+  drivers: acpi: iort: add single mapping function
+  drivers: acpi: iort: introduce iort_iommu_configure
+
+ drivers/acpi/arm64/iort.c         | 595 +++++++++++++++++++++++++++++++++++++-
+ drivers/acpi/glue.c               |   4 +-
+ drivers/acpi/scan.c               |  45 +++
+ drivers/iommu/arm-smmu-v3.c       | 105 +++++--
+ drivers/iommu/arm-smmu.c          | 154 ++++++++--
+ drivers/iommu/iommu.c             |  40 +++
+ drivers/iommu/of_iommu.c          |  39 ---
+ drivers/pci/probe.c               |   3 +-
+ include/acpi/acpi_bus.h           |   2 +
+ include/asm-generic/vmlinux.lds.h |   1 +
+ include/linux/acpi.h              |  26 ++
+ include/linux/acpi_iort.h         |  14 +
+ include/linux/fwnode.h            |   3 +-
+ include/linux/iommu.h             |  14 +
+ include/linux/of_iommu.h          |  12 +-
+ 15 files changed, 953 insertions(+), 104 deletions(-)
+
+-- 
+2.10.0
+
