@@ -1,97 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:43552 "EHLO mga06.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:55700 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753196AbcKIMVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 07:21:07 -0500
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v9 6/8] thunderbolt: Kconfig for Thunderbolt Networking
-Date: Wed,  9 Nov 2016 16:20:06 +0200
-Message-Id: <1478701208-4585-7-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+        id S1753175AbcKPWS3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Nov 2016 17:18:29 -0500
+Date: Wed, 16 Nov 2016 16:18:25 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, pratyush.anand@gmail.com,
+        CARLOS.PALMINHA@synopsys.com, Jose.Abreu@synopsys.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] pci: pcie-designware: Change Maintenance
+Message-ID: <20161116221825.GA16042@bhelgaas-glaptop.roam.corp.google.com>
+References: <c4b8fcc50069ce8ea2091100e52a68dcc30e1021.1479224720.git.jpinto@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c4b8fcc50069ce8ea2091100e52a68dcc30e1021.1479224720.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update to the Kconfig Thunderbolt description to add
-Thunderbolt networking as an option.
-The menu item "Thunderbolt support" now offers:
-"Apple Hardware Support" (existing)
-        and/or
-"Thunderbolt Networking" (new)
+On Tue, Nov 15, 2016 at 04:10:46PM +0000, Joao Pinto wrote:
+> I accepted the invitation from Pratyush to replace him in the
+> pcie-designware maintenance. This patch makes the maintainer replacement
+> and symplifies a bit the pcie-designware* maintenance structure.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Jose Abreu <Jose.Abreu@synopsys.com>
 
-You can choose the driver for your platform or build both drivers -
-each driver will detect if it can run on the specific platform.
-If the Thunderbolt Networking option is chosen, Thunderbolt Networking
-will be enabled between Linux non-Apple systems, macOS and
-Windows based systems.
-Thunderbolt Networking will not affect any other Thunderbolt feature that
-was previous available to Linux users on either Apple or
-non-Apple platforms.
+I applied both of these to for-linus for v4.9, thanks, Joao!
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  3 ++-
- 2 files changed, 25 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..376e5bb 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,32 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt Networking"
-+	help
-+	  This driver is required if you want Thunderbolt Networking on
-+	  non-Apple hardware.
-+	  It creates a virtual Ethernet device that enables computer to
-+	  computer communication over a Thunderbolt cable.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..b6aa6a3 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,4 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
-+obj-${CONFIG_THUNDERBOLT_ICM} += icm/
--- 
-2.7.4
-
+> ---
+>  MAINTAINERS | 10 ++--------
+>  1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index aefa6bf..2c64d7c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9293,17 +9293,11 @@ F:	drivers/pci/host/pci-exynos.c
+>  
+>  PCI DRIVER FOR SYNOPSIS DESIGNWARE
+>  M:	Jingoo Han <jingoohan1@gmail.com>
+> -M:	Pratyush Anand <pratyush.anand@gmail.com>
+> -L:	linux-pci@vger.kernel.org
+> -S:	Maintained
+> -F:	drivers/pci/host/*designware*
+> -
+> -PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
+> -M:	Jose Abreu <Jose.Abreu@synopsys.com>
+> +M:	Joao Pinto <Joao.Pinto@synopsys.com>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+> -F:	drivers/pci/host/pcie-designware-plat.c
+> +F:	drivers/pci/host/*designware*
+>  
+>  PCI DRIVER FOR GENERIC OF HOSTS
+>  M:	Will Deacon <will.deacon@arm.com>
+> -- 
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
