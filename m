@@ -1,192 +1,182 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in irq_create_affinity_masks()
-Date: Tue,  8 Nov 2016 17:15:03 -0800
-Message-Id: <1478654107-7384-4-git-send-email-hch@lst.de>
-In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
-References: <1478654107-7384-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 12/16] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
+Date: Wed, 16 Nov 2016 15:29:32 +0000
+Message-Id: <20161116152936.22955-13-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only calculate the affinity for the main I/O vectors, and skip the
-pre or post vectors specified by struct irq_affinity.
+Current ARM SMMU probe functions intermingle HW and DT probing
+in the initialization functions to detect and programme the ARM SMMU
+driver features. In order to allow probing the ARM SMMU with other
+firmwares than DT, this patch splits the ARM SMMU init functions into
+DT and HW specific portions so that other FW interfaces (ie ACPI) can
+reuse the HW probing functions and skip the DT portion accordingly.
 
-Also remove the irq_affinity cpumask argument that has never been used.
-If we ever need it in the future we can pass it through struct
-irq_affinity.
+This patch implements no functional change, only code reshuffling.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/pci/msi.c         |  6 ++++--
- include/linux/interrupt.h |  4 ++--
- kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
- 3 files changed, 31 insertions(+), 25 deletions(-)
+ drivers/iommu/arm-smmu.c | 62 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index dad2da7..f4a108b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -553,12 +553,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- static struct msi_desc *
- msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
- {
-+	static const struct irq_affinity default_affd;
- 	struct cpumask *masks = NULL;
- 	struct msi_desc *entry;
- 	u16 control;
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 339a8d3..573b2b6 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1668,7 +1668,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 	unsigned long size;
+ 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
+ 	u32 id;
+-	bool cttw_dt, cttw_reg;
++	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
+ 	int i;
  
- 	if (affinity) {
--		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-+		masks = irq_create_affinity_masks(nvec, &default_affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -692,12 +693,13 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			      struct msix_entry *entries, int nvec,
- 			      bool affinity)
- {
-+	static const struct irq_affinity default_affd;
- 	struct cpumask *curmsk, *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret, i;
- 
- 	if (affinity) {
--		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-+		masks = irq_create_affinity_masks(nvec, &default_affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 9081f23b..53144e7 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -290,7 +290,7 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
- extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
--struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity, int nvec);
-+struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
- int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
- 
- #else /* CONFIG_SMP */
-@@ -325,7 +325,7 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
- }
- 
- static inline struct cpumask *
--irq_create_affinity_masks(const struct cpumask *affinity, int nvec)
-+irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
- {
- 	return NULL;
- }
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 8d92597..17360bd 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -51,16 +51,16 @@ static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
- 
- /**
-  * irq_create_affinity_masks - Create affinity masks for multiqueue spreading
-- * @affinity:		The affinity mask to spread. If NULL cpu_online_mask
-- *			is used
-- * @nvecs:		The number of vectors
-+ * @nvecs:	The total number of vectors
-+ * @affd:	Description of the affinity requirements
-  *
-  * Returns the masks pointer or NULL if allocation failed.
-  */
--struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
--					  int nvec)
-+struct cpumask *
-+irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
- {
--	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec = 0;
-+	int n, nodes, vecs_per_node, cpus_per_vec, extra_vecs, curvec;
-+	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
- 	nodemask_t nodemsk = NODE_MASK_NONE;
- 	struct cpumask *masks;
- 	cpumask_var_t nmsk;
-@@ -68,46 +68,46 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
- 		return NULL;
- 
--	masks = kzalloc(nvec * sizeof(*masks), GFP_KERNEL);
-+	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
- 	if (!masks)
- 		goto out;
- 
-+	/* Fill out vectors at the beginning that don't need affinity */
-+	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
-+		cpumask_copy(masks + curvec, cpu_possible_mask);
-+
- 	/* Stabilize the cpumasks */
- 	get_online_cpus();
--	/* If the supplied affinity mask is NULL, use cpu online mask */
--	if (!affinity)
--		affinity = cpu_online_mask;
--
--	nodes = get_nodes_in_cpumask(affinity, &nodemsk);
-+	nodes = get_nodes_in_cpumask(cpu_online_mask, &nodemsk);
+ 	dev_notice(smmu->dev, "probing hardware configuration...\n");
+@@ -1713,20 +1713,17 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
  
  	/*
- 	 * If the number of nodes in the mask is less than or equal the
- 	 * number of vectors we just spread the vectors across the nodes.
+ 	 * In order for DMA API calls to work properly, we must defer to what
+-	 * the DT says about coherency, regardless of what the hardware claims.
++	 * the FW says about coherency, regardless of what the hardware claims.
+ 	 * Fortunately, this also opens up a workaround for systems where the
+ 	 * ID register value has ended up configured incorrectly.
  	 */
--	if (nvec <= nodes) {
-+	if (affv <= nodes) {
- 		for_each_node_mask(n, nodemsk) {
- 			cpumask_copy(masks + curvec, cpumask_of_node(n));
--			if (++curvec == nvec)
-+			if (++curvec == affv)
- 				break;
- 		}
--		goto outonl;
-+		goto done;
- 	}
+-	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
+ 	cttw_reg = !!(id & ID0_CTTW);
+-	if (cttw_dt)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+-	if (cttw_dt || cttw_reg)
++	if (cttw_fw || cttw_reg)
+ 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
+-			   cttw_dt ? "" : "non-");
+-	if (cttw_dt != cttw_reg)
++			   cttw_fw ? "" : "non-");
++	if (cttw_fw != cttw_reg)
+ 		dev_notice(smmu->dev,
+-			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
++			   "\t(IDR0.CTTW overridden by FW configuration)\n");
  
- 	/* Spread the vectors per node */
--	vecs_per_node = nvec / nodes;
-+	vecs_per_node = affv / nodes;
- 	/* Account for rounding errors */
--	extra_vecs = nvec - (nodes * vecs_per_node);
-+	extra_vecs = affv - (nodes * vecs_per_node);
+ 	/* Max. number of entries we have for stream matching/indexing */
+ 	size = 1 << ((id >> ID0_NUMSIDB_SHIFT) & ID0_NUMSIDB_MASK);
+@@ -1907,15 +1904,25 @@ static const struct of_device_id arm_smmu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
  
- 	for_each_node_mask(n, nodemsk) {
- 		int ncpus, v, vecs_to_assign = vecs_per_node;
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
+ {
+ 	const struct arm_smmu_match_data *data;
+-	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+-	int num_irqs, i, err;
+ 	bool legacy_binding;
  
- 		/* Get the cpus on this node which are in the mask */
--		cpumask_and(nmsk, affinity, cpumask_of_node(n));
-+		cpumask_and(nmsk, cpu_online_mask, cpumask_of_node(n));
- 
- 		/* Calculate the number of cpus per vector */
- 		ncpus = cpumask_weight(nmsk);
- 
--		for (v = 0; curvec < nvec && v < vecs_to_assign; curvec++, v++) {
-+		for (v = 0; curvec < affv && v < vecs_to_assign; curvec++, v++) {
- 			cpus_per_vec = ncpus / vecs_to_assign;
- 
- 			/* Account for extra vectors to compensate rounding errors */
-@@ -119,12 +119,16 @@ struct cpumask *irq_create_affinity_masks(const struct cpumask *affinity,
- 			irq_spread_init_one(masks + curvec, nmsk, cpus_per_vec);
- 		}
- 
--		if (curvec >= nvec)
-+		if (curvec >= affv)
- 			break;
- 	}
- 
--outonl:
-+done:
- 	put_online_cpus();
++	if (of_property_read_u32(dev->of_node, "#global-interrupts",
++				 &smmu->num_global_irqs)) {
++		dev_err(dev, "missing #global-interrupts property\n");
++		return -ENODEV;
++	}
 +
-+	/* Fill out vectors at the end that don't need affinity */
-+	for (; curvec < nvecs; curvec++)
-+		cpumask_copy(masks + curvec, cpu_possible_mask);
- out:
- 	free_cpumask_var(nmsk);
- 	return masks;
++	data = of_device_get_match_data(dev);
++	smmu->version = data->version;
++	smmu->model = data->model;
++
++	parse_driver_options(smmu);
++
+ 	legacy_binding = of_find_property(dev->of_node, "mmu-masters", NULL);
+ 	if (legacy_binding && !using_generic_binding) {
+ 		if (!using_legacy_binding)
+@@ -1928,6 +1935,19 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
++	if (of_dma_is_coherent(dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	int num_irqs, i, err;
++
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+ 		dev_err(dev, "failed to allocate arm_smmu_device\n");
+@@ -1935,9 +1955,9 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	}
+ 	smmu->dev = dev;
+ 
+-	data = of_device_get_match_data(dev);
+-	smmu->version = data->version;
+-	smmu->model = data->model;
++	err = arm_smmu_device_dt_probe(pdev, smmu);
++	if (err)
++		return err;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	smmu->base = devm_ioremap_resource(dev, res);
+@@ -1945,12 +1965,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return PTR_ERR(smmu->base);
+ 	smmu->size = resource_size(res);
+ 
+-	if (of_property_read_u32(dev->of_node, "#global-interrupts",
+-				 &smmu->num_global_irqs)) {
+-		dev_err(dev, "missing #global-interrupts property\n");
+-		return -ENODEV;
+-	}
+-
+ 	num_irqs = 0;
+ 	while ((res = platform_get_resource(pdev, IORESOURCE_IRQ, num_irqs))) {
+ 		num_irqs++;
+@@ -1985,8 +1999,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	parse_driver_options(smmu);
+-
+ 	if (smmu->version == ARM_SMMU_V2 &&
+ 	    smmu->num_context_banks != smmu->num_context_irqs) {
+ 		dev_err(dev,
+@@ -2048,7 +2060,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
 -- 
-2.1.4
+2.10.0
+
