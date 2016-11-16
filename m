@@ -1,89 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v8 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
-Date: Wed, 16 Nov 2016 15:29:25 +0000
-Message-Id: <20161116152936.22955-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35021 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752679AbcKPPJB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2016 10:09:01 -0500
+Date: Wed, 16 Nov 2016 09:08:58 -0600
+From: Rob Herring <robh@kernel.org>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: qcom: add support to msm8996 PCIE controller
+Message-ID: <20161116150858.343voujjg4p2zdhn@rob-hp-laptop>
+References: <1479219837-7868-1-git-send-email-srinivas.kandagatla@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479219837-7868-1-git-send-email-srinivas.kandagatla@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMU driver rely on the struct device.of_node pointer for
-device look-up and iommu_ops retrieval.
+On Tue, Nov 15, 2016 at 02:23:57PM +0000, Srinivas Kandagatla wrote:
+> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
 
-In preparation for ACPI probing enablement, convert the driver to use
-the struct device.fwnode member for device and iommu_ops look-up so that
-the driver infrastructure can be used also on systems that do not
-associate an of_node pointer to a struct device (eg ACPI), making the
-device look-up and iommu_ops retrieval firmware agnostic.
+s/pcie/PCIe/
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/arm-smmu.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+> 
+> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 8f72814..339a8d3 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
- 
- static int arm_smmu_match_node(struct device *dev, void *data)
- {
--	return dev->of_node == data;
-+	return dev->fwnode == data;
- }
- 
--static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
-+static
-+struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
- {
- 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
--						np, arm_smmu_match_node);
-+						fwnode, arm_smmu_match_node);
- 	put_device(dev);
- 	return dev ? dev_get_drvdata(dev) : NULL;
- }
-@@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
- 		if (ret)
- 			goto out_free;
- 	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
--		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
-+		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
- 	} else {
- 		return -ENODEV;
- 	}
-@@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
-+	iommu_register_instance(dev->fwnode, &arm_smmu_ops);
- 	platform_set_drvdata(pdev, smmu);
- 	arm_smmu_device_reset(smmu);
- 
--- 
-2.10.0
+s/pcie/PCIe/
+
+> pipe clocks are only setup after the phy is powered on.
+> It also adds ltssm_enable callback as it is very much different to other
+> supported SOCs in the driver.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> ---
+> 
+>  Changes since v4:
+>  	- removed duplicate define spotted by Stan.
+> 	- renamed halt register to remove msm8996 suggested by Stan.
+> 	- dropped simple-pm-bus and runtime pm patches as these can
+> 	 potentially go into pm domain provider.
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
+>  drivers/pci/host/pcie-qcom.c                       | 175 ++++++++++++++++++++-
+>  2 files changed, 236 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 4059a6f..141d8c3 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -7,6 +7,7 @@
+>  			- "qcom,pcie-ipq8064" for ipq8064
+>  			- "qcom,pcie-apq8064" for apq8064
+>  			- "qcom,pcie-apq8084" for apq8084
+> +			- "qcom,pcie-msm8996" for msm8996 or apq8096
+>  
+>  - reg:
+>  	Usage: required
+> @@ -92,6 +93,17 @@
+>  			- "aux"		Auxiliary (AUX) clock
+>  			- "bus_master"	Master AXI clock
+>  			- "bus_slave"	Slave AXI clock
+> +
+> +- clock-names:
+> +	Usage: required for msm8996/apq8096
+> +	Value type: <stringlist>
+> +	Definition: Should contain the following entries
+> +			- "pipe"	Pipe Clock driving internal logic.
+> +			- "aux"		Auxiliary (AUX) clock.
+> +			- "cfg"		Configuration clk.
+> +			- "bus_master"	Master AXI clock.
+> +			- "bus_slave"	Slave AXI clock.
+> +
+>  - resets:
+>  	Usage: required
+>  	Value type: <prop-encoded-array>
+> @@ -115,7 +127,7 @@
+>  			- "core" Core reset
+>  
+>  - power-domains:
+> -	Usage: required for apq8084
+> +	Usage: required for apq8084 and msm8996/apq8096
+>  	Value type: <prop-encoded-array>
+>  	Definition: A phandle and power domain specifier pair to the
+>  		    power domain which is responsible for collapsing
+> @@ -231,3 +243,56 @@
+>  		pinctrl-0 = <&pcie0_pins_default>;
+>  		pinctrl-names = "default";
+>  	};
+> +
+> +* Example for apq8096:
+
+Do you really need an example for every chip?
+
+> +
+> +	pcie@608000{
+> +		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
+> +		power-domains = <&gcc PCIE1_GDSC>;
+> +		bus-range = <0x00 0xff>;
+> +		num-lanes = <1>;
+> +
+> +		reg = <0x00608000 0x2000>,
+> +		      <0x0d000000 0xf1d>,
+> +		      <0x0d000f20 0xa8>,
+> +		      <0x0d100000 0x100000>;
+> +
+> +		reg-names = "parf", "dbi", "elbi", "config";
+> +
+> +		phys = <&pcie_phy 1>;
+> +		phy-names = "pciephy";
+> +
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
+> +			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
+> +
+> +		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
+> +		interrupt-names = "msi";
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0x7>;
+> +		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+> +				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+> +				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+> +				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+> +
+> +		pinctrl-names = "default", "sleep";
+> +		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
+> +		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
+> +
+> +		vdda-1p8-supply = <&pm8994_l12>;
+> +		vdda-supply = <&pm8994_l28>;
+> +		linux,pci-domain = <1>;
+> +
+> +		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
+> +			<&gcc GCC_PCIE_1_AUX_CLK>,
+> +			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
+> +			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
+> +			<&gcc GCC_PCIE_1_SLV_AXI_CLK>;
+> +
+> +		clock-names =  "pipe",
+> +				"aux",
+> +				"cfg",
+> +				"bus_master",
+> +				"bus_slave";
+> +	};
