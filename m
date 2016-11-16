@@ -1,177 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1478647002.7430.69.camel@kernel.crashing.org>
-Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mark Rutland <mark.rutland@arm.com>, "zhichang.yuan"
- <yuanzhichang@hisilicon.com>
-Date: Wed, 09 Nov 2016 10:16:42 +1100
-In-Reply-To: <20161108120323.GC15297@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
- <20161108120323.GC15297@leverpostej>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, catalin.marinas@arm.com, will.deacon@arm.com,
- linuxarm@huawei.com, lorenzo.pieralisi@arm.com, arnd@arndb.de,
- xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, minyard@acm.org, marc.zyngier@arm.com,
- liviu.dudau@arm.com, john.garry@huawei.com, zourongrong@gmail.com,
- robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
- zhichang.yuan02@gmail.com, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, olof@lixom.net
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 08/16] drivers: acpi: iort: add node match function
+Date: Wed, 16 Nov 2016 15:29:28 +0000
+Message-Id: <20161116152936.22955-9-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-11-08 at 12:03 +0000, Mark Rutland wrote:
-> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
-> > 
-> > For arm64, there is no I/O space as other architectural platforms, such as
-> > X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
-> > such as Hip06, when accessing some legacy ISA devices connected to LPC, those
-> > known port addresses are used to control the corresponding target devices, for
-> > example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
-> > normal MMIO mode in using.
-> 
-> This has nothing to do with arm64. Hardware with this kind of indirect
-> bus access could be integrated with a variety of CPU architectures. It
-> simply hasn't been, yet.
+Device drivers (eg ARM SMMU) need to know if a specific component
+is part of the IORT table, so that kernel data structures are not
+initialized at initcalls time if the respective component is not
+part of the IORT table.
 
-On some ppc's we also use similar indirect access methods for IOs. We
-have a generic infrastructure for re-routing some memory or IO regions
-to hooks.
+To this end, this patch adds a trivial function that allows detecting
+if a given IORT node type is present or not in the ACPI table, providing
+an ACPI IORT equivalent for of_find_matching_node().
 
-On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
-firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 15 +++++++++++++++
+ include/linux/acpi_iort.h |  2 ++
+ 2 files changed, 17 insertions(+)
 
-> > To drive these devices, this patch introduces a method named indirect-IO.
-> > In this method the in/out pair in arch/arm64/include/asm/io.h will be
-> > redefined. When upper layer drivers call in/out with those known legacy port
-> > addresses to access the peripherals, the hooking functions corrresponding to
-> > those target peripherals will be called. Through this way, those upper layer
-> > drivers which depend on in/out can run on Hip06 without any changes.
-> 
-> As above, this has nothing to do with arm64, and as such, should live in
-> generic code, exactly as we would do if we had higher-level ISA
-> accessor ops.
-> 
-> Regardless, given the multi-instance case, I don't think this is
-> sufficient in general (and I think we need higher-level ISA accessors
-> to handle the indirection).
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 1ac2720..4bb6acb 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -227,6 +227,21 @@ static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
+ 	return NULL;
+ }
+ 
++static acpi_status
++iort_match_type_callback(struct acpi_iort_node *node, void *context)
++{
++	return AE_OK;
++}
++
++bool iort_node_match(u8 type)
++{
++	struct acpi_iort_node *node;
++
++	node = iort_scan_node(type, iort_match_type_callback, NULL);
++
++	return node != NULL;
++}
++
+ static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
+ 					    void *context)
+ {
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index d16fdda..17bb078 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -28,10 +28,12 @@ void iort_deregister_domain_token(int trans_id);
+ struct fwnode_handle *iort_find_domain_token(int trans_id);
+ #ifdef CONFIG_ACPI_IORT
+ void acpi_iort_init(void);
++bool iort_node_match(u8 type);
+ u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ #else
+ static inline void acpi_iort_init(void) { }
++static inline bool iort_node_match(u8 type) { return false; }
+ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+ { return req_id; }
+ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+-- 
+2.10.0
 
-Multi-instance with IO is tricky to do generically because archs already
-have all sort of hacks to deal with the fact that inb/outb don't require
-an explicit ioremap, so an IO resource can take all sort of shape depending
-on the arch.
-
-Overall it boils down to applying some kind of per-instance "offset" to
-the IO port number though.
-
-> [...]
-> 
-> > 
-> > diff --git a/arch/arm64/include/asm/extio.h b/arch/arm64/include/asm/extio.h
-> > new file mode 100644
-> > index 0000000..6ae0787
-> > --- /dev/null
-> > +++ b/arch/arm64/include/asm/extio.h
-> 
-> > 
-> > +#ifndef __LINUX_EXTIO_H
-> > +#define __LINUX_EXTIO_H
-> 
-> This doesn't match the file naming, __ASM_EXTIO_H would be consistent
-> with other arm64 headers.
-> 
-> > 
-> > +
-> > +struct extio_ops {
-> > > > +	unsigned long start;/* inclusive, sys io addr */
-> > > > +	unsigned long end;/* inclusive, sys io addr */
-> 
-> Please put whitespace before inline comments.
-> 
-> [...]
-> 
-> > 
-> > > > +type in##bw(unsigned long addr)						\
-> > > > +{									\
-> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-> > > > > > +			arm64_extio_ops->end < addr)			\
-> > > > > > +		return read##bw(PCI_IOBASE + addr);			\
-> > > > > > +	return arm64_extio_ops->pfin ?					\
-> > > > > > +		arm64_extio_ops->pfin(arm64_extio_ops->devpara,		\
-> > > > > > +			addr, sizeof(type)) : -1;			\
-> > > > +}									\
-> > > > +									\
-> > > > +void out##bw(type value, unsigned long addr)				\
-> > > > +{									\
-> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-> > > > > > +			arm64_extio_ops->end < addr)			\
-> > > > > > +		write##bw(value, PCI_IOBASE + addr);			\
-> > > > > > +	else								\
-> > > > > > +		if (arm64_extio_ops->pfout)				\
-> > > > +			arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-> > > > > > +				addr, value, sizeof(type));		\
-> > > > +}									\
-> > > > +									\
-> > > > +void ins##bw(unsigned long addr, void *buffer, unsigned int count)	\
-> > > > +{									\
-> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-> > > > > > +			arm64_extio_ops->end < addr)			\
-> > > > > > +		reads##bw(PCI_IOBASE + addr, buffer, count);		\
-> > > > > > +	else								\
-> > > > > > +		if (arm64_extio_ops->pfins)				\
-> > > > +			arm64_extio_ops->pfins(arm64_extio_ops->devpara,\
-> > > > > > +				addr, buffer, sizeof(type), count);	\
-> > > > +}									\
-> > > > +									\
-> > > > +void outs##bw(unsigned long addr, const void *buffer, unsigned int count)	\
-> > > > +{									\
-> > > > > > +	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||	\
-> > > > > > +			arm64_extio_ops->end < addr)			\
-> > > > > > +		writes##bw(PCI_IOBASE + addr, buffer, count);		\
-> > > > > > +	else								\
-> > > > > > +		if (arm64_extio_ops->pfouts)				\
-> > > > +			arm64_extio_ops->pfouts(arm64_extio_ops->devpara,\
-> > > > > > +				addr, buffer, sizeof(type), count);	\
-> > +}
-> > +
-> 
-> So all PCI I/O will be slowed down by irrelevant checks when this is
-> enabled?
-> 
-> [...]
-> 
-> > 
-> > +static inline void arm64_set_extops(struct extio_ops *ops)
-> > +{
-> > > > +	if (ops)
-> > > > +		WRITE_ONCE(arm64_extio_ops, ops);
-> > +}
-> 
-> Why WRITE_ONCE()?
-> 
-> Is this not protected/propagated by some synchronisation mechanism?
-> 
-> WRITE_ONCE() is not sufficient to ensure that this is consistently
-> observed by readers, and regardless, I don't see READ_ONCE() anywhere in
-> this patch.
-> 
-> This looks very suspicious.
-> 
-> Thanks,
-> Mark.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
