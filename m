@@ -1,108 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0080.outbound.protection.outlook.com ([104.47.0.80]:54272
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753480AbcKIQ3h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 11:29:37 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Adi Menachem <adim@mellanox.com>
-Subject: RE: Shouldn't VFIO virtualize the ATS capability?
-Date: Wed, 9 Nov 2016 15:55:55 +0000
-Message-ID: <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161106100832.41e173d5@t450s.home>
-        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161109080746.24dd79dd@t450s.home>
-        <VI1PR0502MB2957CCD1E8EE93A3BC6CE178D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
- <20161109085326.62b47d2f@t450s.home>
-In-Reply-To: <20161109085326.62b47d2f@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 01/16] drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
+Date: Wed, 16 Nov 2016 15:29:21 +0000
+Message-Id: <20161116152936.22955-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I guess hiding it is even better.
+On systems booting with a device tree, every struct device is associated
+with a struct device_node, that provides its DT firmware representation.
+The device node can be used in generic kernel contexts (eg IRQ
+translation, IOMMU streamid mapping), to retrieve the properties
+associated with the device and carry out kernel operations accordingly.
+Owing to the 1:1 relationship between the device and its device_node,
+the device_node can also be used as a look-up token for the device (eg
+looking up a device through its device_node), to retrieve the device in
+kernel paths where the device_node is available.
 
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Wednesday, November 09, 2016 5:53 PM
-> To: Ilya Lesokhin <ilyal@mellanox.com>
-> Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com;
-> Adi Menachem <adim@mellanox.com>
-> Subject: Re: Shouldn't VFIO virtualize the ATS capability?
->=20
-> On Wed, 9 Nov 2016 15:25:16 +0000
-> Ilya Lesokhin <ilyal@mellanox.com> wrote:
->=20
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Wednesday, November 09, 2016 5:08 PM
-> > > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org;
-> > > bhelgaas@google.com; Adi Menachem <adim@mellanox.com>
-> > > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-> > >
-> > > On Wed, 9 Nov 2016 14:49:02 +0000
-> > > Ilya Lesokhin <ilyal@mellanox.com> wrote:
-> > >
-> > > > I would virtualize the "ATS Control Register".
-> > >
-> > > And do what?
-> > I think it should be read only.
->=20
-> That would violate the spec, in which case it shouldn't be virtualized, t=
-he
-> capability should be hidden.
->=20
-> > > > Regarding poor behavior, I couldn't really find what happens when
-> > > > ATS is
-> > > misconfigured, but I would assume it can cause problems.
-> > > > The scenarios I'm concerned about are:
-> > > > 	1. The guest enables translation caching, while the hypervisor
-> > > > thinks
-> > > there are disabled -> Hypervisor won't issue invalidations.
-> > >
-> > > Aren't invalidations issued by the iommu, why does the hypervisor
-> > > need to participate?  How would a software entity induce an
-> invalidation?
-> > That's what one might expect from a sane design, but
-> > http://lxr.free-electrons.com/source/drivers/iommu/intel-iommu.c?v=3D4.=
-8
-> > #L1549
-> > seems to imply otherwise :(
-> > >
-> > > > 	2. Smallest Translation Unit misconfiguration. Not sure if it
-> > > > will cause
-> > > invalid access or only poor caching behavior.
-> > > >
-> > > > Thanks,
-> > > > Ilya
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > > Sent: Sunday, November 06, 2016 7:09 PM
-> > > > > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > > > > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org;
-> > > > > bhelgaas@google.com
-> > > > > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-> > > > >
-> > > > > On Sun, 6 Nov 2016 11:13:09 +0000 Ilya Lesokhin
-> > > > > <ilyal@mellanox.com> wrote:
-> > > > >
-> > > > > > Hi
-> > > > > > I've noticed that VFIO doesn't virtualize the ATS capability.
-> > > > > > It seems to me that translation caching and Smallest
-> > > > > > Translation Unit is
-> > > > > something you would want to control on the host. Am I wrong?
-> > > > >
-> > > > > What about those fields would we virtualize?  Why does the host
-> > > > > need to be an intermediary?  Can the user induce poor behavior
-> > > > > with direct access to them?  Thanks,
-> > > > >
-> > > > > Alex
-> >
+On systems booting with ACPI, the same abstraction provided by
+the device_node is required to provide look-up functionality.
+
+The struct acpi_device, that represents firmware objects in the
+ACPI namespace already includes a struct fwnode_handle of
+type FWNODE_ACPI as their member; the same abstraction is missing
+though for devices that are instantiated out of static ACPI tables
+entries (eg ARM SMMU devices).
+
+Add a new fwnode_handle type to associate devices created out
+of static ACPI table entries to the respective firmware components
+and create a simple ACPI core layer interface to dynamically allocate
+and free the corresponding firmware nodes so that kernel subsystems
+can use it to instantiate the nodes and associate them with the
+respective devices.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ include/linux/acpi.h   | 21 +++++++++++++++++++++
+ include/linux/fwnode.h |  3 ++-
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 689a8b9..6efb13c 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -56,6 +56,27 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
+ 	acpi_fwnode_handle(adev) : NULL)
+ #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
+ 
++static inline struct fwnode_handle *acpi_alloc_fwnode_static(void)
++{
++	struct fwnode_handle *fwnode;
++
++	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
++	if (!fwnode)
++		return NULL;
++
++	fwnode->type = FWNODE_ACPI_STATIC;
++
++	return fwnode;
++}
++
++static inline void acpi_free_fwnode_static(struct fwnode_handle *fwnode)
++{
++	if (WARN_ON(!fwnode || fwnode->type != FWNODE_ACPI_STATIC))
++		return;
++
++	kfree(fwnode);
++}
++
+ /**
+  * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
+  * the PCI-defined class-code information
+diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+index 8516717..8bd28ce 100644
+--- a/include/linux/fwnode.h
++++ b/include/linux/fwnode.h
+@@ -17,8 +17,9 @@ enum fwnode_type {
+ 	FWNODE_OF,
+ 	FWNODE_ACPI,
+ 	FWNODE_ACPI_DATA,
++	FWNODE_ACPI_STATIC,
+ 	FWNODE_PDATA,
+-	FWNODE_IRQCHIP,
++	FWNODE_IRQCHIP
+ };
+ 
+ struct fwnode_handle {
+-- 
+2.10.0
 
