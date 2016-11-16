@@ -1,57 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60487 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755766AbcKVTGm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 14:06:42 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAMHdVSl064135
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 12:41:28 -0500
-Received: from e06smtp06.uk.ibm.com (e06smtp06.uk.ibm.com [195.75.94.102])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 26vku8tnct-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 12:41:27 -0500
-Received: from localhost
-        by e06smtp06.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <fbarrat@linux.vnet.ibm.com>;
-        Tue, 22 Nov 2016 17:41:26 -0000
-Subject: Re: [PATCH 2/2] cxl: Set VPD timeout to avoid access failures
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ian Munsie <imunsie@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org
-References: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-From: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
-Date: Tue, 22 Nov 2016 18:41:22 +0100
+Received: from mail.kernel.org ([198.145.29.136]:55282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753891AbcKPWNf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Nov 2016 17:13:35 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 90579203E1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 22:13:34 +0000 (UTC)
+Received: from localhost (unknown [69.71.4.155])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 840E9203C4
+        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 22:13:33 +0000 (UTC)
+Subject: [PATCH 4/4] PCI: Expand "VPD access disabled" quirk message
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Date: Wed, 16 Nov 2016 16:13:32 -0600
+Message-ID: <20161116221332.15842.39092.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <05398bfe-5bd4-116b-a9d7-b974d4cc032a@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+It's not very enlightening to see
 
+  pci 0000:07:00.0: [Firmware Bug]: VPD access disabled
 
-Le 21/11/2016 à 22:10, Matthew R. Ochs a écrit :
-> Some IBM CXL devices can take up to ~120ms to complete a VPD access
-> transaction when under heavy load. With an existing default VPD timeout
-> of 50ms, reads/writes can fail despite there not being an issue with the
-> underlying hardware.
->
-> To avoid these false failures, increase the VPD wait timeout for certain
-> CXL devices to a value that allows appropriate VPD access delay when faced
-> with a worst-case scenario.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> ---
+in the dmesg log because there's no clue about what the firmware bug is.
+Expand the message to explain why we're disabling VPD.
 
-If the new pci API gets in, then I'm ok with the cxl change, at least 
-for now. For longer term, we should consider opening up the cxl kernel 
-API to give access to the new pci API so that it can be tuned by the AFU 
-driver directly, since it would know better than cxl what the proper vpd 
-access timeout should be.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
-
-   Fred
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c232729..7329796 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2156,7 +2156,7 @@ static void quirk_blacklist_vpd(struct pci_dev *dev)
+ {
+ 	if (dev->vpd) {
+ 		dev->vpd->len = 0;
+-		dev_warn(&dev->dev, FW_BUG "VPD access disabled\n");
++		dev_warn(&dev->dev, FW_BUG "disabling VPD access (can't determine size of non-standard VPD format)\n");
+ 	}
+ }
+ 
 
