@@ -1,78 +1,73 @@
-Return-Path: <mathias.koehrer@etas.com>
-Return-Path: <mathias.koehrer@etas.com>
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Matthew Garrett <mjg59@coreos.com>, Julia Cartwright <julia@ni.com>,
-	Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>
-Subject: [PATCH] Force to clear ASPM bits if CONFIG_PCIEASPM_PERFORMANCE is
- set
-Date: Wed, 2 Nov 2016 09:26:55 +0000
-Message-ID: <95e1fc6e84cf42e094d4a8478c37b18e@FE-MBX1012.de.bosch.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:34023 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbcKPN2F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2016 08:28:05 -0500
+Received: by mail-qt0-f176.google.com with SMTP id n6so100861969qtd.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 05:28:05 -0800 (PST)
+Subject: Re: [PATCH v7 00/16] ACPI IORT ARM SMMU support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <cd630404-3e75-f49f-9027-f2a79293aa7d@semihalf.com>
+Date: Wed, 16 Nov 2016 14:28:02 +0100
 MIME-Version: 1.0
+In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems that have PCIe ASPM support in the BIOS enabled
-the commit 387d37577fdd05e9472c20885464c2a53b3c945f may lead
-to the situation that accesses to registers of enabled
-PCIe devices are extremely slow.
-This happens if the ACPI FADT declares incorrectly that the
-system doesn't support PCIe ASPM even if this is enabled in
-the BIOS.
-In this case the function pcie_no_aspm() will be called.
-However this sets the aspm_policy to POLICY_DEFAULT even
-if CONFIG_PCIEASPM_PERFORMANCE has been configured.
-As result, the ASPM on a PCIe may still be set even if=20
-this is not expected.
+On 09.11.2016 15:19, Lorenzo Pieralisi wrote:
+> This patch series is v7 of a previous posting:
+>
+> https://lkml.org/lkml/2016/10/18/506
+>
 
-This happens e.g. on a HP workstation 800 G1 together with
-an Intel dual port Ethernet server adapter i350 plugged in.
-Whenever ASPM is enabled in the BIOS the access to the=20
-LAN registers are really slow (read access: slower than 20us).
-In this setup the LnkCap of the two LAN controllers and
-of the integrated PCIe switch is set to "ASPM L1 Enabled"=20
-even if the controller is configured to be up and running.
-There has been a lengthy discussion on this performance issue
-due to this issue on the linux-rt-users list:
-http://marc.info/?l=3Dlinux-rt-users&m=3D147454824515022&w=3D2
+[...]
 
+>
+> The ACPI IORT table provides information that allows instantiating
+> ARM SMMU devices and carrying out id mappings between components on
+> ARM based systems (devices, IOMMUs, interrupt controllers).
+>
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>
+> Building on basic IORT support, this patchset enables ARM SMMUs support
+> on ACPI systems.
+>
+> Most of the code is aimed at building the required generic ACPI
+> infrastructure to create and enable IOMMU components and to bring
+> the IOMMU infrastructure for ACPI on par with DT, which is going to
+> make future ARM SMMU components easier to integrate.
+>
 
-This patch solves this issue by forcing to disable ASPM
-if CONFIG_PCIEASPM_PERFORMANCE has been set.
+[...]
 
-Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+>
+> This patchset is provided for review/testing purposes here:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v7
+>
+> Tested on Juno and FVP models for ARM SMMU v1 and v3 probing path.
+>
 
----
- drivers/pci/pcie/aspm.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+For all series:
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
 
-Index: linux-4.8/drivers/pci/pcie/aspm.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-4.8.orig/drivers/pci/pcie/aspm.c
-+++ linux-4.8/drivers/pci/pcie/aspm.c
-@@ -79,10 +79,13 @@ static LIST_HEAD(link_list);
-=20
- #ifdef CONFIG_PCIEASPM_PERFORMANCE
- static int aspm_policy =3D POLICY_PERFORMANCE;
-+static int aspm_default_config_policy =3D POLICY_PERFORMANCE;
- #elif defined CONFIG_PCIEASPM_POWERSAVE
- static int aspm_policy =3D POLICY_POWERSAVE;
-+static int aspm_default_config_policy =3D POLICY_POWERSAFE;
- #else
- static int aspm_policy;
-+static int aspm_default_config_policy;
- #endif
-=20
- static const char *policy_str[] =3D {
-@@ -946,7 +949,7 @@ void pcie_no_aspm(void)
- 	 * (b) prevent userspace from changing policy
- 	 */
- 	if (!aspm_force) {
--		aspm_policy =3D POLICY_DEFAULT;
-+		aspm_policy =3D aspm_default_config_policy;
- 		aspm_disabled =3D 1;
- 	}
- }
+Thanks,
+Tomasz
