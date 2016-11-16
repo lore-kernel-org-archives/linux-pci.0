@@ -1,85 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
-CC: Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
-Date: Fri, 25 Nov 2016 12:16:30 -0500
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH v3] PCI: create revision file in sysfs
+To: Bjorn Helgaas <helgaas@kernel.org>, Daniel Vetter <daniel@ffwll.ch>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161111143723.5818-1-emil.l.velikov@gmail.com>
+ <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
+ <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>, dri-devel@lists.freedesktop.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Greg KH <gregkh@linuxfoundation.org>, Lukas Wunner <lukas@wunner.de>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <dcd8d9fe-ea1d-45b8-2528-adb75a9ba3ed@codeaurora.org>
+Date: Wed, 16 Nov 2016 16:30:16 -0500
 MIME-Version: 1.0
-In-Reply-To: <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-11-25 08:22 AM, Christian König wrote:
->
->> Serguei, what is your plan in GPU land for migration? Ie if I have a
->> CPU mapped page and the GPU moves it to VRAM, it becomes non-cachable
->> - do you still allow the CPU to access it? Or do you swap it back to
->> cachable memory if the CPU touches it?
->
-> Depends on the policy in command, but currently it's the other way 
-> around most of the time.
->
-> E.g. we allocate memory in VRAM, the CPU writes to it WC and avoids 
-> reading because that is slow, the GPU in turn can access it with full 
-> speed.
->
-> When we run out of VRAM we move those allocations to system memory and 
-> update both the CPU as well as the GPU page tables.
->
-> So that move is transparent for both userspace as well as shaders 
-> running on the GPU.
-I would like to add more in relation to  CPU access :
+On 11/16/2016 3:58 PM, Bjorn Helgaas wrote:
+> [+cc Sinan, Lukas]
+> 
+> Hi Daniel,
+> 
+> On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
+>> On Fri, Nov 11, 2016 at 02:37:23PM +0000, Emil Velikov wrote:
+>>> From: Emil Velikov <emil.velikov@collabora.com>
+>>>
+>>> Currently the revision isn't available via sysfs/libudev thus if one
+>>> wants to know the value they need to read through the config file.
+>>>
+>>> This in itself wakes/powers up the device, causing unwanted delay
+>>> since it can be quite costly.
+>>>
+>>> There are at least two userspace components which could make use the new
+>>> file libpciaccess and libdrm. The former [used in various places] wakes
+>>> up _every_ PCI device, which can be observed via glxinfo [when using
+>>> Mesa 10.0+ drivers]. While the latter [in association with Mesa 13.0]
+>>> can lead to 2-3 second delays while starting firefox, thunderbird or
+>>> chromium.
+>>>
+>>> Expose the revision as a separate file, just like we do for the device,
+>>> vendor, their subsystem version and class.
+>>>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: linux-pci@vger.kernel.org
+>>> Cc: Greg KH <gregkh@linuxfoundation.org>
+>>> Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
+>>> Tested-by: Mauro Santos <registo.mailling@gmail.com>
+>>> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+>>> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+>>
+>> Given that waking a gpu can take somewhere between ages and forever, and
+>> that we read the pci revisions everytime we launch a new gl app I think
+>> this is the correct approach. Of course we could just patch libdrm and
+>> everyone to not look at the pci revision, but that just leads to every
+>> pci-based driver having a driver-private ioctl/getparam thing to expose
+>> it. Which also doesn't make much sense.
+> 
+> This re-asserts what has already been said, but doesn't address any of
+> my questions in the v2 discussion, so I'm still looking to continue
+> that thread.
+> 
+> I am curious about this long wakeup issue, though.  Are we talking
+> about a D3cold -> D0 transition?  I assume so, since config space is
+> generally accessible in all power states except D3cold.  From the
+> device's point of view this is basically like a power-on.  I think the
+> gist of PCIe r3.0, sec 6.6.1 is that we need to wait 100ms, e.g.,
+> PCI_PM_D3COLD_WAIT, before doing config accesses.
+> 
+> We do support Configuration Request Retry Status Software Visibility
+> (pci_enable_crs()), so a device *can* take longer than 100ms after
+> power-up to respond to a config read, but I think that only applies to
+> reads of the Vendor ID.  I cc'd Sinan because we do have some issues
+> with our CRS support, and maybe he can shed some light on this.
 
-a) we could have CPU-accessible part of VRAM ("inside" of PCIe BAR register)
-and non-CPU  accessible part.  As the result if user needs to have
-CPU access than memory should be located in CPU-accessible part
-of VRAM or in system memory.
+This applies to all config requests including vendor ID. It is just the
+vendor ID returns a special code (device id = 0x0001 vendor id =0xffff) so
+that CRS aware software can understand the difference between CRS and an
+actual failure. It is recommended to always read the vendor ID following
+a reset/power on to understand if the device is sending a CRS.
 
-Application/user mode driver could specify preference/hints of
-locations based on their assumption / knowledge about access
-patterns requirements, game resolution,  knowledge
-about size of VRAM memory, etc.  So if CPU access performance
-is critical then such memory should be allocated in system memory
-as  the first (and may be only) choice.
+As Bjorn mentioned, we do enable CRS visibility in the kernel but only for
+the root port in pci_enable_crs function. When CRS visibility is disabled,
+root port needs to retry the request until a good response is received.
 
-b) Allocation may not  have CPU address  at all - only GPU one.
-Also we may not be able to have CPU address/accesses for all VRAM
-memory but memory may still  be migrated in any case unrelated
-if we have CPU address or not.
+CRS polling happens behind the scenes in pci_bus_read_dev_vendor_id function.
 
-c) " VRAM, it becomes non-cachable "
-Strictly speaking VRAM is configured as WC (write-combined memory) to
-provide fast CPU write access. Also it was found that sometimes if CPU
-access is not critical from performance perspective it may be useful
-to allocate/program system memory also as WC to  avoid needs for
-extra "snooping" to synchronize with CPU caches during GPU access.
-So potentially system memory could be WC too.
+In order for reads to take longer than 100ms, the CRS must be disabled at
+a lower level in the bus. 
+
+I wonder if you have a bridge between your device and the root port.
+
+Bridge Configuration Retry Enable needs to be programmed if we want kernel
+to know about retry responses behind a bridge. 
+
+"Bridge Configuration Retry Enable – When Set, this bit enables PCI Express
+to PCI/PCI-X bridges to return Configuration Request Retry Status (CRS) in
+response to Configuration Requests that target devices below the bridge. Refer
+to the PCI Express to PCI/PCI-X Bridge Specification, Revision 1.0 for
+further details. Default value of this bit is 0b."
+
+Kernel is currently not setting this.
+
+> 
+> I'm not surprised if a GPU takes longer than 100ms to do device-
+> specific, driver-managed, non-PCI things like detect and wake up
+> monitors.  But I *am* surprised if generic PCI bus-level things like
+> config reads take longer than that.  I also cc'd Lukas because he
+> knows a lot more about PCI PM than I do.
+> 
+> Bjorn
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
