@@ -1,57 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v9 08/16] drivers: acpi: iort: add node match function
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- iommu@lists.linux-foundation.org
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
- <20161121100148.24769-9-lorenzo.pieralisi@arm.com>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <07ed6a31-c791-8832-530c-42ac58806848@linaro.org>
-Date: Tue, 29 Nov 2016 20:14:41 +0800
-MIME-Version: 1.0
-In-Reply-To: <20161121100148.24769-9-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-acpi@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
- Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Eric Auger <eric.auger@redhat.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>,
- Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 15/16] drivers: acpi: iort: add single mapping function
+Date: Wed, 16 Nov 2016 15:29:35 +0000
+Message-Id: <20161116152936.22955-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/11/21 18:01, Lorenzo Pieralisi wrote:
-> Device drivers (eg ARM SMMU) need to know if a specific component
-> is part of the IORT table, so that kernel data structures are not
-> initialized at initcalls time if the respective component is not
-> part of the IORT table.
->
-> To this end, this patch adds a trivial function that allows detecting
-> if a given IORT node type is present or not in the ACPI table, providing
-> an ACPI IORT equivalent for of_find_matching_node().
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+The current IORT id mapping API requires components to provide
+an input requester ID (a Bus-Device-Function (BDF) identifier for
+PCI devices) to translate an input identifier to an output
+identifier through an IORT range mapping.
 
-Acked-by: Hanjun Guo <hanjun.guo@linaro.org>
+Named components do not have an identifiable source ID therefore
+their respective input/output mapping can only be defined in
+IORT tables through single mappings, that provide a translation
+that does not require any input identifier.
 
-Thanks
-Hanjun
+Current IORT interface for requester id mappings (iort_node_map_rid())
+is not suitable for components that do not provide a requester id,
+so it cannot be used for IORT named components.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Add an interface to the IORT API to enable retrieval of id
+by allowing an indexed walk of the single mappings array for
+a given component, therefore completing the IORT mapping API.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 62057c6..7d30605 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -318,6 +318,45 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
+ 	return 0;
+ }
+ 
++static
++struct acpi_iort_node *iort_node_get_id(struct acpi_iort_node *node,
++					u32 *id_out, u8 type_mask,
++					int index)
++{
++	struct acpi_iort_node *parent;
++	struct acpi_iort_id_mapping *map;
++
++	if (!node->mapping_offset || !node->mapping_count ||
++				     index >= node->mapping_count)
++		return NULL;
++
++	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++			   node->mapping_offset);
++
++	/* Firmware bug! */
++	if (!map->output_reference) {
++		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++		       node, node->type);
++		return NULL;
++	}
++
++	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++			       map->output_reference);
++
++	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
++		return NULL;
++
++	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
++		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
++		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
++			*id_out = map[index].output_base;
++			return parent;
++		}
++	}
++
++	return NULL;
++}
++
+ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
+ 						u32 rid_in, u32 *rid_out,
+ 						u8 type_mask)
+-- 
+2.10.0
