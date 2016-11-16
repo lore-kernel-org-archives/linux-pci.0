@@ -1,94 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:55073 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933828AbcKMOWG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 09:22:06 -0500
-From: Noa Osherovich <noaos@mellanox.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-        majd@mellanox.com, noaos@mellanox.com
-Subject: [PATCH 2/4] PCI: Convert Mellanox quirks to be for listed devices only
-Date: Sun, 13 Nov 2016 16:21:40 +0200
-Message-Id: <1479046901-25360-3-git-send-email-noaos@mellanox.com>
-In-Reply-To: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
-References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
+Received: from mail-it0-f45.google.com ([209.85.214.45]:36347 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754033AbcKPAWW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2016 19:22:22 -0500
+Received: by mail-it0-f45.google.com with SMTP id l8so36283089iti.1
+        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2016 16:22:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Tue, 15 Nov 2016 16:22:21 -0800
+Message-ID: <CAJ+vNU1e4kKPVG3X-e+gUCf+fZynYpEFTdYTOqP7m0=xQZKqtA@mail.gmail.com>
+Subject: Re: [PATCH v6 4/4] PCI: designware: Add iATU Unroll feature
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: jszhang@marvell.com, jingoohan1@gmail.com,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change Mellanox's broken_intx_masking quirk from an "all Mellanox
-devices" to a quirk for listed devices only.
+On Wed, Aug 17, 2016 at 1:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> From: Joao Pinto <Joao.Pinto@synopsys.com>
+>
+> Add support for the new iATU Unroll mechanism that will be used from Core
+> version 4.80.  The new Cores can support either iATU Unroll or the "old"
+> iATU method, now called Legacy Mode.  The driver is perfectly capable of
+> performing well for both.
+>
+> [bhelgaas: split ATU enable timeout to separate patch]
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pcie-designware.c |   97 ++++++++++++++++++++++++++++++++----
+>  drivers/pci/host/pcie-designware.h |    1
+>  2 files changed, 87 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 947fac3..e489b18 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -80,6 +80,21 @@
+>  #define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+>  #define PCIE_ATU_UPPER_TARGET          0x91C
+>
+> +/*
+> + * iATU Unroll-specific register definitions
+> + * From 4.80 core version the address translation will be made by unroll
+> + */
+> +#define PCIE_ATU_UNR_REGION_CTRL1      0x00
+> +#define PCIE_ATU_UNR_REGION_CTRL2      0x04
+> +#define PCIE_ATU_UNR_LOWER_BASE                0x08
+> +#define PCIE_ATU_UNR_UPPER_BASE                0x0C
+> +#define PCIE_ATU_UNR_LIMIT             0x10
+> +#define PCIE_ATU_UNR_LOWER_TARGET      0x14
+> +#define PCIE_ATU_UNR_UPPER_TARGET      0x18
+> +
+> +/* Register address builder */
+> +#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region << 9)
+> +
+>  /* PCIe Port Logic registers */
+>  #define PLR_OFFSET                     0x700
+>  #define PCIE_PHY_DEBUG_R1              (PLR_OFFSET + 0x2c)
+> @@ -141,6 +156,27 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+>                 writel(val, pp->dbi_base + reg);
+>  }
+>
+> +static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
+> +{
+> +       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> +
+> +       if (pp->ops->readl_rc)
+> +               return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
+> +
+> +       return readl(pp->dbi_base + offset + reg);
+> +}
+> +
+> +static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
+> +                                        u32 val, u32 reg)
+> +{
+> +       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> +
+> +       if (pp->ops->writel_rc)
+> +               pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
+> +       else
+> +               writel(val, pp->dbi_base + offset + reg);
+> +}
+> +
+>  static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>                                u32 *val)
+>  {
+> @@ -164,23 +200,49 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+>  {
+>         u32 retries, val;
+>
+> -       dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+> -                         PCIE_ATU_VIEWPORT);
+> -       dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
+> -       dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
+> -       dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+> -                         PCIE_ATU_LIMIT);
+> -       dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
+> -       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+> -       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+> -       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> +       if (pp->iatu_unroll_enabled) {
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       type, PCIE_ATU_UNR_REGION_CTRL1);
+> +               dw_pcie_writel_unroll(pp, index,
+> +                       PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
+> +       } else {
+> +               dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+> +                                               PCIE_ATU_VIEWPORT);
+> +               dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
+> +                                               PCIE_ATU_LOWER_BASE);
+> +               dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
+> +                                               PCIE_ATU_UPPER_BASE);
+> +               dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+> +                                               PCIE_ATU_LIMIT);
+> +               dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
+> +                                               PCIE_ATU_LOWER_TARGET);
+> +               dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
+> +                                               PCIE_ATU_UPPER_TARGET);
+> +               dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+> +               dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> +       }
+>
+>         /*
+>          * Make sure ATU enable takes effect before any subsequent config
+>          * and I/O accesses.
+>          */
+>         for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+> -               val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
+> +               if (pp->iatu_unroll_enabled)
+> +                       val = dw_pcie_readl_unroll(pp, index,
+> +                                                  PCIE_ATU_UNR_REGION_CTRL2);
+> +               else
+> +                       val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
+> +
+>                 if (val == PCIE_ATU_ENABLE)
+>                         return;
+>
+> @@ -445,6 +507,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+>         .map = dw_pcie_msi_map,
+>  };
+>
+> +static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
+> +{
+> +       u32 val = 0;
+> +
+> +       dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
+> +       if (val == 0xffffffff)
+> +               return 1;
+> +
+> +       return 0;
+> +}
+> +
+>  int dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>         struct device_node *np = pp->dev->of_node;
+> @@ -561,6 +634,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>                 }
+>         }
+>
+> +       pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> +
+>         if (pp->ops->host_init)
+>                 pp->ops->host_init(pp);
+>
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 285e1ed..e74cc4a 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -48,6 +48,7 @@ struct pcie_port {
+>         int                     msi_irq;
+>         struct irq_domain       *irq_domain;
+>         unsigned long           msi_data;
+> +       u8                      iatu_unroll_enabled;
+>         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>  };
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
----
- drivers/pci/quirks.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 52 insertions(+), 1 deletion(-)
+Bjorn / Joao,
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85048fdf2474..d3977c847e1f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3158,8 +3158,59 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
-  */
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
- 			quirk_broken_intx_masking);
-+
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTIB 0x1011
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX4 0x1013
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX 0x1015
-+
-+static u16 mellanox_broken_intx_devs[] = {
-+	PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_EN,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
-+};
-+
-+static void mellanox_check_broken_intx_masking(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
-+		if (dev->device == mellanox_broken_intx_devs[i]) {
-+			dev->broken_intx_masking = 1;
-+			return;
-+		}
-+	}
-+}
-+
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
--			quirk_broken_intx_masking);
-+			mellanox_check_broken_intx_masking);
- 
- /*
-  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
--- 
-1.8.3.1
+This patch (from commit a0601a47053714eecec726aea5ebcd829f817497) is
+causing a kernel regression in 4.9. I can no longer boot the kernel on
+boards that have a PCIe switch downstream from the IMX6 (ie many of
+the Gateworks Ventana boards) unless PCI is enabled in the bootloader
+(which is not recommended as that causes PCI link in the kernel to
+occasionally fail).
 
+Regards,
+
+Tim
