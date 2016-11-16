@@ -1,56 +1,65 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
-To: Al Stone <al.stone@linaro.org>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
- <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, Al Stone <ahs@redhat.com>,
- Robert Richter <rrichter@cavium.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann
- <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Don Dutile <ddutile@redhat.com>, Christopher Covington <cov@codeaurora.org>,
- Tomasz Nowicki <tn@semihalf.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <98c9564d-17f9-f549-6dd4-5c6abc1ba1a3@codeaurora.org>
-Date: Fri, 11 Nov 2016 09:24:28 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAOMZO5BVYzatwQzHdcYwhHP2Pje7wGoX9_L-jQ3_ZN60z9H=UQ@mail.gmail.com>
+References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <CAJ+vNU1e4kKPVG3X-e+gUCf+fZynYpEFTdYTOqP7m0=xQZKqtA@mail.gmail.com> <CAOMZO5BVYzatwQzHdcYwhHP2Pje7wGoX9_L-jQ3_ZN60z9H=UQ@mail.gmail.com>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Wed, 16 Nov 2016 08:15:52 -0800
+Message-ID: <CAJ+vNU1BRahcF25UWSDzzFSKJOeU6nEmAQw-eDRJqBHvFFqfHg@mail.gmail.com>
+Subject: Re: [PATCH v6 4/4] PCI: designware: Add iATU Unroll feature
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jisheng Zhang <jszhang@marvell.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/10/2016 6:18 PM, Al Stone wrote:
-> On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
->> Hi all,
+On Tue, Nov 15, 2016 at 4:30 PM, Fabio Estevam <festevam@gmail.com> wrote:
+> Hi Tim,
+>
+> On Tue, Nov 15, 2016 at 10:22 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+>
+>> Bjorn / Joao,
 >>
->> We've been working through the details of getting ACPI to work on
->> arm64, and there have been lots of questions about what this means for
->> PCI.  I've outlined this for several people individually, but I'm
->> going to send this separately, apart from a specific patch series, to
->> make sure we're all on the same page.  Please correct my errors and
->> misunderstandings.
->>
->> Bjorn
->>
->> [snip....]
-> 
-> A big +1 to all of this.  This also looks like something that should
-> be added to either PCI, ACPI or arm64 documentation (or even all three).
-> What do you think?
+>> This patch (from commit a0601a47053714eecec726aea5ebcd829f817497) is
+>> causing a kernel regression in 4.9. I can no longer boot the kernel on
+>> boards that have a PCIe switch downstream from the IMX6 (ie many of
+>> the Gateworks Ventana boards) unless PCI is enabled in the bootloader
+>> (which is not recommended as that causes PCI link in the kernel to
+>> occasionally fail).
+>
+> This has been fixed in 4.9-rc4 by the following commit:
+>
+> commit 416379f9ebded501eda882e6af0a7aafc1866700
+> Author: Niklas Cassel <niklas.cassel@axis.com>
+> Date:   Fri Oct 14 23:54:55 2016 +0200
+>
+>     PCI: designware: Check for iATU unroll support after initializing host
+>
+>     dw_pcie_iatu_unroll_enabled() reads a dbi_base register.  Reading any
+>     dbi_base register before pp->ops->host_init has been called causes
+>     "imprecise external abort" on platforms like ARTPEC-6, where the PCIe
+>     module is disabled at boot and first enabled in pp->ops->host_init.  Move
+>     dw_pcie_iatu_unroll_enabled() to dw_pcie_setup_rc(), since it is after
+>     pp->ops->host_init, but before pp->iatu_unroll_enabled is actually used.
+>
+>     Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
+>     Tested-by: James Le Cuirot <chewi@gentoo.org>
+>     Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Joao Pinto <jpinto@synopsys.com>
+>     Acked-by: Olof Johansson <olof@lixom.net>
 
+Fabio,
 
-I agree. In order to have compliant systems, we have to make PNP0C02 required
-in the PCIe appendix of the SBSA specification.
+That does indeed resolve the issue!
 
-> 
-> Thank you for putting this together, Bjorn.
-> 
-> 
+Thanks,
 
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Tim
