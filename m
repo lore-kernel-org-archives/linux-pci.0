@@ -1,83 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
- <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
- <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
-CC: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <c60815a1-aaac-52eb-1714-66abb28bdc01@amd.com>
-Date: Fri, 25 Nov 2016 14:06:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:55274 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753959AbcKPP2s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Nov 2016 10:28:48 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v8 03/16] drivers: acpi: iort: add support for IOMMU fwnode registration
+Date: Wed, 16 Nov 2016 15:29:23 +0000
+Message-Id: <20161116152936.22955-4-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 24.11.2016 um 18:55 schrieb Logan Gunthorpe:
-> Hey,
->
-> On 24/11/16 02:45 AM, Christian König wrote:
->> E.g. it can happen that PCI device A exports it's BAR using ZONE_DEVICE.
->> Not PCI device B (a SATA device) can directly read/write to it because
->> it is on the same bus segment, but PCI device C (a network card for
->> example) can't because it is on a different bus segment and the bridge
->> can't handle P2P transactions.
-> Yeah, that could be an issue but in our experience we have yet to see
-> it. We've tested with two separate PCI buses on different CPUs connected
-> through QPI links and it works fine. (It is rather slow but I understand
-> Intel has improved the bottleneck in newer CPUs than the ones we tested.)
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
-Well Serguei send me a couple of documents about QPI when we started to 
-discuss this internally as well and that's exactly one of the cases I 
-had in mind when writing this.
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective fwnode.
 
-If I understood it correctly for such systems P2P is technical possible, 
-but not necessary a good idea. Usually it is faster to just use a 
-bouncing buffer when the peers are a bit "father" apart.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
 
-That this problem is solved on newer hardware is good, but doesn't helps 
-us at all if we at want to support at least systems from the last five 
-years or so.
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 2c46ebc..1ac2720 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -20,7 +20,9 @@
+ 
+ #include <linux/acpi_iort.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -28,6 +30,90 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_fwnode {
++	struct list_head list;
++	struct acpi_iort_node *iort_node;
++	struct fwnode_handle *fwnode;
++};
++static LIST_HEAD(iort_fwnode_list);
++static DEFINE_SPINLOCK(iort_fwnode_lock);
++
++/**
++ * iort_set_fwnode() - Create iort_fwnode and use it to register
++ *		       iommu data in the iort_fwnode_list
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode associated with the IORT node
++ *
++ * Returns: 0 on success
++ *          <0 on failure
++ */
++static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
++				  struct fwnode_handle *fwnode)
++{
++	struct iort_fwnode *np;
++
++	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
++
++	if (WARN_ON(!np))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&np->list);
++	np->iort_node = iort_node;
++	np->fwnode = fwnode;
++
++	spin_lock(&iort_fwnode_lock);
++	list_add_tail(&np->list, &iort_fwnode_list);
++	spin_unlock(&iort_fwnode_lock);
++
++	return 0;
++}
++
++/**
++ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: fwnode_handle pointer on success, NULL on failure
++ */
++static inline
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr;
++	struct fwnode_handle *fwnode = NULL;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry(curr, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			fwnode = curr->fwnode;
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++
++	return fwnode;
++}
++
++/**
++ * iort_delete_fwnode() - Delete fwnode associated with an IORT node
++ *
++ * @node: IORT table node associated with fwnode to delete
++ */
++static inline void iort_delete_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr, *tmp;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry_safe(curr, tmp, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			list_del(&curr->list);
++			kfree(curr);
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+-- 
+2.10.0
 
-> It may just be older hardware that has this issue. I expect that as long
-> as a failed transfer can be handled gracefully by the initiator I don't
-> see a need to predetermine whether a device can see another devices memory.
-
-I don't want to predetermine whether a device can see another devices 
-memory at get_user_pages() time.
-
-My thinking was more going into the direction of a whitelist to figure 
-out during dma_map_single()/dma_map_sg() time if we should use a 
-bouncing buffer or not.
-
-Christian.
-
->
->
-> Logan
