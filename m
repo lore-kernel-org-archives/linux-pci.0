@@ -1,40 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33258 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938766AbcKWPLA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 10:11:00 -0500
-From: Geliang Tang <geliangtang@gmail.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geliang Tang <geliangtang@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: spear: use builtin_platform_driver
-Date: Wed, 23 Nov 2016 22:55:07 +0800
-Message-Id: <fad445bc8162cd07a298b25a18614773c86ec227.1479912870.git.geliangtang@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <alexdeucher@gmail.com>
+Return-Path: <alexdeucher@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <20161117143520.GA5557@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161111143723.5818-1-emil.l.velikov@gmail.com> <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
+ <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
+ <CADnq5_M+nHeNe13s7sRkY2KE-78N3_mGapAe8s0TcSn_XAxW9g@mail.gmail.com> <20161117143520.GA5557@bhelgaas-glaptop.roam.corp.google.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Thu, 17 Nov 2016 09:48:17 -0500
+Message-ID: <CADnq5_M3K3QG8nKT7Ck6pUf2CaQ8Q9MgVHWW9bf5wXfv9=_akg@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: create revision file in sysfs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Daniel Vetter <daniel@ffwll.ch>, Linux PCI <linux-pci@vger.kernel.org>,
+	Emil Velikov <emil.l.velikov@gmail.com>,
+	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Use builtin_platform_driver() helper to simplify the code.
+On Thu, Nov 17, 2016 at 9:35 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Nov 17, 2016 at 08:28:50AM -0500, Alex Deucher wrote:
+>> On Wed, Nov 16, 2016 at 3:58 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
+>> >> Given that waking a gpu can take somewhere between ages and forever, and
+>> >> that we read the pci revisions everytime we launch a new gl app I think
+>> >> this is the correct approach. Of course we could just patch libdrm and
+>> >> everyone to not look at the pci revision, but that just leads to every
+>> >> pci-based driver having a driver-private ioctl/getparam thing to expose
+>> >> it. Which also doesn't make much sense.
+>> >
+>> > I am curious about this long wakeup issue, though.  Are we talking
+>> > about a D3cold -> D0 transition?  I assume so, since config space is
+>> > generally accessible in all power states except D3cold.  From the
+>> > device's point of view this is basically like a power-on.  I think the
+>> > gist of PCIe r3.0, sec 6.6.1 is that we need to wait 100ms, e.g.,
+>> > PCI_PM_D3COLD_WAIT, before doing config accesses.
+>> >
+>> > We do support Configuration Request Retry Status Software Visibility
+>> > (pci_enable_crs()), so a device *can* take longer than 100ms after
+>> > power-up to respond to a config read, but I think that only applies to
+>> > reads of the Vendor ID.  I cc'd Sinan because we do have some issues
+>> > with our CRS support, and maybe he can shed some light on this.
+>> >
+>> > I'm not surprised if a GPU takes longer than 100ms to do device-
+>> > specific, driver-managed, non-PCI things like detect and wake up
+>> > monitors.  But I *am* surprised if generic PCI bus-level things like
+>> > config reads take longer than that.  I also cc'd Lukas because he
+>> > knows a lot more about PCI PM than I do.
+>>
+>> FWIW,  If you run lspci on a GPU that is in the powered off state
+>> (either D3 cold if supported or the older vendor specific power
+>> controls that pre-dated D3 cold), any fields that were not previously
+>> cached return all 1s.  So for example the pci revision would be 0xff
+>> rather than whatever it's supposed to be.
+>
+> That doesn't feel like the right behavior to me -- I would have
+> expected lspci to either wake up the device and show valid data or
+> maybe complain "this device is powered off" (this seems hard to do
+> without races).  Showing a mix of cached valid data and all 1s data
+> seems like a strange user experience to me.
+>
+> Caching the revision would fix that particular piece, of course, but
+> not the overall experience.  Am I expecting too much?  Maybe my
+> expectations are out of line.
 
-Signed-off-by: Geliang Tang <geliangtang@gmail.com>
----
- drivers/pci/host/pcie-spear13xx.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+I agree with you, I'm just saying that that is the current behavior.
+The GPU power is controlled by runtimepm, perhaps there is a corner
+case we are missing when pci config space is accessed on a powered off
+device?
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 3cf197b..dafe8b8 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -296,8 +296,4 @@ static struct platform_driver spear13xx_pcie_driver = {
- 	},
- };
- 
--static int __init spear13xx_pcie_init(void)
--{
--	return platform_driver_register(&spear13xx_pcie_driver);
--}
--device_initcall(spear13xx_pcie_init);
-+builtin_platform_driver(spear13xx_pcie_driver);
--- 
-2.9.3
+Alex
 
+>
+> I think in this particular case (reading config space of a powered-off
+> device), CRS doesn't apply because the device is powered off, and
+> there's probably no delay: the read would probably complete
+> immediately because the link to the device is down, and the Root Port
+> or Downstream Port would probably generate an Unsupported Request
+> completion, which the Root Complex might handle by fabricating all 1s
+> data for the CPU.
+>
+> Bjorn
