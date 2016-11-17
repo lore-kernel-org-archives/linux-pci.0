@@ -1,83 +1,55 @@
-Return-Path: <alexdeucher@gmail.com>
-Return-Path: <alexdeucher@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37146 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752995AbcKQX36 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Nov 2016 18:29:58 -0500
+Subject: [PATCH v3 0/5] Unmarking Mellanox devices with broken INTx masking
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
+        gwshan@linux.vnet.ibm.com
+Date: Thu, 17 Nov 2016 17:29:54 -0600
+Message-ID: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161117143520.GA5557@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161111143723.5818-1-emil.l.velikov@gmail.com> <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
- <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
- <CADnq5_M+nHeNe13s7sRkY2KE-78N3_mGapAe8s0TcSn_XAxW9g@mail.gmail.com> <20161117143520.GA5557@bhelgaas-glaptop.roam.corp.google.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 17 Nov 2016 09:48:17 -0500
-Message-ID: <CADnq5_M3K3QG8nKT7Ck6pUf2CaQ8Q9MgVHWW9bf5wXfv9=_akg@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: create revision file in sysfs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Daniel Vetter <daniel@ffwll.ch>, Linux PCI <linux-pci@vger.kernel.org>,
-	Emil Velikov <emil.l.velikov@gmail.com>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 9:35 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Nov 17, 2016 at 08:28:50AM -0500, Alex Deucher wrote:
->> On Wed, Nov 16, 2016 at 3:58 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
->> >> Given that waking a gpu can take somewhere between ages and forever, and
->> >> that we read the pci revisions everytime we launch a new gl app I think
->> >> this is the correct approach. Of course we could just patch libdrm and
->> >> everyone to not look at the pci revision, but that just leads to every
->> >> pci-based driver having a driver-private ioctl/getparam thing to expose
->> >> it. Which also doesn't make much sense.
->> >
->> > I am curious about this long wakeup issue, though.  Are we talking
->> > about a D3cold -> D0 transition?  I assume so, since config space is
->> > generally accessible in all power states except D3cold.  From the
->> > device's point of view this is basically like a power-on.  I think the
->> > gist of PCIe r3.0, sec 6.6.1 is that we need to wait 100ms, e.g.,
->> > PCI_PM_D3COLD_WAIT, before doing config accesses.
->> >
->> > We do support Configuration Request Retry Status Software Visibility
->> > (pci_enable_crs()), so a device *can* take longer than 100ms after
->> > power-up to respond to a config read, but I think that only applies to
->> > reads of the Vendor ID.  I cc'd Sinan because we do have some issues
->> > with our CRS support, and maybe he can shed some light on this.
->> >
->> > I'm not surprised if a GPU takes longer than 100ms to do device-
->> > specific, driver-managed, non-PCI things like detect and wake up
->> > monitors.  But I *am* surprised if generic PCI bus-level things like
->> > config reads take longer than that.  I also cc'd Lukas because he
->> > knows a lot more about PCI PM than I do.
->>
->> FWIW,  If you run lspci on a GPU that is in the powered off state
->> (either D3 cold if supported or the older vendor specific power
->> controls that pre-dated D3 cold), any fields that were not previously
->> cached return all 1s.  So for example the pci revision would be 0xff
->> rather than whatever it's supposed to be.
->
-> That doesn't feel like the right behavior to me -- I would have
-> expected lspci to either wake up the device and show valid data or
-> maybe complain "this device is powered off" (this seems hard to do
-> without races).  Showing a mix of cached valid data and all 1s data
-> seems like a strange user experience to me.
->
-> Caching the revision would fix that particular piece, of course, but
-> not the overall experience.  Am I expecting too much?  Maybe my
-> expectations are out of line.
+Maybe the third time is the charm.  This is basically the v1 you posted,
+but I added an mlx4 update to use the new device ID definitions.  That way
+grep and cscope will find the ID both places, so we can match the quirk
+with the related driver.
 
-I agree with you, I'm just saying that that is the current behavior.
-The GPU power is controlled by runtimepm, perhaps there is a corner
-case we are missing when pci config space is accessed on a powered off
-device?
+This is on the pci/virtualization branch.  And I did build it this time.
 
-Alex
+v2 -> v3
+- Add device ID definitions to pci_ids.h (from original patch of Nov 1)
+- Use new definitions in mlx4 driver (new patch)
+- Use new definitions in quirks (as in v1 patches)
 
->
-> I think in this particular case (reading config space of a powered-off
-> device), CRS doesn't apply because the device is powered off, and
-> there's probably no delay: the read would probably complete
-> immediately because the link to the device is down, and the Root Port
-> or Downstream Port would probably generate an Unsupported Request
-> completion, which the Root Complex might handle by fabricating all 1s
-> data for the CPU.
->
-> Bjorn
+v1 -> v2 (pushed to pci/virtualization branch but not posted on list)
+- Bjorn removed device ID definitions (which broke build)
+- Bjorn reordered so Mellanox wasn't in the middle of other quirk list
+- Bjorn moved pci_disable_device() to end of quirk
+
+v0 -> v1
+Fixes according to Gavin Shan's comments:
+- Patch numbering was wrong
+- Fixed logic of mellanox_check_broken_intx_masking
+
+---
+
+Bjorn Helgaas (1):
+      net/mlx4_core: Use device ID defines
+
+Noa Osherovich (4):
+      PCI: Add Mellanox device IDs
+      PCI: Convert broken INTx masking quirks from HEADER to FINAL
+      PCI: Convert Mellanox broken INTx quirks to be for listed devices only
+      PCI: Support INTx masking on ConnectX-4 with firmware x.14.1100+
+
+
+ drivers/net/ethernet/mellanox/mlx4/main.c |   78 +++++++-------
+ drivers/pci/quirks.c                      |  159 ++++++++++++++++++++++-------
+ include/linux/pci_ids.h                   |   27 ++++-
+ 3 files changed, 181 insertions(+), 83 deletions(-)
