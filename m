@@ -1,54 +1,178 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 14 Nov 2016 16:52:23 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161114155222.GZ2078@8bytes.org>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
- <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
- <20161111152248.GS2078@8bytes.org>
- <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
- <20161111162736.GV2078@8bytes.org>
- <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
- <20161114102654.GA1677@red-moon>
- <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+Subject: [PATCH] PCI: Add information about describing PCI in ACPI
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
+Date: Thu, 17 Nov 2016 11:59:38 -0600
+Message-ID: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 14, 2016 at 12:00:47PM +0000, Robin Murphy wrote:
-> If we've already made the decision to move away from bus ops, I don't
-> see that it makes sense to deliberately introduce new dependencies on
-> them. Besides, as it stands, this patch literally implements "tell the
-> iommu-core which hardware-iommus exist in the system and a seperate
-> iommu_ops ptr for each of them" straight off.
+Add a writeup about how PCI host bridges should be described in ACPI
+using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
 
-Not sure which code you are looking at, but as I see it we have only
-per-device iommu-ops now (with this patch). That is different from
-having core-visible hardware-iommu instances where devices could link
-to.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/PCI/00-INDEX      |    2 +
+ Documentation/PCI/acpi-info.txt |  136 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 138 insertions(+)
+ create mode 100644 Documentation/PCI/acpi-info.txt
 
-Also the rest of iommu-core code still makes use of the per-bus ops. The
-per-device ops are only used for the of_xlate fn-ptr.
-
-
-
-	Joerg
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 147231f..0780280 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -1,5 +1,7 @@
+ 00-INDEX
+ 	- this file
++acpi-info.txt
++	- info on how PCI host bridges are represented in ACPI
+ MSI-HOWTO.txt
+ 	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
+ PCIEBUS-HOWTO.txt
+diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-info.txt
+new file mode 100644
+index 0000000..ccbcfda
+--- /dev/null
++++ b/Documentation/PCI/acpi-info.txt
+@@ -0,0 +1,136 @@
++	    ACPI considerations for PCI host bridges
++
++The basic requirement is that the ACPI namespace should describe
++*everything* that consumes address space unless there's another
++standard way for the OS to find it [1, 2].  For example, windows that
++are forwarded to PCI by a PCI host bridge should be described via ACPI
++devices, since the OS can't locate the host bridge by itself.  PCI
++devices *below* the host bridge do not need to be described via ACPI,
++because the resources they consume are inside the host bridge windows,
++and the OS can discover them via the standard PCI enumeration
++mechanism (using config accesses to read and size the BARs).
++
++This ACPI resource description is done via _CRS methods of devices in
++the ACPI namespace [2].   _CRS methods are like generalized PCI BARs:
++the OS can read _CRS and figure out what resource is being consumed
++even if it doesn't have a driver for the device [3].  That's important
++because it means an old OS can work correctly even on a system with
++new devices unknown to the OS.  The new devices won't do anything, but
++the OS can at least make sure no resources conflict with them.
++
++Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
++reserving address space!  The static tables are for things the OS
++needs to know early in boot, before it can parse the ACPI namespace.
++If a new table is defined, an old OS needs to operate correctly even
++though it ignores the table.  _CRS allows that because it is generic
++and understood by the old OS; a static table does not.
++
++If the OS is expected to manage an ACPI device, that device will have
++a specific _HID/_CID that tells the OS what driver to bind to it, and
++the _CRS tells the OS and the driver where the device's registers are.
++
++PNP0C02 "motherboard" devices are basically a catch-all.  There's no
++programming model for them other than "don't use these resources for
++anything else."  So any address space that is (1) not claimed by some
++other ACPI device and (2) should not be assigned by the OS to
++something else, should be claimed by a PNP0C02 _CRS method.
++
++PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
++describe all the address space they consume.  In principle, this would
++be all the windows they forward down to the PCI bus, as well as the
++bridge registers themselves.  The bridge registers include things like
++secondary/subordinate bus registers that determine the bus range below
++the bridge, window registers that describe the apertures, etc.  These
++are all device-specific, non-architected things, so the only way a
++PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
++contain the device-specific details.  These bridge registers also
++include ECAM space, since it is consumed by the bridge.
++
++ACPI defined a Producer/Consumer bit that was intended to distinguish
++the bridge apertures from the bridge registers [4, 5].  However,
++BIOSes didn't use that bit correctly, and the result is that OSes have
++to assume that everything in a PCI host bridge _CRS is a window.  That
++leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
++device itself.
++
++The workaround is to describe the bridge registers (including ECAM
++space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
++the bridge register space is device-specific anyway, so the generic
++PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
++ECAM, pci_root.c learns about the space from either MCFG or the _CBA
++method.
++
++Note that the PCIe spec actually does require ECAM unless there's a
++standard firmware interface for config access, e.g., the ia64 SAL
++interface [7].  One reason is that we want a generic host bridge
++driver (pci_root.c), and a generic driver requires a generic way to
++access config space.
++
++
++[1] ACPI 6.0, sec 6.1:
++    For any device that is on a non-enumerable type of bus (for
++    example, an ISA bus), OSPM enumerates the devices' identifier(s)
++    and the ACPI system firmware must supply an _HID object ... for
++    each device to enable OSPM to do that.
++
++[2] ACPI 6.0, sec 3.7:
++    The OS enumerates motherboard devices simply by reading through
++    the ACPI Namespace looking for devices with hardware IDs.
++
++    Each device enumerated by ACPI includes ACPI-defined objects in
++    the ACPI Namespace that report the hardware resources the device
++    could occupy [_PRS], an object that reports the resources that are
++    currently used by the device [_CRS], and objects for configuring
++    those resources [_SRS].  The information is used by the Plug and
++    Play OS (OSPM) to configure the devices.
++
++[3] ACPI 6.0, sec 6.2:
++    OSPM uses device configuration objects to configure hardware
++    resources for devices enumerated via ACPI.  Device configuration
++    objects provide information about current and possible resource
++    requirements, the relationship between shared resources, and
++    methods for configuring hardware resources.
++
++    When OSPM enumerates a device, it calls _PRS to determine the
++    resource requirements of the device.  It may also call _CRS to
++    find the current resource settings for the device.  Using this
++    information, the Plug and Play system determines what resources
++    the device should consume and sets those resources by calling the
++    device’s _SRS control method.
++
++    In ACPI, devices can consume resources (for example, legacy
++    keyboards), provide resources (for example, a proprietary PCI
++    bridge), or do both.  Unless otherwise specified, resources for a
++    device are assumed to be taken from the nearest matching resource
++    above the device in the device hierarchy.
++
++[4] ACPI 6.0, sec 6.4.3.5.4:
++    Extended Address Space Descriptor
++    General Flags: Bit [0] Consumer/Producer:
++	1–This device consumes this resource
++	0–This device produces and consumes this resource
++
++[5] ACPI 6.0, sec 19.6.43:
++    ResourceUsage specifies whether the Memory range is consumed by
++    this device (ResourceConsumer) or passed on to child devices
++    (ResourceProducer).  If nothing is specified, then
++    ResourceConsumer is assumed.
++
++[6] PCI Firmware 3.0, sec 4.1.2:
++    If the operating system does not natively comprehend reserving the
++    MMCFG region, the MMCFG region must be reserved by firmware.  The
++    address range reported in the MCFG table or by _CBA method (see
++    Section 4.1.3) must be reserved by declaring a motherboard
++    resource.  For most systems, the motherboard resource would appear
++    at the root of the ACPI namespace (under \_SB) in a node with a
++    _HID of EISAID (PNP0C02), and the resources in this case should
++    not be claimed in the root PCI bus’s _CRS.  The resources can
++    optionally be returned in Int15 E820 or EFIGetMemoryMap as
++    reserved memory but must always be reported through ACPI as a
++    motherboard resource.
++
++[7] PCI Express 3.0, sec 7.2.2:
++    For systems that are PC-compatible, or that do not implement a
++    processor-architecture-specific firmware interface standard that
++    allows access to the Configuration Space, the ECAM is required as
++    defined in this section.
 
