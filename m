@@ -1,60 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38200 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:37422 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934727AbcKKVne (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 16:43:34 -0500
-Date: Fri, 11 Nov 2016 15:43:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: hisi: Remove redundant dev_err call in
- hisi_pcie_probe()
-Message-ID: <20161111214330.GK9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476716210-31532-1-git-send-email-weiyj.lk@gmail.com>
+        id S1753104AbcKQXaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Nov 2016 18:30:21 -0500
+Subject: [PATCH v3 3/5] PCI: Convert broken INTx masking quirks from HEADER
+ to FINAL
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Noa Osherovich <noaos@mellanox.com>
+Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
+        gwshan@linux.vnet.ibm.com
+Date: Thu, 17 Nov 2016 17:30:17 -0600
+Message-ID: <20161117233017.2003.43124.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476716210-31532-1-git-send-email-weiyj.lk@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 02:56:50PM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+From: Noa Osherovich <noaos@mellanox.com>
 
-Applied to pci/host-hisi for v4.10, thanks!
+Convert all quirk_broken_intx_masking() quirks from HEADER to FINAL.
 
-> ---
->  drivers/pci/host/pcie-hisi.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 56154c2..a77b9bda 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -185,10 +185,8 @@ static int hisi_pcie_probe(struct platform_device *pdev)
->  
->  	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
->  	pp->dbi_base = devm_ioremap_resource(dev, reg);
-> -	if (IS_ERR(pp->dbi_base)) {
-> -		dev_err(dev, "cannot get rc_dbi base\n");
-> +	if (IS_ERR(pp->dbi_base))
->  		return PTR_ERR(pp->dbi_base);
-> -	}
->  
->  	ret = hisi_add_pcie_port(hisi_pcie, pdev);
->  	if (ret)
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The quirk sets dev->broken_intx_masking, which is only used by
+pci_intx_mask_supported(), which is not needed until after FINAL
+quirks have been run.
+
+[bhelgaas: changelog]
+Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/quirks.c |   72 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c232729..85048fd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3146,53 +3146,53 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
+ {
+ 	dev->broken_intx_masking = 1;
+ }
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
++			quirk_broken_intx_masking);
+ /*
+  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+  *
+  * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
+  */
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
++			quirk_broken_intx_masking);
+ 
+ /*
+  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
+  * DisINTx can be set but the interrupt status bit is non-functional.
+  */
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
+-			 quirk_broken_intx_masking);
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
+-			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1572,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1574,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1580,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1581,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1583,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1584,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1585,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1586,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1587,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1588,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1589,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d0,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d1,
++			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d2,
++			quirk_broken_intx_masking);
+ 
+ static void quirk_no_bus_reset(struct pci_dev *dev)
+ {
+
