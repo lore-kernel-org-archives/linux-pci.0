@@ -1,56 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2016 12:40:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Rob Herring <robh@kernel.org>,
-        Vecu Bosseur <vecu.bosseur@gmail.com>
-Subject: [GIT PULL] PCI fixes for v4.9
-Message-ID: <20161111184004.GA11885@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38875 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751556AbcKRDhl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2016 22:37:41 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAI3Zt7r086293
+        for <linux-pci@vger.kernel.org>; Thu, 17 Nov 2016 22:37:40 -0500
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26sqesdnf4-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 17 Nov 2016 22:37:40 -0500
+Received: from localhost
+        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Fri, 18 Nov 2016 13:37:38 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1E7513578053
+        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2016 14:37:35 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+        by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAI3bZ4D32636990
+        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2016 14:37:35 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAI3bY3L012008
+        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2016 14:37:34 +1100
+Date: Fri, 18 Nov 2016 14:38:47 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Noa Osherovich <noaos@mellanox.com>, linux-pci@vger.kernel.org,
+        majd@mellanox.com, gwshan@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 5/5] PCI: Support INTx masking on ConnectX-4 with
+ firmware x.14.1100+
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117233031.2003.43054.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161117233031.2003.43054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161118033846.GA11760@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+On Thu, Nov 17, 2016 at 05:30:31PM -0600, Bjorn Helgaas wrote:
+>From: Noa Osherovich <noaos@mellanox.com>
+>
+>Mellanox devices were marked as having INTx masking ability broken.  As a
+>result, the VFIO driver fails to start when more than one device function
+>is passed-through to a VM if both have the same INTx pin.
+>
+>Prior to Connect-IB, Mellanox devices exposed to the operating system one
+>PCI function per all ports.  Starting from Connect-IB, the devices are
+>function-per-port.  When passing the second function to a VM, VFIO will
+>fail to start.
+>
+>Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of Mellanox
+>devices marked as having broken INTx masking:
+>
+>- ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
+>  masking is supported, we unmark the broken INTx masking.
+>- Connect-IB does not support INTx currently so will not cause any
+>  problem.
+>
+>[bhelgaas: call pci_disable_device() always, after iounmap()]
+>Fixes: 11e42532ada3 ("PCI: Assume all Mellanox devices have broken INTx masking")
+>Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
+>Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
+> drivers/pci/quirks.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++---
+> 1 file changed, 54 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>index f0515b7..496ca13 100644
+>--- a/drivers/pci/quirks.c
+>+++ b/drivers/pci/quirks.c
+>@@ -3209,13 +3209,25 @@ static u16 mellanox_broken_intx_devs[] = {
+> 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
+> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
+> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
+>-	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
+>-	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
+>-	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX,
+> };
+>
+>+#define CONNECTX_4_CURR_MAX_MINOR 99
+>+#define CONNECTX_4_INTX_SUPPORT_MINOR 14
+>+
+>+/*
+>+ * Check ConnectX-4/LX FW version to see if it supports legacy interrupts.
+>+ * If so, don't mark it as broken.
+>+ * FW minor > 99 means older FW version format and no INTx masking support.
+>+ * FW minor < 14 means new FW version format and no INTx masking support.
+>+ */
+> static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
+> {
+>+	__be32 __iomem *fw_ver;
+>+	u16 fw_major;
+>+	u16 fw_minor;
+>+	u16 fw_subminor;
+>+	u32 fw_maj_min;
+>+	u32 fw_sub_min;
+> 	int i;
+>
+> 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
+>@@ -3224,6 +3236,45 @@ static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
+> 			return;
+> 		}
+> 	}
+>+
+>+	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
+>+	 * support so shouldn't be checked further
+>+	 */
+>+	if (pdev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
+>+		return;
+>+
+>+	if (pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
+>+	    pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX)
+>+		return;
+>+
+>+	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
+>+	if (pci_enable_device_mem(pdev)) {
+>+		dev_warn(&pdev->dev, "Can't enable device memory\n");
+>+		return;
+>+	}
+>+
+>+	fw_ver = ioremap(pci_resource_start(pdev, 0), 4);
+>+	if (!fw_ver) {
+>+		dev_warn(&pdev->dev, "Can't map ConnectX-4 initialization segment\n");
 
-  - Update MAINTAINERS for Intel VMD driver filename
-  - Update Rockchip rk3399 host bridge driver DTS and resets
-  - Fix ROM shadow problem that made some video device initialization fail
+Bjorn, pci_disable_device() is still missed here. Could you please
+amend it?
 
+>+		return;
+>+	}
+>+
+>+	/* Reading from resource space should be 32b aligned */
+>+	fw_maj_min = ioread32be(fw_ver);
+>+	fw_sub_min = ioread32be(fw_ver + 1);
+>+	fw_major = fw_maj_min & 0xffff;
+>+	fw_minor = fw_maj_min >> 16;
+>+	fw_subminor = fw_sub_min & 0xffff;
+>+	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
+>+	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR) {
+>+		dev_warn(&pdev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
+>+			 fw_major, fw_minor, fw_subminor, pdev->device ==
+>+			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
+>+		pdev->broken_intx_masking = 1;
+>+	}
+>+
+>+	iounmap(fw_ver);
+>+	pci_disable_device(pdev);
+> }
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+> 			mellanox_check_broken_intx_masking);
+>
 
-The following changes since commit 416379f9ebded501eda882e6af0a7aafc1866700:
-
-  PCI: designware: Check for iATU unroll support after initializing host (2016-11-04 15:28:55 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.9-fixes-3
-
-for you to fetch changes up to bc79c9851a76d76f269d9ef5150e180825650b67:
-
-  PCI: VMD: Update filename to reflect move (2016-11-10 16:26:32 -0600)
-
-----------------------------------------------------------------
-pci-v4.9-fixes-3
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      PCI: Don't attempt to claim shadow copies of ROM
-
-Keith Busch (1):
-      PCI: VMD: Update filename to reflect move
-
-Shawn Lin (2):
-      PCI: rockchip: Add three new resets as required properties
-      arm64: dts: rockchip: add three new resets for rk3399 PCIe controller
-
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 11 ++--
- MAINTAINERS                                        |  2 +-
- arch/arm64/boot/dts/rockchip/rk3399.dtsi           |  7 ++-
- drivers/pci/host/pcie-rockchip.c                   | 62 ++++++++++++++++++++++
- drivers/pci/setup-res.c                            |  8 +++
- 5 files changed, 84 insertions(+), 6 deletions(-)
