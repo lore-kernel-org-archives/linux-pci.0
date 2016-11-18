@@ -1,96 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0071.outbound.protection.outlook.com ([104.47.40.71]:25824
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932466AbcKYUs4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 15:48:56 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Felix Kuehling <felix.kuehling@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
- <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
- <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
- <c60815a1-aaac-52eb-1714-66abb28bdc01@amd.com>
- <209107c7-3098-ca70-7d62-b55021d01faa@deltatee.com>
- <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
- <fa44af1c-0c8a-7726-5100-a1f74f824a21@amd.com>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <5d43c69b-84fd-f13a-711f-e10c9bb5b1d1@amd.com>
-Date: Fri, 25 Nov 2016 15:48:36 -0500
+Received: from mail.kernel.org ([198.145.29.136]:48888 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752366AbcKRBPU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Nov 2016 20:15:20 -0500
+Date: Thu, 17 Nov 2016 19:15:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH v2 0/9] PCIe port PM: high gloss polish & hotplug support
+Message-ID: <20161118011515.GB25762@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1477611126.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <fa44af1c-0c8a-7726-5100-a1f74f824a21@amd.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1477611126.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Oct 28, 2016 at 10:52:06AM +0200, Lukas Wunner wrote:
+> Respin of this series to polish the runtime PM support for PCIe ports
+> that was added with v4.8, and extend it to native hotplug ports:
+> 
+> - All patches have been reviewed by Rafael, patches 1 to 8 have been
+>   tested by Mika.  (Thanks a lot!)
+> 
+> - Patch 6 ("PCI: Unfold conditions to block runtime PM on PCIe ports")
+>   contains a minor change relative to v1 wherein the function returns
+>   as soon as a single condition evaluates to true.  (Instead of
+>   needlessly evaluating all the remaining conditions.)
+> 
+> - Patch 9 was rebased to accommodate to this change but is otherwise
+>   the same as before.
+> 
+> As usual I've pushed the series to GitHub to ease reviewing/fetching:
+> https://github.com/l1k/linux/commits/pcie_port_pm_v2
+> 
+> Link to v1:
+> http://www.spinics.net/lists/linux-pci/msg55347.html
+> 
+> Thanks,
+> 
+> Lukas
+> 
+> 
+> Lukas Wunner (9):
+>   PCI: Don't acquire ref on parent in pci_bridge_d3_update()
+>   PCI: Autosense device removal in pci_bridge_d3_update()
+>   PCI: Speed up algorithm in pci_bridge_d3_update()
+>   PCI: Activate runtime PM on a PCIe port only if it can suspend
+>   PCI: Consolidate conditions to allow runtime PM on PCIe ports
+>   PCI: Unfold conditions to block runtime PM on PCIe ports
+>   ACPI / hotplug / PCI: Use cached copy of PCI_EXP_SLTCAP_HPC bit
+>   ACPI / hotplug / PCI: Make device_is_managed_by_native_pciehp() public
+>   PCI: pciehp: Add runtime PM support for PCIe hotplug ports
+> 
+>  drivers/pci/bus.c                  |   2 +-
+>  drivers/pci/hotplug/acpiphp_glue.c |  31 +-----------
+>  drivers/pci/hotplug/pciehp_ctrl.c  |   6 +++
+>  drivers/pci/pci-acpi.c             |  24 +++++++++
+>  drivers/pci/pci.c                  | 100 ++++++++++++++++++-------------------
+>  drivers/pci/pci.h                  |   4 +-
+>  drivers/pci/pcie/portdrv_pci.c     |  13 ++---
+>  drivers/pci/remove.c               |   2 +-
+>  include/linux/pci_hotplug.h        |   2 +
+>  9 files changed, 88 insertions(+), 96 deletions(-)
 
-On 2016-11-25 03:26 PM, Felix Kuehling wrote:
-> On 16-11-25 12:20 PM, Serguei Sagalovitch wrote:
->>> A white list may end up being rather complicated if it has to cover
->>> different CPU generations and system architectures. I feel this is a
->>> decision user space could easily make.
->>>
->>> Logan
->> I agreed that it is better to leave up to user space to check what is
->> working
->> and what is not. I found that write is practically always working but
->> read very
->> often not. Also sometimes system BIOS update could fix the issue.
->>
-> But is user mode always aware that P2P is going on or even possible? For
-> example you may have a library reading a buffer from a file, but it
-> doesn't necessarily know where that buffer is located (system memory,
-> VRAM, ...) and it may not know what kind of the device the file is on
-> (SATA drive, NVMe SSD, ...). The library will never know if all it gets
-> is a pointer and a file descriptor.
->
-> The library ends up calling a read system call. Then it would be up to
-> the kernel to figure out the most efficient way to read the buffer from
-> the file. If supported, it could use P2P between a GPU and NVMe where
-> the NVMe device performs a DMA write to VRAM.
->
-> If you put the burden of figuring out the P2P details on user mode code,
-> I think it will severely limit the use cases that actually take
-> advantage of it. You also risk a bunch of different implementations that
-> get it wrong half the time on half the systems out there.
->
-> Regards,
->    Felix
->
->
-I agreed in theory with you but  I must admit that I do not know how
-kernel could effectively collect all informations without running
-pretty complicated tests each time on boot-up (if any configuration
-changed including BIOS settings)  and on pnp events. Also for efficient
-way kernel needs to know performance results (and it could also
-depends on clock / power mode) for read/write of each pair devices, for
-double-buffering it needs to know / detect on which NUMA node
-to allocate, etc. etc.  Also  device could be fully configured only
-on the first request for access so it may be needed to change initialization
-sequences.
+I applied these to pci/pm for v4.10, thanks!
 
+I did make two changes to the changelog of the last patch: you
+mentioned the "subordinate" bus, and I changed it to "secondary".  We
+have often used "subordinate" to refer to the immediately-downstream
+bus, but that's slightly confusing because in the bridge spec,
+"subordinate" means the highest bus number downstream from the bridge,
+while "secondary" refers to the immediately-downstream bridge.  Am I
+making sense or confusing things more?
+
+Bjorn
