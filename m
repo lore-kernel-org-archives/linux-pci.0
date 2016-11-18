@@ -1,82 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2016 14:58:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, vikrams@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
-Message-ID: <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
- <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:51466 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751180AbcKRPoO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Nov 2016 10:44:14 -0500
+Date: Fri, 18 Nov 2016 15:44:13 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v8 10/16] drivers: iommu: arm-smmu-v3: split probe
+ functions into DT/generic portions
+Message-ID: <20161118154413.GU13470@arm.com>
+References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+ <20161116152936.22955-11-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161116152936.22955-11-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 01:35:41PM -0500, Sinan Kaya wrote:
-> On 9/24/2016 10:10 PM, Sinan Kaya wrote:
-> > Each PCIe device can issue up to 32 transactions at a time by default.
-> > Each transaction is tracked by a tag number on the bus. 32 outstanding
-> > transactions is not enough for some performance critical applications
-> > especially when a lot of small sized frames are transmitted.
-> > 
-> > Extended tags support increases this number to 256. Devices not
-> > supporting extended tags tie-off this field to 0. According to ECN, it
-> > is safe to enable this feature for all PCIe endpoints.
-> > 
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---
-> >  drivers/pci/probe.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 93f280d..2424f38 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1505,12 +1505,19 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
-> >  	 */
-> >  }
-> >  
-> > +static int pci_configure_extended_tags(struct pci_dev *dev)
-> > +{
+On Wed, Nov 16, 2016 at 03:29:30PM +0000, Lorenzo Pieralisi wrote:
+> Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
+> initialization functions to detect and programme the ARM SMMU v3 driver
+> features. In order to allow probing the ARM SMMUv3 with other firmwares
+> than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
+> specific portions so that other FW interfaces (ie ACPI) can reuse the HW
+> probing functions and skip the DT portion accordingly.
 > 
-> I should have checked the capability here before trying to enable it. 
-> I'll post a follow up patch on this. 
+> This patch implements no functional change, only code reshuffling.
 > 
-> Is there any other feedback?
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Acked-by: Will Deacon <will.deacon@arm.com>
+> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/iommu/arm-smmu-v3.c | 46 +++++++++++++++++++++++++++++----------------
+>  1 file changed, 30 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+> index e6e1c87..ed563307 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -2381,10 +2381,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+>  	return 0;
+>  }
+>  
+> -static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+> +static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+>  {
+>  	u32 reg;
+> -	bool coherent;
+> +	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
+>  
+>  	/* IDR0 */
+>  	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+> @@ -2436,13 +2436,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+>  		smmu->features |= ARM_SMMU_FEAT_HYP;
+>  
+>  	/*
+> -	 * The dma-coherent property is used in preference to the ID
+> +	 * The coherency feature as set by FW is used in preference to the ID
+>  	 * register, but warn on mismatch.
+>  	 */
+> -	coherent = of_dma_is_coherent(smmu->dev->of_node);
+> -	if (coherent)
+> -		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
+> -
+>  	if (!!(reg & IDR0_COHACC) != coherent)
+>  		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
+>  			 coherent ? "true" : "false");
+> @@ -2563,21 +2559,37 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+>  	return 0;
+>  }
+>  
+> -static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+> +static int arm_smmu_device_dt_probe(struct platform_device *pdev,
+> +				    struct arm_smmu_device *smmu,
+> +				    bool *bypass)
+>  {
+> -	int irq, ret;
+> -	struct resource *res;
+> -	struct arm_smmu_device *smmu;
+>  	struct device *dev = &pdev->dev;
+> -	bool bypass = true;
+>  	u32 cells;
+>  
+> +	*bypass = true;
+> +
+>  	if (of_property_read_u32(dev->of_node, "#iommu-cells", &cells))
+>  		dev_err(dev, "missing #iommu-cells property\n");
+>  	else if (cells != 1)
+>  		dev_err(dev, "invalid #iommu-cells value (%d)\n", cells);
+>  	else
+> -		bypass = false;
+> +		*bypass = false;
+> +
+> +	parse_driver_options(smmu);
+> +
+> +	if (of_dma_is_coherent(dev->of_node))
+> +		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
+> +
+> +	return 0;
 
-If this were completely safe to enable for every device that supported
-it, why would there be an enable bit in Device Control?
+I know you're only moving code here, but the *bypass output parameter
+now seems to be redundant with the unconditional return 0. Given that
+we only set bypass to true if something went wrong, why don't we return
+-ENODEV in those cases, kill the bypass parameter and rework the return
+value check in the caller so that, rather than fail the probe, we pass
+bypass=true to the reset function?
 
-I don't know anything about extended tags, but it worries me a little
-when there's a "go-fast" switch and no explanation about when and why
-we might need to go slow.
-
-> > +	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-> > +					 PCI_EXP_DEVCTL_EXT_TAG);
-> > +}
-> > +
-> >  static void pci_configure_device(struct pci_dev *dev)
-> >  {
-> >  	struct hotplug_params hpp;
-> >  	int ret;
-> >  
-> >  	pci_configure_mps(dev);
-> > +	pci_configure_extended_tags(dev);
-> >  
-> >  	memset(&hpp, 0, sizeof(hpp));
-> >  	ret = pci_get_hp_params(dev, &hpp);
-> > 
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Will
