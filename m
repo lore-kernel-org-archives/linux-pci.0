@@ -1,40 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46919 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752897AbcKHIYz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 03:24:55 -0500
-Date: Tue, 8 Nov 2016 09:24:42 +0100
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/7] pci/msi: Propagate irq affinity description through
- the MSI code
-Message-ID: <20161108082442.o42kmlyvsizvayk2@linux-x5ow.site>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-5-git-send-email-hch@lst.de>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Fri, 18 Nov 2016 10:10:57 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH v2 0/9] PCIe port PM: high gloss polish & hotplug support
+Message-ID: <20161118091057.GA12168@wunner.de>
+References: <cover.1477611126.git.lukas@wunner.de>
+ <20161118011515.GB25762@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1478544462-9549-5-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161118011515.GB25762@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 10:47:39AM -0800, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
+On Thu, Nov 17, 2016 at 07:15:15PM -0600, Bjorn Helgaas wrote:
+> On Fri, Oct 28, 2016 at 10:52:06AM +0200, Lukas Wunner wrote:
+> > Respin of this series to polish the runtime PM support for PCIe ports
+> > that was added with v4.8, and extend it to native hotplug ports:
+[snip]
+> I applied these to pci/pm for v4.10, thanks!
 > 
-> No API change yet, just pass it down all the way from
-> pci_alloc_irq_vectors to the core MSI code.
-> 
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
-> ---
+> I did make two changes to the changelog of the last patch: you
+> mentioned the "subordinate" bus, and I changed it to "secondary".  We
+> have often used "subordinate" to refer to the immediately-downstream
+> bus, but that's slightly confusing because in the bridge spec,
+> "subordinate" means the highest bus number downstream from the bridge,
+> while "secondary" refers to the immediately-downstream bridge.  Am I
+> making sense or confusing things more?
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Indeed the secondary bus was meant here and I used "subordinate" only
+because the attribute in struct pci_dev is named like this. :-)
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Thanks,
+
+Lukas
