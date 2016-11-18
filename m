@@ -1,191 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
-Date: Mon, 21 Nov 2016 10:01:39 +0000
-Message-Id: <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Fri, 18 Nov 2016 11:00:43 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: Remove service driver load/unload messages
+Message-ID: <20161118100043.GA12190@wunner.de>
+References: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161116221310.15842.25671.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117134042.GA11658@wunner.de>
+ <20161117204934.GC22428@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161117204934.GC22428@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On DT based systems, the of_dma_configure() API implements DMA
-configuration for a given device. On ACPI systems an API equivalent to
-of_dma_configure() is missing which implies that it is currently not
-possible to set-up DMA operations for devices through the ACPI generic
-kernel layer.
+On Thu, Nov 17, 2016 at 02:49:34PM -0600, Bjorn Helgaas wrote:
+> On Thu, Nov 17, 2016 at 02:40:42PM +0100, Lukas Wunner wrote:
+> > On Wed, Nov 16, 2016 at 04:13:10PM -0600, Bjorn Helgaas wrote:
+> > > Remove the "service driver %s loaded" and unloaded messages.  I don't think
+> > > these add any useful information.
+> > 
+> > I think those particular ones have a value to some extent because
+> > they communicate for which of the port's capabilities a driver is
+> > available and loaded.  For ports below a hotplug port they also
+> > comunicate the steps to unbind the ports from their drivers when
+> > the device is unplugged.
+> 
+> None of the service drivers can be modules anymore.  I think if we
+> want a clue about whether a service driver is attached to a device, we
+> should add something to the service driver, where we can print more
+> useful information.  In general I want to move towards thinking about
+> the service drivers as optional parts of the PCI core instead of
+> separate "drivers."
 
-This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-calls that for now are just wrappers around arch_setup_dma_ops() and
-arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+The issue with making the port services modules was that user space
+doesn't load them when they're needed.  We could have solved this in
+the kernel by amending get_port_device_capability() to call
+find_module() and then try_module_get() to load the module for a port
+service and acquire a reference on it upon discovery of the services
+supported by a probed port.  Then in pcie_port_device_remove() the
+references on the loaded modules would have to be released with
+module_put().
 
-Since acpi_dma_configure() is used to configure DMA operations, the
-function initializes the dma/coherent_dma masks to sane default values
-if the current masks are uninitialized (also to keep the default values
-consistent with DT systems) to make sure the device has a complete
-default DMA set-up.
+Most users just run the kernel that comes with their distro, and
+distro vendors frequently use a "one size fits all" kernel package
+regardless if the machine is a tiny netbook or a big-iron server.
+They will enable all port services to support all configurations
+and because this is all compiled in, the kernel keeps that code
+resident in memory even if the port services are never used.
+An uncompressed x86_64 vmlinux with the standard Debian configuration
+currently clocks in at around 30 MByte...
 
-The DMA range size passed to arch_setup_dma_ops() is sized according
-to the device coherent_dma_mask (starting at address 0x0), mirroring the
-DT probing path behaviour when a dma-ranges property is not provided
-for the device being probed; this changes the current arch_setup_dma_ops()
-call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-is a NOP on all architectures but ARM/ARM64 this patch does not change
-the current kernel behaviour on them.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/glue.c     |  4 ++--
- drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c     |  3 +--
- include/acpi/acpi_bus.h |  2 ++
- include/linux/acpi.h    |  5 +++++
- 5 files changed, 50 insertions(+), 4 deletions(-)
+> > E.g. when I plug in the Apple Thunderbolt Ethernet adapter I get this
+> > because a new hotplug port appears below the hotplug port of the host
+> > controller:
+> > [  141.926865] pciehp 0000:0a:00.0:pcie204: service driver pciehp loaded
+> 
+> For example, for pciehp, you should already see something like this:
+> 
+>   pciehp 0000:80:02.0:pcie04: Slot #6 AttnBtn+ PwrCtrl+ MRL- AttnInd+ PwrInd+ HotPlug+ Surprise- Interlock- NoCompl- LLActRep+
+> 
+> Is that enough?  Or maybe we don't emit this message in your case for
+> some reason?
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 5ea5dc2..f8d6564 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 
- 	attr = acpi_get_dma_attr(acpi_dev);
- 	if (attr != DEV_DMA_NOT_SUPPORTED)
--		arch_setup_dma_ops(dev, 0, 0, NULL,
--				   attr == DEV_DMA_COHERENT);
-+		acpi_dma_configure(dev, attr);
- 
- 	acpi_physnode_link_name(physical_node_name, node_id);
- 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-@@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	return 0;
- 
-  err:
-+	acpi_dma_deconfigure(dev);
- 	ACPI_COMPANION_SET(dev, NULL);
- 	put_device(dev);
- 	put_device(&acpi_dev->dev);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 3d1856f..45b5710 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 		return DEV_DMA_NON_COHERENT;
- }
- 
-+/**
-+ * acpi_dma_configure - Set-up DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ * @attr: device dma attributes
-+ */
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-+{
-+	/*
-+	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-+	 * setup the correct supported mask.
-+	 */
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	/*
-+	 * Assume dma valid range starts at 0 and covers the whole
-+	 * coherent_dma_mask.
-+	 */
-+	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-+			   attr == DEV_DMA_COHERENT);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_configure);
-+
-+/**
-+ * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ */
-+void acpi_dma_deconfigure(struct device *dev)
-+{
-+	arch_teardown_dma_ops(dev);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
-+
- static void acpi_init_coherency(struct acpi_device *adev)
- {
- 	unsigned long long cca = 0;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..c29e07a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
- 		if (attr == DEV_DMA_NOT_SUPPORTED)
- 			dev_warn(&dev->dev, "DMA not supported.\n");
- 		else
--			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
--					   attr == DEV_DMA_COHERENT);
-+			acpi_dma_configure(&dev->dev, attr);
- 	}
- 
- 	pci_put_host_bridge_device(bridge);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index c1a524d..4242c31 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -573,6 +573,8 @@ struct acpi_pci_root {
- 
- bool acpi_dma_supported(struct acpi_device *adev);
- enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-+void acpi_dma_deconfigure(struct device *dev);
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
- 					   u64 address, bool check_children);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 996a29c..8d15fc5 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -765,6 +765,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 	return DEV_DMA_NOT_SUPPORTED;
- }
- 
-+static inline void acpi_dma_configure(struct device *dev,
-+				      enum dev_dma_attr attr) { }
-+
-+static inline void acpi_dma_deconfigure(struct device *dev) { }
-+
- #define ACPI_PTR(_ptr)	(NULL)
- 
- static inline void acpi_device_set_enumerated(struct acpi_device *adev)
--- 
-2.10.0
+It's sufficient but I'm not sure all port services print such a
+welcome message.
 
+Thanks,
+
+Lukas
+
+> 
+> > On unplug I get this:
+> > [  202.497548] pciehp 0000:0a:00.0:pcie204: unloading service driver pciehp
+> 
+> I'm not sure we print anything when we remove a device; maybe we
+> should.
+> 
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  drivers/pci/pcie/portdrv_core.c |    3 ---
+> > >  1 file changed, 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> > > index e9270b4..9698289 100644
+> > > --- a/drivers/pci/pcie/portdrv_core.c
+> > > +++ b/drivers/pci/pcie/portdrv_core.c
+> > > @@ -499,7 +499,6 @@ static int pcie_port_probe_service(struct device *dev)
+> > >  	if (status)
+> > >  		return status;
+> > >  
+> > > -	dev_printk(KERN_DEBUG, dev, "service driver %s loaded\n", driver->name);
+> > >  	get_device(dev);
+> > >  	return 0;
+> > >  }
+> > > @@ -524,8 +523,6 @@ static int pcie_port_remove_service(struct device *dev)
+> > >  	pciedev = to_pcie_device(dev);
+> > >  	driver = to_service_driver(dev->driver);
+> > >  	if (driver && driver->remove) {
+> > > -		dev_printk(KERN_DEBUG, dev, "unloading service driver %s\n",
+> > > -			driver->name);
+> > >  		driver->remove(pciedev);
+> > >  		put_device(dev);
+> > >  	}
+> > > 
