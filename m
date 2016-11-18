@@ -1,71 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752406AbcK1TZh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 14:25:37 -0500
-Date: Mon, 28 Nov 2016 13:25:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
-Message-ID: <20161128192530.GO16033@bhelgaas-glaptop.roam.corp.google.com>
-References: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
+Received: from mout.kundenserver.de ([217.72.192.73]:56441 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751965AbcKRQgO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 11:36:14 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        John Garry <john.garry@huawei.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@go og le.com" <bhelgaas@google.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        Thomas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "olof@lixom.net" <olof@lixom.net>
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 18 Nov 2016 17:34:45 +0100
+Message-ID: <2364530.A9QSbaqvfm@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F921858@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <2271602.GoSoby0zHK@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F921858@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 09, 2016 at 01:12:55PM +0200, Lukas Wunner wrote:
-> -.data          56
-> +.data           0
-> -.rodata        32
-> +.rodata        88
+On Friday, November 18, 2016 4:18:07 PM CET Gabriele Paoloni wrote:
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > On Friday, November 18, 2016 12:53:08 PM CET Gabriele Paoloni wrote:
+> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > > On Friday, November 18, 2016 12:07:28 PM CET Gabriele Paoloni
+> > > > The easiest change compared to the v5 code would be to walk
+> > > > a linked list of 'struct extio_ops' structures rather than
+> > > > assuming there is only ever one of them. I think one of the
+> > > > earlier versions actually did this.
+> > >
+> > > Right but if my understanding is correct if we live in a multi-
+> > > domain I/O space world when you have an input addr in the I/O
+> > > accessors this addr can be duplicated (for example for the standard
+> > > PCI IO domain and for our special LPC domain).
+> > > So effectively even if you walk a linked list there is a problem
+> > > of disambiguation...am I right?
+> > 
+> > No, unlike the PCI memory space, the PIO addresses are not
+> > usually distinct, i.e. every PCI bus has its own 64K I/O
+> > addresses starting at zero. We linearize them into the
+> > Linux I/O space using the per-domain io_offset value.
 > 
-> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-It'd be nice if this had a changelog.  I'm happy if this goes via the
-x86 tree.
-
-I can't remember a discussion about having this code in drivers/pci in
-the first place.  Would it make sense to move it to
-arch/x86/platform/intel-mid/?
-
-8e522e1d321b ("x86/platform/intel-mid: Add Intel Penwell to ID table")
-fixed a sync issue and added a comment about staying in sync with
-arch/x86/platform/intel-mid/pwr.c.  Maybe moving this code to arch/x86
-would help with that?
-
-Looks like we'd have to expose pci_platform_pm_ops and
-pci_set_platform_pm(), but setting platform-specific PM ops does seem
-like something that would fit in the arch directories, so maybe that
-wouldn't be a bad thing.
-
-> ---
->  drivers/pci/pci-mid.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> I am going to summarize my understanding here below:
 > 
-> diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
-> index a8b52dc..566ded1 100644
-> --- a/drivers/pci/pci-mid.c
-> +++ b/drivers/pci/pci-mid.c
-> @@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
->  	return false;
->  }
->  
-> -static struct pci_platform_pm_ops mid_pci_platform_pm = {
-> +static const struct pci_platform_pm_ops mid_pci_platform_pm = {
->  	.is_manageable	= mid_pci_power_manageable,
->  	.set_state	= mid_pci_set_power_state,
->  	.get_state	= mid_pci_get_power_state,
-> -- 
-> 2.9.3
+> It seems to me that what is linearized is the virtual address
+> space associated to the IO address space. This address space
+> goes from PCI_IOBASE to (PCI_IOBASE + IO_SPACE_LIMIT).
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The I/O accessors perform rd/wr operation on this address
+> space using a port IO token.
+> 
+> Each token map into a cpu physical address range
+> Each cpu physical address range maps to a bus address range
+> if the bus controller specifies a range property.
+> 
+> Devices under a bus controller specify the bus addresses that
+> they operate on in their reg property.
+> 
+> So each device can use the same bus addresses under two
+> separate bus controllers as long as the bus controller
+> use the range properties to map the same bus range to different
+> cpu address range. 
+
+Sounds all correct to me so far, yes.
+
+> > For the ISA/LPC spaces there are only 4k of addresses, they
+> > the bus addresses always overlap, but we can trivially
+> > figure out the bus address from Linux I/O port number
+> > by subtracting the start of the range.
+> 
+> Are you saying that our LPC controller should specify a
+> range property to map bus addresses into a cpu address range? 
+
+No. There is not CPU address associated with it, because it's
+not memory mapped.
+
+Instead, we need to associate a bus address with a logical
+Linux port number, both in of_address_to_resource and
+in inb()/outb().
+
+> > > > Another option the IA64 approach mentioned in another subthread
+> > > > today, looking up the operations based on an index from the
+> > > > upper bits of the port number. If we do this, we probably
+> > > > want to do that for all PIO access and replace the entire
+> > > > virtual address remapping logic with that. I think Bjorn
+> > > > in the past argued in favor of such an approach, while I
+> > > > advocated the current scheme for simplicity based on how
+> > > > every I/O space these days is just memory mapped (which now
+> > > > turned out to be false, both on powerpc and arm64).
+> > >
+> > > This seems really complex...I am a bit worried that possibly
+> > > we end up in having the maintainers saying that it is not worth
+> > > to re-invent the world just for this special LPC device...
+> > 
+> > It would clearly be a rather invasive change, but the
+> > end-result isn't necessarily more complex than what we
+> > have today, as we'd kill off the crazy pci_pio_to_address()
+> > and pci_address_to_pio() hacks in address translation.
+> 
+> I have to look better into this...can you provide me a reference
+> to the Bjorn argument in favor of this approach?
+
+The thread seems to have been pci: Introduce pci_register_io_range()
+helper function, e.g. in https://lkml.org/lkml/2014/7/8/969
+
+> > > To be honest with you I would keep things simple for this
+> > > LPC and introduce more complex reworks later if more devices
+> > > need to be introduced.
+> > >
+> > > What if we stick on a single domain now where we introduce a
+> > > reserved threshold for the IO space (say INDIRECT_MAX_IO).
+> > 
+> > I said having a single domain is fine, but I still don't
+> > like the idea of reserving low port numbers for this hack,
+> > it would mean that the numbers change for everyone else.
+> 
+> I don't get this much...I/O tokens that are passed to the I/O
+> accessors are not fixed anyway and they vary depending on the order
+> of adding ranges to io_range_list...so I don't see a big issue
+> with this...
+
+On machines with a legacy devices behind the PCI bridge,
+there may still be a reason to have the low I/O port range
+reserved for the primary bus, e.g. to get a VGA text console
+to work.
+
+On powerpc, this is called the "primary" PCI host, i.e. the
+only one that is allowed to have an ISA bridge.
+
+	Arnd
