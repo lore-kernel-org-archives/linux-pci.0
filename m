@@ -1,149 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35021 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752679AbcKPPJB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2016 10:09:01 -0500
-Date: Wed, 16 Nov 2016 09:08:58 -0600
-From: Rob Herring <robh@kernel.org>
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: qcom: add support to msm8996 PCIE controller
-Message-ID: <20161116150858.343voujjg4p2zdhn@rob-hp-laptop>
-References: <1479219837-7868-1-git-send-email-srinivas.kandagatla@linaro.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27895 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752336AbcKRLNh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 06:13:37 -0500
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+To: Arnd Bergmann <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478806353.7430.137.camel@kernel.crashing.org>
+ <5825984B.3030303@hisilicon.com> <2436881.9RqUVYxmDf@wuerfel>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <gabriele.paoloni@huawei.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <linuxarm@huawei.com>,
+        <lorenzo.pieralisi@arm.com>, <xuwei5@hisilicon.com>,
+        <linux-serial@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <minyard@acm.org>,
+        <marc.zyngier@arm.com>, <liviu.dudau@arm.com>,
+        <john.garry@huawei.com>, <zourongrong@gmail.com>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <kantyzc@163.com>,
+        <zhichang.yuan02@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <olof@lixom.net>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <582EE223.4090605@hisilicon.com>
+Date: Fri, 18 Nov 2016 19:12:35 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479219837-7868-1-git-send-email-srinivas.kandagatla@linaro.org>
+In-Reply-To: <2436881.9RqUVYxmDf@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 15, 2016 at 02:23:57PM +0000, Srinivas Kandagatla wrote:
-> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+Hi, Arnd,
 
-s/pcie/PCIe/
 
-> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
-> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+On 2016/11/18 17:20, Arnd Bergmann wrote:
+> On Friday, November 11, 2016 6:07:07 PM CET zhichang.yuan wrote:
+>>
+>> I have similar idea as your PPC MMIO.
+>>
+>> We notice the prototype of {in/out()} is something like that:
+>>
+>> static inline u8 inb(unsigned long addr)
+>> static inline void outb(u8 value, unsigned long addr)
+>>
+>> The type of parameter 'addr' is unsigned long. For I/O space, it is big enough.
+>> So, could you divide this 'addr' into several bit segments? The top 8 bits is
+>> defined as bus index. For normal direct IO, the bus index is 0. For those bus
+>> device which need indirectIO or some special I/O accessors, when these devices
+>> are initializing, can request to allocate an unique ID to them, and register
+>> their own accessors to the entry which is corresponding to the ID.
 > 
-> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+> Ah, have you looked at the IA64 code? It does exactly this.
+> For ARM64 we decided to use the same basic approach as powerpc with
+> a single range of virtual memory for mapping it as that somewhat
+> simplified all cases we knew about at the time.
 
-s/pcie/PCIe/
+Yes. I spent some time to trace how to work on PPC. But the code is a bit long,
+I am not clear on how the indirectIO there was supported.
 
-> pipe clocks are only setup after the phy is powered on.
-> It also adds ltssm_enable callback as it is very much different to other
-> supported SOCs in the driver.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> ---
-> 
->  Changes since v4:
->  	- removed duplicate define spotted by Stan.
-> 	- renamed halt register to remove msm8996 suggested by Stan.
-> 	- dropped simple-pm-bus and runtime pm patches as these can
-> 	 potentially go into pm domain provider.
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
->  drivers/pci/host/pcie-qcom.c                       | 175 ++++++++++++++++++++-
->  2 files changed, 236 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 4059a6f..141d8c3 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -7,6 +7,7 @@
->  			- "qcom,pcie-ipq8064" for ipq8064
->  			- "qcom,pcie-apq8064" for apq8064
->  			- "qcom,pcie-apq8084" for apq8084
-> +			- "qcom,pcie-msm8996" for msm8996 or apq8096
->  
->  - reg:
->  	Usage: required
-> @@ -92,6 +93,17 @@
->  			- "aux"		Auxiliary (AUX) clock
->  			- "bus_master"	Master AXI clock
->  			- "bus_slave"	Slave AXI clock
-> +
-> +- clock-names:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <stringlist>
-> +	Definition: Should contain the following entries
-> +			- "pipe"	Pipe Clock driving internal logic.
-> +			- "aux"		Auxiliary (AUX) clock.
-> +			- "cfg"		Configuration clk.
-> +			- "bus_master"	Master AXI clock.
-> +			- "bus_slave"	Slave AXI clock.
-> +
->  - resets:
->  	Usage: required
->  	Value type: <prop-encoded-array>
-> @@ -115,7 +127,7 @@
->  			- "core" Core reset
->  
->  - power-domains:
-> -	Usage: required for apq8084
-> +	Usage: required for apq8084 and msm8996/apq8096
->  	Value type: <prop-encoded-array>
->  	Definition: A phandle and power domain specifier pair to the
->  		    power domain which is responsible for collapsing
-> @@ -231,3 +243,56 @@
->  		pinctrl-0 = <&pcie0_pins_default>;
->  		pinctrl-names = "default";
->  	};
-> +
-> +* Example for apq8096:
+I noticed there are CONFIG_PPC_INDIRECT_PIO and CONFIG_PPC_INDIRECT_MMIO on PPC.
+It seems that only CONFIG_PPC_INDIRECT_MMIO applied some MSB to store the bus
+tokens which are used to get iowa_busses[] for specific operation helpers.
+I can not find how CONFIG_PPC_INDIRECT_PIO support multiple ISA domains. It
+seems only Opal-lpc.c adopt this INDIRECT_PIO method.
 
-Do you really need an example for every chip?
+Although CONFIG_PPC_INDIRECT_MMIO is for MMIO, seems not suitable for ISA/LPC
+I/O. But this idea is helpful.
 
-> +
-> +	pcie@608000{
-> +		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
-> +		power-domains = <&gcc PCIE1_GDSC>;
-> +		bus-range = <0x00 0xff>;
-> +		num-lanes = <1>;
-> +
-> +		reg = <0x00608000 0x2000>,
-> +		      <0x0d000000 0xf1d>,
-> +		      <0x0d000f20 0xa8>,
-> +		      <0x0d100000 0x100000>;
-> +
-> +		reg-names = "parf", "dbi", "elbi", "config";
-> +
-> +		phys = <&pcie_phy 1>;
-> +		phy-names = "pciephy";
-> +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
-> +			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
-> +
-> +		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
-> +		interrupt-names = "msi";
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0x7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> +
-> +		pinctrl-names = "default", "sleep";
-> +		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
-> +		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
-> +
-> +		vdda-1p8-supply = <&pm8994_l12>;
-> +		vdda-supply = <&pm8994_l28>;
-> +		linux,pci-domain = <1>;
-> +
-> +		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
-> +			<&gcc GCC_PCIE_1_AUX_CLK>,
-> +			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-> +			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-> +			<&gcc GCC_PCIE_1_SLV_AXI_CLK>;
-> +
-> +		clock-names =  "pipe",
-> +				"aux",
-> +				"cfg",
-> +				"bus_master",
-> +				"bus_slave";
-> +	};
+what else did I miss??
+
+> 
+>> In this way, we can support multiple domains, I think.
+>> But I am not sure whether it is feasible, for example, are there some
+>> architectures/platforms had populated the top 8 bits? Do we need to request IO
+>> region from ioport_resource for those devices?  etc...
+> 
+> On a 64-bit architecture, the top 32 bits of the port number are
+> definitely free to use for this, and 8 bits are probably sufficient.
+> 
+> Even on 32 bit architectures, I can't see why we'd ever need more than
+> 16 bits worth of addressing within a domain, so using 8 bit domain
+> and 16 bit address leaves 8 or 40 unused bits.
+
+Yes. 8 bits are enough.
+But the maximal PIO on some architectures are defined as ~0 or -1. There is no
+any bare space left. Probably we can not ensure the upper 8 bits available.
+
+
+Thanks,
+Zhichang
+
+
+> 
+> 	Arnd
+> 
+> .
+> 
+
