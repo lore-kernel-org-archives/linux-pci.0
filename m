@@ -1,82 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:33245 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbcKAPrl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2016 11:47:41 -0400
+Received: from lhrrgout.huawei.com ([194.213.3.17]:4194 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752301AbcKRRGN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 12:06:13 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        John Garry <john.garry@huawei.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@go og le.com" <bhelgaas@google.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        T homas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "olof@lixom.net" <olof@lixom.net>
+Subject: RE: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 18 Nov 2016 17:03:11 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F921A0F@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <2271602.GoSoby0zHK@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F921858@lhreml507-mbx>
+ <2364530.A9QSbaqvfm@wuerfel>
+In-Reply-To: <2364530.A9QSbaqvfm@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161101154232.6451-1-emil.l.velikov@gmail.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Tue, 1 Nov 2016 11:47:39 -0400
-Message-ID: <CADnq5_N5_fyJKDpbaew_1t9jNP3+jja+0dAf0WJVOOQ_pOoJXw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: create revision file in sysfs
-To: Emil Velikov <emil.l.velikov@gmail.com>
-Cc: Maling list - DRI developers <dri-devel@lists.freedesktop.org>,
-        Jammy Zhou <Jammy.Zhou@amd.com>,
-        =?UTF-8?Q?Michel_D=C3=A4nzer?= <michel.daenzer@amd.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 1, 2016 at 11:42 AM, Emil Velikov <emil.l.velikov@gmail.com> wr=
-ote:
-> From: Emil Velikov <emil.velikov@collabora.com>
->
-> Currently the revision isn't available via sysfs/libudev thus if one
-> wants to know the value they need to read through the config file.
->
-> This in itself wakes/powers up the device, causing unwanted delay
-> since it can be quite costly.
->
-> Expose the revision as a separate file, just like we do for the device,
-> vendor, their subsystem version and class.
->
-> Cc: Jammy Zhou <Jammy.Zhou@amd.com>
-> Cc: Michel D=C3=A4nzer <michel.daenzer@amd.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 18 November 2016 16:35
+> To: Gabriele Paoloni
+> Cc: linux-arm-kernel@lists.infradead.org; mark.rutland@arm.com;
+> benh@kernel.crashing.org; catalin.marinas@arm.com; liviu.dudau@arm.com;
+> Linuxarm; lorenzo.pieralisi@arm.com; xuwei (O); Jason Gunthorpe; linux-
+> serial@vger.kernel.org; linux-pci@vger.kernel.org;
+> devicetree@vger.kernel.org; minyard@acm.org; will.deacon@arm.com; John
+> Garry; zourongrong@gmail.com; robh+dt@kernel.org; bhelgaas@go og
+> le.com; kantyzc@163.com; zhichang.yuan02@gmail.com; T homas Petazzoni;
+> linux-kernel@vger.kernel.org; Yuanzhichang; olof@lixom.net
+> Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on
+> Hip06
+> 
+> On Friday, November 18, 2016 4:18:07 PM CET Gabriele Paoloni wrote:
+> > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > On Friday, November 18, 2016 12:53:08 PM CET Gabriele Paoloni
+> wrote:
+> > > > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > > > On Friday, November 18, 2016 12:07:28 PM CET Gabriele Paoloni
+> > > > > The easiest change compared to the v5 code would be to walk
+> > > > > a linked list of 'struct extio_ops' structures rather than
+> > > > > assuming there is only ever one of them. I think one of the
+> > > > > earlier versions actually did this.
+> > > >
+> > > > Right but if my understanding is correct if we live in a multi-
+> > > > domain I/O space world when you have an input addr in the I/O
+> > > > accessors this addr can be duplicated (for example for the
+> standard
+> > > > PCI IO domain and for our special LPC domain).
+> > > > So effectively even if you walk a linked list there is a problem
+> > > > of disambiguation...am I right?
+> > >
+> > > No, unlike the PCI memory space, the PIO addresses are not
+> > > usually distinct, i.e. every PCI bus has its own 64K I/O
+> > > addresses starting at zero. We linearize them into the
+> > > Linux I/O space using the per-domain io_offset value.
+> >
+> > I am going to summarize my understanding here below:
+> >
+> > It seems to me that what is linearized is the virtual address
+> > space associated to the IO address space. This address space
+> > goes from PCI_IOBASE to (PCI_IOBASE + IO_SPACE_LIMIT).
+> >
+> > The I/O accessors perform rd/wr operation on this address
+> > space using a port IO token.
+> >
+> > Each token map into a cpu physical address range
+> > Each cpu physical address range maps to a bus address range
+> > if the bus controller specifies a range property.
+> >
+> > Devices under a bus controller specify the bus addresses that
+> > they operate on in their reg property.
+> >
+> > So each device can use the same bus addresses under two
+> > separate bus controllers as long as the bus controller
+> > use the range properties to map the same bus range to different
+> > cpu address range.
+> 
+> Sounds all correct to me so far, yes.
+> 
+> > > For the ISA/LPC spaces there are only 4k of addresses, they
+> > > the bus addresses always overlap, but we can trivially
+> > > figure out the bus address from Linux I/O port number
+> > > by subtracting the start of the range.
+> >
+> > Are you saying that our LPC controller should specify a
+> > range property to map bus addresses into a cpu address range?
+> 
+> No. There is not CPU address associated with it, because it's
+> not memory mapped.
+> 
+> Instead, we need to associate a bus address with a logical
+> Linux port number, both in of_address_to_resource and
+> in inb()/outb().
 
-Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+I think this is effectively what we are doing so far with patch 2/3.
+The problem with this patch is that we are carving out a "forbidden"
+IO tokens range that goes from 0 to PCIBIOS_MIN_IO.
 
-> ---
-> Gents, I'm not subscribed to the mailing list so please keep me in the
-> CC chain.
->
-> Thanks
-> Emil
-> ---
->  drivers/pci/pci-sysfs.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index bcd10c7..0666287 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -50,6 +50,7 @@ pci_config_attr(vendor, "0x%04x\n");
->  pci_config_attr(device, "0x%04x\n");
->  pci_config_attr(subsystem_vendor, "0x%04x\n");
->  pci_config_attr(subsystem_device, "0x%04x\n");
-> +pci_config_attr(revision, "0x%02x\n");
->  pci_config_attr(class, "0x%06x\n");
->  pci_config_attr(irq, "%u\n");
->
-> @@ -568,6 +569,7 @@ static struct attribute *pci_dev_attrs[] =3D {
->         &dev_attr_device.attr,
->         &dev_attr_subsystem_vendor.attr,
->         &dev_attr_subsystem_device.attr,
-> +       &dev_attr_revision.attr,
->         &dev_attr_class.attr,
->         &dev_attr_irq.attr,
->         &dev_attr_local_cpus.attr,
-> --
-> 2.9.3
->
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+I think that the proper solution would be to have the LPC driver to
+set the carveout threshold used in pci_register_io_range(), 
+pci_pio_to_address(), pci_address_to_pio(), but this would impose
+a probe dependency on the LPC itself that should be probed before
+the PCI controller (or before any other devices calling these
+functions...) 
+
+> 
+> > > > > Another option the IA64 approach mentioned in another subthread
+> > > > > today, looking up the operations based on an index from the
+> > > > > upper bits of the port number. If we do this, we probably
+> > > > > want to do that for all PIO access and replace the entire
+> > > > > virtual address remapping logic with that. I think Bjorn
+> > > > > in the past argued in favor of such an approach, while I
+> > > > > advocated the current scheme for simplicity based on how
+> > > > > every I/O space these days is just memory mapped (which now
+> > > > > turned out to be false, both on powerpc and arm64).
+> > > >
+> > > > This seems really complex...I am a bit worried that possibly
+> > > > we end up in having the maintainers saying that it is not worth
+> > > > to re-invent the world just for this special LPC device...
+> > >
+> > > It would clearly be a rather invasive change, but the
+> > > end-result isn't necessarily more complex than what we
+> > > have today, as we'd kill off the crazy pci_pio_to_address()
+> > > and pci_address_to_pio() hacks in address translation.
+> >
+> > I have to look better into this...can you provide me a reference
+> > to the Bjorn argument in favor of this approach?
+> 
+> The thread seems to have been pci: Introduce pci_register_io_range()
+> helper function, e.g. in https://lkml.org/lkml/2014/7/8/969
+
+Ok many thanks I am going to look at it
+
+> 
+> > > > To be honest with you I would keep things simple for this
+> > > > LPC and introduce more complex reworks later if more devices
+> > > > need to be introduced.
+> > > >
+> > > > What if we stick on a single domain now where we introduce a
+> > > > reserved threshold for the IO space (say INDIRECT_MAX_IO).
+> > >
+> > > I said having a single domain is fine, but I still don't
+> > > like the idea of reserving low port numbers for this hack,
+> > > it would mean that the numbers change for everyone else.
+> >
+> > I don't get this much...I/O tokens that are passed to the I/O
+> > accessors are not fixed anyway and they vary depending on the order
+> > of adding ranges to io_range_list...so I don't see a big issue
+> > with this...
+> 
+> On machines with a legacy devices behind the PCI bridge,
+> there may still be a reason to have the low I/O port range
+> reserved for the primary bus, e.g. to get a VGA text console
+> to work.
+> 
+> On powerpc, this is called the "primary" PCI host, i.e. the
+> only one that is allowed to have an ISA bridge.
+
+Yes but
+1) isn't the PCI controller range property that defines how IO bus address
+   map into physical CPU addresses?
+2) How can you guarantee that the cpu range associated with this
+   IO bus range is the first to be registered in pci_register_io_range()?
+   ( i.e. are you saying that they are just relying on the fact that it is the
+     only IO range in the system and by chance the IO tokens and corresponding
+     bus addresses are the same? )
+
+Thanks
+
+Gab
+
+> 
+> 	Arnd
