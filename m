@@ -1,52 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:53308 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933122AbcKWTMX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 14:12:23 -0500
-Date: Wed, 23 Nov 2016 12:12:15 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161123191215.GB12146@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
- <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
+Return-Path: <alexdeucher@gmail.com>
+Return-Path: <alexdeucher@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161118094846.occmgmu4os5nzkh7@phenom.ffwll.local>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161111143723.5818-1-emil.l.velikov@gmail.com> <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
+ <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117144402.GB11693@wunner.de> <20161117234855.GA25762@bhelgaas-glaptop.roam.corp.google.com>
+ <b011e277-7e96-d2ea-216b-f65a6129bc50@daenzer.net> <20161118024010.GC25762@bhelgaas-glaptop.roam.corp.google.com>
+ <20161118094207.j5bfdjgmwd6qv347@phenom.ffwll.local> <20161118094846.occmgmu4os5nzkh7@phenom.ffwll.local>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Fri, 18 Nov 2016 10:04:53 -0500
+Message-ID: <CADnq5_PPt33EUTjyZrHnMBUxizr86h+xOmuvAJcwk=gEbTMiLQ@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: create revision file in sysfs
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, =?UTF-8?Q?Michel_D=C3=A4nzer?= <michel@daenzer.net>,
+	Emil Velikov <emil.l.velikov@gmail.com>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 10:40:47AM -0800, Dan Williams wrote:
+On Fri, Nov 18, 2016 at 4:48 AM, Daniel Vetter <daniel@ffwll.ch> wrote:
+> On Fri, Nov 18, 2016 at 10:42:07AM +0100, Daniel Vetter wrote:
+>> On Thu, Nov 17, 2016 at 08:40:10PM -0600, Bjorn Helgaas wrote:
+>> > On Fri, Nov 18, 2016 at 10:42:20AM +0900, Michel D=C3=A4nzer wrote:
+>> > > On 18/11/16 08:48 AM, Bjorn Helgaas wrote:
+>> > > >
+>> > > > Popping the stack all the way back to Emil's Nov 8 message:
+>> > > >
+>> > > >   When using the Mesa drivers alongside firefox [1] (since Mesa 13=
+.0),
+>> > > >   glxinfo (Mesa 10.0) and others, all the GPUs* will be awaken,
+>> > > >   causing unwanted delays and increased power usage.
+>> > > >
+>> > > >   [1] https://bugs.freedesktop.org/show_bug.cgi?id=3D98502
+>> > > >
+>> > > > The bug is about a delay in starting firefox, thunderbird, or
+>> > > > chromium.  I assume the browser starts on the current, powered-up,
+>> > > > GPU.  I don't understand why we care about the revision of other,
+>> > > > powered-off, GPUs.
+>> > >
+>> > > We don't. The problem is that the current libdrm API unconditionally
+>> > > provides the revision. The plan is to address this in two ways:
+>> > >
+>> > > * Add new libdrm API which allows the caller to say "I don't need th=
+e
+>> > > revision", and make Mesa use that. Users having those changes will n=
+ot
+>> > > run into the problem even on older kernels.
+>> > >
+>> > > * Add the separate revision file in sysfs and make libdrm use that f=
+or
+>> > > its current API. This means that even callers of the current libdrm =
+API
+>> > > will not run into the problem with newer kernels.
+>> >
+>> > Why do we care about *anything* for the other, powered-off, GPUs?
+>> > Even users of the new libdrm API who say "I don't need the revision"
+>> > are still getting the vendor/device/etc for those other GPUs.
+>>
+>> egl device enumeration, and for that you need to know what gpus you have
+>> and load their drivers. Afaik. Yes by default they'll all select the
+>> online gpu, but they can opt for the faster/other one on multi-gpu
+>> machines.
+>
+> Now the only reason we can avoid parsing the revision flag is that most
+> drivers don't care, and the one that does (i915) is generally the one
+> that's on and only needs it after driver init. But fundamentally we can't
+> avoid the enumeration, and imo it's better to cache this in the kernel
+> than implement some userspace thingy (require udev or whatever).
+>
 
-> I don't think that was designed for the case where the backing memory
-> is a special/static physical address range rather than anonymous
-> "System RAM", right?
+We need the revision id as well.
 
-The hardware doesn't care where the memory is. ODP is just a generic
-mechanism to provide demand-fault behavior for a mirrored page table.
+Alex
 
-ODP has the same issue as everything else, it needs to translate a
-page table entry into a DMA address, and we have no API to do that
-when the page table points to peer-peer memory.
-
-Jason
+> I guess in the end I don't really get why caching the revision in the
+> kernel is a problem ...
+> -Daniel
+> --
+> Daniel Vetter
+> Software Engineer, Intel Corporation
+> http://blog.ffwll.ch
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
