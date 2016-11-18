@@ -1,48 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41448 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41160 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933237AbcK3SBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Nov 2016 13:01:52 -0500
-Date: Wed, 30 Nov 2016 12:01:43 -0600
+        id S1752824AbcKROD2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Nov 2016 09:03:28 -0500
+Date: Fri, 18 Nov 2016 08:03:19 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, Andy Lutomirski <luto@kernel.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        David Daney <david.daney@cavium.com>
-Subject: Re: Ping: [PATCH] PCI/ASPM: Don't retrain link if ASPM not possible.
-Message-ID: <20161130180143.GC13411@bhelgaas-glaptop.roam.corp.google.com>
-References: <1479421501-31029-1-git-send-email-ddaney.cavm@gmail.com>
- <583F082F.1010701@caviumnetworks.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH v2 0/9] PCIe port PM: high gloss polish & hotplug support
+Message-ID: <20161118140319.GD25762@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1477611126.git.lukas@wunner.de>
+ <20161118011515.GB25762@bhelgaas-glaptop.roam.corp.google.com>
+ <20161118091057.GA12168@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <583F082F.1010701@caviumnetworks.com>
+In-Reply-To: <20161118091057.GA12168@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
-
-On Wed, Nov 30, 2016 at 09:11:11AM -0800, David Daney wrote:
-> On 11/17/2016 02:25 PM, David Daney wrote:
-> >From: David Daney <david.daney@cavium.com>
-> >
-> >Some (defective) PCIe devices are not able to reliably do link
-> >retraining.
-> >
-> >Check to see if ASPM is possible between link partners before
-> >configuring common clocking, and doing the resulting link retraining.
-> >If ASPM is not possible, there is no reason to risk losing access to a
-> >device due to an unnecessary link retraining.
-> >
+On Fri, Nov 18, 2016 at 10:10:57AM +0100, Lukas Wunner wrote:
+> On Thu, Nov 17, 2016 at 07:15:15PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Oct 28, 2016 at 10:52:06AM +0200, Lukas Wunner wrote:
+> > > Respin of this series to polish the runtime PM support for PCIe ports
+> > > that was added with v4.8, and extend it to native hotplug ports:
+> [snip]
+> > I applied these to pci/pm for v4.10, thanks!
+> > 
+> > I did make two changes to the changelog of the last patch: you
+> > mentioned the "subordinate" bus, and I changed it to "secondary".  We
+> > have often used "subordinate" to refer to the immediately-downstream
+> > bus, but that's slightly confusing because in the bridge spec,
+> > "subordinate" means the highest bus number downstream from the bridge,
+> > while "secondary" refers to the immediately-downstream bridge.  Am I
+> > making sense or confusing things more?
 > 
-> Hi Bjorn,
-> 
-> It has been a couple of weeks since I originally sent this, and I
-> wanted to know if you have had a chance to look at it.  If possible,
-> it would be nice to consider for the approaching merge window.
+> Indeed the secondary bus was meant here and I used "subordinate" only
+> because the attribute in struct pci_dev is named like this. :-)
 
-Yes, definitely.  I haven't had a chance yet, but I hope to.  Right
-now my top priority is getting the arm64 ECAM quirks in for v4.10.
-Once that's settled I'll come back and pick up some of these fixes.
-
-Bjorn
+Yeah, I wish it weren't named that way, but I guess we're stuck with
+that one.
