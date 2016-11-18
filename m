@@ -1,193 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45636 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753995AbcKPSME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Nov 2016 13:12:04 -0500
-Date: Wed, 16 Nov 2016 12:11:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
- bridge hasn't
-Message-ID: <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161102223552.14776-1-jthumshirn@suse.de>
- <20161102223552.14776-2-jthumshirn@suse.de>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53876 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbcKRKGv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2016 05:06:51 -0500
+Date: Fri, 18 Nov 2016 11:07:00 +0100
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Cc: Simon Guinot <simon.guinot@sequanux.org>,
+        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>,
+        "Jamet, Michael" <michael.jamet@intel.com>,
+        "remi.rerolle@seagate.com" <remi.rerolle@seagate.com>
+Subject: Re: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Message-ID: <20161118100700.GA7126@kroah.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <20161109143632.GE6167@kw.sim.vm.gnt>
+ <E607265CB020454880711A6F96C05A03B677E4C9@hasmsx107.ger.corp.intel.com>
+ <20161115105920.GH6167@kw.sim.vm.gnt>
+ <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161102223552.14776-2-jthumshirn@suse.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Johannes,
+On Fri, Nov 18, 2016 at 08:48:36AM +0000, Levy, Amir (Jer) wrote:
+> > BTW, it is quite a shame that the Thunderbolt firmware version can't 
+> > be read from Linux.
+> > 
+> 
+> This is WIP, once this patch will be upstream, we will be able to focus more
+> on aligning Linux with the Thunderbolt features that we have for windows.
 
-On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
-> The Read Completion Boundary (RCB) bit must only be set on a device or
-> endpoint if it is set on the root complex.
+Why is this patch somehow holding that work back?  You aren't just
+sitting around waiting for people to review this and not doing anything
+else, right?  Is there some basic building block in these patches that
+your firmware download code is going to rely on?
 
-I propose the following slightly modified patch.  The interesting
-difference is that your patch only touches the _HPX "OR" mask, so it
-refrains from *setting* RCB in some cases, but it never actually
-*clears* it.  The only time we clear RCB is when the _HPX "AND" mask
-has RCB == 0.
+confused,
 
-My intent below is that we completely ignore the _HPX RCB bits, and we
-set an Endpoint's RCB if and only if the Root Port's RCB is set.
-
-I made an ugly ASCII table to think about the cases:
-
-      Root   EP    _HPX  _HPX     Final Endpoint RCB state
-      Port  (init)  AND   OR     (curr)  (yours)  (mine)
-  0)   0     0      0    0          0       0       0
-  1)   0     0      0    1          1       0       0
-  2)   0     0      1    0          0       0       0
-  3)   0     0      1    1          1       0       0
-  4)   0     1      0    0          0       0       0
-  5)   0     1      0    1          1       0       0
-  6)   0     1      1    0          1       1       0
-  7)   0     1      1    1          1       1       0
-  8)   1     0      0    0          0       0       1
-  9)   1     0      0    1          1       1       1
-  A)   1     0      1    0          0       0       1
-  B)   1     0      1    1          1       1       1
-  C)   1     1      0    0          0       0       1
-  D)   1     1      0    1          1       1       1
-  E)   1     1      1    0          1       1       1
-  F)   1     1      1    1          1       1       1
-
-Cases 0-7 should all result in the Endpoint RCB being zero because the
-Root Port RCB is zero.  Case 1 is the bug you're fixing.  Cases 3 & 5
-are similar hypothetical bugs your patch also fixes.
-
-Cases 6 & 7, where firmware left the Endpoint RCB set and _HPX didn't
-tell us to clear it, are hypothetical firmware bugs that your patch
-wouldn't fix.
-
-In cases 8, A, and C, we currently leave the Endpoint RCB cleared,
-either because firmware left it clear and _HPX didn't tell us to set
-it (8 and A), or because firmware set it but _HPX told us to clear it
-(C).
-
-One could argue that 8, A, and C should stay as they currently are, as
-a way for _HPX to work around hardware bugs, e.g., a Root Port that
-advertises a 128-byte RCB but doesn't actually support it.  I didn't
-bother with that and set the Endpoint's RCB to 128 in all cases when
-the Root Port claims to support it.
-
-It'd be great if you could test this and comment.
-
-If you get a chance, collect the /proc/iomem contents, too.  That's
-not for this bug; it's because I'm curious about the
-
-  ERST: Can not request [mem 0xb928b000-0xb928cbff] for ERST
-  
-problem in your dmesg log.
-
-
-commit da567a6c67cb5c5a55db7b26b46e9b7e9af69299
-Author: Johannes Thumshirn <jthumshirn@suse.de>
-Date:   Wed Nov 2 16:35:52 2016 -0600
-
-    PCI: Set Read Completion Boundary to 128 iff Root Port supports it
-    
-    Per PCIe spec r3.0, sec 2.3.1.1, the Read Completion Boundary (RCB)
-    determines the naturally aligned address boundaries on which a Read Request
-    may be serviced with multiple Completions:
-    
-      - For a Root Complex, RCB is 64 bytes or 128 bytes
-        This value is reported in the Link Control Register
-    
-        Note: Bridges and Endpoints may implement a corresponding command bit
-        which may be set by system software to indicate the RCB value for the
-        Root Complex, allowing the Bridge/Endpoint to optimize its behavior
-        when the Root Complex’s RCB is 128 bytes.
-    
-      - For all other system elements, RCB is 128 bytes
-    
-    Per sec 7.8.7, if a Root Port only supports a 64-byte RCB, the RCB of all
-    downstream devices must be clear, indicating an RCB of 64 bytes.  If the
-    Root Port supports a 128-byte RCB, we may optionally set the RCB of
-    downstream devices so they know they can generate larger Completions.
-    
-    Some BIOSes supply an _HPX that tells us to set RCB, even though the Root
-    Port doesn't have RCB set, which may lead to Malformed TLP errors if the
-    Endpoint generates completions larger than the Root Port can handle.
-    
-    The IBM x3850 X6 with BIOS version -[A8E120CUS-1.30]- 08/22/2016 supplies
-    such an _HPX and a Mellanox MT27500 ConnectX-3 device fails to initialize:
-    
-      mlx4_core 0000:41:00.0: command 0xfff timed out (go bit not cleared)
-      mlx4_core 0000:41:00.0: device is going to be reset
-      mlx4_core 0000:41:00.0: Failed to obtain HW semaphore, aborting
-      mlx4_core 0000:41:00.0: Fail to reset HCA
-      ------------[ cut here ]------------
-      kernel BUG at drivers/net/ethernet/mellanox/mlx4/catas.c:193!
-    
-    After 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-    and 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices
-    with a link"), we apply _HPX settings to *all* devices, not just those
-    hot-added after boot.
-    
-    Before 7a1562d4f2d0, we didn't touch the Mellanox RCB, and the device
-    worked.  After 7a1562d4f2d0, we set its RCB to 128, and it failed.
-    
-    Set the RCB to 128 iff the Root Port supports a 128-byte RCB.  Otherwise,
-    set RCB to 64 bytes.  This effectively ignores what _HPX tells us about
-    RCB.
-    
-    [bhelgaas: changelog, clear RCB if not set for Root Port]
-    Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-    Fixes: 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices with a link")
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=187781
-    Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.18+
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..8854161 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1439,6 +1439,21 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
- 		dev_warn(&dev->dev, "PCI-X settings not supported\n");
- }
- 
-+static bool pcie_root_rcb_set(struct pci_dev *dev)
-+{
-+	struct pci_dev *rp = pcie_find_root_port(dev);
-+	u16 lnkctl;
-+
-+	if (!rp)
-+		return false;
-+
-+	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
-+	if (lnkctl & PCI_EXP_LNKCTL_RCB)
-+		return true;
-+
-+	return false;
-+}
-+
- static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- {
- 	int pos;
-@@ -1468,9 +1483,19 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
- 
- 	/* Initialize Link Control Register */
--	if (pcie_cap_has_lnkctl(dev))
-+	if (pcie_cap_has_lnkctl(dev)) {
-+
-+		/*
-+		 * If the Root Port supports Read Completion Boundary of
-+		 * 128, set RCB to 128.  Otherwise, clear it.
-+		 */
-+		hpp->pci_exp_lnkctl_and |= PCI_EXP_LNKCTL_RCB;
-+		if (pcie_root_rcb_set(dev))
-+			hpp->pci_exp_lnkctl_or |= PCI_EXP_LNKCTL_RCB;
-+
- 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
- 			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-+	}
- 
- 	/* Find Advanced Error Reporting Enhanced Capability */
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+greg k-h
