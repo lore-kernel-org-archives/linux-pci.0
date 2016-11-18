@@ -1,87 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34745 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932336AbcKJNOh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2016 08:14:37 -0500
-Received: by mail-wm0-f65.google.com with SMTP id g23so3100850wme.1
-        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2016 05:14:37 -0800 (PST)
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V5 1/2] PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
+Date: Fri, 18 Nov 2016 17:22:30 +0800
+Message-ID: <1479460951-49281-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1479460951-49281-1-git-send-email-liudongdong3@huawei.com>
+References: <1479460951-49281-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20161110071327.GA30661@kroah.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161109165607.26322-1-emil.l.velikov@gmail.com> <20161110071327.GA30661@kroah.com>
-From: Emil Velikov <emil.l.velikov@gmail.com>
-Date: Thu, 10 Nov 2016 13:14:35 +0000
-Message-ID: <CACvgo50m+nNhfUOmB_vw1ScMXDteG+fXU6D5G6D+suiH85Digw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: create revision file in sysfs
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: ML dri-devel <dri-devel@lists.freedesktop.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 November 2016 at 07:13, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Nov 09, 2016 at 04:56:07PM +0000, Emil Velikov wrote:
->> From: Emil Velikov <emil.velikov@collabora.com>
->>
->> Currently the revision isn't available via sysfs/libudev thus if one
->> wants to know the value they need to read through the config file.
->>
->> This in itself wakes/powers up the device, causing unwanted delays.
->>
->> There are at least two userspace components which could make use the new
->> file - libpciaccess and libdrm. At the moment the former will wake up
->> _every_ PCI device for simple invocation of glxinfo [when using Mesa
->> 10.0+ drivers]. While the latter [in association with Mesa 13.0] can
->> lead to 2-3 second delays while starting firefox, thunderbird or
->> chromium.
->>
->> Expose the revision as a separate file, just like we do for the device,
->> vendor, their subsystem version and class.
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
->> Tested-by: Mauro Santos <registo.mailling@gmail.com>
->> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
->> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
->> ---
->> v2:
->>  - Add r-b/t-b tags
->>  - Slim down CC list
->>  - Add note about userspace.
->>
->> As before, please keep me in the CC list. Additionally if there's
->> anything else I can do to get things going please let me know.
->>
->> Thanks
->> Emil
->> ---
->>  drivers/pci/pci-sysfs.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> index bcd10c7..0666287 100644
->> --- a/drivers/pci/pci-sysfs.c
->> +++ b/drivers/pci/pci-sysfs.c
->> @@ -50,6 +50,7 @@ pci_config_attr(vendor, "0x%04x\n");
->>  pci_config_attr(device, "0x%04x\n");
->>  pci_config_attr(subsystem_vendor, "0x%04x\n");
->>  pci_config_attr(subsystem_device, "0x%04x\n");
->> +pci_config_attr(revision, "0x%02x\n");
->>  pci_config_attr(class, "0x%06x\n");
->>  pci_config_attr(irq, "%u\n");
->
-> Shouldn't we get a Documentation/ABI/ update for this as well?
->
-Definitely, we should.
+The acpi_get_rc_resources() is used to get the RC register address that can
+not be described in MCFG. It takes the _HID&segment to look for and outputs
+the RC address resource. Use PNP0C02 devices to describe such RC address
+resource. Use _UID to match segment to tell which root bus the PNP0C02
+resource belong to.
 
-I've updated Documentation/filesystems/sysfs-pci.txt [locally] yet
-looking through ABI/ there is only a 'testing' one -
-Documentation/ABI/testing/sysfs-bus-pci.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/pci-acpi.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h      |  4 +++
+ 2 files changed, 75 insertions(+)
 
-Feels a bit strange there is no stable one, guess I should/could start one ?
-
-Thanks
-Emil
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index d966d47..3557e3a 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -29,6 +29,77 @@
+ 	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+ };
+ 
++#ifdef CONFIG_ARM64
++static int acpi_get_rc_addr(struct acpi_device *adev, struct resource *res)
++{
++	struct resource_entry *entry;
++	struct list_head list;
++	unsigned long flags;
++	int ret;
++
++	INIT_LIST_HEAD(&list);
++	flags = IORESOURCE_MEM;
++	ret = acpi_dev_get_resources(adev, &list,
++				     acpi_dev_filter_resource_type_cb,
++				     (void *) flags);
++	if (ret < 0) {
++		dev_err(&adev->dev,
++			"failed to parse _CRS method, error code %d\n", ret);
++		return ret;
++	} else if (ret == 0) {
++		dev_err(&adev->dev,
++			"no IO and memory resources present in _CRS\n");
++		return -EINVAL;
++	}
++
++	entry = list_first_entry(&list, struct resource_entry, node);
++	*res = *entry->res;
++	acpi_dev_free_resource_list(&list);
++	return 0;
++}
++
++static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
++				 void **retval)
++{
++	u16 *segment = context;
++	unsigned long long uid;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
++	if (ACPI_FAILURE(status) || uid != *segment)
++		return AE_CTRL_DEPTH;
++
++	*(acpi_handle *)retval = handle;
++	return AE_CTRL_TERMINATE;
++}
++
++int acpi_get_rc_resources(const char *hid, u16 segment, struct resource *res)
++{
++	struct acpi_device *adev;
++	acpi_status status;
++	acpi_handle handle;
++	int ret;
++
++	status = acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
++	if (ACPI_FAILURE(status)) {
++		pr_err("Can't find _HID %s device", hid);
++		return -ENODEV;
++	}
++
++	ret = acpi_bus_get_device(handle, &adev);
++	if (ret)
++		return ret;
++
++	ret = acpi_get_rc_addr(adev, res);
++	if (ret) {
++		dev_err(&adev->dev, "can't get RC resource");
++		return ret;
++	}
++
++	return 0;
++}
++#endif
++
+ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+ {
+ 	acpi_status status = AE_NOT_EXIST;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..17ffa38 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++#ifdef CONFIG_ARM64
++int acpi_get_rc_resources(const char *hid, u16 segment, struct resource *res);
++#endif
++
+ #endif /* DRIVERS_PCI_H */
+-- 
+1.9.1
