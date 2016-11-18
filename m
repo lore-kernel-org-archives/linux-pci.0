@@ -1,81 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0107.outbound.protection.outlook.com ([104.47.32.107]:1472
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755592AbcKJLx4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 06:53:56 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        "Hadden Hoppert" <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 3/3] PCI: hv: delete the device earlier from hbus->children
- for hot-remove
-Date: Thu, 10 Nov 2016 07:19:52 +0000
-Message-ID: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <michel@daenzer.net>
+Return-Path: <michel@daenzer.net>
+Subject: Re: [PATCH v3] PCI: create revision file in sysfs
+To: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>
+References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
+ <20161111143723.5818-1-emil.l.velikov@gmail.com>
+ <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
+ <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117144402.GB11693@wunner.de>
+ <20161117234855.GA25762@bhelgaas-glaptop.roam.corp.google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Emil Velikov <emil.l.velikov@gmail.com>,
+ "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Greg KH <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+From: =?UTF-8?Q?Michel_D=c3=a4nzer?= <michel@daenzer.net>
+Message-ID: <b011e277-7e96-d2ea-216b-f65a6129bc50@daenzer.net>
+Date: Fri, 18 Nov 2016 10:42:20 +0900
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161117234855.GA25762@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-After we send a PCI_EJECTION_COMPLETE message to the host, the host will
-immediately send us a PCI_BUS_RELATIONS message with
-relations->device_count =3D=3D 0, so pci_devices_present_work(), running on
-another thread, can find the being-ejected device, mark
-the hpdev->reported_missing to true, and run list_move_tail()/list_del()
-for the device -- this races hv_eject_device_work() -> list_del().
+On 18/11/16 08:48 AM, Bjorn Helgaas wrote:
+> 
+> Popping the stack all the way back to Emil's Nov 8 message:
+> 
+>   When using the Mesa drivers alongside firefox [1] (since Mesa 13.0),
+>   glxinfo (Mesa 10.0) and others, all the GPUs* will be awaken,
+>   causing unwanted delays and increased power usage.
+> 
+>   [1] https://bugs.freedesktop.org/show_bug.cgi?id=98502
+> 
+> The bug is about a delay in starting firefox, thunderbird, or
+> chromium.  I assume the browser starts on the current, powered-up,
+> GPU.  I don't understand why we care about the revision of other,
+> powered-off, GPUs.
 
-The patch moves the list_del() in hv_eject_device_work() to an earlier
-place, i.e. before we send PCI_EJECTION_COMPLETE, so later the
-pci_devices_present_work() can't see the device.
+We don't. The problem is that the current libdrm API unconditionally
+provides the revision. The plan is to address this in two ways:
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-CC: Jake Oshins <jakeo@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>
-CC: Haiyang Zhang <haiyangz@microsoft.com>
-CC: Vitaly Kuznetsov <vkuznets@redhat.com>
----
- drivers/pci/host/pci-hyperv.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+* Add new libdrm API which allows the caller to say "I don't need the
+revision", and make Mesa use that. Users having those changes will not
+run into the problem even on older kernels.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 7590ad0..fe5179d 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1582,6 +1582,10 @@ static void hv_eject_device_work(struct work_struct =
-*work)
- 		pci_dev_put(pdev);
- 	}
-=20
-+	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
-+	list_del(&hpdev->list_entry);
-+	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
-+
- 	memset(&ctxt, 0, sizeof(ctxt));
- 	ejct_pkt =3D (struct pci_eject_response *)&ctxt.pkt.message;
- 	ejct_pkt->message_type.type =3D PCI_EJECTION_COMPLETE;
-@@ -1590,10 +1594,6 @@ static void hv_eject_device_work(struct work_struct =
-*work)
- 			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
- 			 VM_PKT_DATA_INBAND, 0);
-=20
--	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
--	list_del(&hpdev->list_entry);
--	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
--
- 	put_pcichild(hpdev, hv_pcidev_ref_childlist);
- 	put_pcichild(hpdev, hv_pcidev_ref_pnp);
- 	put_hvpcibus(hpdev->hbus);
---=20
-2.7.4
+* Add the separate revision file in sysfs and make libdrm use that for
+its current API. This means that even callers of the current libdrm API
+will not run into the problem with newer kernels.
 
+
+-- 
+Earthling Michel Dänzer               |               http://www.amd.com
+Libre software enthusiast             |             Mesa and X developer
