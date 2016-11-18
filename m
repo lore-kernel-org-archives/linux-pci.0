@@ -1,258 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 11/16] drivers: iommu: arm-smmu-v3: add IORT configuration
-Date: Wed,  9 Nov 2016 14:19:43 +0000
-Message-Id: <20161109141948.19244-12-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48594 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754094AbcKROqC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Nov 2016 09:46:02 -0500
+Date: Fri, 18 Nov 2016 08:45:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: Remove service driver load/unload messages
+Message-ID: <20161118144556.GG25762@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161116221122.15842.77692.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161116221310.15842.25671.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117134042.GA11658@wunner.de>
+ <20161117204934.GC22428@bhelgaas-glaptop.roam.corp.google.com>
+ <20161118100043.GA12190@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161118100043.GA12190@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In ACPI bases systems, in order to be able to create platform
-devices and initialize them for ARM SMMU v3 components, the IORT
-kernel implementation requires a set of static functions to be
-used by the IORT kernel layer to configure platform devices for
-ARM SMMU v3 components.
+On Fri, Nov 18, 2016 at 11:00:43AM +0100, Lukas Wunner wrote:
+> On Thu, Nov 17, 2016 at 02:49:34PM -0600, Bjorn Helgaas wrote:
+> > On Thu, Nov 17, 2016 at 02:40:42PM +0100, Lukas Wunner wrote:
+> > > On Wed, Nov 16, 2016 at 04:13:10PM -0600, Bjorn Helgaas wrote:
+> > > > Remove the "service driver %s loaded" and unloaded messages.  I don't think
+> > > > these add any useful information.
+> > > 
+> > > I think those particular ones have a value to some extent because
+> > > they communicate for which of the port's capabilities a driver is
+> > > available and loaded.  For ports below a hotplug port they also
+> > > comunicate the steps to unbind the ports from their drivers when
+> > > the device is unplugged.
+> > 
+> > None of the service drivers can be modules anymore.  I think if we
+> > want a clue about whether a service driver is attached to a device, we
+> > should add something to the service driver, where we can print more
+> > useful information.  In general I want to move towards thinking about
+> > the service drivers as optional parts of the PCI core instead of
+> > separate "drivers."
+> 
+> The issue with making the port services modules was that user space
+> doesn't load them when they're needed.  We could have solved this in
+> the kernel by amending get_port_device_capability() to call
+> find_module() and then try_module_get() to load the module for a port
+> service and acquire a reference on it upon discovery of the services
+> supported by a probed port.  Then in pcie_port_device_remove() the
+> references on the loaded modules would have to be released with
+> module_put().
 
-Add static configuration functions to the IORT kernel layer for
-the ARM SMMU v3 components, so that the ARM SMMU v3 driver can
-initialize its respective platform device by relying on the IORT
-kernel infrastructure and by adding a corresponding ACPI device
-early probe section entry.
+That's a possibility, although I'm skeptical of find_module() because
+there are only a handful of callers, and a generally useful feature
+should be much more common.  But obviously I don't know much about
+this and I'm sure it could be done.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/acpi/arm64/iort.c   | 103 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/iommu/arm-smmu-v3.c |  49 ++++++++++++++++++++-
- 2 files changed, 150 insertions(+), 2 deletions(-)
+My more serious objection is that a driver generally owns a piece of
+hardware exclusively, and that's not the case with these service
+drivers.  They have to cooperate with each other and the core much
+more than normal drivers do.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index ddf83b5..fd52e4c 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -459,6 +459,95 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
- 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
- }
- 
-+static void __init acpi_iort_register_irq(int hwirq, const char *name,
-+					  int trigger,
-+					  struct resource *res)
-+{
-+	int irq = acpi_register_gsi(NULL, hwirq, trigger,
-+				    ACPI_ACTIVE_HIGH);
-+
-+	if (irq <= 0) {
-+		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
-+								      name);
-+		return;
-+	}
-+
-+	res->start = irq;
-+	res->end = irq;
-+	res->flags = IORESOURCE_IRQ;
-+	res->name = name;
-+}
-+
-+static int __init arm_smmu_v3_count_resources(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+	/* Always present mem resource */
-+	int num_res = 1;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	if (smmu->event_gsiv)
-+		num_res++;
-+
-+	if (smmu->pri_gsiv)
-+		num_res++;
-+
-+	if (smmu->gerr_gsiv)
-+		num_res++;
-+
-+	if (smmu->sync_gsiv)
-+		num_res++;
-+
-+	return num_res;
-+}
-+
-+static void __init arm_smmu_v3_init_resources(struct resource *res,
-+					      struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+	int num_res = 0;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	res[num_res].start = smmu->base_address;
-+	res[num_res].end = smmu->base_address + SZ_128K - 1;
-+	res[num_res].flags = IORESOURCE_MEM;
-+
-+	num_res++;
-+
-+	if (smmu->event_gsiv)
-+		acpi_iort_register_irq(smmu->event_gsiv, "eventq",
-+				       ACPI_EDGE_SENSITIVE,
-+				       &res[num_res++]);
-+
-+	if (smmu->pri_gsiv)
-+		acpi_iort_register_irq(smmu->pri_gsiv, "priq",
-+				       ACPI_EDGE_SENSITIVE,
-+				       &res[num_res++]);
-+
-+	if (smmu->gerr_gsiv)
-+		acpi_iort_register_irq(smmu->gerr_gsiv, "gerror",
-+				       ACPI_EDGE_SENSITIVE,
-+				       &res[num_res++]);
-+
-+	if (smmu->sync_gsiv)
-+		acpi_iort_register_irq(smmu->sync_gsiv, "cmdq-sync",
-+				       ACPI_EDGE_SENSITIVE,
-+				       &res[num_res++]);
-+}
-+
-+static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
-+}
-+
- struct iort_iommu_config {
- 	const char *name;
- 	int (*iommu_init)(struct acpi_iort_node *node);
-@@ -468,10 +557,22 @@ struct iort_iommu_config {
- 				     struct acpi_iort_node *node);
- };
- 
-+static const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
-+	.name = "arm-smmu-v3",
-+	.iommu_is_coherent = arm_smmu_v3_is_coherent,
-+	.iommu_count_resources = arm_smmu_v3_count_resources,
-+	.iommu_init_resources = arm_smmu_v3_init_resources
-+};
-+
- static __init
- const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
- {
--	return NULL;
-+	switch (node->type) {
-+	case ACPI_IORT_NODE_SMMU_V3:
-+		return &iort_arm_smmu_v3_cfg;
-+	default:
-+		return NULL;
-+	}
- }
- 
- /**
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index f970acd..f2401a05 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -20,6 +20,8 @@
-  * This driver is powered by bad coffee and bombay mix.
-  */
- 
-+#include <linux/acpi.h>
-+#include <linux/acpi_iort.h>
- #include <linux/delay.h>
- #include <linux/dma-iommu.h>
- #include <linux/err.h>
-@@ -2559,6 +2561,36 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+				      struct arm_smmu_device *smmu,
-+				      bool *bypass)
-+{
-+	struct acpi_iort_smmu_v3 *iort_smmu;
-+	struct device *dev = smmu->dev;
-+	struct acpi_iort_node *node;
-+
-+	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
-+
-+	/* Retrieve SMMUv3 specific data */
-+	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
-+		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-+
-+	*bypass = false;
-+
-+	return 0;
-+}
-+#else
-+static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+					     struct arm_smmu_device *smmu,
-+					     bool *bypass)
-+{
-+	return -ENODEV;
-+}
-+#endif
-+
- static int arm_smmu_device_dt_probe(struct platform_device *pdev,
- 				    struct arm_smmu_device *smmu,
- 				    bool *bypass)
-@@ -2626,7 +2658,11 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	if (irq > 0)
- 		smmu->gerr_irq = irq;
- 
--	ret = arm_smmu_device_dt_probe(pdev, smmu, &bypass);
-+	if (dev->of_node)
-+		ret = arm_smmu_device_dt_probe(pdev, smmu, &bypass);
-+	else
-+		ret = arm_smmu_device_acpi_probe(pdev, smmu, &bypass);
-+
- 	if (ret)
- 		return ret;
- 
-@@ -2731,6 +2767,17 @@ static int __init arm_smmu_of_init(struct device_node *np)
- }
- IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
- 
-+#ifdef CONFIG_ACPI
-+static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
-+{
-+	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
-+		return arm_smmu_init();
-+
-+	return 0;
-+}
-+IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
-+#endif
-+
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
- MODULE_LICENSE("GPL v2");
--- 
-2.10.0
+I also think there are some pieces that can't reasonably be done as
+modules because they really should be done during device enumeration.
+I think there are some AER/firmware-first issues that would be
+complicated if AER were a module.
 
+> > > E.g. when I plug in the Apple Thunderbolt Ethernet adapter I get this
+> > > because a new hotplug port appears below the hotplug port of the host
+> > > controller:
+> > > [  141.926865] pciehp 0000:0a:00.0:pcie204: service driver pciehp loaded
+> > 
+> > For example, for pciehp, you should already see something like this:
+> > 
+> >   pciehp 0000:80:02.0:pcie04: Slot #6 AttnBtn+ PwrCtrl+ MRL- AttnInd+ PwrInd+ HotPlug+ Surprise- Interlock- NoCompl- LLActRep+
+> > 
+> > Is that enough?  Or maybe we don't emit this message in your case for
+> > some reason?
+> 
+> It's sufficient but I'm not sure all port services print such a
+> welcome message.
+
+I'm not sure about that either.  If there are some where we need a
+message, I'd rather add it to the service instead of logging the
+registration/unregistration.  We don't do that for any other driver
+registration interfaces, AFAIK.
+
+Bjorn
