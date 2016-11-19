@@ -1,53 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:33800 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752259AbcKITFf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 14:05:35 -0500
-Date: Wed, 9 Nov 2016 19:04:57 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, frowand.list@gmail.com,
-        robh+dt@kernel.org, marc.zyngier@arm.com
-Subject: Re: [PATCH] of/irq: improve error message on irq discovery process
- failure
-Message-ID: <20161109190457.GC837@leverpostej>
-References: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ashok Raj <ashok.raj@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 1/3] pciehp: Prioritize data-link event over presence detect
+Date: Sat, 19 Nov 2016 00:32:45 -0800
+Message-Id: <1479544367-7195-2-git-send-email-ashok.raj@intel.com>
+In-Reply-To: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
+References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 12:05:08PM -0200, Guilherme G. Piccoli wrote:
-> On PowerPC machines some PCI slots might not have Level-triggered
-> interrupts capability (also know as Level Signaled Interrupts - LSI),
-> leading of_irq_parse_pci() to complain by presenting error messages
-> on the kernel log - in this case, the properties "interrupt-map" and
-> "interrupt-map-mask" are not present on the device's node on device
-> tree.
+This patch places higher precedence on a Data Link Layer Status Change
+event over the Presence Detect Change event in the case the slot status
+contains both events in the same interrupt.
 
-If we don't have an interrupt-map on a PCI controller, why don't we
-instead log a message regarding that being missing, and give up early?
+When both events are observed, the pciehp driver is currently relying on
+the Slot Status Presence Detect State (PDS) agree with the Link Status
+Data Link Layer Active status. The Presence Detect State, however, may
+be set to 1 through out-of-band presence detect mechanism even though
+the link is down, which creates conflicting events.
 
-That sounds like a more generically useful error message; it's also
-possible that a DT author simply forgot to add the map, and the platform
-has suitable interrupts wired up.
+Since the Link Status accurately reflects the reachability of the down
+stream bus, the link change event should take precedence over a present
+detect event. This patch skips checking the PDC status we handled a link
+event in the same handler.
 
-> This patch introduces a different message for this specific case,
-> and it also reduces the level of the message from error to warning.
-> Before this patch, when an adapter was plugged in a slot without Level
-> interrupts capabilities, we saw generic error messages like this:
-> 
->     [54.239] pci 002d:70:00.0: of_irq_parse_pci() failed with rc=-22
-> 
-> Now, with this applied, we see the following specific message:
-> 
->     [19.947] pci 0014:60:00.0: of_irq_parse_pci() gave up. The slot of this
->     device has no Level-triggered Interrupts capability.
+Cc: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org
 
-Following my above example, this has gone from opaque to potentially
-misleading.
+Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Thanks,
-Mark.
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index b57fc6d..e1ebd67 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -620,8 +620,18 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
+ 	}
+ 
+-	/* Check Presence Detect Changed */
+-	if (events & PCI_EXP_SLTSTA_PDC) {
++	/*
++	 * Check Link Status Changed at higher precedence than Presence Detect
++	 * Changed. The PDS value may be set to "card present" from out-of-band
++	 * detection, which may be in conflict with a Link Down and cause the
++	 * wrong event to queue.
++     */
++	if (events & PCI_EXP_SLTSTA_DLLSC) {
++		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
++			  link ? "Up" : "Down");
++		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
++					     INT_LINK_DOWN);
++	} else if (events & PCI_EXP_SLTSTA_PDC) {
+ 		present = !!(status & PCI_EXP_SLTSTA_PDS);
+ 		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
+ 			  present ? "" : "not ");
+@@ -636,13 +646,6 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
+ 	}
+ 
+-	if (events & PCI_EXP_SLTSTA_DLLSC) {
+-		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
+-			  link ? "Up" : "Down");
+-		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
+-					     INT_LINK_DOWN);
+-	}
+-
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+2.7.4
