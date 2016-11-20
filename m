@@ -1,78 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0046.outbound.protection.outlook.com ([104.47.37.46]:38930
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755315AbcKYR7c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 12:59:32 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
-CC: Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: Simon Guinot <simon.guinot@sequanux.org>,
+        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "corbet@lwn.net" <corbet@lwn.net>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <3d92687e-e327-0474-2b3b-4c3301b2c57c@amd.com>
-Date: Fri, 25 Nov 2016 12:59:07 -0500
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>,
+        "Jamet, Michael" <michael.jamet@intel.com>,
+        "remi.rerolle@seagate.com" <remi.rerolle@seagate.com>
+Subject: RE: [PATCH v9 0/8] thunderbolt: Introducing Thunderbolt(TM)
+ Networking
+Date: Sun, 20 Nov 2016 06:30:19 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03BE2214E2@hasmsx107.ger.corp.intel.com>
+References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
+ <20161109143632.GE6167@kw.sim.vm.gnt>
+ <E607265CB020454880711A6F96C05A03B677E4C9@hasmsx107.ger.corp.intel.com>
+ <20161115105920.GH6167@kw.sim.vm.gnt>
+ <E607265CB020454880711A6F96C05A03BE2199EE@hasmsx108.ger.corp.intel.com>
+ <20161118100700.GA7126@kroah.com>
+In-Reply-To: <20161118100700.GA7126@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Nov 18 2016, 12:07 PM, gregkh@linuxfoundation.org wrote:
+> On Fri, Nov 18, 2016 at 08:48:36AM +0000, Levy, Amir (Jer) wrote:
+> > > BTW, it is quite a shame that the Thunderbolt firmware version can't
+> > > be read from Linux.
+> > >
+> >
+> > This is WIP, once this patch will be upstream, we will be able to
+> > focus more on aligning Linux with the Thunderbolt features that we have
+> for windows.
+> 
+> Why is this patch somehow holding that work back?  You aren't just sitting
+> around waiting for people to review this and not doing anything else, right?
+> Is there some basic building block in these patches that your firmware
+> download code is going to rely on?
+> 
+> confused,
+> 
+> greg k-h
 
-> Well, I guess there's some consensus building to do. The existing
-> options are:
->
-> * Device DAX: which could work but the problem I see with it is that it
-> only allows one application to do these transfers. Or there would have
-> to be some user-space coordination to figure which application gets what
-> memeroy.
-About one application restriction: so it is per memory mapping? I assume 
-that
-it should not be problem for one application to do transfer to the 
-several devices
-simultaneously? Am I right?
-
-May be we should follow RDMA MR design and register memory for p2p 
-transfer from user
-space?
-
-What about the following:
-
-a)  Device DAX is created
-b) "Normal" (movable, etc.) allocation will be done for PCIe memory and 
-CPU pointer/access will
-be requested.
-c)  p2p_mr_register() will be called and CPU pointer (mmap( on DAX 
-Device)) will be returned.
-Accordingly such memory will be marked as "unmovable" by e.g. graphics 
-driver.
-d) When p2p is not needed then p2p_mr_unregister() will be called.
-
-What do you think? Will it work?
-
-
+All the Thunderbolt SW features (including networking and FW update) depend 
+on the communication with FW, which is patch 3/8 in the series.
+The patch also sets up a generic netlink for user space communication.
+So yes, the communication with Thunderbolt FW is a basic building block.
