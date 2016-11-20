@@ -1,66 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33688 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752340AbcKHPUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 10:20:23 -0500
-Subject: Re: [RFC PATCH] pci: add pci_irq_get_affinity_vector()
-To: Christoph Hellwig <hch@lst.de>
-References: <1478591241-123356-1-git-send-email-hare@suse.de>
- <20161108145652.GA12817@lst.de>
- <40d6e3d4-7e63-0d23-3e5c-a877cebd539a@suse.de>
- <20161108151150.GA14002@lst.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <85806bd8-b4a5-8820-cf7a-207a38fe5505@suse.de>
-Date: Tue, 8 Nov 2016 16:20:20 +0100
+Received: from mail-db5eur01on0057.outbound.protection.outlook.com ([104.47.2.57]:64849
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752060AbcKTLlZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 20 Nov 2016 06:41:25 -0500
+Subject: Re: [PATCH v3 2/5] net/mlx4_core: Use device ID defines
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117233009.2003.52026.stgit@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <majd@mellanox.com>,
+        <gwshan@linux.vnet.ibm.com>
+From: Noa Osherovich <noaos@mellanox.com>
+Message-ID: <3bc11996-c05b-675d-1962-648b8411c5c4@mellanox.com>
+Date: Sun, 20 Nov 2016 09:08:57 +0200
 MIME-Version: 1.0
-In-Reply-To: <20161108151150.GA14002@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20161117233009.2003.52026.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/2016 04:11 PM, Christoph Hellwig wrote:
-> On Tue, Nov 08, 2016 at 04:08:51PM +0100, Hannes Reinecke wrote:
->> The use-case here is that one needs to feed the MSI-X index into the driver
->> command structure. While we can extract that number trivially with scsi-mq,
->> but for scsi-sq we don't have such means.
+Adding relevant Mellanox people to take a look.
+
+On 11/18/2016 1:30 AM, Bjorn Helgaas wrote:
+
+> We added a bunch of new Mellanox device ID definitions because they'll be
+> used by INTx quirks.  Use them in the mlx4 ID table also so grep can find
+> both places.
 >
->> The main impetus of this RFC is to figure out if such a function would have
->> a chance of getting upstream, or if I have to continue use cpumaps in the
->> drivers.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx4/main.c |   78 ++++++++++++++---------------
+>  1 file changed, 37 insertions(+), 41 deletions(-)
 >
-> There should be no need for a cpumap, nor should there be any need
-> for a lookup.  Driver will need the vector index for some admin ops,
-> but it can store it in it's driver-private queue structure (e.g. take
-> a look at the cq_vector field in NVMe).  Drivers really should not need
-> this during I/O, but if for some weird reason they do that driver specific
-> field is trivially reachable through the hw_ctx which gets passed to
-> ->queue_rq.
+> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+> index 7183ac4..672e0a2e 100644
+> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+> @@ -4012,49 +4012,45 @@ int mlx4_restart_one(struct pci_dev *pdev)
+>  	return err;
+>  }
+>  
+> +#define MLX_SP(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_FORCE_SENSE_PORT }
+> +#define MLX_VF(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_IS_VF }
+> +#define MLX_GN(id) { PCI_VDEVICE(MELLANOX, id), 0 }
+> +
+>  static const struct pci_device_id mlx4_pci_table[] = {
+> -	/* MT25408 "Hermon" SDR */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6340), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" DDR */
+> -	{ PCI_VDEVICE(MELLANOX, 0x634a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" QDR */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6354), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" DDR PCIe gen2 */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6732), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" QDR PCIe gen2 */
+> -	{ PCI_VDEVICE(MELLANOX, 0x673c), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" EN 10GigE */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6368), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25408 "Hermon" EN 10GigE PCIe gen2 */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6750), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25458 ConnectX EN 10GBASE-T 10GigE */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6372), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25458 ConnectX EN 10GBASE-T+Gen2 10GigE */
+> -	{ PCI_VDEVICE(MELLANOX, 0x675a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT26468 ConnectX EN 10GigE PCIe gen2*/
+> -	{ PCI_VDEVICE(MELLANOX, 0x6764), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT26438 ConnectX EN 40GigE PCIe gen2 5GT/s */
+> -	{ PCI_VDEVICE(MELLANOX, 0x6746), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT26478 ConnectX2 40GigE PCIe gen2 */
+> -	{ PCI_VDEVICE(MELLANOX, 0x676e), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+> -	/* MT25400 Family [ConnectX-2 Virtual Function] */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1002), MLX4_PCI_DEV_IS_VF },
+> +	/* MT25408 "Hermon" */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_SDR),	/* SDR */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR),	/* DDR */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR),	/* QDR */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2), /* DDR Gen2 */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2),	/* QDR Gen2 */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN),	/* EN 10GigE */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2),  /* EN 10GigE Gen2 */
+> +	/* MT25458 ConnectX EN 10GBASE-T */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN),
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2),	/* Gen2 */
+> +	/* MT26468 ConnectX EN 10GigE PCIe Gen2*/
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2),
+> +	/* MT26438 ConnectX EN 40GigE PCIe Gen2 5GT/s */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2),
+> +	/* MT26478 ConnectX2 40GigE PCIe Gen2 */
+> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX2),
+> +	/* MT25400 Family [ConnectX-2] */
+> +	MLX_VF(0x1002),					/* Virtual Function */
+>  	/* MT27500 Family [ConnectX-3] */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1003), 0 },
+> -	/* MT27500 Family [ConnectX-3 Virtual Function] */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1004), MLX4_PCI_DEV_IS_VF },
+> -	{ PCI_VDEVICE(MELLANOX, 0x1005), 0 }, /* MT27510 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1006), 0 }, /* MT27511 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1007), 0 }, /* MT27520 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1008), 0 }, /* MT27521 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1009), 0 }, /* MT27530 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100a), 0 }, /* MT27531 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100b), 0 }, /* MT27540 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100c), 0 }, /* MT27541 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100d), 0 }, /* MT27550 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100e), 0 }, /* MT27551 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x100f), 0 }, /* MT27560 Family */
+> -	{ PCI_VDEVICE(MELLANOX, 0x1010), 0 }, /* MT27561 Family */
+> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3),
+> +	MLX_VF(0x1004),					/* Virtual Function */
+> +	MLX_GN(0x1005),					/* MT27510 Family */
+> +	MLX_GN(0x1006),					/* MT27511 Family */
+> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO),	/* MT27520 Family */
+> +	MLX_GN(0x1008),					/* MT27521 Family */
+> +	MLX_GN(0x1009),					/* MT27530 Family */
+> +	MLX_GN(0x100a),					/* MT27531 Family */
+> +	MLX_GN(0x100b),					/* MT27540 Family */
+> +	MLX_GN(0x100c),					/* MT27541 Family */
+> +	MLX_GN(0x100d),					/* MT27550 Family */
+> +	MLX_GN(0x100e),					/* MT27551 Family */
+> +	MLX_GN(0x100f),					/* MT27560 Family */
+> +	MLX_GN(0x1010),					/* MT27561 Family */
+>  	{ 0, }
+>  };
+>  
+>
 
-I did mention that this is trivial for scsi-mq, right?
-The issue here is scsi-sq.
-(Much as you despise it).
-
-As long a scsi-mq is not the standard we _have_ to provide a way of 
-retaining the original functionality which allowed for interrupt 
-distribution even for scsi-sq.
-Hence either the driver has to keep this functionality (looking up 
-msi-index based on a give scsi command) internal within the driver or we 
-provide a common function allowing drivers to look it up.
-
-And my patch is aiming to provide the latter.
-If you don't agree with it or think it'll be pointless, fine, I'll go 
-ahead and modify the drivers.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
