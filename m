@@ -1,244 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50790 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752296AbcKIBPn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 20:15:43 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/7] PCI/MSI: Propagate IRQ affinity description through the MSI code
-Date: Tue,  8 Nov 2016 17:15:04 -0800
-Message-Id: <1478654107-7384-5-git-send-email-hch@lst.de>
-In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
-References: <1478654107-7384-1-git-send-email-hch@lst.de>
+Received: from mail-db5eur01on0054.outbound.protection.outlook.com ([104.47.2.54]:10401
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752293AbcKTNqk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 20 Nov 2016 08:46:40 -0500
+From: Noa Osherovich <noaos@mellanox.com>
+Subject: Re: [PATCH v3 2/5] net/mlx4_core: Use device ID defines
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Yishai Hadas <yishaih@mellanox.com>
+References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161117233009.2003.52026.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <3bc11996-c05b-675d-1962-648b8411c5c4@mellanox.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Majd Dibbiny <majd@mellanox.com>,
+        "gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>
+Message-ID: <cde87228-7940-c1c7-f92e-f30d316c9b59@mellanox.com>
+Date: Sun, 20 Nov 2016 09:14:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <3bc11996-c05b-675d-1962-648b8411c5c4@mellanox.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No API change yet, just pass it down all the way from
-pci_alloc_irq_vectors() to the core MSI code.
+With the people this time.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c | 66 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
+On 11/20/2016 9:08 AM, Noa Osherovich wrote:
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f4a108b..512f388 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -551,15 +551,14 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- }
- 
- static struct msi_desc *
--msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
-+msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
- {
--	static const struct irq_affinity default_affd;
- 	struct cpumask *masks = NULL;
- 	struct msi_desc *entry;
- 	u16 control;
- 
--	if (affinity) {
--		masks = irq_create_affinity_masks(nvec, &default_affd);
-+	if (affd) {
-+		masks = irq_create_affinity_masks(nvec, affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -619,7 +618,8 @@ static int msi_verify_entries(struct pci_dev *dev)
-  * an error, and a positive return value indicates the number of interrupts
-  * which could have been allocated.
-  */
--static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
-+static int msi_capability_init(struct pci_dev *dev, int nvec,
-+			       const struct irq_affinity *affd)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -627,7 +627,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
- 
- 	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	entry = msi_setup_entry(dev, nvec, affinity);
-+	entry = msi_setup_entry(dev, nvec, affd);
- 	if (!entry)
- 		return -ENOMEM;
- 
-@@ -691,15 +691,14 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
- 
- static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			      struct msix_entry *entries, int nvec,
--			      bool affinity)
-+			      const struct irq_affinity *affd)
- {
--	static const struct irq_affinity default_affd;
- 	struct cpumask *curmsk, *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret, i;
- 
--	if (affinity) {
--		masks = irq_create_affinity_masks(nvec, &default_affd);
-+	if (affd) {
-+		masks = irq_create_affinity_masks(nvec, affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -755,14 +754,14 @@ static void msix_program_entries(struct pci_dev *dev,
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-  * @entries: pointer to an array of struct msix_entry entries
-  * @nvec: number of @entries
-- * @affinity: flag to indicate cpu irq affinity mask should be set
-+ * @affd: Optional pointer to enable automatic affinity assignement
-  *
-  * Setup the MSI-X capability structure of device function with a
-  * single MSI-X irq. A return of zero indicates the successful setup of
-  * requested MSI-X entries with allocated irqs or non-zero for otherwise.
-  **/
- static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
--				int nvec, bool affinity)
-+				int nvec, const struct irq_affinity *affd)
- {
- 	int ret;
- 	u16 control;
-@@ -777,7 +776,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
- 	if (!base)
- 		return -ENOMEM;
- 
--	ret = msix_setup_entries(dev, base, entries, nvec, affinity);
-+	ret = msix_setup_entries(dev, base, entries, nvec, affd);
- 	if (ret)
- 		return ret;
- 
-@@ -958,7 +957,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_msix_vec_count);
- 
- static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
--			     int nvec, bool affinity)
-+			     int nvec, const struct irq_affinity *affd)
- {
- 	int nr_entries;
- 	int i, j;
-@@ -990,7 +989,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
- 		return -EINVAL;
- 	}
--	return msix_capability_init(dev, entries, nvec, affinity);
-+	return msix_capability_init(dev, entries, nvec, affd);
- }
- 
- /**
-@@ -1010,7 +1009,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
-  **/
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- {
--	return __pci_enable_msix(dev, entries, nvec, false);
-+	return __pci_enable_msix(dev, entries, nvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msix);
- 
-@@ -1061,10 +1060,8 @@ int pci_msi_enabled(void)
- EXPORT_SYMBOL(pci_msi_enabled);
- 
- static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
--		unsigned int flags)
-+				  const struct irq_affinity *affd)
- {
--	static const struct irq_affinity default_affd;
--	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int nvec;
- 	int rc;
- 
-@@ -1093,13 +1090,13 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 		nvec = maxvec;
- 
- 	for (;;) {
--		if (affinity) {
--			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
-+		if (affd) {
-+			nvec = irq_calc_affinity_vectors(nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
- 
--		rc = msi_capability_init(dev, nvec, affinity);
-+		rc = msi_capability_init(dev, nvec, affd);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1126,29 +1123,27 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
-  **/
- int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- {
--	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
-+	return __pci_enable_msi_range(dev, minvec, maxvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msi_range);
- 
- static int __pci_enable_msix_range(struct pci_dev *dev,
--		struct msix_entry *entries, int minvec, int maxvec,
--		unsigned int flags)
-+				   struct msix_entry *entries, int minvec,
-+				   int maxvec, const struct irq_affinity *affd)
- {
--	static const struct irq_affinity default_affd;
--	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int rc, nvec = maxvec;
- 
- 	if (maxvec < minvec)
- 		return -ERANGE;
- 
- 	for (;;) {
--		if (affinity) {
--			nvec = irq_calc_affinity_vectors(nvec, &default_affd);
-+		if (affd) {
-+			nvec = irq_calc_affinity_vectors(nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
- 
--		rc = __pci_enable_msix(dev, entries, nvec, affinity);
-+		rc = __pci_enable_msix(dev, entries, nvec, affd);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1179,7 +1174,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 		int minvec, int maxvec)
- {
--	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
-+	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msix_range);
- 
-@@ -1203,17 +1198,22 @@ EXPORT_SYMBOL(pci_enable_msix_range);
- int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		unsigned int max_vecs, unsigned int flags)
- {
-+	static const struct irq_affinity msi_default_affd;
-+	const struct irq_affinity *affd = NULL;
- 	int vecs = -ENOSPC;
- 
-+	if (flags & PCI_IRQ_AFFINITY)
-+		affd = &msi_default_affd;
-+
- 	if (flags & PCI_IRQ_MSIX) {
- 		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
--				flags);
-+				affd);
- 		if (vecs > 0)
- 			return vecs;
- 	}
- 
- 	if (flags & PCI_IRQ_MSI) {
--		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
-+		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
- 		if (vecs > 0)
- 			return vecs;
- 	}
--- 
-2.1.4
+> Adding relevant Mellanox people to take a look.
+>
+> On 11/18/2016 1:30 AM, Bjorn Helgaas wrote:
+>
+>> We added a bunch of new Mellanox device ID definitions because they'll be
+>> used by INTx quirks.  Use them in the mlx4 ID table also so grep can find
+>> both places.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/net/ethernet/mellanox/mlx4/main.c |   78 ++++++++++++++---------------
+>>  1 file changed, 37 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+>> index 7183ac4..672e0a2e 100644
+>> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+>> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+>> @@ -4012,49 +4012,45 @@ int mlx4_restart_one(struct pci_dev *pdev)
+>>  	return err;
+>>  }
+>>  
+>> +#define MLX_SP(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_FORCE_SENSE_PORT }
+>> +#define MLX_VF(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_IS_VF }
+>> +#define MLX_GN(id) { PCI_VDEVICE(MELLANOX, id), 0 }
+>> +
+>>  static const struct pci_device_id mlx4_pci_table[] = {
+>> -	/* MT25408 "Hermon" SDR */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6340), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" DDR */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x634a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" QDR */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6354), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" DDR PCIe gen2 */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6732), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" QDR PCIe gen2 */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x673c), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" EN 10GigE */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6368), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25408 "Hermon" EN 10GigE PCIe gen2 */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6750), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25458 ConnectX EN 10GBASE-T 10GigE */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6372), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25458 ConnectX EN 10GBASE-T+Gen2 10GigE */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x675a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT26468 ConnectX EN 10GigE PCIe gen2*/
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6764), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT26438 ConnectX EN 40GigE PCIe gen2 5GT/s */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x6746), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT26478 ConnectX2 40GigE PCIe gen2 */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x676e), MLX4_PCI_DEV_FORCE_SENSE_PORT },
+>> -	/* MT25400 Family [ConnectX-2 Virtual Function] */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1002), MLX4_PCI_DEV_IS_VF },
+>> +	/* MT25408 "Hermon" */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_SDR),	/* SDR */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR),	/* DDR */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR),	/* QDR */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2), /* DDR Gen2 */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2),	/* QDR Gen2 */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN),	/* EN 10GigE */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2),  /* EN 10GigE Gen2 */
+>> +	/* MT25458 ConnectX EN 10GBASE-T */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN),
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2),	/* Gen2 */
+>> +	/* MT26468 ConnectX EN 10GigE PCIe Gen2*/
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2),
+>> +	/* MT26438 ConnectX EN 40GigE PCIe Gen2 5GT/s */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2),
+>> +	/* MT26478 ConnectX2 40GigE PCIe Gen2 */
+>> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX2),
+>> +	/* MT25400 Family [ConnectX-2] */
+>> +	MLX_VF(0x1002),					/* Virtual Function */
+>>  	/* MT27500 Family [ConnectX-3] */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1003), 0 },
+>> -	/* MT27500 Family [ConnectX-3 Virtual Function] */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1004), MLX4_PCI_DEV_IS_VF },
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1005), 0 }, /* MT27510 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1006), 0 }, /* MT27511 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1007), 0 }, /* MT27520 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1008), 0 }, /* MT27521 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1009), 0 }, /* MT27530 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100a), 0 }, /* MT27531 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100b), 0 }, /* MT27540 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100c), 0 }, /* MT27541 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100d), 0 }, /* MT27550 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100e), 0 }, /* MT27551 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x100f), 0 }, /* MT27560 Family */
+>> -	{ PCI_VDEVICE(MELLANOX, 0x1010), 0 }, /* MT27561 Family */
+>> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3),
+>> +	MLX_VF(0x1004),					/* Virtual Function */
+>> +	MLX_GN(0x1005),					/* MT27510 Family */
+>> +	MLX_GN(0x1006),					/* MT27511 Family */
+>> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO),	/* MT27520 Family */
+>> +	MLX_GN(0x1008),					/* MT27521 Family */
+>> +	MLX_GN(0x1009),					/* MT27530 Family */
+>> +	MLX_GN(0x100a),					/* MT27531 Family */
+>> +	MLX_GN(0x100b),					/* MT27540 Family */
+>> +	MLX_GN(0x100c),					/* MT27541 Family */
+>> +	MLX_GN(0x100d),					/* MT27550 Family */
+>> +	MLX_GN(0x100e),					/* MT27551 Family */
+>> +	MLX_GN(0x100f),					/* MT27560 Family */
+>> +	MLX_GN(0x1010),					/* MT27561 Family */
+>>  	{ 0, }
+>>  };
+>>  
+>>
 
