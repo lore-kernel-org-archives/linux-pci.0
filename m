@@ -1,64 +1,177 @@
-Return-Path: <cov@codeaurora.org>
-Return-Path: <cov@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 01 Nov 2016 07:06:31 -0600
-From: cov@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
- will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
- Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
- jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-In-Reply-To: <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58340 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753564AbcKUVKE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2016 16:10:04 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uALL8P6b050070
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:10:03 -0500
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 26v76gkvrf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 16:10:03 -0500
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Mon, 21 Nov 2016 14:10:00 -0700
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ian Munsie <imunsie@au1.ibm.com>,
+        Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] PCI: Add pci_set_vpd_timeout() to set VPD access timeout
+Date: Mon, 21 Nov 2016 15:09:49 -0600
+In-Reply-To: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
+References: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Message-Id: <1479762589-51557-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
+complete. When an access does not complete within this period, a warning
+is logged and an error returned to the caller.
 
-On 2016-10-31 15:48, Bjorn Helgaas wrote:
-> On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
->> The Qualcomm Technologies QDF2432 SoC does not support accesses 
->> smaller
->> than 32 bits to the PCI configuration space. Register the appropriate
->> quirk.
->> 
->> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> 
-> Hi Christopher,
-> 
-> Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
+While this default timeout is valid for most hardware, some devices can
+experience longer access delays under certain circumstances. For example,
+one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
+scenario. These types of devices can benefit from an extended timeout that
+is specific to their hardware constraints.
 
-I apologize for not being clearer. This patch depends on:
+To support per-device VPD access timeouts, pci_set_vpd_timeout() is added
+as an exported service. PCI devices will continue to default with the 50ms
+timeout and use a per-device timeout when a driver calls this new service.
 
-PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
-PCI/ACPI: Check platform-specific ECAM quirks
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+---
+ drivers/pci/access.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/pci.h    |  2 ++
+ include/linux/pci.h  |  1 +
+ 3 files changed, 47 insertions(+), 1 deletion(-)
 
-These patches from Tomasz Nowicki were previously in your pci/ecam-v6
-branch, but that seems to have come and gone. How would you like to
-proceed?
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d11cdbb..2734a3a 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -288,6 +288,21 @@ int pci_set_vpd_size(struct pci_dev *dev, size_t len)
+ }
+ EXPORT_SYMBOL(pci_set_vpd_size);
+ 
++/**
++ * pci_set_vpd_timeout - Set wait timeout for Vital Product Data accesses
++ * @dev:	pci device struct
++ * @timeout:	jiffies to wait for completion
++ */
++int pci_set_vpd_timeout(struct pci_dev *dev, unsigned long timeout)
++{
++	if (!dev->vpd || !dev->vpd->ops)
++		return -ENODEV;
++	return dev->vpd->ops->set_timeout(dev, timeout);
++}
++EXPORT_SYMBOL(pci_set_vpd_timeout);
++
++#define PCI_VPD_DEF_TIMEOUT msecs_to_jiffies(50)
++#define PCI_VPD_MAX_TIMEOUT msecs_to_jiffies(250)
+ #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
+ 
+ /**
+@@ -355,7 +370,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ static int pci_vpd_wait(struct pci_dev *dev)
+ {
+ 	struct pci_vpd *vpd = dev->vpd;
+-	unsigned long timeout = jiffies + msecs_to_jiffies(50);
++	unsigned long timeout = jiffies + vpd->timeout;
+ 	unsigned long max_sleep = 16;
+ 	u16 status;
+ 	int ret;
+@@ -524,10 +539,22 @@ static int pci_vpd_set_size(struct pci_dev *dev, size_t len)
+ 	return 0;
+ }
+ 
++static int pci_vpd_set_timeout(struct pci_dev *dev, unsigned long timeout)
++{
++	struct pci_vpd *vpd = dev->vpd;
++
++	if (timeout < PCI_VPD_DEF_TIMEOUT || timeout > PCI_VPD_MAX_TIMEOUT)
++		return -EINVAL;
++
++	vpd->timeout = timeout;
++	return 0;
++}
++
+ static const struct pci_vpd_ops pci_vpd_ops = {
+ 	.read = pci_vpd_read,
+ 	.write = pci_vpd_write,
+ 	.set_size = pci_vpd_set_size,
++	.set_timeout = pci_vpd_set_timeout,
+ };
+ 
+ static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+@@ -574,10 +601,25 @@ static int pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
+ 	return ret;
+ }
+ 
++static int pci_vpd_f0_set_timeout(struct pci_dev *dev, unsigned long timeout)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus,
++					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
++	int ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_set_vpd_timeout(tdev, timeout);
++	pci_dev_put(tdev);
++	return ret;
++}
++
+ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+ 	.read = pci_vpd_f0_read,
+ 	.write = pci_vpd_f0_write,
+ 	.set_size = pci_vpd_f0_set_size,
++	.set_timeout = pci_vpd_f0_set_timeout,
+ };
+ 
+ int pci_vpd_init(struct pci_dev *dev)
+@@ -594,6 +636,7 @@ int pci_vpd_init(struct pci_dev *dev)
+ 		return -ENOMEM;
+ 
+ 	vpd->len = PCI_VPD_MAX_SIZE;
++	vpd->timeout = PCI_VPD_DEF_TIMEOUT;
+ 	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
+ 		vpd->ops = &pci_vpd_f0_ops;
+ 	else
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..99f089a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -112,12 +112,14 @@ struct pci_vpd_ops {
+ 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+ 	int (*set_size)(struct pci_dev *dev, size_t len);
++	int (*set_timeout)(struct pci_dev *dev, unsigned long timeout);
+ };
+ 
+ struct pci_vpd {
+ 	const struct pci_vpd_ops *ops;
+ 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
+ 	struct mutex	lock;
++	unsigned long	timeout; /* wait timeout in jiffies */
+ 	unsigned int	len;
+ 	u16		flag;
+ 	u8		cap;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0e49f70..3038246 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1123,6 +1123,7 @@ void pci_unlock_rescan_remove(void);
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+ int pci_set_vpd_size(struct pci_dev *dev, size_t len);
++int pci_set_vpd_timeout(struct pci_dev *dev, unsigned long timeout);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+-- 
+2.1.0
 
-> Note that this hardware is not spec-compliant since it doesn't support
-> sub-32 bit config writes.  I just proposed a patch to warn about that
-> [1], so if/when we merge that patch and this one, you'll start seeing
-> those warnings.
-> 
-> [1]
-> http://lkml.kernel.org/r/20161031213902.6340.96123.stgit@bhelgaas-glaptop.roam.corp.google.com
-
-That looks great, thank you. The earlier PCI HDL and SoC vendors can be
-made aware of such problems, the better.
-
-Thanks,
-Cov
