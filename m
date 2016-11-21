@@ -1,72 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33099 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932506AbcKVU0I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 15:26:08 -0500
-Received: by mail-io0-f194.google.com with SMTP id j92so12701712ioi.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 12:26:07 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20161108120323.GC15297@leverpostej>
+ <1478647002.7430.69.camel@kernel.crashing.org>
+CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <olof@lixom.net>,
+        <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
+        <lorenzo.pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
+        <kantyzc@163.com>, <xuwei5@hisilicon.com>, <marc.zyngier@arm.com>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <79d73f93-1cf8-19db-ca5c-8fb6257edd6c@huawei.com>
+Date: Mon, 21 Nov 2016 12:58:28 +0000
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
-From: Daniel Vetter <daniel@ffwll.ch>
-Date: Tue, 22 Nov 2016 21:10:43 +0100
-Message-ID: <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1478647002.7430.69.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
-> <serguei.sagalovitch@amd.com> wrote:
->> I personally like "device-DAX" idea but my concerns are:
+On 08/11/2016 23:16, Benjamin Herrenschmidt wrote:
+> On Tue, 2016-11-08 at 12:03 +0000, Mark Rutland wrote:
+>> On Tue, Nov 08, 2016 at 11:47:07AM +0800, zhichang.yuan wrote:
+>>>
+>>> For arm64, there is no I/O space as other architectural platforms, such as
+>>> X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+>>> such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+>>> known port addresses are used to control the corresponding target devices, for
+>>> example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+>>> normal MMIO mode in using.
 >>
->> -  How well it will co-exists with the  DRM infrastructure / implementations
->>    in part dealing with CPU pointers?
+>> This has nothing to do with arm64. Hardware with this kind of indirect
+>> bus access could be integrated with a variety of CPU architectures. It
+>> simply hasn't been, yet.
 >
-> Inside the kernel a device-DAX range is "just memory" in the sense
-> that you can perform pfn_to_page() on it and issue I/O, but the vma is
-> not migratable. To be honest I do not know how well that co-exists
-> with drm infrastructure.
+> On some ppc's we also use similar indirect access methods for IOs. We
+> have a generic infrastructure for re-routing some memory or IO regions
+> to hooks.
 >
->> -  How well we will be able to handle case when we need to "move"/"evict"
->>    memory/data to the new location so CPU pointer should point to the new
->> physical location/address
->>     (and may be not in PCI device memory at all)?
+> On POWER8, our PCIe doesn't do IO at all, but we have an LPC bus behind
+> firmware calls ;-) We use that infrastructure to plumb in the LPC bus.
 >
-> So, device-DAX deliberately avoids support for in-kernel migration or
-> overcommit. Those cases are left to the core mm or drm. The device-dax
-> interface is for cases where all that is needed is a direct-mapping to
-> a statically-allocated physical-address range be it persistent memory
-> or some other special reserved memory range.
+Hi,
 
-For some of the fancy use-cases (e.g. to be comparable to what HMM can
-pull off) I think we want all the magic in core mm, i.e. migration and
-overcommit. At least that seems to be the very strong drive in all
-general-purpose gpu abstractions and implementations, where memory is
-allocated with malloc, and then mapped/moved into vram/gpu address
-space through some magic, but still visible on both the cpu and gpu
-side in some form. Special device to allocate memory, and not being
-able to migrate stuff around sound like misfeatures from that pov.
--Daniel
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+I would like to mention another topic on supporting LPC, and this is 
+regard to eSPI support.
+eSPI is seen as the successor for LPC, and some BMCs already support it.
+
+I had a chat with Arnd on this, and the idea to model LPC as a SPI bus 
+adpater (and also eSPI).
+
+However it seems to me that most platforms will/should support eSPI as a 
+transparent bridge, same as LPC on x86. So I don't think that this is 
+much point in modelling LPC/eSPI as a bus.
+
+So we shall continue with indriect-IO support...
+
+Thanks,
+John
