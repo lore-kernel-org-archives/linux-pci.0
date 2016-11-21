@@ -1,189 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:43552 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751021AbcKIMUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 07:20:53 -0500
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v9 2/8] thunderbolt: Updating the register definitions
-Date: Wed,  9 Nov 2016 16:20:02 +0200
-Message-Id: <1478701208-4585-3-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 7/9] PCI: hotplug: Remove hotplug core message
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
+Date: Mon, 21 Nov 2016 15:46:02 -0600
+Message-ID: <20161121214602.21036.2749.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding more Thunderbolt(TM) register definitions
-and some helper macros.
+Remove the "PCI Hot Plug PCI Core" version message.  I don't think it
+contains any useful information.  Remove unused #defines and move the
+author information to a comment.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
+ drivers/pci/hotplug/pci_hotplug_core.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 75cf069..b8e961f 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -9,6 +9,11 @@
- 
- #include <linux/types.h>
- 
-+#define NHI_MMIO_BAR 0
-+
-+#define TBT_RING_MIN_NUM_BUFFERS	2
-+#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
-+
- enum ring_flags {
- 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
- 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
-@@ -39,6 +44,33 @@ struct ring_desc {
- 	u32 time; /* write zero */
- } __packed;
- 
-+/**
-+ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
-+ * This is same as struct ring_desc, but without the use of bitfields and
-+ * with explicit endianity.
-+ */
-+struct tbt_buf_desc {
-+	__le64 phys;
-+	__le32 attributes;
-+	__le32 time;
-+};
-+
-+#define DESC_ATTR_LEN_SHIFT		0
-+#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
-+#define DESC_ATTR_EOF_SHIFT		12
-+#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
-+#define DESC_ATTR_SOF_SHIFT		16
-+#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
-+#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
-+#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
-+#define DESC_ATTR_DESC_DONE		BIT(21)
-+#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
-+#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
-+#define DESC_ATTR_INT_EN		BIT(23)
-+#define DESC_ATTR_OFFSET_SHIFT		24
-+#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
-+
-+
- /* NHI registers in bar 0 */
- 
- /*
-@@ -60,6 +92,30 @@ struct ring_desc {
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index fea0b8b..56013d0 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -23,6 +23,9 @@
+  *
+  * Send feedback to <kristen.c.accardi@intel.com>
+  *
++ * Authors:
++ *   Greg Kroah-Hartman <greg@kroah.com>
++ *   Scott Murray <scottm@somanetworks.com>
   */
- #define REG_RX_RING_BASE	0x08000
  
-+#define REG_RING_STEP			16
-+#define REG_RING_PHYS_LO_OFFSET		0
-+#define REG_RING_PHYS_HI_OFFSET		4
-+#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
-+#define REG_RING_CONS_SHIFT		0
-+#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
-+#define REG_RING_PROD_SHIFT		16
-+#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
-+#define REG_RING_SIZE_OFFSET		12
-+#define REG_RING_SIZE_SHIFT		0
-+#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
-+#define REG_RING_BUF_SIZE_SHIFT		16
-+#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
-+
-+#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
-+			      ((iobase) + (ringbase) + \
-+			      ((ringnumber) * REG_RING_STEP) + \
-+			      REG_RING_CONS_PROD_OFFSET)
-+
-+#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
-+				       REG_RING_PROD_SHIFT)
-+
-+#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
-+				       REG_RING_CONS_SHIFT)
- /*
-  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
-  * 00: enum_ring_flags
-@@ -77,6 +133,19 @@ struct ring_desc {
-  * ..: unknown
-  */
- #define REG_RX_OPTIONS_BASE	0x29800
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
-+				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
-+#define REG_RX_OPTS_MASK_OFFSET		4
-+#define REG_RX_OPTS_MASK_EOF_SHIFT	0
-+#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
-+#define REG_RX_OPTS_MASK_SOF_SHIFT	16
-+#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
-+
-+#define REG_OPTS_STEP			32
-+#define REG_OPTS_E2E_EN			BIT(28)
-+#define REG_OPTS_RAW			BIT(30)
-+#define REG_OPTS_VALID			BIT(31)
+ #include <linux/module.h>	/* try_module_get & module_put */
+@@ -50,15 +53,9 @@
+ #define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
+ #define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
  
- /*
-  * three bitfields: tx, rx, rx overflow
-@@ -86,6 +155,7 @@ struct ring_desc {
-  */
- #define REG_RING_NOTIFY_BASE	0x37800
- #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
-+#define REG_RING_NOTIFY_STEP	4
+-
+ /* local variables */
+ static bool debug;
  
- /*
-  * two bitfields: rx, tx
-@@ -94,8 +164,47 @@ struct ring_desc {
-  */
- #define REG_RING_INTERRUPT_BASE	0x38200
- #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
-+#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
-+#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
-+							    (num_paths))
-+#define RING_INT_DISABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_ENABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_DISABLE_TX(base, ring_num) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_ENABLE_TX(base, ring_num) \
-+	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
-+			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+
-+#define REG_RING_INTERRUPT_STEP	4
-+
-+#define REG_INT_THROTTLING_RATE	0x38c00
-+#define REG_INT_THROTTLING_RATE_STEP	4
-+#define NUM_INT_VECTORS			16
-+
-+#define REG_INT_VEC_ALLOC_BASE	0x38c40
-+#define REG_INT_VEC_ALLOC_STEP		4
-+#define REG_INT_VEC_ALLOC_FIELD_BITS	4
-+#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
-+#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
-+					 REG_INT_VEC_ALLOC_FIELD_BITS)
+-#define DRIVER_VERSION	"0.5"
+-#define DRIVER_AUTHOR	"Greg Kroah-Hartman <greg@kroah.com>, Scott Murray <scottm@somanetworks.com>"
+-#define DRIVER_DESC	"PCI Hot Plug PCI Core"
+-
+-
+ static LIST_HEAD(pci_hotplug_slot_list);
+ static DEFINE_MUTEX(pci_hp_mutex);
  
- /* The last 11 bits contain the number of hops supported by the NHI port. */
- #define REG_HOP_COUNT		0x39640
-+#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
-+
-+#define REG_HOST_INTERFACE_RST	0x39858
-+
-+#define REG_DMA_MISC		0x39864
-+#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
+@@ -534,7 +531,6 @@ static int __init pci_hotplug_init(void)
+ 		return result;
+ 	}
  
- #endif
--- 
-2.7.4
-
+-	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+ 	return result;
+ }
+ device_initcall(pci_hotplug_init);
