@@ -1,72 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44360 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752827AbcKGXwC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Nov 2016 18:52:02 -0500
-Subject: [PATCH] PCI: Don't attempt to claim shadow copies of ROM
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Vecu Bosseur <vecu.bosseur@gmail.com>
-Date: Mon, 07 Nov 2016 17:51:58 -0600
-Message-ID: <20161107235158.32425.50331.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v9 01/16] drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
+Date: Mon, 21 Nov 2016 10:01:33 +0000
+Message-Id: <20161121100148.24769-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we're using a shadow copy of a PCI device ROM, the shadow copy is in RAM
-and the device never sees accesses to it and doesn't respond to it.  We
-don't have to route the shadow range to the PCI device, and the device
-doesn't have to claim the range.
+On systems booting with a device tree, every struct device is associated
+with a struct device_node, that provides its DT firmware representation.
+The device node can be used in generic kernel contexts (eg IRQ
+translation, IOMMU streamid mapping), to retrieve the properties
+associated with the device and carry out kernel operations accordingly.
+Owing to the 1:1 relationship between the device and its device_node,
+the device_node can also be used as a look-up token for the device (eg
+looking up a device through its device_node), to retrieve the device in
+kernel paths where the device_node is available.
 
-Previously we treated the shadow copy as though it were the ROM BAR, and we
-failed to claim it because the region wasn't routed to the device:
+On systems booting with ACPI, the same abstraction provided by
+the device_node is required to provide look-up functionality.
 
-  pci 0000:01:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
-  pci_bus 0000:01: Allocating resources
-  pci 0000:01:00.0: can't claim BAR 6 [mem 0x000c0000-0x000dffff]: no compatible bridge window
+The struct acpi_device, that represents firmware objects in the
+ACPI namespace already includes a struct fwnode_handle of
+type FWNODE_ACPI as their member; the same abstraction is missing
+though for devices that are instantiated out of static ACPI tables
+entries (eg ARM SMMU devices).
 
-The failure path of pcibios_allocate_dev_rom_resource() cleared out the
-resource start address, which caused the following ioremap() warning:
+Add a new fwnode_handle type to associate devices created out
+of static ACPI table entries to the respective firmware components
+and create a simple ACPI core layer interface to dynamically allocate
+and free the corresponding firmware nodes so that kernel subsystems
+can use it to instantiate the nodes and associate them with the
+respective devices.
 
-  WARNING: CPU: 0 PID: 116 at /build/linux-akdJXO/linux-4.8.0/arch/x86/mm/ioremap.c:121 __ioremap_caller+0x1ec/0x370
-  ioremap on RAM at 0x0000000000000000 - 0x000000000001ffff
-
-Handle a shadow copy as RAM, without inserting it into the iomem tree.
-
-This fixes a regression caused by 0c0e0736acad ("PCI: Set ROM shadow
-location in arch code, not in PCI core"), which appeared in v4.6.  The
-effect is failure to initialize video devices, reported on AMD Turks but
-likely to affect others as well.
-
-Fixes: 0c0e0736acad ("PCI: Set ROM shadow location in arch code, not in PCI core")
-Reported-and-tested-by: Vecu Bosseur <vecu.bosseur@gmail.com>
-Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627496
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=175391
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1352272
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: stable@vger.kernel.org	# v4.6+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/pci/setup-res.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ include/linux/acpi.h   | 21 +++++++++++++++++++++
+ include/linux/fwnode.h |  3 ++-
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 66c4d8f..9526e34 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -121,6 +121,14 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
- 		return -EINVAL;
- 	}
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 61a3d90..996a29c 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -56,6 +56,27 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
+ 	acpi_fwnode_handle(adev) : NULL)
+ #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
  
-+	/*
-+	 * If we have a shadow copy in RAM, the PCI device doesn't respond
-+	 * to the shadow range, so we don't need to claim it, and upstream
-+	 * bridges don't need to route the range to the device.
-+	 */
-+	if (res->flags & IORESOURCE_ROM_SHADOW)
-+		return 0;
++static inline struct fwnode_handle *acpi_alloc_fwnode_static(void)
++{
++	struct fwnode_handle *fwnode;
 +
- 	root = pci_find_parent_resource(dev, res);
- 	if (!root) {
- 		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
++	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
++	if (!fwnode)
++		return NULL;
++
++	fwnode->type = FWNODE_ACPI_STATIC;
++
++	return fwnode;
++}
++
++static inline void acpi_free_fwnode_static(struct fwnode_handle *fwnode)
++{
++	if (WARN_ON(!fwnode || fwnode->type != FWNODE_ACPI_STATIC))
++		return;
++
++	kfree(fwnode);
++}
++
+ /**
+  * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
+  * the PCI-defined class-code information
+diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+index 8516717..8bd28ce 100644
+--- a/include/linux/fwnode.h
++++ b/include/linux/fwnode.h
+@@ -17,8 +17,9 @@ enum fwnode_type {
+ 	FWNODE_OF,
+ 	FWNODE_ACPI,
+ 	FWNODE_ACPI_DATA,
++	FWNODE_ACPI_STATIC,
+ 	FWNODE_PDATA,
+-	FWNODE_IRQCHIP,
++	FWNODE_IRQCHIP
+ };
+ 
+ struct fwnode_handle {
+-- 
+2.10.0
 
