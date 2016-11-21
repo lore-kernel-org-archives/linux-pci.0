@@ -1,90 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37724 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753388AbcKNLOs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2016 06:14:48 -0500
+Received: from mail.kernel.org ([198.145.29.136]:57244 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752077AbcKUVpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Nov 2016 16:45:15 -0500
+Subject: [PATCH v2 0/9] PCI: Tidy up messages
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
+Date: Mon, 21 Nov 2016 15:45:11 -0600
+Message-ID: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2eae2624-fd5e-df55-5261-a49b3fe56a18@linaro.org>
-References: <1478264387-17914-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1478264387-17914-3-git-send-email-srinivas.kandagatla@linaro.org>
- <CAFp+6iF7rspwXvANoz_3XgC33-CwSYzPvdpwsGK8UAfp064Jxg@mail.gmail.com> <2eae2624-fd5e-df55-5261-a49b3fe56a18@linaro.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Date: Mon, 14 Nov 2016 16:43:53 +0530
-Message-ID: <CAFp+6iHkhqHUcLRHZNPoJXqvm2RjzkenRZq9JVGj1SS7cSYA8A@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: qcom: add support to msm8996 PCIE controller
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: svarbanov@mm-sol.com, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Remove a few messages that don't contain any useful information, e.g.,
+
+  pcie_pme 0000:00:02.0:pcie01: service driver pcie_pme loaded
+  pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+  pciehp 0000:80:02.0:pcie04: service driver pciehp loaded
+  pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+
+NOTE: I added a patch to drop Root Complex Event Collector PME support.  I
+suspect that we really want to keep that, but it looks like it's currently
+broken.  I would welcome opinions and some help to test it if we fix the
+current breakage.
+
+Changes from v1->v2:
+  - Drop Root Complex Event Collector PME support
+  - Add PME IRQ to existing log message
+  - Log PME message once per hierarchy, not once per device
+  - Log AER probe errors with plain PCI device, not PCIe service device
+  - Add new AER claim message, including IRQ
+  - Remove unused AER version macros
+
+---
+
+Bjorn Helgaas (9):
+      PCI/PME: Drop unused support for PMEs from Root Complex Event Collectors
+      PCI/PME: Log PME IRQ when claiming Root Port
+      PCI/AER: Remove unused version macros
+      PCI/AER: Log errors with PCI device, not PCIe service device
+      PCI/AER: Log AER IRQ when claiming Root Port
+      PCI: Remove service driver load/unload messages
+      PCI: hotplug: Remove hotplug core message
+      PCI: pciehp: Remove loading message
+      PCI: Expand "VPD access disabled" quirk message
 
 
-On Mon, Nov 14, 2016 at 4:02 PM, Srinivas Kandagatla
-<srinivas.kandagatla@linaro.org> wrote:
->
->
-> On 09/11/16 10:37, Vivek Gautam wrote:
->>
->> Hi,
->>
->> On Fri, Nov 4, 2016 at 6:29 PM, Srinivas Kandagatla
->> <srinivas.kandagatla@linaro.org> wrote:
->>>
->>> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
->>> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
->>> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
->>>
->>> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
->>> pipe clocks are only setup after the phy is powered on.
->>> It also adds ltssm_enable callback as it is very much different to other
->>> supported SOCs in the driver.
->>>
->>> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
->>> ---
->>
->>
->> Few minor nits.
->>
->>>  .../devicetree/bindings/pci/qcom,pcie.txt          |  68 +++++++-
->>>  drivers/pci/host/pcie-qcom.c                       | 177
->>> ++++++++++++++++++++-
->>>  2 files changed, 239 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> index 4059a6f..4a0538d 100644
->>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> @@ -7,6 +7,7 @@
->>>                         - "qcom,pcie-ipq8064" for ipq8064
->>>                         - "qcom,pcie-apq8064" for apq8064
->>>                         - "qcom,pcie-apq8084" for apq8084
->>> +                       - "qcom,pcie-msm8996" for msm8996 or apq8096
->>
->>
->> Since this works for both apq8096 and msm8996, compatible -
->> "qcom,pcie-apq8096" for uniformity ?
->
->
-> AFAIK, compatible is selected based on SOC on which this IP is integrated
-> first, So msm8996 seems to be correct, in that way.
->
-> Also if we look at clk controller compatible strings, you would see them as
-> *msm8996* rather than *8096*.
-
-ok, cool. I didn't notice that. This looks good then.
-
-
-Thanks
-Vivek
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+ drivers/pci/hotplug/pci_hotplug_core.c |   10 +++-------
+ drivers/pci/hotplug/pciehp_core.c      |    9 ++++-----
+ drivers/pci/pcie/aer/aerdrv.c          |   18 ++++++------------
+ drivers/pci/pcie/pme.c                 |   29 +++++++----------------------
+ drivers/pci/pcie/portdrv_core.c        |    3 ---
+ drivers/pci/quirks.c                   |    2 +-
+ 6 files changed, 21 insertions(+), 50 deletions(-)
