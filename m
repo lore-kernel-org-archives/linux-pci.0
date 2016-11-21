@@ -1,87 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:59564
-        "EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752051AbcKAWdg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Nov 2016 18:33:36 -0400
-From: Long Li <longli@exchange.microsoft.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: [PATCH] pci-hyperv: move hypercall buffer from stack to heap
-Date: Tue,  1 Nov 2016 17:26:16 -0700
-Message-Id: <1478046376-7570-1-git-send-email-longli@exchange.microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/9] PCI/PME: Drop unused support for PMEs from Root Complex Event Collectors
+Date: Mon, 21 Nov 2016 23:58:09 +0100
+Message-ID: <11655163.pKNesUmc8Z@vostro.rjw.lan>
+In-Reply-To: <20161121224210.GD4832@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com> <4459736.K6pDNqTrTR@vostro.rjw.lan> <20161121224210.GD4832@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+On Monday, November 21, 2016 04:42:10 PM Bjorn Helgaas wrote:
+> On Mon, Nov 21, 2016 at 11:28:56PM +0100, Rafael J. Wysocki wrote:
+> > On Monday, November 21, 2016 03:45:19 PM Bjorn Helgaas wrote:
+> > > Since we register pcie_pme_driver only for PCI_EXP_TYPE_ROOT_PORT, the PME
+> > > driver never claims Root Complex Event Collectors.
+> > > 
+> > > Remove unused code related to Root Complex Event Collectors.
+> > > 
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  drivers/pci/pcie/pme.c |   17 +----------------
+> > >  1 file changed, 1 insertion(+), 16 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> > > index 884bad5..9e8aa9d 100644
+> > > --- a/drivers/pci/pcie/pme.c
+> > > +++ b/drivers/pci/pcie/pme.c
+> > > @@ -319,23 +319,8 @@ static int pcie_pme_set_native(struct pci_dev *dev, void *ign)
+> > >  static void pcie_pme_mark_devices(struct pci_dev *port)
+> > >  {
+> > >  	pcie_pme_set_native(port, NULL);
+> > > -	if (port->subordinate) {
+> > > +	if (port->subordinate)
+> > >  		pci_walk_bus(port->subordinate, pcie_pme_set_native, NULL);
+> > > -	} else {
+> > > -		struct pci_bus *bus = port->bus;
+> > > -		struct pci_dev *dev;
+> > > -
+> > > -		/* Check if this is a root port event collector. */
+> > > -		if (pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC || !bus)
+> > > -			return;
+> > > -
+> > > -		down_read(&pci_bus_sem);
+> > > -		list_for_each_entry(dev, &bus->devices, bus_list)
+> > > -			if (pci_is_pcie(dev)
+> > > -			    && pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+> > > -				pcie_pme_set_native(dev, NULL);
+> > > -		up_read(&pci_bus_sem);
+> > > -	}
+> > >  }
+> > >  
+> > >  /**
+> > 
+> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> I'm shocked :)
 
-We need to pass a segment from a physically continuous buffer to hv_do_hypercall. Buffer allocated on the stack may not work if CONFIG_VMAP_STACK=y is set. Moving the params buffer from stack to buffer returned by kmalloc.
+Well, the code is not used as a matter of fact and it can be added back
+when needed, can't it?
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+> You mean we really don't care about PME from RC event
+> collectors?  Without the RCEC support, we won't see any PMEs from RC
+> integrated devices.  I mean, I don't think we see those PMEs today, but I
+> thought maybe we would *want* to.  No?
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 763ff87..97e6daf 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -378,6 +378,7 @@ struct hv_pcibus_device {
- 	struct msi_domain_info msi_info;
- 	struct msi_controller msi_chip;
- 	struct irq_domain *irq_domain;
-+	struct retarget_msi_interrupt retarget_msi_interrupt_params;
- };
- 
- /*
-@@ -774,7 +775,7 @@ void hv_irq_unmask(struct irq_data *data)
- {
- 	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
- 	struct irq_cfg *cfg = irqd_cfg(data);
--	struct retarget_msi_interrupt params;
-+	struct retarget_msi_interrupt *params;
- 	struct hv_pcibus_device *hbus;
- 	struct cpumask *dest;
- 	struct pci_bus *pbus;
-@@ -785,23 +786,24 @@ void hv_irq_unmask(struct irq_data *data)
- 	pdev = msi_desc_to_pci_dev(msi_desc);
- 	pbus = pdev->bus;
- 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
--
--	memset(&params, 0, sizeof(params));
--	params.partition_id = HV_PARTITION_ID_SELF;
--	params.source = 1; /* MSI(-X) */
--	params.address = msi_desc->msg.address_lo;
--	params.data = msi_desc->msg.data;
--	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
-+	params = &hbus->retarget_msi_interrupt_params;
-+
-+	memset(params, 0, sizeof(*params));
-+	params->partition_id = HV_PARTITION_ID_SELF;
-+	params->source = 1; /* MSI(-X) */
-+	params->address = msi_desc->msg.address_lo;
-+	params->data = msi_desc->msg.data;
-+	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
- 			   (hbus->hdev->dev_instance.b[4] << 16) |
- 			   (hbus->hdev->dev_instance.b[7] << 8) |
- 			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
- 			   PCI_FUNC(pdev->devfn);
--	params.vector = cfg->vector;
-+	params->vector = cfg->vector;
- 
- 	for_each_cpu_and(cpu, dest, cpu_online_mask)
--		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-+		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
- 
--	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-+	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
- 
- 	pci_msi_unmask_irq(data);
- }
--- 
-2.7.4
+In the majority of cases those are signaled via ACPI GPEs anyway.  I'm not
+sure why, but event collectors have not been extremely popular for the last
+several years.  I haven't seen a single one with native PME handling so far
+and I kind of don't expect to see any.
 
+Thanks,
+Rafael
