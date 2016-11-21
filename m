@@ -1,35 +1,60 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI/VMD: Select SRCU
-Date: Fri, 11 Nov 2016 15:50:57 -0700
-Message-Id: <1478904657-11342-2-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1478904657-11342-1-git-send-email-jonathan.derrick@intel.com>
-References: <1478904657-11342-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57298 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753261AbcKUVpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Nov 2016 16:45:22 -0500
+Subject: [PATCH v2 1/9] PCI/PME: Drop unused support for PMEs from Root
+ Complex Event Collectors
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
+Date: Mon, 21 Nov 2016 15:45:19 -0600
+Message-ID: <20161121214519.21036.33519.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VMD now uses SRCU, so we must qualify that it is part of the kernel.
+Since we register pcie_pme_driver only for PCI_EXP_TYPE_ROOT_PORT, the PME
+driver never claims Root Complex Event Collectors.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Remove unused code related to Root Complex Event Collectors.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pcie/pme.c |   17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a..80ffa66 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -287,6 +287,7 @@ config PCIE_ROCKCHIP
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 884bad5..9e8aa9d 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -319,23 +319,8 @@ static int pcie_pme_set_native(struct pci_dev *dev, void *ign)
+ static void pcie_pme_mark_devices(struct pci_dev *port)
+ {
+ 	pcie_pme_set_native(port, NULL);
+-	if (port->subordinate) {
++	if (port->subordinate)
+ 		pci_walk_bus(port->subordinate, pcie_pme_set_native, NULL);
+-	} else {
+-		struct pci_bus *bus = port->bus;
+-		struct pci_dev *dev;
+-
+-		/* Check if this is a root port event collector. */
+-		if (pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC || !bus)
+-			return;
+-
+-		down_read(&pci_bus_sem);
+-		list_for_each_entry(dev, &bus->devices, bus_list)
+-			if (pci_is_pcie(dev)
+-			    && pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+-				pcie_pme_set_native(dev, NULL);
+-		up_read(&pci_bus_sem);
+-	}
+ }
  
- config VMD
- 	depends on PCI_MSI && X86_64
-+	select SRCU
- 	tristate "Intel Volume Management Device Driver"
- 	default N
- 	---help---
--- 
-1.8.3.1
+ /**
+
