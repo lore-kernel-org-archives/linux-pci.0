@@ -1,169 +1,184 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "Jake Oshins" <jakeo@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        "Vitaly Kuznetsov" <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
-Date: Mon, 14 Nov 2016 23:06:36 +0000
-Message-ID: <DM5PR03MB24901CCCB7EB2C47566CA772A0BC0@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-In-Reply-To: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v9 12/16] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
+Date: Mon, 21 Nov 2016 10:01:44 +0000
+Message-Id: <20161121100148.24769-13-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Current ARM SMMU probe functions intermingle HW and DT probing
+in the initialization functions to detect and programme the ARM SMMU
+driver features. In order to allow probing the ARM SMMU with other
+firmwares than DT, this patch splits the ARM SMMU init functions into
+DT and HW specific portions so that other FW interfaces (ie ACPI) can
+reuse the HW probing functions and skip the DT portion accordingly.
 
+This patch implements no functional change, only code reshuffling.
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Wednesday, November 9, 2016 11:19 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
-> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
-> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
-> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
-> olaf@aepfle.de; linux-kernel@vger.kernel.org
-> Subject: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
->=20
-> 1. We don't really need such a big on-stack buffer when sending
-> the teardown_packet: vmbus_sendpacket() here only uses
-> sizeof(struct pci_message).
->=20
-> 2. In the hot-remove case (PCI_EJECT), after we send
-> PCI_EJECTION_COMPLETE
-> to the host, the host will send a RESCIND_CHANNEL message to us and the
-> host won't access the per-channel ringbuffer any longer, so we needn't
-> send PCI_RESOURCES_RELEASED/PCI_BUS_D0EXIT to the host, and we
-> shouldn't
-> expect the host's completion message of PCI_BUS_D0EXIT, which will never
-> come.
->=20
-> 3. We should send PCI_BUS_D0EXIT after hv_send_resources_released().
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> CC: Jake Oshins <jakeo@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>
-> CC: Haiyang Zhang <haiyangz@microsoft.com>
-> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Will Deacon <will.deacon@arm.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu.c | 62 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 339a8d3..573b2b6 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1668,7 +1668,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 	unsigned long size;
+ 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
+ 	u32 id;
+-	bool cttw_dt, cttw_reg;
++	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
+ 	int i;
+ 
+ 	dev_notice(smmu->dev, "probing hardware configuration...\n");
+@@ -1713,20 +1713,17 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 
+ 	/*
+ 	 * In order for DMA API calls to work properly, we must defer to what
+-	 * the DT says about coherency, regardless of what the hardware claims.
++	 * the FW says about coherency, regardless of what the hardware claims.
+ 	 * Fortunately, this also opens up a workaround for systems where the
+ 	 * ID register value has ended up configured incorrectly.
+ 	 */
+-	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
+ 	cttw_reg = !!(id & ID0_CTTW);
+-	if (cttw_dt)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+-	if (cttw_dt || cttw_reg)
++	if (cttw_fw || cttw_reg)
+ 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
+-			   cttw_dt ? "" : "non-");
+-	if (cttw_dt != cttw_reg)
++			   cttw_fw ? "" : "non-");
++	if (cttw_fw != cttw_reg)
+ 		dev_notice(smmu->dev,
+-			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
++			   "\t(IDR0.CTTW overridden by FW configuration)\n");
+ 
+ 	/* Max. number of entries we have for stream matching/indexing */
+ 	size = 1 << ((id >> ID0_NUMSIDB_SHIFT) & ID0_NUMSIDB_MASK);
+@@ -1907,15 +1904,25 @@ static const struct of_device_id arm_smmu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
+ {
+ 	const struct arm_smmu_match_data *data;
+-	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+-	int num_irqs, i, err;
+ 	bool legacy_binding;
+ 
++	if (of_property_read_u32(dev->of_node, "#global-interrupts",
++				 &smmu->num_global_irqs)) {
++		dev_err(dev, "missing #global-interrupts property\n");
++		return -ENODEV;
++	}
++
++	data = of_device_get_match_data(dev);
++	smmu->version = data->version;
++	smmu->model = data->model;
++
++	parse_driver_options(smmu);
++
+ 	legacy_binding = of_find_property(dev->of_node, "mmu-masters", NULL);
+ 	if (legacy_binding && !using_generic_binding) {
+ 		if (!using_legacy_binding)
+@@ -1928,6 +1935,19 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
++	if (of_dma_is_coherent(dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	int num_irqs, i, err;
++
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+ 		dev_err(dev, "failed to allocate arm_smmu_device\n");
+@@ -1935,9 +1955,9 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	}
+ 	smmu->dev = dev;
+ 
+-	data = of_device_get_match_data(dev);
+-	smmu->version = data->version;
+-	smmu->model = data->model;
++	err = arm_smmu_device_dt_probe(pdev, smmu);
++	if (err)
++		return err;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	smmu->base = devm_ioremap_resource(dev, res);
+@@ -1945,12 +1965,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return PTR_ERR(smmu->base);
+ 	smmu->size = resource_size(res);
+ 
+-	if (of_property_read_u32(dev->of_node, "#global-interrupts",
+-				 &smmu->num_global_irqs)) {
+-		dev_err(dev, "missing #global-interrupts property\n");
+-		return -ENODEV;
+-	}
+-
+ 	num_irqs = 0;
+ 	while ((res = platform_get_resource(pdev, IORESOURCE_IRQ, num_irqs))) {
+ 		num_irqs++;
+@@ -1985,8 +1999,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	parse_driver_options(smmu);
+-
+ 	if (smmu->version == ARM_SMMU_V2 &&
+ 	    smmu->num_context_banks != smmu->num_context_irqs) {
+ 		dev_err(dev,
+@@ -2048,7 +2060,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
+-- 
+2.10.0
 
-Thanks Dexuan.
-
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
->=20
-> ---
->=20
-> I made the patch based on discussions with Jake Oshins and others.
->=20
->  drivers/pci/host/pci-hyperv.c | 53 +++++++++++++++++++++++++++--------
-> --------
->  1 file changed, 33 insertions(+), 20 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 93ed64a..7590ad0 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -2266,24 +2266,32 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	return ret;
->  }
->=20
-> -/**
-> - * hv_pci_remove() - Remove routine for this VMBus channel
-> - * @hdev:	VMBus's tracking struct for this root PCI bus
-> - *
-> - * Return: 0 on success, -errno on failure
-> - */
-> -static int hv_pci_remove(struct hv_device *hdev)
-> +static void hv_pci_bus_exit(struct hv_device *hdev)
->  {
-> -	int ret;
-> -	struct hv_pcibus_device *hbus;
-> -	union {
-> +	struct hv_pcibus_device *hbus =3D hv_get_drvdata(hdev);
-> +	struct {
->  		struct pci_packet teardown_packet;
-> -		u8 buffer[0x100];
-> +		u8 buffer[sizeof(struct pci_message)];
->  	} pkt;
->  	struct pci_bus_relations relations;
->  	struct hv_pci_compl comp_pkt;
-> +	int ret;
->=20
-> -	hbus =3D hv_get_drvdata(hdev);
-> +	/*
-> +	 * After the host sends the RESCIND_CHANNEL message, it doesn't
-> +	 * access the per-channel ringbuffer any longer.
-> +	 */
-> +	if (hdev->channel->rescind)
-> +		return;
-> +
-> +	/* Delete any children which might still exist. */
-> +	memset(&relations, 0, sizeof(relations));
-> +	hv_pci_devices_present(hbus, &relations);
-> +
-> +	ret =3D hv_send_resources_released(hdev);
-> +	if (ret)
-> +		dev_err(&hdev->device,
-> +			"Couldn't send resources released packet(s)\n");
->=20
->  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
->  	init_completion(&comp_pkt.host_event);
-> @@ -2298,7 +2306,19 @@ static int hv_pci_remove(struct hv_device *hdev)
->=20
-> VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->  	if (!ret)
->  		wait_for_completion_timeout(&comp_pkt.host_event, 10 *
-> HZ);
-> +}
-> +
-> +/**
-> + * hv_pci_remove() - Remove routine for this VMBus channel
-> + * @hdev:	VMBus's tracking struct for this root PCI bus
-> + *
-> + * Return: 0 on success, -errno on failure
-> + */
-> +static int hv_pci_remove(struct hv_device *hdev)
-> +{
-> +	struct hv_pcibus_device *hbus;
->=20
-> +	hbus =3D hv_get_drvdata(hdev);
->  	if (hbus->state =3D=3D hv_pcibus_installed) {
->  		/* Remove the bus from PCI's point of view. */
->  		pci_lock_rescan_remove();
-> @@ -2307,17 +2327,10 @@ static int hv_pci_remove(struct hv_device
-> *hdev)
->  		pci_unlock_rescan_remove();
->  	}
->=20
-> -	ret =3D hv_send_resources_released(hdev);
-> -	if (ret)
-> -		dev_err(&hdev->device,
-> -			"Couldn't send resources released packet(s)\n");
-> +	hv_pci_bus_exit(hdev);
->=20
->  	vmbus_close(hdev->channel);
->=20
-> -	/* Delete any children which might still exist. */
-> -	memset(&relations, 0, sizeof(relations));
-> -	hv_pci_devices_present(hbus, &relations);
-> -
->  	iounmap(hbus->cfg_addr);
->  	hv_free_config_window(hbus);
->  	pci_free_resource_list(&hbus->resources_for_children);
-> --
-> 2.7.4
