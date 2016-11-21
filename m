@@ -1,21 +1,14 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:34023 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbcKPN2F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2016 08:28:05 -0500
-Received: by mail-qt0-f176.google.com with SMTP id n6so100861969qtd.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Nov 2016 05:28:05 -0800 (PST)
-Subject: Re: [PATCH v7 00/16] ACPI IORT ARM SMMU support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
         Marc Zyngier <marc.zyngier@arm.com>,
         Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
         Eric Auger <eric.auger@redhat.com>,
         Sinan Kaya <okaya@codeaurora.org>,
         Nate Watterson <nwatters@codeaurora.org>,
@@ -23,51 +16,137 @@ Cc: Will Deacon <will.deacon@arm.com>,
         Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <cd630404-3e75-f49f-9027-f2a79293aa7d@semihalf.com>
-Date: Wed, 16 Nov 2016 14:28:02 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v9 03/16] drivers: acpi: iort: add support for IOMMU fwnode registration
+Date: Mon, 21 Nov 2016 10:01:35 +0000
+Message-Id: <20161121100148.24769-4-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09.11.2016 15:19, Lorenzo Pieralisi wrote:
-> This patch series is v7 of a previous posting:
->
-> https://lkml.org/lkml/2016/10/18/506
->
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
-[...]
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective fwnode.
 
->
-> The ACPI IORT table provides information that allows instantiating
-> ARM SMMU devices and carrying out id mappings between components on
-> ARM based systems (devices, IOMMUs, interrupt controllers).
->
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->
-> Building on basic IORT support, this patchset enables ARM SMMUs support
-> on ACPI systems.
->
-> Most of the code is aimed at building the required generic ACPI
-> infrastructure to create and enable IOMMU components and to bring
-> the IOMMU infrastructure for ACPI on par with DT, which is going to
-> make future ARM SMMU components easier to integrate.
->
-
-[...]
-
->
-> This patchset is provided for review/testing purposes here:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v7
->
-> Tested on Juno and FVP models for ARM SMMU v1 and v3 probing path.
->
-
-For all series:
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
 
-Thanks,
-Tomasz
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 2c46ebc..1ac2720 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -20,7 +20,9 @@
+ 
+ #include <linux/acpi_iort.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -28,6 +30,90 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_fwnode {
++	struct list_head list;
++	struct acpi_iort_node *iort_node;
++	struct fwnode_handle *fwnode;
++};
++static LIST_HEAD(iort_fwnode_list);
++static DEFINE_SPINLOCK(iort_fwnode_lock);
++
++/**
++ * iort_set_fwnode() - Create iort_fwnode and use it to register
++ *		       iommu data in the iort_fwnode_list
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode associated with the IORT node
++ *
++ * Returns: 0 on success
++ *          <0 on failure
++ */
++static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
++				  struct fwnode_handle *fwnode)
++{
++	struct iort_fwnode *np;
++
++	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
++
++	if (WARN_ON(!np))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&np->list);
++	np->iort_node = iort_node;
++	np->fwnode = fwnode;
++
++	spin_lock(&iort_fwnode_lock);
++	list_add_tail(&np->list, &iort_fwnode_list);
++	spin_unlock(&iort_fwnode_lock);
++
++	return 0;
++}
++
++/**
++ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: fwnode_handle pointer on success, NULL on failure
++ */
++static inline
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr;
++	struct fwnode_handle *fwnode = NULL;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry(curr, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			fwnode = curr->fwnode;
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++
++	return fwnode;
++}
++
++/**
++ * iort_delete_fwnode() - Delete fwnode associated with an IORT node
++ *
++ * @node: IORT table node associated with fwnode to delete
++ */
++static inline void iort_delete_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr, *tmp;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry_safe(curr, tmp, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			list_del(&curr->list);
++			kfree(curr);
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+-- 
+2.10.0
