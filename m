@@ -1,57 +1,151 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1478646779.7430.66.camel@kernel.crashing.org>
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mark Rutland <mark.rutland@arm.com>, "zhichang.yuan"
- <yuanzhichang@hisilicon.com>
-Date: Wed, 09 Nov 2016 10:12:59 +1100
-In-Reply-To: <20161108114953.GB15297@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
- <20161108114953.GB15297@leverpostej>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, catalin.marinas@arm.com, will.deacon@arm.com,
- linuxarm@huawei.com, lorenzo.pieralisi@arm.com, arnd@arndb.de,
- xuwei5@hisilicon.com, linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, minyard@acm.org, marc.zyngier@arm.com,
- liviu.dudau@arm.com, john.garry@huawei.com, zourongrong@gmail.com,
- robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
- zhichang.yuan02@gmail.com, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, olof@lixom.net
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54830 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753956AbcKUKBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Nov 2016 05:01:15 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v9 10/16] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
+Date: Mon, 21 Nov 2016 10:01:42 +0000
+Message-Id: <20161121100148.24769-11-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTExLTA4IGF0IDExOjQ5ICswMDAwLCBNYXJrIFJ1dGxhbmQgd3JvdGU6Cj4g
-Cj4gTXkgdW5kZXJzdGFuZGluZyBvZiBJU0EgKHdoaWNoIG1heSBiZSBmbGF3ZWQpIGlzIHRoYXQg
-aXQncyBub3QgcGFydCBvZgo+IHRoZSBQQ0kgaG9zdCBicmlkZ2UsIGJ1dCByYXRoZXIgb24geDg2
-IGl0IGhhcHBlbnMgdG8gc2hhcmUgdGhlIElPIHNwYWNlCj4gd2l0aCBQQ0kuCgpTb3J0LW9mLiBP
-biBzb21lIHN5c3RlbXMgaXQgYWN0dWFsbHkgZ29lcyB0aHJvdWdoIFBDSSBhbmQgdGhlcmUncyBh
-ClBDSS0+SVNBIGJyaWRnZSB0aGF0IHVzZXMgc3Vic3RyYWN0aXZlIGRlY29kaW5nIHRvIHRoZSBs
-ZWdhY3kgZGV2aWNlcy4KCj4gU28sIGhvdyBhYm91dCB0aGlzIGJlY29tZXM6Cj4gCj4gwqAgSGlz
-aWxpY29uIEhpcDA2IFNvQ3MgaW1wbGVtZW50IGEgTG93IFBpbiBDb3VudCAoTFBDKSBjb250cm9s
-bGVyLCB3aGljaAo+IMKgIHByb3ZpZGVzIGFjY2VzcyB0byBzb21lIGxlZ2FjeSBJU0EgZGV2aWNl
-cy4KPiAKPiBJIGJlbGlldmUgdGhhdCB3ZSBjb3VsZCB0aGVvcmV0aWNhbGx5IGhhdmUgbXVsdGlw
-bGUgaW5kZXBlbmRlbnQgTFBDL0lTQQo+IGJ1c3NlcywgYXMgaXMgcG9zc2libGUgd2l0aCBQQ0kg
-b24gIXg4NiBzeXN0ZW1zLiBJZiB0aGUgY3VycmVudCBJU0EgY29kZQo+IGFzc3VtZXMgYSBzaW5n
-bGV0b24gYnVzLCBJIHRoaW5rIHRoYXQncyBzb21ldGhpbmcgdGhhdCBuZWVkcyB0byBiZSBmaXhl
-ZAo+IHVwIG1vcmUgZ2VuZXJpY2FsbHkuCj4gCj4gSSBkb24ndCBzZWUgd2h5IHdlIHNob3VsZCBu
-ZWVkIGFueSBhcmNoaXRlY3R1cmUtc3BlY2lmaWMgY29kZSBoZXJlLiBXaHkKPiBjYW4gd2Ugbm90
-IGZpeCB1cCB0aGUgSVNBIGJ1cyBjb2RlIGluIGRyaXZlcnMvb2YvYWRkcmVzcy5jIHN1Y2ggdGhh
-dCBpdAo+IGhhbmRsZXMgbXVsdGlwbGUgSVNBIGJ1cyBpbnN0YW5jZXMsIGFuZCB0cmFuc2xhdGVz
-IGFsbCBzdWItZGV2aWNlCj4gYWRkcmVzc2VzIHJlbGF0aXZlIHRvIHRoZSBzcGVjaWZpYyBidXMg
-aW5zdGFuY2U/CgpXaGF0IGluIHRoYXQgY29kZSBwcmV2ZW50cyB0aGF0IHRvZGF5ID8KCkNoZWVy
-cywKQmVuLgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
-cmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xp
-bnV4LWFybS1rZXJuZWwK
+Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
+initialization functions to detect and programme the ARM SMMU v3 driver
+features. In order to allow probing the ARM SMMUv3 with other firmwares
+than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
+specific portions so that other FW interfaces (ie ACPI) can reuse the HW
+probing functions and skip the DT portion accordingly.
+
+This patch implements no functional change, only code reshuffling.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 43 +++++++++++++++++++++++++++----------------
+ 1 file changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index e6e1c87..2b3f9ac 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2381,10 +2381,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
++static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+-	bool coherent;
++	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
+ 
+ 	/* IDR0 */
+ 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+@@ -2436,13 +2436,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 		smmu->features |= ARM_SMMU_FEAT_HYP;
+ 
+ 	/*
+-	 * The dma-coherent property is used in preference to the ID
++	 * The coherency feature as set by FW is used in preference to the ID
+ 	 * register, but warn on mismatch.
+ 	 */
+-	coherent = of_dma_is_coherent(smmu->dev->of_node);
+-	if (coherent)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
+-
+ 	if (!!(reg & IDR0_COHACC) != coherent)
+ 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
+ 			 coherent ? "true" : "false");
+@@ -2563,21 +2559,35 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
+ {
+-	int irq, ret;
+-	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+-	bool bypass = true;
+ 	u32 cells;
++	int ret = -EINVAL;
+ 
+ 	if (of_property_read_u32(dev->of_node, "#iommu-cells", &cells))
+ 		dev_err(dev, "missing #iommu-cells property\n");
+ 	else if (cells != 1)
+ 		dev_err(dev, "invalid #iommu-cells value (%d)\n", cells);
+ 	else
+-		bypass = false;
++		ret = 0;
++
++	parse_driver_options(smmu);
++
++	if (of_dma_is_coherent(dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
++	return ret;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	int irq, ret;
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	bool bypass;
+ 
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+@@ -2614,10 +2624,11 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (irq > 0)
+ 		smmu->gerr_irq = irq;
+ 
+-	parse_driver_options(smmu);
++	/* Set bypass mode according to firmware probing result */
++	bypass = !!arm_smmu_device_dt_probe(pdev, smmu);
+ 
+ 	/* Probe the h/w */
+-	ret = arm_smmu_device_probe(smmu);
++	ret = arm_smmu_device_hw_probe(smmu);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -2679,7 +2690,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu-v3",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
+-- 
+2.10.0
+
