@@ -1,47 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46431 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751998AbcKHIRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 03:17:35 -0500
-Subject: Re: [PATCH 5/7] pci/msi: Provide pci_alloc_irq_vectors_affinity()
-To: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-6-git-send-email-hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <7cf222db-cb37-9ef3-29bf-00f36663ea6d@suse.de>
-Date: Tue, 8 Nov 2016 09:17:33 +0100
-MIME-Version: 1.0
-In-Reply-To: <1478544462-9549-6-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v9 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
+Date: Mon, 21 Nov 2016 10:01:37 +0000
+Message-Id: <20161121100148.24769-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/2016 07:47 PM, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
->
-> This is a variant of pci_alloc_irq_vectors() that allows passing a
-> struct irq_affinity to provide fine-grainded IRQ affinity control.
-> For now this means being able to exclude vectors at the beginning or
-> end of the MSI vector space, but it could also be used for any other
-> quirks needed in the future (e.g. more vectors than CPUs, or exluding
-> CPUs from the spreading).
->
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c   | 20 +++++++++++++-------
->  include/linux/pci.h | 24 +++++++++++++++++++-----
->  2 files changed, 32 insertions(+), 12 deletions(-)
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Current ARM SMMU driver rely on the struct device.of_node pointer for
+device look-up and iommu_ops retrieval.
 
-Cheers,
+In preparation for ACPI probing enablement, convert the driver to use
+the struct device.fwnode member for device and iommu_ops look-up so that
+the driver infrastructure can be used also on systems that do not
+associate an of_node pointer to a struct device (eg ACPI), making the
+device look-up and iommu_ops retrieval firmware agnostic.
 
-Hannes
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Tomasz Nowicki <tn@semihalf.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 8f72814..339a8d3 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
+ 
+ static int arm_smmu_match_node(struct device *dev, void *data)
+ {
+-	return dev->of_node == data;
++	return dev->fwnode == data;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static
++struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+-						np, arm_smmu_match_node);
++						fwnode, arm_smmu_match_node);
+ 	put_device(dev);
+ 	return dev ? dev_get_drvdata(dev) : NULL;
+ }
+@@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 		if (ret)
+ 			goto out_free;
+ 	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
+-		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
++		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+ 	} else {
+ 		return -ENODEV;
+ 	}
+@@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	iommu_register_instance(dev->fwnode, &arm_smmu_ops);
+ 	platform_set_drvdata(pdev, smmu);
+ 	arm_smmu_device_reset(smmu);
+ 
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.10.0
+
