@@ -1,178 +1,149 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH] PCI: Add information about describing PCI in ACPI
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
-Date: Thu, 17 Nov 2016 11:59:38 -0600
-Message-ID: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Tue, 22 Nov 2016 15:56:48 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, rafael@kernel.org, tn@semihalf.com,
+	wangzhou1@hisilicon.com, pratyush.anand@gmail.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jcm@redhat.com,
+	gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+	hanjun.guo@linaro.org, linuxarm@huawei.com
+Subject: Re: [PATCH V6 1/2] PCI/ACPI: Provide acpi_get_rc_resources() for
+ ARM64 platform
+Message-ID: <20161122155648.GA2022@red-moon>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+ <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a writeup about how PCI host bridges should be described in ACPI
-using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
+On Tue, Nov 22, 2016 at 08:08:48PM +0800, Dongdong Liu wrote:
+> The acpi_get_rc_resources() is used to get the RC register address that can
+> not be described in MCFG. It takes the _HID&segment to look for and returns
+> the RC address resource. Use PNP0C02 devices to describe such RC address
+> resource. Use _UID to match segment to tell which root bus the PNP0C02
+> resource belong to.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/PCI/00-INDEX      |    2 +
- Documentation/PCI/acpi-info.txt |  136 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 138 insertions(+)
- create mode 100644 Documentation/PCI/acpi-info.txt
+Here (ie interpreting the _UID as a segment identifier) is where we
+start interpreting the specs instead of relying on them, if you want to
+go ahead with this feel free but I do not like this attitude at all.
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 147231f..0780280 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -1,5 +1,7 @@
- 00-INDEX
- 	- this file
-+acpi-info.txt
-+	- info on how PCI host bridges are represented in ACPI
- MSI-HOWTO.txt
- 	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
- PCIEBUS-HOWTO.txt
-diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-info.txt
-new file mode 100644
-index 0000000..ccbcfda
---- /dev/null
-+++ b/Documentation/PCI/acpi-info.txt
-@@ -0,0 +1,136 @@
-+	    ACPI considerations for PCI host bridges
-+
-+The basic requirement is that the ACPI namespace should describe
-+*everything* that consumes address space unless there's another
-+standard way for the OS to find it [1, 2].  For example, windows that
-+are forwarded to PCI by a PCI host bridge should be described via ACPI
-+devices, since the OS can't locate the host bridge by itself.  PCI
-+devices *below* the host bridge do not need to be described via ACPI,
-+because the resources they consume are inside the host bridge windows,
-+and the OS can discover them via the standard PCI enumeration
-+mechanism (using config accesses to read and size the BARs).
-+
-+This ACPI resource description is done via _CRS methods of devices in
-+the ACPI namespace [2].   _CRS methods are like generalized PCI BARs:
-+the OS can read _CRS and figure out what resource is being consumed
-+even if it doesn't have a driver for the device [3].  That's important
-+because it means an old OS can work correctly even on a system with
-+new devices unknown to the OS.  The new devices won't do anything, but
-+the OS can at least make sure no resources conflict with them.
-+
-+Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-+reserving address space!  The static tables are for things the OS
-+needs to know early in boot, before it can parse the ACPI namespace.
-+If a new table is defined, an old OS needs to operate correctly even
-+though it ignores the table.  _CRS allows that because it is generic
-+and understood by the old OS; a static table does not.
-+
-+If the OS is expected to manage an ACPI device, that device will have
-+a specific _HID/_CID that tells the OS what driver to bind to it, and
-+the _CRS tells the OS and the driver where the device's registers are.
-+
-+PNP0C02 "motherboard" devices are basically a catch-all.  There's no
-+programming model for them other than "don't use these resources for
-+anything else."  So any address space that is (1) not claimed by some
-+other ACPI device and (2) should not be assigned by the OS to
-+something else, should be claimed by a PNP0C02 _CRS method.
-+
-+PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-+describe all the address space they consume.  In principle, this would
-+be all the windows they forward down to the PCI bus, as well as the
-+bridge registers themselves.  The bridge registers include things like
-+secondary/subordinate bus registers that determine the bus range below
-+the bridge, window registers that describe the apertures, etc.  These
-+are all device-specific, non-architected things, so the only way a
-+PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
-+contain the device-specific details.  These bridge registers also
-+include ECAM space, since it is consumed by the bridge.
-+
-+ACPI defined a Producer/Consumer bit that was intended to distinguish
-+the bridge apertures from the bridge registers [4, 5].  However,
-+BIOSes didn't use that bit correctly, and the result is that OSes have
-+to assume that everything in a PCI host bridge _CRS is a window.  That
-+leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-+device itself.
-+
-+The workaround is to describe the bridge registers (including ECAM
-+space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
-+the bridge register space is device-specific anyway, so the generic
-+PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
-+ECAM, pci_root.c learns about the space from either MCFG or the _CBA
-+method.
-+
-+Note that the PCIe spec actually does require ECAM unless there's a
-+standard firmware interface for config access, e.g., the ia64 SAL
-+interface [7].  One reason is that we want a generic host bridge
-+driver (pci_root.c), and a generic driver requires a generic way to
-+access config space.
-+
-+
-+[1] ACPI 6.0, sec 6.1:
-+    For any device that is on a non-enumerable type of bus (for
-+    example, an ISA bus), OSPM enumerates the devices' identifier(s)
-+    and the ACPI system firmware must supply an _HID object ... for
-+    each device to enable OSPM to do that.
-+
-+[2] ACPI 6.0, sec 3.7:
-+    The OS enumerates motherboard devices simply by reading through
-+    the ACPI Namespace looking for devices with hardware IDs.
-+
-+    Each device enumerated by ACPI includes ACPI-defined objects in
-+    the ACPI Namespace that report the hardware resources the device
-+    could occupy [_PRS], an object that reports the resources that are
-+    currently used by the device [_CRS], and objects for configuring
-+    those resources [_SRS].  The information is used by the Plug and
-+    Play OS (OSPM) to configure the devices.
-+
-+[3] ACPI 6.0, sec 6.2:
-+    OSPM uses device configuration objects to configure hardware
-+    resources for devices enumerated via ACPI.  Device configuration
-+    objects provide information about current and possible resource
-+    requirements, the relationship between shared resources, and
-+    methods for configuring hardware resources.
-+
-+    When OSPM enumerates a device, it calls _PRS to determine the
-+    resource requirements of the device.  It may also call _CRS to
-+    find the current resource settings for the device.  Using this
-+    information, the Plug and Play system determines what resources
-+    the device should consume and sets those resources by calling the
-+    device’s _SRS control method.
-+
-+    In ACPI, devices can consume resources (for example, legacy
-+    keyboards), provide resources (for example, a proprietary PCI
-+    bridge), or do both.  Unless otherwise specified, resources for a
-+    device are assumed to be taken from the nearest matching resource
-+    above the device in the device hierarchy.
-+
-+[4] ACPI 6.0, sec 6.4.3.5.4:
-+    Extended Address Space Descriptor
-+    General Flags: Bit [0] Consumer/Producer:
-+	1–This device consumes this resource
-+	0–This device produces and consumes this resource
-+
-+[5] ACPI 6.0, sec 19.6.43:
-+    ResourceUsage specifies whether the Memory range is consumed by
-+    this device (ResourceConsumer) or passed on to child devices
-+    (ResourceProducer).  If nothing is specified, then
-+    ResourceConsumer is assumed.
-+
-+[6] PCI Firmware 3.0, sec 4.1.2:
-+    If the operating system does not natively comprehend reserving the
-+    MMCFG region, the MMCFG region must be reserved by firmware.  The
-+    address range reported in the MCFG table or by _CBA method (see
-+    Section 4.1.3) must be reserved by declaring a motherboard
-+    resource.  For most systems, the motherboard resource would appear
-+    at the root of the ACPI namespace (under \_SB) in a node with a
-+    _HID of EISAID (PNP0C02), and the resources in this case should
-+    not be claimed in the root PCI bus’s _CRS.  The resources can
-+    optionally be returned in Int15 E820 or EFIGetMemoryMap as
-+    reserved memory but must always be reported through ACPI as a
-+    motherboard resource.
-+
-+[7] PCI Express 3.0, sec 7.2.2:
-+    For systems that are PC-compatible, or that do not implement a
-+    processor-architecture-specific firmware interface standard that
-+    allows access to the Configuration Space, the ECAM is required as
-+    defined in this section.
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  drivers/pci/pci-acpi.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h      |  4 +++
+>  2 files changed, 73 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index d966d47..76fd6f4 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -29,6 +29,75 @@
+>  	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+>  };
+>  
+> +#ifdef CONFIG_ARM64
 
+CONFIG_PCI_ECAM_QUIRKS (that you will introduce earlier in your series).
+
+The way you did it seems to imply that on ARM64 to get RC address we
+need to (and are allowed to) use this function (and related, *Linux
+specific*, ACPI bindings) and that's a generic way of getting config
+space. It is not and it must not be and I consider it a bit of a stretch
+to have it in generic code but I can live with that as long as it comes
+with its own config option that describes that this stuff is
+non-compliant code used by non-compliant platform drivers.
+
+Thanks,
+Lorenzo
+
+> +static struct resource *acpi_get_rc_addr(struct acpi_device *adev)
+> +{
+> +	struct resource_entry *entry;
+> +	struct list_head list;
+> +	unsigned long flags;
+> +	int ret;
+> +	struct resource *res;
+> +
+> +	INIT_LIST_HEAD(&list);
+> +	flags = IORESOURCE_MEM;
+> +	ret = acpi_dev_get_resources(adev, &list,
+> +				     acpi_dev_filter_resource_type_cb,
+> +				     (void *) flags);
+> +	if (ret <= 0)
+> +		return NULL;
+> +
+> +	entry = list_first_entry(&list, struct resource_entry, node);
+> +	res = entry->res;
+> +	acpi_dev_free_resource_list(&list);
+> +	return res;
+> +}
+> +
+> +static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
+> +				 void **retval)
+> +{
+> +	u16 *segment = context;
+> +	unsigned long long uid;
+> +	acpi_status status;
+> +
+> +	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
+> +	if (ACPI_FAILURE(status) || uid != *segment)
+> +		return AE_CTRL_DEPTH;
+> +
+> +	*(acpi_handle *)retval = handle;
+> +	return AE_CTRL_TERMINATE;
+> +}
+> +
+> +/**
+> + * acpi_get_rc_resources() - get the RC address resource.
+> + * @hid:	HID to search for.
+> + * @segment:	PCI Segment number.
+> + *
+> + * Get the RC address resource that can not be described in MCFG. It takes
+> + * the _HID&segment to look for and returns the RC address resource. Use
+> + * _CRS of PNP0C02 devices to describe such RC address resource. Use _UID
+> + * to match segment to tell which root bus the PNP0C02 resource belong to.
+> + *
+> + * Return: RC address resource.
+> + */
+> +struct resource *acpi_get_rc_resources(const char *hid, u16 segment)
+> +{
+> +	struct acpi_device *adev;
+> +	acpi_status status;
+> +	acpi_handle handle;
+> +	int ret;
+> +
+> +	status = acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
+> +	if (ACPI_FAILURE(status))
+> +		return -ENODEV;
+> +
+> +	ret = acpi_bus_get_device(handle, &adev);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return acpi_get_rc_addr(adev);
+> +}
+> +#endif
+> +
+>  phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+>  {
+>  	acpi_status status = AE_NOT_EXIST;
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4518562..bf1dbfe 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  }
+>  #endif
+>  
+> +#if defined(CONFIG_ARM64) && defined(CONFIG_ACPI)
+> +struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
+> +#endif
+> +
+>  #endif /* DRIVERS_PCI_H */
+> -- 
+> 1.9.1
+> 
