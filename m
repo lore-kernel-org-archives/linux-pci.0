@@ -1,87 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:41956
-        "EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752380AbcKHGcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 01:32:13 -0500
-From: Long Li <longli@exchange.microsoft.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: [Resend] [PATCH] pci-hyperv: use kmalloc to allocate hypercall params buffer
-Date: Tue,  8 Nov 2016 00:14:14 -0800
-Message-Id: <1478592854-17303-1-git-send-email-longli@exchange.microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+CC: Dave Hansen <dave.hansen@linux.intel.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Date: Tue, 22 Nov 2016 22:21:12 +0000
+Message-ID: <SN1PR12MB070353A173C65D77A2868A79FEB40@SN1PR12MB0703.namprd12.prod.outlook.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
+ <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
+ <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
+ <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>,<CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
+In-Reply-To: <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+>=A0I don't think we should be using numa distance to reverse engineer a
+>=A0certain allocation behavior.=A0 The latency data should be truthful, bu=
+t
+>=A0you're right we'll need a mechanism to keep general purpose
+>=A0allocations out of that range by default.=A0
 
-hv_do_hypercall assumes that we pass a segment from a physically continuous buffer. Buffer allocated on the stack may not work if CONFIG_VMAP_STACK=y is set. Use kmalloc to allocate this buffer.
+Just to clarify: Do you propose/thinking to utilize NUMA API for=A0
+such (VRAM) allocations?=20
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 763ff87..97e6daf 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -378,6 +378,7 @@ struct hv_pcibus_device {
- 	struct msi_domain_info msi_info;
- 	struct msi_controller msi_chip;
- 	struct irq_domain *irq_domain;
-+	struct retarget_msi_interrupt retarget_msi_interrupt_params;
- };
- 
- /*
-@@ -774,7 +775,7 @@ void hv_irq_unmask(struct irq_data *data)
- {
- 	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
- 	struct irq_cfg *cfg = irqd_cfg(data);
--	struct retarget_msi_interrupt params;
-+	struct retarget_msi_interrupt *params;
- 	struct hv_pcibus_device *hbus;
- 	struct cpumask *dest;
- 	struct pci_bus *pbus;
-@@ -785,23 +786,24 @@ void hv_irq_unmask(struct irq_data *data)
- 	pdev = msi_desc_to_pci_dev(msi_desc);
- 	pbus = pdev->bus;
- 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
--
--	memset(&params, 0, sizeof(params));
--	params.partition_id = HV_PARTITION_ID_SELF;
--	params.source = 1; /* MSI(-X) */
--	params.address = msi_desc->msg.address_lo;
--	params.data = msi_desc->msg.data;
--	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
-+	params = &hbus->retarget_msi_interrupt_params;
-+
-+	memset(params, 0, sizeof(*params));
-+	params->partition_id = HV_PARTITION_ID_SELF;
-+	params->source = 1; /* MSI(-X) */
-+	params->address = msi_desc->msg.address_lo;
-+	params->data = msi_desc->msg.data;
-+	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
- 			   (hbus->hdev->dev_instance.b[4] << 16) |
- 			   (hbus->hdev->dev_instance.b[7] << 8) |
- 			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
- 			   PCI_FUNC(pdev->devfn);
--	params.vector = cfg->vector;
-+	params->vector = cfg->vector;
- 
- 	for_each_cpu_and(cpu, dest, cpu_online_mask)
--		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-+		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
- 
--	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-+	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
- 
- 	pci_msi_unmask_irq(data);
- }
--- 
-2.7.4
 
+    =
