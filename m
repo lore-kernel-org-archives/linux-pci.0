@@ -1,103 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0133.outbound.protection.outlook.com ([104.47.34.133]:8506
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934919AbcKLAoL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 19:44:11 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/3] PCI: hv: delete the device earlier from
- hbus->children for hot-remove
-Date: Sat, 12 Nov 2016 00:44:06 +0000
-Message-ID: <SN1PR0301MB15983C33ABB735E7976C0C0CABBA0@SN1PR0301MB1598.namprd03.prod.outlook.com>
-References: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-In-Reply-To: <MWHPR03MB2669255256A616C62606216EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37975 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755074AbcKVAc1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2016 19:32:27 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAM0T22U032140
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 19:32:26 -0500
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 26uyx4g6t5-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 19:32:25 -0500
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+        Tue, 22 Nov 2016 10:32:23 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id EAF372CE8054
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100 (EST)
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAM0WKqK3408352
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAM0WKc5004537
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100
+Subject: Re: [PATCH 2/2] cxl: Set VPD timeout to avoid access failures
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ian Munsie <imunsie@au1.ibm.com>,
+        Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+References: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Date: Tue, 22 Nov 2016 11:32:18 +1100
 MIME-Version: 1.0
+In-Reply-To: <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <24ea6084-35e7-677f-a083-a6909adf881e@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Wednesday, November 9, 2016 11:20 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
-> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
-> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
-> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
-> olaf@aepfle.de; linux-kernel@vger.kernel.org
-> Subject: [PATCH 3/3] PCI: hv: delete the device earlier from hbus->childr=
-en
-> for hot-remove
->=20
-> After we send a PCI_EJECTION_COMPLETE message to the host, the host will
-> immediately send us a PCI_BUS_RELATIONS message with
-> relations->device_count =3D=3D 0, so pci_devices_present_work(), running =
-on
-> another thread, can find the being-ejected device, mark
-> the hpdev->reported_missing to true, and run list_move_tail()/list_del()
-> for the device -- this races hv_eject_device_work() -> list_del().
->=20
-> The patch moves the list_del() in hv_eject_device_work() to an earlier
-> place, i.e. before we send PCI_EJECTION_COMPLETE, so later the
-> pci_devices_present_work() can't see the device.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> CC: Jake Oshins <jakeo@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>
-> CC: Haiyang Zhang <haiyangz@microsoft.com>
-> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+On 22/11/16 08:10, Matthew R. Ochs wrote:
+> Some IBM CXL devices can take up to ~120ms to complete a VPD access
+
+Which devices?
+
+> transaction when under heavy load. With an existing default VPD timeout
+> of 50ms, reads/writes can fail despite there not being an issue with the
+> underlying hardware.
+>
+> To avoid these false failures, increase the VPD wait timeout for certain
+> CXL devices to a value that allows appropriate VPD access delay when faced
+> with a worst-case scenario.
+>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+
+Contingent on Bjorn applying patch 1, and with comment below:
+
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+
 > ---
->  drivers/pci/host/pci-hyperv.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 7590ad0..fe5179d 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1582,6 +1582,10 @@ static void hv_eject_device_work(struct
-> work_struct *work)
->  		pci_dev_put(pdev);
+>  drivers/misc/cxl/pci.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
+> index e96be9c..56a67cf 100644
+> --- a/drivers/misc/cxl/pci.c
+> +++ b/drivers/misc/cxl/pci.c
+> @@ -1675,6 +1675,10 @@ bool cxl_slot_is_supported(struct pci_dev *dev, int flags)
+>  }
+>  EXPORT_SYMBOL_GPL(cxl_slot_is_supported);
+>
+> +static bool cxl_pci_is_slow_vpd_device(struct pci_dev *dev)
+> +{
+> +	return dev->device == 0x0601;
+
+Comment with device name.
+
+> +}
+>
+>  static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  {
+> @@ -1692,6 +1696,9 @@ static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  		return -ENODEV;
 >  	}
->=20
-> +	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
-> +	list_del(&hpdev->list_entry);
-> +	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+>
+> +	if (cxl_pci_is_slow_vpd_device(dev))
+> +		pci_set_vpd_timeout(dev, msecs_to_jiffies(125));
 > +
->  	memset(&ctxt, 0, sizeof(ctxt));
->  	ejct_pkt =3D (struct pci_eject_response *)&ctxt.pkt.message;
->  	ejct_pkt->message_type.type =3D PCI_EJECTION_COMPLETE;
-> @@ -1590,10 +1594,6 @@ static void hv_eject_device_work(struct
-> work_struct *work)
->  			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
->  			 VM_PKT_DATA_INBAND, 0);
->=20
-> -	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
-> -	list_del(&hpdev->list_entry);
-> -	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
-> -
->  	put_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	put_pcichild(hpdev, hv_pcidev_ref_pnp);
->  	put_hvpcibus(hpdev->hbus);
-> --
-> 2.7.4
+>  	if (cxl_verbose)
+>  		dump_cxl_config_space(dev);
+>
+>
 
-This looks good, too.
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
 
--- Jake Oshins
