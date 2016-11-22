@@ -1,194 +1,209 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-Subject: [PATCH V4 1/2] PCI: hisi: Add ECAM support for devices that are not RC
-Date: Wed, 9 Nov 2016 17:14:56 +0800
-Message-ID: <1478682897-119874-2-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
-References: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "liudongdong (C)"
+	<liudongdong3@huawei.com>
+CC: "helgaas@kernel.org" <helgaas@kernel.org>,
+        "arnd@arndb.de"
+	<arnd@arndb.de>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "tn@semihalf.com"
+	<tn@semihalf.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "Chenxin (Charles)"
+	<charles.chenxin@huawei.com>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: RE: [PATCH V6 1/2] PCI/ACPI: Provide acpi_get_rc_resources() for
+ ARM64 platform
+Date: Tue, 22 Nov 2016 16:09:57 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F92CC43@lhreml507-mbx>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+ <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
+ <20161122155648.GA2022@red-moon>
+In-Reply-To: <20161122155648.GA2022@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch modifies the current Hip05/Hip06 PCIe host
-controller driver to add support for 'almost ECAM'
-compliant platforms. Some controllers are ECAM compliant
-for all the devices of the hierarchy except the root
-complex; this patch adds support for such controllers.
+Hi Lorenzo
 
-This is needed in preparation for the ACPI based driver
-to allow both DT and ACPI drivers to use the same BIOS
-(that configure the Designware iATUs).
-This commit doesn't break backward compatibility with
-previous non-ECAM platforms.
+Thanks for reviewing
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
- drivers/pci/host/Kconfig                           |  4 +-
- drivers/pci/host/pcie-designware.c                 |  4 +-
- drivers/pci/host/pcie-designware.h                 |  2 +
- drivers/pci/host/pcie-hisi.c                       | 45 ++++++++++++++++++++++
- 5 files changed, 60 insertions(+), 10 deletions(-)
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: 22 November 2016 15:57
+> To: liudongdong (C)
+> Cc: helgaas@kernel.org; arnd@arndb.de; rafael@kernel.org;
+> tn@semihalf.com; Wangzhou (B); pratyush.anand@gmail.com; linux-
+> pci@vger.kernel.org; linux-acpi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; jcm@redhat.com; Gabriele Paoloni; Chenxin
+> (Charles); hanjun.guo@linaro.org; Linuxarm
+> Subject: Re: [PATCH V6 1/2] PCI/ACPI: Provide acpi_get_rc_resources()
+> for ARM64 platform
+>=20
+> On Tue, Nov 22, 2016 at 08:08:48PM +0800, Dongdong Liu wrote:
+> > The acpi_get_rc_resources() is used to get the RC register address
+> that can
+> > not be described in MCFG. It takes the _HID&segment to look for and
+> returns
+> > the RC address resource. Use PNP0C02 devices to describe such RC
+> address
+> > resource. Use _UID to match segment to tell which root bus the
+> PNP0C02
+> > resource belong to.
+>=20
+> Here (ie interpreting the _UID as a segment identifier) is where we
+> start interpreting the specs instead of relying on them, if you want to
+> go ahead with this feel free but I do not like this attitude at all.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-index 59c2f47..87a597a 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -9,10 +9,13 @@ Additional properties are described here:
- 
- Required properties
- - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
--- reg: Should contain rc_dbi, config registers location and length.
--- reg-names: Must include the following entries:
-+- reg: Should contain rc_dbi and  either config or ecam-cfg registers
-+       location and length (it depends on the platform BIOS).
-+- reg-names: Must include
-   "rc_dbi": controller configuration registers;
--  "config": PCIe configuration space registers.
-+  and one of the following entries:
-+    "config": PCIe configuration space registers for non-ECAM platforms.
-+    "ecam-cfg": PCIe configuration space registers for ECAM platforms
- - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
- - port-id: Should be 0, 1, 2 or 3.
- 
-@@ -23,8 +26,10 @@ Optional properties:
- Hip05 Example (note that Hip06 is the same except compatible):
- 	pcie@0xb0080000 {
- 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
--		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
--		reg-names = "rc_dbi", "config";
-+		reg = <0 0xb0080000 0 0x10000>,
-+		      <0x220 0x00000000 0 0x2000>
-+		/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
-+		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
- 		bus-range = <0  15>;
- 		msi-parent = <&its_pcie>;
- 		#address-cells = <3>;
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a..ae98644 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -219,13 +219,13 @@ config PCIE_ALTERA_MSI
- 
- config PCI_HISI
- 	depends on OF && ARM64
--	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-+	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW
- 	help
- 	  Say Y here if you want PCIe controller support on HiSilicon
--	  Hip05 and Hip06 SoCs
-+	  Hip05 and Hip06 and Hip07 SoCs
- 
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 035f50c..da11644 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -101,8 +101,6 @@
- #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
- #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
- 
--static struct pci_ops dw_pcie_ops;
--
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
- 	if ((uintptr_t)addr & (size - 1)) {
-@@ -800,7 +798,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
- }
- 
--static struct pci_ops dw_pcie_ops = {
-+struct pci_ops dw_pcie_ops = {
- 	.read = dw_pcie_rd_conf,
- 	.write = dw_pcie_wr_conf,
- };
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a567ea2..30d228a 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -83,4 +83,6 @@ struct pcie_host_ops {
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
- 
-+extern struct pci_ops dw_pcie_ops;
-+
- #endif /* _PCIE_DESIGNWARE_H */
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 56154c2..555c964 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -43,6 +43,34 @@ struct hisi_pcie {
- 	struct pcie_soc_ops *soc_ops;
- };
- 
-+static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				    unsigned int devfn, int where, int size,
-+				    u32 *value)
-+{
-+	return pci_generic_config_read(bus, devfn, where, size, value);
-+}
-+
-+static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				    unsigned int devfn, int where, int size,
-+				    u32 value)
-+{
-+	return pci_generic_config_write(bus, devfn, where, size, value);
-+}
-+
-+static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
-+					      unsigned int devfn,
-+					      int where)
-+{
-+	void __iomem *addr;
-+	struct pcie_port *pp = bus->sysdata;
-+
-+	addr = pp->va_cfg1_base - (pp->busn->start << 20) +
-+		((bus->number << 20) | (devfn << 12)) +
-+		where;
-+
-+	return addr;
-+}
-+
- /* HipXX PCIe host only supports 32-bit config access */
- static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
- 			      u32 *val)
-@@ -190,6 +218,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 	}
- 
-+	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
-+	if (reg) {
-+		/* ECAM driver version */
-+		hisi_pcie->pp.va_cfg0_base =
-+		devm_ioremap_resource(&pdev->dev, reg);
-+		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
-+			dev_err(pp->dev, "cannot get ecam-cfg\n");
-+			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
-+		}
-+		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
-+
-+		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
-+
-+		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
-+		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
-+	}
-+
- 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
- 	if (ret)
- 		return ret;
--- 
-1.9.1
+Obviously there are no specs to specify the segment id of a quirk.
+Looking at the ACPI specs it seems to me that the _UID is no worse
+than other device identification objects...
+
+Maybe we can use the _SUN as an alternative solution?
+
+>=20
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> > ---
+> >  drivers/pci/pci-acpi.c | 69
+> ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/pci.h      |  4 +++
+> >  2 files changed, 73 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index d966d47..76fd6f4 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -29,6 +29,75 @@
+> >  	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+> >  };
+> >
+> > +#ifdef CONFIG_ARM64
+>=20
+> CONFIG_PCI_ECAM_QUIRKS (that you will introduce earlier in your
+> series).
+>=20
+> The way you did it seems to imply that on ARM64 to get RC address we
+> need to (and are allowed to) use this function (and related, *Linux
+> specific*, ACPI bindings) and that's a generic way of getting config
+> space. It is not and it must not be and I consider it a bit of a
+> stretch
+> to have it in generic code but I can live with that as long as it comes
+> with its own config option that describes that this stuff is
+> non-compliant code used by non-compliant platform drivers.
+
+Yes probably better to have
+
+#ifdef CONFIG_PCI_ECAM_QUIRKS
+
+Thanks
+
+Gab
+
+>=20
+> Thanks,
+> Lorenzo
+>=20
+> > +static struct resource *acpi_get_rc_addr(struct acpi_device *adev)
+> > +{
+> > +	struct resource_entry *entry;
+> > +	struct list_head list;
+> > +	unsigned long flags;
+> > +	int ret;
+> > +	struct resource *res;
+> > +
+> > +	INIT_LIST_HEAD(&list);
+> > +	flags =3D IORESOURCE_MEM;
+> > +	ret =3D acpi_dev_get_resources(adev, &list,
+> > +				     acpi_dev_filter_resource_type_cb,
+> > +				     (void *) flags);
+> > +	if (ret <=3D 0)
+> > +		return NULL;
+> > +
+> > +	entry =3D list_first_entry(&list, struct resource_entry, node);
+> > +	res =3D entry->res;
+> > +	acpi_dev_free_resource_list(&list);
+> > +	return res;
+> > +}
+> > +
+> > +static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void
+> *context,
+> > +				 void **retval)
+> > +{
+> > +	u16 *segment =3D context;
+> > +	unsigned long long uid;
+> > +	acpi_status status;
+> > +
+> > +	status =3D acpi_evaluate_integer(handle, "_UID", NULL, &uid);
+> > +	if (ACPI_FAILURE(status) || uid !=3D *segment)
+> > +		return AE_CTRL_DEPTH;
+> > +
+> > +	*(acpi_handle *)retval =3D handle;
+> > +	return AE_CTRL_TERMINATE;
+> > +}
+> > +
+> > +/**
+> > + * acpi_get_rc_resources() - get the RC address resource.
+> > + * @hid:	HID to search for.
+> > + * @segment:	PCI Segment number.
+> > + *
+> > + * Get the RC address resource that can not be described in MCFG. It
+> takes
+> > + * the _HID&segment to look for and returns the RC address resource.
+> Use
+> > + * _CRS of PNP0C02 devices to describe such RC address resource. Use
+> _UID
+> > + * to match segment to tell which root bus the PNP0C02 resource
+> belong to.
+> > + *
+> > + * Return: RC address resource.
+> > + */
+> > +struct resource *acpi_get_rc_resources(const char *hid, u16 segment)
+> > +{
+> > +	struct acpi_device *adev;
+> > +	acpi_status status;
+> > +	acpi_handle handle;
+> > +	int ret;
+> > +
+> > +	status =3D acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
+> > +	if (ACPI_FAILURE(status))
+> > +		return -ENODEV;
+> > +
+> > +	ret =3D acpi_bus_get_device(handle, &adev);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	return acpi_get_rc_addr(adev);
+> > +}
+> > +#endif
+> > +
+> >  phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+> >  {
+> >  	acpi_status status =3D AE_NOT_EXIST;
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index 4518562..bf1dbfe 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct
+> pci_dev *dev, int probe)
+> >  }
+> >  #endif
+> >
+> > +#if defined(CONFIG_ARM64) && defined(CONFIG_ACPI)
+> > +struct resource *acpi_get_rc_resources(const char *hid, u16
+> segment);
+> > +#endif
+> > +
+> >  #endif /* DRIVERS_PCI_H */
+> > --
+> > 1.9.1
+> >
