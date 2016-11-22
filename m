@@ -1,32 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44126 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933423AbcKNVDW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 16:03:22 -0500
-Date: Mon, 14 Nov 2016 15:03:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/5] PCI: Balance ports to avoid ACS errata on Pericom
- switches
-Message-ID: <20161114210319.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161026175156.23495.12980.stgit@gimli.home>
- <20161026180140.23495.27388.stgit@gimli.home>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V6 1/2] PCI/ACPI: Provide acpi_get_rc_resources() for
+ ARM64 platform
+To: Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org,
+ arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ wangzhou1@hisilicon.com, pratyush.anand@gmail.com
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+ <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com,
+ charles.chenxin@huawei.com, hanjun.guo@linaro.org, linuxarm@huawei.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56c1d551-a18d-8ee0-eb3c-b2b7d5341161@semihalf.com>
+Date: Tue, 22 Nov 2016 13:32:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161026180140.23495.27388.stgit@gimli.home>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 12:01:40PM -0600, Alex Williamson wrote:
-> As described in the included code comment, this quirk is intended to
-> work around an errata in a variety of Pericom 4-lane, 3 and 4 port
-> PCIe 2.0 switches.  The switches advertise ACS capabilities, but the
-> P2P Request Redirection support includes an errata that PCI_ACS_RR
-> effectively doesn't work and results in transactions being queued and
-> not delivered within the PCIe switch.  The errata has no planned
-> hardware fix.
+Hi Dongdong,
 
-Is there a published erratum we can reference here?  It'd be really
-nice to have a URL.
+On 22.11.2016 13:08, Dongdong Liu wrote:
+> The acpi_get_rc_resources() is used to get the RC register address that can
+> not be described in MCFG. It takes the _HID&segment to look for and returns
+> the RC address resource. Use PNP0C02 devices to describe such RC address
+> resource. Use _UID to match segment to tell which root bus the PNP0C02
+> resource belong to.
+>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  drivers/pci/pci-acpi.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h      |  4 +++
+>  2 files changed, 73 insertions(+)
+>
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index d966d47..76fd6f4 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -29,6 +29,75 @@
+>  	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+>  };
+>
+> +#ifdef CONFIG_ARM64
+> +static struct resource *acpi_get_rc_addr(struct acpi_device *adev)
+> +{
+> +	struct resource_entry *entry;
+> +	struct list_head list;
+> +	unsigned long flags;
+> +	int ret;
+> +	struct resource *res;
+> +
+> +	INIT_LIST_HEAD(&list);
+> +	flags = IORESOURCE_MEM;
+> +	ret = acpi_dev_get_resources(adev, &list,
+> +				     acpi_dev_filter_resource_type_cb,
+> +				     (void *) flags);
+> +	if (ret <= 0)
+> +		return NULL;
+> +
+> +	entry = list_first_entry(&list, struct resource_entry, node);
+> +	res = entry->res;
+
+You return "res" memory pointer and...
+
+> +	acpi_dev_free_resource_list(&list);
+
+free it here.
+
+> +	return res;
+> +}
+
+
+We either allocate memory for res here or get it from the caller.
+
+Tomasz
