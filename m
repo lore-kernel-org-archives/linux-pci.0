@@ -1,108 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37444 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752852AbcKQXa2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Nov 2016 18:30:28 -0500
-Subject: [PATCH v3 4/5] PCI: Convert Mellanox broken INTx quirks to be for
- listed devices only
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Noa Osherovich <noaos@mellanox.com>
-Cc: linux-pci@vger.kernel.org, majd@mellanox.com,
-        gwshan@linux.vnet.ibm.com
-Date: Thu, 17 Nov 2016 17:30:24 -0600
-Message-ID: <20161117233024.2003.82747.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <jthumshirn@suse.de>
+Return-Path: <jthumshirn@suse.de>
+Date: Tue, 22 Nov 2016 08:59:59 +0100
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
+	Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
+ bridge hasn't
+Message-ID: <20161122075959.nrubafbmxdnqyjkk@linux-x5ow.site>
+References: <20161102223552.14776-1-jthumshirn@suse.de>
+ <20161102223552.14776-2-jthumshirn@suse.de>
+ <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
+ <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Noa Osherovich <noaos@mellanox.com>
+On Mon, Nov 21, 2016 at 10:53:52AM -0600, Bjorn Helgaas wrote:
+> On Wed, Nov 16, 2016 at 12:11:58PM -0600, Bjorn Helgaas wrote:
+> > Hi Johannes,
+> > 
+> > On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
+> > > The Read Completion Boundary (RCB) bit must only be set on a device or
+> > > endpoint if it is set on the root complex.
+> > 
+> > I propose the following slightly modified patch.  The interesting
+> > difference is that your patch only touches the _HPX "OR" mask, so it
+> > refrains from *setting* RCB in some cases, but it never actually
+> > *clears* it.  The only time we clear RCB is when the _HPX "AND" mask
+> > has RCB == 0.
+> > 
+> > My intent below is that we completely ignore the _HPX RCB bits, and we
+> > set an Endpoint's RCB if and only if the Root Port's RCB is set.
+> > 
+> > I made an ugly ASCII table to think about the cases:
+> > 
+> >       Root   EP    _HPX  _HPX     Final Endpoint RCB state
+> >       Port  (init)  AND   OR     (curr)  (yours)  (mine)
+> >   0)   0     0      0    0          0       0       0
+> >   1)   0     0      0    1          1       0       0
+> >   2)   0     0      1    0          0       0       0
+> >   3)   0     0      1    1          1       0       0
+> >   4)   0     1      0    0          0       0       0
+> >   5)   0     1      0    1          1       0       0
+> >   6)   0     1      1    0          1       1       0
+> >   7)   0     1      1    1          1       1       0
+> >   8)   1     0      0    0          0       0       1
+> >   9)   1     0      0    1          1       1       1
+> >   A)   1     0      1    0          0       0       1
+> >   B)   1     0      1    1          1       1       1
+> >   C)   1     1      0    0          0       0       1
+> >   D)   1     1      0    1          1       1       1
+> >   E)   1     1      1    0          1       1       1
+> >   F)   1     1      1    1          1       1       1
+> > 
+> > Cases 0-7 should all result in the Endpoint RCB being zero because the
+> > Root Port RCB is zero.  Case 1 is the bug you're fixing.  Cases 3 & 5
+> > are similar hypothetical bugs your patch also fixes.
+> > 
+> > Cases 6 & 7, where firmware left the Endpoint RCB set and _HPX didn't
+> > tell us to clear it, are hypothetical firmware bugs that your patch
+> > wouldn't fix.
+> > 
+> > In cases 8, A, and C, we currently leave the Endpoint RCB cleared,
+> > either because firmware left it clear and _HPX didn't tell us to set
+> > it (8 and A), or because firmware set it but _HPX told us to clear it
+> > (C).
+> > 
+> > One could argue that 8, A, and C should stay as they currently are, as
+> > a way for _HPX to work around hardware bugs, e.g., a Root Port that
+> > advertises a 128-byte RCB but doesn't actually support it.  I didn't
+> > bother with that and set the Endpoint's RCB to 128 in all cases when
+> > the Root Port claims to support it.
+> > 
+> > It'd be great if you could test this and comment.
+> > 
+> > If you get a chance, collect the /proc/iomem contents, too.  That's
+> > not for this bug; it's because I'm curious about the
+> > 
+> >   ERST: Can not request [mem 0xb928b000-0xb928cbff] for ERST
+> >   
+> > problem in your dmesg log.
+> 
+> Oops, I goofed and forgot to clear RCB by default.
+> Here's the fixed one.
 
-Change Mellanox's broken_intx_masking() quirk from an "all Mellanox
-devices" to a quirk for listed devices only.
+Yep, my contact already noticed. I have heard rumors that the first two
+patches worked on RHEL and the 3rd one didn't (but that's just rumors) so I
+try to persuade our field engineer to spend another day testing the patches.
+But please be aware this is a bit cumbersome as I don't have access to the
+machine and our field engineer only has remote access as well.
 
-[bhelgaas: remove #defines, reorder to keep other quirks together]
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/quirks.c |   40 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85048fd..f0515b7 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3137,8 +3137,9 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
-+
- /*
-- * Some devices may pass our check in pci_intx_mask_supported if
-+ * Some devices may pass our check in pci_intx_mask_supported() if
-  * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
-  * support this feature.
-  */
-@@ -3150,6 +3151,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
- 			quirk_broken_intx_masking);
- DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
- 			quirk_broken_intx_masking);
-+
- /*
-  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
-  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
-@@ -3158,8 +3160,6 @@ DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
-  */
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8169,
- 			quirk_broken_intx_masking);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
--			quirk_broken_intx_masking);
- 
- /*
-  * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
-@@ -3194,6 +3194,40 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d1,
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x37d2,
- 			quirk_broken_intx_masking);
- 
-+static u16 mellanox_broken_intx_devs[] = {
-+	PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_EN,
-+	PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
-+	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX,
-+};
-+
-+static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
-+		if (pdev->device == mellanox_broken_intx_devs[i]) {
-+			pdev->broken_intx_masking = 1;
-+			return;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-+			mellanox_check_broken_intx_masking);
-+
- static void quirk_no_bus_reset(struct pci_dev *dev)
- {
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
