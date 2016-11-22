@@ -1,57 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50920 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932300AbcKHVRg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 16:17:36 -0500
-Date: Tue, 8 Nov 2016 15:17:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/7] pci/msi: Provide pci_alloc_irq_vectors_affinity()
-Message-ID: <20161108211732.GC14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-6-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478544462-9549-6-git-send-email-hch@lst.de>
+Received: from mout.kundenserver.de ([217.72.192.75]:54505 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755660AbcKVOUA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 09:20:00 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Oza <oza.oza@broadcom.com>,
+        "Dmitry V. Krivenok" <krivenok.dmitry@gmail.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] PCI: iproc: avoid maybe-uninitialized warning
+Date: Tue, 22 Nov 2016 15:17:52 +0100
+Message-Id: <20161122141844.1655574-2-arnd@arndb.de>
+In-Reply-To: <20161122141844.1655574-1-arnd@arndb.de>
+References: <20161122141844.1655574-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 10:47:40AM -0800, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
+gcc notices that calling iproc_pcie_setup_ib with ib->nr_regions==0
+would result in an uninitialized return value:
 
-s/Christogh/Christoph/ (also below)
+drivers/pci/host/pcie-iproc.c: In function 'iproc_pcie_setup_ib':
+drivers/pci/host/pcie-iproc.c:894:6: error: 'ret' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-> This is a variant of pci_alloc_irq_vectors() that allows passing a
-> struct irq_affinity to provide fine-grainded IRQ affinity control.
+This can't really happen, but the correct behavior of the function
+is probably to return -EINVAL if it ever did.
 
-s/grainded/grained/
+Fixes: 4213e15c364e ("PCI: iproc: Make outbound mapping code more generic")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/host/pcie-iproc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> For now this means being able to exclude vectors at the beginning or
-> end of the MSI vector space, but it could also be used for any other
-> quirks needed in the future (e.g. more vectors than CPUs, or exluding
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 857ff5198317..0359569c8d78 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -936,6 +936,7 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
+ 
+ 		}
+ 	}
++	ret = -EINVAL;
+ err_ib:
+ 	dev_err(dev, "unable to configure inbound mapping\n");
+ 	dev_err(dev, "axi %pap, pci %pap, res size %pap\n",
+-- 
+2.9.0
 
-s/exluding/excluding/
-
-> CPUs from the spreading).
-> 
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> +int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> +				   unsigned int max_vecs, unsigned int flags,
-> +				   const struct irq_affinity *affd)
-
-> +int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> +				   unsigned int max_vecs, unsigned int flags,
-> +				   const struct irq_affinity *affd);
-
-> +static inline int
-> +pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> +			       unsigned int max_vecs, unsigned int flags,
-> +			       const struct irq_affinity *aff_desc)
-
-Maybe use the same formal parameter name as in the definition and
-declaration above?
