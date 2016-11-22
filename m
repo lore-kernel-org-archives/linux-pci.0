@@ -1,154 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51866 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933945AbcKWRcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 12:32:10 -0500
-Date: Wed, 23 Nov 2016 11:31:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
- bridge hasn't
-Message-ID: <20161123173152.GC16033@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161102223552.14776-1-jthumshirn@suse.de>
- <20161102223552.14776-2-jthumshirn@suse.de>
- <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
- <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:34813 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756237AbcKVVVg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 16:21:36 -0500
+Received: by mail-oi0-f47.google.com with SMTP id y198so32557689oia.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 13:21:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
+ <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
+ <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com> <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 22 Nov 2016 13:21:03 -0800
+Message-ID: <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 21, 2016 at 10:53:52AM -0600, Bjorn Helgaas wrote:
-> On Wed, Nov 16, 2016 at 12:11:58PM -0600, Bjorn Helgaas wrote:
-> > Hi Johannes,
-> > 
-> > On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
-> > > The Read Completion Boundary (RCB) bit must only be set on a device or
-> > > endpoint if it is set on the root complex.
-> ...
+On Tue, Nov 22, 2016 at 1:03 PM, Daniel Vetter <daniel@ffwll.ch> wrote:
+> On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
+> <serguei.sagalovitch@amd.com> wrote:
+>>
+>> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
+>>>
+>>> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com>
+>>> wrote:
+>>>>
+>>>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
+>>>> <serguei.sagalovitch@amd.com> wrote:
+>>>>>
+>>>>> I personally like "device-DAX" idea but my concerns are:
+>>>>>
+>>>>> -  How well it will co-exists with the  DRM infrastructure /
+>>>>> implementations
+>>>>>     in part dealing with CPU pointers?
+>>>>
+>>>> Inside the kernel a device-DAX range is "just memory" in the sense
+>>>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
+>>>> not migratable. To be honest I do not know how well that co-exists
+>>>> with drm infrastructure.
+>>>>
+>>>>> -  How well we will be able to handle case when we need to
+>>>>> "move"/"evict"
+>>>>>     memory/data to the new location so CPU pointer should point to the
+>>>>> new
+>>>>> physical location/address
+>>>>>      (and may be not in PCI device memory at all)?
+>>>>
+>>>> So, device-DAX deliberately avoids support for in-kernel migration or
+>>>> overcommit. Those cases are left to the core mm or drm. The device-dax
+>>>> interface is for cases where all that is needed is a direct-mapping to
+>>>> a statically-allocated physical-address range be it persistent memory
+>>>> or some other special reserved memory range.
+>>>
+>>> For some of the fancy use-cases (e.g. to be comparable to what HMM can
+>>> pull off) I think we want all the magic in core mm, i.e. migration and
+>>> overcommit. At least that seems to be the very strong drive in all
+>>> general-purpose gpu abstractions and implementations, where memory is
+>>> allocated with malloc, and then mapped/moved into vram/gpu address
+>>> space through some magic,
+>>
+>> It is possible that there is other way around: memory is requested to be
+>> allocated and should be kept in vram for  performance reason but due
+>> to possible overcommit case we need at least temporally to "move" such
+>> allocation to system memory.
+>
+> With migration I meant migrating both ways of course. And with stuff
+> like numactl we can also influence where exactly the malloc'ed memory
+> is allocated originally, at least if we'd expose the vram range as a
+> very special numa node that happens to be far away and not hold any
+> cpu cores.
 
-> Here's the fixed one.
-
-I applied the one below to for-linus for v4.9.
-
-I did tweak the preceding patch to only share pcie_find_root_port()
-inside drivers/pci -- moved the declaration from include/linux/pci.h
-to drivers/pci/pci.h and moved the definition to drivers/pci/search.c.
-
-I don't think it needs to be visible to the whole kernel.
-
-> commit b7bff74c2e6babf12906291ee177f16444de81ad
-> Author: Johannes Thumshirn <jthumshirn@suse.de>
-> Date:   Wed Nov 16 15:47:53 2016 -0600
-> 
->     PCI: Set Read Completion Boundary to 128 iff Root Port supports it
->     
->     Per PCIe spec r3.0, sec 2.3.1.1, the Read Completion Boundary (RCB)
->     determines the naturally aligned address boundaries on which a Read Request
->     may be serviced with multiple Completions:
->     
->       - For a Root Complex, RCB is 64 bytes or 128 bytes
->         This value is reported in the Link Control Register
->     
->         Note: Bridges and Endpoints may implement a corresponding command bit
->         which may be set by system software to indicate the RCB value for the
->         Root Complex, allowing the Bridge/Endpoint to optimize its behavior
->         when the Root Complex’s RCB is 128 bytes.
->     
->       - For all other system elements, RCB is 128 bytes
->     
->     Per sec 7.8.7, if a Root Port only supports a 64-byte RCB, the RCB of all
->     downstream devices must be clear, indicating an RCB of 64 bytes.  If the
->     Root Port supports a 128-byte RCB, we may optionally set the RCB of
->     downstream devices so they know they can generate larger Completions.
->     
->     Some BIOSes supply an _HPX that tells us to set RCB, even though the Root
->     Port doesn't have RCB set, which may lead to Malformed TLP errors if the
->     Endpoint generates completions larger than the Root Port can handle.
->     
->     The IBM x3850 X6 with BIOS version -[A8E120CUS-1.30]- 08/22/2016 supplies
->     such an _HPX and a Mellanox MT27500 ConnectX-3 device fails to initialize:
->     
->       mlx4_core 0000:41:00.0: command 0xfff timed out (go bit not cleared)
->       mlx4_core 0000:41:00.0: device is going to be reset
->       mlx4_core 0000:41:00.0: Failed to obtain HW semaphore, aborting
->       mlx4_core 0000:41:00.0: Fail to reset HCA
->       ------------[ cut here ]------------
->       kernel BUG at drivers/net/ethernet/mellanox/mlx4/catas.c:193!
->     
->     After 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
->     and 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices
->     with a link"), we apply _HPX settings to *all* devices, not just those
->     hot-added after boot.
->     
->     Before 7a1562d4f2d0, we didn't touch the Mellanox RCB, and the device
->     worked.  After 7a1562d4f2d0, we set its RCB to 128, and it failed.
->     
->     Set the RCB to 128 iff the Root Port supports a 128-byte RCB.  Otherwise,
->     set RCB to 64 bytes.  This effectively ignores what _HPX tells us about
->     RCB.
->     
->     [bhelgaas: changelog, clear RCB if not set for Root Port]
->     Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
->     Fixes: 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices with a link")
->     Link: https://bugzilla.kernel.org/show_bug.cgi?id=187781
->     Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org	# v3.18+
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ab00267..104c46d 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1439,6 +1439,21 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
->  		dev_warn(&dev->dev, "PCI-X settings not supported\n");
->  }
->  
-> +static bool pcie_root_rcb_set(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *rp = pcie_find_root_port(dev);
-> +	u16 lnkctl;
-> +
-> +	if (!rp)
-> +		return false;
-> +
-> +	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
-> +	if (lnkctl & PCI_EXP_LNKCTL_RCB)
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->  static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  {
->  	int pos;
-> @@ -1468,9 +1483,20 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
->  
->  	/* Initialize Link Control Register */
-> -	if (pcie_cap_has_lnkctl(dev))
-> +	if (pcie_cap_has_lnkctl(dev)) {
-> +
-> +		/*
-> +		 * If the Root Port supports Read Completion Boundary of
-> +		 * 128, set RCB to 128.  Otherwise, clear it.
-> +		 */
-> +		hpp->pci_exp_lnkctl_and |= PCI_EXP_LNKCTL_RCB;
-> +		hpp->pci_exp_lnkctl_or &= ~PCI_EXP_LNKCTL_RCB;
-> +		if (pcie_root_rcb_set(dev))
-> +			hpp->pci_exp_lnkctl_or |= PCI_EXP_LNKCTL_RCB;
-> +
->  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
->  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-> +	}
->  
->  	/* Find Advanced Error Reporting Enhanced Capability */
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't think we should be using numa distance to reverse engineer a
+certain allocation behavior.  The latency data should be truthful, but
+you're right we'll need a mechanism to keep general purpose
+allocations out of that range by default. Btw, strict isolation is
+another design point of device-dax, but I think in this case we're
+describing something between the two extremes of full isolation and
+full compatibility with existing numactl apis.
