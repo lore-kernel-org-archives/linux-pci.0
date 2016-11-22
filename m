@@ -1,389 +1,228 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [PATCH V3 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1476933034-46044-1-git-send-email-liudongdong3@huawei.com>
- <1476933034-46044-3-git-send-email-liudongdong3@huawei.com>
- <20161102234053.GC10528@bhelgaas-glaptop.roam.corp.google.com>
-CC: <arnd@arndb.de>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>,
-        <tn@semihalf.com>, <wangzhou1@hisilicon.com>,
-        <pratyush.anand@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <5380c7fd-8351-1ce3-e1fb-54c649adf7ce@huawei.com>
-Date: Thu, 3 Nov 2016 13:05:11 +0800
+Return-Path: <myron.stowe@gmail.com>
+Return-Path: <myron.stowe@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161102234053.GC10528@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161102223552.14776-1-jthumshirn@suse.de> <20161102223552.14776-2-jthumshirn@suse.de>
+ <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com> <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
+From: Myron Stowe <myron.stowe@gmail.com>
+Date: Tue, 22 Nov 2016 09:01:40 -0700
+Message-ID: <CAL-B5D0Y30-YYSgAOF_mpaiXp0mv63jQB_311AB4r55m01+vLA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
+ bridge hasn't
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	Alexander Graf <agraf@suse.de>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
-
-Thanks for your review.
-
-在 2016/11/3 7:40, Bjorn Helgaas 写道:
-> On Thu, Oct 20, 2016 at 11:10:34AM +0800, Dongdong Liu wrote:
->> PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
->> It is non ECAM only for the RC bus config space;for any other bus
->> underneath the root bus we support ECAM access.
->> Add specific quirks for PCI config space accessors.This involves:
->> 1. New initialization call hisi_pcie_init() to obtain rc base
->> addresses from PNP0C02 as subdevice of PNP0A03.
->> 2. New entry in common quirk array.
+On Mon, Nov 21, 2016 at 9:53 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Nov 16, 2016 at 12:11:58PM -0600, Bjorn Helgaas wrote:
+>> Hi Johannes,
 >>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> ---
->>  MAINTAINERS                       |   1 +
->>  drivers/acpi/pci_mcfg.c           |  15 ++++
->>  drivers/pci/host/Kconfig          |   8 ++
->>  drivers/pci/host/Makefile         |   1 +
->>  drivers/pci/host/pcie-hisi-acpi.c | 170 ++++++++++++++++++++++++++++++++++++++
->>  include/linux/pci-ecam.h          |   4 +
->>  6 files changed, 199 insertions(+)
->>  create mode 100755 drivers/pci/host/pcie-hisi-acpi.c
+>> On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
+>> > The Read Completion Boundary (RCB) bit must only be set on a device or
+>> > endpoint if it is set on the root complex.
 >>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 1cd38a7..b224caa 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>  F:	drivers/pci/host/pcie-hisi.c
->> +F:	drivers/pci/host/pcie-hisi-acpi.c
+>> I propose the following slightly modified patch.  The interesting
+>> difference is that your patch only touches the _HPX "OR" mask, so it
+>> refrains from *setting* RCB in some cases, but it never actually
+>> *clears* it.  The only time we clear RCB is when the _HPX "AND" mask
+>> has RCB =3D=3D 0.
 >>
->>  PCIE DRIVER FOR ROCKCHIP
->>  M:	Shawn Lin <shawn.lin@rock-chips.com>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index bb2c508..135a9b4 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -96,6 +96,21 @@ struct mcfg_fixup {
->>  	THUNDER_ECAM_MCFG(2, 12),
->>  	THUNDER_ECAM_MCFG(2, 13),
->>  #endif
->> +#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
->> +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
->> +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
->> +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
->> +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
->> +
->> +#ifdef CONFIG_PCI_HISI_ACPI
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
->> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
->> +#endif
->> +
->>  };
+>> My intent below is that we completely ignore the _HPX RCB bits, and we
+>> set an Endpoint's RCB if and only if the Root Port's RCB is set.
 >>
->>  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index ae98644..9ff2bcd 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -227,6 +227,14 @@ config PCI_HISI
->>  	  Say Y here if you want PCIe controller support on HiSilicon
->>  	  Hip05 and Hip06 and Hip07 SoCs
+>> I made an ugly ASCII table to think about the cases:
 >>
->> +config PCI_HISI_ACPI
->> +	depends on ACPI && ARM64
->> +	bool "HiSilicon Hip05 and Hip06 and Hip07 SoCs ACPI PCIe controllers"
->> +	select PNP
->> +	help
->> +	  Say Y here if you want ACPI PCIe controller support on HiSilicon
->> +	  Hip05 and Hip06 and Hip07 SoCs
->> +
->>  config PCIE_QCOM
->>  	bool "Qualcomm PCIe controller"
->>  	depends on ARCH_QCOM && OF
->> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->> index 084cb49..9402858 100644
->> --- a/drivers/pci/host/Makefile
->> +++ b/drivers/pci/host/Makefile
->> @@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->>  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
->>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
->>  obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
->> +obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o
->>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
->>  obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
->>  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
->> diff --git a/drivers/pci/host/pcie-hisi-acpi.c b/drivers/pci/host/pcie-hisi-acpi.c
->> new file mode 100755
->> index 0000000..5650d91
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-hisi-acpi.c
->> @@ -0,0 +1,170 @@
->> +/*
->> + * PCIe host controller driver for HiSilicon HipXX SoCs
->> + *
->> + * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
->> + *
->> + * Author: Dongdong Liu <liudongdong3@huawei.com>
->> + *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + */
->> +#include <linux/pci.h>
->> +#include <linux/pci-acpi.h>
->> +#include <linux/pci-ecam.h>
->> +
->> +#define DEBUG0				0x728
->> +#define PCIE_LTSSM_LINKUP_STATE		0x11
->> +#define PCIE_LTSSM_STATE_MASK		0x3F
->> +
->> +static const struct acpi_device_id hisi_pcie_rc_res_ids[] = {
->> +	{"HISI0081", 0},
->> +	{"", 0},
->> +};
->> +
->> +static int hisi_pcie_link_up_acpi(struct pci_config_window *cfg)
->> +{
->> +	u32 val;
->> +	void __iomem *reg_base = cfg->priv;
->> +
->> +	val = readl(reg_base + DEBUG0);
->> +	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
->> +}
->
-> Maybe reorder this so hisi_pcie_link_up_acpi() is next to the caller,
-> without the config accessors in between?
-
-Yes, will fix it.
-
->
->> +static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->> +				  int size, u32 *val)
->> +{
->> +	struct pci_config_window *cfg = bus->sysdata;
->> +	int dev = PCI_SLOT(devfn);
->> +
->> +	if (bus->number == cfg->busr.start) {
->> +		/* access only one slot on each root port */
->> +		if (dev > 0)
->> +			return PCIBIOS_DEVICE_NOT_FOUND;
->> +		else
->> +			return pci_generic_config_read32(bus, devfn, where,
->> +							 size, val);
->> +	}
->> +
->> +	return pci_generic_config_read(bus, devfn, where, size, val);
->> +}
->> +
->> +static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
->> +				  int where, int size, u32 val)
->> +{
->> +	struct pci_config_window *cfg = bus->sysdata;
->> +	int dev = PCI_SLOT(devfn);
->> +
->> +	if (bus->number == cfg->busr.start) {
->> +		/* access only one slot on each root port */
->> +		if (dev > 0)
->> +			return PCIBIOS_DEVICE_NOT_FOUND;
->> +		else
->> +			return pci_generic_config_write32(bus, devfn, where,
->> +							  size, val);
->> +	}
->> +
->> +	return pci_generic_config_write(bus, devfn, where, size, val);
->> +}
->
-> Seems like we could *almost* get rid of these and use only the generic
-> 32-bit accessors:
->
->     struct pci_ecam_ops hisi_pcie_ops = {
-> 	    .bus_shift    = 20,
-> 	    .init         =  hisi_pcie_init,
-> 	    .pci_ops      = {
-> 		    .map_bus    = hisi_pcie_map_bus,
-> 		    .read       = pci_generic_config_read32,
-> 		    .write      = pci_generic_config_write32,
-> 	    }
->     }
->
-> We'd be using the 32-bit accessors on the root bus when it's not
-> strictly necessary.  And we'd give up the "dev > 0" check.  Not sure
-> how important those are, though.  If "dev > 0" accesses just fail
-> naturally, there'd be no need to do the check.
-
-Our host controller only has one root port.
-If we'd give up the "dev > 0" check, will enumerate 32 root ports,
-so we need to do the check.
-root@(none)$ lspci
-10:00.0 Class 0604: 19e5:1610
-10:01.0 Class 0604: 19e5:1610
-10:02.0 Class 0604: 19e5:1610
-.....
-
-
->
->> +static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->> +				       int where)
->> +{
->> +	struct pci_config_window *cfg = bus->sysdata;
->> +	void __iomem *reg_base = cfg->priv;
->> +
->> +	if (bus->number == cfg->busr.start)
->> +		return reg_base + where;
->> +	else
->> +		return pci_ecam_map_bus(bus, devfn, where);
->> +}
->> +
->> +/*
->> + * Retrieve RC base and size from sub-device under the RC
->> + * Device (RES1)
->> + * {
->> + *	Name (_HID, "HISI0081")
->> + *	Name (_CID, "PNP0C02")
->> + *	Name (_CRS, ResourceTemplate (){
->> + *		Memory32Fixed (ReadWrite, 0xb0080000, 0x10000)
->> + *	})
->> + * }
->> + */
->> +static int hisi_pcie_rc_addr_get(struct acpi_device *adev,
->> +				 void __iomem **addr)
->> +{
->> +	struct acpi_device *child_adev;
->> +	struct list_head list;
->> +	struct resource *res;
->> +	struct resource_entry *entry;
->> +	unsigned long flags;
->> +	int ret;
->> +
->> +	list_for_each_entry(child_adev, &adev->children, node) {
->> +		ret = acpi_match_device_ids(child_adev, hisi_pcie_rc_res_ids);
->> +		if (ret)
->> +			continue;
->> +
->> +		INIT_LIST_HEAD(&list);
->> +		flags = IORESOURCE_MEM;
->> +		ret = acpi_dev_get_resources(child_adev, &list,
->> +					     acpi_dev_filter_resource_type_cb,
->> +					     (void *)flags);
->> +		if (ret < 0) {
->> +			dev_err(&child_adev->dev,
->> +				"failed to parse _CRS method, error code %d\n",
->> +				ret);
->> +			return ret;
->> +		} else if (ret == 0) {
->> +			dev_err(&child_adev->dev,
->> +				"no IO and memory resources present in _CRS\n");
->> +			return -EINVAL;
->> +		}
->> +
->> +		entry = list_first_entry(&list, struct resource_entry, node);
->> +		res = entry->res;
->> +		*addr = devm_ioremap(&child_adev->dev,
->> +				     res->start, resource_size(res));
->> +		acpi_dev_free_resource_list(&list);
->> +		if (IS_ERR(*addr)) {
->> +			dev_err(&child_adev->dev, "error with ioremap\n");
->> +			return -ENOMEM;
->> +		}
->> +
->> +		return 0;
->> +	}
->> +
->> +	return -EINVAL;
->> +}
->> +
->> +static int hisi_pcie_init(struct pci_config_window *cfg)
->> +{
->> +	int ret;
->> +	struct acpi_device *adev = to_acpi_device(cfg->parent);
->> +	void __iomem *reg_base;
->> +
->> +	ret = hisi_pcie_rc_addr_get(adev, &reg_base);
->> +	if (ret) {
->> +		dev_err(&adev->dev, "can't get rc base address");
->> +		return ret;
->> +	}
->> +
->> +	cfg->priv = reg_base;
->> +	if (!hisi_pcie_link_up_acpi(cfg)) {
->> +		dev_err(&adev->dev, "link status is down\n");
->> +		return -EINVAL;
->> +	}
->
-> How necessary is this link_up check?The link can go down
-> asynchronously anyway, at any time after we do this check, so why
-> bother doing it here?
-
-Yes, this is not relly necessary,
-If we do link_up check,and the link is down(e.g not insert a card),
-we will return early and not continue to enumerate devices.
-
->
-> If we don't need to do it, we don't really need to know the register
-> addresses here, do we?  Maybe we can just fall back to the standard
-> x86 solution of a PNP0C02 device at the ACPI root that has _CRS to
-> cover the host bridge registers?
-
-Yes , we don't really need to know link status register, but we still need to know
-the RC base address. this reg_base is not only used to get the link status but
-also to access RC config space. see hisi_pcie_map_bus()
-
-static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-				       int where)
-{
-	struct pci_config_window *cfg = bus->sysdata;
-	void __iomem *reg_base = cfg->priv;
-                       ^^^^^^^
-	if (bus->number == cfg->busr.start)
-		return reg_base + where;
-                        ^^^^^^^
-	else
-		return pci_ecam_map_bus(bus, devfn, where);
-}
-
-Thanks
-Dongdong
->
-> It'd be nice if we didn't have to grub around in the ACPI devices
-> looking for a corresponding device.  That's sort of a new solution to
-> a problem that will go away soon anyway (assuming future hardware is
-> more spec-conforming as far as ECAM).
->
->> +	return 0;
->> +}
->> +
->> +struct pci_ecam_ops hisi_pcie_ops = {
->> +	.bus_shift    = 20,
->> +	.init         =  hisi_pcie_init,
->> +	.pci_ops      = {
->> +		.map_bus    = hisi_pcie_map_bus,
->> +		.read       = hisi_pcie_acpi_rd_conf,
->> +		.write      = hisi_pcie_acpi_wr_conf,
->> +	}
->> +};
->> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
->> index 35f0e81..2db4db8 100644
->> --- a/include/linux/pci-ecam.h
->> +++ b/include/linux/pci-ecam.h
->> @@ -66,6 +66,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
->>  extern struct pci_ecam_ops pci_thunder_ecam_ops;
->>  #endif
+>>       Root   EP    _HPX  _HPX     Final Endpoint RCB state
+>>       Port  (init)  AND   OR     (curr)  (yours)  (mine)
+>>   0)   0     0      0    0          0       0       0
+>>   1)   0     0      0    1          1       0       0
+>>   2)   0     0      1    0          0       0       0
+>>   3)   0     0      1    1          1       0       0
+>>   4)   0     1      0    0          0       0       0
+>>   5)   0     1      0    1          1       0       0
+>>   6)   0     1      1    0          1       1       0
+>>   7)   0     1      1    1          1       1       0
+>>   8)   1     0      0    0          0       0       1
+>>   9)   1     0      0    1          1       1       1
+>>   A)   1     0      1    0          0       0       1
+>>   B)   1     0      1    1          1       1       1
+>>   C)   1     1      0    0          0       0       1
+>>   D)   1     1      0    1          1       1       1
+>>   E)   1     1      1    0          1       1       1
+>>   F)   1     1      1    1          1       1       1
 >>
->> +#ifdef CONFIG_PCI_HISI_ACPI
->> +extern struct pci_ecam_ops hisi_pcie_ops;
->> +#endif
->> +
->>  #ifdef CONFIG_PCI_HOST_GENERIC
->>  /* for DT-based PCI controllers that support ECAM */
->>  int pci_host_common_probe(struct platform_device *pdev,
->> --
->> 1.9.1
+>> Cases 0-7 should all result in the Endpoint RCB being zero because the
+>> Root Port RCB is zero.  Case 1 is the bug you're fixing.  Cases 3 & 5
+>> are similar hypothetical bugs your patch also fixes.
 >>
+>> Cases 6 & 7, where firmware left the Endpoint RCB set and _HPX didn't
+>> tell us to clear it, are hypothetical firmware bugs that your patch
+>> wouldn't fix.
+>>
+>> In cases 8, A, and C, we currently leave the Endpoint RCB cleared,
+>> either because firmware left it clear and _HPX didn't tell us to set
+>> it (8 and A), or because firmware set it but _HPX told us to clear it
+>> (C).
+>>
+>> One could argue that 8, A, and C should stay as they currently are, as
+>> a way for _HPX to work around hardware bugs, e.g., a Root Port that
+>> advertises a 128-byte RCB but doesn't actually support it.  I didn't
+>> bother with that and set the Endpoint's RCB to 128 in all cases when
+>> the Root Port claims to support it.
+>>
+>> It'd be great if you could test this and comment.
+>>
+>> If you get a chance, collect the /proc/iomem contents, too.  That's
+>> not for this bug; it's because I'm curious about the
+>>
+>>   ERST: Can not request [mem 0xb928b000-0xb928cbff] for ERST
+>>
+>> problem in your dmesg log.
 >
-> .
+> Oops, I goofed and forgot to clear RCB by default.
+> Here's the fixed one.
 >
+
+Testing on our end was successful again with this fix  ;)
+
+Tested-by: Frank Danapfel <fdanapfe@redhat.com>
+Acked-by: Myron Stowe <myron.stowe@redhat.com>
+
+>
+> commit b7bff74c2e6babf12906291ee177f16444de81ad
+> Author: Johannes Thumshirn <jthumshirn@suse.de>
+> Date:   Wed Nov 16 15:47:53 2016 -0600
+>
+>     PCI: Set Read Completion Boundary to 128 iff Root Port supports it
+>
+>     Per PCIe spec r3.0, sec 2.3.1.1, the Read Completion Boundary (RCB)
+>     determines the naturally aligned address boundaries on which a Read R=
+equest
+>     may be serviced with multiple Completions:
+>
+>       - For a Root Complex, RCB is 64 bytes or 128 bytes
+>         This value is reported in the Link Control Register
+>
+>         Note: Bridges and Endpoints may implement a corresponding command=
+ bit
+>         which may be set by system software to indicate the RCB value for=
+ the
+>         Root Complex, allowing the Bridge/Endpoint to optimize its behavi=
+or
+>         when the Root Complex=E2=80=99s RCB is 128 bytes.
+>
+>       - For all other system elements, RCB is 128 bytes
+>
+>     Per sec 7.8.7, if a Root Port only supports a 64-byte RCB, the RCB of=
+ all
+>     downstream devices must be clear, indicating an RCB of 64 bytes.  If =
+the
+>     Root Port supports a 128-byte RCB, we may optionally set the RCB of
+>     downstream devices so they know they can generate larger Completions.
+>
+>     Some BIOSes supply an _HPX that tells us to set RCB, even though the =
+Root
+>     Port doesn't have RCB set, which may lead to Malformed TLP errors if =
+the
+>     Endpoint generates completions larger than the Root Port can handle.
+>
+>     The IBM x3850 X6 with BIOS version -[A8E120CUS-1.30]- 08/22/2016 supp=
+lies
+>     such an _HPX and a Mellanox MT27500 ConnectX-3 device fails to initia=
+lize:
+>
+>       mlx4_core 0000:41:00.0: command 0xfff timed out (go bit not cleared=
+)
+>       mlx4_core 0000:41:00.0: device is going to be reset
+>       mlx4_core 0000:41:00.0: Failed to obtain HW semaphore, aborting
+>       mlx4_core 0000:41:00.0: Fail to reset HCA
+>       ------------[ cut here ]------------
+>       kernel BUG at drivers/net/ethernet/mellanox/mlx4/catas.c:193!
+>
+>     After 6cd33649fa83 ("PCI: Add pci_configure_device() during enumerati=
+on")
+>     and 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devic=
+es
+>     with a link"), we apply _HPX settings to *all* devices, not just thos=
+e
+>     hot-added after boot.
+>
+>     Before 7a1562d4f2d0, we didn't touch the Mellanox RCB, and the device
+>     worked.  After 7a1562d4f2d0, we set its RCB to 128, and it failed.
+>
+>     Set the RCB to 128 iff the Root Port supports a 128-byte RCB.  Otherw=
+ise,
+>     set RCB to 64 bytes.  This effectively ignores what _HPX tells us abo=
+ut
+>     RCB.
+>
+>     [bhelgaas: changelog, clear RCB if not set for Root Port]
+>     Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumerat=
+ion")
+>     Fixes: 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all de=
+vices with a link")
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D187781
+>     Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org  # v3.18+
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ab00267..104c46d 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1439,6 +1439,21 @@ static void program_hpp_type1(struct pci_dev *dev,=
+ struct hpp_type1 *hpp)
+>                 dev_warn(&dev->dev, "PCI-X settings not supported\n");
+>  }
+>
+> +static bool pcie_root_rcb_set(struct pci_dev *dev)
+> +{
+> +       struct pci_dev *rp =3D pcie_find_root_port(dev);
+> +       u16 lnkctl;
+> +
+> +       if (!rp)
+> +               return false;
+> +
+> +       pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
+> +       if (lnkctl & PCI_EXP_LNKCTL_RCB)
+> +               return true;
+> +
+> +       return false;
+> +}
+> +
+>  static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp=
+)
+>  {
+>         int pos;
+> @@ -1468,9 +1483,20 @@ static void program_hpp_type2(struct pci_dev *dev,=
+ struct hpp_type2 *hpp)
+>                         ~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or)=
+;
+>
+>         /* Initialize Link Control Register */
+> -       if (pcie_cap_has_lnkctl(dev))
+> +       if (pcie_cap_has_lnkctl(dev)) {
+> +
+> +               /*
+> +                * If the Root Port supports Read Completion Boundary of
+> +                * 128, set RCB to 128.  Otherwise, clear it.
+> +                */
+> +               hpp->pci_exp_lnkctl_and |=3D PCI_EXP_LNKCTL_RCB;
+> +               hpp->pci_exp_lnkctl_or &=3D ~PCI_EXP_LNKCTL_RCB;
+> +               if (pcie_root_rcb_set(dev))
+> +                       hpp->pci_exp_lnkctl_or |=3D PCI_EXP_LNKCTL_RCB;
+> +
+>                 pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+>                         ~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or)=
+;
+> +       }
+>
+>         /* Find Advanced Error Reporting Enhanced Capability */
+>         pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
