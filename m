@@ -1,118 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 18 Nov 2016 15:55:43 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v8 11/16] drivers: iommu: arm-smmu-v3: add IORT
- configuration
-Message-ID: <20161118155543.GV13470@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
- <20161116152936.22955-12-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:34200 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755902AbcKVVVg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 16:21:36 -0500
+Received: by mail-io0-f193.google.com with SMTP id r94so2545004ioe.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 13:20:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20161116152936.22955-12-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
- iommu@lists.linux-foundation.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Jon Masters <jcm@redhat.com>, Dennis Chen <dennis.chen@arm.com>,
- Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
+ <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com> <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
+From: Daniel Vetter <daniel@ffwll.ch>
+Date: Tue, 22 Nov 2016 22:03:09 +0100
+Message-ID: <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 03:29:31PM +0000, Lorenzo Pieralisi wrote:
-> In ACPI bases systems, in order to be able to create platform
-> devices and initialize them for ARM SMMU v3 components, the IORT
-> kernel implementation requires a set of static functions to be
-> used by the IORT kernel layer to configure platform devices for
-> ARM SMMU v3 components.
-> 
-> Add static configuration functions to the IORT kernel layer for
-> the ARM SMMU v3 components, so that the ARM SMMU v3 driver can
-> initialize its respective platform device by relying on the IORT
-> kernel infrastructure and by adding a corresponding ACPI device
-> early probe section entry.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/acpi/arm64/iort.c   | 103 +++++++++++++++++++++++++++++++++++++++++++-
->  drivers/iommu/arm-smmu-v3.c |  49 ++++++++++++++++++++-
->  2 files changed, 150 insertions(+), 2 deletions(-)
+On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
+<serguei.sagalovitch@amd.com> wrote:
+>
+> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
+>>
+>> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com>
+>> wrote:
+>>>
+>>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
+>>> <serguei.sagalovitch@amd.com> wrote:
+>>>>
+>>>> I personally like "device-DAX" idea but my concerns are:
+>>>>
+>>>> -  How well it will co-exists with the  DRM infrastructure /
+>>>> implementations
+>>>>     in part dealing with CPU pointers?
+>>>
+>>> Inside the kernel a device-DAX range is "just memory" in the sense
+>>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
+>>> not migratable. To be honest I do not know how well that co-exists
+>>> with drm infrastructure.
+>>>
+>>>> -  How well we will be able to handle case when we need to
+>>>> "move"/"evict"
+>>>>     memory/data to the new location so CPU pointer should point to the
+>>>> new
+>>>> physical location/address
+>>>>      (and may be not in PCI device memory at all)?
+>>>
+>>> So, device-DAX deliberately avoids support for in-kernel migration or
+>>> overcommit. Those cases are left to the core mm or drm. The device-dax
+>>> interface is for cases where all that is needed is a direct-mapping to
+>>> a statically-allocated physical-address range be it persistent memory
+>>> or some other special reserved memory range.
+>>
+>> For some of the fancy use-cases (e.g. to be comparable to what HMM can
+>> pull off) I think we want all the magic in core mm, i.e. migration and
+>> overcommit. At least that seems to be the very strong drive in all
+>> general-purpose gpu abstractions and implementations, where memory is
+>> allocated with malloc, and then mapped/moved into vram/gpu address
+>> space through some magic,
+>
+> It is possible that there is other way around: memory is requested to be
+> allocated and should be kept in vram for  performance reason but due
+> to possible overcommit case we need at least temporally to "move" such
+> allocation to system memory.
 
-[...]
-
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index ed563307..9315bf3 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -20,6 +20,8 @@
->   * This driver is powered by bad coffee and bombay mix.
->   */
->  
-> +#include <linux/acpi.h>
-> +#include <linux/acpi_iort.h>
->  #include <linux/delay.h>
->  #include <linux/dma-iommu.h>
->  #include <linux/err.h>
-> @@ -2559,6 +2561,36 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
->  	return 0;
->  }
->  
-> +#ifdef CONFIG_ACPI
-> +static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +				      struct arm_smmu_device *smmu,
-> +				      bool *bypass)
-> +{
-> +	struct acpi_iort_smmu_v3 *iort_smmu;
-> +	struct device *dev = smmu->dev;
-> +	struct acpi_iort_node *node;
-> +
-> +	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
-> +
-> +	/* Retrieve SMMUv3 specific data */
-> +	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-> +
-> +	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
-> +		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-> +
-> +	*bypass = false;
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +					     struct arm_smmu_device *smmu,
-> +					     bool *bypass)
-> +{
-> +	return -ENODEV;
-> +}
-> +#endif
-
-Same bypass comments as before, but you'll probably need to do something
-so that you *can* abort the probe if !ACPI, perhaps by allocating two
-error codes to distinguish the "I no nothing about this SMMU" from "I know
-enough to put it into bypass, but nothing more".
-
-Will
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+With migration I meant migrating both ways of course. And with stuff
+like numactl we can also influence where exactly the malloc'ed memory
+is allocated originally, at least if we'd expose the vram range as a
+very special numa node that happens to be far away and not hold any
+cpu cores.
+-Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
++41 (0) 79 365 57 48 - http://blog.ffwll.ch
