@@ -1,214 +1,344 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:35029 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755734AbcKWCNj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 21:13:39 -0500
-Received: by mail-pg0-f51.google.com with SMTP id p66so13818236pga.2
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 18:13:39 -0800 (PST)
-Date: Tue, 22 Nov 2016 18:08:35 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH 3/3] PCI: rockchip: Add system PM support
-Message-ID: <20161123020835.GB119441@google.com>
-References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
- <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-wj0-f179.google.com ([209.85.210.179]:33507 "EHLO
+        mail-wj0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932263AbcKVKug (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 05:50:36 -0500
+Received: by mail-wj0-f179.google.com with SMTP id xy5so40451184wjc.0
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 02:50:35 -0800 (PST)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com
+Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
+        srinivas.kandagatla@linaro.org, devicetree@vger.kernel.org
+Subject: [PATCH v7] PCI: qcom: add support to msm8996 PCIe controller
+Date: Tue, 22 Nov 2016 10:43:29 +0000
+Message-Id: <1479811409-22375-1-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 09:19:13AM +0800, Shawn Lin wrote:
-> This patch adds system PM support for Rockchip's RC.
-> For pre S3, the EP is configured into D3 state which guarantees
-> the link state should be in L1. So we could send PME_Turn_Off message
-> to the EP and wait for its ACK to make the link state into L2 or L3
-> without the aux-supply. This could help save more power which I think
-> should be very important for mobile devices.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 90 +++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 89 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 71d056d..720535b 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -20,6 +20,7 @@
->  #include <linux/gpio/consumer.h>
->  #include <linux/init.h>
->  #include <linux/interrupt.h>
-> +#include <linux/iopoll.h>
->  #include <linux/irq.h>
->  #include <linux/irqchip/chained_irq.h>
->  #include <linux/irqdomain.h>
-> @@ -55,6 +56,10 @@
->  #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
->  #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
->  #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
-> +#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
-> +#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
-> +#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
-> +#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
->  #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
->  #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
->  #define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
-> @@ -173,6 +178,7 @@
->  
->  #define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
->  #define MIN_AXI_ADDR_BITS_PASSED		8
-> +#define PCIE_RC_SEND_PME_OFF			0x11960
->  #define ROCKCHIP_VENDOR_ID			0x1d87
->  #define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
->  #define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
-> @@ -181,6 +187,9 @@
->  #define PCIE_ECAM_ADDR(bus, dev, func, reg) \
->  	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
->  	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
-> +#define PCIE_LINK_IS_L2(x) \
-> +		((x & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
+This patch adds support to msm8996/apq8096 PCIe, MSM8996 supports
+Gen 1/2, One lane, 3 PCIe root-complex with support to MSI and
+legacy interrupts and it conforms to PCI Express Base 2.1 specification.
 
-Wrap the 'x' in parentheses, for safety in case the caller passes
-something complicated.
+This patch adds post_init callback to qcom_pcie_ops, as this is PCIe
+pipe clocks are only setup after the phy is powered on.
+It also adds ltssm_enable callback as it is very much different to other
+supported SOCs in the driver.
 
-> +		 PCIE_CLIENT_DEBUG_LTSSM_L2)
->  
->  #define RC_REGION_0_ADDR_TRANS_H		0x00000000
->  #define RC_REGION_0_ADDR_TRANS_L		0x00000000
-> @@ -1205,9 +1214,80 @@ static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
->  				  AXI_WRAPPER_NOR_MSG,
->  				  20 - 1, 0, 0);
->  	rockchip->msg_region = ioremap(rockchip->mem_bus_addr +
-> -				       ((reg_no - 1) << 20), SZ_1M);
-> +				       ((reg_no + offset) << 20), SZ_1M);
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+---
+ Changes since v5/v6:
+ 	- No code changes.
+	- s/pcie/PCIe in change log based on Rob's comments.
+	- Removed DT example for 8996 as requested by Rob.
 
-^^^ You're leaking this, now that you call rockchip_cfg_atu() every
-time you resume.
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  14 +-
+ drivers/pci/host/pcie-qcom.c                       | 175 ++++++++++++++++++++-
+ 2 files changed, 183 insertions(+), 6 deletions(-)
 
->  	return err;
->  }
-> +
-> +static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
-> +{
-> +	u32 value;
-> +	int err;
-> +
-> +	/* send PME_TURN_OFF message */
-> +	writel(0x0, rockchip->msg_region + PCIE_RC_SEND_PME_OFF);
-> +
-> +	/* read LTSSM and wait for falling into L2 link state */
-> +	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_DEBUG_OUT_0,
-> +				 value, PCIE_LINK_IS_L2(value), 20,
-> +				 jiffies_to_usecs(5 * HZ));
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 4059a6f..15ced03 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -7,6 +7,7 @@
+ 			- "qcom,pcie-ipq8064" for ipq8064
+ 			- "qcom,pcie-apq8064" for apq8064
+ 			- "qcom,pcie-apq8084" for apq8084
++			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 
+ - reg:
+ 	Usage: required
+@@ -92,6 +93,17 @@
+ 			- "aux"		Auxiliary (AUX) clock
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
++
++- clock-names:
++	Usage: required for msm8996/apq8096
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "pipe"	Pipe Clock driving internal logic.
++			- "aux"		Auxiliary (AUX) clock.
++			- "cfg"		Configuration clk.
++			- "bus_master"	Master AXI clock.
++			- "bus_slave"	Slave AXI clock.
++
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -115,7 +127,7 @@
+ 			- "core" Core reset
+ 
+ - power-domains:
+-	Usage: required for apq8084
++	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+ 	Definition: A phandle and power domain specifier pair to the
+ 		    power domain which is responsible for collapsing
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index 3593640..25c5556 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -36,11 +36,17 @@
+ 
+ #include "pcie-designware.h"
+ 
++#define PCIE20_PARF_SYS_CTRL			0x00
+ #define PCIE20_PARF_PHY_CTRL			0x40
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+ #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
++#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
+ #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
++#define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2	0x1A8
++#define PCIE20_PARF_LTSSM			0x1B0
++#define PCIE20_PARF_SID_OFFSET			0x234
++#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+ 
+ #define PCIE20_ELBI_SYS_CTRL			0x04
+ #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+@@ -72,9 +78,18 @@ struct qcom_pcie_resources_v1 {
+ 	struct regulator *vdda;
+ };
+ 
++struct qcom_pcie_resources_v2 {
++	struct clk *aux_clk;
++	struct clk *master_clk;
++	struct clk *slave_clk;
++	struct clk *cfg_clk;
++	struct clk *pipe_clk;
++};
++
+ union qcom_pcie_resources {
+ 	struct qcom_pcie_resources_v0 v0;
+ 	struct qcom_pcie_resources_v1 v1;
++	struct qcom_pcie_resources_v2 v2;
+ };
+ 
+ struct qcom_pcie;
+@@ -82,7 +97,9 @@ struct qcom_pcie;
+ struct qcom_pcie_ops {
+ 	int (*get_resources)(struct qcom_pcie *pcie);
+ 	int (*init)(struct qcom_pcie *pcie);
++	int (*post_init)(struct qcom_pcie *pcie);
+ 	void (*deinit)(struct qcom_pcie *pcie);
++	void (*ltssm_enable)(struct qcom_pcie *pcie);
+ };
+ 
+ struct qcom_pcie {
+@@ -116,17 +133,33 @@ static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+ 	return dw_handle_msi_irq(pp);
+ }
+ 
+-static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
++static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+-
+-	if (dw_pcie_link_up(&pcie->pp))
+-		return 0;
+-
+ 	/* enable link training */
+ 	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+ 	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
+ 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
++}
++
++static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
++{
++	u32 val;
++	/* enable link training */
++	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
++	val |= BIT(8);
++	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
++}
++
++static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
++{
++
++	if (dw_pcie_link_up(&pcie->pp))
++		return 0;
++
++	/* Enable Link Training state machine */
++	if (pcie->ops->ltssm_enable)
++		pcie->ops->ltssm_enable(pcie);
+ 
+ 	return dw_pcie_wait_for_link(&pcie->pp);
+ }
+@@ -421,6 +454,113 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
++static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++
++	res->aux_clk = devm_clk_get(dev, "aux");
++	if (IS_ERR(res->aux_clk))
++		return PTR_ERR(res->aux_clk);
++
++	res->cfg_clk = devm_clk_get(dev, "cfg");
++	if (IS_ERR(res->cfg_clk))
++		return PTR_ERR(res->cfg_clk);
++
++	res->master_clk = devm_clk_get(dev, "bus_master");
++	if (IS_ERR(res->master_clk))
++		return PTR_ERR(res->master_clk);
++
++	res->slave_clk = devm_clk_get(dev, "bus_slave");
++	if (IS_ERR(res->slave_clk))
++		return PTR_ERR(res->slave_clk);
++
++	res->pipe_clk = devm_clk_get(dev, "pipe");
++	if (IS_ERR(res->pipe_clk))
++		return PTR_ERR(res->pipe_clk);
++
++	return 0;
++}
++
++static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++	u32 val;
++	int ret;
++
++	ret = clk_prepare_enable(res->aux_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable aux clock\n");
++		return ret;
++	}
++
++	ret = clk_prepare_enable(res->cfg_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable cfg clock\n");
++		goto err_cfg_clk;
++	}
++
++	ret = clk_prepare_enable(res->master_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable master clock\n");
++		goto err_master_clk;
++	}
++
++	ret = clk_prepare_enable(res->slave_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable slave clock\n");
++		goto err_slave_clk;
++	}
++
++	/* enable PCIe clocks and resets */
++	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
++	val &= ~BIT(0);
++	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
++
++	/* change DBI base address */
++	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
++
++	/* MAC PHY_POWERDOWN MUX DISABLE  */
++	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
++	val &= ~BIT(29);
++	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
++
++	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++	val |= BIT(4);
++	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++
++	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
++	val |= BIT(31);
++	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
++
++	return 0;
++
++err_slave_clk:
++	clk_disable_unprepare(res->master_clk);
++err_master_clk:
++	clk_disable_unprepare(res->cfg_clk);
++err_cfg_clk:
++	clk_disable_unprepare(res->aux_clk);
++
++	return ret;
++}
++
++static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct device *dev = pcie->pp.dev;
++	int ret;
++
++	ret = clk_prepare_enable(res->pipe_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable pipe clock\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int qcom_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+@@ -429,6 +569,17 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
+ 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
+ }
+ 
++static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++
++	clk_disable_unprepare(res->pipe_clk);
++	clk_disable_unprepare(res->slave_clk);
++	clk_disable_unprepare(res->master_clk);
++	clk_disable_unprepare(res->cfg_clk);
++	clk_disable_unprepare(res->aux_clk);
++}
++
+ static void qcom_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+@@ -444,6 +595,9 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		goto err_deinit;
+ 
++	if (pcie->ops->post_init)
++		pcie->ops->post_init(pcie);
++
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+@@ -487,12 +641,22 @@ static const struct qcom_pcie_ops ops_v0 = {
+ 	.get_resources = qcom_pcie_get_resources_v0,
+ 	.init = qcom_pcie_init_v0,
+ 	.deinit = qcom_pcie_deinit_v0,
++	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
+ };
+ 
+ static const struct qcom_pcie_ops ops_v1 = {
+ 	.get_resources = qcom_pcie_get_resources_v1,
+ 	.init = qcom_pcie_init_v1,
+ 	.deinit = qcom_pcie_deinit_v1,
++	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++};
++
++static const struct qcom_pcie_ops ops_v2 = {
++	.get_resources = qcom_pcie_get_resources_v2,
++	.init = qcom_pcie_init_v2,
++	.post_init = qcom_pcie_post_init_v2,
++	.deinit = qcom_pcie_deinit_v2,
++	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
+ };
+ 
+ static int qcom_pcie_probe(struct platform_device *pdev)
+@@ -572,6 +736,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
++	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+ 	{ }
+ };
+ 
+-- 
+2.10.1
 
-You really want to wait a whole 5 seconds for this? Last I saw, you were
-doing testing with about 500ms or less. As I read the spec, there's cap
-on per-device time to ACK the request, and I recall that was on the
-order of 10s of milliseconds. But technically that can add up if you
-have a large hierarchy of devices attached...
-
-> +	if (err) {
-> +		dev_err(rockchip->dev, "PCIe link enter L2 timeout!\n");
-> +		return err;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int rockchip_pcie_suspend_noirq(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	/* disable core and cli int since we don't need to ack PME_ACK */
-> +	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
-> +			    PCIE_CLIENT_INT_CLI, PCIE_CLIENT_INT_MASK);
-> +	rockchip_pcie_write(rockchip, (u32)PCIE_CORE_INT, PCIE_CORE_INT_MASK);
-> +
-> +	ret = rockchip_pcie_wait_l2(rockchip);
-> +	if (ret)
-> +		return ret;
-
-You leave core and client interrupts masked if you timeout here?
-
-Brian
-
-> +
-> +	phy_power_off(rockchip->phy);
-> +	phy_exit(rockchip->phy);
-> +
-> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
-> +	clk_disable_unprepare(rockchip->hclk_pcie);
-> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
-> +	clk_disable_unprepare(rockchip->aclk_pcie);
-> +
-> +	return ret;
-> +}
-> +
-> +static int rockchip_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> +	int err;
-> +
-> +	clk_prepare_enable(rockchip->clk_pcie_pm);
-> +	clk_prepare_enable(rockchip->hclk_pcie);
-> +	clk_prepare_enable(rockchip->aclk_perf_pcie);
-> +	clk_prepare_enable(rockchip->aclk_pcie);
-> +
-> +	err = rockchip_pcie_init_port(rockchip);
-> +	if (err)
-> +		return err;
-> +
-> +	err = rockchip_cfg_atu(rockchip);
-> +	if (err)
-> +		return err;
-> +
-> +	/* Need this to enter L1 again */
-> +	rockchip_pcie_update_txcredit_mui(rockchip);
-> +	rockchip_pcie_enable_interrupts(rockchip);
-> +
-> +	return 0;
-> +}
-> +
->  static int rockchip_pcie_probe(struct platform_device *pdev)
->  {
->  	struct rockchip_pcie *rockchip;
-> @@ -1228,6 +1308,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	if (!rockchip)
->  		return -ENOMEM;
->  
-> +	platform_set_drvdata(pdev, rockchip);
-> +
->  	rockchip->dev = dev;
->  
->  	err = rockchip_pcie_parse_dt(rockchip);
-> @@ -1352,6 +1434,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	return err;
->  }
->  
-> +static const struct dev_pm_ops rockchip_pcie_pm_ops = {
-> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
-> +				      rockchip_pcie_resume_noirq)
-> +};
-> +
->  static const struct of_device_id rockchip_pcie_of_match[] = {
->  	{ .compatible = "rockchip,rk3399-pcie", },
->  	{}
-> @@ -1361,6 +1448,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	.driver = {
->  		.name = "rockchip-pcie",
->  		.of_match_table = rockchip_pcie_of_match,
-> +		.pm = &rockchip_pcie_pm_ops,
->  	},
->  	.probe = rockchip_pcie_probe,
->  
-> -- 
-> 1.9.1
-> 
-> 
