@@ -1,135 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0054.outbound.protection.outlook.com ([104.47.2.54]:10401
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0044.outbound.protection.outlook.com ([104.47.40.44]:64224
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752293AbcKTNqk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 Nov 2016 08:46:40 -0500
-From: Noa Osherovich <noaos@mellanox.com>
-Subject: Re: [PATCH v3 2/5] net/mlx4_core: Use device ID defines
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Yishai Hadas <yishaih@mellanox.com>
-References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161117233009.2003.52026.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <3bc11996-c05b-675d-1962-648b8411c5c4@mellanox.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Majd Dibbiny <majd@mellanox.com>,
-        "gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>
-Message-ID: <cde87228-7940-c1c7-f92e-f30d316c9b59@mellanox.com>
-Date: Sun, 20 Nov 2016 09:14:26 +0200
+        id S1756198AbcKVUfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Nov 2016 15:35:24 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Daniel Vetter <daniel@ffwll.ch>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
+ <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
+CC: Dave Hansen <dave.hansen@linux.intel.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
+Date: Tue, 22 Nov 2016 15:35:08 -0500
 MIME-Version: 1.0
-In-Reply-To: <3bc11996-c05b-675d-1962-648b8411c5c4@mellanox.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the people this time.
 
-On 11/20/2016 9:08 AM, Noa Osherovich wrote:
 
-> Adding relevant Mellanox people to take a look.
->
-> On 11/18/2016 1:30 AM, Bjorn Helgaas wrote:
->
->> We added a bunch of new Mellanox device ID definitions because they'll be
->> used by INTx quirks.  Use them in the mlx4 ID table also so grep can find
->> both places.
+On 2016-11-22 03:10 PM, Daniel Vetter wrote:
+> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
+>> <serguei.sagalovitch@amd.com> wrote:
+>>> I personally like "device-DAX" idea but my concerns are:
+>>>
+>>> -  How well it will co-exists with the  DRM infrastructure / implementations
+>>>     in part dealing with CPU pointers?
+>> Inside the kernel a device-DAX range is "just memory" in the sense
+>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
+>> not migratable. To be honest I do not know how well that co-exists
+>> with drm infrastructure.
 >>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/net/ethernet/mellanox/mlx4/main.c |   78 ++++++++++++++---------------
->>  1 file changed, 37 insertions(+), 41 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
->> index 7183ac4..672e0a2e 100644
->> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
->> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
->> @@ -4012,49 +4012,45 @@ int mlx4_restart_one(struct pci_dev *pdev)
->>  	return err;
->>  }
->>  
->> +#define MLX_SP(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_FORCE_SENSE_PORT }
->> +#define MLX_VF(id) { PCI_VDEVICE(MELLANOX, id), MLX4_PCI_DEV_IS_VF }
->> +#define MLX_GN(id) { PCI_VDEVICE(MELLANOX, id), 0 }
->> +
->>  static const struct pci_device_id mlx4_pci_table[] = {
->> -	/* MT25408 "Hermon" SDR */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6340), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" DDR */
->> -	{ PCI_VDEVICE(MELLANOX, 0x634a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" QDR */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6354), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" DDR PCIe gen2 */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6732), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" QDR PCIe gen2 */
->> -	{ PCI_VDEVICE(MELLANOX, 0x673c), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" EN 10GigE */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6368), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25408 "Hermon" EN 10GigE PCIe gen2 */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6750), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25458 ConnectX EN 10GBASE-T 10GigE */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6372), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25458 ConnectX EN 10GBASE-T+Gen2 10GigE */
->> -	{ PCI_VDEVICE(MELLANOX, 0x675a), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT26468 ConnectX EN 10GigE PCIe gen2*/
->> -	{ PCI_VDEVICE(MELLANOX, 0x6764), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT26438 ConnectX EN 40GigE PCIe gen2 5GT/s */
->> -	{ PCI_VDEVICE(MELLANOX, 0x6746), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT26478 ConnectX2 40GigE PCIe gen2 */
->> -	{ PCI_VDEVICE(MELLANOX, 0x676e), MLX4_PCI_DEV_FORCE_SENSE_PORT },
->> -	/* MT25400 Family [ConnectX-2 Virtual Function] */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1002), MLX4_PCI_DEV_IS_VF },
->> +	/* MT25408 "Hermon" */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_SDR),	/* SDR */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR),	/* DDR */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR),	/* QDR */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2), /* DDR Gen2 */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2),	/* QDR Gen2 */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN),	/* EN 10GigE */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2),  /* EN 10GigE Gen2 */
->> +	/* MT25458 ConnectX EN 10GBASE-T */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN),
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2),	/* Gen2 */
->> +	/* MT26468 ConnectX EN 10GigE PCIe Gen2*/
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2),
->> +	/* MT26438 ConnectX EN 40GigE PCIe Gen2 5GT/s */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2),
->> +	/* MT26478 ConnectX2 40GigE PCIe Gen2 */
->> +	MLX_SP(PCI_DEVICE_ID_MELLANOX_CONNECTX2),
->> +	/* MT25400 Family [ConnectX-2] */
->> +	MLX_VF(0x1002),					/* Virtual Function */
->>  	/* MT27500 Family [ConnectX-3] */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1003), 0 },
->> -	/* MT27500 Family [ConnectX-3 Virtual Function] */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1004), MLX4_PCI_DEV_IS_VF },
->> -	{ PCI_VDEVICE(MELLANOX, 0x1005), 0 }, /* MT27510 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1006), 0 }, /* MT27511 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1007), 0 }, /* MT27520 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1008), 0 }, /* MT27521 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1009), 0 }, /* MT27530 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100a), 0 }, /* MT27531 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100b), 0 }, /* MT27540 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100c), 0 }, /* MT27541 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100d), 0 }, /* MT27550 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100e), 0 }, /* MT27551 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x100f), 0 }, /* MT27560 Family */
->> -	{ PCI_VDEVICE(MELLANOX, 0x1010), 0 }, /* MT27561 Family */
->> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3),
->> +	MLX_VF(0x1004),					/* Virtual Function */
->> +	MLX_GN(0x1005),					/* MT27510 Family */
->> +	MLX_GN(0x1006),					/* MT27511 Family */
->> +	MLX_GN(PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO),	/* MT27520 Family */
->> +	MLX_GN(0x1008),					/* MT27521 Family */
->> +	MLX_GN(0x1009),					/* MT27530 Family */
->> +	MLX_GN(0x100a),					/* MT27531 Family */
->> +	MLX_GN(0x100b),					/* MT27540 Family */
->> +	MLX_GN(0x100c),					/* MT27541 Family */
->> +	MLX_GN(0x100d),					/* MT27550 Family */
->> +	MLX_GN(0x100e),					/* MT27551 Family */
->> +	MLX_GN(0x100f),					/* MT27560 Family */
->> +	MLX_GN(0x1010),					/* MT27561 Family */
->>  	{ 0, }
->>  };
->>  
->>
+>>> -  How well we will be able to handle case when we need to "move"/"evict"
+>>>     memory/data to the new location so CPU pointer should point to the new
+>>> physical location/address
+>>>      (and may be not in PCI device memory at all)?
+>> So, device-DAX deliberately avoids support for in-kernel migration or
+>> overcommit. Those cases are left to the core mm or drm. The device-dax
+>> interface is for cases where all that is needed is a direct-mapping to
+>> a statically-allocated physical-address range be it persistent memory
+>> or some other special reserved memory range.
+> For some of the fancy use-cases (e.g. to be comparable to what HMM can
+> pull off) I think we want all the magic in core mm, i.e. migration and
+> overcommit. At least that seems to be the very strong drive in all
+> general-purpose gpu abstractions and implementations, where memory is
+> allocated with malloc, and then mapped/moved into vram/gpu address
+> space through some magic,
+It is possible that there is other way around: memory is requested to be
+allocated and should be kept in vram for  performance reason but due
+to possible overcommit case we need at least temporally to "move" such
+allocation to system memory.
+>   but still visible on both the cpu and gpu
+> side in some form. Special device to allocate memory, and not being
+> able to migrate stuff around sound like misfeatures from that pov.
+> -Daniel
 
