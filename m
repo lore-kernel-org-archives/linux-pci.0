@@ -1,63 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0105.outbound.protection.outlook.com ([104.47.41.105]:2465
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751664AbcKJIvK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 03:51:10 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        "Hadden Hoppert" <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/3] PCI: hv: use the correct buffer size in
- new_pcichild_device()
-Date: Thu, 10 Nov 2016 07:17:48 +0000
-Message-ID: <MWHPR03MB26695762E11D248A4181F43EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [PATCH V6 1/2] PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
+Date: Tue, 22 Nov 2016 20:08:48 +0800
+Message-ID: <1479816529-97410-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't really need such a big on-stack buffer.
-vmbus_sendpacket() here only uses sizeof(struct pci_child_message).
+The acpi_get_rc_resources() is used to get the RC register address that can
+not be described in MCFG. It takes the _HID&segment to look for and returns
+the RC address resource. Use PNP0C02 devices to describe such RC address
+resource. Use _UID to match segment to tell which root bus the PNP0C02
+resource belong to.
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-CC: Jake Oshins <jakeo@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>
-CC: Haiyang Zhang <haiyangz@microsoft.com>
-CC: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- drivers/pci/host/pci-hyperv.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/pci-acpi.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h      |  4 +++
+ 2 files changed, 73 insertions(+)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 763ff87..93ed64a 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1271,9 +1271,9 @@ static struct hv_pci_dev *new_pcichild_device(struct =
-hv_pcibus_device *hbus,
- 	struct hv_pci_dev *hpdev;
- 	struct pci_child_message *res_req;
- 	struct q_res_req_compl comp_pkt;
--	union {
--	struct pci_packet init_packet;
--		u8 buffer[0x100];
-+	struct {
-+		struct pci_packet init_packet;
-+		u8 buffer[sizeof(struct pci_child_message)];
- 	} pkt;
- 	unsigned long flags;
- 	int ret;
---=20
-2.7.4
-
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index d966d47..76fd6f4 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -29,6 +29,75 @@
+ 	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+ };
+ 
++#ifdef CONFIG_ARM64
++static struct resource *acpi_get_rc_addr(struct acpi_device *adev)
++{
++	struct resource_entry *entry;
++	struct list_head list;
++	unsigned long flags;
++	int ret;
++	struct resource *res;
++
++	INIT_LIST_HEAD(&list);
++	flags = IORESOURCE_MEM;
++	ret = acpi_dev_get_resources(adev, &list,
++				     acpi_dev_filter_resource_type_cb,
++				     (void *) flags);
++	if (ret <= 0)
++		return NULL;
++
++	entry = list_first_entry(&list, struct resource_entry, node);
++	res = entry->res;
++	acpi_dev_free_resource_list(&list);
++	return res;
++}
++
++static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
++				 void **retval)
++{
++	u16 *segment = context;
++	unsigned long long uid;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
++	if (ACPI_FAILURE(status) || uid != *segment)
++		return AE_CTRL_DEPTH;
++
++	*(acpi_handle *)retval = handle;
++	return AE_CTRL_TERMINATE;
++}
++
++/**
++ * acpi_get_rc_resources() - get the RC address resource.
++ * @hid:	HID to search for.
++ * @segment:	PCI Segment number.
++ *
++ * Get the RC address resource that can not be described in MCFG. It takes
++ * the _HID&segment to look for and returns the RC address resource. Use
++ * _CRS of PNP0C02 devices to describe such RC address resource. Use _UID
++ * to match segment to tell which root bus the PNP0C02 resource belong to.
++ *
++ * Return: RC address resource.
++ */
++struct resource *acpi_get_rc_resources(const char *hid, u16 segment)
++{
++	struct acpi_device *adev;
++	acpi_status status;
++	acpi_handle handle;
++	int ret;
++
++	status = acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
++	if (ACPI_FAILURE(status))
++		return -ENODEV;
++
++	ret = acpi_bus_get_device(handle, &adev);
++	if (ret)
++		return ret;
++
++	return acpi_get_rc_addr(adev);
++}
++#endif
++
+ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+ {
+ 	acpi_status status = AE_NOT_EXIST;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..bf1dbfe 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++#if defined(CONFIG_ARM64) && defined(CONFIG_ACPI)
++struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
++#endif
++
+ #endif /* DRIVERS_PCI_H */
+-- 
+1.9.1
