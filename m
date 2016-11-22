@@ -1,47 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37128 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933483AbcKWXtP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 18:49:15 -0500
-Date: Wed, 23 Nov 2016 17:49:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bhelgaas@google.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        clsoto@us.ibm.com
-Subject: Re: [PATCH v3 0/2] Disable VF's memory space on updating IOV BARs
-Message-ID: <20161123234910.GN16033@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ray Jui <ray.jui@broadcom.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: avoid maybe-uninitialized warning
+Date: Tue, 22 Nov 2016 22:15:08 +0100
+Message-ID: <2504851.C6gOdhdaGF@wuerfel>
+In-Reply-To: <31c4c52b-3de5-2277-7a44-2a4231531074@broadcom.com>
+References: <20161122141844.1655574-1-arnd@arndb.de>
+ <20161122141844.1655574-2-arnd@arndb.de>
+ <31c4c52b-3de5-2277-7a44-2a4231531074@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
+ Oza Oza <oza.oza@broadcom.com>,
+ "Dmitry V. Krivenok" <krivenok.dmitry@gmail.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 12:15:34PM +1100, Gavin Shan wrote:
-> This moves pcibios_sriov_enable() to the point before VF and VF BARs
-> are enabled on PowerNV platform. Also, pci_update_resource() is used
-> to update IOV BARs on PowerNV platform, the PF might have been functional
-> when the function is called. We shouldn't disable PF's memory decoding
-> at that point. Instead, the VF's memory space should be disabled.
+On Tuesday, November 22, 2016 9:45:24 AM CET Ray Jui wrote:
+> > diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> > index 857ff5198317..0359569c8d78 100644
+> > --- a/drivers/pci/host/pcie-iproc.c
+> > +++ b/drivers/pci/host/pcie-iproc.c
+> > @@ -936,6 +936,7 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
+> >  
+> >               }
+> >       }
+> > +     ret = -EINVAL;
+> >  err_ib:
+> >       dev_err(dev, "unable to configure inbound mapping\n");
+> >       dev_err(dev, "axi %pap, pci %pap, res size %pap\n",
+> > 
 > 
-> Changelog
-> =========
-> v3:
->   * Disable VF's memory space when IOV BARs are updated in
->     pcibios_sriov_enable().
-> v2:
->   * Added one patch calling pcibios_sriov_enable() before the VF
->     and VF BARs are enabled.
+> This change is good, but in my opinion, a further improvement for
+> clarity would be to initialize 'ret' to -EINVAL in the beginning of this
+> function when 'ret' is declared. What do you think?
 > 
-> Gavin Shan (2):
->   PCI: Call pcibios_sriov_enable() before IOV BARs are enabled
->   PCI: Disable VF's memory space on updating IOV BAR in
->     pci_update_resource()
-> 
->  drivers/pci/iov.c       | 14 +++++++-------
->  drivers/pci/setup-res.c | 28 ++++++++++++++++++++--------
->  2 files changed, 27 insertions(+), 15 deletions(-)
 
-I applied these to pci/virtualization for v4.10.  Thanks for your
-patience, Gavin.
+I never do that, see https://rusty.ozlabs.org/?p=232 for a great
+explanation about why.
+
+	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
