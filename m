@@ -1,83 +1,90 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Mon, 28 Nov 2016 23:38:59 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
-Message-ID: <20161128223859.GA4571@wunner.de>
-References: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
- <20161128192530.GO16033@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:34990 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934383AbcKWWmT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 17:42:19 -0500
+Received: by mail-oi0-f51.google.com with SMTP id b126so31933572oia.2
+        for <linux-pci@vger.kernel.org>; Wed, 23 Nov 2016 14:42:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161128192530.GO16033@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161123215510.GA16311@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com> <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com> <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com> <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 23 Nov 2016 14:42:12 -0800
+Message-ID: <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 01:25:30PM -0600, Bjorn Helgaas wrote:
-> On Sun, Oct 09, 2016 at 01:12:55PM +0200, Lukas Wunner wrote:
-> > -.data          56
-> > +.data           0
-> > -.rodata        32
-> > +.rodata        88
-> > 
-> > Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> It'd be nice if this had a changelog.  I'm happy if this goes via the
-> x86 tree.
+On Wed, Nov 23, 2016 at 1:55 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Wed, Nov 23, 2016 at 02:11:29PM -0700, Logan Gunthorpe wrote:
+>> > As I said, there is no possible special handling. Standard IB hardware
+>> > does not support changing the DMA address once a MR is created. Forget
+>> > about doing that.
+>>
+>> Yeah, that's essentially the point I was trying to make. Not to mention
+>> all the other unrelated hardware that can't DMA to an address that might
+>> disappear mid-transfer.
+>
+> Right, it is impossible to ask for generic page migration with ongoing
+> DMA. That is simply not supported by any of the hardware at all.
+>
+>> > Only ODP hardware allows changing the DMA address on the fly, and it
+>> > works at the page table level. We do not need special handling for
+>> > RDMA.
+>>
+>> I am aware of ODP but, noted by others, it doesn't provide a general
+>> solution to the points above.
+>
+> How do you mean?
+>
+> Perhaps I am not following what Serguei is asking for, but I
+> understood the desire was for a complex GPU allocator that could
+> migrate pages between GPU and CPU memory under control of the GPU
+> driver, among other things. The desire is for DMA to continue to work
+> even after these migrations happen.
+>
+> Page table mirroring *is* the general solution for this problem. The
+> GPU driver controls the VMA and the DMA driver mirrors that VMA.
+>
+> Do you know of another option that doesn't just degenerate to page
+> table mirroring??
+>
+> Remember, there are two facets to the RDMA ODP implementation, I feel
+> there is some confusion here..
+>
+> The crucial part for this discussion is the ability to fence and block
+> DMA for a specific range. This is the hardware capability that lets
+> page migration happen: fence&block DMA, migrate page, update page
+> table in HCA, unblock DMA.
 
-Thanks, I'll resend with your ack.
-
-As for the changelog, to be honest I can't think of much more to write
-there.  One important motivation of constifying structs that are never
-modified, and particularly structs containing function pointers like
-this one, is to prevent their modification and subsequent usage by an
-attacker.  However constification patches are submitted all the
-time by Julia Lawall and others, and I've never seen this rationale
-spelled out in a commit message, so the assumption seems to be that
-it's common knowledge.  I could probably add something like
-
-	Size of pci-mid.o ELF sections:
-
-to clarify what the numbers in the changelog refer to.
-
-Best regards,
-
-Lukas
-
-> I can't remember a discussion about having this code in drivers/pci in
-> the first place.  Would it make sense to move it to
-> arch/x86/platform/intel-mid/?
-> 
-> 8e522e1d321b ("x86/platform/intel-mid: Add Intel Penwell to ID table")
-> fixed a sync issue and added a comment about staying in sync with
-> arch/x86/platform/intel-mid/pwr.c.  Maybe moving this code to arch/x86
-> would help with that?
-> 
-> Looks like we'd have to expose pci_platform_pm_ops and
-> pci_set_platform_pm(), but setting platform-specific PM ops does seem
-> like something that would fit in the arch directories, so maybe that
-> wouldn't be a bad thing.
-> 
-> > ---
-> >  drivers/pci/pci-mid.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
-> > index a8b52dc..566ded1 100644
-> > --- a/drivers/pci/pci-mid.c
-> > +++ b/drivers/pci/pci-mid.c
-> > @@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
-> >  	return false;
-> >  }
-> >  
-> > -static struct pci_platform_pm_ops mid_pci_platform_pm = {
-> > +static const struct pci_platform_pm_ops mid_pci_platform_pm = {
-> >  	.is_manageable	= mid_pci_power_manageable,
-> >  	.set_state	= mid_pci_set_power_state,
-> >  	.get_state	= mid_pci_get_power_state,
-> > -- 
-> > 2.9.3
+Wait, ODP requires migratable pages, ZONE_DEVICE pages are not
+migratable. You can't replace a PCIe mapping with just any other
+System RAM physical address, right? At least not without a filesystem
+recording where things went, but at point we're no longer talking
+about the base P2P-DMA mapping mechanism and are instead talking about
+something like pnfs-rdma to a DAX filesystem.
