@@ -1,91 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:62867
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934541AbcKJRTe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 12:19:34 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/3] PCI: hv: use the correct buffer size in
- new_pcichild_device()
-Date: Thu, 10 Nov 2016 17:05:08 +0000
-Message-ID: <BLUPR0301MB15875BCF319BBC7F5671F805ABB80@BLUPR0301MB1587.namprd03.prod.outlook.com>
-References: <MWHPR03MB26695762E11D248A4181F43EBFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
- <BLUPR0301MB1587B92E6F6478DB59F72E2AABB80@BLUPR0301MB1587.namprd03.prod.outlook.com>
- <MWHPR03MB26690DD8D1756E3202D27820BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-In-Reply-To: <MWHPR03MB26690DD8D1756E3202D27820BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:34476 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbcKWC3J (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 21:29:09 -0500
+Received: by mail-pg0-f45.google.com with SMTP id x23so18929pgx.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 18:29:09 -0800 (PST)
+Date: Tue, 22 Nov 2016 18:29:06 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH 1/3] PCI: rockchip: split out rockchip_cfg_atu
+Message-ID: <20161123022905.GA122654@google.com>
+References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
+ <20161123015914.GA119441@google.com>
+ <30d37e0c-73df-5bae-f489-3d9b56cc7b02@rock-chips.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <30d37e0c-73df-5bae-f489-3d9b56cc7b02@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
->=20
-> > From: Jake Oshins
-> > > From: Dexuan Cui
-> > > Sent: Wednesday, November 9, 2016 11:18 PM
-> > > We don't really need such a big on-stack buffer.
-> > > vmbus_sendpacket() here only uses sizeof(struct pci_child_message).
-> > >
-> > > @@ -1271,9 +1271,9 @@ static struct hv_pci_dev
-> > > *new_pcichild_device(struct hv_pcibus_device *hbus,
-> > >  	struct hv_pci_dev *hpdev;
-> > >  	struct pci_child_message *res_req;
-> > >  	struct q_res_req_compl comp_pkt;
-> > > -	union {
-> > > -	struct pci_packet init_packet;
-> > > -		u8 buffer[0x100];
-> > > +	struct {
-> > > +		struct pci_packet init_packet;
-> > > +		u8 buffer[sizeof(struct pci_child_message)];
-> > >  	} pkt;
-> > >  	unsigned long flags;
-> > >  	int ret;
+On Wed, Nov 23, 2016 at 10:15:16AM +0800, Shawn Lin wrote:
+> 在 2016/11/23 9:59, Brian Norris 写道:
+> >On Wed, Nov 23, 2016 at 09:19:11AM +0800, Shawn Lin wrote:
+> >>diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> >>index b55037a..19399fc 100644
+> >>--- a/drivers/pci/host/pcie-rockchip.c
+> >>+++ b/drivers/pci/host/pcie-rockchip.c
+
+...
+
+> >>+	rockchip->msg_region = ioremap(rockchip->mem_bus_addr +
+> >>+				       ((reg_no - 1) << 20), SZ_1M);
 > >
-> > This change seems good to me, in that it's always a bad idea to use too
-> much
-> > stack.  But this won't fix the problem with VMAP_STACK.  The buffer cou=
-ld
-> still
-> > end up spanning two pages and the physical addresses of those pages
-> would
-> > possibly be discontiguous.  Do you want to just refactor this so that i=
-t uses
-> a
-> > fixed buffer, one that will work with VMAP_STACK?  Or is that coming in=
- a
-> future
-> > patch?
->=20
-> Hi Jake, I think the VMAP_STACK issue you mentioned should be another
-> different
-> issue fixed by Long Li: https://patchwork.ozlabs.org/patch/692447/.
->=20
-> The VMAP_STACK issue is only an issue when we pass the buffer's physical
-> address
-> to the hypercall.
->=20
-> Here the buffer is not passed to any hypercall. We just use
-> vmbus_sendpacket()
-> to memcpy the buffer into the per-channel ringbuffer.
->=20
-> Thanks,
-> -- Dexuan
+> >(And here.)
+> >
+> >ioremap() can fail; check for NULL.
+> >
+> 
+> Sure.
+> 
+> >Also, when you start reusing rockchip_cfg_atu() in patch 3, you'll be
+> >leaking virtual address space, as you'll keep remapping this every time.
+> 
+> How about just check if rockchip->msg_region was already mapped?
+> Otherwise we don't remap it again when calling rockchip_cfg_atu.
 
-Yes, you're right.  This patch looks fine to me.  Sorry for confusing the t=
-wo issues.
+That'd work, even if it's a little awkward. That's basically one of my
+suggestions below.
 
--- Jake
+> >You should straighten that out. Either some kind of check for
+> >'if (!rockchip->msg_region)', or just do the map/unmap where it's
+> >actually used (in patch 3).
+> 
+> Should we really need to unmap it? As this driver won't be a module and
+> I think it's okay to keep the rockchip->msg_region always.
+
+No, I guess we don't really need to unmap it. I just meant, you could
+map/unmap every time you use it, or make sure you just map it once (and
+only once).
+
+Also (if it helps), you could use devm_ioremap(), in case you ever do
+make it removable.
+
+Brian
