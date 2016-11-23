@@ -1,117 +1,189 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54734 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753976AbcKIOTD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:19:03 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 02/16] drivers: acpi: iort: introduce linker section for IORT entries probing
-Date: Wed,  9 Nov 2016 14:19:34 +0000
-Message-Id: <20161109141948.19244-3-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+Received: from lucky1.263xmail.com ([211.157.147.132]:46790 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755902AbcKWBUL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 20:20:11 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 3/3] PCI: rockchip: Add system PM support
+Date: Wed, 23 Nov 2016 09:19:13 +0800
+Message-Id: <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit e647b532275b ("ACPI: Add early device probing
-infrastructure") the kernel has gained the infrastructure that allows
-adding linker script section entries to execute ACPI driver callbacks
-(ie probe routines) for all subsystems that register a table entry
-in the respective kernel section (eg clocksource, irqchip).
+This patch adds system PM support for Rockchip's RC.
+For pre S3, the EP is configured into D3 state which guarantees
+the link state should be in L1. So we could send PME_Turn_Off message
+to the EP and wait for its ACK to make the link state into L2 or L3
+without the aux-supply. This could help save more power which I think
+should be very important for mobile devices.
 
-Since ARM IOMMU devices data is described through IORT tables when
-booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
-callback routines that are called to probe IORT entries and initialize
-the respective IOMMU devices.
-
-To avoid adding driver specific hooks into IORT table initialization
-code (breaking therefore code modularity - ie ACPI IORT code must be made
-aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
-that allows ARM SMMU drivers to take advantage of the ACPI early probing
-infrastructure, so that they can add linker script section entries
-containing drivers callback to be executed on IORT tables detection.
-
-Since IORT nodes are differentiated by a type, the callback routines
-can easily parse the IORT table entries, check the IORT nodes and
-carry out some actions whenever the IORT node type associated with
-the driver specific callback is matched.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/acpi/arm64/iort.c         | 13 ++++++++++---
- include/asm-generic/vmlinux.lds.h |  1 +
- include/linux/acpi_iort.h         |  3 +++
- 3 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 6b81746..2c46ebc 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -361,8 +361,15 @@ void __init acpi_iort_init(void)
- 	acpi_status status;
+ drivers/pci/host/pcie-rockchip.c | 90 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 89 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 71d056d..720535b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -20,6 +20,7 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
++#include <linux/iopoll.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+@@ -55,6 +56,10 @@
+ #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
+ #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+ #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
++#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
++#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
++#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
++#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
+ #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+ #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+ #define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
+@@ -173,6 +178,7 @@
  
- 	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
--	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
--		const char *msg = acpi_format_exception(status);
--		pr_err("Failed to get table, %s\n", msg);
-+	if (ACPI_FAILURE(status)) {
-+		if (status != AE_NOT_FOUND) {
-+			const char *msg = acpi_format_exception(status);
-+
-+			pr_err("Failed to get table, %s\n", msg);
-+		}
-+
-+		return;
- 	}
-+
-+	acpi_probe_device_table(iort);
+ #define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
+ #define MIN_AXI_ADDR_BITS_PASSED		8
++#define PCIE_RC_SEND_PME_OFF			0x11960
+ #define ROCKCHIP_VENDOR_ID			0x1d87
+ #define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
+ #define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
+@@ -181,6 +187,9 @@
+ #define PCIE_ECAM_ADDR(bus, dev, func, reg) \
+ 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+ 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
++#define PCIE_LINK_IS_L2(x) \
++		((x & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
++		 PCIE_CLIENT_DEBUG_LTSSM_L2)
+ 
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+@@ -1205,9 +1214,80 @@ static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
+ 				  AXI_WRAPPER_NOR_MSG,
+ 				  20 - 1, 0, 0);
+ 	rockchip->msg_region = ioremap(rockchip->mem_bus_addr +
+-				       ((reg_no - 1) << 20), SZ_1M);
++				       ((reg_no + offset) << 20), SZ_1M);
+ 	return err;
  }
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 3074796..f9c9f3c 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -563,6 +563,7 @@
- 	IRQCHIP_OF_MATCH_TABLE()					\
- 	ACPI_PROBE_TABLE(irqchip)					\
- 	ACPI_PROBE_TABLE(clksrc)					\
-+	ACPI_PROBE_TABLE(iort)						\
- 	EARLYCON_TABLE()
- 
- #define INIT_TEXT							\
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 0e32dac..d16fdda 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -39,4 +39,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
- { return NULL; }
- #endif
- 
-+#define IORT_ACPI_DECLARE(name, table_id, fn)		\
-+	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
 +
- #endif /* __ACPI_IORT_H__ */
++static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
++{
++	u32 value;
++	int err;
++
++	/* send PME_TURN_OFF message */
++	writel(0x0, rockchip->msg_region + PCIE_RC_SEND_PME_OFF);
++
++	/* read LTSSM and wait for falling into L2 link state */
++	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_DEBUG_OUT_0,
++				 value, PCIE_LINK_IS_L2(value), 20,
++				 jiffies_to_usecs(5 * HZ));
++	if (err) {
++		dev_err(rockchip->dev, "PCIe link enter L2 timeout!\n");
++		return err;
++	}
++
++	return 0;
++}
++
++static int rockchip_pcie_suspend_noirq(struct device *dev)
++{
++	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
++	int ret;
++
++	/* disable core and cli int since we don't need to ack PME_ACK */
++	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
++			    PCIE_CLIENT_INT_CLI, PCIE_CLIENT_INT_MASK);
++	rockchip_pcie_write(rockchip, (u32)PCIE_CORE_INT, PCIE_CORE_INT_MASK);
++
++	ret = rockchip_pcie_wait_l2(rockchip);
++	if (ret)
++		return ret;
++
++	phy_power_off(rockchip->phy);
++	phy_exit(rockchip->phy);
++
++	clk_disable_unprepare(rockchip->clk_pcie_pm);
++	clk_disable_unprepare(rockchip->hclk_pcie);
++	clk_disable_unprepare(rockchip->aclk_perf_pcie);
++	clk_disable_unprepare(rockchip->aclk_pcie);
++
++	return ret;
++}
++
++static int rockchip_pcie_resume_noirq(struct device *dev)
++{
++	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
++	int err;
++
++	clk_prepare_enable(rockchip->clk_pcie_pm);
++	clk_prepare_enable(rockchip->hclk_pcie);
++	clk_prepare_enable(rockchip->aclk_perf_pcie);
++	clk_prepare_enable(rockchip->aclk_pcie);
++
++	err = rockchip_pcie_init_port(rockchip);
++	if (err)
++		return err;
++
++	err = rockchip_cfg_atu(rockchip);
++	if (err)
++		return err;
++
++	/* Need this to enter L1 again */
++	rockchip_pcie_update_txcredit_mui(rockchip);
++	rockchip_pcie_enable_interrupts(rockchip);
++
++	return 0;
++}
++
+ static int rockchip_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct rockchip_pcie *rockchip;
+@@ -1228,6 +1308,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	if (!rockchip)
+ 		return -ENOMEM;
+ 
++	platform_set_drvdata(pdev, rockchip);
++
+ 	rockchip->dev = dev;
+ 
+ 	err = rockchip_pcie_parse_dt(rockchip);
+@@ -1352,6 +1434,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static const struct dev_pm_ops rockchip_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
++				      rockchip_pcie_resume_noirq)
++};
++
+ static const struct of_device_id rockchip_pcie_of_match[] = {
+ 	{ .compatible = "rockchip,rk3399-pcie", },
+ 	{}
+@@ -1361,6 +1448,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	.driver = {
+ 		.name = "rockchip-pcie",
+ 		.of_match_table = rockchip_pcie_of_match,
++		.pm = &rockchip_pcie_pm_ops,
+ 	},
+ 	.probe = rockchip_pcie_probe,
+ 
 -- 
-2.10.0
+1.9.1
+
 
