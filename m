@@ -1,57 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH] pci: add pci_irq_get_affinity_vector()
-To: Christoph Hellwig <hch@lst.de>
-References: <1478591241-123356-1-git-send-email-hare@suse.de>
- <20161108145652.GA12817@lst.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <40d6e3d4-7e63-0d23-3e5c-a877cebd539a@suse.de>
-Date: Tue, 8 Nov 2016 16:08:51 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161108145652.GA12817@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:57096 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755487AbcKWEQd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 23:16:33 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/3] PCI: rockchip: split out rockchip_cfg_atu
+Date: Wed, 23 Nov 2016 12:15:13 +0800
+Message-Id: <1479874515-65872-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/2016 03:56 PM, Christoph Hellwig wrote:
-> On Tue, Nov 08, 2016 at 08:47:21AM +0100, Hannes Reinecke wrote:
->> Add a reverse-mapping function to return the interrupt vector for
->> any CPU if interrupt affinity is enabled.
->
-> What's the use case of it?
->
-> Also as-is this won't work due to the non-affinity vectors that
-> have the affinity set to all cpus.  It will get even worse if we have
-> to support things like virtio_net that have multiple interrupts per
-> CPU due to the send and receive virtqueues.
->
-The use-case here is that one needs to feed the MSI-X index into the 
-driver command structure. While we can extract that number trivially 
-with scsi-mq, but for scsi-sq we don't have such means.
+We split out a new function, rockchip_cfg_atu, in order to
+re-configure the atu when missing these information after
+wakeup from S3.
 
-So if we start assigning interrupt affinity per default we need to 
-figure out the msi-x index from a given SCSI command.
-Currently most of these drivers keep an internal CPU map which I'd love 
-to get rid of.
-Hence this patch.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-And before you complain: Yes, this patch is wrong; it returns the vector 
-and not the index (which is what I'm after).
-I found that on my test machine :-(
+---
 
-The main impetus of this RFC is to figure out if such a function would 
-have a chance of getting upstream, or if I have to continue use cpumaps 
-in the drivers.
+Changes in v2:
+- remove msg region support
 
-Cheers,
+ drivers/pci/host/pcie-rockchip.c | 104 +++++++++++++++++++++------------------
+ 1 file changed, 55 insertions(+), 49 deletions(-)
 
-Hannes
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index b55037a..9cb84b1 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -210,6 +210,11 @@ struct rockchip_pcie {
+ 	int	link_gen;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
++	u32     io_size;
++	int     offset;
++	phys_addr_t io_bus_addr;
++	u32     mem_size;
++	phys_addr_t mem_bus_addr;
+ };
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+@@ -1149,6 +1154,50 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+ 	return 0;
+ }
+ 
++static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
++{
++	int offset;
++	int err;
++	int reg_no;
++
++	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
++		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
++						AXI_WRAPPER_MEM_WRITE,
++						20 - 1,
++						rockchip->mem_bus_addr +
++						(reg_no << 20),
++						0);
++		if (err) {
++			dev_err(rockchip->dev,
++					"program RC mem outbound ATU failed\n");
++			return err;
++		}
++	}
++
++	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
++	if (err) {
++		dev_err(rockchip->dev, "program RC mem inbound ATU failed\n");
++		return err;
++	}
++
++	offset = rockchip->mem_size >> 20;
++	for (reg_no = 0; reg_no < (rockchip->io_size >> 20); reg_no++) {
++		err = rockchip_pcie_prog_ob_atu(rockchip,
++						reg_no + 1 + offset,
++						AXI_WRAPPER_IO_WRITE,
++						20 - 1,
++						rockchip->io_bus_addr +
++						(reg_no << 20),
++						0);
++		if (err) {
++			dev_err(rockchip->dev,
++					"program RC io outbound ATU failed\n");
++			return err;
++		}
++	}
++
++	return err;
++}
+ static int rockchip_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct rockchip_pcie *rockchip;
+@@ -1158,13 +1207,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	resource_size_t io_base;
+ 	struct resource	*mem;
+ 	struct resource	*io;
+-	phys_addr_t io_bus_addr = 0;
+-	u32 io_size;
+-	phys_addr_t mem_bus_addr = 0;
+-	u32 mem_size = 0;
+-	int reg_no;
+ 	int err;
+-	int offset;
+ 
+ 	LIST_HEAD(res);
+ 
+@@ -1231,14 +1274,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_vpcie;
+ 
+ 	/* Get the I/O and memory ranges from DT */
+-	io_size = 0;
+ 	resource_list_for_each_entry(win, &res) {
+ 		switch (resource_type(win->res)) {
+ 		case IORESOURCE_IO:
+ 			io = win->res;
+ 			io->name = "I/O";
+-			io_size = resource_size(io);
+-			io_bus_addr = io->start - win->offset;
++			rockchip->io_size = resource_size(io);
++			rockchip->io_bus_addr = io->start - win->offset;
+ 			err = pci_remap_iospace(io, io_base);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+@@ -1249,8 +1291,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		case IORESOURCE_MEM:
+ 			mem = win->res;
+ 			mem->name = "MEM";
+-			mem_size = resource_size(mem);
+-			mem_bus_addr = mem->start - win->offset;
++			rockchip->mem_size = resource_size(mem);
++			rockchip->mem_bus_addr = mem->start - win->offset;
+ 			break;
+ 		case IORESOURCE_BUS:
+ 			rockchip->root_bus_nr = win->res->start;
+@@ -1260,45 +1302,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	if (mem_size) {
+-		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
+-			err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
+-							AXI_WRAPPER_MEM_WRITE,
+-							20 - 1,
+-							mem_bus_addr +
+-							(reg_no << 20),
+-							0);
+-			if (err) {
+-				dev_err(dev, "program RC mem outbound ATU failed\n");
+-				goto err_vpcie;
+-			}
+-		}
+-	}
+-
+-	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
+-	if (err) {
+-		dev_err(dev, "program RC mem inbound ATU failed\n");
++	err = rockchip_cfg_atu(rockchip);
++	if (err)
+ 		goto err_vpcie;
+-	}
+-
+-	offset = mem_size >> 20;
+-
+-	if (io_size) {
+-		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
+-			err = rockchip_pcie_prog_ob_atu(rockchip,
+-							reg_no + 1 + offset,
+-							AXI_WRAPPER_IO_WRITE,
+-							20 - 1,
+-							io_bus_addr +
+-							(reg_no << 20),
+-							0);
+-			if (err) {
+-				dev_err(dev, "program RC io outbound ATU failed\n");
+-				goto err_vpcie;
+-			}
+-		}
+-	}
+-
+ 	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
+ 	if (!bus) {
+ 		err = -ENOMEM;
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.9.1
+
+
