@@ -1,77 +1,25 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36288 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932094AbcK2ERH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:17:07 -0500
-Subject: [PATCH v4 7/7] PCI: Add comments about ROM BAR updating
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:16:48 -0600
-Message-ID: <20161129041648.21453.94596.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33079 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935938AbcKWNNp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 08:13:45 -0500
+Received: by mail-io0-f178.google.com with SMTP id j65so22818079iof.0
+        for <linux-pci@vger.kernel.org>; Wed, 23 Nov 2016 05:12:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Muni Sekhar <munisekharrms@gmail.com>
+Date: Wed, 23 Nov 2016 18:42:25 +0530
+Message-ID: <CAHhAz+jGkc5DQ719zC_A8g1vF7L41Dowh9yTiLkYoHcEaAw+RA@mail.gmail.com>
+Subject: PCI driver reset function?
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_update_resource() updates a hardware BAR so its address matches the
-kernel's struct resource UNLESS it's a disabled ROM BAR.  We only update
-those when we enable the ROM.
+HI All,
 
-It's not obvious from the code why ROM BARs should be handled specially.
-Apparently there are Matrox devices with defective ROM BARs that read as
-zero when disabled.  That means that if pci_enable_rom() reads the disabled
-BAR, sets PCI_ROM_ADDRESS_ENABLE (without re-inserting the address), and
-writes it back, it would enable the ROM at address zero.
+Does the PCI driver have any associated reset function?
 
-Add comments and references to explain why we can't make the code look more
-rational.
 
-The code changes are from 755528c860b0 ("Ignore disabled ROM resources at
-setup") and 8085ce084c0f ("[PATCH] Fix PCI ROM mapping").
-
-Link: https://lkml.org/lkml/2005/8/30/138
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/rom.c       |    5 +++++
- drivers/pci/setup-res.c |    6 ++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 06663d3..b6edb18 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -35,6 +35,11 @@ int pci_enable_rom(struct pci_dev *pdev)
- 	if (res->flags & IORESOURCE_ROM_SHADOW)
- 		return 0;
- 
-+	/*
-+	 * Ideally pci_update_resource() would update the ROM BAR address,
-+	 * and we would only set the enable bit here.  But apparently some
-+	 * devices have buggy ROM BARs that read as zero when disabled.
-+	 */
- 	pcibios_resource_to_bus(pdev->bus, &region, res);
- 	pci_read_config_dword(pdev, pdev->rom_base_reg, &rom_addr);
- 	rom_addr &= ~PCI_ROM_ADDRESS_MASK;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 09bdff7..57d7041 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -67,6 +67,12 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	if (resno < PCI_ROM_RESOURCE) {
- 		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
- 	} else if (resno == PCI_ROM_RESOURCE) {
-+
-+		/*
-+		 * Apparently some Matrox devices have ROM BARs that read
-+		 * as zero when disabled, so don't update ROM BARs unless
-+		 * they're enabled.  See https://lkml.org/lkml/2005/8/30/138.
-+		 */
- 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
- 			return;
- 
-
+-- 
+Thanks,
+Sekhar
