@@ -1,93 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34200 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755902AbcKVVVg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 16:21:36 -0500
-Received: by mail-io0-f193.google.com with SMTP id r94so2545004ioe.1
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 13:20:53 -0800 (PST)
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:35029 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755734AbcKWCNj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 21:13:39 -0500
+Received: by mail-pg0-f51.google.com with SMTP id p66so13818236pga.2
+        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 18:13:39 -0800 (PST)
+Date: Tue, 22 Nov 2016 18:08:35 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH 3/3] PCI: rockchip: Add system PM support
+Message-ID: <20161123020835.GB119441@google.com>
+References: <1479863953-123874-1-git-send-email-shawn.lin@rock-chips.com>
+ <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
- <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com> <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
-From: Daniel Vetter <daniel@ffwll.ch>
-Date: Tue, 22 Nov 2016 22:03:09 +0100
-Message-ID: <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479863953-123874-3-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
-<serguei.sagalovitch@amd.com> wrote:
->
-> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
->>
->> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com>
->> wrote:
->>>
->>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
->>> <serguei.sagalovitch@amd.com> wrote:
->>>>
->>>> I personally like "device-DAX" idea but my concerns are:
->>>>
->>>> -  How well it will co-exists with the  DRM infrastructure /
->>>> implementations
->>>>     in part dealing with CPU pointers?
->>>
->>> Inside the kernel a device-DAX range is "just memory" in the sense
->>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
->>> not migratable. To be honest I do not know how well that co-exists
->>> with drm infrastructure.
->>>
->>>> -  How well we will be able to handle case when we need to
->>>> "move"/"evict"
->>>>     memory/data to the new location so CPU pointer should point to the
->>>> new
->>>> physical location/address
->>>>      (and may be not in PCI device memory at all)?
->>>
->>> So, device-DAX deliberately avoids support for in-kernel migration or
->>> overcommit. Those cases are left to the core mm or drm. The device-dax
->>> interface is for cases where all that is needed is a direct-mapping to
->>> a statically-allocated physical-address range be it persistent memory
->>> or some other special reserved memory range.
->>
->> For some of the fancy use-cases (e.g. to be comparable to what HMM can
->> pull off) I think we want all the magic in core mm, i.e. migration and
->> overcommit. At least that seems to be the very strong drive in all
->> general-purpose gpu abstractions and implementations, where memory is
->> allocated with malloc, and then mapped/moved into vram/gpu address
->> space through some magic,
->
-> It is possible that there is other way around: memory is requested to be
-> allocated and should be kept in vram for  performance reason but due
-> to possible overcommit case we need at least temporally to "move" such
-> allocation to system memory.
+On Wed, Nov 23, 2016 at 09:19:13AM +0800, Shawn Lin wrote:
+> This patch adds system PM support for Rockchip's RC.
+> For pre S3, the EP is configured into D3 state which guarantees
+> the link state should be in L1. So we could send PME_Turn_Off message
+> to the EP and wait for its ACK to make the link state into L2 or L3
+> without the aux-supply. This could help save more power which I think
+> should be very important for mobile devices.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 90 +++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 89 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 71d056d..720535b 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/gpio/consumer.h>
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+> +#include <linux/iopoll.h>
+>  #include <linux/irq.h>
+>  #include <linux/irqchip/chained_irq.h>
+>  #include <linux/irqdomain.h>
+> @@ -55,6 +56,10 @@
+>  #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
+>  #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+>  #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+> +#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
+> +#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
+> +#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
+> +#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
+>  #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+>  #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+>  #define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
+> @@ -173,6 +178,7 @@
+>  
+>  #define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
+>  #define MIN_AXI_ADDR_BITS_PASSED		8
+> +#define PCIE_RC_SEND_PME_OFF			0x11960
+>  #define ROCKCHIP_VENDOR_ID			0x1d87
+>  #define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
+>  #define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
+> @@ -181,6 +187,9 @@
+>  #define PCIE_ECAM_ADDR(bus, dev, func, reg) \
+>  	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+>  	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
+> +#define PCIE_LINK_IS_L2(x) \
+> +		((x & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
 
-With migration I meant migrating both ways of course. And with stuff
-like numactl we can also influence where exactly the malloc'ed memory
-is allocated originally, at least if we'd expose the vram range as a
-very special numa node that happens to be far away and not hold any
-cpu cores.
--Daniel
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+Wrap the 'x' in parentheses, for safety in case the caller passes
+something complicated.
+
+> +		 PCIE_CLIENT_DEBUG_LTSSM_L2)
+>  
+>  #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+>  #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+> @@ -1205,9 +1214,80 @@ static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
+>  				  AXI_WRAPPER_NOR_MSG,
+>  				  20 - 1, 0, 0);
+>  	rockchip->msg_region = ioremap(rockchip->mem_bus_addr +
+> -				       ((reg_no - 1) << 20), SZ_1M);
+> +				       ((reg_no + offset) << 20), SZ_1M);
+
+^^^ You're leaking this, now that you call rockchip_cfg_atu() every
+time you resume.
+
+>  	return err;
+>  }
+> +
+> +static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+> +{
+> +	u32 value;
+> +	int err;
+> +
+> +	/* send PME_TURN_OFF message */
+> +	writel(0x0, rockchip->msg_region + PCIE_RC_SEND_PME_OFF);
+> +
+> +	/* read LTSSM and wait for falling into L2 link state */
+> +	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_DEBUG_OUT_0,
+> +				 value, PCIE_LINK_IS_L2(value), 20,
+> +				 jiffies_to_usecs(5 * HZ));
+
+You really want to wait a whole 5 seconds for this? Last I saw, you were
+doing testing with about 500ms or less. As I read the spec, there's cap
+on per-device time to ACK the request, and I recall that was on the
+order of 10s of milliseconds. But technically that can add up if you
+have a large hierarchy of devices attached...
+
+> +	if (err) {
+> +		dev_err(rockchip->dev, "PCIe link enter L2 timeout!\n");
+> +		return err;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_suspend_noirq(struct device *dev)
+> +{
+> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+> +	int ret;
+> +
+> +	/* disable core and cli int since we don't need to ack PME_ACK */
+> +	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
+> +			    PCIE_CLIENT_INT_CLI, PCIE_CLIENT_INT_MASK);
+> +	rockchip_pcie_write(rockchip, (u32)PCIE_CORE_INT, PCIE_CORE_INT_MASK);
+> +
+> +	ret = rockchip_pcie_wait_l2(rockchip);
+> +	if (ret)
+> +		return ret;
+
+You leave core and client interrupts masked if you timeout here?
+
+Brian
+
+> +
+> +	phy_power_off(rockchip->phy);
+> +	phy_exit(rockchip->phy);
+> +
+> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
+> +	clk_disable_unprepare(rockchip->hclk_pcie);
+> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+> +	clk_disable_unprepare(rockchip->aclk_pcie);
+> +
+> +	return ret;
+> +}
+> +
+> +static int rockchip_pcie_resume_noirq(struct device *dev)
+> +{
+> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+> +	int err;
+> +
+> +	clk_prepare_enable(rockchip->clk_pcie_pm);
+> +	clk_prepare_enable(rockchip->hclk_pcie);
+> +	clk_prepare_enable(rockchip->aclk_perf_pcie);
+> +	clk_prepare_enable(rockchip->aclk_pcie);
+> +
+> +	err = rockchip_pcie_init_port(rockchip);
+> +	if (err)
+> +		return err;
+> +
+> +	err = rockchip_cfg_atu(rockchip);
+> +	if (err)
+> +		return err;
+> +
+> +	/* Need this to enter L1 again */
+> +	rockchip_pcie_update_txcredit_mui(rockchip);
+> +	rockchip_pcie_enable_interrupts(rockchip);
+> +
+> +	return 0;
+> +}
+> +
+>  static int rockchip_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct rockchip_pcie *rockchip;
+> @@ -1228,6 +1308,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	if (!rockchip)
+>  		return -ENOMEM;
+>  
+> +	platform_set_drvdata(pdev, rockchip);
+> +
+>  	rockchip->dev = dev;
+>  
+>  	err = rockchip_pcie_parse_dt(rockchip);
+> @@ -1352,6 +1434,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	return err;
+>  }
+>  
+> +static const struct dev_pm_ops rockchip_pcie_pm_ops = {
+> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
+> +				      rockchip_pcie_resume_noirq)
+> +};
+> +
+>  static const struct of_device_id rockchip_pcie_of_match[] = {
+>  	{ .compatible = "rockchip,rk3399-pcie", },
+>  	{}
+> @@ -1361,6 +1448,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	.driver = {
+>  		.name = "rockchip-pcie",
+>  		.of_match_table = rockchip_pcie_of_match,
+> +		.pm = &rockchip_pcie_pm_ops,
+>  	},
+>  	.probe = rockchip_pcie_probe,
+>  
+> -- 
+> 1.9.1
+> 
+> 
