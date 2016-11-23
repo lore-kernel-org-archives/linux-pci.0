@@ -1,145 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46948 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752109AbcKRObp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:31:45 -0500
-Date: Fri, 18 Nov 2016 08:31:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Noa Osherovich <noaos@mellanox.com>, linux-pci@vger.kernel.org,
-        majd@mellanox.com
-Subject: Re: [PATCH v3 5/5] PCI: Support INTx masking on ConnectX-4 with
- firmware x.14.1100+
-Message-ID: <20161118143141.GF25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161117233031.2003.43054.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161118033846.GA11760@gwshan>
+Received: from mail-by2nam01on0072.outbound.protection.outlook.com ([104.47.34.72]:2816
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935089AbcKWTnI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:43:08 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
+ <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
+ <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
+ <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
+ <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
+ <20161123074902.ph7a5cmlw3pclugx@phenom.ffwll.local>
+ <2a8a6582-f3de-5cda-0c6e-1c93774147e0@amd.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <6ed2c861-7493-902b-bfbd-9c937a3efba3@amd.com>
+Date: Wed, 23 Nov 2016 14:27:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161118033846.GA11760@gwshan>
+In-Reply-To: <2a8a6582-f3de-5cda-0c6e-1c93774147e0@amd.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 02:38:47PM +1100, Gavin Shan wrote:
-> On Thu, Nov 17, 2016 at 05:30:31PM -0600, Bjorn Helgaas wrote:
-> >From: Noa Osherovich <noaos@mellanox.com>
-> >
-> >Mellanox devices were marked as having INTx masking ability broken.  As a
-> >result, the VFIO driver fails to start when more than one device function
-> >is passed-through to a VM if both have the same INTx pin.
-> >
-> >Prior to Connect-IB, Mellanox devices exposed to the operating system one
-> >PCI function per all ports.  Starting from Connect-IB, the devices are
-> >function-per-port.  When passing the second function to a VM, VFIO will
-> >fail to start.
-> >
-> >Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of Mellanox
-> >devices marked as having broken INTx masking:
-> >
-> >- ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
-> >  masking is supported, we unmark the broken INTx masking.
-> >- Connect-IB does not support INTx currently so will not cause any
-> >  problem.
-> >
-> >[bhelgaas: call pci_disable_device() always, after iounmap()]
-> >Fixes: 11e42532ada3 ("PCI: Assume all Mellanox devices have broken INTx masking")
-> >Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
-> >Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> >---
-> > drivers/pci/quirks.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++---
-> > 1 file changed, 54 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >index f0515b7..496ca13 100644
-> >--- a/drivers/pci/quirks.c
-> >+++ b/drivers/pci/quirks.c
-> >@@ -3209,13 +3209,25 @@ static u16 mellanox_broken_intx_devs[] = {
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-> > 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
-> >-	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX,
-> > };
-> >
-> >+#define CONNECTX_4_CURR_MAX_MINOR 99
-> >+#define CONNECTX_4_INTX_SUPPORT_MINOR 14
-> >+
-> >+/*
-> >+ * Check ConnectX-4/LX FW version to see if it supports legacy interrupts.
-> >+ * If so, don't mark it as broken.
-> >+ * FW minor > 99 means older FW version format and no INTx masking support.
-> >+ * FW minor < 14 means new FW version format and no INTx masking support.
-> >+ */
-> > static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
-> > {
-> >+	__be32 __iomem *fw_ver;
-> >+	u16 fw_major;
-> >+	u16 fw_minor;
-> >+	u16 fw_subminor;
-> >+	u32 fw_maj_min;
-> >+	u32 fw_sub_min;
-> > 	int i;
-> >
-> > 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
-> >@@ -3224,6 +3236,45 @@ static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
-> > 			return;
-> > 		}
-> > 	}
-> >+
-> >+	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
-> >+	 * support so shouldn't be checked further
-> >+	 */
-> >+	if (pdev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
-> >+		return;
-> >+
-> >+	if (pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
-> >+	    pdev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX)
-> >+		return;
-> >+
-> >+	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
-> >+	if (pci_enable_device_mem(pdev)) {
-> >+		dev_warn(&pdev->dev, "Can't enable device memory\n");
-> >+		return;
-> >+	}
-> >+
-> >+	fw_ver = ioremap(pci_resource_start(pdev, 0), 4);
-> >+	if (!fw_ver) {
-> >+		dev_warn(&pdev->dev, "Can't map ConnectX-4 initialization segment\n");
-> 
-> Bjorn, pci_disable_device() is still missed here. Could you please
-> amend it?
 
-Fixed and re-pushed, thanks!
+On 2016-11-23 03:51 AM, Christian König wrote:
+> Am 23.11.2016 um 08:49 schrieb Daniel Vetter:
+>> On Tue, Nov 22, 2016 at 01:21:03PM -0800, Dan Williams wrote:
+>>> On Tue, Nov 22, 2016 at 1:03 PM, Daniel Vetter <daniel@ffwll.ch> wrote:
+>>>> On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
+>>>> <serguei.sagalovitch@amd.com> wrote:
+>>>>> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
+>>>>>> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams 
+>>>>>> <dan.j.williams@intel.com>
+>>>>>> wrote:
+>>>>>>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
+>>>>>>> <serguei.sagalovitch@amd.com> wrote:
+>>>>>>>> I personally like "device-DAX" idea but my concerns are:
+>>>>>>>>
+>>>>>>>> -  How well it will co-exists with the  DRM infrastructure /
+>>>>>>>> implementations
+>>>>>>>>      in part dealing with CPU pointers?
+>>>>>>> Inside the kernel a device-DAX range is "just memory" in the sense
+>>>>>>> that you can perform pfn_to_page() on it and issue I/O, but the 
+>>>>>>> vma is
+>>>>>>> not migratable. To be honest I do not know how well that co-exists
+>>>>>>> with drm infrastructure.
+>>>>>>>
+>>>>>>>> -  How well we will be able to handle case when we need to
+>>>>>>>> "move"/"evict"
+>>>>>>>>      memory/data to the new location so CPU pointer should 
+>>>>>>>> point to the
+>>>>>>>> new
+>>>>>>>> physical location/address
+>>>>>>>>       (and may be not in PCI device memory at all)?
+>>>>>>> So, device-DAX deliberately avoids support for in-kernel 
+>>>>>>> migration or
+>>>>>>> overcommit. Those cases are left to the core mm or drm. The 
+>>>>>>> device-dax
+>>>>>>> interface is for cases where all that is needed is a 
+>>>>>>> direct-mapping to
+>>>>>>> a statically-allocated physical-address range be it persistent 
+>>>>>>> memory
+>>>>>>> or some other special reserved memory range.
+>>>>>> For some of the fancy use-cases (e.g. to be comparable to what 
+>>>>>> HMM can
+>>>>>> pull off) I think we want all the magic in core mm, i.e. 
+>>>>>> migration and
+>>>>>> overcommit. At least that seems to be the very strong drive in all
+>>>>>> general-purpose gpu abstractions and implementations, where 
+>>>>>> memory is
+>>>>>> allocated with malloc, and then mapped/moved into vram/gpu address
+>>>>>> space through some magic,
+>>>>> It is possible that there is other way around: memory is requested 
+>>>>> to be
+>>>>> allocated and should be kept in vram for  performance reason but due
+>>>>> to possible overcommit case we need at least temporally to "move" 
+>>>>> such
+>>>>> allocation to system memory.
+>>>> With migration I meant migrating both ways of course. And with stuff
+>>>> like numactl we can also influence where exactly the malloc'ed memory
+>>>> is allocated originally, at least if we'd expose the vram range as a
+>>>> very special numa node that happens to be far away and not hold any
+>>>> cpu cores.
+>>> I don't think we should be using numa distance to reverse engineer a
+>>> certain allocation behavior.  The latency data should be truthful, but
+>>> you're right we'll need a mechanism to keep general purpose
+>>> allocations out of that range by default. Btw, strict isolation is
+>>> another design point of device-dax, but I think in this case we're
+>>> describing something between the two extremes of full isolation and
+>>> full compatibility with existing numactl apis.
+>> Yes, agreed. My idea with exposing vram sections using numa nodes wasn't
+>> to reuse all the existing allocation policies directly, those won't 
+>> work.
+>> So at boot-up your default numa policy would exclude any vram nodes.
+>>
+>> But I think (as an -mm layman) that numa gives us a lot of the tools and
+>> policy interface that we need to implement what we want for gpus.
+>
+> Agree completely. From a ten mile high view our GPUs are just command 
+> processors with local memory as well .
+>
+> Basically this is also the whole idea of what AMD is pushing with HSA 
+> for a while.
+>
+> It's just that a lot of problems start to pop up when you look at all 
+> the nasty details. For example only part of the GPU memory is usually 
+> accessible by the CPU.
+>
+> So even when numa nodes expose a good foundation for this I think 
+> there is still a lot of code to write.
+>
+> BTW: I should probably start to read into the numa code of the kernel. 
+> Any good pointers for that?
+I would assume that "page" allocation logic itself should be inside of 
+graphics driver due to possible different requirements especially from 
+graphics: alignment, etc.
 
-> >+		return;
-> >+	}
-> >+
-> >+	/* Reading from resource space should be 32b aligned */
-> >+	fw_maj_min = ioread32be(fw_ver);
-> >+	fw_sub_min = ioread32be(fw_ver + 1);
-> >+	fw_major = fw_maj_min & 0xffff;
-> >+	fw_minor = fw_maj_min >> 16;
-> >+	fw_subminor = fw_sub_min & 0xffff;
-> >+	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
-> >+	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR) {
-> >+		dev_warn(&pdev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
-> >+			 fw_major, fw_minor, fw_subminor, pdev->device ==
-> >+			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
-> >+		pdev->broken_intx_masking = 1;
-> >+	}
-> >+
-> >+	iounmap(fw_ver);
-> >+	pci_disable_device(pdev);
-> > }
-> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-> > 			mellanox_check_broken_intx_masking);
-> >
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Regards,
+> Christian.
+>
+>> Wrt isolation: There's a sliding scale of what different users expect,
+>> from full auto everything, including migrating pages around if needed to
+>> full isolation all seems to be on the table. As long as we keep vram 
+>> nodes
+>> out of any default allocation numasets, full isolation should be 
+>> possible.
+>> -Daniel
+>
+>
+
+Sincerely yours,
+Serguei Sagalovitch
+
