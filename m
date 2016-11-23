@@ -1,73 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36282 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754568AbcKUWmP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Nov 2016 17:42:15 -0500
-Date: Mon, 21 Nov 2016 16:42:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/9] PCI/PME: Drop unused support for PMEs from Root
- Complex Event Collectors
-Message-ID: <20161121224210.GD4832@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161121214519.21036.33519.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <4459736.K6pDNqTrTR@vostro.rjw.lan>
+Received: from mail-sn1nam01on0045.outbound.protection.outlook.com ([104.47.32.45]:16256
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932754AbcKWT7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:59:00 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+ <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
+ <20161123191215.GB12146@obsidianresearch.com>
+CC: Bart Van Assche <bart.vanassche@sandisk.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <1dffffdf-55e2-0842-60f0-ffbfbd70aa2d@amd.com>
+Date: Wed, 23 Nov 2016 14:24:33 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4459736.K6pDNqTrTR@vostro.rjw.lan>
+In-Reply-To: <20161123191215.GB12146@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 21, 2016 at 11:28:56PM +0100, Rafael J. Wysocki wrote:
-> On Monday, November 21, 2016 03:45:19 PM Bjorn Helgaas wrote:
-> > Since we register pcie_pme_driver only for PCI_EXP_TYPE_ROOT_PORT, the PME
-> > driver never claims Root Complex Event Collectors.
-> > 
-> > Remove unused code related to Root Complex Event Collectors.
-> > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/pcie/pme.c |   17 +----------------
-> >  1 file changed, 1 insertion(+), 16 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> > index 884bad5..9e8aa9d 100644
-> > --- a/drivers/pci/pcie/pme.c
-> > +++ b/drivers/pci/pcie/pme.c
-> > @@ -319,23 +319,8 @@ static int pcie_pme_set_native(struct pci_dev *dev, void *ign)
-> >  static void pcie_pme_mark_devices(struct pci_dev *port)
-> >  {
-> >  	pcie_pme_set_native(port, NULL);
-> > -	if (port->subordinate) {
-> > +	if (port->subordinate)
-> >  		pci_walk_bus(port->subordinate, pcie_pme_set_native, NULL);
-> > -	} else {
-> > -		struct pci_bus *bus = port->bus;
-> > -		struct pci_dev *dev;
-> > -
-> > -		/* Check if this is a root port event collector. */
-> > -		if (pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC || !bus)
-> > -			return;
-> > -
-> > -		down_read(&pci_bus_sem);
-> > -		list_for_each_entry(dev, &bus->devices, bus_list)
-> > -			if (pci_is_pcie(dev)
-> > -			    && pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
-> > -				pcie_pme_set_native(dev, NULL);
-> > -		up_read(&pci_bus_sem);
-> > -	}
-> >  }
-> >  
-> >  /**
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I'm shocked :)  You mean we really don't care about PME from RC event
-collectors?  Without the RCEC support, we won't see any PMEs from RC
-integrated devices.  I mean, I don't think we see those PMEs today, but I
-thought maybe we would *want* to.  No?
 
-Bjorn
+On 2016-11-23 02:12 PM, Jason Gunthorpe wrote:
+> On Wed, Nov 23, 2016 at 10:40:47AM -0800, Dan Williams wrote:
+>
+>> I don't think that was designed for the case where the backing memory
+>> is a special/static physical address range rather than anonymous
+>> "System RAM", right?
+> The hardware doesn't care where the memory is. ODP is just a generic
+> mechanism to provide demand-fault behavior for a mirrored page table.
+>
+> ODP has the same issue as everything else, it needs to translate a
+> page table entry into a DMA address, and we have no API to do that
+> when the page table points to peer-peer memory.
+>
+> Jason
+I would like to note that for graphics applications (especially for VR 
+support) we
+should  avoid ODP  case at any cost during graphics commands execution  due
+to requirement to have smooth and predictable playback. We want to load 
+/ "pin"
+all required resources before graphics processor begin to touch them. 
+This is not
+so critical for compute applications. Because only graphics / compute stack
+knows which resource will be in used as well as all statistics 
+accordingly only graphics
+stack is capable to make the correct decision when and _where_ evict as 
+well
+as when and _where_ to put memory back.
+
