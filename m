@@ -1,110 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55074 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933475AbcKIOTk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:19:40 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 14/16] drivers: acpi: iort: replace rid map type with type mask
-Date: Wed,  9 Nov 2016 14:19:46 +0000
-Message-Id: <20161109141948.19244-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <gg@slimlogic.co.uk>
+Return-Path: <gg@slimlogic.co.uk>
+Date: Wed, 23 Nov 2016 09:44:28 +0000
+From: Graeme Gregory <gg@slimlogic.co.uk>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"rafael@kernel.org" <rafael@kernel.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	"Chenxin (Charles)" <charles.chenxin@huawei.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Linuxarm <linuxarm@huawei.com>
+Subject: Re: [PATCH V6 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
+ SoCs Host Controllers
+Message-ID: <20161123094428.GA878@linaro-xps13.localdomain>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+ <1479816529-97410-3-git-send-email-liudongdong3@huawei.com>
+ <026faf89-93de-4238-f69a-ea02c57e5ee0@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F92CA85@lhreml507-mbx>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F92CA85@lhreml507-mbx>
 List-ID: <linux-pci.vger.kernel.org>
 
-IORT tables provide data that allow the kernel to carry out
-device ID mappings between endpoints and system components
-(eg interrupt controllers, IOMMUs). When the mapping for a
-given device ID is carried out, the translation mechanism
-is done on a per-subsystem basis rather than a component
-subtype (ie the IOMMU kernel layer will look for mappings
-from a device to all IORT node types corresponding to IOMMU
-components), therefore the corresponding mapping API should
-work on a range (ie mask) of IORT node types corresponding
-to a common set of components (eg IOMMUs) rather than a
-specific node type.
+On Tue, Nov 22, 2016 at 03:05:29PM +0000, Gabriele Paoloni wrote:
+> Hi Tomasz
+> 
+> > -----Original Message-----
+> > From: Tomasz Nowicki [mailto:tn@semihalf.com]
+> > Sent: 22 November 2016 13:58
+> > To: liudongdong (C); helgaas@kernel.org; arnd@arndb.de;
+> > rafael@kernel.org; Lorenzo.Pieralisi@arm.com; Wangzhou (B);
+> > pratyush.anand@gmail.com
+> > Cc: linux-pci@vger.kernel.org; linux-acpi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; jcm@redhat.com; Gabriele Paoloni; Chenxin
+> > (Charles); hanjun.guo@linaro.org; Linuxarm
+> > Subject: Re: [PATCH V6 2/2] PCI/ACPI: hisi: Add ACPI support for
+> > HiSilicon SoCs Host Controllers
+> > 
+> > On 22.11.2016 13:08, Dongdong Liu wrote:
+> > > PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
+> > > It is non ECAM only for the RC bus config space;for any other bus
+> > > underneath the root bus we support ECAM access.
+> > > Add specific quirks for PCI config space accessors.This involves:
+> > > 1. New initialization call hisi_pcie_init() to obtain rc base
+> > > addresses from PNP0C02 at the root of the ACPI namespace (under
+> > \_SB).
+> > > 2. New entry in common quirk array.
+> > >
+> > > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > > ---
+> > >  MAINTAINERS                       |   1 +
+> > >  drivers/acpi/pci_mcfg.c           |  13 +++++
+> > >  drivers/pci/host/Kconfig          |   7 +++
+> > >  drivers/pci/host/Makefile         |   1 +
+> > >  drivers/pci/host/pcie-hisi-acpi.c | 119
+> > ++++++++++++++++++++++++++++++++++++++
+> > >  include/linux/pci-ecam.h          |   5 ++
+> > >  6 files changed, 146 insertions(+)
+> > >  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+> > >
+> > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > index 1cd38a7..b224caa 100644
+> > > --- a/MAINTAINERS
+> > > +++ b/MAINTAINERS
+> > > @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
+> > >  S:	Maintained
+> > >  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > >  F:	drivers/pci/host/pcie-hisi.c
+> > > +F:	drivers/pci/host/pcie-hisi-acpi.c
+> > >
+> > >  PCIE DRIVER FOR ROCKCHIP
+> > >  M:	Shawn Lin <shawn.lin@rock-chips.com>
+> > > diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> > > index ac21db3..3297c5a 100644
+> > > --- a/drivers/acpi/pci_mcfg.c
+> > > +++ b/drivers/acpi/pci_mcfg.c
+> > > @@ -57,6 +57,19 @@ struct mcfg_fixup {
+> > >  	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
+> > >  	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
+> > >  	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
+> > > +#ifdef CONFIG_PCI_ECAM_QUIRKS
+> > > +	#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
+> > > +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
+> > > +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
+> > > +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
+> > > +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
+> > > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
+> > > +#endif
+> > >  };
+> > >
+> > >  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+> > > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > > index ae98644..1fbade5 100644
+> > > --- a/drivers/pci/host/Kconfig
+> > > +++ b/drivers/pci/host/Kconfig
+> > > @@ -301,4 +301,11 @@ config VMD
+> > >  	  To compile this driver as a module, choose M here: the
+> > >  	  module will be called vmd.
+> > >
+> > > +config PCI_ECAM_QUIRKS
+> > > +	bool "PCI ECAM quirks for ARM64 platform"
+> > > +	depends on PCI_ECAM && ARM64 && ACPI
+> > > +	help
+> > > +	  Say y here to enable your platform-specific config access that
+> > > +	  is not ECAM compliant.
+> > > +
+> > 
+> > ARM64 selects PCI_ECAM for ACPI anyway so we can skip it here.
+> 
+> Yes sure
+> 
+> > 
+> > How about selecting PCI_ECAM_QUIRKS from ARM64 Kconfig:
+> 
+> I don't think we should assume that ARM64 platforms should
+> support quirks by default...
+> i.e. from my perspective the quirk module should go in only
+> if strictly required by the platform you're working on.
+> 
+> Thoughts?
+> 
+> Thanks
+> 
+No, same kernel multiple machines is the model, code should go in
+unconditional.
 
-Upgrade the IORT iort_node_map_rid() API to work with a
-type mask instead of a single node type so that it can
-be used for mappings that span multiple components types
-(ie IOMMUs).
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 4708806..62057c6 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -26,6 +26,9 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#define IORT_TYPE_MASK(type)	(1 << (type))
-+#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+
- struct iort_its_msi_chip {
- 	struct list_head	list;
- 	struct fwnode_handle	*fw_node;
-@@ -317,7 +320,7 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
--						u8 type)
-+						u8 type_mask)
- {
- 	u32 rid = rid_in;
- 
-@@ -326,7 +329,7 @@ static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 		struct acpi_iort_id_mapping *map;
- 		int i;
- 
--		if (node->type == type) {
-+		if (IORT_TYPE_MASK(node->type) & type_mask) {
- 			if (rid_out)
- 				*rid_out = rid;
- 			return node;
-@@ -399,7 +402,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- 	if (!node)
- 		return req_id;
- 
--	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
- 	return dev_id;
- }
- 
-@@ -421,7 +424,7 @@ static int iort_dev_find_its_id(struct device *dev, u32 req_id,
- 	if (!node)
- 		return -ENXIO;
- 
--	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
- 	if (!node)
- 		return -ENXIO;
- 
--- 
-2.10.0
-
+Graeme
