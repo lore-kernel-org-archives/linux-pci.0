@@ -1,175 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37128 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933483AbcKWXtP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 18:49:15 -0500
+Date: Wed, 23 Nov 2016 17:49:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bhelgaas@google.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        clsoto@us.ibm.com
+Subject: Re: [PATCH v3 0/2] Disable VF's memory space on updating IOV BARs
+Message-ID: <20161123234910.GN16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-CC: akpm@linux-foundation.org, "H. Peter Anvin" <hpa@zytor.com>,
-        "Linus Torvalds" <torvalds@linux-foundation.org>,
-        "Bjorn Helgaas" <bhelgaas@google.com>,
-        "Andy Lutomirski" <luto@kernel.org>,
-        "Lukas Wunner" <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        "Ingo Molnar" <mingo@kernel.org>,
-        "Brian Gerst" <brgerst@gmail.com>,
-        "Peter Zijlstra" <peterz@infradead.org>,
-        "Denys Vlasenko" <dvlasenk@redhat.com>,
-        "Thomas Gleixner" <tglx@linutronix.de>,
-        "Yinghai Lu" <yinghai@kernel.org>,
-        "Josh Poimboeuf" <jpoimboe@redhat.com>,
-        "Borislav Petkov" <bp@alien8.de>
-Date: Mon, 14 Nov 2016 00:14:20 +0000
-Message-ID: <lsq.1479082460.8668542@decadent.org.uk>
-Subject: [PATCH 3.16 056/346] x86/quirks: Reintroduce scanning of
- secondary buses
-In-Reply-To: <lsq.1479082458.755945576@decadent.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477444536-29612-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.16.39-rc1 review patch.  If anyone has any objections, please let me know.
+On Wed, Oct 26, 2016 at 12:15:34PM +1100, Gavin Shan wrote:
+> This moves pcibios_sriov_enable() to the point before VF and VF BARs
+> are enabled on PowerNV platform. Also, pci_update_resource() is used
+> to update IOV BARs on PowerNV platform, the PF might have been functional
+> when the function is called. We shouldn't disable PF's memory decoding
+> at that point. Instead, the VF's memory space should be disabled.
+> 
+> Changelog
+> =========
+> v3:
+>   * Disable VF's memory space when IOV BARs are updated in
+>     pcibios_sriov_enable().
+> v2:
+>   * Added one patch calling pcibios_sriov_enable() before the VF
+>     and VF BARs are enabled.
+> 
+> Gavin Shan (2):
+>   PCI: Call pcibios_sriov_enable() before IOV BARs are enabled
+>   PCI: Disable VF's memory space on updating IOV BAR in
+>     pci_update_resource()
+> 
+>  drivers/pci/iov.c       | 14 +++++++-------
+>  drivers/pci/setup-res.c | 28 ++++++++++++++++++++--------
+>  2 files changed, 27 insertions(+), 15 deletions(-)
 
-------------------
-
-From: Lukas Wunner <lukas@wunner.de>
-
-commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
-
-We used to scan secondary buses until the following commit that
-was applied in 2009:
-
-  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
-
-which commit constrained early quirks to the root bus only. Its
-motivation was to prevent application of the nvidia_bugs quirk
-on secondary buses.
-
-We're about to add a quirk to reset the Broadcom 4331 wireless card on
-2011/2012 Macs, which is located on a secondary bus behind a PCIe root
-port. To facilitate that, reintroduce scanning of secondary buses.
-
-The commit message of 8659c406ade3 notes that scanning only the root bus
-"saves quite some unnecessary scanning work". The algorithm used prior
-to 8659c406ade3 was particularly time consuming because it scanned
-buses 0 to 31 brute force. To avoid lengthening boot time, employ a
-recursive strategy which only scans buses that are actually reachable
-from the root bus.
-
-Yinghai Lu pointed out that the secondary bus number read from a
-bridge's config space may be invalid, in particular a value of 0 would
-cause an infinite loop. The PCI core goes beyond that and recurses to a
-child bus only if its bus number is greater than the parent bus number
-(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
-that secondary buses may not be 0. Do the same on early scanning.
-
-If this algorithm is found to significantly impact boot time or cause
-infinite loops on broken hardware, it would be possible to limit its
-recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
-at depth 0, so the bus need not be scanned deeper than that for now. An
-alternative approach would be to revert to scanning only the root bus,
-and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
-and 8086:1e16. Apple always positioned the card behind either of these
-three ports. The quirk would then check presence of the card in slot 0
-below the root port and do its deed.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Brian Gerst <brgerst@gmail.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- arch/x86/kernel/early-quirks.c | 34 +++++++++++++++++++++-------------
- 1 file changed, 21 insertions(+), 13 deletions(-)
-
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -585,12 +585,6 @@ struct chipset {
- 	void (*f)(int num, int slot, int func);
- };
- 
--/*
-- * Only works for devices on the root bus. If you add any devices
-- * not on bus 0 readd another loop level in early_quirks(). But
-- * be careful because at least the Nvidia quirk here relies on
-- * only matching on bus 0.
-- */
- static struct chipset early_qrk[] __initdata = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
-@@ -619,6 +613,8 @@ static struct chipset early_qrk[] __init
- 	{}
- };
- 
-+static void __init early_pci_scan_bus(int bus);
-+
- /**
-  * check_dev_quirk - apply early quirks to a given PCI device
-  * @num: bus number
-@@ -627,7 +623,7 @@ static struct chipset early_qrk[] __init
-  *
-  * Check the vendor & device ID against the early quirks table.
-  *
-- * If the device is single function, let early_quirks() know so we don't
-+ * If the device is single function, let early_pci_scan_bus() know so we don't
-  * poke at this device again.
-  */
- static int __init check_dev_quirk(int num, int slot, int func)
-@@ -636,6 +632,7 @@ static int __init check_dev_quirk(int nu
- 	u16 vendor;
- 	u16 device;
- 	u8 type;
-+	u8 sec;
- 	int i;
- 
- 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
-@@ -663,25 +660,36 @@ static int __init check_dev_quirk(int nu
- 
- 	type = read_pci_config_byte(num, slot, func,
- 				    PCI_HEADER_TYPE);
-+
-+	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
-+		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
-+		if (sec > num)
-+			early_pci_scan_bus(sec);
-+	}
-+
- 	if (!(type & 0x80))
- 		return -1;
- 
- 	return 0;
- }
- 
--void __init early_quirks(void)
-+static void __init early_pci_scan_bus(int bus)
- {
- 	int slot, func;
- 
--	if (!early_pci_allowed())
--		return;
--
- 	/* Poor man's PCI discovery */
--	/* Only scan the root bus */
- 	for (slot = 0; slot < 32; slot++)
- 		for (func = 0; func < 8; func++) {
- 			/* Only probe function 0 on single fn devices */
--			if (check_dev_quirk(0, slot, func))
-+			if (check_dev_quirk(bus, slot, func))
- 				break;
- 		}
- }
-+
-+void __init early_quirks(void)
-+{
-+	if (!early_pci_allowed())
-+		return;
-+
-+	early_pci_scan_bus(0);
-+}
+I applied these to pci/virtualization for v4.10.  Thanks for your
+patience, Gavin.
