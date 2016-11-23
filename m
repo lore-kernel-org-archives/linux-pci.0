@@ -1,117 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54708 "EHLO foss.arm.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:42196 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752427AbcKIOTA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 09:19:00 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v7 01/16] drivers: acpi: add FWNODE_ACPI_STATIC fwnode type
-Date: Wed,  9 Nov 2016 14:19:33 +0000
-Message-Id: <20161109141948.19244-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
-References: <20161109141948.19244-1-lorenzo.pieralisi@arm.com>
+        id S1753022AbcKWTci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:32:38 -0500
+Date: Wed, 23 Nov 2016 12:32:28 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161123193228.GC12146@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems booting with a device tree, every struct device is associated
-with a struct device_node, that provides its DT firmware representation.
-The device node can be used in generic kernel contexts (eg IRQ
-translation, IOMMU streamid mapping), to retrieve the properties
-associated with the device and carry out kernel operations accordingly.
-Owing to the 1:1 relationship between the device and its device_node,
-the device_node can also be used as a look-up token for the device (eg
-looking up a device through its device_node), to retrieve the device in
-kernel paths where the device_node is available.
+On Wed, Nov 23, 2016 at 02:14:40PM -0500, Serguei Sagalovitch wrote:
+> 
+> On 2016-11-23 02:05 PM, Jason Gunthorpe wrote:
 
-On systems booting with ACPI, the same abstraction provided by
-the device_node is required to provide look-up functionality.
+> >As Bart says, it would be best to be combined with something like
+> >Mellanox's ODP MRs, which allows a page to be evicted and then trigger
+> >a CPU interrupt if a DMA is attempted so it can be brought back.
 
-The struct acpi_device, that represents firmware objects in the
-ACPI namespace already includes a struct fwnode_handle of
-type FWNODE_ACPI as their member; the same abstraction is missing
-though for devices that are instantiated out of static ACPI tables
-entries (eg ARM SMMU devices).
+> Please note that in the general case (including  MR one) we could have
+> "page fault" from the different PCIe device. So all  PCIe device must
+> be synchronized.
 
-Add a new fwnode_handle type to associate devices created out
-of static ACPI table entries to the respective firmware components
-and create a simple ACPI core layer interface to dynamically allocate
-and free the corresponding firmware nodes so that kernel subsystems
-can use it to instantiate the nodes and associate them with the
-respective devices.
+Standard RDMA MRs require pinned pages, the DMA address cannot change
+while the MR exists (there is no hardware support for this at all), so
+page faulting from any other device is out of the question while they
+exist. This is the same requirement as typical simple driver DMA which
+requires pages pinned until the simple device completes DMA.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- include/linux/acpi.h   | 21 +++++++++++++++++++++
- include/linux/fwnode.h |  3 ++-
- 2 files changed, 23 insertions(+), 1 deletion(-)
+ODP RDMA MRs do not require that, they just page fault like the CPU or
+really anything and the kernel has to make sense of concurrant page
+faults from multiple sources.
 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 689a8b9..6efb13c 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -56,6 +56,27 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
- 	acpi_fwnode_handle(adev) : NULL)
- #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
- 
-+static inline struct fwnode_handle *acpi_alloc_fwnode_static(void)
-+{
-+	struct fwnode_handle *fwnode;
-+
-+	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
-+	if (!fwnode)
-+		return NULL;
-+
-+	fwnode->type = FWNODE_ACPI_STATIC;
-+
-+	return fwnode;
-+}
-+
-+static inline void acpi_free_fwnode_static(struct fwnode_handle *fwnode)
-+{
-+	if (WARN_ON(!fwnode || fwnode->type != FWNODE_ACPI_STATIC))
-+		return;
-+
-+	kfree(fwnode);
-+}
-+
- /**
-  * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
-  * the PCI-defined class-code information
-diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
-index 8516717..8bd28ce 100644
---- a/include/linux/fwnode.h
-+++ b/include/linux/fwnode.h
-@@ -17,8 +17,9 @@ enum fwnode_type {
- 	FWNODE_OF,
- 	FWNODE_ACPI,
- 	FWNODE_ACPI_DATA,
-+	FWNODE_ACPI_STATIC,
- 	FWNODE_PDATA,
--	FWNODE_IRQCHIP,
-+	FWNODE_IRQCHIP
- };
- 
- struct fwnode_handle {
--- 
-2.10.0
+The upshot is that GPU scenarios that rely on highly dynamic
+virtual->physical translation cannot sanely be combined with standard
+long-life RDMA MRs.
 
+Certainly, any solution for GPUs must follow the typical page pinning
+semantics, changing the DMA address of a page must be blocked while
+any DMA is in progress.
+
+> >Does HMM solve the peer-peer problem? Does it do it generically or
+> >only for drivers that are mirroring translation tables?
+
+> In current form HMM doesn't solve peer-peer problem. Currently it allow
+> "mirroring" of  "malloc" memory on GPU which is not always what needed.
+> Additionally  there is need to have opportunity to share VRAM allocations
+> between  different processes.
+
+Humm, so it can be removed from Alexander's list then :\
+
+As Dan suggested, maybe we need to do both. Some kind of fix for
+get_user_pages() for smaller mappings (eg ZONE_DEVICE) and a mandatory
+API conversion to get_user_dma_sg() for other cases?
+
+Jason
