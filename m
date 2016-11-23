@@ -1,46 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51205 "EHLO gate.crashing.org"
+Received: from quartz.orcorp.ca ([184.70.90.242]:53308 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752107AbcKJHKC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 02:10:02 -0500
-Message-ID: <1478761707.7430.119.camel@kernel.crashing.org>
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for
- special ISA
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        bhelgaas@google.com, olof@lixom.net, arnd@arndb.de,
-        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
-Date: Thu, 10 Nov 2016 18:08:27 +1100
-In-Reply-To: <20161109111959.GB17020@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
-         <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com>
-         <20161108114953.GB15297@leverpostej>
-         <1478646779.7430.66.camel@kernel.crashing.org>
-         <20161109111959.GB17020@leverpostej>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S933122AbcKWTMX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:12:23 -0500
+Date: Wed, 23 Nov 2016 12:12:15 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161123191215.GB12146@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+ <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-11-09 at 11:20 +0000, Mark Rutland wrote:
-> The big change would be to handle !MMIO translations, for which we'd
-> need a runtime registry of ISA bus instance to find the relevant
-> accessor ops and instance-specific data.
+On Wed, Nov 23, 2016 at 10:40:47AM -0800, Dan Williams wrote:
 
-Yes. We do something a bit like that on ppc, we find the PCI bus
-for which the IO ports match and I have a hook to register the
-special indirect ISA.
+> I don't think that was designed for the case where the backing memory
+> is a special/static physical address range rather than anonymous
+> "System RAM", right?
 
-It's a bit messy, we could do something nicer generically.
+The hardware doesn't care where the memory is. ODP is just a generic
+mechanism to provide demand-fault behavior for a mirrored page table.
 
-Cheers,
-Ben.
+ODP has the same issue as everything else, it needs to translate a
+page table entry into a DMA address, and we have no API to do that
+when the page table points to peer-peer memory.
 
+Jason
