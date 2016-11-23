@@ -1,240 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50020 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933094AbcKGSrq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 13:47:46 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christogh Hellwig <hch@lst.de>
-Subject: [PATCH 4/7] pci/msi: Propagate irq affinity description through the MSI code
-Date: Mon,  7 Nov 2016 10:47:39 -0800
-Message-Id: <1478544462-9549-5-git-send-email-hch@lst.de>
-In-Reply-To: <1478544462-9549-1-git-send-email-hch@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:34353 "EHLO
+        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933530AbcKWSkt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 13:40:49 -0500
+Received: by mail-oi0-f44.google.com with SMTP id y198so25604900oia.1
+        for <linux-pci@vger.kernel.org>; Wed, 23 Nov 2016 10:40:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com> <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 23 Nov 2016 10:40:47 -0800
+Message-ID: <CAPcyv4jsgrsQaeewFedUzcD1XLSQ8vQ5Zyr8EoB_5ORUqmL4nQ@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christogh Hellwig <hch@lst.de>
+On Wed, Nov 23, 2016 at 9:27 AM, Bart Van Assche
+<bart.vanassche@sandisk.com> wrote:
+> On 11/23/2016 09:13 AM, Logan Gunthorpe wrote:
+>>
+>> IMO any memory that has been registered for a P2P transaction should be
+>> locked from being evicted. So if there's a get_user_pages call it needs
+>> to be pinned until the put_page. The main issue being with the RDMA
+>> case: handling an eviction when a chunk of memory has been registered as
+>> an MR would be very tricky. The MR may be relied upon by another host
+>> and the kernel would have to inform user-space the MR was invalid then
+>> user-space would have to tell the remote application.
+>
+>
+> Hello Logan,
+>
+> Are you aware that the Linux kernel already supports ODP (On Demand Paging)?
+> See also the output of git grep -nHi on.demand.paging. See also
+> https://www.openfabrics.org/images/eventpresos/workshops2014/DevWorkshop/presos/Tuesday/pdf/04_ODP_update.pdf.
+>
 
-No API change yet, just pass it down all the way from
-pci_alloc_irq_vectors to the core MSI code.
+I don't think that was designed for the case where the backing memory
+is a special/static physical address range rather than anonymous
+"System RAM", right?
 
-Signed-off-by: Christogh Hellwig <hch@lst.de>
----
- drivers/pci/msi.c | 62 +++++++++++++++++++++++++++++--------------------------
- 1 file changed, 33 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 1761b8a..512f388 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -551,14 +551,14 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- }
- 
- static struct msi_desc *
--msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
-+msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
- {
- 	struct cpumask *masks = NULL;
- 	struct msi_desc *entry;
- 	u16 control;
- 
--	if (affinity) {
--		masks = irq_create_affinity_masks(nvec, NULL);
-+	if (affd) {
-+		masks = irq_create_affinity_masks(nvec, affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -618,7 +618,8 @@ static int msi_verify_entries(struct pci_dev *dev)
-  * an error, and a positive return value indicates the number of interrupts
-  * which could have been allocated.
-  */
--static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
-+static int msi_capability_init(struct pci_dev *dev, int nvec,
-+			       const struct irq_affinity *affd)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -626,7 +627,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec, bool affinity)
- 
- 	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	entry = msi_setup_entry(dev, nvec, affinity);
-+	entry = msi_setup_entry(dev, nvec, affd);
- 	if (!entry)
- 		return -ENOMEM;
- 
-@@ -690,14 +691,14 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
- 
- static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			      struct msix_entry *entries, int nvec,
--			      bool affinity)
-+			      const struct irq_affinity *affd)
- {
- 	struct cpumask *curmsk, *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret, i;
- 
--	if (affinity) {
--		masks = irq_create_affinity_masks(nvec, NULL);
-+	if (affd) {
-+		masks = irq_create_affinity_masks(nvec, affd);
- 		if (!masks)
- 			pr_err("Unable to allocate affinity masks, ignoring\n");
- 	}
-@@ -753,14 +754,14 @@ static void msix_program_entries(struct pci_dev *dev,
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-  * @entries: pointer to an array of struct msix_entry entries
-  * @nvec: number of @entries
-- * @affinity: flag to indicate cpu irq affinity mask should be set
-+ * @affd: Optional pointer to enable automatic affinity assignement
-  *
-  * Setup the MSI-X capability structure of device function with a
-  * single MSI-X irq. A return of zero indicates the successful setup of
-  * requested MSI-X entries with allocated irqs or non-zero for otherwise.
-  **/
- static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
--				int nvec, bool affinity)
-+				int nvec, const struct irq_affinity *affd)
- {
- 	int ret;
- 	u16 control;
-@@ -775,7 +776,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
- 	if (!base)
- 		return -ENOMEM;
- 
--	ret = msix_setup_entries(dev, base, entries, nvec, affinity);
-+	ret = msix_setup_entries(dev, base, entries, nvec, affd);
- 	if (ret)
- 		return ret;
- 
-@@ -956,7 +957,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_msix_vec_count);
- 
- static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
--			     int nvec, bool affinity)
-+			     int nvec, const struct irq_affinity *affd)
- {
- 	int nr_entries;
- 	int i, j;
-@@ -988,7 +989,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
- 		return -EINVAL;
- 	}
--	return msix_capability_init(dev, entries, nvec, affinity);
-+	return msix_capability_init(dev, entries, nvec, affd);
- }
- 
- /**
-@@ -1008,7 +1009,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
-  **/
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- {
--	return __pci_enable_msix(dev, entries, nvec, false);
-+	return __pci_enable_msix(dev, entries, nvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msix);
- 
-@@ -1059,9 +1060,8 @@ int pci_msi_enabled(void)
- EXPORT_SYMBOL(pci_msi_enabled);
- 
- static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
--		unsigned int flags)
-+				  const struct irq_affinity *affd)
- {
--	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int nvec;
- 	int rc;
- 
-@@ -1090,13 +1090,13 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 		nvec = maxvec;
- 
- 	for (;;) {
--		if (affinity) {
--			nvec = irq_calc_affinity_vectors(nvec, NULL);
-+		if (affd) {
-+			nvec = irq_calc_affinity_vectors(nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
- 
--		rc = msi_capability_init(dev, nvec, affinity);
-+		rc = msi_capability_init(dev, nvec, affd);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1123,28 +1123,27 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
-  **/
- int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- {
--	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
-+	return __pci_enable_msi_range(dev, minvec, maxvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msi_range);
- 
- static int __pci_enable_msix_range(struct pci_dev *dev,
--		struct msix_entry *entries, int minvec, int maxvec,
--		unsigned int flags)
-+				   struct msix_entry *entries, int minvec,
-+				   int maxvec, const struct irq_affinity *affd)
- {
--	bool affinity = flags & PCI_IRQ_AFFINITY;
- 	int rc, nvec = maxvec;
- 
- 	if (maxvec < minvec)
- 		return -ERANGE;
- 
- 	for (;;) {
--		if (affinity) {
--			nvec = irq_calc_affinity_vectors(nvec, NULL);
-+		if (affd) {
-+			nvec = irq_calc_affinity_vectors(nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
- 
--		rc = __pci_enable_msix(dev, entries, nvec, affinity);
-+		rc = __pci_enable_msix(dev, entries, nvec, affd);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1175,7 +1174,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 		int minvec, int maxvec)
- {
--	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
-+	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
- }
- EXPORT_SYMBOL(pci_enable_msix_range);
- 
-@@ -1199,17 +1198,22 @@ EXPORT_SYMBOL(pci_enable_msix_range);
- int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		unsigned int max_vecs, unsigned int flags)
- {
-+	static const struct irq_affinity msi_default_affd;
-+	const struct irq_affinity *affd = NULL;
- 	int vecs = -ENOSPC;
- 
-+	if (flags & PCI_IRQ_AFFINITY)
-+		affd = &msi_default_affd;
-+
- 	if (flags & PCI_IRQ_MSIX) {
- 		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
--				flags);
-+				affd);
- 		if (vecs > 0)
- 			return vecs;
- 	}
- 
- 	if (flags & PCI_IRQ_MSI) {
--		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
-+		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
- 		if (vecs > 0)
- 			return vecs;
- 	}
--- 
-2.1.4
-
+I think we should handle the graphics P2P concerns separately from the
+general P2P-DMA case since the latter does not require the higher
+order memory management facilities. Using ZONE_DEVICE/DAX mappings to
+avoid changes to every driver that wants to support P2P-DMA separately
+from typical DMA still seems the path of least resistance.
