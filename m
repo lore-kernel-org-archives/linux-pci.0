@@ -1,91 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v9 05/16] drivers: iommu: arm-smmu: convert struct device of_node to fwnode usage
-Date: Mon, 21 Nov 2016 10:01:37 +0000
-Message-Id: <20161121100148.24769-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V9 11/11] ARM64/PCI: Support for ACPI based PCI host
+ controller
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+ <1465588519-11334-12-git-send-email-tn@semihalf.com>
+ <20161122231321.GA20246@bhelgaas-glaptop.roam.corp.google.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+ rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+ okaya@codeaurora.org, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ cov@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <edf72769-e9c8-4617-8dc4-8f3d05a678e7@semihalf.com>
+Date: Wed, 23 Nov 2016 12:21:03 +0100
+MIME-Version: 1.0
+In-Reply-To: <20161122231321.GA20246@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMU driver rely on the struct device.of_node pointer for
-device look-up and iommu_ops retrieval.
+Hi Bjorn,
 
-In preparation for ACPI probing enablement, convert the driver to use
-the struct device.fwnode member for device and iommu_ops look-up so that
-the driver infrastructure can be used also on systems that do not
-associate an of_node pointer to a struct device (eg ACPI), making the
-device look-up and iommu_ops retrieval firmware agnostic.
+On 23.11.2016 00:13, Bjorn Helgaas wrote:
+> Hi Tomasz,
+>
+> On Fri, Jun 10, 2016 at 09:55:19PM +0200, Tomasz Nowicki wrote:
+>> Implement pci_acpi_scan_root and other arch-specific call so that ARM64
+>> can start using ACPI to setup and enumerate PCI buses.
+>>
+>> Prior to buses enumeration the pci_acpi_scan_root() implementation looks
+>> for configuration space start address (obtained through ACPI _CBA method or
+>> MCFG interface). If succeed, it uses ECAM library to create new mapping.
+>> Then it attaches generic ECAM ops (pci_generic_ecam_ops) which are used
+>> for accessing configuration space later on.
+>> ...
+>
+>> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
+>> +	.release_info = pci_acpi_generic_release_info,
+>> +};
+>> +
+>> +/* Interface called from ACPI code to setup PCI host controller */
+>>  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>  {
+>> -	/* TODO: Should be revisited when implementing PCI on ACPI */
+>> -	return NULL;
+>> +	int node = acpi_get_node(root->device->handle);
+>> +	struct acpi_pci_generic_root_info *ri;
+>> +	struct pci_bus *bus, *child;
+>> +
+>> +	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+>> +	if (!ri)
+>> +		return NULL;
+>> +
+>> +	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+>> +	if (!ri->cfg) {
+>> +		kfree(ri);
+>> +		return NULL;
+>> +	}
+>> +
+>> +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
+>
+> This has already been merged, but this isn't right, is it?  We're
+> writing a host controller-specific pointer into the single system-wide
+> acpi_pci_root_ops, then passing it on to acpi_pci_root_create().
+>
+> Today, I think ri->cfg->ops->pci_ops is always &pci_generic_ecam_ops,
+> from this path:
+>
+>   ri->cfg = pci_acpi_setup_ecam_mapping
+>     cfg = pci_ecam_create(..., &pci_generic_ecam_ops)
+>       cfg = kzalloc(...)
+>       cfg->ops = ops             # &pci_generic_ecam_ops
+>
+> But we're about to merge the ECAM quirks series, which will mean it
+> may not be &pci_generic_ecam_ops.  Even apart from the ECAM quirks, we
+> should avoid this pattern of putting device-specific info in a single
+> shared structure because it's too difficult to verify that it's
+> correct.
+>
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/arm-smmu.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Well spotted. I agree, we need to fix this. How about this:
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index fb439c7..31c0e1c 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -152,33 +152,35 @@ static void pci_acpi_generic_release_info(struct 
+acpi_pci_root_info *ci)
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 8f72814..339a8d3 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -1379,13 +1379,14 @@ static bool arm_smmu_capable(enum iommu_cap cap)
- 
- static int arm_smmu_match_node(struct device *dev, void *data)
- {
--	return dev->of_node == data;
-+	return dev->fwnode == data;
- }
- 
--static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
-+static
-+struct arm_smmu_device *arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
- {
- 	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
--						np, arm_smmu_match_node);
-+						fwnode, arm_smmu_match_node);
- 	put_device(dev);
- 	return dev ? dev_get_drvdata(dev) : NULL;
- }
-@@ -1403,7 +1404,7 @@ static int arm_smmu_add_device(struct device *dev)
- 		if (ret)
- 			goto out_free;
- 	} else if (fwspec && fwspec->ops == &arm_smmu_ops) {
--		smmu = arm_smmu_get_by_node(to_of_node(fwspec->iommu_fwnode));
-+		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
- 	} else {
- 		return -ENODEV;
- 	}
-@@ -2007,7 +2008,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
-+	iommu_register_instance(dev->fwnode, &arm_smmu_ops);
- 	platform_set_drvdata(pdev, smmu);
- 	arm_smmu_device_reset(smmu);
- 
--- 
-2.10.0
+         ri = container_of(ci, struct acpi_pci_generic_root_info, common);
+         pci_ecam_free(ri->cfg);
++       kfree(ci->ops);
+         kfree(ri);
+  }
 
+-static struct acpi_pci_root_ops acpi_pci_root_ops = {
+-       .release_info = pci_acpi_generic_release_info,
+-};
+-
+  /* Interface called from ACPI code to setup PCI host controller */
+  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+  {
+         int node = acpi_get_node(root->device->handle);
+         struct acpi_pci_generic_root_info *ri;
+         struct pci_bus *bus, *child;
++       struct acpi_pci_root_ops *root_ops;
+
+         ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+         if (!ri)
+                 return NULL;
+
++       root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
++       if (!root_ops)
++               return NULL;
++
+         ri->cfg = pci_acpi_setup_ecam_mapping(root);
+         if (!ri->cfg) {
+                 kfree(ri);
++               kfree(root_ops);
+                 return NULL;
+         }
+
+-       acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
+-       bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
+-                                  ri->cfg);
++       root_ops->release_info = pci_acpi_generic_release_info;
++       root_ops->pci_ops = &ri->cfg->ops->pci_ops;
++       bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+         if (!bus)
+                 return NULL;
+
+Of course, this should be the part of ECAM quirks core patches.
+
+The other option we have is to remove "struct pci_ops *pci_ops;" from 
+acpi_pci_root_ops structure and pass struct pci_ops as an extra argument 
+to acpi_pci_root_create(). What do you think?
+
+Thanks,
+Tomasz
