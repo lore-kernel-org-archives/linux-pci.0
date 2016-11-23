@@ -1,64 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-Subject: [PATCH V4 0/2] Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Wed, 9 Nov 2016 17:14:55 +0800
-Message-ID: <1478682897-119874-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60502 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933488AbcKWW6z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 17:58:55 -0500
+Date: Wed, 23 Nov 2016 16:58:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Quentin Lambert <lambert.quentin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI Hotplug: cpqphp: Add missing call to
+ pci_disable_device
+Message-ID: <20161123225851.GJ16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161119174148.20187-1-lambert.quentin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161119174148.20187-1-lambert.quentin@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
-PCIe controllers.
-The two patches respectively:
-        - rework the current HiSilicon driver to add support for ECAM
-          platforms(not RC).
-        - adds the HiSilicon ACPI specific quirks.
+On Sat, Nov 19, 2016 at 06:41:48PM +0100, Quentin Lambert wrote:
+> Most error branches following the call to pci_enable_device contain
+> a call to pci_disable_device. This patch add these calls where they are
+> missing.
+> 
+> This issue was found with Hector.
+> 
+> Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 
-This patchset is based on branch pci/ecam-v6
-It can be found here:
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-v6)
+Applied to pci/hotplug for v4.10, thanks, Quentin!
 
-v3 -> v4:
-- rebase on pci/ecam-v6.
-- delete the unnecessary link_up check code. 
-
-v2 -> v3:
-- rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset. 
-- obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead of
-  hardcode the addresses.
-- modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
-  Arnd comments.
-
-v1 -> v2:
-- rebase against Tomasz RFC V5 quirk mechanism
-- add ACPI support for the HiSilicon Hip07 SoC PCIe controllers
-
-Dongdong Liu (2):
-  PCI: hisi: Add ECAM support for devices that are not RC
-  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
- MAINTAINERS                                        |   1 +
- drivers/acpi/pci_mcfg.c                            |  13 ++
- drivers/pci/host/Kconfig                           |  12 +-
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |   4 +-
- drivers/pci/host/pcie-designware.h                 |   2 +
- drivers/pci/host/pcie-hisi-acpi.c                  | 157 +++++++++++++++++++++
- drivers/pci/host/pcie-hisi.c                       |  45 ++++++
- include/linux/pci-ecam.h                           |   5 +
- 10 files changed, 245 insertions(+), 10 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
-
--- 
-1.9.1
-
+> ---
+>  drivers/pci/hotplug/cpqphp_core.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- a/drivers/pci/hotplug/cpqphp_core.c
+> +++ b/drivers/pci/hotplug/cpqphp_core.c
+> @@ -867,7 +867,8 @@ static int cpqhpc_probe(struct pci_dev *
+>  	 */
+>  	if ((pdev->revision <= 2) && (vendor_id != PCI_VENDOR_ID_INTEL)) {
+>  		err(msg_HPC_not_supported);
+> -		return -ENODEV;
+> +		rc = -ENODEV;
+> +		goto err_disable_device;
+>  	}
+>  
+>  	/* TODO: This code can be made to support non-Compaq or Intel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
