@@ -1,100 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
-Date: Fri, 18 Nov 2016 12:46:21 +0100
-Message-ID: <2565107.vdSUAxpRt4@wuerfel>
-In-Reply-To: <582469C8.9090609@hisilicon.com>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <17821285.aIcTyCGn5n@wuerfel> <582469C8.9090609@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53430 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753722AbcKWRjv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 12:39:51 -0500
+Date: Wed, 23 Nov 2016 11:39:46 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Noa Osherovich <noaos@mellanox.com>, linux-pci@vger.kernel.org,
+        majd@mellanox.com, gwshan@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 0/5] Unmarking Mellanox devices with broken INTx
+ masking
+Message-ID: <20161123173946.GE16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "minyard@acm.org" <minyard@acm.org>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- John Garry <john.garry@huawei.com>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "kantyzc@163.com" <kantyzc@163.com>,
- "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
- linux-arm-kernel@lists.infradead.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "olof@lixom.net" <olof@lixom.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161117232458.2003.88193.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[found this old mail in my drafts folder, might as well send it now]
-
-On Thursday, November 10, 2016 8:36:24 PM CET zhichang.yuan wrote:
-> Sorry! I can't catch your idea yet:(
+On Thu, Nov 17, 2016 at 05:29:54PM -0600, Bjorn Helgaas wrote:
+> Maybe the third time is the charm.  This is basically the v1 you posted,
+> but I added an mlx4 update to use the new device ID definitions.  That way
+> grep and cscope will find the ID both places, so we can match the quirk
+> with the related driver.
 > 
-> When to register the I/O range? Is it done just after the successfully
-> of_translate_address() during the children scanning?
-
-No, you do it when first finding the bus itself, just like we do for
-PCI host bridges.
-
-> If yes, when a child is scanning, there is no range data in arm64_extio_ops. The
-> addr_is_indirect_io() calling in of_get_isa_indirect_io() don't need. All we can
-> check is just whether the address to be translated is IO and is under a parent
-> device which has no 'ranges' property.
-
-The children should only be scanned after the I/O range has been
-registered for the parent.
-
-> > Your current version has
-> > 
-> >         if (arm64_extio_ops->pfout)                             \
-> >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-> >                        addr, value, sizeof(type));             \
-> > 
-> > Instead, just subtract the start of the range from the logical
-> > port number to transform it back into a bus-local port number:
-> > 
-> >         if (arm64_extio_ops->pfout)                             \
-> >                 arm64_extio_ops->pfout(arm64_extio_ops->devpara,\
-> >                        addr - arm64_extio_ops->start, value, sizeof(type)); \
-> > 
-> I think there is some information needed sync.
-> In the old patch-set, we don't bypass the pci_address_to_pio() after
-> successfully of_translate_address(). In this way, we don't need to reserve any
-> PIO space for our LPC since the logical port are from the same mapping
-> algorithm. Based on this way, the port number in the device resource is logical
-> one, then we need to subtract the start of the resource to get back the
-> bus-local port.
+> This is on the pci/virtualization branch.  And I did build it this time.
 > 
-> From V3, we don't apply the mapping based on pci_address_to_pio(), the
-> of_translate_address() return the bus-local port directly and store into
-> relevant device resource. So, in the current arm64_extio_ops->pfout(), the
-> reverse translation don't need anymore. The input "addr" is bus-local port now.
+> v2 -> v3
+> - Add device ID definitions to pci_ids.h (from original patch of Nov 1)
+> - Use new definitions in mlx4 driver (new patch)
+> - Use new definitions in quirks (as in v1 patches)
+> 
+> v1 -> v2 (pushed to pci/virtualization branch but not posted on list)
+> - Bjorn removed device ID definitions (which broke build)
+> - Bjorn reordered so Mellanox wasn't in the middle of other quirk list
+> - Bjorn moved pci_disable_device() to end of quirk
+> 
+> v0 -> v1
+> Fixes according to Gavin Shan's comments:
+> - Patch numbering was wrong
+> - Fixed logic of mellanox_check_broken_intx_masking
+> 
+> ---
+> 
+> Bjorn Helgaas (1):
+>       net/mlx4_core: Use device ID defines
+> 
+> Noa Osherovich (4):
+>       PCI: Add Mellanox device IDs
+>       PCI: Convert broken INTx masking quirks from HEADER to FINAL
+>       PCI: Convert Mellanox broken INTx quirks to be for listed devices only
+>       PCI: Support INTx masking on ConnectX-4 with firmware x.14.1100+
+> 
+> 
+>  drivers/net/ethernet/mellanox/mlx4/main.c |   78 +++++++-------
+>  drivers/pci/quirks.c                      |  159 ++++++++++++++++++++++-------
+>  include/linux/pci_ids.h                   |   27 ++++-
+>  3 files changed, 181 insertions(+), 83 deletions(-)
 
-Ok, so this would have to be changed again: If we want to support multiple
-bus domains, of_translate_address() must translate between the bus specific
-address and the general Linux I/O port number. Even without doing that,
-it seems nicer to not overlap the range of the first PCI host bridge.
-
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I added Tariq's ack on "net/mlx4_core: Use device ID defines" and applied
+these on pci/virtualization for v4.10.
