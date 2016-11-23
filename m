@@ -1,90 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:33066 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbcKWFGt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 00:06:49 -0500
-Received: by mail-pg0-f43.google.com with SMTP id 3so1593253pgd.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 21:06:46 -0800 (PST)
-Date: Tue, 22 Nov 2016 21:06:42 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v2 3/3] PCI: rockchip: Add system PM support
-Message-ID: <20161123050642.GC28948@google.com>
-References: <1479874515-65872-1-git-send-email-shawn.lin@rock-chips.com>
- <1479874515-65872-3-git-send-email-shawn.lin@rock-chips.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:60258 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933256AbcKWWcJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 17:32:09 -0500
+Date: Wed, 23 Nov 2016 14:55:10 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161123215510.GA16311@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479874515-65872-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
-
-On Wed, Nov 23, 2016 at 12:15:15PM +0800, Shawn Lin wrote:
-> This patch adds system PM support for Rockchip's RC.
-> For pre S3, the EP is configured into D3 state which guarantees
-> the link state should be in L1. So we could send PME_Turn_Off message
-> to the EP and wait for its ACK to make the link state into L2 or L3
-> without the aux-supply. This could help save more power which I think
-> should be very important for mobile devices.
+On Wed, Nov 23, 2016 at 02:11:29PM -0700, Logan Gunthorpe wrote:
+> > As I said, there is no possible special handling. Standard IB hardware
+> > does not support changing the DMA address once a MR is created. Forget
+> > about doing that.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Yeah, that's essentially the point I was trying to make. Not to mention
+> all the other unrelated hardware that can't DMA to an address that might
+> disappear mid-transfer.
+
+Right, it is impossible to ask for generic page migration with ongoing
+DMA. That is simply not supported by any of the hardware at all.
+
+> > Only ODP hardware allows changing the DMA address on the fly, and it
+> > works at the page table level. We do not need special handling for
+> > RDMA.
 > 
-> ---
+> I am aware of ODP but, noted by others, it doesn't provide a general
+> solution to the points above.
+
+How do you mean?
+
+Perhaps I am not following what Serguei is asking for, but I
+understood the desire was for a complex GPU allocator that could
+migrate pages between GPU and CPU memory under control of the GPU
+driver, among other things. The desire is for DMA to continue to work
+even after these migrations happen.
+
+Page table mirroring *is* the general solution for this problem. The
+GPU driver controls the VMA and the DMA driver mirrors that VMA.
+
+Do you know of another option that doesn't just degenerate to page
+table mirroring??
+
+Remember, there are two facets to the RDMA ODP implementation, I feel
+there is some confusion here..
+
+The crucial part for this discussion is the ability to fence and block
+DMA for a specific range. This is the hardware capability that lets
+page migration happen: fence&block DMA, migrate page, update page
+table in HCA, unblock DMA.
+
+Without that hardware support the DMA address must be unchanging, and
+there is nothing we can do about it. This is why standard IB hardware
+must have fixed MRs - it lacks the fence&block capability.
+
+The other part is the page faulting implementation, but that is not
+required, and to Serguei's point, is not desired for GPU anyhow.
+
+> > To me this means at least items #1 and #3 should be removed from
+> > Alexander's list.
 > 
-> Changes in v2:
-> - Wrap the 'x' in parentheses
-> - add msg regison mapped support
-> - enable int for err case in suspend_noirq
-> 
->  drivers/pci/host/pcie-rockchip.c | 102 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 102 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 457401d..f2828a8 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
+> It's also worth noting that #4 makes use of ZONE_DEVICE (#2) so they are
+> really the same option. iopmem is really just one way to get BAR
+> addresses to user-space while inside the kernel it's ZONE_DEVICE.
 
-[...]
+Seems fine for RDMA?
 
-> @@ -1196,8 +1207,91 @@ static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
->  		}
->  	}
->  
-> +	/* assign message regions */
-> +	rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1 + offset,
-> +				  AXI_WRAPPER_NOR_MSG,
-> +				  20 - 1, 0, 0);
-> +	if (!rockchip->msg_region)
-> +		rockchip->msg_region = devm_ioremap(rockchip->dev,
-> +						    rockchip->mem_bus_addr +
-> +						    ((reg_no + offset) << 20),
-> +						    SZ_1M);
+Didn't we just strike off everything on the list except #2? :\
 
-You still forgot to check for devm_ioremap() failures. Should probably
-have:
-
-		if (!rockchip->msg_region)
-			return -ENOMEM;
-
-in there.
-
-Otherwise (and maybe with the "why 5 seconds" answer noted in the commit
-message?):
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-on all 3 patches.
-
-> +
->  	return err;
->  }
-
-[...]
-
-Thanks,
-Brian
+Jason
