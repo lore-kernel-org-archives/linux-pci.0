@@ -1,124 +1,136 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 10 Nov 2016 13:57:33 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Hanjun Guo <hanjun.guo@linaro.org>,
-	Jayachandran C <jchandra@broadcom.com>, Duc Dang <dhdang@apm.com>,
-	Robert Richter <robert.richter@caviumnetworks.com>,
-	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	David Daney <ddaney@caviumnetworks.com>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>,
-	Jeremy Linton <jeremy.linton@arm.com>,
-	Dongdong Liu <liudongdong3@huawei.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jeff Hugo <jhugo@codeaurora.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-Message-ID: <20161110135733.GA20403@red-moon>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
- <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org>
- <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
- <20161109224955.GO14322@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9_sdcoN7rjQp-R=2vKY3rECt0BC3eWGpse32o2Q4LHXg@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH V5 3/3] ARM64 LPC: LPC driver implementation on Hip06
+Date: Wed, 23 Nov 2016 15:16:07 +0100
+Message-ID: <2359248.XjnRfPbj1B@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F921A0F@lhreml507-mbx>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <2364530.A9QSbaqvfm@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F921A0F@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu9_sdcoN7rjQp-R=2vKY3rECt0BC3eWGpse32o2Q4LHXg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ T homas Petazzoni <thomas.petazzo.ni@free-electrons.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ John Garry <john.garry@huawei.com>, "olof@lixom.net" <olof@lixom.net>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@go og le.com" <bhelgaas@google.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 06:25:16PM +0800, Ard Biesheuvel wrote:
-> On 10 November 2016 at 06:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Nov 09, 2016 at 08:29:23PM +0000, Ard Biesheuvel wrote:
-> >> Hi Bjorn,
-> >>
-> >> On 9 November 2016 at 20:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> > On Wed, Nov 09, 2016 at 02:25:56PM -0500, Christopher Covington wrote:
-> >> >> Hi Bjorn,
-> >> >>
-> >> [...]
-> >> >>
-> >> >> We're working to add the PNP0C02 resource to future firmware, but it's
-> >> >> not in the current firmware. Are dmesg and /proc/iomem from the
-> >> >> current firmware interesting or should we wait for the update to file?
-> >> >
-> >> > Note that the ECAM space is not the only thing that should be
-> >> > described via these PNP0C02 devices.  *All* non-enumerable resources
-> >> > should be described by the _CRS method of some ACPI device.  Here's a
-> >> > sample from my laptop:
-> >> >
-> >> >   PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xf8000000-0xfbffffff] (base 0xf8000000)
-> >> >   system 00:01: [io  0x1800-0x189f] could not be reserved
-> >> >   system 00:01: [io  0x0800-0x087f] has been reserved
-> >> >   system 00:01: [io  0x0880-0x08ff] has been reserved
-> >> >   system 00:01: [io  0x0900-0x097f] has been reserved
-> >> >   system 00:01: [io  0x0980-0x09ff] has been reserved
-> >> >   system 00:01: [io  0x0a00-0x0a7f] has been reserved
-> >> >   system 00:01: [io  0x0a80-0x0aff] has been reserved
-> >> >   system 00:01: [io  0x0b00-0x0b7f] has been reserved
-> >> >   system 00:01: [io  0x0b80-0x0bff] has been reserved
-> >> >   system 00:01: [io  0x15e0-0x15ef] has been reserved
-> >> >   system 00:01: [io  0x1600-0x167f] has been reserved
-> >> >   system 00:01: [io  0x1640-0x165f] has been reserved
-> >> >   system 00:01: [mem 0xf8000000-0xfbffffff] could not be reserved
-> >> >   system 00:01: [mem 0xfed10000-0xfed13fff] has been reserved
-> >> >   system 00:01: [mem 0xfed18000-0xfed18fff] has been reserved
-> >> >   system 00:01: [mem 0xfed19000-0xfed19fff] has been reserved
-> >> >   system 00:01: [mem 0xfeb00000-0xfebfffff] has been reserved
-> >> >   system 00:01: [mem 0xfed20000-0xfed3ffff] has been reserved
-> >> >   system 00:01: [mem 0xfed90000-0xfed93fff] has been reserved
-> >> >   system 00:01: [mem 0xf7fe0000-0xf7ffffff] has been reserved
-> >> >   system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
-> >> >
-> >> > Do you have firmware in the field that may not get updated?  If so,
-> >> > I'd like to see the whole solution for that firmware, including the
-> >> > MCFG quirk (which tells the PCI core where the ECAM region is) and
-> >> > whatever PNP0C02 quirk you figure out to actually reserve the region.
-> >> >
-> >> > I proposed a PNP0C02 quirk to Duc along these lines of the below.  I
-> >> > don't actually know if it's feasible, but it didn't look as bad as I
-> >> > expected, so I'd kind of like somebody to try it out.  I think you
-> >> > would have to call this via a DMI hook (do you have DMI on arm64?),
-> >> > maybe from pnp_init() or similar.
-> >>
-> >> We do have SMBIOS/DMI on arm64, but we have been successful so far not
-> >> to rely on it for quirks, and we'd very much like to keep it that way.
-> >>
-> >> Since this ACPI _CRS method has nothing to do with SMBIOS/DMI, surely
-> >> there is a better way to wire up the reservation code to the
-> >> information exposed by ACPI?
-> >
-> > I'm open to other ways, feel free to propose one :)
-> >
-> > If you do a quirk, you need some way to identify the machine/firmware
-> > combination, because you don't want to apply the quirk on every
-> > machine.  You're trying to work around a firmware issue, so you
-> > probably want something tied to the firmware version.  On x86, that's
-> > typically done with DMI.
-> >
+On Friday, November 18, 2016 5:03:11 PM CET Gabriele Paoloni wrote:
+> > On Friday, November 18, 2016 4:18:07 PM CET Gabriele Paoloni wrote:
+> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > > On Friday, November 18, 2016 12:53:08 PM CET Gabriele Paoloni
+> > wrote:
+> > > > For the ISA/LPC spaces there are only 4k of addresses, they
+> > > > the bus addresses always overlap, but we can trivially
+> > > > figure out the bus address from Linux I/O port number
+> > > > by subtracting the start of the range.
+> > >
+> > > Are you saying that our LPC controller should specify a
+> > > range property to map bus addresses into a cpu address range?
+> > 
+> > No. There is not CPU address associated with it, because it's
+> > not memory mapped.
+> > 
+> > Instead, we need to associate a bus address with a logical
+> > Linux port number, both in of_address_to_resource and
+> > in inb()/outb().
 > 
-> I think I misunderstood the purpose of the example: that should only
-> be necessary if the _CRS methods are missing from the firmware, right?
-> If we update the firmware to cover all non-enumerable resources by
-> such a method, we shouldn't need any such quirks at all IIUC
+> I think this is effectively what we are doing so far with patch 2/3.
+> The problem with this patch is that we are carving out a "forbidden"
+> IO tokens range that goes from 0 to PCIBIOS_MIN_IO.
+> 
+> I think that the proper solution would be to have the LPC driver to
+> set the carveout threshold used in pci_register_io_range(), 
+> pci_pio_to_address(), pci_address_to_pio(), but this would impose
+> a probe dependency on the LPC itself that should be probed before
+> the PCI controller (or before any other devices calling these
+> functions...)
 
-Yes that's correct you need a quirk to fabricate a PNP0c02 motherboard
-resource if it is not present in FW.
+Why do you think the order matters? My point was that we should
+be able to register any region of logical port numbers for any
+bus here.
 
-Lorenzo
+
+> > > > > To be honest with you I would keep things simple for this
+> > > > > LPC and introduce more complex reworks later if more devices
+> > > > > need to be introduced.
+> > > > >
+> > > > > What if we stick on a single domain now where we introduce a
+> > > > > reserved threshold for the IO space (say INDIRECT_MAX_IO).
+> > > >
+> > > > I said having a single domain is fine, but I still don't
+> > > > like the idea of reserving low port numbers for this hack,
+> > > > it would mean that the numbers change for everyone else.
+> > >
+> > > I don't get this much...I/O tokens that are passed to the I/O
+> > > accessors are not fixed anyway and they vary depending on the order
+> > > of adding ranges to io_range_list...so I don't see a big issue
+> > > with this...
+> > 
+> > On machines with a legacy devices behind the PCI bridge,
+> > there may still be a reason to have the low I/O port range
+> > reserved for the primary bus, e.g. to get a VGA text console
+> > to work.
+> > 
+> > On powerpc, this is called the "primary" PCI host, i.e. the
+> > only one that is allowed to have an ISA bridge.
+> 
+> Yes but
+> 1) isn't the PCI controller range property that defines how IO bus address
+>    map into physical CPU addresses?
+
+Correct, but the DT knows nothing about logical port numbers in Linux.
+
+> 2) How can you guarantee that the cpu range associated with this
+>    IO bus range is the first to be registered in pci_register_io_range()?
+>    ( i.e. are you saying that they are just relying on the fact that it is the
+>      only IO range in the system and by chance the IO tokens and corresponding
+>      bus addresses are the same? )
+
+To clarify: the special properties of having the first 0x1000 logical
+port numbers go to a particular physical bus are very obscure. I think
+it's more important to not change the behavior for existing systems
+that might rely on it than for new systems that have no such legacy.
+
+The ipmi and uart drivers in particular will get the port numbers filled
+in their platform device from the DT bus scanning, so they don't care
+at all about having the same numeric value for port numbers on the bus
+and logical numbers, but other drivers might rely on particular ports
+to be mapped on a specific PCI host, especially when those drivers
+are  used only on systems that don't have more than one PCI domain.
+
+	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
