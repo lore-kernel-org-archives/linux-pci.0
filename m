@@ -1,116 +1,96 @@
-Return-Path: <shawn.lin@rock-chips.com>
-Return-Path: <shawn.lin@rock-chips.com>
-Subject: Re: [RESEND PATCH 1/2] PCI: rockchip: cleanup bit definition for
- PCIE_RC_CONFIG_LCS
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
- <20161114222604.GJ9868@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Wenrui Li <wenrui.li@rock-chips.com>, Brian Norris
- <briannorris@chromium.org>, Jeffy Chen <jeffy.chen@rock-chips.com>,
- devicetree@vger.kernel.org
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <6279a593-2a86-220c-98b9-c930f4502513@rock-chips.com>
-Date: Tue, 15 Nov 2016 09:09:37 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:41557
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750857AbcKWTOu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:14:50 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+CC: Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+Date: Wed, 23 Nov 2016 14:14:40 -0500
 MIME-Version: 1.0
-In-Reply-To: <20161114222604.GJ9868@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20161123190515.GA12146@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-On 2016/11/15 6:26, Bjorn Helgaas wrote:
-> On Mon, Nov 14, 2016 at 12:11:05PM +0800, Shawn Lin wrote:
->> PCIE_RC_CONFIG_LCS contains control and status bits specific
->> to the PCIe link. The layout for this register looks the same
->> as the existed PCI_EXP_LNKCTL and PCI_EXP_LNKSTA. So let's
->> reuse them.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On 2016-11-23 02:05 PM, Jason Gunthorpe wrote:
+> On Wed, Nov 23, 2016 at 10:13:03AM -0700, Logan Gunthorpe wrote:
 >
-> Did something change since the version you posted yesterday?
-> Resending a patch with no changes or with no hint about what changed
-> doesn't speed things up; in fact, it slows things down.
+>> an MR would be very tricky. The MR may be relied upon by another host
+>> and the kernel would have to inform user-space the MR was invalid then
+>> user-space would have to tell the remote application.
+> As Bart says, it would be best to be combined with something like
+> Mellanox's ODP MRs, which allows a page to be evicted and then trigger
+> a CPU interrupt if a DMA is attempted so it can be brought back.
+Please note that in the general case (including  MR one) we could have
+"page fault" from the different PCIe device. So all  PCIe device must
+be synchronized.
+> includes the usual fencing mechanism so the CPU can block, flush, and
+> then evict a page coherently.
 >
-
-Sorry for that, mea culpa. I was finding I had sent a wrong patch which
-couldn't be compiled cleanly, so I resent a new one. I should directly
-respin a new version for that case.
-
->> ---
->>
->>  drivers/pci/host/pcie-rockchip.c | 14 ++++----------
->>  1 file changed, 4 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 7f238af..1dba698 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -141,12 +141,6 @@
->>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
->>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
->>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
->> -#define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
->> -#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
->> -#define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
->> -#define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
->> -#define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
->> -#define   PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
->>  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
->>  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
->>  #define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
->> @@ -229,7 +223,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
->>  	u32 status;
->>
->>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
->> -	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
->> +	status |= (PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
->>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->>  }
->>
->> @@ -238,7 +232,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
->>  	u32 status;
->>
->>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
->> -	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
->> +	status |= (PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS) << 16;
->>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->>  }
->>
->> @@ -540,7 +534,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->>
->>  	/* Set RC's clock architecture as common clock */
->>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
->> -	status |= PCIE_RC_CONFIG_LCS_CCC;
->> +	status |= PCI_EXP_LNKCTL_CCC;
->>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->>
->>  	/* Enable Gen1 training */
->> @@ -575,7 +569,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->>  		 * gen1 finished.
->>  		 */
->>  		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
->> -		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
->> +		status |= PCI_EXP_LNKCTL_RL;
->>  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->>
->>  		timeout = jiffies + msecs_to_jiffies(500);
->> --
->> 1.9.1
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This is the general direction the industry is going in: Link PCI DMA
+> directly to dynamic user page tabels, including support for demand
+> faulting and synchronicity.
 >
+> Mellanox ODP is a rough implementation of mirroring a process's page
+> table via the kernel, while IBM's CAPI (and CCIX, PCI ATS?) is
+> probably a good example of where this is ultimately headed.
+>
+> CAPI allows a PCI DMA to directly target an ASID associated with a
+> user process and then use the usual CPU machinery to do the page
+> translation for the DMA. This includes page faults for evicted pages,
+> and obviously allows eviction and migration..
+>
+> So, of all the solutions in the original list, I would discard
+> anything that isn't VMA focused. Emulating what CAPI does in hardware
+> with software is probably the best choice, or we have to do it all
+> again when CAPI style hardware broadly rolls out :(
+>
+> DAX and GPU allocators should create VMAs and manipulate them in the
+> usual way to achieve migration, windowing, cache&mirror, movement or
+> swap of the potentially peer-peer memory pages. They would have to
+> respect the usual rules for a VMA, including pinning.
+>
+> DMA drivers would use the usual approaches for dealing with DMA from
+> a VMA: short term pin or long term coherent translation mirror.
+>
+> So, to my view (looking from RDMA), the main problem with peer-peer is
+> how do you DMA translate VMA's that point at non struct page memory?
+>
+> Does HMM solve the peer-peer problem? Does it do it generically or
+> only for drivers that are mirroring translation tables?
+In current form HMM doesn't solve peer-peer problem. Currently it allow
+"mirroring" of  "malloc" memory on GPU which is not always what needed.
+Additionally  there is need to have opportunity to share VRAM allocations
+between  different processes.
+>  From a RDMA perspective we could use something other than
+> get_user_pages() to pin and DMA translate a VMA if the core community
+> could decide on an API. eg get_user_dma_sg() would probably be quite
+> usable.
+>
+> Jason
 
-
--- 
-Best Regards
-Shawn Lin
