@@ -1,94 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:50387 "EHLO extserv.mm-sol.com"
+Received: from mail.kernel.org ([198.145.29.136]:53002 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750890AbcKOMYt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Nov 2016 07:24:49 -0500
-Subject: Re: [PATCH v4 2/3] PCI: qcom: add support to msm8996 PCIE controller
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
-Cc: robh+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <aa135735-4ff4-06e3-7899-1255a21edfb4@mm-sol.com>
-Date: Tue, 15 Nov 2016 14:24:44 +0200
+        id S935282AbcKWRgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 12:36:33 -0500
+Date: Wed, 23 Nov 2016 11:36:24 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/9] PCI: Tidy up messages
+Message-ID: <20161123173624.GD16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1479122155-13393-3-git-send-email-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Srini,
-
-On 11/14/2016 01:15 PM, Srinivas Kandagatla wrote:
-> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
-> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
-> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+On Mon, Nov 21, 2016 at 03:45:11PM -0600, Bjorn Helgaas wrote:
+> Remove a few messages that don't contain any useful information, e.g.,
 > 
-> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
-> pipe clocks are only setup after the phy is powered on.
-> It also adds ltssm_enable callback as it is very much different to other
-> supported SOCs in the driver.
+>   pcie_pme 0000:00:02.0:pcie01: service driver pcie_pme loaded
+>   pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+>   pciehp 0000:80:02.0:pcie04: service driver pciehp loaded
+>   pciehp: PCI Express Hot Plug Controller Driver version: 0.4
 > 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-
-With below comments addressed:
-
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-
+> NOTE: I added a patch to drop Root Complex Event Collector PME support.  I
+> suspect that we really want to keep that, but it looks like it's currently
+> broken.  I would welcome opinions and some help to test it if we fix the
+> current breakage.
+> 
+> Changes from v1->v2:
+>   - Drop Root Complex Event Collector PME support
+>   - Add PME IRQ to existing log message
+>   - Log PME message once per hierarchy, not once per device
+>   - Log AER probe errors with plain PCI device, not PCIe service device
+>   - Add new AER claim message, including IRQ
+>   - Remove unused AER version macros
+> 
 > ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  67 +++++++-
->  drivers/pci/host/pcie-qcom.c                       | 177 ++++++++++++++++++++-
->  2 files changed, 238 insertions(+), 6 deletions(-)
 > 
+> Bjorn Helgaas (9):
+>       PCI/PME: Drop unused support for PMEs from Root Complex Event Collectors
+>       PCI/PME: Log PME IRQ when claiming Root Port
+>       PCI/AER: Remove unused version macros
+>       PCI/AER: Log errors with PCI device, not PCIe service device
+>       PCI/AER: Log AER IRQ when claiming Root Port
+>       PCI: Remove service driver load/unload messages
+>       PCI: hotplug: Remove hotplug core message
+>       PCI: pciehp: Remove loading message
+>       PCI: Expand "VPD access disabled" quirk message
+> 
+> 
+>  drivers/pci/hotplug/pci_hotplug_core.c |   10 +++-------
+>  drivers/pci/hotplug/pciehp_core.c      |    9 ++++-----
+>  drivers/pci/pcie/aer/aerdrv.c          |   18 ++++++------------
+>  drivers/pci/pcie/pme.c                 |   29 +++++++----------------------
+>  drivers/pci/pcie/portdrv_core.c        |    3 ---
+>  drivers/pci/quirks.c                   |    2 +-
+>  6 files changed, 21 insertions(+), 50 deletions(-)
 
-<snip>
-
-> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-> index 3593640..03ba6b1 100644
-> --- a/drivers/pci/host/pcie-qcom.c
-> +++ b/drivers/pci/host/pcie-qcom.c
-> @@ -36,11 +36,19 @@
->  
->  #include "pcie-designware.h"
->  
-> +#define PCIE20_PARF_DBI_BASE_ADDR	0x168
-
-This is already defined few rows below, please drop it.
-
-> +
-> +#define PCIE20_PARF_SYS_CTRL			0x00
->  #define PCIE20_PARF_PHY_CTRL			0x40
->  #define PCIE20_PARF_PHY_REFCLK			0x4C
->  #define PCIE20_PARF_DBI_BASE_ADDR		0x168
->  #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
-> +#define PCIE20_PARF_MHI_CLOCK_RESET_CTRL	0x174
->  #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
-> +#define MSM8996_PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT   0x1A8
-
-I don't like MSM8996_ prefix. Could you invent a macro which depending
-on controller selects proper offset?
-
-> +#define PCIE20_PARF_LTSSM			0x1B0
-> +#define PCIE20_PARF_SID_OFFSET			0x234
-> +#define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
->  
->  #define PCIE20_ELBI_SYS_CTRL			0x04
->  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
-> @@ -72,9 +80,18 @@ struct qcom_pcie_resources_v1 {
->  	struct regulator *vdda;
->  };
->  
-> +struct qcom_pcie_resources_v2 {
-> +	struct clk *aux_clk;
-> +	struct clk *master_clk;
-> +	struct clk *slave_clk;
-> +	struct clk *cfg_clk;
-> +	struct clk *pipe_clk;
-> +};
-
-<snip>
-
-regards,
-Stan
+I applied these (with Rafael's ack on the first two) to pci/misc for v4.10.
