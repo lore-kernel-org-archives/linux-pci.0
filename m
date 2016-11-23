@@ -1,189 +1,87 @@
-Return-Path: <prarit@redhat.com>
-Return-Path: <prarit@redhat.com>
-Message-ID: <58237AB7.8080301@redhat.com>
-Date: Wed, 09 Nov 2016 14:36:23 -0500
-From: Prarit Bhargava <prarit@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:43063 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933402AbcKWUdl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 15:33:41 -0500
+Date: Wed, 23 Nov 2016 13:33:32 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161123203332.GA15062@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, alex.williamson@redhat.com, darcari@redhat.com,
-        mstowe@redhat.com, bhelgaas@google.com, lukas@wunner.de,
-        keith.busch@intel.com, mika.westerberg@linux.intel.com
-Subject: Re: [PATCH] pci: Only disable MSI/X and enable INTx if shutdown function
- has been called
-References: <1478627867-28795-1-git-send-email-prarit@redhat.com> <20161109170529.GJ14322@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161109170529.GJ14322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Nov 23, 2016 at 02:58:38PM -0500, Serguei Sagalovitch wrote:
 
+>    We do not want to have "highly" dynamic translation due to
+>    performance cost.  We need to support "overcommit" but would
+>    like to minimize impact.  To support RDMA MRs for GPU/VRAM/PCIe
+>    device memory (which is must) we need either globally force
+>    pinning for the scope of "get_user_pages() / "put_pages" or have
+>    special handling for RDMA MRs and similar cases.
 
-On 11/09/2016 12:05 PM, Bjorn Helgaas wrote:
-> Hi Prarit,
-> 
-> Is there a bugzilla or other archive of configuration/dmesg/other info
+As I said, there is no possible special handling. Standard IB hardware
+does not support changing the DMA address once a MR is created. Forget
+about doing that.
 
-[I have only added Bjorn and myself to the BZ below.  Please feel free to add
-yourself.]
+Only ODP hardware allows changing the DMA address on the fly, and it
+works at the page table level. We do not need special handling for
+RDMA.
 
-Bjorn, unfortunately this won't be caught in a dmesg log because the filesystem
-is unmounted by the time we shutdown the PCI devices in the halt/reboot path.
+>    Generally it could be difficult to correctly handle "DMA in
+>    progress" due to the facts that (a) DMA could originate from
+>    numerous PCIe devices simultaneously including requests to
+>    receive network data.
 
-The trace is only available from serial console, and I have opened up
+We handle all of this today in kernel via the page pinning mechanism.
+This needs to be copied into peer-peer memory and GPU memory schemes
+as well. A pinned page means the DMA address channot be changed and
+there is active non-CPU access to it.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=187351
+Any hardware that does not support page table mirroring must go this
+route.
 
-to track this.
+> (b) in HSA case DMA could originated from user space without kernel
+>    driver knowledge.  So without corresponding h/w support
+>    everywhere I do not see how it could be solved effectively.
 
-I have added some additional links to other bugzillas which seem to show the
-same behavior, and included a full serial console capture of the boot to the BZ.
- The end of the log shows the unhandled irq stack trace for irq 16.
+All true user triggered DMA must go through some kind of coherent page
+table mirroring scheme (eg this is what CAPI does, presumably AMDs HSA
+is similar). A page table mirroring scheme is basically the same as
+what ODP does.
 
-HTH,
+Like I said, this is the direction the industry seems to be moving in,
+so any solution here should focus on VMAs/page tables as the way to link
+the peer-peer devices.
 
-P.
+To me this means at least items #1 and #3 should be removed from
+Alexander's list.
 
-> related to this problem?  I'd really like to connect this fix to a
-> problem report, and it would help me review the patch as well.
-> 
-> On Tue, Nov 08, 2016 at 12:57:47PM -0500, Prarit Bhargava wrote:
->> Bjorn,
->>
->> We have seen this at Red Hat on various drivers: nouveau, ahci, mei_me, and
->> pcieport (so far).  Google search for "unhandled irq 16" yields many results
->> reporting similar behavior during shutdown indicating that this problem is
->> widespread.  I can cause this to happen on a "stable" system by adding a 3
->> second delay in pci_device_shutdown() which causes the number of spurious
->> interrupts to exceed the 100000 limit and display the warning below for the
->> primarily the nouveau driver, and occasionally for the other mentioned drivers.
->>
->> A patch for this was proposed and rejected here for being too risky:
->>
->> https://patchwork.kernel.org/patch/5990701/
->>
->> I also originally posted a patch to resolve this here:
->>
->> http://marc.info/?l=linux-pci&m=147705209308588&w=2
->>
->> and several other patch suggestions were made.  The problem with all of these
->> solutions is that there is some risk associated with them (kdump, kvm, etc.)
->> and they are papering over the real issue that the PCI shutdown should not
->> blindly switch to INTx for all devices.
->>
->> I am reproposing the original suggested patch.  There is some risk associated
->> with this but I don't think it is any more or any less than the other patches,
->> and it seems like the other patches are only applying band-aids to the problem.
->>
->> [Aside: Lukas Wunner asked why does this always happen on IRQ 16 (even when the
->> legacy device says IRQ 32 in lspci)?
->>
->> The PCI irq pins A, B, C, and D are routed according to the ACPI _PRT table for
->> the device.  _In general_, I have noted a consistent pattern for PCI irq pins
->> such that
->>
->> 	irq pin A is IRQ 0x10 (16)
->> 	irq pin B is IRQ 0x11 (17)
->> 	irq pin C is IRQ 0x12 (18)
->> 	irq pin D is IRQ 0x13 (19)
->>
->> Since the device's IRQ is hooked up to pin A we're seeing the unhandled
->> interrupt on IRQ 16.]
->>
->> I have tested this on various systems with KVM and kdump (and kdump on
->> KVM) and didn't see any issues.
->>
->> NOTE: In my testing this resolves the problem with PCI based serial ports
->> cutting off their output during shutdown.  Again, this can be tracked to the
->> PCI shutdown path switching between MSI & INTx independently of the driver.
->>
->> ----8<----
->>
->> The following unhandled IRQ warning is seen during shutdown:
->>
->> irq 16: nobody cared (try booting with the "irqpoll" option)
->> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
->> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
->>  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
->>  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
->>  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
->> Call Trace:
->>  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
->>  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
->>  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
->>  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
->>  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
->>  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
->>  [<ffffffff8102edfb>] handle_irq+0xab/0x130
->>  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
->>  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
->>  [<ffffffff81704502>] common_interrupt+0x82/0x82
->>  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
->>  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
->>  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
->>  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
->>  [<ffffffff816f6da7>] rest_init+0x77/0x80
->>  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
->>  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
->>  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
->>  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
->>  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
->>
->> pci_device_shutdown() is called on each PCI device, and does
->>
->>         if (drv && drv->shutdown)
->>                 drv->shutdown(pci_dev);
->>         pci_msi_shutdown(pci_dev);
->>         pci_msix_shutdown(pci_dev);
->>
->> The pci_msi_shutdown() and pci_msix_shutdown() functions both call
->> pci_intx_for_msi() which enables the INTx interrupt asynchronously of the
->> driver.
->>
->> The problem is that the driver may not have a shutdown function and the
->> device remains active.  The driver continues to operate the PCI device and the
->> device interrupts to generate INTx.  The driver, however, has not registered a
->> handler for INTx and the interrupt line remains set which leads to an unhandled
->> IRQ warning.
->>
->> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->> Cc: alex.williamson@redhat.com
->> Cc: darcari@redhat.com
->> Cc: mstowe@redhat.com
->> Cc: bhelgaas@google.com
->> Cc: lukas@wunner.de
->> Cc: keith.busch@intel.com
->> Cc: mika.westerberg@linux.intel.com
->> ---
->>  drivers/pci/pci-driver.c |    7 ++++---
->>  1 file changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 1ccce1cd6aca..87c35db5a564 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -461,10 +461,11 @@ static void pci_device_shutdown(struct device *dev)
->>  
->>  	pm_runtime_resume(dev);
->>  
->> -	if (drv && drv->shutdown)
->> +	if (drv && drv->shutdown) {
->>  		drv->shutdown(pci_dev);
->> -	pci_msi_shutdown(pci_dev);
->> -	pci_msix_shutdown(pci_dev);
->> +		pci_msi_shutdown(pci_dev);
->> +		pci_msix_shutdown(pci_dev);
->> +	}
->>  
->>  	/*
->>  	 * If this is a kexec reboot, turn off Bus Master bit on the
->> -- 
->> 1.7.9.3
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Jason
