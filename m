@@ -1,88 +1,154 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 18 Nov 2016 16:08:09 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v8 13/16] drivers: iommu: arm-smmu: add IORT configuration
-Message-ID: <20161118160808.GX13470@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
- <20161116152936.22955-14-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933945AbcKWRcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 12:32:10 -0500
+Date: Wed, 23 Nov 2016 11:31:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Alexander Graf <agraf@suse.de>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] pci: Don't set RCB bit in LNKCTL if the upstream
+ bridge hasn't
+Message-ID: <20161123173152.GC16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161102223552.14776-1-jthumshirn@suse.de>
+ <20161102223552.14776-2-jthumshirn@suse.de>
+ <20161116181158.GB26600@bhelgaas-glaptop.roam.corp.google.com>
+ <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161116152936.22955-14-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
- iommu@lists.linux-foundation.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Jon Masters <jcm@redhat.com>, Dennis Chen <dennis.chen@arm.com>,
- Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20161121165352.GM25762@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 03:29:33PM +0000, Lorenzo Pieralisi wrote:
-> In ACPI bases systems, in order to be able to create platform
-> devices and initialize them for ARM SMMU components, the IORT
-> kernel implementation requires a set of static functions to be
-> used by the IORT kernel layer to configure platform devices for
-> ARM SMMU components.
+On Mon, Nov 21, 2016 at 10:53:52AM -0600, Bjorn Helgaas wrote:
+> On Wed, Nov 16, 2016 at 12:11:58PM -0600, Bjorn Helgaas wrote:
+> > Hi Johannes,
+> > 
+> > On Wed, Nov 02, 2016 at 04:35:52PM -0600, Johannes Thumshirn wrote:
+> > > The Read Completion Boundary (RCB) bit must only be set on a device or
+> > > endpoint if it is set on the root complex.
+> ...
+
+> Here's the fixed one.
+
+I applied the one below to for-linus for v4.9.
+
+I did tweak the preceding patch to only share pcie_find_root_port()
+inside drivers/pci -- moved the declaration from include/linux/pci.h
+to drivers/pci/pci.h and moved the definition to drivers/pci/search.c.
+
+I don't think it needs to be visible to the whole kernel.
+
+> commit b7bff74c2e6babf12906291ee177f16444de81ad
+> Author: Johannes Thumshirn <jthumshirn@suse.de>
+> Date:   Wed Nov 16 15:47:53 2016 -0600
 > 
-> Add static configuration functions to the IORT kernel layer for
-> the ARM SMMU components, so that the ARM SMMU driver can
-> initialize its respective platform device by relying on the IORT
-> kernel infrastructure and by adding a corresponding ACPI device
-> early probe section entry.
+>     PCI: Set Read Completion Boundary to 128 iff Root Port supports it
+>     
+>     Per PCIe spec r3.0, sec 2.3.1.1, the Read Completion Boundary (RCB)
+>     determines the naturally aligned address boundaries on which a Read Request
+>     may be serviced with multiple Completions:
+>     
+>       - For a Root Complex, RCB is 64 bytes or 128 bytes
+>         This value is reported in the Link Control Register
+>     
+>         Note: Bridges and Endpoints may implement a corresponding command bit
+>         which may be set by system software to indicate the RCB value for the
+>         Root Complex, allowing the Bridge/Endpoint to optimize its behavior
+>         when the Root Complex’s RCB is 128 bytes.
+>     
+>       - For all other system elements, RCB is 128 bytes
+>     
+>     Per sec 7.8.7, if a Root Port only supports a 64-byte RCB, the RCB of all
+>     downstream devices must be clear, indicating an RCB of 64 bytes.  If the
+>     Root Port supports a 128-byte RCB, we may optionally set the RCB of
+>     downstream devices so they know they can generate larger Completions.
+>     
+>     Some BIOSes supply an _HPX that tells us to set RCB, even though the Root
+>     Port doesn't have RCB set, which may lead to Malformed TLP errors if the
+>     Endpoint generates completions larger than the Root Port can handle.
+>     
+>     The IBM x3850 X6 with BIOS version -[A8E120CUS-1.30]- 08/22/2016 supplies
+>     such an _HPX and a Mellanox MT27500 ConnectX-3 device fails to initialize:
+>     
+>       mlx4_core 0000:41:00.0: command 0xfff timed out (go bit not cleared)
+>       mlx4_core 0000:41:00.0: device is going to be reset
+>       mlx4_core 0000:41:00.0: Failed to obtain HW semaphore, aborting
+>       mlx4_core 0000:41:00.0: Fail to reset HCA
+>       ------------[ cut here ]------------
+>       kernel BUG at drivers/net/ethernet/mellanox/mlx4/catas.c:193!
+>     
+>     After 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+>     and 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices
+>     with a link"), we apply _HPX settings to *all* devices, not just those
+>     hot-added after boot.
+>     
+>     Before 7a1562d4f2d0, we didn't touch the Mellanox RCB, and the device
+>     worked.  After 7a1562d4f2d0, we set its RCB to 128, and it failed.
+>     
+>     Set the RCB to 128 iff the Root Port supports a 128-byte RCB.  Otherwise,
+>     set RCB to 64 bytes.  This effectively ignores what _HPX tells us about
+>     RCB.
+>     
+>     [bhelgaas: changelog, clear RCB if not set for Root Port]
+>     Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+>     Fixes: 7a1562d4f2d0 ("PCI: Apply _HPX Link Control settings to all devices with a link")
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=187781
+>     Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org	# v3.18+
 > 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/acpi/arm64/iort.c | 81 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/arm-smmu.c  | 83 ++++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/acpi_iort.h |  3 ++
->  3 files changed, 166 insertions(+), 1 deletion(-)
-
-[...]
-
-> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-> index 573b2b6..21d1892 100644
-> --- a/drivers/iommu/arm-smmu.c
-> +++ b/drivers/iommu/arm-smmu.c
-> @@ -28,6 +28,8 @@
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ab00267..104c46d 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1439,6 +1439,21 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+>  		dev_warn(&dev->dev, "PCI-X settings not supported\n");
+>  }
 >  
->  #define pr_fmt(fmt) "arm-smmu: " fmt
+> +static bool pcie_root_rcb_set(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *rp = pcie_find_root_port(dev);
+> +	u16 lnkctl;
+> +
+> +	if (!rp)
+> +		return false;
+> +
+> +	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
+> +	if (lnkctl & PCI_EXP_LNKCTL_RCB)
+> +		return true;
+> +
+> +	return false;
+> +}
+> +
+>  static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>  {
+>  	int pos;
+> @@ -1468,9 +1483,20 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
 >  
-> +#include <linux/acpi.h>
-> +#include <linux/acpi_iort.h>
->  #include <linux/atomic.h>
->  #include <linux/delay.h>
->  #include <linux/dma-iommu.h>
-> @@ -1904,6 +1906,70 @@ static const struct of_device_id arm_smmu_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
+>  	/* Initialize Link Control Register */
+> -	if (pcie_cap_has_lnkctl(dev))
+> +	if (pcie_cap_has_lnkctl(dev)) {
+> +
+> +		/*
+> +		 * If the Root Port supports Read Completion Boundary of
+> +		 * 128, set RCB to 128.  Otherwise, clear it.
+> +		 */
+> +		hpp->pci_exp_lnkctl_and |= PCI_EXP_LNKCTL_RCB;
+> +		hpp->pci_exp_lnkctl_or &= ~PCI_EXP_LNKCTL_RCB;
+> +		if (pcie_root_rcb_set(dev))
+> +			hpp->pci_exp_lnkctl_or |= PCI_EXP_LNKCTL_RCB;
+> +
+>  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+>  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
+> +	}
 >  
-> +#ifdef CONFIG_ACPI
-> +static int acpi_smmu_get_data(u32 model, u32 *version, u32 *impl)
-
-You should use the enum type for the version, rather than a u32.
-
-Will
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  	/* Find Advanced Error Reporting Enhanced Capability */
+>  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
