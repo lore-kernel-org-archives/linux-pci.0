@@ -1,15 +1,20 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:60258 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933256AbcKWWcJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Nov 2016 17:32:09 -0500
-Date: Wed, 23 Nov 2016 14:55:10 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+Received: from mail-co1nam03on0047.outbound.protection.outlook.com ([104.47.40.47]:63481
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933035AbcKWTXK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Nov 2016 14:23:10 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Bart Van Assche <bart.vanassche@sandisk.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
+ <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+CC: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
         "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "Kuehling, Felix" <Felix.Kuehling@amd.com>,
@@ -21,82 +26,34 @@ Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
         "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
         "Blinzer, Paul" <Paul.Blinzer@amd.com>,
         "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161123215510.GA16311@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+        <haggaie@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <09c49114-914e-8257-746d-71e39d34b103@amd.com>
+Date: Wed, 23 Nov 2016 14:06:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+In-Reply-To: <eca737c1-415c-bcd4-80b9-628010638051@sandisk.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 02:11:29PM -0700, Logan Gunthorpe wrote:
-> > As I said, there is no possible special handling. Standard IB hardware
-> > does not support changing the DMA address once a MR is created. Forget
-> > about doing that.
-> 
-> Yeah, that's essentially the point I was trying to make. Not to mention
-> all the other unrelated hardware that can't DMA to an address that might
-> disappear mid-transfer.
+On 2016-11-23 12:27 PM, Bart Van Assche wrote:
+> On 11/23/2016 09:13 AM, Logan Gunthorpe wrote:
+>> IMO any memory that has been registered for a P2P transaction should be
+>> locked from being evicted. So if there's a get_user_pages call it needs
+>> to be pinned until the put_page. The main issue being with the RDMA
+>> case: handling an eviction when a chunk of memory has been registered as
+>> an MR would be very tricky. The MR may be relied upon by another host
+>> and the kernel would have to inform user-space the MR was invalid then
+>> user-space would have to tell the remote application.
+>
+> Hello Logan,
+>
+> Are you aware that the Linux kernel already supports ODP (On Demand 
+> Paging)? See also the output of git grep -nHi on.demand.paging. See 
+> also 
+> https://www.openfabrics.org/images/eventpresos/workshops2014/DevWorkshop/presos/Tuesday/pdf/04_ODP_update.pdf.
+>
+> Bart.
+My understanding is that  the main problems are (a) h/w support (b) 
+compatibility with IB Verbs semantic.
 
-Right, it is impossible to ask for generic page migration with ongoing
-DMA. That is simply not supported by any of the hardware at all.
-
-> > Only ODP hardware allows changing the DMA address on the fly, and it
-> > works at the page table level. We do not need special handling for
-> > RDMA.
-> 
-> I am aware of ODP but, noted by others, it doesn't provide a general
-> solution to the points above.
-
-How do you mean?
-
-Perhaps I am not following what Serguei is asking for, but I
-understood the desire was for a complex GPU allocator that could
-migrate pages between GPU and CPU memory under control of the GPU
-driver, among other things. The desire is for DMA to continue to work
-even after these migrations happen.
-
-Page table mirroring *is* the general solution for this problem. The
-GPU driver controls the VMA and the DMA driver mirrors that VMA.
-
-Do you know of another option that doesn't just degenerate to page
-table mirroring??
-
-Remember, there are two facets to the RDMA ODP implementation, I feel
-there is some confusion here..
-
-The crucial part for this discussion is the ability to fence and block
-DMA for a specific range. This is the hardware capability that lets
-page migration happen: fence&block DMA, migrate page, update page
-table in HCA, unblock DMA.
-
-Without that hardware support the DMA address must be unchanging, and
-there is nothing we can do about it. This is why standard IB hardware
-must have fixed MRs - it lacks the fence&block capability.
-
-The other part is the page faulting implementation, but that is not
-required, and to Serguei's point, is not desired for GPU anyhow.
-
-> > To me this means at least items #1 and #3 should be removed from
-> > Alexander's list.
-> 
-> It's also worth noting that #4 makes use of ZONE_DEVICE (#2) so they are
-> really the same option. iopmem is really just one way to get BAR
-> addresses to user-space while inside the kernel it's ZONE_DEVICE.
-
-Seems fine for RDMA?
-
-Didn't we just strike off everything on the list except #2? :\
-
-Jason
