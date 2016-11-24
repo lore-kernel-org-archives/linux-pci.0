@@ -1,153 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Long Li <longli@microsoft.com>
-CC: Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0048.outbound.protection.outlook.com ([104.47.40.48]:41967
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934194AbcKXJpj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Nov 2016 04:45:39 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+ <20161123232503.GA13965@obsidianresearch.com>
+CC: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] pci-hyperv: use kmalloc to allocate hypercall params
- buffer
-Date: Thu, 24 Nov 2016 02:18:46 +0000
-Message-ID: <DM5PR03MB24902727D39E48272BC9B3D1A0B60@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
- <20161123232027.GM16033@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161123232027.GM16033@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+Date: Thu, 24 Nov 2016 10:45:18 +0100
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161123232503.GA13965@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am 24.11.2016 um 00:25 schrieb Jason Gunthorpe:
+> There is certainly nothing about the hardware that cares
+> about ZONE_DEVICE vs System memory.
+Well that is clearly not so simple. When your ZONE_DEVICE pages describe 
+a PCI BAR and another PCI device initiates a DMA to this address the DMA 
+subsystem must be able to check if the interconnection really works.
 
+E.g. it can happen that PCI device A exports it's BAR using ZONE_DEVICE. 
+Not PCI device B (a SATA device) can directly read/write to it because 
+it is on the same bus segment, but PCI device C (a network card for 
+example) can't because it is on a different bus segment and the bridge 
+can't handle P2P transactions.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Wednesday, November 23, 2016 3:20 PM
-> To: Long Li <longli@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Long Li <longli@microsoft.com>
-> Subject: Re: [PATCH] pci-hyperv: use kmalloc to allocate hypercall params
-> buffer
->=20
-> On Tue, Nov 08, 2016 at 02:04:38PM -0800, Long Li wrote:
-> > From: Long Li <longli@microsoft.com>
-> >
-> > hv_do_hypercall assumes that we pass a segment from a physically
-> > continuous buffer. Buffer allocated on the stack may not work if
-> > CONFIG_VMAP_STACK=3Dy is set.
-> >
-> > Change to use kmalloc to allocate this buffer.
-> >
-> > The v2 patch adds locking to access the pre-allocated buffer.
-> >
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > Reported-by: Haiyang Zhang <haiyangz@microsoft.com>
->=20
-> Waiting for a maintainer ack for this.
+We need to be able to handle such cases and fall back to bouncing 
+buffers, but I don't see that in the DMA subsystem right now.
 
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-
->=20
-> $ ./scripts/get_maintainer.pl -f drivers/pci/host/pci-hyperv.c
-> "K. Y. Srinivasan" <kys@microsoft.com> (maintainer:Hyper-V CORE AND
-> DRIVERS)
-> Haiyang Zhang <haiyangz@microsoft.com> (maintainer:Hyper-V CORE AND
-> DRIVERS)
-> ...
->=20
-> > ---
-> >  drivers/pci/host/pci-hyperv.c | 29 +++++++++++++++++++----------
-> >  1 file changed, 19 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyper=
-v.c
-> > index 763ff87..ca553df 100644
-> > --- a/drivers/pci/host/pci-hyperv.c
-> > +++ b/drivers/pci/host/pci-hyperv.c
-> > @@ -378,6 +378,8 @@ struct hv_pcibus_device {
-> >  	struct msi_domain_info msi_info;
-> >  	struct msi_controller msi_chip;
-> >  	struct irq_domain *irq_domain;
-> > +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> > +	spinlock_t retarget_msi_interrupt_lock;;
-> >  };
-> >
-> >  /*
-> > @@ -774,34 +776,40 @@ void hv_irq_unmask(struct irq_data *data)
-> >  {
-> >  	struct msi_desc *msi_desc =3D irq_data_get_msi_desc(data);
-> >  	struct irq_cfg *cfg =3D irqd_cfg(data);
-> > -	struct retarget_msi_interrupt params;
-> > +	struct retarget_msi_interrupt *params;
-> >  	struct hv_pcibus_device *hbus;
-> >  	struct cpumask *dest;
-> >  	struct pci_bus *pbus;
-> >  	struct pci_dev *pdev;
-> >  	int cpu;
-> > +	unsigned long flags;
-> >
-> >  	dest =3D irq_data_get_affinity_mask(data);
-> >  	pdev =3D msi_desc_to_pci_dev(msi_desc);
-> >  	pbus =3D pdev->bus;
-> >  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
-> sysdata);
-> >
-> > -	memset(&params, 0, sizeof(params));
-> > -	params.partition_id =3D HV_PARTITION_ID_SELF;
-> > -	params.source =3D 1; /* MSI(-X) */
-> > -	params.address =3D msi_desc->msg.address_lo;
-> > -	params.data =3D msi_desc->msg.data;
-> > -	params.device_id =3D (hbus->hdev->dev_instance.b[5] << 24) |
-> > +	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
-> > +
-> > +	params =3D &hbus->retarget_msi_interrupt_params;
-> > +	memset(params, 0, sizeof(*params));
-> > +	params->partition_id =3D HV_PARTITION_ID_SELF;
-> > +	params->source =3D 1; /* MSI(-X) */
-> > +	params->address =3D msi_desc->msg.address_lo;
-> > +	params->data =3D msi_desc->msg.data;
-> > +	params->device_id =3D (hbus->hdev->dev_instance.b[5] << 24) |
-> >  			   (hbus->hdev->dev_instance.b[4] << 16) |
-> >  			   (hbus->hdev->dev_instance.b[7] << 8) |
-> >  			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
-> >  			   PCI_FUNC(pdev->devfn);
-> > -	params.vector =3D cfg->vector;
-> > +	params->vector =3D cfg->vector;
-> >
-> >  	for_each_cpu_and(cpu, dest, cpu_online_mask)
-> > -		params.vp_mask |=3D (1ULL <<
-> vmbus_cpu_number_to_vp_number(cpu));
-> > +		params->vp_mask |=3D (1ULL <<
-> vmbus_cpu_number_to_vp_number(cpu));
-> > +
-> > +	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
-> >
-> > -	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-> > +	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
-> >
-> >  	pci_msi_unmask_irq(data);
-> >  }
-> > @@ -2186,6 +2194,7 @@ static int hv_pci_probe(struct hv_device *hdev,
-> >  	INIT_LIST_HEAD(&hbus->resources_for_children);
-> >  	spin_lock_init(&hbus->config_lock);
-> >  	spin_lock_init(&hbus->device_list_lock);
-> > +	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
-> >  	sema_init(&hbus->enum_sem, 1);
-> >  	init_completion(&hbus->remove_event);
-> >
-> > --
-> > 2.7.4
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at
-> https://na01.safelinks.protection.outlook.com/?url=3Dhttp%3A%2F%2Fvger.ke
-> rnel.org%2Fmajordomo-
-> info.html&data=3D02%7C01%7Ckys%40microsoft.com%7C95f624c719384a83b0
-> e308d413f75282%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C6361
-> 55400348714262&sdata=3DiE5j0UF00ExjolDvuilAe9Kxo17TrPScjbkFU%2BA426w
-> %3D&reserved=3D0
+Regards,
+Christian.
