@@ -1,62 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 7/9] PCI: hotplug: Remove hotplug core message
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org
-Date: Mon, 21 Nov 2016 15:46:02 -0600
-Message-ID: <20161121214602.21036.2749.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161121214006.21036.11599.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:54040 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754159AbcKXBzU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 20:55:20 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 2/3] PCI: rockchip: move the deassert of pm/aclk/pclk after phy_init
+Date: Thu, 24 Nov 2016 09:54:21 +0800
+Message-Id: <1479952462-194300-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the "PCI Hot Plug PCI Core" version message.  I don't think it
-contains any useful information.  Remove unused #defines and move the
-author information to a comment.
+Move them after phy_init as we want to optimize the logic
+of reset control and reuse rockchip_pcie_init_port later
+which should fully follow the cold boot procedure of ROM
+code.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/pci/hotplug/pci_hotplug_core.c |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index fea0b8b..56013d0 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -23,6 +23,9 @@
-  *
-  * Send feedback to <kristen.c.accardi@intel.com>
-  *
-+ * Authors:
-+ *   Greg Kroah-Hartman <greg@kroah.com>
-+ *   Scott Murray <scottm@somanetworks.com>
-  */
- 
- #include <linux/module.h>	/* try_module_get & module_put */
-@@ -50,15 +53,9 @@
- #define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
- #define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
- 
--
- /* local variables */
- static bool debug;
- 
--#define DRIVER_VERSION	"0.5"
--#define DRIVER_AUTHOR	"Greg Kroah-Hartman <greg@kroah.com>, Scott Murray <scottm@somanetworks.com>"
--#define DRIVER_DESC	"PCI Hot Plug PCI Core"
--
--
- static LIST_HEAD(pci_hotplug_slot_list);
- static DEFINE_MUTEX(pci_hp_mutex);
- 
-@@ -534,7 +531,6 @@ static int __init pci_hotplug_init(void)
- 		return result;
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-rockchip.c | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 9cb84b1..457401d 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -473,26 +473,6 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
  	}
  
--	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
- 	return result;
- }
- device_initcall(pci_hotplug_init);
+-	udelay(10);
+-
+-	err = reset_control_deassert(rockchip->pm_rst);
+-	if (err) {
+-		dev_err(dev, "deassert pm_rst err %d\n", err);
+-		return err;
+-	}
+-
+-	err = reset_control_deassert(rockchip->aclk_rst);
+-	if (err) {
+-		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+-		return err;
+-	}
+-
+-	err = reset_control_deassert(rockchip->pclk_rst);
+-	if (err) {
+-		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+-		return err;
+-	}
+-
+ 	err = phy_init(rockchip->phy);
+ 	if (err < 0) {
+ 		dev_err(dev, "fail to init phy, err %d\n", err);
+@@ -523,6 +503,26 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
++	udelay(10);
++
++	err = reset_control_deassert(rockchip->pm_rst);
++	if (err) {
++		dev_err(dev, "deassert pm_rst err %d\n", err);
++		return err;
++	}
++
++	err = reset_control_deassert(rockchip->aclk_rst);
++	if (err) {
++		dev_err(dev, "deassert aclk_rst err %d\n", err);
++		return err;
++	}
++
++	err = reset_control_deassert(rockchip->pclk_rst);
++	if (err) {
++		dev_err(dev, "deassert pclk_rst err %d\n", err);
++		return err;
++	}
++
+ 	if (rockchip->link_gen == 2)
+ 		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
+ 				    PCIE_CLIENT_CONFIG);
+-- 
+1.9.1
+
+
