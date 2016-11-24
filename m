@@ -1,100 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37975 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755074AbcKVAc1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2016 19:32:27 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAM0T22U032140
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 19:32:26 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 26uyx4g6t5-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2016 19:32:25 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-        Tue, 22 Nov 2016 10:32:23 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp01.au.ibm.com (Postfix) with ESMTP id EAF372CE8054
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100 (EST)
-Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAM0WKqK3408352
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100
-Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
-        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAM0WKc5004537
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 11:32:20 +1100
-Subject: Re: [PATCH 2/2] cxl: Set VPD timeout to avoid access failures
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ian Munsie <imunsie@au1.ibm.com>,
-        Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-References: <1479762225-51440-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Date: Tue, 22 Nov 2016 11:32:18 +1100
+Received: from quartz.orcorp.ca ([184.70.90.242]:37552 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752822AbcKXQnB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Nov 2016 11:43:01 -0500
+Date: Thu, 24 Nov 2016 09:42:49 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161124164249.GD20818@obsidianresearch.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <1479762606-51632-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <24ea6084-35e7-677f-a083-a6909adf881e@au1.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/11/16 08:10, Matthew R. Ochs wrote:
-> Some IBM CXL devices can take up to ~120ms to complete a VPD access
+On Wed, Nov 23, 2016 at 06:25:21PM -0700, Logan Gunthorpe wrote:
+> 
+> 
+> On 23/11/16 02:55 PM, Jason Gunthorpe wrote:
+> >>> Only ODP hardware allows changing the DMA address on the fly, and it
+> >>> works at the page table level. We do not need special handling for
+> >>> RDMA.
+> >>
+> >> I am aware of ODP but, noted by others, it doesn't provide a general
+> >> solution to the points above.
+> > 
+> > How do you mean?
+> 
+> I was only saying it wasn't general in that it wouldn't work for IB
+> hardware that doesn't support ODP or other hardware  that doesn't do
+> similar things (like an NVMe drive).
 
-Which devices?
+There are three cases to worry about:
+ - Coherent long lived page table mirroring (RDMA ODP MR)
+ - Non-coherent long lived page table mirroring (RDMA MR)
+ - Short lived DMA mapping (everything else)
 
-> transaction when under heavy load. With an existing default VPD timeout
-> of 50ms, reads/writes can fail despite there not being an issue with the
-> underlying hardware.
->
-> To avoid these false failures, increase the VPD wait timeout for certain
-> CXL devices to a value that allows appropriate VPD access delay when faced
-> with a worst-case scenario.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Like you say below we have to handle short lived in the usual way, and
+that covers basically every device except IB MRs, including the
+command queue on a NVMe drive.
 
-Contingent on Bjorn applying patch 1, and with comment below:
+> any complex allocators (GPU or otherwise) should respect that. And that
+> seems like it should be the default way most of this works -- and I
+> think it wouldn't actually take too much effort to make it all work now
+> as is. (Our iopmem work is actually quite small and simple.)
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Yes, absolutely, some kind of page pinning like locking is a hard
+requirement.
 
-> ---
->  drivers/misc/cxl/pci.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
-> index e96be9c..56a67cf 100644
-> --- a/drivers/misc/cxl/pci.c
-> +++ b/drivers/misc/cxl/pci.c
-> @@ -1675,6 +1675,10 @@ bool cxl_slot_is_supported(struct pci_dev *dev, int flags)
->  }
->  EXPORT_SYMBOL_GPL(cxl_slot_is_supported);
->
-> +static bool cxl_pci_is_slow_vpd_device(struct pci_dev *dev)
-> +{
-> +	return dev->device == 0x0601;
+> Yeah, we've had RDMA and O_DIRECT transfers to PCIe backed ZONE_DEVICE
+> memory working for some time. I'd say it's a good fit. The main question
+> we've had is how to expose PCIe bars to userspace to be used as MRs and
+> such.
 
-Comment with device name.
+Is there any progress on that?
 
-> +}
->
->  static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  {
-> @@ -1692,6 +1696,9 @@ static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  		return -ENODEV;
->  	}
->
-> +	if (cxl_pci_is_slow_vpd_device(dev))
-> +		pci_set_vpd_timeout(dev, msecs_to_jiffies(125));
-> +
->  	if (cxl_verbose)
->  		dump_cxl_config_space(dev);
->
->
+I still don't quite get what iopmem was about.. I thought the
+objection to uncachable ZONE_DEVICE & DAX made sense, so running DAX
+over iopmem and still ending up with uncacheable mmaps still seems
+like a non-starter to me...
 
--- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
+Serguei, what is your plan in GPU land for migration? Ie if I have a
+CPU mapped page and the GPU moves it to VRAM, it becomes non-cachable
+- do you still allow the CPU to access it? Or do you swap it back to
+cachable memory if the CPU touches it?
 
+One approach might be to mmap the uncachable ZONE_DEVICE memory and
+mark it inaccessible to the CPU - DMA could still translate. If the
+CPU needs it then the kernel migrates it to system memory so it
+becomes cachable. ??
+
+Jason
