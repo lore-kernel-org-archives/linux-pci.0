@@ -1,151 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54830 "EHLO foss.arm.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:42017 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753956AbcKUKBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Nov 2016 05:01:15 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v9 10/16] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
-Date: Mon, 21 Nov 2016 10:01:42 +0000
-Message-Id: <20161121100148.24769-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+        id S1756864AbcKXQ0Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Nov 2016 11:26:25 -0500
+Date: Thu, 24 Nov 2016 09:26:20 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161124162620.GC20818@obsidianresearch.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+ <20161123232503.GA13965@obsidianresearch.com>
+ <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
-initialization functions to detect and programme the ARM SMMU v3 driver
-features. In order to allow probing the ARM SMMUv3 with other firmwares
-than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
-specific portions so that other FW interfaces (ie ACPI) can reuse the HW
-probing functions and skip the DT portion accordingly.
+On Thu, Nov 24, 2016 at 10:45:18AM +0100, Christian König wrote:
+> Am 24.11.2016 um 00:25 schrieb Jason Gunthorpe:
+> >There is certainly nothing about the hardware that cares
+> >about ZONE_DEVICE vs System memory.
+> Well that is clearly not so simple. When your ZONE_DEVICE pages describe a
+> PCI BAR and another PCI device initiates a DMA to this address the DMA
+> subsystem must be able to check if the interconnection really works.
 
-This patch implements no functional change, only code reshuffling.
+I said the hardware doesn't care.. You are right, we still have an
+outstanding problem in Linux of how to generically DMA map a P2P
+address - which is a different issue from getting the P2P address from
+a __user pointer...
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 43 +++++++++++++++++++++++++++----------------
- 1 file changed, 27 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index e6e1c87..2b3f9ac 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2381,10 +2381,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	return 0;
- }
- 
--static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
-+static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
--	bool coherent;
-+	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
- 
- 	/* IDR0 */
- 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
-@@ -2436,13 +2436,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
- 
- 	/*
--	 * The dma-coherent property is used in preference to the ID
-+	 * The coherency feature as set by FW is used in preference to the ID
- 	 * register, but warn on mismatch.
- 	 */
--	coherent = of_dma_is_coherent(smmu->dev->of_node);
--	if (coherent)
--		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
--
- 	if (!!(reg & IDR0_COHACC) != coherent)
- 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
- 			 coherent ? "true" : "false");
-@@ -2563,21 +2559,35 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 	return 0;
- }
- 
--static int arm_smmu_device_dt_probe(struct platform_device *pdev)
-+static int arm_smmu_device_dt_probe(struct platform_device *pdev,
-+				    struct arm_smmu_device *smmu)
- {
--	int irq, ret;
--	struct resource *res;
--	struct arm_smmu_device *smmu;
- 	struct device *dev = &pdev->dev;
--	bool bypass = true;
- 	u32 cells;
-+	int ret = -EINVAL;
- 
- 	if (of_property_read_u32(dev->of_node, "#iommu-cells", &cells))
- 		dev_err(dev, "missing #iommu-cells property\n");
- 	else if (cells != 1)
- 		dev_err(dev, "invalid #iommu-cells value (%d)\n", cells);
- 	else
--		bypass = false;
-+		ret = 0;
-+
-+	parse_driver_options(smmu);
-+
-+	if (of_dma_is_coherent(dev->of_node))
-+		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-+
-+	return ret;
-+}
-+
-+static int arm_smmu_device_probe(struct platform_device *pdev)
-+{
-+	int irq, ret;
-+	struct resource *res;
-+	struct arm_smmu_device *smmu;
-+	struct device *dev = &pdev->dev;
-+	bool bypass;
- 
- 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
- 	if (!smmu) {
-@@ -2614,10 +2624,11 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 	if (irq > 0)
- 		smmu->gerr_irq = irq;
- 
--	parse_driver_options(smmu);
-+	/* Set bypass mode according to firmware probing result */
-+	bypass = !!arm_smmu_device_dt_probe(pdev, smmu);
- 
- 	/* Probe the h/w */
--	ret = arm_smmu_device_probe(smmu);
-+	ret = arm_smmu_device_hw_probe(smmu);
- 	if (ret)
- 		return ret;
- 
-@@ -2679,7 +2690,7 @@ static struct platform_driver arm_smmu_driver = {
- 		.name		= "arm-smmu-v3",
- 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
- 	},
--	.probe	= arm_smmu_device_dt_probe,
-+	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
- 
--- 
-2.10.0
-
+Jason
