@@ -1,36 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:55046 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933689AbcKMOWC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2016 09:22:02 -0500
-From: Noa Osherovich <noaos@mellanox.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-        majd@mellanox.com, noaos@mellanox.com
-Subject: [PATCH 0/4] Cover letter
-Date: Sun, 13 Nov 2016 16:21:38 +0200
-Message-Id: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
+Date: Thu, 24 Nov 2016 11:11:34 -0700
+MIME-Version: 1.0
+In-Reply-To: <20161124164249.GD20818@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following 3 patches unmark some Mellanox devices as having broken
-INTx masking.
 
-The first patch moves all broken INTx masking to FINAL instead of
-HEADER so that the fixup can execute on all archs.
-The second fixup changes the Mellanox marking to be according to a
-list of devices rather than a general fixup by vendor.
-The third patch excludes some Mellanox devices from the INTx broken
-marking according to device ID / firmware version.
 
-Noa Osherovich (3):
-  PCI: Use FINAL fixup to mark broken INTx masking
-  PCI: Convert Mellanox quirks to be for listed devices only
-  PCI: Add checks to mellanox_check_broken_intx_masking
+On 24/11/16 09:42 AM, Jason Gunthorpe wrote:
+> There are three cases to worry about:
+>  - Coherent long lived page table mirroring (RDMA ODP MR)
+>  - Non-coherent long lived page table mirroring (RDMA MR)
+>  - Short lived DMA mapping (everything else)
+> 
+> Like you say below we have to handle short lived in the usual way, and
+> that covers basically every device except IB MRs, including the
+> command queue on a NVMe drive.
 
- drivers/pci/quirks.c | 172 ++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 136 insertions(+), 36 deletions(-)
+Yes, this makes sense to me. Though I thought regular IB MRs with
+regular memory currently pinned the pages (despite being long lived)
+that's why we can run up against the "max locked memory" limit. It
+doesn't seem so terrible if GPU memory had a similar restriction until
+ODP like solutions get implemented.
 
--- 
-1.8.3.1
+>> Yeah, we've had RDMA and O_DIRECT transfers to PCIe backed ZONE_DEVICE
+>> memory working for some time. I'd say it's a good fit. The main question
+>> we've had is how to expose PCIe bars to userspace to be used as MRs and
+>> such.
 
+> Is there any progress on that?
+
+Well, I guess there's some consensus building to do. The existing
+options are:
+
+* Device DAX: which could work but the problem I see with it is that it
+only allows one application to do these transfers. Or there would have
+to be some user-space coordination to figure which application gets what
+memeroy.
+
+* Regular DAX in the FS doesn't work at this time because the FS can
+move the file you think your transfer to out from under you. Though I
+understand there's been some work with XFS to solve that issue.
+
+Though, we've been considering that the backed memory would be
+non-volatile which adds some of this complexity. If the memory were
+volatile the kernel would just need to do some relatively straight
+forward allocation to user-space when asked. For example, with NVMe, the
+kernel could give chunks of the CMB buffer to userspace via an mmap call
+to /dev/nvmeX. Though I think there's been some push back against things
+like that as well.
+
+> I still don't quite get what iopmem was about.. I thought the
+> objection to uncachable ZONE_DEVICE & DAX made sense, so running DAX
+> over iopmem and still ending up with uncacheable mmaps still seems
+> like a non-starter to me...
+
+The latest incarnation of iopmem simply created a block device backed by
+ZONE_DEVICE memory on a PCIe BAR. We then put a DAX FS on it and
+user-space could mmap the files and send them to other devices to do P2P
+transfers.
+
+I don't think there was a hard objection to uncachable ZONE_DEVICE and
+DAX. We did try our experimental hardware with cached ZONE_DEVICE and it
+did work but the performance was beyond unusable (which may be a
+hardware issue). In the end I feel the driver would have to decide the
+most appropriate caching for the hardware and I don't understand why WC
+or UC wouldn't work with ZONE_DEVICE.
+
+Logan
