@@ -1,161 +1,195 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-        "liudongdong (C)"
-	<liudongdong3@huawei.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "Wangzhou (B)"
-	<wangzhou1@hisilicon.com>,
-        "pratyush.anand@gmail.com"
-	<pratyush.anand@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "Chenxin (Charles)"
-	<charles.chenxin@huawei.com>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: RE: [PATCH V6 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-Date: Tue, 22 Nov 2016 15:05:29 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F92CA85@lhreml507-mbx>
-References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
- <1479816529-97410-3-git-send-email-liudongdong3@huawei.com>
- <026faf89-93de-4238-f69a-ea02c57e5ee0@semihalf.com>
-In-Reply-To: <026faf89-93de-4238-f69a-ea02c57e5ee0@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:36560 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754159AbcKXBz2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 20:55:28 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 1/3] PCI: rockchip: split out rockchip_cfg_atu
+Date: Thu, 24 Nov 2016 09:54:20 +0800
+Message-Id: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz
+We split out a new function, rockchip_cfg_atu, in order to
+re-configure the atu when missing these information after
+wakeup from S3.
 
-> -----Original Message-----
-> From: Tomasz Nowicki [mailto:tn@semihalf.com]
-> Sent: 22 November 2016 13:58
-> To: liudongdong (C); helgaas@kernel.org; arnd@arndb.de;
-> rafael@kernel.org; Lorenzo.Pieralisi@arm.com; Wangzhou (B);
-> pratyush.anand@gmail.com
-> Cc: linux-pci@vger.kernel.org; linux-acpi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; jcm@redhat.com; Gabriele Paoloni; Chenxin
-> (Charles); hanjun.guo@linaro.org; Linuxarm
-> Subject: Re: [PATCH V6 2/2] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
->=20
-> On 22.11.2016 13:08, Dongdong Liu wrote:
-> > PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
-> > It is non ECAM only for the RC bus config space;for any other bus
-> > underneath the root bus we support ECAM access.
-> > Add specific quirks for PCI config space accessors.This involves:
-> > 1. New initialization call hisi_pcie_init() to obtain rc base
-> > addresses from PNP0C02 at the root of the ACPI namespace (under
-> \_SB).
-> > 2. New entry in common quirk array.
-> >
-> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > ---
-> >  MAINTAINERS                       |   1 +
-> >  drivers/acpi/pci_mcfg.c           |  13 +++++
-> >  drivers/pci/host/Kconfig          |   7 +++
-> >  drivers/pci/host/Makefile         |   1 +
-> >  drivers/pci/host/pcie-hisi-acpi.c | 119
-> ++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci-ecam.h          |   5 ++
-> >  6 files changed, 146 insertions(+)
-> >  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
-> >
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 1cd38a7..b224caa 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
-> >  S:	Maintained
-> >  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> >  F:	drivers/pci/host/pcie-hisi.c
-> > +F:	drivers/pci/host/pcie-hisi-acpi.c
-> >
-> >  PCIE DRIVER FOR ROCKCHIP
-> >  M:	Shawn Lin <shawn.lin@rock-chips.com>
-> > diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> > index ac21db3..3297c5a 100644
-> > --- a/drivers/acpi/pci_mcfg.c
-> > +++ b/drivers/acpi/pci_mcfg.c
-> > @@ -57,6 +57,19 @@ struct mcfg_fixup {
-> >  	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
-> >  	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
-> >  	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
-> > +#ifdef CONFIG_PCI_ECAM_QUIRKS
-> > +	#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
-> > +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
-> > +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
-> > +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
-> > +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
-> > +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-> > +#endif
-> >  };
-> >
-> >  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index ae98644..1fbade5 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -301,4 +301,11 @@ config VMD
-> >  	  To compile this driver as a module, choose M here: the
-> >  	  module will be called vmd.
-> >
-> > +config PCI_ECAM_QUIRKS
-> > +	bool "PCI ECAM quirks for ARM64 platform"
-> > +	depends on PCI_ECAM && ARM64 && ACPI
-> > +	help
-> > +	  Say y here to enable your platform-specific config access that
-> > +	  is not ECAM compliant.
-> > +
->=20
-> ARM64 selects PCI_ECAM for ACPI anyway so we can skip it here.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Yes sure
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
 
->=20
-> How about selecting PCI_ECAM_QUIRKS from ARM64 Kconfig:
+Changes in v3: None
+Changes in v2:
+- remove msg region support
 
-I don't think we should assume that ARM64 platforms should
-support quirks by default...
-i.e. from my perspective the quirk module should go in only
-if strictly required by the platform you're working on.
+ drivers/pci/host/pcie-rockchip.c | 104 +++++++++++++++++++++------------------
+ 1 file changed, 55 insertions(+), 49 deletions(-)
 
-Thoughts?
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index b55037a..9cb84b1 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -210,6 +210,11 @@ struct rockchip_pcie {
+ 	int	link_gen;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
++	u32     io_size;
++	int     offset;
++	phys_addr_t io_bus_addr;
++	u32     mem_size;
++	phys_addr_t mem_bus_addr;
+ };
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+@@ -1149,6 +1154,50 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+ 	return 0;
+ }
+ 
++static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
++{
++	int offset;
++	int err;
++	int reg_no;
++
++	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
++		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
++						AXI_WRAPPER_MEM_WRITE,
++						20 - 1,
++						rockchip->mem_bus_addr +
++						(reg_no << 20),
++						0);
++		if (err) {
++			dev_err(rockchip->dev,
++					"program RC mem outbound ATU failed\n");
++			return err;
++		}
++	}
++
++	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
++	if (err) {
++		dev_err(rockchip->dev, "program RC mem inbound ATU failed\n");
++		return err;
++	}
++
++	offset = rockchip->mem_size >> 20;
++	for (reg_no = 0; reg_no < (rockchip->io_size >> 20); reg_no++) {
++		err = rockchip_pcie_prog_ob_atu(rockchip,
++						reg_no + 1 + offset,
++						AXI_WRAPPER_IO_WRITE,
++						20 - 1,
++						rockchip->io_bus_addr +
++						(reg_no << 20),
++						0);
++		if (err) {
++			dev_err(rockchip->dev,
++					"program RC io outbound ATU failed\n");
++			return err;
++		}
++	}
++
++	return err;
++}
+ static int rockchip_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct rockchip_pcie *rockchip;
+@@ -1158,13 +1207,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	resource_size_t io_base;
+ 	struct resource	*mem;
+ 	struct resource	*io;
+-	phys_addr_t io_bus_addr = 0;
+-	u32 io_size;
+-	phys_addr_t mem_bus_addr = 0;
+-	u32 mem_size = 0;
+-	int reg_no;
+ 	int err;
+-	int offset;
+ 
+ 	LIST_HEAD(res);
+ 
+@@ -1231,14 +1274,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_vpcie;
+ 
+ 	/* Get the I/O and memory ranges from DT */
+-	io_size = 0;
+ 	resource_list_for_each_entry(win, &res) {
+ 		switch (resource_type(win->res)) {
+ 		case IORESOURCE_IO:
+ 			io = win->res;
+ 			io->name = "I/O";
+-			io_size = resource_size(io);
+-			io_bus_addr = io->start - win->offset;
++			rockchip->io_size = resource_size(io);
++			rockchip->io_bus_addr = io->start - win->offset;
+ 			err = pci_remap_iospace(io, io_base);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+@@ -1249,8 +1291,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		case IORESOURCE_MEM:
+ 			mem = win->res;
+ 			mem->name = "MEM";
+-			mem_size = resource_size(mem);
+-			mem_bus_addr = mem->start - win->offset;
++			rockchip->mem_size = resource_size(mem);
++			rockchip->mem_bus_addr = mem->start - win->offset;
+ 			break;
+ 		case IORESOURCE_BUS:
+ 			rockchip->root_bus_nr = win->res->start;
+@@ -1260,45 +1302,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	if (mem_size) {
+-		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
+-			err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
+-							AXI_WRAPPER_MEM_WRITE,
+-							20 - 1,
+-							mem_bus_addr +
+-							(reg_no << 20),
+-							0);
+-			if (err) {
+-				dev_err(dev, "program RC mem outbound ATU failed\n");
+-				goto err_vpcie;
+-			}
+-		}
+-	}
+-
+-	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
+-	if (err) {
+-		dev_err(dev, "program RC mem inbound ATU failed\n");
++	err = rockchip_cfg_atu(rockchip);
++	if (err)
+ 		goto err_vpcie;
+-	}
+-
+-	offset = mem_size >> 20;
+-
+-	if (io_size) {
+-		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
+-			err = rockchip_pcie_prog_ob_atu(rockchip,
+-							reg_no + 1 + offset,
+-							AXI_WRAPPER_IO_WRITE,
+-							20 - 1,
+-							io_bus_addr +
+-							(reg_no << 20),
+-							0);
+-			if (err) {
+-				dev_err(dev, "program RC io outbound ATU failed\n");
+-				goto err_vpcie;
+-			}
+-		}
+-	}
+-
+ 	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
+ 	if (!bus) {
+ 		err = -ENOMEM;
+-- 
+1.9.1
 
-Thanks
 
-Gab
-
->=20
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 30398db..9743186 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -105,6 +105,7 @@ config ARM64
->          select OF_EARLY_FLATTREE
->          select OF_RESERVED_MEM
->          select PCI_ECAM if ACPI
-> +       select PCI_ECAM_QUIRKS if ACPI
->          select POWER_RESET
->          select POWER_SUPPLY
->          select SPARSE_IRQ
->=20
-> I agree with Bjorn, we should not have to turn on platform-specific
-> config options for ARM64 & ACPI.
->=20
-> Thanks,
-> Tomasz
