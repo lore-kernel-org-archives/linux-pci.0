@@ -1,65 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        bhelgaas@google.com, olof@lixom.net,
-        linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org,
-        benh@kernel.crashing.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com, marc.zyngier@arm.com
-Subject: Re: [PATCH V5 2/3] ARM64 LPC: Add missing range exception for special ISA
-Date: Tue, 08 Nov 2016 17:19:54 +0100
-Message-ID: <2368890.jTbyGqYR0M@wuerfel>
-In-Reply-To: <20161108114953.GB15297@leverpostej>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com> <1478576829-112707-3-git-send-email-yuanzhichang@hisilicon.com> <20161108114953.GB15297@leverpostej>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+ <20161123232503.GA13965@obsidianresearch.com>
+ <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+ <20161124162620.GC20818@obsidianresearch.com>
+CC: Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <87e6cfce-c65d-2d9f-a3c6-e4224cb94b2c@amd.com>
+Date: Thu, 24 Nov 2016 12:00:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20161124162620.GC20818@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 8, 2016 11:49:53 AM CET Mark Rutland wrote:
-> On Tue, Nov 08, 2016 at 11:47:08AM +0800, zhichang.yuan wrote:
-> > +Hisilicon Hip06 low-pin-count device
-> > +  Usually LPC controller is part of PCI host bridge, so the legacy ISA ports
-> > +  locate on LPC bus can be accessed direclty. But some SoCs have independent
-> > +  LPC controller, and access the legacy ports by triggering LPC I/O cycles.
-> > +  Hisilicon Hip06 implements this LPC device.
-> 
-> s/direclty/directly/
-> 
-> My understanding of ISA (which may be flawed) is that it's not part of
-> the PCI host bridge, but rather on x86 it happens to share the IO space
-> with PCI.
 
-On normal systems, ISA or LPC are behind a PCI bridge device, which
-passes down both low addresses of I/O space and memory space.
+On 2016-11-24 11:26 AM, Jason Gunthorpe wrote:
+> On Thu, Nov 24, 2016 at 10:45:18AM +0100, Christian König wrote:
+>> Am 24.11.2016 um 00:25 schrieb Jason Gunthorpe:
+>>> There is certainly nothing about the hardware that cares
+>>> about ZONE_DEVICE vs System memory.
+>> Well that is clearly not so simple. When your ZONE_DEVICE pages describe a
+>> PCI BAR and another PCI device initiates a DMA to this address the DMA
+>> subsystem must be able to check if the interconnection really works.
+> I said the hardware doesn't care.. You are right, we still have an
+> outstanding problem in Linux of how to generically DMA map a P2P
+> address - which is a different issue from getting the P2P address from
+> a __user pointer...
+>
+> Jason
+I agreed but the problem is that one issue immediately introduce another 
+one
+to solve and so on (if we do not want to cut corners). I would think  that
+a lot of them interconnected because the way how one problem could be
+solved may impact solution for another.
 
-> So, how about this becomes:
-> 
->   Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
->   provides access to some legacy ISA devices.
-> 
-> I believe that we could theoretically have multiple independent LPC/ISA
-> busses, as is possible with PCI on !x86 systems. If the current ISA code
-> assumes a singleton bus, I think that's something that needs to be fixed
-> up more generically.
-> 
-> I don't see why we should need any architecture-specific code here. Why
-> can we not fix up the ISA bus code in drivers/of/address.c such that it
-> handles multiple ISA bus instances, and translates all sub-device
-> addresses relative to the specific bus instance?
-
-I think it is a relatively safe assumption that there is only one
-ISA bridge. A lot of old drivers hardcode PIO or memory addresses
-when talking to an ISA device, so having multiple instances is
-already problematic.
-
-What is odd about ARM64 here is that the PIO space is not shared among
-all ISA and PCI buses in some cases.
-
-	Arnd
+btw: about "DMA map a p2p address": Right now to enable  p2p between 
+devices
+it is required/recommended to disable iommu support  (e.g. intel iommu 
+driver
+has special logic for graphics and  comment "Reserve all PCI MMIO to avoid
+peer-to-peer access").
