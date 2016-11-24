@@ -1,155 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55450 "EHLO foss.arm.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:52180 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754186AbcKPP3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Nov 2016 10:29:10 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v8 10/16] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
-Date: Wed, 16 Nov 2016 15:29:30 +0000
-Message-Id: <20161116152936.22955-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
+        id S1752475AbcKXQYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Nov 2016 11:24:31 -0500
+Date: Thu, 24 Nov 2016 09:24:22 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161124162422.GB20818@obsidianresearch.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <SN1PR12MB0703CE07F4878243164299C4FEB70@SN1PR12MB0703.namprd12.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <SN1PR12MB0703CE07F4878243164299C4FEB70@SN1PR12MB0703.namprd12.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
-initialization functions to detect and programme the ARM SMMU v3 driver
-features. In order to allow probing the ARM SMMUv3 with other firmwares
-than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
-specific portions so that other FW interfaces (ie ACPI) can reuse the HW
-probing functions and skip the DT portion accordingly.
+On Thu, Nov 24, 2016 at 12:40:37AM +0000, Sagalovitch, Serguei wrote:
+> On Wed, Nov 23, 2016 at 02:11:29PM -0700, Logan Gunthorpe wrote:
+> 
+> > Perhaps I am not following what Serguei is asking for, but I
+> > understood the desire was for a complex GPU allocator that could
+> > migrate pages between GPU and CPU memory under control of the GPU
+> > driver, among other things. The desire is for DMA to continue to work
+> > even after these migrations happen.
+> 
+> The main issue is to  how to solve use cases when p2p is 
+> requested/initiated via CPU pointers where such pointers could 
+> point to non-system memory location e.g.  VRAM.  
 
-This patch implements no functional change, only code reshuffling.
+Okay, but your list is conflating a whole bunch of problems..
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 46 +++++++++++++++++++++++++++++----------------
- 1 file changed, 30 insertions(+), 16 deletions(-)
+ 1) How to go from a __user pointer to a p2p DMA address
+  a) How to validate, setup iommu and maybe worst case bounce buffer
+     these p2p DMAs
+ 2) How to allow drivers (ie GPU allocator) dynamically
+    remap pages in a VMA to/from p2p DMA addresses
+ 3) How to expose uncachable p2p DMA address to user space via mmap
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index e6e1c87..ed563307 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2381,10 +2381,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	return 0;
- }
- 
--static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
-+static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
--	bool coherent;
-+	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
- 
- 	/* IDR0 */
- 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
-@@ -2436,13 +2436,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
- 
- 	/*
--	 * The dma-coherent property is used in preference to the ID
-+	 * The coherency feature as set by FW is used in preference to the ID
- 	 * register, but warn on mismatch.
- 	 */
--	coherent = of_dma_is_coherent(smmu->dev->of_node);
--	if (coherent)
--		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
--
- 	if (!!(reg & IDR0_COHACC) != coherent)
- 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
- 			 coherent ? "true" : "false");
-@@ -2563,21 +2559,37 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 	return 0;
- }
- 
--static int arm_smmu_device_dt_probe(struct platform_device *pdev)
-+static int arm_smmu_device_dt_probe(struct platform_device *pdev,
-+				    struct arm_smmu_device *smmu,
-+				    bool *bypass)
- {
--	int irq, ret;
--	struct resource *res;
--	struct arm_smmu_device *smmu;
- 	struct device *dev = &pdev->dev;
--	bool bypass = true;
- 	u32 cells;
- 
-+	*bypass = true;
-+
- 	if (of_property_read_u32(dev->of_node, "#iommu-cells", &cells))
- 		dev_err(dev, "missing #iommu-cells property\n");
- 	else if (cells != 1)
- 		dev_err(dev, "invalid #iommu-cells value (%d)\n", cells);
- 	else
--		bypass = false;
-+		*bypass = false;
-+
-+	parse_driver_options(smmu);
-+
-+	if (of_dma_is_coherent(dev->of_node))
-+		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-+
-+	return 0;
-+}
-+
-+static int arm_smmu_device_probe(struct platform_device *pdev)
-+{
-+	int irq, ret;
-+	struct resource *res;
-+	struct arm_smmu_device *smmu;
-+	struct device *dev = &pdev->dev;
-+	bool bypass;
- 
- 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
- 	if (!smmu) {
-@@ -2614,10 +2626,12 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 	if (irq > 0)
- 		smmu->gerr_irq = irq;
- 
--	parse_driver_options(smmu);
-+	ret = arm_smmu_device_dt_probe(pdev, smmu, &bypass);
-+	if (ret)
-+		return ret;
- 
- 	/* Probe the h/w */
--	ret = arm_smmu_device_probe(smmu);
-+	ret = arm_smmu_device_hw_probe(smmu);
- 	if (ret)
- 		return ret;
- 
-@@ -2679,7 +2693,7 @@ static struct platform_driver arm_smmu_driver = {
- 		.name		= "arm-smmu-v3",
- 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
- 	},
--	.probe	= arm_smmu_device_dt_probe,
-+	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
- 
--- 
-2.10.0
+> to allow "get_user_pages"  to work transparently similar 
+> how it is/was done for "DAX Device" case. Unfortunately 
+> based on my understanding "DAX Device" implementation 
+> deal only with permanently  "locked" memory  (fixed location) 
+> unrelated to "get_user_pages"/"put_page" scope  
+> which doesn't satisfy requirements  for "eviction" / "moving" of 
+> memory keeping CPU address intact.  
 
+Hurm, isn't that issue with DAX only to do with being coherent with
+the page cache?
+
+A GPU allocator would not use the page cache, it would have to
+construct VMAs some other way.
+
+> My understanding is that It will not solve RDMA MR issue where "lock" 
+> could be during the whole  application life but  (a) it will not make 
+> RDMA MR case worse  (b) should be enough for all other cases for 
+> "get_user_pages"/"put_page" controlled by  kernel.
+
+Right. There is no solution to the RDMA MR issue on old hardware. Apps
+that are using GPU+RDMA+Old hardware will have to use short lived MRs
+and pay that performance cost, or give up on migration.
+
+Jason
