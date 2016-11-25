@@ -1,69 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 18 Nov 2016 14:49:02 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v8 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161118144902.GQ13470@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
- <20161116152936.22955-5-lorenzo.pieralisi@arm.com>
+Return-Path: <fancer.lancer@gmail.com>
+Return-Path: <fancer.lancer@gmail.com>
+Date: Fri, 25 Nov 2016 17:03:56 +0300
+From: Serge Semin <fancer.lancer@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, shawn.lin@rock-chips.com, luto@kernel.org,
+	Sergey.Semin@t-platforms.ru, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC] PCI: Fix kernel panic of root-port-less PCIe enum due to
+ ASPM
+Message-ID: <20161125140356.GB11256@mobilestation>
+References: <1475746455-20665-1-git-send-email-fancer.lancer@gmail.com>
+ <20161108232957.GH14322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161116152936.22955-5-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161108232957.GH14322@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 03:29:24PM +0000, Lorenzo Pieralisi wrote:
-> The of_iommu_{set/get}_ops() API is used to associate a device
-> tree node with a specific set of IOMMU operations. The same
-> kernel interface is required on systems booting with ACPI, where
-> devices are not associated with a device tree node, therefore
-> the interface requires generalization.
-> 
-> The struct device fwnode member represents the fwnode token associated
-> with the device and the struct it points at is firmware specific;
-> regardless, it is initialized on both ACPI and DT systems and makes an
-> ideal candidate to use it to associate a set of IOMMU operations to a
-> given device, through its struct device.fwnode member pointer, paving
-> the way for representing per-device iommu_ops (ie an iommu instance
-> associated with a device).
-> 
-> Convert the DT specific of_iommu_{set/get}_ops() interface to
-> use struct device.fwnode as a look-up token, making the interface
-> usable on ACPI systems and rename the data structures and the
-> registration API so that they are made to represent their usage
-> more clearly.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/iommu/iommu.c    | 40 ++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/of_iommu.c | 39 ---------------------------------------
->  include/linux/iommu.h    | 14 ++++++++++++++
->  include/linux/of_iommu.h | 12 ++++++++++--
->  4 files changed, 64 insertions(+), 41 deletions(-)
+On Tue, Nov 08, 2016 at 05:29:57PM -0600, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Acked-by: Will Deacon <will.deacon@arm.com>
+Hello Bjorn,
+Here are the answers on your questions inlined in the text.
 
-Will
+> Hi Serge,
+> 
+> On Thu, Oct 06, 2016 at 12:34:15PM +0300, Serge Semin wrote:
+> > Hello linux folks,
+> > 
+> >     Sometime ago I discovered a kernel panic popping up when PCI subsystem was
+> > trying to enumerate PCI express bus with ASPM service enabled. Here it is:
+> > 
+> > [    5.089667] CPU 0 Unable to handle kernel paging request at virtual
+> > address 00000060, epc == 80317004, ra == 80316ac8
+> > [    5.120952] Oops[#1]:
+> >           ...
+> > [    5.528438] Call Trace:
+> > [    5.535640] [<80317004>] pcie_aspm_init_link_state+0x6c0/0x814
+> > [    5.552843] [<80300c44>] pci_scan_slot+0x140/0x148
+> > [    5.566957] [<80301dcc>] pci_scan_child_bus+0x50/0x1b0
+> > [    5.582096] [<80301944>] pci_scan_bridge+0x25c/0x694
+> > [    5.596724] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
+> > [    5.611862] [<80301944>] pci_scan_bridge+0x25c/0x694
+> > [    5.626488] [<80301e78>] pci_scan_child_bus+0xfc/0x1b0
+> > [    5.641628] [<8030215c>] pci_scan_root_bus+0x64/0x124
+> > [    5.656528] [<804ca298>] pcibios_scanbus+0xa8/0x188
+> > 
+> >     I more than sure you are familiar with the issue, since I've found the
+> > mailing discussion: "PCI: avoid NULL deref in alloc_pcie_link_state"
+> > https://patchwork.kernel.org/patch/2751651/
+> > https://bugzilla.kernel.org/show_bug.cgi?id=60111
+> 
+> I'm trying to puzzle out a few things here.  Maybe you can help me out?
+> 
+> - Does this issue exist in current upstream kernels?  Your dmesg shows a
+>   v3.19-based kernel.  c8fc9339409d ("PCI/ASPM: Use dev->has_secondary_link
+>   to find downstream links"), which appeared in v4.2, fixes a problem very
+>   similar to what you're reporting.
+> 
+
+I saw that fix, but alas it hasn't fixed the issue. I've tested kernel 4.4.24
+without my patch applied and the problem with ASPM-related kernel panic still
+exists (see the stack-trace above).
+
+> - When we dereference the NULL pointer, which device did we call
+>   pcie_aspm_init_link_state() for?
+> 
+
+My suggestion was that the problem arised in the framework of bus 2 enumeration.
+Since there was no root bus on my architecture, the pci_link_state structure was
+not created. So when the algorithm tried to enumerate the second bus, it needed
+actual pci_link_state structure of parental bus, which hadn't been created.
+That's how the NULL-dereference happened.
+
+> - https://bugzilla.kernel.org/attachment.cgi?id=240981 is the failing dmesg
+>   log, and it shows "vgaarb: device added: PCI:0000:04:00.0".
+>   
+>   Your lspci output (https://bugzilla.kernel.org/attachment.cgi?id=241001)
+>   shows 04:00.0 is a downstream port, but vga_arbiter_add_pci_device() only
+>   prints that message for VGA class devices.
+> 
+>   https://bugzilla.kernel.org/attachment.cgi?id=240991, the successful
+>   dmesg log, shows "vgaarb: device added: PCI:0000:06:00.0".  That makes
+>   more sense because 06:00.0 is class 0300, which is a VGA device.
+> 
+> Bjorn
+
+I can't be sure about the reason of that strange enumeration. But I can assure
+you, that that bus confusion isn't the reason of the ASPM panicing. So I can
+just guess, that the misleading BDF can be caused by SMP (I've got a processor
+with two cores) and ASPM panic. VGA driver initialization may happen
+concurrently with PCI bus enumeration.
+
+Regards,
+-Sergey
