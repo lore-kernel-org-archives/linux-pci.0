@@ -1,58 +1,262 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 11 Nov 2016 09:32:26 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Al Stone <al.stone@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Al Stone <ahs@redhat.com>,
-	Robert Richter <rrichter@cavium.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Christopher Covington <cov@codeaurora.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
-Message-ID: <20161111093226.GA13333@red-moon>
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
- <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:32792 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750801AbcKYK5f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:35 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: [PATCH v4 04/10] PCI: tegra: Use new pci_register_host_bridge() interface
+Date: Fri, 25 Nov 2016 11:57:12 +0100
+Message-Id: <20161125105718.3866-4-thierry.reding@gmail.com>
+In-Reply-To: <20161125105718.3866-1-thierry.reding@gmail.com>
+References: <20161125105718.3866-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 04:18:54PM -0700, Al Stone wrote:
-> On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
-> > Hi all,
-> > 
-> > We've been working through the details of getting ACPI to work on
-> > arm64, and there have been lots of questions about what this means for
-> > PCI.  I've outlined this for several people individually, but I'm
-> > going to send this separately, apart from a specific patch series, to
-> > make sure we're all on the same page.  Please correct my errors and
-> > misunderstandings.
-> > 
-> > Bjorn
-> > 
-> >[snip....]
-> 
-> A big +1 to all of this.  This also looks like something that should
-> be added to either PCI, ACPI or arm64 documentation (or even all three).
+From: Arnd Bergmann <arnd@arndb.de>
 
-And to arm64 platforms FW :)
+Tegra is one of the remaining platforms that still use the traditional
+pci_common_init_dev() interface for probing PCI host bridges.
 
-> What do you think?
+This demonstrates how to convert it to the pci_register_host interface
+I just added in a previous patch. This leads to a more linear probe
+sequence that can handle errors better because we avoid callbacks into
+the driver, and it makes the driver architecture independent.
 
-I do not think there is anything ARM64 specific in Bjorn's description,
-but I do think it is very useful to have it in documentation, these
-bits of information are scattered around ACPI specs and PCI FW specs,
-having a single source would help and would have prevented asking
-Bjorn the same questions 100 times.
+Changes in v4 (Thierry Reding):
+- update for changes in core to deal with driver-private data
 
-> Thank you for putting this together, Bjorn.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 105 ++++++++++++++++++++++---------------------
+ 1 file changed, 54 insertions(+), 51 deletions(-)
 
-+1, Thank you very much for this nice summary Bjorn.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 8dfccf733241..d5206fa53353 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -322,11 +322,6 @@ struct tegra_pcie_bus {
+ 	unsigned int nr;
+ };
+ 
+-static inline struct tegra_pcie *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ static inline void afi_writel(struct tegra_pcie *pcie, u32 value,
+ 			      unsigned long offset)
+ {
+@@ -430,7 +425,8 @@ static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
+ 
+ static int tegra_pcie_add_bus(struct pci_bus *bus)
+ {
+-	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
++	struct pci_host_bridge *host = pci_find_host_bridge(bus);
++	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+ 	struct tegra_pcie_bus *b;
+ 
+ 	b = tegra_pcie_bus_alloc(pcie, bus->number);
+@@ -444,7 +440,8 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
+ 
+ static void tegra_pcie_remove_bus(struct pci_bus *child)
+ {
+-	struct tegra_pcie *pcie = sys_to_pcie(child->sysdata);
++	struct pci_host_bridge *host = pci_find_host_bridge(child);
++	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+ 	struct tegra_pcie_bus *bus, *tmp;
+ 
+ 	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
+@@ -461,7 +458,8 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 					unsigned int devfn,
+ 					int where)
+ {
+-	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
++	struct pci_host_bridge *host = pci_find_host_bridge(bus);
++	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+ 	struct device *dev = pcie->dev;
+ 	void __iomem *addr = NULL;
+ 
+@@ -610,39 +608,31 @@ static void tegra_pcie_relax_enable(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
+ 
+-static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
++static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ {
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
+ 	struct device *dev = pcie->dev;
+ 	int err;
+ 
+-	sys->mem_offset = pcie->offset.mem;
+-	sys->io_offset = pcie->offset.io;
++	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
++	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
++	pci_add_resource_offset(windows, &pcie->prefetch, pcie->offset.mem);
++	pci_add_resource(windows, &pcie->busn);
+ 
+-	err = devm_request_resource(dev, &iomem_resource, &pcie->io);
++	err = devm_request_pci_bus_resources(dev, windows);
+ 	if (err < 0)
+ 		return err;
+ 
+-	err = pci_remap_iospace(&pcie->pio, pcie->io.start);
+-	if (!err)
+-		pci_add_resource_offset(&sys->resources, &pcie->pio,
+-					sys->io_offset);
+-
+-	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
+-	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
+-				sys->mem_offset);
+-	pci_add_resource(&sys->resources, &pcie->busn);
+-
+-	err = devm_request_pci_bus_resources(dev, &sys->resources);
+-	if (err < 0)
+-		return err;
++	pci_remap_iospace(&pcie->pio, pcie->io.start);
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+-	struct tegra_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
++	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
++	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+ 	int irq;
+ 
+ 	tegra_cpuidle_pcie_irqs_in_use();
+@@ -1499,10 +1489,11 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 
+ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct platform_device *pdev = to_platform_device(pcie->dev);
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	struct tegra_msi *msi = &pcie->msi;
++	struct device *dev = pcie->dev;
+ 	unsigned long base;
+ 	int err;
+ 	u32 reg;
+@@ -1559,6 +1550,8 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 	reg |= AFI_INTR_MASK_MSI_MASK;
+ 	afi_writel(pcie, reg, AFI_INTR_MASK);
+ 
++	host->msi = &msi->chip;
++
+ 	return 0;
+ 
+ err:
+@@ -2021,11 +2014,10 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
+ 	return false;
+ }
+ 
+-static int tegra_pcie_enable(struct tegra_pcie *pcie)
++static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct tegra_pcie_port *port, *tmp;
+-	struct hw_pci hw;
+ 
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+ 		dev_info(dev, "probing port %u, using %u lanes\n",
+@@ -2041,21 +2033,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 		tegra_pcie_port_disable(port);
+ 		tegra_pcie_port_free(port);
+ 	}
+-
+-	memset(&hw, 0, sizeof(hw));
+-
+-#ifdef CONFIG_PCI_MSI
+-	hw.msi_ctrl = &pcie->msi.chip;
+-#endif
+-
+-	hw.nr_controllers = 1;
+-	hw.private_data = (void **)&pcie;
+-	hw.setup = tegra_pcie_setup;
+-	hw.map_irq = tegra_pcie_map_irq;
+-	hw.ops = &tegra_pcie_ops;
+-
+-	pci_common_init_dev(dev, &hw);
+-	return 0;
+ }
+ 
+ static const struct tegra_pcie_soc tegra20_pcie = {
+@@ -2217,13 +2194,17 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ static int tegra_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
++	struct pci_host_bridge *host;
+ 	struct tegra_pcie *pcie;
++	struct pci_bus *child;
+ 	int err;
+ 
+-	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+-	if (!pcie)
++	host = pci_alloc_host_bridge(sizeof(*pcie));
++	if (!host)
+ 		return -ENOMEM;
+ 
++	pcie = pci_host_bridge_priv(host);
++
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	INIT_LIST_HEAD(&pcie->buses);
+ 	INIT_LIST_HEAD(&pcie->ports);
+@@ -2243,6 +2224,10 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		goto put_resources;
+ 
++	err = tegra_pcie_request_resources(pcie);
++	if (err)
++		goto put_resources;
++
+ 	/* setup the AFI address translations */
+ 	tegra_pcie_setup_translations(pcie);
+ 
+@@ -2254,12 +2239,30 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	err = tegra_pcie_enable(pcie);
++	tegra_pcie_enable_ports(pcie);
++
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
++	host->busnr = pcie->busn.start;
++	host->dev.parent = &pdev->dev;
++	host->ops = &tegra_pcie_ops;
++
++	err = pci_register_host_bridge(host);
+ 	if (err < 0) {
+-		dev_err(dev, "failed to enable PCIe ports: %d\n", err);
++		dev_err(dev, "failed to register host: %d\n", err);
+ 		goto disable_msi;
+ 	}
+ 
++	pci_scan_child_bus(host->bus);
++
++	pci_fixup_irqs(pci_common_swizzle, tegra_pcie_map_irq);
++	pci_bus_size_bridges(host->bus);
++	pci_bus_assign_resources(host->bus);
++
++	list_for_each_entry(child, &host->bus->children, node)
++		pcie_bus_configure_settings(child);
++
++	pci_bus_add_devices(host->bus);
++
+ 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+ 		err = tegra_pcie_debugfs_init(pcie);
+ 		if (err < 0)
+-- 
+2.10.2
 
-Lorenzo
