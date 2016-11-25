@@ -1,36 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42847 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751786AbcKHQdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 11:33:20 -0500
-Date: Tue, 8 Nov 2016 17:33:17 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
-        irq_create_affinity_masks()
-Message-ID: <20161108163317.GA17383@lst.de>
-References: <1478544462-9549-1-git-send-email-hch@lst.de> <1478544462-9549-4-git-send-email-hch@lst.de> <a7e25633-b9fb-468f-fd33-28dbc0368cc1@suse.de> <20161108145508.GA12519@lst.de> <c9ba9026-8ff8-8717-60dc-92672724d5d8@suse.de> <20161108150040.GA13184@lst.de> <alpine.DEB.2.20.1611081727410.3501@nanos>
+Received: from bombadil.infradead.org ([198.137.202.9]:59519 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbcKYIVb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 03:21:31 -0500
+Date: Thu, 24 Nov 2016 23:58:17 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161125075817.GA18428@infradead.org>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1611081727410.3501@nanos>
+In-Reply-To: <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 05:27:52PM +0100, Thomas Gleixner wrote:
-> On Tue, 8 Nov 2016, Christoph Hellwig wrote:
-> 
-> > On Tue, Nov 08, 2016 at 03:59:16PM +0100, Hannes Reinecke wrote:
-> > >
-> > > Which you don't in this patch:
-> > 
-> > True.  We will always in the end, but the split isn't right, we'll
-> > need to pass the non-NULL argument starting in this patch.
-> 
-> No, in the previous one ....
+On Thu, Nov 24, 2016 at 11:11:34AM -0700, Logan Gunthorpe wrote:
+> * Regular DAX in the FS doesn't work at this time because the FS can
+> move the file you think your transfer to out from under you. Though I
+> understand there's been some work with XFS to solve that issue.
 
-That too, but it's for different functions.  I have a rebased version
-that does this, I'll run it through quick testing and will repost
-it later today.
+The file system will never move anything under locked down pages,
+locking down pages is used exactly to protect against that.  So as long
+as we page structures available RDMA to/from device memory _from kernel
+space_ is trivial, although for file systems to work properly you
+really want a notification to the consumer if the file systems wants
+to remove the mapping.  We have implemented that using FL_LAYOUTS locks
+for NFSD, but only XFS supports it so far.  Without that a long term
+locked down region of memory (e.g. a kernel MR) would prevent various
+file operations that would simply hang.
