@@ -1,89 +1,108 @@
-Return-Path: <alexdeucher@gmail.com>
-Return-Path: <alexdeucher@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.133]:50888 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751858AbcKYJxT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 04:53:19 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v3 2/4] PCI: Allow driver-specific data in host bridge
+Date: Fri, 25 Nov 2016 10:53:12 +0100
+Message-ID: <11320589.vngR9yAux7@wuerfel>
+In-Reply-To: <20161125072629.GA29326@ulmo.ba.sec>
+References: <20160815153647.1075-1-thierry.reding@gmail.com> <26481704.zoJheIBO1p@wuerfel> <20161125072629.GA29326@ulmo.ba.sec>
 MIME-Version: 1.0
-In-Reply-To: <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161111143723.5818-1-emil.l.velikov@gmail.com> <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
- <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 17 Nov 2016 08:28:50 -0500
-Message-ID: <CADnq5_M+nHeNe13s7sRkY2KE-78N3_mGapAe8s0TcSn_XAxW9g@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: create revision file in sysfs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Daniel Vetter <daniel@ffwll.ch>, Linux PCI <linux-pci@vger.kernel.org>,
-	Emil Velikov <emil.l.velikov@gmail.com>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 3:58 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> [+cc Sinan, Lukas]
->
-> Hi Daniel,
->
-> On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
->> On Fri, Nov 11, 2016 at 02:37:23PM +0000, Emil Velikov wrote:
->> > From: Emil Velikov <emil.velikov@collabora.com>
->> >
->> > Currently the revision isn't available via sysfs/libudev thus if one
->> > wants to know the value they need to read through the config file.
->> >
->> > This in itself wakes/powers up the device, causing unwanted delay
->> > since it can be quite costly.
->> >
->> > There are at least two userspace components which could make use the new
->> > file libpciaccess and libdrm. The former [used in various places] wakes
->> > up _every_ PCI device, which can be observed via glxinfo [when using
->> > Mesa 10.0+ drivers]. While the latter [in association with Mesa 13.0]
->> > can lead to 2-3 second delays while starting firefox, thunderbird or
->> > chromium.
->> >
->> > Expose the revision as a separate file, just like we do for the device,
->> > vendor, their subsystem version and class.
->> >
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: linux-pci@vger.kernel.org
->> > Cc: Greg KH <gregkh@linuxfoundation.org>
->> > Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
->> > Tested-by: Mauro Santos <registo.mailling@gmail.com>
->> > Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
->> > Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
->>
->> Given that waking a gpu can take somewhere between ages and forever, and
->> that we read the pci revisions everytime we launch a new gl app I think
->> this is the correct approach. Of course we could just patch libdrm and
->> everyone to not look at the pci revision, but that just leads to every
->> pci-based driver having a driver-private ioctl/getparam thing to expose
->> it. Which also doesn't make much sense.
->
-> This re-asserts what has already been said, but doesn't address any of
-> my questions in the v2 discussion, so I'm still looking to continue
-> that thread.
->
-> I am curious about this long wakeup issue, though.  Are we talking
-> about a D3cold -> D0 transition?  I assume so, since config space is
-> generally accessible in all power states except D3cold.  From the
-> device's point of view this is basically like a power-on.  I think the
-> gist of PCIe r3.0, sec 6.6.1 is that we need to wait 100ms, e.g.,
-> PCI_PM_D3COLD_WAIT, before doing config accesses.
->
-> We do support Configuration Request Retry Status Software Visibility
-> (pci_enable_crs()), so a device *can* take longer than 100ms after
-> power-up to respond to a config read, but I think that only applies to
-> reads of the Vendor ID.  I cc'd Sinan because we do have some issues
-> with our CRS support, and maybe he can shed some light on this.
->
-> I'm not surprised if a GPU takes longer than 100ms to do device-
-> specific, driver-managed, non-PCI things like detect and wake up
-> monitors.  But I *am* surprised if generic PCI bus-level things like
-> config reads take longer than that.  I also cc'd Lukas because he
-> knows a lot more about PCI PM than I do.
+On Friday, November 25, 2016 8:26:29 AM CET Thierry Reding wrote:
+> On Mon, Aug 22, 2016 at 04:00:42PM +0200, Arnd Bergmann wrote:
+> > On Friday, August 19, 2016 5:55:06 PM CEST Lorenzo Pieralisi wrote:
+> > > > 
+> > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > > index 93583b389058..ecf543014da3 100644
+> > > > --- a/drivers/pci/probe.c
+> > > > +++ b/drivers/pci/probe.c
+> > > > @@ -521,16 +521,19 @@ static void pci_release_host_bridge_dev(struct device *dev)
+> > > >       kfree(bridge);
+> > > >  }
+> > > >  
+> > > > -static struct pci_host_bridge *pci_alloc_host_bridge(void)
+> > > > +static struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+> > > >  {
+> > > >       struct pci_host_bridge *bridge;
+> > > >  
+> > > > -     bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> > > > +     bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
+> > > >       if (!bridge)
+> > > >               return NULL;
+> > > >  
+> > > >       INIT_LIST_HEAD(&bridge->windows);
+> > > >  
+> > > > +     if (priv)
+> > > > +             bridge->private = &bridge[1];
+> > > 
+> > > How about making private a zero length array ?
+> > 
+> > Right, the member can actually be removed here if we want to, this
+> > was just meant as a shorthand so we can avoid the cast or function
+> > call in device drivers. I think either way makes sense.
+> > 
+> > Also, someone commented on a related issue in the previous version, and I
+> > recommended to align it to ARCH_SLAB_MINALIGN. This might be done more
+> > easily with the zero-length array using
+> > 
+> > struct pci_host_bridge {
+> > 	...
+> > 
+> > 	unsigned long private[0] __attribute__((aligned(ARCH_SLAB_MINALIGN)));
+> > };
+> > 
+> > Without this, we need a bit more computation, like
+> > 	
+> > 	bridge = kzalloc(ALIGN(sizeof(*bridge), ARCH_SLAB_MINALIGN) + priv, GFP_KERNEL);
+> > 	bridge->private = (void *)bridge + ALIGN(sizeof(*bridge);
+> > 
+> > or
+> > 
+> > static inline void *pci_bridge_private(struct pci_host_bridge *bridge)
+> > {
+> > 	return (void *)bridge + ALIGN(sizeof(*bridge);
+> > }
+> > static inline struct pci_host_bridge *pci_bridge_from_private(void *priv)
+> > {
+> > 	return priv - ALIGN(sizeof(*bridge);
+> > }
+> > 
+> > The alignment is needed if the private structure contains any data that
+> > we may want to transfer using DMA.
+> 
+> Looks like I never replied to this, though I seem to remember that I
+> did...
+> 
+> My question is: why would we want the private structure to be aligned?
+> Surely if somebody has data in the private structure that needs to be
+> transferred using DMA then they need to make sure that that field will
+> be properly aligned. Aligning the private structure itself won't ensure
+> that, right?
 
-FWIW,  If you run lspci on a GPU that is in the powered off state
-(either D3 cold if supported or the older vendor specific power
-controls that pre-dated D3 cold), any fields that were not previously
-cached return all 1s.  So for example the pci revision would be 0xff
-rather than whatever it's supposed to be.
+You need both of them. Having the field aligned in the structure when
+the structure itself is misaligned will break in surprising ways.
 
-Alex
+It's possible that we don't ever need this for PCI hosts the way we
+do need it for ethernet drivers.
+ 
+> Anyway, it seems like there's very little contentious about this other
+> than the minor issue of how to get at the private data. I'd like to make
+> progress on this because we're now three generations into 64-bit with
+> Tegra and still missing PCI support on all of them.
+
+
+Yes, that would be good.
+
+	Arnd
