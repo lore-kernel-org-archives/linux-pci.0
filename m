@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32907 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752940AbcKYK5n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:43 -0500
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:32963 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751261AbcKYK56 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:58 -0500
 From: Thierry Reding <thierry.reding@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
@@ -10,9 +10,9 @@ Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
         linux-tegra@vger.kernel.org
-Subject: [PATCH v4 06/10] PCI: tegra: Implement PCA enable workaround
-Date: Fri, 25 Nov 2016 11:57:14 +0100
-Message-Id: <20161125105718.3866-6-thierry.reding@gmail.com>
+Subject: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
+Date: Fri, 25 Nov 2016 11:57:18 +0100
+Message-Id: <20161125105718.3866-10-thierry.reding@gmail.com>
 In-Reply-To: <20161125105718.3866-1-thierry.reding@gmail.com>
 References: <20161125105718.3866-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
@@ -20,78 +20,51 @@ List-ID: <linux-pci.vger.kernel.org>
 
 From: Thierry Reding <treding@nvidia.com>
 
-Tegra210's PCIe controller has a bug that requires the PCA (performance
-counter) feature to be enabled. If this isn't done, accesses to device
-configuration space will hang the chip for tens of seconds. Implement
-the workaround.
-
-Based on commit 514e19138af2 ("pci: tegra: implement PCA enable
-workaround") from U-Boot by Stephen Warren <swarren@nvidia.com>.
+Enable the x4 PCIe and M.2 Key E slots on Jetson TX1. The Key E slot is
+currently untested due to lack of hardware.
 
 Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/host/pci-tegra.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts | 26 ++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index d5206fa53353..4bfaac6d3582 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -188,6 +188,9 @@
- #define RP_VEND_XP	0x00000f00
- #define  RP_VEND_XP_DL_UP	(1 << 30)
+diff --git a/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts b/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
+index 983775e637a4..4c1ea7a08d43 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p2371-2180.dts
+@@ -7,6 +7,32 @@
+ 	model = "NVIDIA Jetson TX1 Developer Kit";
+ 	compatible = "nvidia,p2371-2180", "nvidia,tegra210";
  
-+#define RP_VEND_CTL2 0x00000fa8
-+#define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
++	pcie-controller@01003000 {
++		status = "okay";
 +
- #define RP_PRIV_MISC	0x00000fe0
- #define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
- #define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
-@@ -252,6 +255,7 @@ struct tegra_pcie_soc {
- 	bool has_intr_prsnt_sense;
- 	bool has_cml_clk;
- 	bool has_gen2;
-+	bool force_pca_enable;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -556,6 +560,12 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
- 	afi_writel(port->pcie, value, ctrl);
- 
- 	tegra_pcie_port_reset(port);
++		avdd-pll-uerefe-supply = <&avdd_1v05_pll>;
++		hvddio-pex-supply = <&vdd_1v8>;
++		dvddio-pex-supply = <&vdd_pex_1v05>;
++		dvdd-pex-pll-supply = <&vdd_pex_1v05>;
++		hvdd-pex-pll-e-supply = <&vdd_1v8>;
++		vddio-pex-ctl-supply = <&vdd_1v8>;
 +
-+	if (soc->force_pca_enable) {
-+		value = readl(port->base + RP_VEND_CTL2);
-+		value |= RP_VEND_CTL2_PCA_ENABLE;
-+		writel(value, port->base + RP_VEND_CTL2);
-+	}
- }
- 
- static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
-@@ -2046,6 +2056,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.has_intr_prsnt_sense = false,
- 	.has_cml_clk = false,
- 	.has_gen2 = false,
-+	.force_pca_enable = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2060,6 +2071,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.has_intr_prsnt_sense = true,
- 	.has_cml_clk = true,
- 	.has_gen2 = false,
-+	.force_pca_enable = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2073,6 +2085,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.has_intr_prsnt_sense = true,
- 	.has_cml_clk = true,
- 	.has_gen2 = true,
-+	.force_pca_enable = false,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
++		pci@1,0 {
++			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-0}>,
++			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-1}>,
++			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-2}>,
++			       <&{/padctl@7009f000/pads/pcie/lanes/pcie-3}>;
++			phy-names = "pcie-0", "pcie-1", "pcie-2", "pcie-3";
++			status = "okay";
++		};
++
++		pci@2,0 {
++			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
++			phy-names = "pcie-0";
++			status = "okay";
++		};
++	};
++
+ 	host1x@50000000 {
+ 		dsi@54300000 {
+ 			status = "okay";
 -- 
 2.10.2
 
