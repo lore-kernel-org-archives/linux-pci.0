@@ -1,45 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:58599 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751732AbcKHHn6 (ORCPT
-        <rfc822;groupwise-linux-pci@vger.kernel.org:4:1>);
-        Tue, 8 Nov 2016 02:43:58 -0500
-Message-Id: <5821904A020000780011CF55@prv-mh.provo.novell.com>
-Date: Tue, 08 Nov 2016 00:43:54 -0700
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: <tglx@linutronix.de>, <hch@lst.de>, <linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI/MSI: pci_irq_get_affinity() should cope with NULL
- affinity vector
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from quartz.orcorp.ca ([184.70.90.242]:46231 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751164AbcKYVTA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 16:19:00 -0500
+Date: Fri, 25 Nov 2016 14:18:46 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
+Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161125211846.GA22521@obsidianresearch.com>
+References: <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <a98185d9-ffb1-6469-4272-2d1222600825@vodafone.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <a98185d9-ffb1-6469-4272-2d1222600825@vodafone.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-msi_setup_entry() only logs a message when the affinity vector can't be
-allocated, and hence pci_irq_get_affinity() indexing entry->affinity is
-wrong without a prior check.
+On Fri, Nov 25, 2016 at 09:40:10PM +0100, Christian König wrote:
 
-Fixes: ee8d41e53efe "pci/msi: Retrieve affinity for a vector"
-Signed-off-by: Jan Beulich <jbeulich@suse.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/msi.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> We call this "userptr" and it's just a combination of get_user_pages() on
+> command submission and making sure the returned list of pages stays valid
+> using a MMU notifier.
 
---- 4.9-rc4/drivers/pci/msi.c
-+++ 4.9-rc4-PCI-MSI-no-affinity/drivers/pci/msi.c
-@@ -1294,7 +1294,8 @@ const struct cpumask *pci_irq_get_affini
- 	} else if (dev->msi_enabled) {
- 		struct msi_desc *entry = first_pci_msi_entry(dev);
- 
--		if (WARN_ON_ONCE(!entry || nr >= entry->nvec_used))
-+		if (WARN_ON_ONCE(!entry || !entry->affinity ||
-+				 nr >= entry->nvec_used))
- 			return NULL;
- 
- 		return &entry->affinity[nr];
+Doesn't that still pin the page?
 
+> The "big" problem with this approach is that it is horrible slow. I mean
+> seriously horrible slow so that we actually can't use it for some of the
+> purposes we wanted to use it.
+> 
+> >The code moving the page will move it and the next GPU command that
+> >needs it will refault it in the usual way, just like the CPU would.
+> 
+> And here comes the problem. CPU do this on a page by page basis, so they
+> fault only what needed and everything else gets filled in on demand. This
+> results that faulting a page is relatively light weight operation.
+>
+> But for GPU command submission we don't know which pages might be accessed
+> beforehand, so what we do is walking all possible pages and make sure all of
+> them are present.
 
+Little confused why this is slow? So you fault the entire user MM into
+your page tables at start of day and keep track of it with mmu
+notifiers?
 
+> >This might be much more efficient since it optimizes for the common
+> >case of unchanging translation tables.
+> 
+> Yeah, completely agree. It works perfectly fine as long as you don't have
+> two drivers trying to mess with the same page.
+
+Well, the idea would be to not have the GPU block the other driver
+beyond hinting that the page shouldn't be swapped out.
+
+> >This assumes the commands are fairly short lived of course, the
+> >expectation of the mmu notifiers is that a flush is reasonably prompt
+> 
+> Correct, this is another problem. GFX command submissions usually don't take
+> longer than a few milliseconds, but compute command submission can easily
+> take multiple hours.
+
+So, that won't work - you have the same issue as RDMA with work loads
+like that.
+
+If you can't somehow fence the hardware then pinning is the only
+solution. Felix has the right kind of suggestion for what is needed -
+globally stop the GPU, fence the DMA, fix the page tables, and start
+it up again. :\
+
+> I can easily imagine what would happen when kswapd is blocked by a GPU
+> command submission for an hour or so while the system is under memory
+> pressure :)
+
+Right. The advantage of pinning is it tells the other stuff not to
+touch the page and doesn't block it, MMU notifiers have to be able to
+block&fence quickly.
+
+> I'm thinking on this problem for about a year now and going in circles for
+> quite a while. So if you have ideas on this even if they sound totally
+> crazy, feel free to come up.
+
+Well, it isn't a software problem. From what I've seen in this thread
+the GPU application requires coherent page table mirroring, so the
+only full & complete solution is going to be to actually implement
+that somehow in GPU hardware.
+
+Everything else is going to be deeply flawed somehow. Linux just
+doesn't have the support for this kind of stuff - and I'm honestly not
+sure something better is even possible considering the hardware
+constraints....
+
+This doesn't have to be faulting, but really anything that lets you
+pause the GPU DMA and reload the page tables.
+
+You might look at trying to use the IOMMU and/or PCI ATS in very new
+hardware. IIRC the physical IOMMU hardware can do the fault and fence
+and block stuff, but I'm not sure about software support for using the
+IOMMU to create coherent user page table mirrors - that is something
+Linux doesn't do today. But there is demand for this kind of capability..
+
+Jason
