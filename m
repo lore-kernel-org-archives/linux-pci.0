@@ -1,66 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51300 "EHLO mail.kernel.org"
+Received: from quartz.orcorp.ca ([184.70.90.242]:57035 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932655AbcKHVVD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Nov 2016 16:21:03 -0500
-Date: Tue, 8 Nov 2016 15:20:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] genirq/affinity: Handle pre/post vectors in
- irq_create_affinity_masks()
-Message-ID: <20161108212059.GE14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478544462-9549-1-git-send-email-hch@lst.de>
- <1478544462-9549-4-git-send-email-hch@lst.de>
+        id S1754553AbcKYTeQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 14:34:16 -0500
+Date: Fri, 25 Nov 2016 12:34:10 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161125193410.GD16504@obsidianresearch.com>
+References: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478544462-9549-4-git-send-email-hch@lst.de>
+In-Reply-To: <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 10:47:38AM -0800, Christoph Hellwig wrote:
-> From: Christogh Hellwig <hch@lst.de>
-> 
-> Only calculate the affinity for the main I/O vectors, and skip the
-> pre or post vectors specified by struct irq_affinity.
-> 
-> Also remove the irq_affinity cpumask argument that has never been used.
-> If we ever need it in the future we can pass it through struct
-> irq_affinity.
-> 
-> Signed-off-by: Christogh Hellwig <hch@lst.de>
+On Fri, Nov 25, 2016 at 12:16:30PM -0500, Serguei Sagalovitch wrote:
 
-s/Christogh/Christoph/ (also above, and maybe other patches too?)
+> b) Allocation may not  have CPU address  at all - only GPU one.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+But you don't expect RDMA to work in the case, right?
 
-> ---
->  drivers/pci/msi.c         |  4 ++--
->  include/linux/interrupt.h |  4 ++--
->  kernel/irq/affinity.c     | 46 +++++++++++++++++++++++++---------------------
->  3 files changed, 29 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c58d3c2..1761b8a 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -558,7 +558,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, bool affinity)
->  	u16 control;
->  
->  	if (affinity) {
-> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-> +		masks = irq_create_affinity_masks(nvec, NULL);
->  		if (!masks)
->  			pr_err("Unable to allocate affinity masks, ignoring\n");
->  	}
-> @@ -697,7 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
->  	int ret, i;
->  
->  	if (affinity) {
-> -		masks = irq_create_affinity_masks(dev->irq_affinity, nvec);
-> +		masks = irq_create_affinity_masks(nvec, NULL);
->  		if (!masks)
->  			pr_err("Unable to allocate affinity masks, ignoring\n");
+GPU people need to stop doing this windowed memory stuff :)
 
-Not caused by this patch, but can we use dev_err() here and above?
+Jason
