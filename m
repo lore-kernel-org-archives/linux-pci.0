@@ -1,63 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38100 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934163AbcKKVmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 16:42:06 -0500
-Date: Fri, 11 Nov 2016 15:42:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH -next] PCI: layerscape: Remove redundant dev_err call in
- ls_pcie_probe()
-Message-ID: <20161111214202.GJ9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476716140-30608-1-git-send-email-weiyj.lk@gmail.com>
+Received: from dehamd003.servertools24.de ([31.47.254.18]:53699 "EHLO
+        dehamd003.servertools24.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932214AbcKYQPo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 11:15:44 -0500
+Subject: Re: Multiple problems with the Linux kernel on an AMD desktop
+To: =?UTF-8?Q?Rog=c3=a9rio_Brito?= <rbrito@ime.usp.br>
+References: <20161124233957.k2twr352kna6ukd2@ime.usp.br>
+        <20161125070159.ner7xvizvo2upb6h@pd.tnic>
+        <20161125160548.b4wxokxffhk5zt6r@ime.usp.br>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+From: Clemens Ladisch <clemens@ladisch.de>
+Message-ID: <80eb4533-2233-6b75-eae9-99f6decebd88@ladisch.de>
+Date: Fri, 25 Nov 2016 17:15:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476716140-30608-1-git-send-email-weiyj.lk@gmail.com>
+In-Reply-To: <20161125160548.b4wxokxffhk5zt6r@ime.usp.br>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 02:55:40PM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Rogério Brito wrote:
+>     [  130.007219] evbug: Event. Dev: input6, Type: 0, Code: 0, Value: 0
 
-Applied to pci/host-layerscape for v4.10, thanks!
+The evbug module is intended for debugging; it dumps all input events
+into syslog.  If you do not want these messages, do not load this module.
+(If it is loaded automatically, you have an actual bug.)
 
-> ---
->  drivers/pci/host/pci-layerscape.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 2cb7315..bbd3d23 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -251,10 +251,8 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  
->  	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
->  	pcie->pp.dbi_base = devm_ioremap_resource(dev, dbi_base);
-> -	if (IS_ERR(pcie->pp.dbi_base)) {
-> -		dev_err(dev, "missing *regs* space\n");
-> +	if (IS_ERR(pcie->pp.dbi_base))
->  		return PTR_ERR(pcie->pp.dbi_base);
-> -	}
->  
->  	pcie->drvdata = match->data;
->  	pcie->lut = pcie->pp.dbi_base + pcie->drvdata->lut_offset;
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Regards,
+Clemens
