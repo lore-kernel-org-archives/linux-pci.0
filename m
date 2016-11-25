@@ -1,123 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 13/16] drivers: iommu: arm-smmu: add IORT configuration
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Eric Auger <eric.auger@redhat.com>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
- <20161018160414.1228-14-lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <f8ec1ef0-9fbd-7dd6-822a-ca91aafe986a@semihalf.com>
-Date: Wed, 9 Nov 2016 14:24:49 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0062.outbound.protection.outlook.com ([104.47.33.62]:17728
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754853AbcKYTuC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 14:50:02 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <7ff3cf70-b0c3-028e-fea8-c370a1185b65@amd.com>
+ <20161125193410.GD16504@obsidianresearch.com>
+CC: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <80aae3e6-278e-49af-7d09-bea87ffd19e8@amd.com>
+Date: Fri, 25 Nov 2016 14:49:50 -0500
 MIME-Version: 1.0
-In-Reply-To: <20161018160414.1228-14-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161125193410.GD16504@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 18.10.2016 18:04, Lorenzo Pieralisi wrote:
-> In ACPI bases systems, in order to be able to create platform
-> devices and initialize them for ARM SMMU components, the IORT
-> kernel implementation requires a set of static functions to be
-> used by the IORT kernel layer to configure platform devices for
-> ARM SMMU components.
+On 2016-11-25 02:34 PM, Jason Gunthorpe wrote:
+> On Fri, Nov 25, 2016 at 12:16:30PM -0500, Serguei Sagalovitch wrote:
 >
-> Add static configuration functions to the IORT kernel layer for
-> the ARM SMMU components, so that the ARM SMMU driver can
-> initialize its respective platform device by relying on the IORT
-> kernel infrastructure and by adding a corresponding ACPI device
-> early probe section entry.
+>> b) Allocation may not  have CPU address  at all - only GPU one.
+> But you don't expect RDMA to work in the case, right?
 >
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> ---
->  drivers/acpi/arm64/iort.c | 81 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/arm-smmu.c  | 84 ++++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/acpi_iort.h |  3 ++
->  3 files changed, 167 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index ea90bc8..04cc5f7 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -548,6 +548,78 @@ static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
->  	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
->  }
->
-[...]
-> +
-> +static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +				      struct arm_smmu_device *smmu)
-> +{
-> +	struct device *dev = smmu->dev;
-> +	struct acpi_iort_node *node =
-> +		*(struct acpi_iort_node **)dev_get_platdata(dev);
-> +	struct acpi_iort_smmu *iort_smmu;
-> +	u64 *glb_irq;
-> +	int ret;
-> +
-> +	/* Retrieve SMMU1/2 specific data */
-> +	iort_smmu = (struct acpi_iort_smmu *)node->node_data;
-> +
-> +	ret = acpi_smmu_get_data(iort_smmu->model, &smmu->version,
-> +						   &smmu->model);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	glb_irq = ACPI_ADD_PTR(u64, iort_smmu,
-> +			iort_smmu->global_interrupt_offset);
+> GPU people need to stop doing this windowed memory stuff :)
+GPU could perfectly access all VRAM.  It is only issue for p2p without
+special interconnect and CPU access. Strictly speaking as long as we
+have "bus address"  we could have RDMA but  I agreed that for
+RDMA we could/should(?) always "request"  CPU address (I hope that we
+could forget about 32-bit application :-)).
 
-One bug that I found:
+BTW/FYI: About CPU access: Some user-level API is mainly handle based
+so there is no need for CPU access by default.
 
--	glb_irq = ACPI_ADD_PTR(u64, iort_smmu,
--			iort_smmu->global_interrupt_offset);
-+	glb_irq = ACPI_ADD_PTR(u64, node,
-+			iort_smmu->global_interrupt_offset);
-
-With this fix, I run VM with several PCI devices (NIC, SATA) in 
-passthrough mode successfully on ACPI host using ThunderX 1-socket board.
-
-Also, for my tests I used Eric's patches:
-https://github.com/eauger/linux/commits/v4.9-rc3-reserved-rfc-v2
-
-Including bug fix above:
-Tested-by: Tomasz Nowicki <tn@semihalf.com> for all series.
-
-> +
-> +	if (!IORT_IRQ_MASK(glb_irq[1]))	/* 0 means not implemented */
-> +		smmu->num_global_irqs = 1;
-> +	else
-> +		smmu->num_global_irqs = 2;
-> +
-> +	if (iort_smmu->flags & ACPI_IORT_SMMU_COHERENT_WALK)
-> +		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-> +					     struct arm_smmu_device *smmu)
-> +{
-> +	return -ENODEV;
-> +}
-> +#endif
-> +
-
-Thanks,
-Tomasz
+About "visible" / non-visible VRAM parts: I assume  that going
+forward we will be able to get rid from it completely as soon as support
+for resizable PCI BAR will be implemented and/or old/current h/w
+will become obsolete.
