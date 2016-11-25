@@ -1,77 +1,83 @@
-Return-Path: <prvs=0140ff2712=wzhang@fb.com>
-Return-Path: <prvs=0140ff2712=wzhang@fb.com>
-From: Wei Zhang <wzhang@fb.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCHv4 next 0/3] Limiting pci access
-Date: Mon, 28 Nov 2016 09:14:39 +0000
-Message-ID: <CB060C5F-26CB-40E8-91BB-B891B5704746@fb.com>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <20161118232544.GI28386@localhost.localdomain>
- <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0055.outbound.protection.outlook.com ([104.47.40.55]:11136
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750916AbcKYU7z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 15:59:55 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+ <20161123232503.GA13965@obsidianresearch.com>
+ <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+ <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
+ <c60815a1-aaac-52eb-1714-66abb28bdc01@amd.com>
+ <209107c7-3098-ca70-7d62-b55021d01faa@deltatee.com>
+ <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
+CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Felix Kuehling <felix.kuehling@amd.com>
+Message-ID: <fa44af1c-0c8a-7726-5100-a1f74f824a21@amd.com>
+Date: Fri, 25 Nov 2016 15:26:45 -0500
 MIME-Version: 1.0
+In-Reply-To: <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoaXMgaXMgV2VpIGFuZCBJIHdvcmsgZnJvbSBGYWNlYm9vayBTdG9yYWdl
-IEhhcmR3YXJlIGdyb3VwLiAgVGhlIHNlcmllcyBvZiBjaGFuZ2VzIG1hZGUgYnkgS2VpdGggYXJl
-IHRvIHN1cHBvcnQgdGhlIFBDSWUgaG90IHBsdWcgdGVzdGluZyBvbiBvdXIgTGlnaHRuaW5nIHBs
-YXRmb3JtIChUaGFua3MgS2VpdGghKS4gIExpZ2h0bmluZyBpcyBhIOKAnEp1c3Qgb2YgQnVuY2gg
-b2YgRmxhc2jigJ0sIG9yIEpCT0YsIHN0b3JhZ2UgcGxhdGZvcm0gdGhhdCBoYXMgYSBQQ0llIHN3
-aXRjaCBjb25uZWN0aW5nIHRvIDE1IE5WTWUgU1NEcy4gIE9uZSBvZiBvdXIgZ29hbHMgaXMgdG8g
-YmUgYWJsZSB0byBzdXJwcmlzZSBob3QgcmVtb3ZlL3BsdWcgZWFjaCBTU0RzIGluIHRoZSBjaGFz
-c2lzLiAgVGhlc2UgY2hhbmdlcyBhcmUgdG8gZml4IGlzc3VlcyBmb3VuZCBkdXJpbmcgc3VycHJp
-c2UgaG90IHBsdWcgdGVzdGluZy4gIFNwZWNpYWxseSwgdGhleSByZWR1Y2VkIFBDSWUgcmVnaXN0
-ZXJzIGFjY2VzcyBkdXJpbmcgYSBzdXJwcmlzZWQgaG90IHJlbW92ZSBldmVudC4gIFdlIGhhdmUg
-aW5jb3Jwb3JhdGVkIEtlaXRo4oCZcyBwYXRjaGVzIGFuZCB0ZXN0ZWQgb24gb3VyIExpZ2h0bmlu
-ZyBwbGF0Zm9ybS4gIFRoZXkgd29ya2VkIHdlbGwuIA0KDQpGb3IgYSBkZXRhaWwgZGVzY3JpcHRp
-b24gb2YgdGhlIExpZ2h0bmluZyBwbGF0Zm9ybSwgcGxlYXNlIHJlZmVyIHRvIGh0dHBzOi8vY29k
-ZS5mYWNlYm9vay5jb20vcG9zdHMvOTg5NjM4ODA0NDU4MDA3L2ludHJvZHVjaW5nLWxpZ2h0bmlu
-Zy1hLWZsZXhpYmxlLW52bWUtamJvZi8NCg0KSG9wZSB0aGlzIGdpdmVzIHlvdSBzb21lIGJhY2tn
-cm91bmQgaW5mbyBvbiB0aGVzZSBjaGFuZ2VzLiAgQXBwcmVjaWF0ZSB5b3VyIHJldmlld3MgYXMg
-d2VsbCENCg0KVGhhbmtzIQ0KLVdlaQ0KDQoNCk9uIDExLzIzLzE2LCA4OjA5IEFNLCAiQmpvcm4g
-SGVsZ2FhcyIgPGhlbGdhYXNAa2VybmVsLm9yZz4gd3JvdGU6DQoNCiAgICBPbiBGcmksIE5vdiAx
-OCwgMjAxNiBhdCAwNjoyNTo0NFBNIC0wNTAwLCBLZWl0aCBCdXNjaCB3cm90ZToNCiAgICA+IE9u
-IEZyaSwgT2N0IDI4LCAyMDE2IGF0IDA2OjU4OjE0UE0gLTA0MDAsIEtlaXRoIEJ1c2NoIHdyb3Rl
-Og0KICAgID4gPiBIZXJlJ3MgdmVyc2lvbiAzLiBUd28gb2YgdGhlIHBhdGNoZXMgZnJvbSB2MiBo
-YXZlIGFscmVhZHkgYmVlbiBhcHBsaWVkDQogICAgPiA+IHVwc3RyZWFtLCBzbyB0aGlzIGlzIGRv
-d24gdG8gdGhyZWUgcGF0Y2hlcyBub3cuDQogICAgPiA+IA0KICAgID4gPiBUaGUgbWFpbiBkaWZm
-ZXJlbmNlIHdpdGggdjIgaXMgc2V0dGluZyBzdWJvcmRpbmF0ZXMgdG8gcmVtb3ZlZCB3aGVuDQog
-ICAgPiA+IGRldGVjdGVkIChwYXRjaCAxLzMpLg0KICAgID4gPiANCiAgICA+ID4gUGF0Y2ggMi8z
-IHNob3J0LWN1dHMgcGNpX2RldmljZV9pc19wcmVzZW50IGlmIGlzX3JlbW92ZWQgaXMgc2V0Lg0K
-ICAgID4gPiANCiAgICA+ID4gT3RoZXJ3aXNlLCB0aGUgc2FtZSBhcyBiZWZvcmUuIEp1c3QgdG8g
-cmVzdGF0ZSB0aGUganVzdGlmaWNhdGlvbiwgdGhpcw0KICAgID4gPiBzaWduaWZpY2FudGx5IHNw
-ZWVkcyB1cCBtYW55IGRldmljZSByZW1vdmFscyB3aXRob3V0IHJlbHlpbmcgb24gaGFyZHdhcmUu
-DQogICAgPiA+IA0KICAgID4gPiBLZWl0aCBCdXNjaCAoMyk6DQogICAgPiA+ICAgcGNpOiBBZGQg
-aXNfcmVtb3ZlZCBzdGF0ZQ0KICAgID4gPiAgIHBjaTogTm8gY29uZmlnIGFjY2VzcyBmb3IgcmVt
-b3ZlZCBkZXZpY2VzDQogICAgPiA+ICAgcGNpL21zaXg6IFNraXAgZGlzYWJsaW5nIHJlbW92ZWQg
-ZGV2aWNlcw0KICAgID4gPiANCiAgICA+ID4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX3Bj
-aS5jIHwgIDUgKysrKysNCiAgICA+ID4gIGRyaXZlcnMvcGNpL21zaS5jICAgICAgICAgICAgICAg
-IHwgIDcgKysrKysrLQ0KICAgID4gPiAgZHJpdmVycy9wY2kvcGNpLmMgICAgICAgICAgICAgICAg
-fCAgMiArKw0KICAgID4gPiAgZHJpdmVycy9wY2kvcGNpZS9wY2llLWRwYy5jICAgICAgfCAgNCAr
-KysrDQogPiA+ICA1IGZpbGVzIGNoYW5nZWQsIDQyIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
-LSkNCiAgICA+IA0KICAgID4gSGkgQmpvcm4sDQogICAgPiANCiAgICA+IEp1c3Qgd2FudGVkIHRv
-IGNoZWNrIGluIHdpdGggeW91IG9uIHRoaXMgc2VyaWVzLiBBbnkgdGhvdWdodHMgb24NCiAgICA+
-IHRoaXM/IEkndmUgYmVlbiBwaW5nZWQgZnJvbSBzZXZlcmFsIGhhcmR3YXJlIHZlbmRvcnMgb24g
-dGhpcyBzaW5jZSB0aGV5DQogICAgPiBzYXkgaXQgaW1wcm92ZXMgc3lzdGVtIHN0YWJpbGl0eS4g
-SSBrZWVwIHRlbGxpbmcgdGhlbSB0byBidWcgeW91IGFib3V0DQogICAgPiBpdCwgYnV0IEkgZ3Vl
-c3MgdGhleSB0aGluayBJJ20gbGVzcyBpbnRpbWlkYXRpbmcuIDopDQogICAgDQogICAgSSdkIHRo
-aW5rIHRoZXknZCB3YW50IHNvbWVib2R5ICptb3JlKiBpbnRpbWlkYXRpbmcgdG8gZW5jb3VyYWdl
-DQogICAgcHJvZ3Jlc3MgOikNCiAgICANCiAgICBTb3JyeSBJIGhhdmVuJ3QgaGFkIGEgY2hhbmNl
-IHRvIGxvb2sgYXQgdGhlc2UgeWV0LiAgSSB3YW50IHRvIHRoaW5rDQogICAgYWJvdXQgdGhlbSBh
-IGxpdHRsZSBtb3JlIGJlY2F1c2UgaXQgc2VlbXMgbGlrZSB0aGVzZSBzaG91bGQgYmUNCiAgICBv
-cHRpbWl6YXRpb25zLCBub3QgcmVhbGx5IGZpeGVzLiAgSWYgdGhleSBpbXByb3ZlIHN0YWJpbGl0
-eSBieSBmaXhpbmcNCiAgICBMaW51eCBpc3N1ZXMsIGRldGFpbHMgb2YgdGhvc2UgaXNzdWVzIHdv
-dWxkIGhlbHAuICBCdXQgbWF5YmUgdGhlDQogICAgaW1wcm92ZW1lbnQgaXMgZnJvbSBhdm9pZGlu
-ZyB0aGluZ3MgdGhlIGhhcmR3YXJlIGRvZXNuJ3QgaGFuZGxlIHF1aXRlDQogICAgY29ycmVjdGx5
-Lg0KICAgIA0KICAgIEFuZCBJJ20gYWx3YXlzIGhlc2l0YW50IGFib3V0IHRoaW5ncyBsaWtlIGZs
-YWdzIHRoYXQgc2F5ICJ0aGlzIGRldmljZQ0KICAgIGlzIGJlaW5nIHJlbW92ZWQgYnV0IGhhc24n
-dCBiZWVuIHJlbW92ZWQgeWV0IiBiZWNhdXNlIHRoZSByZW1vdmUNCiAgICBwcm9jZXNzIGlzIGFs
-cmVhZHkgY29tcGxpY2F0ZWQgYW5kIHdlJ3ZlIHRyaXBwZWQgb3ZlciByYWNlcyBhbmQNCiAgICBv
-cmRlcmluZyBpc3N1ZXMgaW4gdGhlIHBhc3QuICBUaGF0J3Mgbm90IHRvIHNheSB0aGlzIGlzIGEg
-YmFkDQogICAgYXBwcm9hY2g7IGl0J3MganVzdCBhbiBleGN1c2UgZm9yIHdoeSBJIG5lZWQgc29t
-ZSB0aW1lIHRvIHdvcmsgdGhyb3VnaA0KICAgIHRoZXNlIHBhdGNoZXMuDQogICAgDQogICAgQmpv
-cm4NCiAgICANCg0K
+On 16-11-25 12:20 PM, Serguei Sagalovitch wrote:
+>
+>> A white list may end up being rather complicated if it has to cover
+>> different CPU generations and system architectures. I feel this is a
+>> decision user space could easily make.
+>>
+>> Logan
+> I agreed that it is better to leave up to user space to check what is
+> working
+> and what is not. I found that write is practically always working but
+> read very
+> often not. Also sometimes system BIOS update could fix the issue.
+>
+But is user mode always aware that P2P is going on or even possible? For
+example you may have a library reading a buffer from a file, but it
+doesn't necessarily know where that buffer is located (system memory,
+VRAM, ...) and it may not know what kind of the device the file is on
+(SATA drive, NVMe SSD, ...). The library will never know if all it gets
+is a pointer and a file descriptor.
+
+The library ends up calling a read system call. Then it would be up to
+the kernel to figure out the most efficient way to read the buffer from
+the file. If supported, it could use P2P between a GPU and NVMe where
+the NVMe device performs a DMA write to VRAM.
+
+If you put the burden of figuring out the P2P details on user mode code,
+I think it will severely limit the use cases that actually take
+advantage of it. You also risk a bunch of different implementations that
+get it wrong half the time on half the systems out there.
+
+Regards,
+  Felix
+
+
