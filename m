@@ -1,93 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49930 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751537AbcKIOFZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 09:05:25 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uA9E4T9Z071632
-        for <linux-pci@vger.kernel.org>; Wed, 9 Nov 2016 09:05:24 -0500
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26m2kkmw18-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 09 Nov 2016 09:05:24 -0500
-Received: from localhost
-        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Wed, 9 Nov 2016 12:05:22 -0200
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: devicetree@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        frowand.list@gmail.com, robh+dt@kernel.org,
-        gpiccoli@linux.vnet.ibm.com
-Subject: [PATCH] of/irq: improve error message on irq discovery process failure
-Date: Wed,  9 Nov 2016 12:05:08 -0200
-Message-Id: <1478700308-25481-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mail-bn3nam01on0081.outbound.protection.outlook.com ([104.47.33.81]:4096
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932348AbcKYRVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 12:21:32 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Logan Gunthorpe <logang@deltatee.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
+ <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
+ <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
+ <20161123232503.GA13965@obsidianresearch.com>
+ <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
+ <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
+ <c60815a1-aaac-52eb-1714-66abb28bdc01@amd.com>
+ <209107c7-3098-ca70-7d62-b55021d01faa@deltatee.com>
+CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
+Date: Fri, 25 Nov 2016 12:20:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <209107c7-3098-ca70-7d62-b55021d01faa@deltatee.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowerPC machines some PCI slots might not have Level-triggered
-interrupts capability (also know as Level Signaled Interrupts - LSI),
-leading of_irq_parse_pci() to complain by presenting error messages
-on the kernel log - in this case, the properties "interrupt-map" and
-"interrupt-map-mask" are not present on the device's node on device
-tree.
 
-This patch introduces a different message for this specific case,
-and it also reduces the level of the message from error to warning.
-Before this patch, when an adapter was plugged in a slot without Level
-interrupts capabilities, we saw generic error messages like this:
-
-    [54.239] pci 002d:70:00.0: of_irq_parse_pci() failed with rc=-22
-
-Now, with this applied, we see the following specific message:
-
-    [19.947] pci 0014:60:00.0: of_irq_parse_pci() gave up. The slot of this
-    device has no Level-triggered Interrupts capability.
-
-No functional changes were introduced.
-
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- drivers/of/irq.c        | 5 ++++-
- drivers/of/of_pci_irq.c | 8 +++++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 393fea8..1ad6882 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -275,7 +275,10 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
- 	of_node_put(ipar);
- 	of_node_put(newpar);
- 
--	return -EINVAL;
-+	/* Positive non-zero return means no Level-triggered Interrupts
-+	 * capability was found.
-+	 */
-+	return ENOENT;
- }
- EXPORT_SYMBOL_GPL(of_irq_parse_raw);
- 
-diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-index 2306313..9b6f387 100644
---- a/drivers/of/of_pci_irq.c
-+++ b/drivers/of/of_pci_irq.c
-@@ -89,8 +89,14 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
- 	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
- 	laddr[1] = laddr[2] = cpu_to_be32(0);
- 	rc = of_irq_parse_raw(laddr, out_irq);
--	if (rc)
-+
-+	if (rc < 0) {
- 		goto err;
-+	} else if (rc > 0) {
-+		dev_warn(&pdev->dev,
-+			"of_irq_parse_pci() gave up. The slot of this device has no Level-triggered Interrupts capability.\n");
-+		return -rc;
-+	}
- 	return 0;
- err:
- 	dev_err(&pdev->dev, "of_irq_parse_pci() failed with rc=%d\n", rc);
--- 
-2.1.0
+> A white list may end up being rather complicated if it has to cover
+> different CPU generations and system architectures. I feel this is a
+> decision user space could easily make.
+>
+> Logan
+I agreed that it is better to leave up to user space to check what is 
+working
+and what is not. I found that write is practically always working but 
+read very
+often not. Also sometimes system BIOS update could fix the issue.
 
