@@ -1,40 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:51558 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752702AbcKGNir (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2016 08:38:47 -0500
-Date: Mon, 7 Nov 2016 14:38:40 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:38826 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932342AbcKYTlr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 14:41:47 -0500
+Date: Fri, 25 Nov 2016 12:41:33 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH/RFC] PCI: rcar: Restrict pci_fixup_irqs to the same PCI
- domain
-Message-ID: <20161107133840.GE29721@verge.net.au>
-References: <1478520048-25430-1-git-send-email-horms+renesas@verge.net.au>
- <HK2PR0601MB1393486793C40576FB24106CF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Haggai Eran <haggaie@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161125194133.GF16504@obsidianresearch.com>
+References: <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
+ <20161125075817.GA18428@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <HK2PR0601MB1393486793C40576FB24106CF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+In-Reply-To: <20161125075817.GA18428@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 01:32:28PM +0000, Phil Edworthy wrote:
-> Hi Simon,
+On Thu, Nov 24, 2016 at 11:58:17PM -0800, Christoph Hellwig wrote:
+> On Thu, Nov 24, 2016 at 11:11:34AM -0700, Logan Gunthorpe wrote:
+> > * Regular DAX in the FS doesn't work at this time because the FS can
+> > move the file you think your transfer to out from under you. Though I
+> > understand there's been some work with XFS to solve that issue.
 > 
-> On 07 November 2016 12:01, Simon Horman wrote:
-> > From: Phil Edworthy <phil.edworthy@renesas.com>
-> > 
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > ---
-> > 
-> > Phil, this is from the 3.3.2 BSP.
-> > Is it appropriate for mainline?
-> No, this is not for upstream. The pci_fixup_irqs_local function was an RFC
-> that should be solved in a more generic way.
-> See https://patchwork.kernel.org/patch/9220653
+> The file system will never move anything under locked down pages,
+> locking down pages is used exactly to protect against that.
 
-Thanks, got it.
+.. And ODP style mmu notifiers work correctly as well, I'd assume.
+
+So this should work with ZONE_DEVICE, if it doesn't it is a filesystem
+bug?
+
+> really want a notification to the consumer if the file systems wants
+> to remove the mapping.  We have implemented that using FL_LAYOUTS locks
+> for NFSD, but only XFS supports it so far.  Without that a long term
+> locked down region of memory (e.g. a kernel MR) would prevent various
+> file operations that would simply hang.
+
+So you imagine a signal back to user space asking user space to drop
+any RDMA MRS so the FS can relocate things?
+
+Do we need that, or should we encourage people to use either short
+lived MRs or ODP MRs when working with scenarios that need FS
+relocation?
+
+Jason
