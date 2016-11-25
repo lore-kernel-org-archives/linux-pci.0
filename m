@@ -1,86 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50799 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752346AbcKIBPn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2016 20:15:43 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 7/7] blk-mq: add a first_vec argument to blk_mq_pci_map_queues
-Date: Tue,  8 Nov 2016 17:15:07 -0800
-Message-Id: <1478654107-7384-8-git-send-email-hch@lst.de>
-In-Reply-To: <1478654107-7384-1-git-send-email-hch@lst.de>
-References: <1478654107-7384-1-git-send-email-hch@lst.de>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32907 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752940AbcKYK5n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:43 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: [PATCH v4 06/10] PCI: tegra: Implement PCA enable workaround
+Date: Fri, 25 Nov 2016 11:57:14 +0100
+Message-Id: <20161125105718.3866-6-thierry.reding@gmail.com>
+In-Reply-To: <20161125105718.3866-1-thierry.reding@gmail.com>
+References: <20161125105718.3866-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This allows skipping the first N IRQ vectors in case they are used for
-control or admin interrupts.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Tegra210's PCIe controller has a bug that requires the PCA (performance
+counter) feature to be enabled. If this isn't done, accesses to device
+configuration space will hang the chip for tens of seconds. Implement
+the workaround.
+
+Based on commit 514e19138af2 ("pci: tegra: implement PCA enable
+workaround") from U-Boot by Stephen Warren <swarren@nvidia.com>.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- block/blk-mq-pci.c         | 6 ++++--
- drivers/nvme/host/pci.c    | 2 +-
- include/linux/blk-mq-pci.h | 3 ++-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-tegra.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-index 966c216..03ff7c4 100644
---- a/block/blk-mq-pci.c
-+++ b/block/blk-mq-pci.c
-@@ -21,6 +21,7 @@
-  * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
-  * @set:	tagset to provide the mapping for
-  * @pdev:	PCI device associated with @set.
-+ * @first_vec:	first interrupt vectors to use for queues (usually 0)
-  *
-  * This function assumes the PCI device @pdev has at least as many available
-  * interrupt vetors as @set has queues.  It will then queuery the vector
-@@ -28,12 +29,13 @@
-  * that maps a queue to the CPUs that have irq affinity for the corresponding
-  * vector.
-  */
--int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev)
-+int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
-+		int first_vec)
- {
- 	const struct cpumask *mask;
- 	unsigned int queue, cpu;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index d5206fa53353..4bfaac6d3582 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -188,6 +188,9 @@
+ #define RP_VEND_XP	0x00000f00
+ #define  RP_VEND_XP_DL_UP	(1 << 30)
  
--	for (queue = 0; queue < set->nr_hw_queues; queue++) {
-+	for (queue = first_vec; queue < set->nr_hw_queues; queue++) {
- 		mask = pci_irq_get_affinity(pdev, queue);
- 		if (!mask)
- 			return -EINVAL;
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 0248d0e..6e6b917 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -273,7 +273,7 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
- {
- 	struct nvme_dev *dev = set->driver_data;
++#define RP_VEND_CTL2 0x00000fa8
++#define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
++
+ #define RP_PRIV_MISC	0x00000fe0
+ #define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
+ #define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
+@@ -252,6 +255,7 @@ struct tegra_pcie_soc {
+ 	bool has_intr_prsnt_sense;
+ 	bool has_cml_clk;
+ 	bool has_gen2;
++	bool force_pca_enable;
+ };
  
--	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev));
-+	return blk_mq_pci_map_queues(set, to_pci_dev(dev->dev), 0);
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -556,6 +560,12 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+ 	afi_writel(port->pcie, value, ctrl);
+ 
+ 	tegra_pcie_port_reset(port);
++
++	if (soc->force_pca_enable) {
++		value = readl(port->base + RP_VEND_CTL2);
++		value |= RP_VEND_CTL2_PCA_ENABLE;
++		writel(value, port->base + RP_VEND_CTL2);
++	}
  }
  
- /**
-diff --git a/include/linux/blk-mq-pci.h b/include/linux/blk-mq-pci.h
-index 6ab5952..fde26d2 100644
---- a/include/linux/blk-mq-pci.h
-+++ b/include/linux/blk-mq-pci.h
-@@ -4,6 +4,7 @@
- struct blk_mq_tag_set;
- struct pci_dev;
+ static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
+@@ -2046,6 +2056,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.has_intr_prsnt_sense = false,
+ 	.has_cml_clk = false,
+ 	.has_gen2 = false,
++	.force_pca_enable = false,
+ };
  
--int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev);
-+int blk_mq_pci_map_queues(struct blk_mq_tag_set *set, struct pci_dev *pdev,
-+		int first_vec);
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2060,6 +2071,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.has_intr_prsnt_sense = true,
+ 	.has_cml_clk = true,
+ 	.has_gen2 = false,
++	.force_pca_enable = false,
+ };
  
- #endif /* _LINUX_BLK_MQ_PCI_H */
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2073,6 +2085,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.has_intr_prsnt_sense = true,
+ 	.has_cml_clk = true,
+ 	.has_gen2 = true,
++	.force_pca_enable = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.1.4
+2.10.2
 
