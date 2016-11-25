@@ -1,71 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v9 14/16] drivers: acpi: iort: replace rid map type with
- type mask
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- iommu@lists.linux-foundation.org
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
- <20161121100148.24769-15-lorenzo.pieralisi@arm.com>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <300db741-2ad9-3a44-13b3-03980ce3713c@linaro.org>
-Date: Tue, 29 Nov 2016 20:29:16 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0079.outbound.protection.outlook.com ([104.47.40.79]:15384
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932466AbcKYUvM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Nov 2016 15:51:12 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <a98185d9-ffb1-6469-4272-2d1222600825@vodafone.de>
+CC: Haggai Eran <haggaie@mellanox.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+From: Felix Kuehling <felix.kuehling@amd.com>
+Message-ID: <e3c2640a-5dd9-7527-7db8-9b3219bb7625@amd.com>
+Date: Fri, 25 Nov 2016 15:51:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20161121100148.24769-15-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-acpi@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
- Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Eric Auger <eric.auger@redhat.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>,
- Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <a98185d9-ffb1-6469-4272-2d1222600825@vodafone.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/11/21 18:01, Lorenzo Pieralisi wrote:
-> IORT tables provide data that allow the kernel to carry out
-> device ID mappings between endpoints and system components
-> (eg interrupt controllers, IOMMUs). When the mapping for a
-> given device ID is carried out, the translation mechanism
-> is done on a per-subsystem basis rather than a component
-> subtype (ie the IOMMU kernel layer will look for mappings
-> from a device to all IORT node types corresponding to IOMMU
-> components), therefore the corresponding mapping API should
-> work on a range (ie mask) of IORT node types corresponding
-> to a common set of components (eg IOMMUs) rather than a
-> specific node type.
+
+On 16-11-25 03:40 PM, Christian König wrote:
+> Am 25.11.2016 um 20:32 schrieb Jason Gunthorpe:
+>> This assumes the commands are fairly short lived of course, the
+>> expectation of the mmu notifiers is that a flush is reasonably prompt
 >
-> Upgrade the IORT iort_node_map_rid() API to work with a
-> type mask instead of a single node type so that it can
-> be used for mappings that span multiple components types
-> (ie IOMMUs).
+> Correct, this is another problem. GFX command submissions usually
+> don't take longer than a few milliseconds, but compute command
+> submission can easily take multiple hours.
 >
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/arm64/iort.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
+> I can easily imagine what would happen when kswapd is blocked by a GPU
+> command submission for an hour or so while the system is under memory
+> pressure :)
+>
+> I'm thinking on this problem for about a year now and going in circles
+> for quite a while. So if you have ideas on this even if they sound
+> totally crazy, feel free to come up.
 
-Acked-by: Hanjun Guo <hanjun.guo@linaro.org>
+Our GPUs (at least starting with VI) support compute-wave-save-restore
+and can swap out compute queues with fairly low latency. Yes, there is
+some overhead (both memory usage and time), but it's a fairly regular
+thing with our hardware scheduler (firmware, actually) when we need to
+preempt running compute queues to update runlists or we overcommit the
+hardware queue resources.
 
-Thanks
-Hanjun
+Regards,
+  Felix
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
