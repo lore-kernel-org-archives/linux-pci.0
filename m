@@ -1,100 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:44046 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753696AbcK3AmI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 19:42:08 -0500
-Subject: Re: [RESEND PATCH 2/2] PCI: rockchip: Add quirk to disable RC's ASPM
- L0s
-To: Rob Herring <robh@kernel.org>
-References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
- <1479096666-112668-2-git-send-email-shawn.lin@rock-chips.com>
- <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+CC: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <56e13221-9889-c373-4dc5-748c6601aae7@rock-chips.com>
-Date: Wed, 30 Nov 2016 08:41:45 +0800
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+From: Haggai Eran <haggaie@mellanox.com>
+Message-ID: <383d4a9c-b8ce-bb00-74c5-fdcf231513ff@mellanox.com>
+Date: Sun, 27 Nov 2016 10:16:19 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161125193252.GC16504@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+On 11/25/2016 9:32 PM, Jason Gunthorpe wrote:
+> On Fri, Nov 25, 2016 at 02:22:17PM +0100, Christian König wrote:
+> 
+>>> Like you say below we have to handle short lived in the usual way, and
+>>> that covers basically every device except IB MRs, including the
+>>> command queue on a NVMe drive.
+>>
+>> Well a problem which wasn't mentioned so far is that while GPUs do have a
+>> page table to mirror the CPU page table, they usually can't recover from
+>> page faults.
+> 
+>> So what we do is making sure that all memory accessed by the GPU Jobs stays
+>> in place while those jobs run (pretty much the same pinning you do for the
+>> DMA).
+> 
+> Yes, it is DMA, so this is a valid approach.
+> 
+> But, you don't need page faults from the GPU to do proper coherent
+> page table mirroring. Basically when the driver submits the work to
+> the GPU it 'faults' the pages into the CPU and mirror translation
+> table (instead of pinning).
+> 
+> Like in ODP, MMU notifiers/HMM are used to monitor for translation
+> changes. If a change comes in the GPU driver checks if an executing
+> command is touching those pages and blocks the MMU notifier until the
+> command flushes, then unfaults the page (blocking future commands) and
+> unblocks the mmu notifier.
+I think blocking mmu notifiers against something that is basically
+controlled by user-space can be problematic. This can block things like
+memory reclaim. If you have user-space access to the device's queues,
+user-space can block the mmu notifier forever.
 
-On 2016/11/29 23:34, Rob Herring wrote:
-> On Sun, Nov 13, 2016 at 10:11 PM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->> Rockchip's RC outputs 100MHz reference clock but there are
->> two methods for PHY to generate it.
->>
->> (1)One of them is to use system PLL to generate 100MHz clock and
->> the PHY will relock it and filter signal noise then outputs the
->> reference clock.
->>
->> (2)Another way is to share Soc's 24MHZ crystal oscillator with
->> PHY and force PHY's DLL to generate 100MHz internally.
->>
->> When using case(2), the exit from L0s doesn't work fine occasionally
->> due to the broken design of RC receiver's logical circuit. So even if
->> we use extended-synch, it still fails for PHY to relock the bits from
->> FTS sometimes. This will hang the system.
->>
->> Maybe we could argue that why not use case(1) to avoid it? The reason
->> is that as we could see the reference clock is derived from system PLL
->> and the path from it to PHY isn't so clean which means there are some
->> noise introduced by power-domain and other buses can't be filterd out
->> by PHY and we could see noise from the frequency spectrum by oscilloscope.
->> This makes the TX compatibility test a little difficult to pass the spec.
->> So case(1) and case(2) are both used indeed now. If using case(2), we
->> should disable RC's L0s support, and that is why we need this property to
->> indicate this quirk.
->>
->> Also after checking quirk.c, I noticed there is already a quirk for
->> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
->> shouldn't do that as mentioned above that case(1) could still works fine
->> with L0s.
->>
->> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> Cc: Brian Norris <briannorris@chromium.org>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
->>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
->>  2 files changed, 11 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> index ba67b39..cfa44a7 100644
->> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> @@ -42,6 +42,8 @@ Required properties:
->>  Optional Property:
->>  - ep-gpios: contain the entry for pre-reset gpio
->>  - num-lanes: number of lanes to use
->> +- quirk,aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
->
-> quirk is not a vendor. Drop it.
+On PeerDirect, we have some kind of a middle-ground solution for pinning
+GPU memory. We create a non-ODP MR pointing to VRAM but rely on
+user-space and the GPU not to migrate it. If they do, the MR gets
+destroyed immediately. This should work on legacy devices without ODP
+support, and allows the system to safely terminate a process that
+misbehaves. The downside of course is that it cannot transparently
+migrate memory but I think for user-space RDMA doing that transparently
+requires hardware support for paging, via something like HMM.
 
-I guess you want me to drop the "quirk" prefix and just use
-aspm-no-l0s instaed?
+...
 
->
->> +       using 24MHz OSC for RC's PHY.
->>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
->>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
->>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
->
->
->
+> I'm hearing most people say ZONE_DEVICE is the way to handle this,
+> which means the missing remaing piece for RDMA is some kind of DMA
+> core support for p2p address translation..
 
+Yes, this is definitely something we need. I think Will Davis's patches
+are a good start.
 
--- 
-Best Regards
-Shawn Lin
+Another thing I think is that while HMM is good for user-space
+applications, for kernel p2p use there is no need for that. Using
+ZONE_DEVICE with or without something like DMA-BUF to pin and unpin
+pages for the short duration as you wrote above could work fine for
+kernel uses in which we can guarantee they are short.
 
+Haggai
