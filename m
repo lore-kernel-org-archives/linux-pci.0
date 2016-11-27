@@ -1,119 +1,84 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH v3] PCI: create revision file in sysfs
-To: Bjorn Helgaas <helgaas@kernel.org>, Daniel Vetter <daniel@ffwll.ch>
-References: <20161101154232.6451-1-emil.l.velikov@gmail.com>
- <20161111143723.5818-1-emil.l.velikov@gmail.com>
- <20161114184003.gdkd4kkiet2qqe7s@phenom.ffwll.local>
- <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Emil Velikov <emil.l.velikov@gmail.com>, dri-devel@lists.freedesktop.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Greg KH <gregkh@linuxfoundation.org>, Lukas Wunner <lukas@wunner.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <dcd8d9fe-ea1d-45b8-2528-adb75a9ba3ed@codeaurora.org>
-Date: Wed, 16 Nov 2016 16:30:16 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0056.outbound.protection.outlook.com ([104.47.40.56]:63760
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751230AbcK0OHm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 27 Nov 2016 09:07:42 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Haggai Eran <haggaie@mellanox.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
+ <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
+ <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+CC: Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Max Gurtovoy <maxg@mellanox.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <0087fba9-7bcb-8bb3-c26e-4ef3e4970c34@amd.com>
+Date: Sun, 27 Nov 2016 15:07:22 +0100
 MIME-Version: 1.0
-In-Reply-To: <20161116205811.GE26600@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/16/2016 3:58 PM, Bjorn Helgaas wrote:
-> [+cc Sinan, Lukas]
-> 
-> Hi Daniel,
-> 
-> On Mon, Nov 14, 2016 at 07:40:03PM +0100, Daniel Vetter wrote:
->> On Fri, Nov 11, 2016 at 02:37:23PM +0000, Emil Velikov wrote:
->>> From: Emil Velikov <emil.velikov@collabora.com>
->>>
->>> Currently the revision isn't available via sysfs/libudev thus if one
->>> wants to know the value they need to read through the config file.
->>>
->>> This in itself wakes/powers up the device, causing unwanted delay
->>> since it can be quite costly.
->>>
->>> There are at least two userspace components which could make use the new
->>> file libpciaccess and libdrm. The former [used in various places] wakes
->>> up _every_ PCI device, which can be observed via glxinfo [when using
->>> Mesa 10.0+ drivers]. While the latter [in association with Mesa 13.0]
->>> can lead to 2-3 second delays while starting firefox, thunderbird or
->>> chromium.
->>>
->>> Expose the revision as a separate file, just like we do for the device,
->>> vendor, their subsystem version and class.
->>>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>> Cc: linux-pci@vger.kernel.org
->>> Cc: Greg KH <gregkh@linuxfoundation.org>
->>> Link: https://bugs.freedesktop.org/show_bug.cgi?id=98502
->>> Tested-by: Mauro Santos <registo.mailling@gmail.com>
->>> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
->>> Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+Am 27.11.2016 um 15:02 schrieb Haggai Eran:
+> On 11/25/2016 9:32 PM, Jason Gunthorpe wrote:
+>> On Fri, Nov 25, 2016 at 02:22:17PM +0100, Christian König wrote:
 >>
->> Given that waking a gpu can take somewhere between ages and forever, and
->> that we read the pci revisions everytime we launch a new gl app I think
->> this is the correct approach. Of course we could just patch libdrm and
->> everyone to not look at the pci revision, but that just leads to every
->> pci-based driver having a driver-private ioctl/getparam thing to expose
->> it. Which also doesn't make much sense.
-> 
-> This re-asserts what has already been said, but doesn't address any of
-> my questions in the v2 discussion, so I'm still looking to continue
-> that thread.
-> 
-> I am curious about this long wakeup issue, though.  Are we talking
-> about a D3cold -> D0 transition?  I assume so, since config space is
-> generally accessible in all power states except D3cold.  From the
-> device's point of view this is basically like a power-on.  I think the
-> gist of PCIe r3.0, sec 6.6.1 is that we need to wait 100ms, e.g.,
-> PCI_PM_D3COLD_WAIT, before doing config accesses.
-> 
-> We do support Configuration Request Retry Status Software Visibility
-> (pci_enable_crs()), so a device *can* take longer than 100ms after
-> power-up to respond to a config read, but I think that only applies to
-> reads of the Vendor ID.  I cc'd Sinan because we do have some issues
-> with our CRS support, and maybe he can shed some light on this.
+>>>> Like you say below we have to handle short lived in the usual way, and
+>>>> that covers basically every device except IB MRs, including the
+>>>> command queue on a NVMe drive.
+>>> Well a problem which wasn't mentioned so far is that while GPUs do have a
+>>> page table to mirror the CPU page table, they usually can't recover from
+>>> page faults.
+>>> So what we do is making sure that all memory accessed by the GPU Jobs stays
+>>> in place while those jobs run (pretty much the same pinning you do for the
+>>> DMA).
+>> Yes, it is DMA, so this is a valid approach.
+>>
+>> But, you don't need page faults from the GPU to do proper coherent
+>> page table mirroring. Basically when the driver submits the work to
+>> the GPU it 'faults' the pages into the CPU and mirror translation
+>> table (instead of pinning).
+>>
+>> Like in ODP, MMU notifiers/HMM are used to monitor for translation
+>> changes. If a change comes in the GPU driver checks if an executing
+>> command is touching those pages and blocks the MMU notifier until the
+>> command flushes, then unfaults the page (blocking future commands) and
+>> unblocks the mmu notifier.
+> I think blocking mmu notifiers against something that is basically
+> controlled by user-space can be problematic. This can block things like
+> memory reclaim. If you have user-space access to the device's queues,
+> user-space can block the mmu notifier forever.
+Really good point.
 
-This applies to all config requests including vendor ID. It is just the
-vendor ID returns a special code (device id = 0x0001 vendor id =0xffff) so
-that CRS aware software can understand the difference between CRS and an
-actual failure. It is recommended to always read the vendor ID following
-a reset/power on to understand if the device is sending a CRS.
+I think this means the bare minimum if we don't have recoverable page 
+faults is to have preemption support like Felix described in his answer 
+as well.
 
-As Bjorn mentioned, we do enable CRS visibility in the kernel but only for
-the root port in pci_enable_crs function. When CRS visibility is disabled,
-root port needs to retry the request until a good response is received.
+Going to keep that in mind,
+Christian.
 
-CRS polling happens behind the scenes in pci_bus_read_dev_vendor_id function.
-
-In order for reads to take longer than 100ms, the CRS must be disabled at
-a lower level in the bus. 
-
-I wonder if you have a bridge between your device and the root port.
-
-Bridge Configuration Retry Enable needs to be programmed if we want kernel
-to know about retry responses behind a bridge. 
-
-"Bridge Configuration Retry Enable – When Set, this bit enables PCI Express
-to PCI/PCI-X bridges to return Configuration Request Retry Status (CRS) in
-response to Configuration Requests that target devices below the bridge. Refer
-to the PCI Express to PCI/PCI-X Bridge Specification, Revision 1.0 for
-further details. Default value of this bit is 0b."
-
-Kernel is currently not setting this.
-
-> 
-> I'm not surprised if a GPU takes longer than 100ms to do device-
-> specific, driver-managed, non-PCI things like detect and wake up
-> monitors.  But I *am* surprised if generic PCI bus-level things like
-> config reads take longer than that.  I also cc'd Lukas because he
-> knows a lot more about PCI PM than I do.
-> 
-> Bjorn
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
