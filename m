@@ -1,8 +1,14 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0047.outbound.protection.outlook.com ([104.47.37.47]:55552
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932532AbcK1PDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 10:03:40 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Haggai Eran <haggaie@mellanox.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20161123190515.GA12146@obsidianresearch.com>
  <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
  <20161123193228.GC12146@obsidianresearch.com>
  <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
@@ -11,7 +17,10 @@ References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
  <20161123215510.GA16311@obsidianresearch.com>
  <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
  <20161124164249.GD20818@obsidianresearch.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+CC: Logan Gunthorpe <logang@deltatee.com>,
         Dan Williams <dan.j.williams@intel.com>,
         "Deucher, Alexander" <Alexander.Deucher@amd.com>,
         "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
@@ -21,82 +30,54 @@ Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
         "Bridgman, John" <John.Bridgman@amd.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
         "Sander, Ben" <ben.sander@amd.com>,
         "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
         "Blinzer, Paul" <Paul.Blinzer@amd.com>,
         "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <9cc22068-ede8-c1bc-5d8b-cf6224a7ce05@deltatee.com>
-Date: Thu, 24 Nov 2016 11:11:34 -0700
+        Max Gurtovoy <maxg@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <314e9ef7-f60e-bf6b-d488-c585f1ea60e8@amd.com>
+Date: Mon, 28 Nov 2016 09:48:34 -0500
 MIME-Version: 1.0
-In-Reply-To: <20161124164249.GD20818@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2016-11-27 09:02 AM, Haggai Eran wrote
+> On PeerDirect, we have some kind of a middle-ground solution for pinning
+> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
+> user-space and the GPU not to migrate it. If they do, the MR gets
+> destroyed immediately. This should work on legacy devices without ODP
+> support, and allows the system to safely terminate a process that
+> misbehaves. The downside of course is that it cannot transparently
+> migrate memory but I think for user-space RDMA doing that transparently
+> requires hardware support for paging, via something like HMM.
+>
+> ...
+May be I am wrong but my understanding is that PeerDirect logic basically
+follow  "RDMA register MR" logic so basically nothing prevent to "terminate"
+process for "MMU notifier" case when we are very low on memory
+not making it similar (not worse) then PeerDirect case.
+>> I'm hearing most people say ZONE_DEVICE is the way to handle this,
+>> which means the missing remaing piece for RDMA is some kind of DMA
+>> core support for p2p address translation..
+> Yes, this is definitely something we need. I think Will Davis's patches
+> are a good start.
+>
+> Another thing I think is that while HMM is good for user-space
+> applications, for kernel p2p use there is no need for that.
+About HMM: I do not think that in the current form HMM would  fit in
+requirement for generic P2P transfer case. My understanding is that at
+the current stage HMM is good for "caching" system memory
+in device memory for fast GPU access but in RDMA MR non-ODP case
+it will not work because  the location of memory should not be
+changed so memory should be allocated directly in PCIe memory.
+> Using ZONE_DEVICE with or without something like DMA-BUF to pin and unpin
+> pages for the short duration as you wrote above could work fine for
+> kernel uses in which we can guarantee they are short.
+Potentially there is another issue related to pin/unpin. If memory could
+be used a lot of time then there is no sense to rebuild and program
+s/g tables each time if location of memory was not changed.
 
 
-On 24/11/16 09:42 AM, Jason Gunthorpe wrote:
-> There are three cases to worry about:
->  - Coherent long lived page table mirroring (RDMA ODP MR)
->  - Non-coherent long lived page table mirroring (RDMA MR)
->  - Short lived DMA mapping (everything else)
-> 
-> Like you say below we have to handle short lived in the usual way, and
-> that covers basically every device except IB MRs, including the
-> command queue on a NVMe drive.
-
-Yes, this makes sense to me. Though I thought regular IB MRs with
-regular memory currently pinned the pages (despite being long lived)
-that's why we can run up against the "max locked memory" limit. It
-doesn't seem so terrible if GPU memory had a similar restriction until
-ODP like solutions get implemented.
-
->> Yeah, we've had RDMA and O_DIRECT transfers to PCIe backed ZONE_DEVICE
->> memory working for some time. I'd say it's a good fit. The main question
->> we've had is how to expose PCIe bars to userspace to be used as MRs and
->> such.
-
-> Is there any progress on that?
-
-Well, I guess there's some consensus building to do. The existing
-options are:
-
-* Device DAX: which could work but the problem I see with it is that it
-only allows one application to do these transfers. Or there would have
-to be some user-space coordination to figure which application gets what
-memeroy.
-
-* Regular DAX in the FS doesn't work at this time because the FS can
-move the file you think your transfer to out from under you. Though I
-understand there's been some work with XFS to solve that issue.
-
-Though, we've been considering that the backed memory would be
-non-volatile which adds some of this complexity. If the memory were
-volatile the kernel would just need to do some relatively straight
-forward allocation to user-space when asked. For example, with NVMe, the
-kernel could give chunks of the CMB buffer to userspace via an mmap call
-to /dev/nvmeX. Though I think there's been some push back against things
-like that as well.
-
-> I still don't quite get what iopmem was about.. I thought the
-> objection to uncachable ZONE_DEVICE & DAX made sense, so running DAX
-> over iopmem and still ending up with uncacheable mmaps still seems
-> like a non-starter to me...
-
-The latest incarnation of iopmem simply created a block device backed by
-ZONE_DEVICE memory on a PCIe BAR. We then put a DAX FS on it and
-user-space could mmap the files and send them to other devices to do P2P
-transfers.
-
-I don't think there was a hard objection to uncachable ZONE_DEVICE and
-DAX. We did try our experimental hardware with cached ZONE_DEVICE and it
-did work but the performance was beyond unusable (which may be a
-hardware issue). In the end I feel the driver would have to decide the
-most appropriate caching for the hardware and I don't understand why WC
-or UC wouldn't work with ZONE_DEVICE.
-
-Logan
