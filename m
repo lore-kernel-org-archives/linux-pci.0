@@ -1,171 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36178 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:38966 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932349AbcK2EQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:16:03 -0500
-Subject: [PATCH v4 5/7] PCI: Remove pci_resource_bar() and
- pci_iov_resource_bar()
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:15:42 -0600
-Message-ID: <20161129041542.21453.14468.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1752406AbcK1TZh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 14:25:37 -0500
+Date: Mon, 28 Nov 2016 13:25:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
+Message-ID: <20161128192530.GO16033@bhelgaas-glaptop.roam.corp.google.com>
+References: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c2b767a782f9a0e1780e5c201d245d1be5b7d78a.1476011255.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_std_update_resource() only deals with standard BARs, so we don't have
-to worry about the complications of VF BARs in an SR-IOV capability.
+On Sun, Oct 09, 2016 at 01:12:55PM +0200, Lukas Wunner wrote:
+> -.data          56
+> +.data           0
+> -.rodata        32
+> +.rodata        88
+> 
+> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-Compute the BAR address inline and remove pci_resource_bar().  That makes
-pci_iov_resource_bar() unused, so remove that as well.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c       |   18 ------------------
- drivers/pci/pci.c       |   30 ------------------------------
- drivers/pci/pci.h       |    6 ------
- drivers/pci/setup-res.c |   13 +++++++------
- 4 files changed, 7 insertions(+), 60 deletions(-)
+It'd be nice if this had a changelog.  I'm happy if this goes via the
+x86 tree.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index a800ba2..c9c84ba 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -554,24 +554,6 @@ void pci_iov_release(struct pci_dev *dev)
- }
- 
- /**
-- * pci_iov_resource_bar - get position of the SR-IOV BAR
-- * @dev: the PCI device
-- * @resno: the resource number
-- *
-- * Returns position of the BAR encapsulated in the SR-IOV capability.
-- */
--int pci_iov_resource_bar(struct pci_dev *dev, int resno)
--{
--	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
--		return 0;
--
--	BUG_ON(!dev->is_physfn);
--
--	return dev->sriov->pos + PCI_SRIOV_BAR +
--		4 * (resno - PCI_IOV_RESOURCES);
--}
--
--/**
-  * pci_iov_update_resource - update a VF BAR
-  * @dev: the PCI device
-  * @resno: the resource number
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 631eac2..ec3f16d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4827,36 +4827,6 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags)
- }
- EXPORT_SYMBOL(pci_select_bars);
- 
--/**
-- * pci_resource_bar - get position of the BAR associated with a resource
-- * @dev: the PCI device
-- * @resno: the resource number
-- * @type: the BAR type to be filled in
-- *
-- * Returns BAR position in config space, or 0 if the BAR is invalid.
-- */
--int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
--{
--	int reg;
--
--	if (resno < PCI_ROM_RESOURCE) {
--		*type = pci_bar_unknown;
--		return PCI_BASE_ADDRESS_0 + 4 * resno;
--	} else if (resno == PCI_ROM_RESOURCE) {
--		*type = pci_bar_mem32;
--		return dev->rom_base_reg;
--	} else if (resno < PCI_BRIDGE_RESOURCES) {
--		/* device specific resource */
--		*type = pci_bar_unknown;
--		reg = pci_iov_resource_bar(dev, resno);
--		if (reg)
--			return reg;
--	}
--
--	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
--	return 0;
--}
--
- /* Some architectures require additional programming to enable VGA */
- static arch_set_vga_state_t arch_set_vga_state;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5bfcb92..a5d37f6 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -245,7 +245,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- int pci_setup_device(struct pci_dev *dev);
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
--int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
- void pci_configure_ari(struct pci_dev *dev);
- void __pci_bus_size_bridges(struct pci_bus *bus,
- 			struct list_head *realloc_head);
-@@ -289,7 +288,6 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
- #ifdef CONFIG_PCI_IOV
- int pci_iov_init(struct pci_dev *dev);
- void pci_iov_release(struct pci_dev *dev);
--int pci_iov_resource_bar(struct pci_dev *dev, int resno);
- void pci_iov_update_resource(struct pci_dev *dev, int resno);
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
- void pci_restore_iov_state(struct pci_dev *dev);
-@@ -304,10 +302,6 @@ static inline void pci_iov_release(struct pci_dev *dev)
- 
- {
- }
--static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
--{
--	return 0;
--}
- static inline void pci_restore_iov_state(struct pci_dev *dev)
- {
- }
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index ee0be34..09bdff7 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -32,7 +32,6 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	u16 cmd;
- 	u32 new, check, mask;
- 	int reg;
--	enum pci_bar_type type;
- 	struct resource *res = dev->resource + resno;
- 
- 	/* Per SR-IOV spec 3.4.1.11, VF BARs are RO zero */
-@@ -65,14 +64,16 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	else
- 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
- 
--	reg = pci_resource_bar(dev, resno, &type);
--	if (!reg)
--		return;
--	if (type != pci_bar_unknown) {
-+	if (resno < PCI_ROM_RESOURCE) {
-+		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
-+	} else if (resno == PCI_ROM_RESOURCE) {
- 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
- 			return;
-+
-+		reg = dev->rom_base_reg;
- 		new |= PCI_ROM_ADDRESS_ENABLE;
--	}
-+	} else
-+		return;
- 
- 	/*
- 	 * We can't update a 64-bit BAR atomically, so when possible,
+I can't remember a discussion about having this code in drivers/pci in
+the first place.  Would it make sense to move it to
+arch/x86/platform/intel-mid/?
 
+8e522e1d321b ("x86/platform/intel-mid: Add Intel Penwell to ID table")
+fixed a sync issue and added a comment about staying in sync with
+arch/x86/platform/intel-mid/pwr.c.  Maybe moving this code to arch/x86
+would help with that?
+
+Looks like we'd have to expose pci_platform_pm_ops and
+pci_set_platform_pm(), but setting platform-specific PM ops does seem
+like something that would fit in the arch directories, so maybe that
+wouldn't be a bad thing.
+
+> ---
+>  drivers/pci/pci-mid.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
+> index a8b52dc..566ded1 100644
+> --- a/drivers/pci/pci-mid.c
+> +++ b/drivers/pci/pci-mid.c
+> @@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
+>  	return false;
+>  }
+>  
+> -static struct pci_platform_pm_ops mid_pci_platform_pm = {
+> +static const struct pci_platform_pm_ops mid_pci_platform_pm = {
+>  	.is_manageable	= mid_pci_power_manageable,
+>  	.set_state	= mid_pci_set_power_state,
+>  	.get_state	= mid_pci_get_power_state,
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
