@@ -1,103 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Nov 2016 17:40:39 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, cov@codeaurora.org, dhdang@apm.com,
-        Liviu.Dudau@arm.com, msalter@redhat.com, wangyijing@huawei.com,
-        jchandra@broadcom.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        ddaney@caviumnetworks.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jcm@redhat.com, jhugo@codeaurora.org
-Subject: Re: [PATCH V6 1/1] ARM64/PCI: Manage controller-specific information
- on the host controller basis
-Message-ID: <20161129234039.GB7375@bhelgaas-glaptop.roam.corp.google.com>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1479985523-10006-1-git-send-email-tn@semihalf.com>
+Return-Path: <prvs=0140ff2712=wzhang@fb.com>
+Return-Path: <prvs=0140ff2712=wzhang@fb.com>
+From: Wei Zhang <wzhang@fb.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Date: Mon, 28 Nov 2016 09:14:39 +0000
+Message-ID: <CB060C5F-26CB-40E8-91BB-B891B5704746@fb.com>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <20161118232544.GI28386@localhost.localdomain>
+ <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479985523-10006-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 24, 2016 at 12:05:23PM +0100, Tomasz Nowicki wrote:
-> Currently we use one shared global acpi_pci_root_ops structure to keep
-> controller-specific ops. Then its pointer is passed to acpi_pci_root_create()
-> and associated with host bridge instance for good. Such design implies
-> serious drawback. Any potential manipulation on the single system-wide
-> acpi_pci_root_ops leads to kernel crash. The structure content is not
-> really changing even across multiple host bridges creation thus it was not
-> the issue so far.
-> 
-> In preparation for adding ECAM quirks mechanism (where controller-specific
-> PCI ops may be different for each host bridge) allocate new
-> acpi_pci_root_ops and fill in with data for each bridge. Now it is safe
-> to have different controller-specific info. As a consequence free
-> acpi_pci_root_ops when host bridge is released.
-> 
-> No functional changes in this patch.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-
-Applied to pci/ecam for v4.10, thanks, Tomasz!
-
-> ---
->  arch/arm64/kernel/pci.c | 17 ++++++++++-------
->  1 file changed, 10 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index fb439c7..5c08baf 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -152,33 +152,36 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
->  
->  	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
->  	pci_ecam_free(ri->cfg);
-> +	kfree(ci->ops);
->  	kfree(ri);
->  }
->  
-> -static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> -	.release_info = pci_acpi_generic_release_info,
-> -};
-> -
->  /* Interface called from ACPI code to setup PCI host controller */
->  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
->  	int node = acpi_get_node(root->device->handle);
->  	struct acpi_pci_generic_root_info *ri;
->  	struct pci_bus *bus, *child;
-> +	struct acpi_pci_root_ops *root_ops;
->  
->  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->  	if (!ri)
->  		return NULL;
->  
-> +	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
-> +	if (!root_ops)
-> +		return NULL;
-> +
->  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
->  	if (!ri->cfg) {
->  		kfree(ri);
-> +		kfree(root_ops);
->  		return NULL;
->  	}
->  
-> -	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-> -	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
-> -				   ri->cfg);
-> +	root_ops->release_info = pci_acpi_generic_release_info;
-> +	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
-> +	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
->  	if (!bus)
->  		return NULL;
->  
-> -- 
-> 2.7.4
-> 
+SGkgQmpvcm4sDQoNClRoaXMgaXMgV2VpIGFuZCBJIHdvcmsgZnJvbSBGYWNlYm9vayBTdG9yYWdl
+IEhhcmR3YXJlIGdyb3VwLiAgVGhlIHNlcmllcyBvZiBjaGFuZ2VzIG1hZGUgYnkgS2VpdGggYXJl
+IHRvIHN1cHBvcnQgdGhlIFBDSWUgaG90IHBsdWcgdGVzdGluZyBvbiBvdXIgTGlnaHRuaW5nIHBs
+YXRmb3JtIChUaGFua3MgS2VpdGghKS4gIExpZ2h0bmluZyBpcyBhIOKAnEp1c3Qgb2YgQnVuY2gg
+b2YgRmxhc2jigJ0sIG9yIEpCT0YsIHN0b3JhZ2UgcGxhdGZvcm0gdGhhdCBoYXMgYSBQQ0llIHN3
+aXRjaCBjb25uZWN0aW5nIHRvIDE1IE5WTWUgU1NEcy4gIE9uZSBvZiBvdXIgZ29hbHMgaXMgdG8g
+YmUgYWJsZSB0byBzdXJwcmlzZSBob3QgcmVtb3ZlL3BsdWcgZWFjaCBTU0RzIGluIHRoZSBjaGFz
+c2lzLiAgVGhlc2UgY2hhbmdlcyBhcmUgdG8gZml4IGlzc3VlcyBmb3VuZCBkdXJpbmcgc3VycHJp
+c2UgaG90IHBsdWcgdGVzdGluZy4gIFNwZWNpYWxseSwgdGhleSByZWR1Y2VkIFBDSWUgcmVnaXN0
+ZXJzIGFjY2VzcyBkdXJpbmcgYSBzdXJwcmlzZWQgaG90IHJlbW92ZSBldmVudC4gIFdlIGhhdmUg
+aW5jb3Jwb3JhdGVkIEtlaXRo4oCZcyBwYXRjaGVzIGFuZCB0ZXN0ZWQgb24gb3VyIExpZ2h0bmlu
+ZyBwbGF0Zm9ybS4gIFRoZXkgd29ya2VkIHdlbGwuIA0KDQpGb3IgYSBkZXRhaWwgZGVzY3JpcHRp
+b24gb2YgdGhlIExpZ2h0bmluZyBwbGF0Zm9ybSwgcGxlYXNlIHJlZmVyIHRvIGh0dHBzOi8vY29k
+ZS5mYWNlYm9vay5jb20vcG9zdHMvOTg5NjM4ODA0NDU4MDA3L2ludHJvZHVjaW5nLWxpZ2h0bmlu
+Zy1hLWZsZXhpYmxlLW52bWUtamJvZi8NCg0KSG9wZSB0aGlzIGdpdmVzIHlvdSBzb21lIGJhY2tn
+cm91bmQgaW5mbyBvbiB0aGVzZSBjaGFuZ2VzLiAgQXBwcmVjaWF0ZSB5b3VyIHJldmlld3MgYXMg
+d2VsbCENCg0KVGhhbmtzIQ0KLVdlaQ0KDQoNCk9uIDExLzIzLzE2LCA4OjA5IEFNLCAiQmpvcm4g
+SGVsZ2FhcyIgPGhlbGdhYXNAa2VybmVsLm9yZz4gd3JvdGU6DQoNCiAgICBPbiBGcmksIE5vdiAx
+OCwgMjAxNiBhdCAwNjoyNTo0NFBNIC0wNTAwLCBLZWl0aCBCdXNjaCB3cm90ZToNCiAgICA+IE9u
+IEZyaSwgT2N0IDI4LCAyMDE2IGF0IDA2OjU4OjE0UE0gLTA0MDAsIEtlaXRoIEJ1c2NoIHdyb3Rl
+Og0KICAgID4gPiBIZXJlJ3MgdmVyc2lvbiAzLiBUd28gb2YgdGhlIHBhdGNoZXMgZnJvbSB2MiBo
+YXZlIGFscmVhZHkgYmVlbiBhcHBsaWVkDQogICAgPiA+IHVwc3RyZWFtLCBzbyB0aGlzIGlzIGRv
+d24gdG8gdGhyZWUgcGF0Y2hlcyBub3cuDQogICAgPiA+IA0KICAgID4gPiBUaGUgbWFpbiBkaWZm
+ZXJlbmNlIHdpdGggdjIgaXMgc2V0dGluZyBzdWJvcmRpbmF0ZXMgdG8gcmVtb3ZlZCB3aGVuDQog
+ICAgPiA+IGRldGVjdGVkIChwYXRjaCAxLzMpLg0KICAgID4gPiANCiAgICA+ID4gUGF0Y2ggMi8z
+IHNob3J0LWN1dHMgcGNpX2RldmljZV9pc19wcmVzZW50IGlmIGlzX3JlbW92ZWQgaXMgc2V0Lg0K
+ICAgID4gPiANCiAgICA+ID4gT3RoZXJ3aXNlLCB0aGUgc2FtZSBhcyBiZWZvcmUuIEp1c3QgdG8g
+cmVzdGF0ZSB0aGUganVzdGlmaWNhdGlvbiwgdGhpcw0KICAgID4gPiBzaWduaWZpY2FudGx5IHNw
+ZWVkcyB1cCBtYW55IGRldmljZSByZW1vdmFscyB3aXRob3V0IHJlbHlpbmcgb24gaGFyZHdhcmUu
+DQogICAgPiA+IA0KICAgID4gPiBLZWl0aCBCdXNjaCAoMyk6DQogICAgPiA+ICAgcGNpOiBBZGQg
+aXNfcmVtb3ZlZCBzdGF0ZQ0KICAgID4gPiAgIHBjaTogTm8gY29uZmlnIGFjY2VzcyBmb3IgcmVt
+b3ZlZCBkZXZpY2VzDQogICAgPiA+ICAgcGNpL21zaXg6IFNraXAgZGlzYWJsaW5nIHJlbW92ZWQg
+ZGV2aWNlcw0KICAgID4gPiANCiAgICA+ID4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX3Bj
+aS5jIHwgIDUgKysrKysNCiAgICA+ID4gIGRyaXZlcnMvcGNpL21zaS5jICAgICAgICAgICAgICAg
+IHwgIDcgKysrKysrLQ0KICAgID4gPiAgZHJpdmVycy9wY2kvcGNpLmMgICAgICAgICAgICAgICAg
+fCAgMiArKw0KICAgID4gPiAgZHJpdmVycy9wY2kvcGNpZS9wY2llLWRwYy5jICAgICAgfCAgNCAr
+KysrDQogPiA+ICA1IGZpbGVzIGNoYW5nZWQsIDQyIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
+LSkNCiAgICA+IA0KICAgID4gSGkgQmpvcm4sDQogICAgPiANCiAgICA+IEp1c3Qgd2FudGVkIHRv
+IGNoZWNrIGluIHdpdGggeW91IG9uIHRoaXMgc2VyaWVzLiBBbnkgdGhvdWdodHMgb24NCiAgICA+
+IHRoaXM/IEkndmUgYmVlbiBwaW5nZWQgZnJvbSBzZXZlcmFsIGhhcmR3YXJlIHZlbmRvcnMgb24g
+dGhpcyBzaW5jZSB0aGV5DQogICAgPiBzYXkgaXQgaW1wcm92ZXMgc3lzdGVtIHN0YWJpbGl0eS4g
+SSBrZWVwIHRlbGxpbmcgdGhlbSB0byBidWcgeW91IGFib3V0DQogICAgPiBpdCwgYnV0IEkgZ3Vl
+c3MgdGhleSB0aGluayBJJ20gbGVzcyBpbnRpbWlkYXRpbmcuIDopDQogICAgDQogICAgSSdkIHRo
+aW5rIHRoZXknZCB3YW50IHNvbWVib2R5ICptb3JlKiBpbnRpbWlkYXRpbmcgdG8gZW5jb3VyYWdl
+DQogICAgcHJvZ3Jlc3MgOikNCiAgICANCiAgICBTb3JyeSBJIGhhdmVuJ3QgaGFkIGEgY2hhbmNl
+IHRvIGxvb2sgYXQgdGhlc2UgeWV0LiAgSSB3YW50IHRvIHRoaW5rDQogICAgYWJvdXQgdGhlbSBh
+IGxpdHRsZSBtb3JlIGJlY2F1c2UgaXQgc2VlbXMgbGlrZSB0aGVzZSBzaG91bGQgYmUNCiAgICBv
+cHRpbWl6YXRpb25zLCBub3QgcmVhbGx5IGZpeGVzLiAgSWYgdGhleSBpbXByb3ZlIHN0YWJpbGl0
+eSBieSBmaXhpbmcNCiAgICBMaW51eCBpc3N1ZXMsIGRldGFpbHMgb2YgdGhvc2UgaXNzdWVzIHdv
+dWxkIGhlbHAuICBCdXQgbWF5YmUgdGhlDQogICAgaW1wcm92ZW1lbnQgaXMgZnJvbSBhdm9pZGlu
+ZyB0aGluZ3MgdGhlIGhhcmR3YXJlIGRvZXNuJ3QgaGFuZGxlIHF1aXRlDQogICAgY29ycmVjdGx5
+Lg0KICAgIA0KICAgIEFuZCBJJ20gYWx3YXlzIGhlc2l0YW50IGFib3V0IHRoaW5ncyBsaWtlIGZs
+YWdzIHRoYXQgc2F5ICJ0aGlzIGRldmljZQ0KICAgIGlzIGJlaW5nIHJlbW92ZWQgYnV0IGhhc24n
+dCBiZWVuIHJlbW92ZWQgeWV0IiBiZWNhdXNlIHRoZSByZW1vdmUNCiAgICBwcm9jZXNzIGlzIGFs
+cmVhZHkgY29tcGxpY2F0ZWQgYW5kIHdlJ3ZlIHRyaXBwZWQgb3ZlciByYWNlcyBhbmQNCiAgICBv
+cmRlcmluZyBpc3N1ZXMgaW4gdGhlIHBhc3QuICBUaGF0J3Mgbm90IHRvIHNheSB0aGlzIGlzIGEg
+YmFkDQogICAgYXBwcm9hY2g7IGl0J3MganVzdCBhbiBleGN1c2UgZm9yIHdoeSBJIG5lZWQgc29t
+ZSB0aW1lIHRvIHdvcmsgdGhyb3VnaA0KICAgIHRoZXNlIHBhdGNoZXMuDQogICAgDQogICAgQmpv
+cm4NCiAgICANCg0K
