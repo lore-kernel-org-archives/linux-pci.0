@@ -1,58 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36432 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756291AbcKVUBU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 15:01:20 -0500
-Received: by mail-oi0-f48.google.com with SMTP id v84so30094766oie.3
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 12:01:19 -0800 (PST)
+Received: from mga03.intel.com ([134.134.136.65]:16615 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932468AbcK1QUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 11:20:46 -0500
+Date: Mon, 28 Nov 2016 11:30:56 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] drivers/pci/host/vmd: Fix suspend handlers unused warning
+Message-ID: <20161128163056.GC2609@localhost.localdomain>
+References: <20161126182957.6144-1-bp@alien8.de>
 MIME-Version: 1.0
-In-Reply-To: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com> <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 22 Nov 2016 12:01:17 -0800
-Message-ID: <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20161126182957.6144-1-bp@alien8.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
-<serguei.sagalovitch@amd.com> wrote:
-> Dan,
->
-> I personally like "device-DAX" idea but my concerns are:
->
-> -  How well it will co-exists with the  DRM infrastructure / implementations
->    in part dealing with CPU pointers?
+On Sat, Nov 26, 2016 at 07:29:57PM +0100, Borislav Petkov wrote:
+> From: Borislav Petkov <bp@suse.de>
+> 
+> Fix:
+> 
+>   drivers/pci/host/vmd.c:731:12: warning: ‘vmd_suspend’ defined but not used [-Wunused-function]
+>    static int vmd_suspend(struct device *dev)
+>               ^
+>   drivers/pci/host/vmd.c:739:12: warning: ‘vmd_resume’ defined but not used [-Wunused-function]
+>    static int vmd_resume(struct device *dev)
+>               ^
+> 
+> Signed-off-by: Borislav Petkov <bp@suse.de>
 
-Inside the kernel a device-DAX range is "just memory" in the sense
-that you can perform pfn_to_page() on it and issue I/O, but the vma is
-not migratable. To be honest I do not know how well that co-exists
-with drm infrastructure.
+Thanks for the fix.
 
-> -  How well we will be able to handle case when we need to "move"/"evict"
->    memory/data to the new location so CPU pointer should point to the new
-> physical location/address
->     (and may be not in PCI device memory at all)?
-
-So, device-DAX deliberately avoids support for in-kernel migration or
-overcommit. Those cases are left to the core mm or drm. The device-dax
-interface is for cases where all that is needed is a direct-mapping to
-a statically-allocated physical-address range be it persistent memory
-or some other special reserved memory range.
+Reviewed-by: Keith Busch <keith.busch@intel.com>
