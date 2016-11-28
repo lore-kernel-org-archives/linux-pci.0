@@ -1,166 +1,81 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jake Oshins <jakeo@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
-Date: Sat, 12 Nov 2016 00:40:11 +0000
-Message-ID: <SN1PR0301MB1598BC04BEBF6BD373668FDEABBA0@SN1PR0301MB1598.namprd03.prod.outlook.com>
-References: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-In-Reply-To: <MWHPR03MB2669BF0EB52B9289747F04E1BFB80@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <583BC14B.2040809@amd.com>
+Date: Mon, 28 Nov 2016 13:31:55 +0800
+From: zhoucm1 <david1.zhou@amd.com>
 MIME-Version: 1.0
+To: =?UTF-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>,
+        "Haggai Eran" <haggaie@mellanox.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        "Yu, Qiang" <Qiang.Yu@amd.com>
+CC: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+References: <20161123190515.GA12146@obsidianresearch.com> <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com> <20161123193228.GC12146@obsidianresearch.com> <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com> <20161123203332.GA15062@obsidianresearch.com> <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com> <20161123215510.GA16311@obsidianresearch.com> <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com> <20161124164249.GD20818@obsidianresearch.com> <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com> <20161125193252.GC16504@obsidianresearch.com> <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com> <0087fba9-7bcb-8bb3-c26e-4ef3e4970c34@amd.com>
+In-Reply-To: <0087fba9-7bcb-8bb3-c26e-4ef3e4970c34@amd.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Wednesday, November 9, 2016 11:19 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>;
-> Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Jake Oshins <jakeo@microsoft.com>; Hadden
-> Hoppert <haddenh@microsoft.com>; Vitaly Kuznetsov
-> <vkuznets@redhat.com>; jasowang@redhat.com; apw@canonical.com;
-> olaf@aepfle.de; linux-kernel@vger.kernel.org
-> Subject: [PATCH 2/3] PCI: hv: fix hv_pci_remove() for hot-remove
->=20
-> 1. We don't really need such a big on-stack buffer when sending
-> the teardown_packet: vmbus_sendpacket() here only uses
-> sizeof(struct pci_message).
->=20
-> 2. In the hot-remove case (PCI_EJECT), after we send
-> PCI_EJECTION_COMPLETE
-> to the host, the host will send a RESCIND_CHANNEL message to us and the
-> host won't access the per-channel ringbuffer any longer, so we needn't
-> send PCI_RESOURCES_RELEASED/PCI_BUS_D0EXIT to the host, and we
-> shouldn't
-> expect the host's completion message of PCI_BUS_D0EXIT, which will never
-> come.
->=20
-> 3. We should send PCI_BUS_D0EXIT after hv_send_resources_released().
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> CC: Jake Oshins <jakeo@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>
-> CC: Haiyang Zhang <haiyangz@microsoft.com>
-> CC: Vitaly Kuznetsov <vkuznets@redhat.com>
->=20
-> ---
->=20
-> I made the patch based on discussions with Jake Oshins and others.
->=20
->  drivers/pci/host/pci-hyperv.c | 53 +++++++++++++++++++++++++++--------
-> --------
->  1 file changed, 33 insertions(+), 20 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 93ed64a..7590ad0 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -2266,24 +2266,32 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	return ret;
->  }
->=20
-> -/**
-> - * hv_pci_remove() - Remove routine for this VMBus channel
-> - * @hdev:	VMBus's tracking struct for this root PCI bus
-> - *
-> - * Return: 0 on success, -errno on failure
-> - */
-> -static int hv_pci_remove(struct hv_device *hdev)
-> +static void hv_pci_bus_exit(struct hv_device *hdev)
->  {
-> -	int ret;
-> -	struct hv_pcibus_device *hbus;
-> -	union {
-> +	struct hv_pcibus_device *hbus =3D hv_get_drvdata(hdev);
-> +	struct {
->  		struct pci_packet teardown_packet;
-> -		u8 buffer[0x100];
-> +		u8 buffer[sizeof(struct pci_message)];
->  	} pkt;
->  	struct pci_bus_relations relations;
->  	struct hv_pci_compl comp_pkt;
-> +	int ret;
->=20
-> -	hbus =3D hv_get_drvdata(hdev);
-> +	/*
-> +	 * After the host sends the RESCIND_CHANNEL message, it doesn't
-> +	 * access the per-channel ringbuffer any longer.
-> +	 */
-> +	if (hdev->channel->rescind)
-> +		return;
-> +
-> +	/* Delete any children which might still exist. */
-> +	memset(&relations, 0, sizeof(relations));
-> +	hv_pci_devices_present(hbus, &relations);
-> +
-> +	ret =3D hv_send_resources_released(hdev);
-> +	if (ret)
-> +		dev_err(&hdev->device,
-> +			"Couldn't send resources released packet(s)\n");
->=20
->  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
->  	init_completion(&comp_pkt.host_event);
-> @@ -2298,7 +2306,19 @@ static int hv_pci_remove(struct hv_device *hdev)
->=20
-> VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->  	if (!ret)
->  		wait_for_completion_timeout(&comp_pkt.host_event, 10 *
-> HZ);
-> +}
-> +
-> +/**
-> + * hv_pci_remove() - Remove routine for this VMBus channel
-> + * @hdev:	VMBus's tracking struct for this root PCI bus
-> + *
-> + * Return: 0 on success, -errno on failure
-> + */
-> +static int hv_pci_remove(struct hv_device *hdev)
-> +{
-> +	struct hv_pcibus_device *hbus;
->=20
-> +	hbus =3D hv_get_drvdata(hdev);
->  	if (hbus->state =3D=3D hv_pcibus_installed) {
->  		/* Remove the bus from PCI's point of view. */
->  		pci_lock_rescan_remove();
-> @@ -2307,17 +2327,10 @@ static int hv_pci_remove(struct hv_device
-> *hdev)
->  		pci_unlock_rescan_remove();
->  	}
->=20
-> -	ret =3D hv_send_resources_released(hdev);
-> -	if (ret)
-> -		dev_err(&hdev->device,
-> -			"Couldn't send resources released packet(s)\n");
-> +	hv_pci_bus_exit(hdev);
->=20
->  	vmbus_close(hdev->channel);
->=20
-> -	/* Delete any children which might still exist. */
-> -	memset(&relations, 0, sizeof(relations));
-> -	hv_pci_devices_present(hbus, &relations);
-> -
->  	iounmap(hbus->cfg_addr);
->  	hv_free_config_window(hbus);
->  	pci_free_resource_list(&hbus->resources_for_children);
-> --
-> 2.7.4
++Qiang, who is working on it.
 
-This looks fine to me.
-
--- Jake Oshins
+On 2016年11月27日 22:07, Christian König wrote:
+> Am 27.11.2016 um 15:02 schrieb Haggai Eran:
+>> On 11/25/2016 9:32 PM, Jason Gunthorpe wrote:
+>>> On Fri, Nov 25, 2016 at 02:22:17PM +0100, Christian König wrote:
+>>>
+>>>>> Like you say below we have to handle short lived in the usual way, 
+>>>>> and
+>>>>> that covers basically every device except IB MRs, including the
+>>>>> command queue on a NVMe drive.
+>>>> Well a problem which wasn't mentioned so far is that while GPUs do 
+>>>> have a
+>>>> page table to mirror the CPU page table, they usually can't recover 
+>>>> from
+>>>> page faults.
+>>>> So what we do is making sure that all memory accessed by the GPU 
+>>>> Jobs stays
+>>>> in place while those jobs run (pretty much the same pinning you do 
+>>>> for the
+>>>> DMA).
+>>> Yes, it is DMA, so this is a valid approach.
+>>>
+>>> But, you don't need page faults from the GPU to do proper coherent
+>>> page table mirroring. Basically when the driver submits the work to
+>>> the GPU it 'faults' the pages into the CPU and mirror translation
+>>> table (instead of pinning).
+>>>
+>>> Like in ODP, MMU notifiers/HMM are used to monitor for translation
+>>> changes. If a change comes in the GPU driver checks if an executing
+>>> command is touching those pages and blocks the MMU notifier until the
+>>> command flushes, then unfaults the page (blocking future commands) and
+>>> unblocks the mmu notifier.
+>> I think blocking mmu notifiers against something that is basically
+>> controlled by user-space can be problematic. This can block things like
+>> memory reclaim. If you have user-space access to the device's queues,
+>> user-space can block the mmu notifier forever.
+> Really good point.
+>
+> I think this means the bare minimum if we don't have recoverable page 
+> faults is to have preemption support like Felix described in his 
+> answer as well.
+>
+> Going to keep that in mind,
+> Christian.
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
