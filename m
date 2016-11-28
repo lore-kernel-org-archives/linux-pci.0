@@ -1,67 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55700 "EHLO mail.kernel.org"
+Received: from quartz.orcorp.ca ([184.70.90.242]:40606 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753175AbcKPWS3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Nov 2016 17:18:29 -0500
-Date: Wed, 16 Nov 2016 16:18:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, pratyush.anand@gmail.com,
-        CARLOS.PALMINHA@synopsys.com, Jose.Abreu@synopsys.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: pcie-designware: Change Maintenance
-Message-ID: <20161116221825.GA16042@bhelgaas-glaptop.roam.corp.google.com>
-References: <c4b8fcc50069ce8ea2091100e52a68dcc30e1021.1479224720.git.jpinto@synopsys.com>
+        id S1754980AbcK1WZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 17:25:03 -0500
+Date: Mon, 28 Nov 2016 15:24:52 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        Christian K??nig <christian.koenig@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Max Gurtovoy <maxg@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161128222452.GA744@obsidianresearch.com>
+References: <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
+ <0d3d56e2-4d2b-85b7-9487-b7ae2aaea610@amd.com>
+ <c8c25265-9f59-f3d6-6249-07500e73930e@deltatee.com>
+ <1ac2f9e7-f1ee-a2c9-0134-ffaa28c706af@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c4b8fcc50069ce8ea2091100e52a68dcc30e1021.1479224720.git.jpinto@synopsys.com>
+In-Reply-To: <1ac2f9e7-f1ee-a2c9-0134-ffaa28c706af@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 15, 2016 at 04:10:46PM +0000, Joao Pinto wrote:
-> I accepted the invitation from Pratyush to replace him in the
-> pcie-designware maintenance. This patch makes the maintainer replacement
-> and symplifies a bit the pcie-designware* maintenance structure.
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Jose Abreu <Jose.Abreu@synopsys.com>
+On Mon, Nov 28, 2016 at 04:55:23PM -0500, Serguei Sagalovitch wrote:
 
-I applied both of these to for-linus for v4.9, thanks, Joao!
+> >We haven't touch this in a long time and perhaps it changed, but there
+> >definitely was a call back in the PeerDirect API to allow the GPU to
+> >invalidate the mapping. That's what we don't want.
 
-> ---
->  MAINTAINERS | 10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index aefa6bf..2c64d7c 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9293,17 +9293,11 @@ F:	drivers/pci/host/pci-exynos.c
->  
->  PCI DRIVER FOR SYNOPSIS DESIGNWARE
->  M:	Jingoo Han <jingoohan1@gmail.com>
-> -M:	Pratyush Anand <pratyush.anand@gmail.com>
-> -L:	linux-pci@vger.kernel.org
-> -S:	Maintained
-> -F:	drivers/pci/host/*designware*
-> -
-> -PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
-> -M:	Jose Abreu <Jose.Abreu@synopsys.com>
-> +M:	Joao Pinto <Joao.Pinto@synopsys.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
-> -F:	drivers/pci/host/pcie-designware-plat.c
-> +F:	drivers/pci/host/*designware*
->  
->  PCI DRIVER FOR GENERIC OF HOSTS
->  M:	Will Deacon <will.deacon@arm.com>
-> -- 
-> 1.8.3.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I assume that you are talking about "invalidate_peer_memory()' callback?
+> I was told that it is the "last resort" because HCA (and driver) is not
+> able to handle  it in the safe manner so it is basically "abort" everything.
+
+If it is a last resort to save system stability then kill the impacted
+process, that will release the MRs.
+
+Jason
