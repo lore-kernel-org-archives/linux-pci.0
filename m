@@ -1,180 +1,74 @@
-Return-Path: <noaos@mellanox.com>
-Return-Path: <noaos@mellanox.com>
-Subject: Re: [PATCH 3/4] PCI: Add checks to mellanox_check_broken_intx_masking
-To: Bjorn Helgaas <helgaas@kernel.org>, Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1479046901-25360-1-git-send-email-noaos@mellanox.com>
- <1479046901-25360-4-git-send-email-noaos@mellanox.com>
- <20161114001535.GB14481@gwshan>
- <20161114223508.GK9868@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <majd@mellanox.com>
-From: Noa Osherovich <noaos@mellanox.com>
-Message-ID: <9cca6012-df7f-c6f4-5b90-da14aecd1828@mellanox.com>
-Date: Tue, 15 Nov 2016 08:11:31 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 28 Nov 2016 09:57:51 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Haggai Eran <haggaie@mellanox.com>
+Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Max Gurtovoy <maxg@mellanox.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161128165751.GB28381@obsidianresearch.com>
+References: <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <20161114223508.GK9868@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Gavin,
+On Sun, Nov 27, 2016 at 04:02:16PM +0200, Haggai Eran wrote:
 
-On 11/15/2016 12:35 AM, Bjorn Helgaas wrote:
+> > Like in ODP, MMU notifiers/HMM are used to monitor for translation
+> > changes. If a change comes in the GPU driver checks if an executing
+> > command is touching those pages and blocks the MMU notifier until the
+> > command flushes, then unfaults the page (blocking future commands) and
+> > unblocks the mmu notifier.
 
-> On Mon, Nov 14, 2016 at 11:15:35AM +1100, Gavin Shan wrote:
->> On Sun, Nov 13, 2016 at 04:21:41PM +0200, Noa Osherovich wrote:
->>> Mellanox devices were marked as having INTx masking ability broken.
->>> As a result, the VFIO driver fails to start when more than one device
->>> function is passed-through to a VM if both have the same INTx pin.
->>>
->>> Prior to Connect-IB, Mellanox devices exposed to the operating system
->>> one PCI function per all ports.
->>> Starting from Connect-IB, the devices are function-per-port. When
->>> passing the second function to a VM, VFIO will fail to start.
->>>
->>> Exclude ConnectX-4, ConnectX4-Lx and Connect-IB from the list of
->>> Mellanox devices marked as having broken INTx masking:
->>>
->>> - ConnectX-4 and ConnectX4-LX firmware version is checked. If INTx
->>>  masking is supported, we unmark the broken INTx masking.
->>> - Connect-IB does not support INTx currently so will not cause any
->>>  problem.
->>>
->>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
->>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
->>> Reviewed-by: Or Gerlitz <ogerlitz@mellanox.com>
->> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>
->> With below comments addressed:
-> Noa, would you mind refreshing this to address Gavin's comments?
-> I don't want to risk doing it myself and breaking something.
+> I think blocking mmu notifiers against something that is basically
+> controlled by user-space can be problematic. This can block things like
+> memory reclaim. If you have user-space access to the device's queues,
+> user-space can block the mmu notifier forever.
 
-The series is ready after Gavin's fixes, I'll send it after an internal
+Right, I mentioned that..
 
-review.
+> On PeerDirect, we have some kind of a middle-ground solution for pinning
+> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
+> user-space and the GPU not to migrate it. If they do, the MR gets
+> destroyed immediately.
 
->>> ---
->>> drivers/pci/quirks.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++------
->>> 1 file changed, 55 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index d3977c847e1f..cbd6776e70e6 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -3192,21 +3192,70 @@ static void quirk_broken_intx_masking(struct pci_dev *dev)
->>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX2,
->>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3,
->>> 	PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
->>> -	PCI_DEVICE_ID_MELLANOX_CONNECTIB,
->>> -	PCI_DEVICE_ID_MELLANOX_CONNECTX4,
->>> -	PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX
->>> };
->>>
->>> +#define CONNECTX_4_CURR_MAX_MINOR 99
->>> +#define CONNECTX_4_INTX_SUPPORT_MINOR 14
->>> +
->>> +/*
->>> + * Checking ConnectX-4/LX FW version to see if it supports legacy interrupts.
->>> + * If so, don't mark it as broken.
->>> + * FW minor > 99 means older FW version format and no INTx masking support.
->>> + * FW minor < 14 means new FW version format and no INTx masking support.
->>> + */
->>> static void mellanox_check_broken_intx_masking(struct pci_dev *dev)
->>> {
->>> +	__be32 __iomem *fw_ver;
->>> +	u16 fw_major;
->>> +	u16 fw_minor;
->>> +	u16 fw_subminor;
->>> +	u32 fw_maj_min;
->>> +	u32 fw_sub_min;
->>> 	int i;
->>>
->>> +	dev->broken_intx_masking = 1;
->>> +
->>> 	for (i = 0; i < ARRAY_SIZE(mellanox_broken_intx_devs); i++) {
->>> -		if (dev->device == mellanox_broken_intx_devs[i]) {
->>> -			dev->broken_intx_masking = 1;
->>> +		if (dev->device == mellanox_broken_intx_devs[i])
->>> 			return;
->>> -		}
->>> 	}
->>> +
->>> +	/* Getting here means Connect-IB cards and up. Connect-IB has no INTx
->>> +	 * support so shouldn't be checked further
->>> +	 */
->>> +	if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB) {
->>> +		dev->broken_intx_masking = 0;
->>> +		return;
->>> +	}
->>> +
->>> +	/* For ConnectX-4 and ConnectX-4LX, need to check FW support */
->>> +	if (pci_enable_device_mem(dev)) {
->>> +		dev_warn(&dev->dev, "Can't enable device memory\n");
->>> +		return;
->>> +	}
->> It might be safer to set @broken_intx_masking in the failing path. On the
->> following exit or failing path, the device needs to be disabled with function
->> pci_disable_device(). Otherwise, &dev->enable_cnt, tracking if the device is
->> enabled or not, will be unbalanced.
->>
->>> +
->>> +	/* Convert from PCI bus to resource space. */
->>> +	fw_ver = ioremap(pci_resource_start(dev, 0), 4);
->>> +	if (!fw_ver) {
->>> +		dev_warn(&dev->dev, "Can't map ConnectX-4 initialization segment\n");
->>> +		return;
->>> +	}
->>> +
->>> +	/* Reading from resource space should be 32b aligned */
->>> +	fw_maj_min = ioread32be(fw_ver);
->>> +	fw_sub_min = ioread32be(fw_ver + 1);
->>> +	fw_major = fw_maj_min & 0xffff;
->>> +	fw_minor = fw_maj_min >> 16;
->>> +	fw_subminor = fw_sub_min & 0xffff;
->>> +	if (fw_minor > CONNECTX_4_CURR_MAX_MINOR ||
->>> +	    fw_minor < CONNECTX_4_INTX_SUPPORT_MINOR)
->>> +		dev_warn(&dev->dev, "ConnectX-4: FW %u.%u.%u doesn't support INTx masking, disabling. Please upgrade FW to %d.14.1100 and up for INTx support\n",
->>> +			 fw_major, fw_minor, fw_subminor, dev->device ==
->>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX4 ? 12 : 14);
->>> +	else
->>> +		dev->broken_intx_masking = 0;
->>> +
->>> +	iounmap(fw_ver);
->>> }
->> Noa, it doesn't look quite correct: when a device ID doesn't match with
->> anyone in the list, CONNECTIB, CONNECT4 or CONNECTX4_LX. The code goes
->> though as it's CONNECT4 or CONNECT4_LX. The firmware version retrieved
->> from MMIO register (BAR 0, offset 0/4) are checked. I don't think it's
->> assured that the registers are for firmware version on the device. It
->> seems you need more checks here: @broken_intx_masking is untouched and
->> kept as 0 by default when the device ID isn't in the intrest list, which
->> is the policy you introduced in PATCH[2/3]. Something like below would
->> work:
->>
->> static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
->> {
->>      /*
->>       * Set @broken_intx_masking to 1 when device ID matches with
->>       * anyone in the list. No code change to PATCH[2/3] is needed.
->>       */
->>      if (pdev->device in mellanox_broken_intx_devs) {
->>          pdev->broken_intx_masking = 1;
->>          return;
->>      }
->>
->>      if (dev->device == PCI_DEVICE_ID_MELLANOX_CONNECTIB)
->>          return;
->>
->>      if (dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4 &&
->>          dev->device != PCI_DEVICE_ID_MELLANOX_CONNECTX4_LE)
->>          return;
->>
->>      /* Check firmware version on CONNECT4 or CONNECT4_LE */
->> }
->>
->>> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->> Thanks,
->> Gavin
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That sounds horrible. How can that possibly work? What if the MR is
+being used when the GPU decides to migrate? I would not support that
+upstream without a lot more explanation..
+
+I know people don't like requiring new hardware, but in this case we
+really do need ODP hardware to get all the semantics people want..
+
+> Another thing I think is that while HMM is good for user-space
+> applications, for kernel p2p use there is no need for that. Using
+
+>From what I understand we are not really talking about kernel p2p,
+everything proposed so far is being mediated by a userspace VMA, so
+I'd focus on making that work.
+
+Jason
