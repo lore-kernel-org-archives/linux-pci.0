@@ -1,75 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754614AbcK2EOZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 23:14:25 -0500
-Subject: [PATCH v4 1/7] PCI: Do any VF BAR updates before enabling the BARs
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au
-Date: Mon, 28 Nov 2016 22:14:06 -0600
-Message-ID: <20161129041406.21453.62657.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-bn3nam01on0081.outbound.protection.outlook.com ([104.47.33.81]:30624
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754725AbcK1TfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 14:35:18 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Haggai Eran <haggaie@mellanox.com>
+References: <20161123193228.GC12146@obsidianresearch.com>
+ <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
+ <20161123203332.GA15062@obsidianresearch.com>
+ <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
+ <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
+CC: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        Max Gurtovoy <maxg@mellanox.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <0d3d56e2-4d2b-85b7-9487-b7ae2aaea610@amd.com>
+Date: Mon, 28 Nov 2016 14:35:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <f3bb8372-ae2e-2f5e-5505-4ecaddbfb16e@deltatee.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-
-Previously we enabled VFs and enable their memory space before calling
-pcibios_sriov_enable().  But pcibios_sriov_enable() may update the VF BARs:
-for example, on PPC PowerNV we may change them to manage the association of
-VFs to PEs.
-
-Because 64-bit BARs cannot be updated atomically, it's unsafe to update
-them while they're enabled.  The half-updated state may conflict with other
-devices in the system.
-
-Call pcibios_sriov_enable() before enabling the VFs so any BAR updates
-happen while the VF BARs are disabled.
-
-[bhelgaas: changelog]
-Tested-by: Carol Soto <clsoto@us.ibm.com>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index e30f05c..d41ec29 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -306,13 +306,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_iov_set_numvfs(dev, nr_virtfn);
--	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
--	pci_cfg_access_lock(dev);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	msleep(100);
--	pci_cfg_access_unlock(dev);
--
- 	iov->initial_VFs = initial;
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
-@@ -323,6 +316,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		goto err_pcibios;
- 	}
- 
-+	pci_iov_set_numvfs(dev, nr_virtfn);
-+	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-+	pci_cfg_access_lock(dev);
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-+	msleep(100);
-+	pci_cfg_access_unlock(dev);
-+
- 	for (i = 0; i < initial; i++) {
- 		rc = pci_iov_add_virtfn(dev, i, 0);
- 		if (rc)
+On 2016-11-28 01:20 PM, Logan Gunthorpe wrote:
+>
+> On 28/11/16 09:57 AM, Jason Gunthorpe wrote:
+>>> On PeerDirect, we have some kind of a middle-ground solution for pinning
+>>> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
+>>> user-space and the GPU not to migrate it. If they do, the MR gets
+>>> destroyed immediately.
+>> That sounds horrible. How can that possibly work? What if the MR is
+>> being used when the GPU decides to migrate? I would not support that
+>> upstream without a lot more explanation..
+> Yup, this was our experience when playing around with PeerDirect. There
+> was nothing we could do if the GPU decided to invalidate the P2P
+> mapping.
+As soon as PeerDirect mapping is called then GPU must not "move" the
+such memory.  It is by PeerDirect design. It is similar how it is works
+with system memory and RDMA MR: when "get_user_pages" is called then the
+memory is pinned.
 
