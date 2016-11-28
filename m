@@ -1,49 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35952 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933521AbcKJW2v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 17:28:51 -0500
-Date: Thu, 10 Nov 2016 16:28:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci/vmd: Update maintainers file
-Message-ID: <20161110222846.GA12055@bhelgaas-glaptop.roam.corp.google.com>
-References: <1478812244-5519-1-git-send-email-keith.busch@intel.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Mon, 28 Nov 2016 11:22:08 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Wei Zhang <wzhang@fb.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Message-ID: <20161128102208.GA4072@wunner.de>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <20161118232544.GI28386@localhost.localdomain>
+ <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
+ <CB060C5F-26CB-40E8-91BB-B891B5704746@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478812244-5519-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CB060C5F-26CB-40E8-91BB-B891B5704746@fb.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 04:10:44PM -0500, Keith Busch wrote:
-> Updating MAINTAINERS to reflect the new location of the vmd driver.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+On Mon, Nov 28, 2016 at 09:14:39AM +0000, Wei Zhang wrote:
+> The series of changes made by Keith are to support the PCIe hot plug
+> testing on our Lightning platform (Thanks Keith!).  Lightning is a
+> "Just of Bunch of Flash", or JBOF, storage platform that has a PCIe
+> switch connecting to 15 NVMe SSDs.
 
-Applied to for-linus for v4.9, thanks, Keith.
+Are the hotplug ports on this switch capable of D3hot?  There's a
+series queued up for 4.10 which will suspend hotplug ports to D3hot
+when nothing is connected.  I cc'ed Keith when I posted it, but I
+forgot to cc you:
 
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 906e969..aefa6bf 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9318,7 +9318,7 @@ PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
->  M:	Keith Busch <keith.busch@intel.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Supported
-> -F:	arch/x86/pci/vmd.c
-> +F:	drivers/pci/host/vmd.c
->  
->  PCIE DRIVER FOR ST SPEAR13XX
->  M:	Pratyush Anand <pratyush.anand@gmail.com>
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+https://www.spinics.net/lists/linux-pci/msg55564.html
+
+If you haven't tested this series so far, now would be a good time
+to do so, as it would allow fixing regressions (if any) before 4.10
+is out.  Note that this series might save you quite a bit of power
+if you have lots of unused ports.
+
+You can fetch the patches from:
+
+https://github.com/l1k/linux/commits/pcie_port_pm_v2
+
+Thanks,
+
+Lukas
