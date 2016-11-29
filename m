@@ -1,83 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0047.outbound.protection.outlook.com ([104.47.37.47]:55552
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932532AbcK1PDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Nov 2016 10:03:40 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Haggai Eran <haggaie@mellanox.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
-CC: Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Max Gurtovoy <maxg@mellanox.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <314e9ef7-f60e-bf6b-d488-c585f1ea60e8@amd.com>
-Date: Mon, 28 Nov 2016 09:48:34 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 29 Nov 2016 12:19:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
+Message-ID: <20161129181927.GB17112@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_xW+7KAC8fHquEwHynYzpy6OoO1ZjEm5mVKMo1S8j4Nw@mail.gmail.com>
+ <20161123010600.GF4832@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu-TW__+eZFS2p=1ZLN7fBs7pqQ+SitbEX46Z4JiS64egA@mail.gmail.com>
+ <20161123150632.GA16033@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161123150632.GA16033@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-11-27 09:02 AM, Haggai Eran wrote
-> On PeerDirect, we have some kind of a middle-ground solution for pinning
-> GPU memory. We create a non-ODP MR pointing to VRAM but rely on
-> user-space and the GPU not to migrate it. If they do, the MR gets
-> destroyed immediately. This should work on legacy devices without ODP
-> support, and allows the system to safely terminate a process that
-> misbehaves. The downside of course is that it cannot transparently
-> migrate memory but I think for user-space RDMA doing that transparently
-> requires hardware support for paging, via something like HMM.
->
-> ...
-May be I am wrong but my understanding is that PeerDirect logic basically
-follow  "RDMA register MR" logic so basically nothing prevent to "terminate"
-process for "MMU notifier" case when we are very low on memory
-not making it similar (not worse) then PeerDirect case.
->> I'm hearing most people say ZONE_DEVICE is the way to handle this,
->> which means the missing remaing piece for RDMA is some kind of DMA
->> core support for p2p address translation..
-> Yes, this is definitely something we need. I think Will Davis's patches
-> are a good start.
->
-> Another thing I think is that while HMM is good for user-space
-> applications, for kernel p2p use there is no need for that.
-About HMM: I do not think that in the current form HMM would  fit in
-requirement for generic P2P transfer case. My understanding is that at
-the current stage HMM is good for "caching" system memory
-in device memory for fast GPU access but in RDMA MR non-ODP case
-it will not work because  the location of memory should not be
-changed so memory should be allocated directly in PCIe memory.
-> Using ZONE_DEVICE with or without something like DMA-BUF to pin and unpin
-> pages for the short duration as you wrote above could work fine for
-> kernel uses in which we can guarantee they are short.
-Potentially there is another issue related to pin/unpin. If memory could
-be used a lot of time then there is no sense to rebuild and program
-s/g tables each time if location of memory was not changed.
+On Wed, Nov 23, 2016 at 09:06:33AM -0600, Bjorn Helgaas wrote:
+> On Wed, Nov 23, 2016 at 07:28:12AM +0000, Ard Biesheuvel wrote:
+> > On 23 November 2016 at 01:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Tue, Nov 22, 2016 at 10:09:50AM +0000, Ard Biesheuvel wrote:
+> > >> On 17 November 2016 at 17:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > >
+> > >> > +PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
+> > >> > +describe all the address space they consume.  In principle, this would
+> > >> > +be all the windows they forward down to the PCI bus, as well as the
+> > >> > +bridge registers themselves.  The bridge registers include things like
+> > >> > +secondary/subordinate bus registers that determine the bus range below
+> > >> > +the bridge, window registers that describe the apertures, etc.  These
+> > >> > +are all device-specific, non-architected things, so the only way a
+> > >> > +PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
+> > >> > +contain the device-specific details.  These bridge registers also
+> > >> > +include ECAM space, since it is consumed by the bridge.
+> > >> > +
+> > >> > +ACPI defined a Producer/Consumer bit that was intended to distinguish
+> > >> > +the bridge apertures from the bridge registers [4, 5].  However,
+> > >> > +BIOSes didn't use that bit correctly, and the result is that OSes have
+> > >> > +to assume that everything in a PCI host bridge _CRS is a window.  That
+> > >> > +leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
+> > >> > +device itself.
+> > >>
+> > >> Is that universally true? Or is it still possible to do the right
+> > >> thing here on new ACPI architectures such as arm64?
+> > >
+> > > That's a very good question.  I had thought that the ACPI spec had
+> > > given up on Consumer/Producer completely, but I was wrong.  In the 6.0
+> > > spec, the Consumer/Producer bit is still documented in the Extended
+> > > Address Space Descriptor (sec 6.4.3.5.4).  It is documented as
+> > > "ignored" in the QWord, DWord, and Word descriptors (sec 6.4.3.5.1,2,3).
+> > >
+> > > Linux looks at the producer_consumer bit in acpi_decode_space(), which
+> > > I think is used for all these descriptors (QWord, DWord, Word, and
+> > > Extended).  This doesn't quite follow the spec -- we probably should
+> > > ignore it except for Extended.  In any event, acpi_decode_space() sets
+> > > IORESOURCE_WINDOW for Producer descriptors, but we don't test
+> > > IORESOURCE_WINDOW in the PCI host bridge code.
+> > >
+> > > x86 and ia64 supply their own pci_acpi_root_prepare_resources()
+> > > functions that call acpi_pci_probe_root_resources(), which parses _CRS
+> > > and looks at producer_consumer.  Then they do a little arch-specific
+> > > stuff on the result.
+> > >
+> > > On arm64 we use acpi_pci_probe_root_resources() directly, with no
+> > > arch-specific stuff.
+> > >
+> > > On all three arches, we ignore the Consumer/Producer bit, so all the
+> > > resources are treated as Producers, e.g., as bridge windows.
+> > >
+> > > I think we *could* implement an arm64 version of
+> > > pci_acpi_root_prepare_resources() that would pay attention to the
+> > > Consumer/Producer bit by checking IORESOURCE_WINDOW.  To be spec
+> > > compliant, we would have to use Extended descriptors for all bridge
+> > > windows, even if they would fit in a DWord or QWord.
+> > >
+> > > Should we do that?  I dunno.  I'd like to hear your opinion(s).
+> > >
+> > 
+> > Yes, I think we should. If the spec allows for a way for a PNP0A03
+> > device to describe all of its resources unambiguously, we should not
+> > be relying on workarounds that were designed for another architecture
+> > in another decade (for, presumably, another OS)
+> > 
+> > Just for my understanding, we will need to use extended descriptors
+> > for all consumed *and* produced regions, even though dword/qword are
+> > implicitly produced-only, due to the fact that the bit is ignored?
+> 
+> From an ACPI spec point of view, I would say QWord/DWord/Word
+> descriptors are implicitly *consumer*-only because ResourceConsumer
+> is the default and they don't have a bit to indicate otherwise.
+> 
+> The current code assumes all PNP0A03 resources are producers.  If we
+> implement an arm64 pci_acpi_root_prepare_resources() that pays
+> attention to the Consumer/Producer bit, we would have to:
+> 
+>   - Reserve all producer regions in the iomem/ioport trees.  This is
+>     already done via pci_acpi_root_add_resources(), but we might need
+>     a new check to handle consumers differently.
+> 
+>   - Reserve all consumer regions.  This corresponds to what
+>     pnp/system.c does for PNP0C02 devices.  This is similar to the
+>     producer regions, but I think the consumer ones should be marked
+>     IORESOURCE_BUSY.
+> 
+>   - Use every producer (IORESOURCE_WINDOW) as a host bridge window.
+> 
+> I think it's a bug that acpi_decode_space() looks at producer_consumer
+> for QWord/DWord/Word descriptors, but I think QWord/DWord/Word
+> descriptors for consumed regions should be safe, as long as they don't
+> set the Consumer/Producer bit.
 
+I'm going to post a couple very lightly-tested patches that should
+make us ignore the Consumer/Producer bit for QWord/DWord/Word.  I'd
+appreciate any discussion about whether that's the right approach.
 
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
