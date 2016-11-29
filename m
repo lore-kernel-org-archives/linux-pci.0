@@ -1,53 +1,211 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35259 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753735AbcKIMVJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 07:21:09 -0500
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v9 1/8] thunderbolt: Macro rename
-Date: Wed,  9 Nov 2016 16:20:01 +0200
-Message-Id: <1478701208-4585-2-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-References: <1478701208-4585-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Wed, 30 Nov 2016 10:20:28 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, clsoto@us.ibm.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
+Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
+ updates
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129045546.GB20642@gwshan>
+ <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161129232028.GA8143@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-This first patch updates the NHI Thunderbolt controller registers file to
-reflect that it is not only for Cactus Ridge.
-No functional change intended.
+On Tue, Nov 29, 2016 at 08:48:26AM -0600, Bjorn Helgaas wrote:
+>On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
+>> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
+>> >Previously pci_update_resource() used the same code path for updating
+>> >standard BARs and VF BARs in SR-IOV capabilities.
+>> >
+>> >Split the VF BAR update into a new pci_iov_update_resource() internal
+>> >interface, which makes it simpler to compute the BAR address (we can get
+>> >rid of pci_resource_bar() and pci_iov_resource_bar()).
+>> >
+>> >This patch:
+>> >
+>> >  - Renames pci_update_resource() to pci_std_update_resource(),
+>> >  - Adds pci_iov_update_resource(),
+>> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
+>> >
+>> >No functional change intended.
+>> >
+>> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> 
+>> With below minor comments fixed:
+>> 
+>> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> 
+>> >---
+>> > drivers/pci/iov.c       |   49 +++++++++++++++++++++++++++++++++++++++++++++++
+>> > drivers/pci/pci.h       |    1 +
+>> > drivers/pci/setup-res.c |   13 +++++++++++-
+>> > 3 files changed, 61 insertions(+), 2 deletions(-)
+>> >
+>> >diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> >index d41ec29..d00ed5c 100644
+>> >--- a/drivers/pci/iov.c
+>> >+++ b/drivers/pci/iov.c
+>> >@@ -571,6 +571,55 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>> > 		4 * (resno - PCI_IOV_RESOURCES);
+>> > }
+>> >
+>> >+/**
+>> >+ * pci_iov_update_resource - update a VF BAR
+>> >+ * @dev: the PCI device
+>> >+ * @resno: the resource number
+>> >+ *
+>> >+ * Update a VF BAR in the SR-IOV capability of a PF.
+>> >+ */
+>> >+void pci_iov_update_resource(struct pci_dev *dev, int resno)
+>> >+{
+>> >+	struct pci_sriov *iov = dev->is_physfn ? dev->sriov : NULL;
+>> >+	struct resource *res = dev->resource + resno;
+>> >+	int vf_bar = resno - PCI_IOV_RESOURCES;
+>> >+	struct pci_bus_region region;
+>> >+	u32 new;
+>> >+	int reg;
+>> >+
+>> >+	/*
+>> >+	 * The generic pci_restore_bars() path calls this for all devices,
+>> >+	 * including VFs and non-SR-IOV devices.  If this is not a PF, we
+>> >+	 * have nothing to do.
+>> >+	 */
+>> >+	if (!iov)
+>> >+		return;
+>> >+
+>> >+	/*
+>> >+	 * Ignore unimplemented BARs, unused resource slots for 64-bit
+>> >+	 * BARs, and non-movable resources, e.g., those described via
+>> >+	 * Enhanced Allocation.
+>> >+	 */
+>> >+	if (!res->flags)
+>> >+		return;
+>> >+
+>> >+	if (res->flags & IORESOURCE_UNSET)
+>> >+		return;
+>> >+
+>> >+	if (res->flags & IORESOURCE_PCI_FIXED)
+>> >+		return;
+>> >+
+>> >+	pcibios_resource_to_bus(dev->bus, &region, res);
+>> >+	new = region.start;
+>> >+
+>> 
+>> The bits indicating the BAR's property (e.g. memory, IO etc) are missed in @new.
+>
+>Hmm, yes.  I omitted those because those bits are supposed to be
+>read-only, per spec (PCI r3.0, sec 6.2.5.1).  But I guess it would be
+>more conservative to keep them, and this shouldn't be needlessly
+>different from pci_std_update_resource().
+>
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/nhi_regs.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Yeah, Agree.
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 86b996c..75cf069 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -1,11 +1,11 @@
- /*
-- * Thunderbolt Cactus Ridge driver - NHI registers
-+ * Thunderbolt driver - NHI registers
-  *
-  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-  */
- 
--#ifndef DSL3510_REGS_H_
--#define DSL3510_REGS_H_
-+#ifndef NHI_REGS_H_
-+#define NHI_REGS_H_
- 
- #include <linux/types.h>
- 
--- 
-2.7.4
+>However, I don't think this code in pci_update_resource() is obviously
+>correct:
+>
+>  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+>
+>PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
+>property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
+>part of the address, so on the face of it, the above could corrupt two
+>bits of an I/O address.
+>
+>It's true that decode_bar() initializes flags correctly, using
+>PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
+>for memory BARs, but it would take a little more digging to be sure
+>that we never set bits 2-3 of flags for an I/O resource elsewhere.
+>
 
+The BAR's property bits are probed from device-tree, not hardware
+on some platforms (e.g. pSeries). Also, there is only one (property)
+bit if it's a ROM BAR. So more check as below might be needed because
+the code (without the enhancement) should also work fine.
+
+>How about this in pci_std_update_resource():
+>
+>        pcibios_resource_to_bus(dev->bus, &region, res);
+>        new = region.start;
+>
+>        if (res->flags & IORESOURCE_IO) {
+>                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+>                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+>        } else {
+>                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>        }
+>
+
+	if (res->flags & IORESOURCE_IO) {
+		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+	} else if (resno < PCI_ROM_RESOURCE) {
+		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+	} else if (resno == PCI_ROM_RESOURCE) {
+		mask = ~((u32)IORESOURCE_ROM_ENABLE);
+		new |= res->flags & IORESOURCE_ROM_ENABLE);
+	} else {
+		dev_warn(&dev->dev, "BAR#%d out of range\n", resno);
+		return;
+	}
+
+
+>and this in pci_iov_update_resource():
+>
+>        pcibios_resource_to_bus(dev->bus, &region, res);
+>        new = region.start;
+>        new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>
+>It shouldn't fix anything, but I think it is more obvious that we
+>can't corrupt bits 2-3 of an I/O BAR.
+>
+
+Agree and the this part of changes look good to me.
+
+>> >+	reg = iov->pos + PCI_SRIOV_BAR + 4 * vf_bar;
+>> >+	pci_write_config_dword(dev, reg, new);
+>> >+	if (res->flags & IORESOURCE_MEM_64) {
+>> >+		new = region.start >> 16 >> 16;
+>> 
+>> I think it was copied from pci_update_resource(). Why we can't just have "new = region.start >> 32"? 
+>
+>Right; I did copy this from pci_update_resource().  The changelog from
+>cf7bee5a0bf2 ("[PATCH] Fix restore of 64-bit PCI BAR's") says "Also
+>make sure to write high bits - use "x >> 16 >> 16" (rather than the
+>simpler ">> 32") to avoid warnings on 32-bit architectures where we're
+>not going to have any high bits."
+>
+>I didn't take the time to revalidate whether that's still applicable.
+>
+
+Ah, I see. I think we still need this on 32-bits systems.
+
+>> >+void pci_update_resource(struct pci_dev *dev, int resno)
+>> >+{
+>> >+	if (resno <= PCI_ROM_RESOURCE)
+>> >+		pci_std_update_resource(dev, resno);
+>> >+#ifdef CONFIG_PCI_IOV
+>> >+	else if (resno >= PCI_IOV_RESOURCES && resno < PCI_IOV_RESOURCE_END)
+>> 
+>> The last BAR is missed:
+>> 
+>> 	else if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
+>
+>Ah, right, thanks!
+>
+>> >+		pci_iov_update_resource(dev, resno);
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
