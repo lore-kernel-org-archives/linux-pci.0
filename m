@@ -1,98 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51278 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933656AbcKNWOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Nov 2016 17:14:52 -0500
-Date: Mon, 14 Nov 2016 16:14:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, robh+dt@kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Kevin Hilman <khilman@linaro.org>,
-        Simon Horman <horms+renesas@verge.net.au>
-Subject: Re: [PATCH v4 1/3] bus: simple-pm: add support to pm clocks
-Message-ID: <20161114221447.GH9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1479122155-13393-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1479122155-13393-2-git-send-email-srinivas.kandagatla@linaro.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 29 Nov 2016 17:05:49 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161129160549.GH2078@8bytes.org>
+References: <20161109141948.19244-5-lorenzo.pieralisi@arm.com>
+ <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
+ <20161111162736.GV2078@8bytes.org>
+ <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+ <20161114102654.GA1677@red-moon>
+ <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+ <20161114155222.GZ2078@8bytes.org>
+ <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
+ <20161116095615.GA25656@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479122155-13393-2-git-send-email-srinivas.kandagatla@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161116095615.GA25656@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Geert, Kevin, Simon]
+On Wed, Nov 16, 2016 at 09:56:15AM +0000, Lorenzo Pieralisi wrote:
+> I can easily make the changes Robin suggests above, I need to know
+> what to do with this patch it is the last blocking point for this
+> series and time is running out I can revert to using dev->bus to
+> retrieve iommu_ops (even though I do not think it makes sense given
+> what Robin outlines below) but I need to know please, we can't gate
+> an entire series for this patch that is just syntactic sugar.
 
-On Mon, Nov 14, 2016 at 11:15:53AM +0000, Srinivas Kandagatla wrote:
-> This patch adds support to pm clocks via device tree, so that the clocks
-> can be turned on and off during runtime pm. This patch is required for
-> Qualcomm msm8996 pcie controller which sits on a bus with its own
-> power-domain and clocks.
-> 
-> Without this patch the clock associated with the bus are never turned on.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Well, I didn't really object to the approach per-se, I just wanted to
+know the rationale behind the need for the iommu-ops pointer. So through
+which tree should this series be merged?
+I think I can live with the pointer for now, we can later convert it to
+an iommu-instance pointer.
 
-I don't see a formal maintainer for drivers/bus/simple-pm-bus.c, but I'd
-like an ack or at least a review from Geert or Simon.
 
-> ---
->  drivers/bus/simple-pm-bus.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/bus/simple-pm-bus.c b/drivers/bus/simple-pm-bus.c
-> index c5eb46c..63b7e8c 100644
-> --- a/drivers/bus/simple-pm-bus.c
-> +++ b/drivers/bus/simple-pm-bus.c
-> @@ -11,6 +11,7 @@
->  #include <linux/module.h>
->  #include <linux/of_platform.h>
->  #include <linux/platform_device.h>
-> +#include <linux/pm_clock.h>
->  #include <linux/pm_runtime.h>
->  
->  
-> @@ -22,17 +23,26 @@ static int simple_pm_bus_probe(struct platform_device *pdev)
->  
->  	pm_runtime_enable(&pdev->dev);
->  
-> -	if (np)
-> +	if (np) {
-> +		of_pm_clk_add_clks(&pdev->dev);
->  		of_platform_populate(np, NULL, NULL, &pdev->dev);
-> +	}
->  
->  	return 0;
->  }
->  
-> +static const struct dev_pm_ops simple_pm_bus_pm_ops = {
-> +	SET_RUNTIME_PM_OPS(pm_clk_suspend,
-> +			   pm_clk_resume, NULL)
-> +};
-> +
->  static int simple_pm_bus_remove(struct platform_device *pdev)
->  {
->  	dev_dbg(&pdev->dev, "%s\n", __func__);
->  
->  	pm_runtime_disable(&pdev->dev);
-> +	pm_clk_destroy(&pdev->dev);
-> +
->  	return 0;
->  }
->  
-> @@ -48,6 +58,7 @@ static struct platform_driver simple_pm_bus_driver = {
->  	.driver = {
->  		.name = "simple-pm-bus",
->  		.of_match_table = simple_pm_bus_of_match,
-> +		.pm = &simple_pm_bus_pm_ops,
->  	},
->  };
->  
-> -- 
-> 2.10.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Joerg
+
