@@ -1,132 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33277 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbcKYH0e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 02:26:34 -0500
-Date: Fri, 25 Nov 2016 08:26:29 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v3 2/4] PCI: Allow driver-specific data in host bridge
-Message-ID: <20161125072629.GA29326@ulmo.ba.sec>
-References: <20160815153647.1075-1-thierry.reding@gmail.com>
- <20160815153647.1075-2-thierry.reding@gmail.com>
- <20160819165506.GA11823@red-moon>
- <26481704.zoJheIBO1p@wuerfel>
+Received: from mail.kernel.org ([198.145.29.136]:35878 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754329AbcK2EOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 23:14:01 -0500
+Subject: [PATCH v4 0/7] Disable VF's memory space on updating IOV BARs
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        mpe@ellerman.id.au
+Date: Mon, 28 Nov 2016 22:13:41 -0600
+Message-ID: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
-In-Reply-To: <26481704.zoJheIBO1p@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This is a v4 of Gavin's series for handling VF BAR updates.  The
+important piece is the first patch ("PCI: Do any VF BAR updates before
+enabling the BARs").  That makes sure that if we update VF BARs, we do
+it before enabling the VFs, and that is unchanged from v3.
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The second patch in Gavin's series ("PCI: Disable VF's memory space on
+updating IOV BAR in pci_update_resource()") temporarily disabled VF
+memory space during an update.  Since the first patch does the update
+before enabling VFs, this case shouldn't happen in practice.
 
-On Mon, Aug 22, 2016 at 04:00:42PM +0200, Arnd Bergmann wrote:
-> On Friday, August 19, 2016 5:55:06 PM CEST Lorenzo Pieralisi wrote:
-> > >=20
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 93583b389058..ecf543014da3 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -521,16 +521,19 @@ static void pci_release_host_bridge_dev(struct =
-device *dev)
-> > >       kfree(bridge);
-> > >  }
-> > > =20
-> > > -static struct pci_host_bridge *pci_alloc_host_bridge(void)
-> > > +static struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
-> > >  {
-> > >       struct pci_host_bridge *bridge;
-> > > =20
-> > > -     bridge =3D kzalloc(sizeof(*bridge), GFP_KERNEL);
-> > > +     bridge =3D kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
-> > >       if (!bridge)
-> > >               return NULL;
-> > > =20
-> > >       INIT_LIST_HEAD(&bridge->windows);
-> > > =20
-> > > +     if (priv)
-> > > +             bridge->private =3D &bridge[1];
-> >=20
-> > How about making private a zero length array ?
->=20
-> Right, the member can actually be removed here if we want to, this
-> was just meant as a shorthand so we can avoid the cast or function
-> call in device drivers. I think either way makes sense.
->=20
-> Also, someone commented on a related issue in the previous version, and I
-> recommended to align it to ARCH_SLAB_MINALIGN. This might be done more
-> easily with the zero-length array using
->=20
-> struct pci_host_bridge {
-> 	...
->=20
-> 	unsigned long private[0] __attribute__((aligned(ARCH_SLAB_MINALIGN)));
-> };
->=20
-> Without this, we need a bit more computation, like
-> =09
-> 	bridge =3D kzalloc(ALIGN(sizeof(*bridge), ARCH_SLAB_MINALIGN) + priv, GF=
-P_KERNEL);
-> 	bridge->private =3D (void *)bridge + ALIGN(sizeof(*bridge);
->=20
-> or
->=20
-> static inline void *pci_bridge_private(struct pci_host_bridge *bridge)
-> {
-> 	return (void *)bridge + ALIGN(sizeof(*bridge);
-> }
-> static inline struct pci_host_bridge *pci_bridge_from_private(void *priv)
-> {
-> 	return priv - ALIGN(sizeof(*bridge);
-> }
->=20
-> The alignment is needed if the private structure contains any data that
-> we may want to transfer using DMA.
+But even if we want to update a VF BAR while VF memory space is
+enabled, I think temporarily disabling it is wrong.  So I replaced
+the second patch with a few patches that make that such an update
+fail.
 
-Looks like I never replied to this, though I seem to remember that I
-did...
+Please comment.  These are on my pci/virtualization branch.
 
-My question is: why would we want the private structure to be aligned?
-Surely if somebody has data in the private structure that needs to be
-transferred using DMA then they need to make sure that that field will
-be properly aligned. Aligning the private structure itself won't ensure
-that, right?
+Changelog
+=========
+v4:
+  * Don't disable VF's memory space when IOV BARs are updated; fail the
+    update instead. 
+  * Split IOV BAR updates from standard BAR updates so IOV updates can go
+    in pci/iov.c.
+  * Remove pci_resource_bar() and pci_iov_resource_bar() (the relevant
+    code is simpler when inlined into the callers).
+  * Cleanup IORESOURCE_ROM_ENABLE usage.
+  * Add comments about why ROMs are updated differently.
+v3:
+  * Disable VF's memory space when IOV BARs are updated in
+    pcibios_sriov_enable().
+v2:
+  * Added one patch calling pcibios_sriov_enable() before the VF
+    and VF BARs are enabled.
 
-Anyway, it seems like there's very little contentious about this other
-than the minor issue of how to get at the private data. I'd like to make
-progress on this because we're now three generations into 64-bit with
-Tegra and still missing PCI support on all of them.
+---
 
-Thierry
+Bjorn Helgaas (6):
+      PCI: Ignore BAR updates on virtual functions
+      PCI: Separate VF BAR updates from standard BAR updates
+      PCI: Don't update VF BARs while VF memory space is enabled
+      PCI: Remove pci_resource_bar() and pci_iov_resource_bar()
+      PCI: Decouple IORESOURCE_ROM_ENABLE and PCI_ROM_ADDRESS_ENABLE
+      PCI: Add comments about ROM BAR updating
 
---PEIAKu/WMn1b1Hv9
-Content-Type: application/pgp-signature; name="signature.asc"
+Gavin Shan (1):
+      PCI: Do any VF BAR updates before enabling the BARs
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABCAAGBQJYN+ehAAoJEN0jrNd/PrOhgK8QAKQPAHvaZVwjb6IfHwOU8pjB
-C9pgJF5EzPUNoUbx/YivVQPqIsT9/9JRbgausTHZwcn4GzteN7jjdD9DPfSS4UM0
-Qzo+3cbCj7zWAWfhQOdeTMjPpknqKrEJgwwAr75sBgaqhNt6eXfphLKEbI8hNfaJ
-bMoyMNUIcua07JP3ICSP9P8a4alLnMQYgsLrcG6RI7OAntLqmu5SRw/l0s5N9jpG
-pzJE6keaFXr4J6esUZQZ6dzqRv6rZn13YaTnVpyi2raaoENlay8UATI8h9NT5knj
-gQgvE9OfH7I6l5wynwFaTXpkJVMM84H756cULiuRGefO2eSZHwrGk9aCp9+uouxq
-vluC/n4ajCR8hFMMm/Mzj6yFqK0XXg9jIXEEz105t69jenU+DcLYYr4HVvgJhv5t
-MDfNhNLIS3fYD270N1NepHlFpX426dM0k7lT2YidTfG7uqh+hgQGnKvLAHpqS+1K
-GMHki5l0hR/9+d/lB7vF15VYTyjRK+br57t500hMglPEML/roVV37X/8J+DJZl3T
-DL4Nw6D94lfOQHXeWUfkh5wO4WmQg8yUNZuz01Sz8xwMbxMwDV/wHCL7Y+dcPdo6
-up1X4puO+prnVUfKxm49bLRBQ+wZ9x8C/rwn3Tp8J7tS50sXuM0iLc62YxSNrJ+q
-pVbEpV10CwklP2Bi7MB6
-=Yo1I
------END PGP SIGNATURE-----
-
---PEIAKu/WMn1b1Hv9--
+ drivers/pci/iov.c       |   69 +++++++++++++++++++++++++++++++++++++----------
+ drivers/pci/pci.c       |   34 -----------------------
+ drivers/pci/pci.h       |    7 +----
+ drivers/pci/probe.c     |    3 +-
+ drivers/pci/rom.c       |    5 +++
+ drivers/pci/setup-res.c |   37 ++++++++++++++++++-------
+ 6 files changed, 88 insertions(+), 67 deletions(-)
