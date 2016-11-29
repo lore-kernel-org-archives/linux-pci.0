@@ -1,245 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 7 Nov 2016 10:56:11 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v6 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
- agnostic
-Message-ID: <20161107105611.GA7183@red-moon>
-References: <20161018160414.1228-1-lorenzo.pieralisi@arm.com>
- <20161018160414.1228-5-lorenzo.pieralisi@arm.com>
- <9e91cb41-3034-c1ca-9275-cce3235cc662@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51589 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752306AbcK2FES (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 00:04:18 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT4wVwM072088
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:03:54 -0500
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2712rw2m78-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:03:54 -0500
+Received: from localhost
+        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 29 Nov 2016 15:03:51 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6AC962BB0045
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100 (EST)
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAT53nwm5177656
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAT53m1o026945
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:03:49 +1100
+Date: Tue, 29 Nov 2016 16:05:10 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
+Subject: Re: [PATCH v4 7/7] PCI: Add comments about ROM BAR updating
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041648.21453.94596.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9e91cb41-3034-c1ca-9275-cce3235cc662@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161129041648.21453.94596.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161129050510.GA23688@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 01, 2016 at 04:36:10PM +0000, Robin Murphy wrote:
-> Bikeshed alert...
-> 
-> On 18/10/16 17:04, Lorenzo Pieralisi wrote:
-> > The of_iommu_{set/get}_ops() API is used to associate a device
-> > tree node with a specific set of IOMMU operations. The same
-> > kernel interface is required on systems booting with ACPI, where
-> > devices are not associated with a device tree node, therefore
-> > the interface requires generalization.
-> > 
-> > The struct device fwnode member represents the fwnode token
-> > associated with the device and the struct it points at is firmware
-> > specific; regardless, it is initialized on both ACPI and DT systems
-> > and makes an ideal candidate to use it to associate a set of IOMMU
-> > operations to a given device, through its struct device.fwnode member
-> > pointer.
-> > 
-> > Convert the DT specific of_iommu_{set/get}_ops() interface to
-> > use struct device.fwnode as a look-up token, making the interface
-> > usable on ACPI systems.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> > Cc: Robin Murphy <robin.murphy@arm.com>
-> > Cc: Joerg Roedel <joro@8bytes.org>
-> > ---
-> >  drivers/iommu/iommu.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/iommu/of_iommu.c | 39 ---------------------------------------
-> >  include/linux/iommu.h    | 14 ++++++++++++++
-> >  include/linux/of_iommu.h | 12 ++++++++++--
-> >  4 files changed, 67 insertions(+), 41 deletions(-)
-> > 
-> > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > index 9a2f196..320eb8c 100644
-> > --- a/drivers/iommu/iommu.c
-> > +++ b/drivers/iommu/iommu.c
-> > @@ -1615,6 +1615,49 @@ int iommu_request_dm_for_dev(struct device *dev)
-> >  	return ret;
-> >  }
-> >  
-> > +struct fwnode_iommu_node {
-> 
-> Having just pulled in this patch in isolation for some hacking, I
-> realise that by about the fifth time one reads "fwnode_iommu_node" it
-> just looks like meaningless gibberish. Can we just call it
-> "iommu_instance" instead, as that's what it's representing here?
+On Mon, Nov 28, 2016 at 10:16:48PM -0600, Bjorn Helgaas wrote:
+>pci_update_resource() updates a hardware BAR so its address matches the
+>kernel's struct resource UNLESS it's a disabled ROM BAR.  We only update
+>those when we enable the ROM.
+>
+>It's not obvious from the code why ROM BARs should be handled specially.
+>Apparently there are Matrox devices with defective ROM BARs that read as
+>zero when disabled.  That means that if pci_enable_rom() reads the disabled
+>BAR, sets PCI_ROM_ADDRESS_ENABLE (without re-inserting the address), and
+>writes it back, it would enable the ROM at address zero.
+>
+>Add comments and references to explain why we can't make the code look more
+>rational.
+>
+>The code changes are from 755528c860b0 ("Ignore disabled ROM resources at
+>setup") and 8085ce084c0f ("[PATCH] Fix PCI ROM mapping").
+>
+>Link: https://lkml.org/lkml/2005/8/30/138
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Agreed, how about iommu_(fw)entry ? Anyway, I will do, point taken.
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> > +	struct list_head list;
-> > +	struct fwnode_handle *fwnode;
-> > +	const struct iommu_ops *ops;
-> > +};
-> > +static LIST_HEAD(fwnode_iommu_list);
-> > +static DEFINE_SPINLOCK(fwnode_iommu_lock);
-> > +
-> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> > +			  const struct iommu_ops *ops)
-> > +{
-> > +	struct fwnode_iommu_node *iommu =
-> > +				kzalloc(sizeof(*iommu), GFP_KERNEL);
-> 
-> (plus it shortens this line so it really doesn't the awkward break)
-> 
-> Apologies, (the original rubbish name was my fault anyway)
+>---
+> drivers/pci/rom.c       |    5 +++++
+> drivers/pci/setup-res.c |    6 ++++++
+> 2 files changed, 11 insertions(+)
+>
+>diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+>index 06663d3..b6edb18 100644
+>--- a/drivers/pci/rom.c
+>+++ b/drivers/pci/rom.c
+>@@ -35,6 +35,11 @@ int pci_enable_rom(struct pci_dev *pdev)
+> 	if (res->flags & IORESOURCE_ROM_SHADOW)
+> 		return 0;
+>
+>+	/*
+>+	 * Ideally pci_update_resource() would update the ROM BAR address,
+>+	 * and we would only set the enable bit here.  But apparently some
+>+	 * devices have buggy ROM BARs that read as zero when disabled.
+>+	 */
+> 	pcibios_resource_to_bus(pdev->bus, &region, res);
+> 	pci_read_config_dword(pdev, pdev->rom_base_reg, &rom_addr);
+> 	rom_addr &= ~PCI_ROM_ADDRESS_MASK;
+>diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>index 09bdff7..57d7041 100644
+>--- a/drivers/pci/setup-res.c
+>+++ b/drivers/pci/setup-res.c
+>@@ -67,6 +67,12 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+> 	if (resno < PCI_ROM_RESOURCE) {
+> 		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
+> 	} else if (resno == PCI_ROM_RESOURCE) {
+>+
+>+		/*
+>+		 * Apparently some Matrox devices have ROM BARs that read
+>+		 * as zero when disabled, so don't update ROM BARs unless
+>+		 * they're enabled.  See https://lkml.org/lkml/2005/8/30/138.
+>+		 */
+> 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
+> 			return;
+>
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-No worries, you have a point, will update for next (hopefully last)
-posting.
-
-Thanks !
-Lorenzo
-
-> Robin.
-> 
-> > +
-> > +	if (WARN_ON(!iommu))
-> > +		return;
-> > +
-> > +	if (is_of_node(fwnode))
-> > +		of_node_get(to_of_node(fwnode));
-> > +
-> > +	INIT_LIST_HEAD(&iommu->list);
-> > +	iommu->fwnode = fwnode;
-> > +	iommu->ops = ops;
-> > +	spin_lock(&fwnode_iommu_lock);
-> > +	list_add_tail(&iommu->list, &fwnode_iommu_list);
-> > +	spin_unlock(&fwnode_iommu_lock);
-> > +}
-> > +
-> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-> > +{
-> > +	struct fwnode_iommu_node *node;
-> > +	const struct iommu_ops *ops = NULL;
-> > +
-> > +	spin_lock(&fwnode_iommu_lock);
-> > +	list_for_each_entry(node, &fwnode_iommu_list, list)
-> > +		if (node->fwnode == fwnode) {
-> > +			ops = node->ops;
-> > +			break;
-> > +		}
-> > +	spin_unlock(&fwnode_iommu_lock);
-> > +	return ops;
-> > +}
-> > +
-> >  int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
-> >  		      const struct iommu_ops *ops)
-> >  {
-> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> > index 5b82862..0f57ddc 100644
-> > --- a/drivers/iommu/of_iommu.c
-> > +++ b/drivers/iommu/of_iommu.c
-> > @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
-> >  }
-> >  EXPORT_SYMBOL_GPL(of_get_dma_window);
-> >  
-> > -struct of_iommu_node {
-> > -	struct list_head list;
-> > -	struct device_node *np;
-> > -	const struct iommu_ops *ops;
-> > -};
-> > -static LIST_HEAD(of_iommu_list);
-> > -static DEFINE_SPINLOCK(of_iommu_lock);
-> > -
-> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
-> > -{
-> > -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
-> > -
-> > -	if (WARN_ON(!iommu))
-> > -		return;
-> > -
-> > -	of_node_get(np);
-> > -	INIT_LIST_HEAD(&iommu->list);
-> > -	iommu->np = np;
-> > -	iommu->ops = ops;
-> > -	spin_lock(&of_iommu_lock);
-> > -	list_add_tail(&iommu->list, &of_iommu_list);
-> > -	spin_unlock(&of_iommu_lock);
-> > -}
-> > -
-> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
-> > -{
-> > -	struct of_iommu_node *node;
-> > -	const struct iommu_ops *ops = NULL;
-> > -
-> > -	spin_lock(&of_iommu_lock);
-> > -	list_for_each_entry(node, &of_iommu_list, list)
-> > -		if (node->np == np) {
-> > -			ops = node->ops;
-> > -			break;
-> > -		}
-> > -	spin_unlock(&of_iommu_lock);
-> > -	return ops;
-> > -}
-> > -
-> >  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
-> >  {
-> >  	struct of_phandle_args *iommu_spec = data;
-> > diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> > index 436dc21..15d5478 100644
-> > --- a/include/linux/iommu.h
-> > +++ b/include/linux/iommu.h
-> > @@ -351,6 +351,9 @@ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
-> >  		      const struct iommu_ops *ops);
-> >  void iommu_fwspec_free(struct device *dev);
-> >  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
-> > +void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> > +			  const struct iommu_ops *ops);
-> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode);
-> >  
-> >  #else /* CONFIG_IOMMU_API */
-> >  
-> > @@ -580,6 +583,17 @@ static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
-> >  	return -ENODEV;
-> >  }
-> >  
-> > +static inline void fwnode_iommu_set_ops(struct fwnode_handle *fwnode,
-> > +					const struct iommu_ops *ops)
-> > +{
-> > +}
-> > +
-> > +static inline
-> > +const struct iommu_ops *fwnode_iommu_get_ops(struct fwnode_handle *fwnode)
-> > +{
-> > +	return NULL;
-> > +}
-> > +
-> >  #endif /* CONFIG_IOMMU_API */
-> >  
-> >  #endif /* __LINUX_IOMMU_H */
-> > diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-> > index e80b9c7..7681007 100644
-> > --- a/include/linux/of_iommu.h
-> > +++ b/include/linux/of_iommu.h
-> > @@ -31,8 +31,16 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
-> >  
-> >  #endif	/* CONFIG_OF_IOMMU */
-> >  
-> > -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> > -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-> > +static inline void of_iommu_set_ops(struct device_node *np,
-> > +				    const struct iommu_ops *ops)
-> > +{
-> > +	fwnode_iommu_set_ops(&np->fwnode, ops);
-> > +}
-> > +
-> > +static inline const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
-> > +{
-> > +	return fwnode_iommu_get_ops(&np->fwnode);
-> > +}
-> >  
-> >  extern struct of_device_id __iommu_of_table;
-> >  
-> > 
-> 
