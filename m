@@ -1,120 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42026 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54504 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752065AbcKIWt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 17:49:59 -0500
-Date: Wed, 9 Nov 2016 16:49:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Christopher Covington <cov@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Duc Dang <dhdang@apm.com>,
-        Robert Richter <robert.richter@caviumnetworks.com>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Liviu Dudau <Liviu.Dudau@arm.com>,
-        David Daney <ddaney@caviumnetworks.com>,
-        "wangyijing@huawei.com" <wangyijing@huawei.com>,
-        Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Andrea Gallo <andrea.gallo@linaro.org>,
-        Jeremy Linton <jeremy.linton@arm.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Jeff Hugo <jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-Message-ID: <20161109224955.GO14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
- <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org>
- <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
+        id S1757695AbcK2Pef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Nov 2016 10:34:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
+In-Reply-To: <1479096666-112668-2-git-send-email-shawn.lin@rock-chips.com>
+References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com> <1479096666-112668-2-git-send-email-shawn.lin@rock-chips.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 29 Nov 2016 09:34:09 -0600
+Message-ID: <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
+Subject: Re: [RESEND PATCH 2/2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 08:29:23PM +0000, Ard Biesheuvel wrote:
-> Hi Bjorn,
-> 
-> On 9 November 2016 at 20:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Nov 09, 2016 at 02:25:56PM -0500, Christopher Covington wrote:
-> >> Hi Bjorn,
-> >>
-> [...]
-> >>
-> >> We're working to add the PNP0C02 resource to future firmware, but it's
-> >> not in the current firmware. Are dmesg and /proc/iomem from the
-> >> current firmware interesting or should we wait for the update to file?
-> >
-> > Note that the ECAM space is not the only thing that should be
-> > described via these PNP0C02 devices.  *All* non-enumerable resources
-> > should be described by the _CRS method of some ACPI device.  Here's a
-> > sample from my laptop:
-> >
-> >   PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xf8000000-0xfbffffff] (base 0xf8000000)
-> >   system 00:01: [io  0x1800-0x189f] could not be reserved
-> >   system 00:01: [io  0x0800-0x087f] has been reserved
-> >   system 00:01: [io  0x0880-0x08ff] has been reserved
-> >   system 00:01: [io  0x0900-0x097f] has been reserved
-> >   system 00:01: [io  0x0980-0x09ff] has been reserved
-> >   system 00:01: [io  0x0a00-0x0a7f] has been reserved
-> >   system 00:01: [io  0x0a80-0x0aff] has been reserved
-> >   system 00:01: [io  0x0b00-0x0b7f] has been reserved
-> >   system 00:01: [io  0x0b80-0x0bff] has been reserved
-> >   system 00:01: [io  0x15e0-0x15ef] has been reserved
-> >   system 00:01: [io  0x1600-0x167f] has been reserved
-> >   system 00:01: [io  0x1640-0x165f] has been reserved
-> >   system 00:01: [mem 0xf8000000-0xfbffffff] could not be reserved
-> >   system 00:01: [mem 0xfed10000-0xfed13fff] has been reserved
-> >   system 00:01: [mem 0xfed18000-0xfed18fff] has been reserved
-> >   system 00:01: [mem 0xfed19000-0xfed19fff] has been reserved
-> >   system 00:01: [mem 0xfeb00000-0xfebfffff] has been reserved
-> >   system 00:01: [mem 0xfed20000-0xfed3ffff] has been reserved
-> >   system 00:01: [mem 0xfed90000-0xfed93fff] has been reserved
-> >   system 00:01: [mem 0xf7fe0000-0xf7ffffff] has been reserved
-> >   system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
-> >
-> > Do you have firmware in the field that may not get updated?  If so,
-> > I'd like to see the whole solution for that firmware, including the
-> > MCFG quirk (which tells the PCI core where the ECAM region is) and
-> > whatever PNP0C02 quirk you figure out to actually reserve the region.
-> >
-> > I proposed a PNP0C02 quirk to Duc along these lines of the below.  I
-> > don't actually know if it's feasible, but it didn't look as bad as I
-> > expected, so I'd kind of like somebody to try it out.  I think you
-> > would have to call this via a DMI hook (do you have DMI on arm64?),
-> > maybe from pnp_init() or similar.
-> 
-> We do have SMBIOS/DMI on arm64, but we have been successful so far not
-> to rely on it for quirks, and we'd very much like to keep it that way.
-> 
-> Since this ACPI _CRS method has nothing to do with SMBIOS/DMI, surely
-> there is a better way to wire up the reservation code to the
-> information exposed by ACPI?
+On Sun, Nov 13, 2016 at 10:11 PM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> Rockchip's RC outputs 100MHz reference clock but there are
+> two methods for PHY to generate it.
+>
+> (1)One of them is to use system PLL to generate 100MHz clock and
+> the PHY will relock it and filter signal noise then outputs the
+> reference clock.
+>
+> (2)Another way is to share Soc's 24MHZ crystal oscillator with
+> PHY and force PHY's DLL to generate 100MHz internally.
+>
+> When using case(2), the exit from L0s doesn't work fine occasionally
+> due to the broken design of RC receiver's logical circuit. So even if
+> we use extended-synch, it still fails for PHY to relock the bits from
+> FTS sometimes. This will hang the system.
+>
+> Maybe we could argue that why not use case(1) to avoid it? The reason
+> is that as we could see the reference clock is derived from system PLL
+> and the path from it to PHY isn't so clean which means there are some
+> noise introduced by power-domain and other buses can't be filterd out
+> by PHY and we could see noise from the frequency spectrum by oscilloscope.
+> This makes the TX compatibility test a little difficult to pass the spec.
+> So case(1) and case(2) are both used indeed now. If using case(2), we
+> should disable RC's L0s support, and that is why we need this property to
+> indicate this quirk.
+>
+> Also after checking quirk.c, I noticed there is already a quirk for
+> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+> shouldn't do that as mentioned above that case(1) could still works fine
+> with L0s.
+>
+> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Cc: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>
+> ---
+>
+>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+>  2 files changed, 11 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index ba67b39..cfa44a7 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -42,6 +42,8 @@ Required properties:
+>  Optional Property:
+>  - ep-gpios: contain the entry for pre-reset gpio
+>  - num-lanes: number of lanes to use
+> +- quirk,aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
 
-I'm open to other ways, feel free to propose one :)
+quirk is not a vendor. Drop it.
 
-If you do a quirk, you need some way to identify the machine/firmware
-combination, because you don't want to apply the quirk on every
-machine.  You're trying to work around a firmware issue, so you
-probably want something tied to the firmware version.  On x86, that's
-typically done with DMI.
-
-Bjorn
+> +       using 24MHz OSC for RC's PHY.
+>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
