@@ -1,74 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34858 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933839AbcKVSLx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2016 13:11:53 -0500
-Received: by mail-oi0-f50.google.com with SMTP id b126so26944345oia.2
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 10:11:53 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 29 Nov 2016 17:06:40 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 04/16] drivers: iommu: make of_iommu_set/get_ops() DT
+ agnostic
+Message-ID: <20161129170639.GH30283@arm.com>
+References: <20161111152248.GS2078@8bytes.org>
+ <552e674a-f434-f08f-8e16-a94544ce8e6e@arm.com>
+ <20161111162736.GV2078@8bytes.org>
+ <33769e3c-265f-6e89-adf9-6d35b1e03579@arm.com>
+ <20161114102654.GA1677@red-moon>
+ <41e3eff1-9ce6-bcfb-5716-c65ef38add63@arm.com>
+ <20161114155222.GZ2078@8bytes.org>
+ <313844ca-d948-1297-84b2-669f3a7d57d2@arm.com>
+ <20161116095615.GA25656@red-moon>
+ <20161129160549.GH2078@8bytes.org>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 22 Nov 2016 10:11:51 -0800
-Message-ID: <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161129160549.GH2078@8bytes.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 21, 2016 at 12:36 PM, Deucher, Alexander
-<Alexander.Deucher@amd.com> wrote:
-> This is certainly not the first time this has been brought up, but I'd li=
-ke to try and get some consensus on the best way to move this forward.  All=
-owing devices to talk directly improves performance and reduces latency by =
-avoiding the use of staging buffers in system memory.  Also in cases where =
-both devices are behind a switch, it avoids the CPU entirely.  Most current=
- APIs (DirectGMA, PeerDirect, CUDA, HSA) that deal with this are pointer ba=
-sed.  Ideally we'd be able to take a CPU virtual address and be able to get=
- to a physical address taking into account IOMMUs, etc.  Having struct page=
-s for the memory would allow it to work more generally and wouldn't require=
- as much explicit support in drivers that wanted to use it.
->
-> Some use cases:
-> 1. Storage devices streaming directly to GPU device memory
-> 2. GPU device memory to GPU device memory streaming
-> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
-> 4. DVB/V4L/SDI devices streaming directly to storage devices
->
-> Here is a relatively simple example of how this could work for testing.  =
-This is obviously not a complete solution.
-> - Device memory will be registered with Linux memory sub-system by create=
-d corresponding struct page structures for device memory
-> - get_user_pages_fast() will  return corresponding struct pages when CPU =
-address points to the device memory
-> - put_page() will deal with struct pages for device memory
->
-[..]
-> 4. iopmem
-> iopmem : A block device for PCIe memory (https://lwn.net/Articles/703895/=
-)
+On Tue, Nov 29, 2016 at 05:05:49PM +0100, Joerg Roedel wrote:
+> On Wed, Nov 16, 2016 at 09:56:15AM +0000, Lorenzo Pieralisi wrote:
+> > I can easily make the changes Robin suggests above, I need to know
+> > what to do with this patch it is the last blocking point for this
+> > series and time is running out I can revert to using dev->bus to
+> > retrieve iommu_ops (even though I do not think it makes sense given
+> > what Robin outlines below) but I need to know please, we can't gate
+> > an entire series for this patch that is just syntactic sugar.
+> 
+> Well, I didn't really object to the approach per-se, I just wanted to
+> know the rationale behind the need for the iommu-ops pointer. So through
+> which tree should this series be merged?
 
-The change I suggest for this particular approach is to switch to
-"device-DAX" [1]. I.e. a character device for establishing DAX
-mappings rather than a block device plus a DAX filesystem. The pro of
-this approach is standard user pointers and struct pages rather than a
-new construct. The con is that this is done via an interface separate
-from the existing gpu and storage device. For example it would require
-a /dev/dax instance alongside a /dev/nvme interface, but I don't see
-that as a significant blocking concern.
+I was just about to send a pull request to you, since it conflicts with
+my ARM SMMU patches and the PCI/ACPI bits are acked by Rafael and Bjorn.
 
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2016-October/007496.html
+My for-joerg/arm-smmu/updates is ready to go; just need to write the
+pull request.
+
+Will
