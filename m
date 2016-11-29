@@ -1,45 +1,120 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 11 Nov 2016 11:28:29 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Al Stone <ahs@redhat.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Christopher Covington <cov@codeaurora.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Dongdong Liu <liudongdong3@huawei.com>, Duc Dang <dhdang@apm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Jon Masters <jcm@redhat.com>, Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Robert Richter <rrichter@cavium.com>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
-Subject: Re: ACPI namespace details for ARM64
-Message-ID: <20161111112829.GB13333@red-moon>
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 29 Nov 2016 12:20:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
+Message-ID: <20161129182014.GC17112@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <1AE640813FDE7649BE1B193DEA596E886A2949AF@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886A2949AF@SHSMSX101.ccr.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 04:05:06PM -0600, Bjorn Helgaas wrote:
+On Wed, Nov 23, 2016 at 03:23:35AM +0000, Zheng, Lv wrote:
+> Hi, Bjorn
+> =
 
-[...]
+> Thanks for the documentation.
+> It really helps!
+> =
 
-> ACPI defined a Producer/Consumer bit that was intended to distinguish
-> the bridge apertures from the bridge registers [4, 5]. However, BIOSes
-> didn't use that bit correctly, and the result is that OSes have to
-> assume that everything in a PCI host bridge _CRS is a window. That
-> leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-> device itself.
+> However I have a question below.
+> =
 
-ACPI 6.1 states that in the revision changes 4.0a Apr.2010 (xiii)
-"Consumer/Producer bit is ignored (Restored 2.0C change that had
-been lost)" and still that bit is marked as valid. If it is not
-reliable it should be set as "ignored" in the specs (as it was
-on ACPI 2.0C, BTW), as it is it is just a source of confusion.
+> > From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.ke=
+rnel.org] On Behalf Of Bjorn
+> > Helgaas
+> > Subject: [PATCH] PCI: Add information about describing PCI in ACPI
+> > =
 
-Thanks again !
-Lorenzo
+> > Add a writeup about how PCI host bridges should be described in ACPI
+> > using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
+> > =
+
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  Documentation/PCI/00-INDEX      |    2 +
+> >  Documentation/PCI/acpi-info.txt |  136 +++++++++++++++++++++++++++++++=
+++++++++
+> >  2 files changed, 138 insertions(+)
+> >  create mode 100644 Documentation/PCI/acpi-info.txt
+> > =
+
+> > diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+> > index 147231f..0780280 100644
+> > --- a/Documentation/PCI/00-INDEX
+> > +++ b/Documentation/PCI/00-INDEX
+> > @@ -1,5 +1,7 @@
+> >  00-INDEX
+> >  	- this file
+> > +acpi-info.txt
+> > +	- info on how PCI host bridges are represented in ACPI
+> >  MSI-HOWTO.txt
+> >  	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
+> >  PCIEBUS-HOWTO.txt
+> > diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-i=
+nfo.txt
+> > new file mode 100644
+> > index 0000000..ccbcfda
+> > --- /dev/null
+> > +++ b/Documentation/PCI/acpi-info.txt
+> > @@ -0,0 +1,136 @@
+> > +	    ACPI considerations for PCI host bridges
+> > +
+> > +The basic requirement is that the ACPI namespace should describe
+> > +*everything* that consumes address space unless there's another
+> > +standard way for the OS to find it [1, 2]. =A0For example, windows that
+> > +are forwarded to PCI by a PCI host bridge should be described via ACPI
+> > +devices, since the OS can't locate the host bridge by itself. =A0PCI
+> > +devices *below* the host bridge do not need to be described via ACPI,
+> > +because the resources they consume are inside the host bridge windows,
+> > +and the OS can discover them via the standard PCI enumeration
+> > +mechanism (using config accesses to read and size the BARs).
+> > +
+> > +This ACPI resource description is done via _CRS methods of devices in
+> > +the ACPI namespace [2]. =A0 _CRS methods are like generalized PCI BARs:
+> > +the OS can read _CRS and figure out what resource is being consumed
+> > +even if it doesn't have a driver for the device [3]. =A0That's importa=
+nt
+> > +because it means an old OS can work correctly even on a system with
+> > +new devices unknown to the OS. =A0The new devices won't do anything, b=
+ut
+> > +the OS can at least make sure no resources conflict with them.
+> > +
+> > +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
+> > +reserving address space!  The static tables are for things the OS
+> > +needs to know early in boot, before it can parse the ACPI namespace.
+> > +If a new table is defined, an old OS needs to operate correctly even
+> > +though it ignores the table.  _CRS allows that because it is generic
+> > +and understood by the old OS; a static table does not.
+> =
+
+> The entire document doesn't talk about the details of _CBA.
+> There is only one line below mentioned _CBA as an example.
+
+Yes, that's a good point.  I'll add some more details about MCFG
+and _CBA.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
