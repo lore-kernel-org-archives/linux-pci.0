@@ -1,195 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:36560 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754159AbcKXBz2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 20:55:28 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+Received: from mail.kernel.org ([198.145.29.136]:57410 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755579AbcK2RZ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Nov 2016 12:25:27 -0500
+Date: Tue, 29 Nov 2016 11:25:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rob Herring <robh@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
         Wenrui Li <wenrui.li@rock-chips.com>,
         Brian Norris <briannorris@chromium.org>,
         Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 1/3] PCI: rockchip: split out rockchip_cfg_atu
-Date: Thu, 24 Nov 2016 09:54:20 +0800
-Message-Id: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [RESEND PATCH 2/2] PCI: rockchip: Add quirk to disable RC's ASPM
+ L0s
+Message-ID: <20161129172519.GA17112@bhelgaas-glaptop.roam.corp.google.com>
+References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
+ <1479096666-112668-2-git-send-email-shawn.lin@rock-chips.com>
+ <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We split out a new function, rockchip_cfg_atu, in order to
-re-configure the atu when missing these information after
-wakeup from S3.
+On Tue, Nov 29, 2016 at 09:34:09AM -0600, Rob Herring wrote:
+> On Sun, Nov 13, 2016 at 10:11 PM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> > Rockchip's RC outputs 100MHz reference clock but there are
+> > two methods for PHY to generate it.
+> >
+> > (1)One of them is to use system PLL to generate 100MHz clock and
+> > the PHY will relock it and filter signal noise then outputs the
+> > reference clock.
+> >
+> > (2)Another way is to share Soc's 24MHZ crystal oscillator with
+> > PHY and force PHY's DLL to generate 100MHz internally.
+> >
+> > When using case(2), the exit from L0s doesn't work fine occasionally
+> > due to the broken design of RC receiver's logical circuit. So even if
+> > we use extended-synch, it still fails for PHY to relock the bits from
+> > FTS sometimes. This will hang the system.
+> >
+> > Maybe we could argue that why not use case(1) to avoid it? The reason
+> > is that as we could see the reference clock is derived from system PLL
+> > and the path from it to PHY isn't so clean which means there are some
+> > noise introduced by power-domain and other buses can't be filterd out
+> > by PHY and we could see noise from the frequency spectrum by oscilloscope.
+> > This makes the TX compatibility test a little difficult to pass the spec.
+> > So case(1) and case(2) are both used indeed now. If using case(2), we
+> > should disable RC's L0s support, and that is why we need this property to
+> > indicate this quirk.
+> >
+> > Also after checking quirk.c, I noticed there is already a quirk for
+> > disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+> > shouldn't do that as mentioned above that case(1) could still works fine
+> > with L0s.
+> >
+> > Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > Cc: Brian Norris <briannorris@chromium.org>
+> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >
+> > ---
+> >
+> >  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+> >  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+> >  2 files changed, 11 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > index ba67b39..cfa44a7 100644
+> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > @@ -42,6 +42,8 @@ Required properties:
+> >  Optional Property:
+> >  - ep-gpios: contain the entry for pre-reset gpio
+> >  - num-lanes: number of lanes to use
+> > +- quirk,aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+> 
+> quirk is not a vendor. Drop it.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
-
-Changes in v3: None
-Changes in v2:
-- remove msg region support
-
- drivers/pci/host/pcie-rockchip.c | 104 +++++++++++++++++++++------------------
- 1 file changed, 55 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index b55037a..9cb84b1 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -210,6 +210,11 @@ struct rockchip_pcie {
- 	int	link_gen;
- 	struct	device *dev;
- 	struct	irq_domain *irq_domain;
-+	u32     io_size;
-+	int     offset;
-+	phys_addr_t io_bus_addr;
-+	u32     mem_size;
-+	phys_addr_t mem_bus_addr;
- };
- 
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-@@ -1149,6 +1154,50 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 	return 0;
- }
- 
-+static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
-+{
-+	int offset;
-+	int err;
-+	int reg_no;
-+
-+	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
-+		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
-+						AXI_WRAPPER_MEM_WRITE,
-+						20 - 1,
-+						rockchip->mem_bus_addr +
-+						(reg_no << 20),
-+						0);
-+		if (err) {
-+			dev_err(rockchip->dev,
-+					"program RC mem outbound ATU failed\n");
-+			return err;
-+		}
-+	}
-+
-+	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
-+	if (err) {
-+		dev_err(rockchip->dev, "program RC mem inbound ATU failed\n");
-+		return err;
-+	}
-+
-+	offset = rockchip->mem_size >> 20;
-+	for (reg_no = 0; reg_no < (rockchip->io_size >> 20); reg_no++) {
-+		err = rockchip_pcie_prog_ob_atu(rockchip,
-+						reg_no + 1 + offset,
-+						AXI_WRAPPER_IO_WRITE,
-+						20 - 1,
-+						rockchip->io_bus_addr +
-+						(reg_no << 20),
-+						0);
-+		if (err) {
-+			dev_err(rockchip->dev,
-+					"program RC io outbound ATU failed\n");
-+			return err;
-+		}
-+	}
-+
-+	return err;
-+}
- static int rockchip_pcie_probe(struct platform_device *pdev)
- {
- 	struct rockchip_pcie *rockchip;
-@@ -1158,13 +1207,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	resource_size_t io_base;
- 	struct resource	*mem;
- 	struct resource	*io;
--	phys_addr_t io_bus_addr = 0;
--	u32 io_size;
--	phys_addr_t mem_bus_addr = 0;
--	u32 mem_size = 0;
--	int reg_no;
- 	int err;
--	int offset;
- 
- 	LIST_HEAD(res);
- 
-@@ -1231,14 +1274,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		goto err_vpcie;
- 
- 	/* Get the I/O and memory ranges from DT */
--	io_size = 0;
- 	resource_list_for_each_entry(win, &res) {
- 		switch (resource_type(win->res)) {
- 		case IORESOURCE_IO:
- 			io = win->res;
- 			io->name = "I/O";
--			io_size = resource_size(io);
--			io_bus_addr = io->start - win->offset;
-+			rockchip->io_size = resource_size(io);
-+			rockchip->io_bus_addr = io->start - win->offset;
- 			err = pci_remap_iospace(io, io_base);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
-@@ -1249,8 +1291,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		case IORESOURCE_MEM:
- 			mem = win->res;
- 			mem->name = "MEM";
--			mem_size = resource_size(mem);
--			mem_bus_addr = mem->start - win->offset;
-+			rockchip->mem_size = resource_size(mem);
-+			rockchip->mem_bus_addr = mem->start - win->offset;
- 			break;
- 		case IORESOURCE_BUS:
- 			rockchip->root_bus_nr = win->res->start;
-@@ -1260,45 +1302,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	if (mem_size) {
--		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
--			err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
--							AXI_WRAPPER_MEM_WRITE,
--							20 - 1,
--							mem_bus_addr +
--							(reg_no << 20),
--							0);
--			if (err) {
--				dev_err(dev, "program RC mem outbound ATU failed\n");
--				goto err_vpcie;
--			}
--		}
--	}
--
--	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
--	if (err) {
--		dev_err(dev, "program RC mem inbound ATU failed\n");
-+	err = rockchip_cfg_atu(rockchip);
-+	if (err)
- 		goto err_vpcie;
--	}
--
--	offset = mem_size >> 20;
--
--	if (io_size) {
--		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
--			err = rockchip_pcie_prog_ob_atu(rockchip,
--							reg_no + 1 + offset,
--							AXI_WRAPPER_IO_WRITE,
--							20 - 1,
--							io_bus_addr +
--							(reg_no << 20),
--							0);
--			if (err) {
--				dev_err(dev, "program RC io outbound ATU failed\n");
--				goto err_vpcie;
--			}
--		}
--	}
--
- 	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
- 	if (!bus) {
- 		err = -ENOMEM;
--- 
-1.9.1
-
-
+I dropped this patch from pci/host-rockchip for now.
