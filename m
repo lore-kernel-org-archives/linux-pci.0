@@ -1,15 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 30 Nov 2016 12:04:25 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] ACPI: Ignore Consumer/Producer for QWord/DWord/Word
- Address Space
-Message-ID: <20161130120425.GA13765@red-moon>
-References: <20161129182415.7618.99129.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129184334.7618.5495.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Subject: Re: [PATCH v9 00/16] ACPI IORT ARM SMMU support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ iommu@lists.linux-foundation.org
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <af1d9b6c-1229-4e2c-918c-423ae5a48afd@linaro.org>
+Date: Tue, 29 Nov 2016 19:11:45 +0800
 MIME-Version: 1.0
-In-Reply-To: <20161129184334.7618.5495.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,82 +16,36 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linaro-acpi@lists.linaro.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
+ linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>,
+ Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 12:43:34PM -0600, Bjorn Helgaas wrote:
-> Per ACPI spec r6.0, sec 6.4.3.5.1, 2, 3, Bit [0] of General Flags (the
-> Consumer/Producer bit) should be ignored for QWord/DWord/Word Address Space
-> descriptors.  The Consumer/Producer bit is defined only for the Extended
-> Address Space descriptor.
-> 
-> Ignore Consumer/Producer except for Extended Address Space descriptors.
-> 
-> Note that for QWord/DWord/Word descriptors, we previously applied the
-> translation offset (_TRA) only when the Consumer/Producer bit was set.
+On 2016/11/21 18:01, Lorenzo Pieralisi wrote:
+> This patch series is v9 of a previous posting:
+>
+> https://lkml.org/lkml/2016/11/16/386
+>
+> v8 -> v9
+> 	- Updated bypass flag handling in ARM SMMU v3 according to
+> 	  reviews
+> 	- Removed SMMUv1/v2 configuration interrupt handling
+> 	- Rebased against v4.9-rc5
+> 	- Updated tags
 
-"..Consumer/Producer bit was clear" ? If that bit was set:
+I rebased on top of latest 4.9-rc7 (can apply cleanly), and tested on
+Hisilicon D03, the SMMUv3 works fine as previous version.
 
-struct acpi_resource_address->producer_consumer == ACPI_CONSUMER
-
-and we are not applying the _TRA offset in that case, right ?
-
-Thanks,
-Lorenzo
-
-> This patch changes that: for those descriptors, we ignore Consumer/Producer
-> and always apply the translation offset.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/acpi/resource.c |   16 +++++++++++-----
->  1 file changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 2732d39e..b45cd8f 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -261,11 +261,16 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->  	 * primary side. Non-bridge devices must list 0 for all Address
->  	 * Translation offset bits.
->  	 */
-> -	if (addr->producer_consumer == ACPI_PRODUCER)
-> +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64) {
-> +		if (addr->producer_consumer == ACPI_PRODUCER)
-> +			offset = attr->translation_offset;
-> +		else if (attr->translation_offset)
-> +			pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
-> +				 attr->translation_offset);
-> +	} else {
->  		offset = attr->translation_offset;
-> -	else if (attr->translation_offset)
-> -		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
-> -			 attr->translation_offset);
-> +	}
-> +
->  	start = attr->minimum + offset;
->  	end = attr->maximum + offset;
->  
-> @@ -294,7 +299,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->  		return false;
->  	}
->  
-> -	if (addr->producer_consumer == ACPI_PRODUCER)
-> +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64 &&
-> +	    addr->producer_consumer == ACPI_PRODUCER)
->  		res->flags |= IORESOURCE_WINDOW;
->  
->  	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Hanjun
 
 _______________________________________________
 linux-arm-kernel mailing list
