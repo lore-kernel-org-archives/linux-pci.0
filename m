@@ -1,262 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:32792 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750801AbcKYK5f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2016 05:57:35 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34479 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750846AbcK2FAw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 00:00:52 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT4wW65013969
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:00:51 -0500
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 270xsq9gxb-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 00:00:51 -0500
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 29 Nov 2016 15:00:48 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 737562BB0055
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:45 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uAT50jkc6619430
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:45 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uAT50iew000421
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 16:00:44 +1100
+Date: Tue, 29 Nov 2016 16:02:05 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: [PATCH v4 04/10] PCI: tegra: Use new pci_register_host_bridge() interface
-Date: Fri, 25 Nov 2016 11:57:12 +0100
-Message-Id: <20161125105718.3866-4-thierry.reding@gmail.com>
-In-Reply-To: <20161125105718.3866-1-thierry.reding@gmail.com>
-References: <20161125105718.3866-1-thierry.reding@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
+Subject: Re: [PATCH v4 5/7] PCI: Remove pci_resource_bar() and
+ pci_iov_resource_bar()
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041542.21453.14468.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161129041542.21453.14468.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161129050205.GA23115@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Mon, Nov 28, 2016 at 10:15:42PM -0600, Bjorn Helgaas wrote:
+>pci_std_update_resource() only deals with standard BARs, so we don't have
+>to worry about the complications of VF BARs in an SR-IOV capability.
+>
+>Compute the BAR address inline and remove pci_resource_bar().  That makes
+>pci_iov_resource_bar() unused, so remove that as well.
+>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Tegra is one of the remaining platforms that still use the traditional
-pci_common_init_dev() interface for probing PCI host bridges.
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-This demonstrates how to convert it to the pci_register_host interface
-I just added in a previous patch. This leads to a more linear probe
-sequence that can handle errors better because we avoid callbacks into
-the driver, and it makes the driver architecture independent.
-
-Changes in v4 (Thierry Reding):
-- update for changes in core to deal with driver-private data
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 105 ++++++++++++++++++++++---------------------
- 1 file changed, 54 insertions(+), 51 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 8dfccf733241..d5206fa53353 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -322,11 +322,6 @@ struct tegra_pcie_bus {
- 	unsigned int nr;
- };
- 
--static inline struct tegra_pcie *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- static inline void afi_writel(struct tegra_pcie *pcie, u32 value,
- 			      unsigned long offset)
- {
-@@ -430,7 +425,8 @@ static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
- 
- static int tegra_pcie_add_bus(struct pci_bus *bus)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
- 	struct tegra_pcie_bus *b;
- 
- 	b = tegra_pcie_bus_alloc(pcie, bus->number);
-@@ -444,7 +440,8 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
- 
- static void tegra_pcie_remove_bus(struct pci_bus *child)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(child->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(child);
-+	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
- 	struct tegra_pcie_bus *bus, *tmp;
- 
- 	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-@@ -461,7 +458,8 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 					unsigned int devfn,
- 					int where)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
- 	struct device *dev = pcie->dev;
- 	void __iomem *addr = NULL;
- 
-@@ -610,39 +608,31 @@ static void tegra_pcie_relax_enable(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- 
--static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
-+static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
- 	struct device *dev = pcie->dev;
- 	int err;
- 
--	sys->mem_offset = pcie->offset.mem;
--	sys->io_offset = pcie->offset.io;
-+	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
-+	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
-+	pci_add_resource_offset(windows, &pcie->prefetch, pcie->offset.mem);
-+	pci_add_resource(windows, &pcie->busn);
- 
--	err = devm_request_resource(dev, &iomem_resource, &pcie->io);
-+	err = devm_request_pci_bus_resources(dev, windows);
- 	if (err < 0)
- 		return err;
- 
--	err = pci_remap_iospace(&pcie->pio, pcie->io.start);
--	if (!err)
--		pci_add_resource_offset(&sys->resources, &pcie->pio,
--					sys->io_offset);
--
--	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
--	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
--				sys->mem_offset);
--	pci_add_resource(&sys->resources, &pcie->busn);
--
--	err = devm_request_pci_bus_resources(dev, &sys->resources);
--	if (err < 0)
--		return err;
-+	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
--	return 1;
-+	return 0;
- }
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-+	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
- 	int irq;
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
-@@ -1499,10 +1489,11 @@ static const struct irq_domain_ops msi_domain_ops = {
- 
- static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
--	struct platform_device *pdev = to_platform_device(dev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_msi *msi = &pcie->msi;
-+	struct device *dev = pcie->dev;
- 	unsigned long base;
- 	int err;
- 	u32 reg;
-@@ -1559,6 +1550,8 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 	reg |= AFI_INTR_MASK_MSI_MASK;
- 	afi_writel(pcie, reg, AFI_INTR_MASK);
- 
-+	host->msi = &msi->chip;
-+
- 	return 0;
- 
- err:
-@@ -2021,11 +2014,10 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
- 	return false;
- }
- 
--static int tegra_pcie_enable(struct tegra_pcie *pcie)
-+static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct tegra_pcie_port *port, *tmp;
--	struct hw_pci hw;
- 
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		dev_info(dev, "probing port %u, using %u lanes\n",
-@@ -2041,21 +2033,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 		tegra_pcie_port_disable(port);
- 		tegra_pcie_port_free(port);
- 	}
--
--	memset(&hw, 0, sizeof(hw));
--
--#ifdef CONFIG_PCI_MSI
--	hw.msi_ctrl = &pcie->msi.chip;
--#endif
--
--	hw.nr_controllers = 1;
--	hw.private_data = (void **)&pcie;
--	hw.setup = tegra_pcie_setup;
--	hw.map_irq = tegra_pcie_map_irq;
--	hw.ops = &tegra_pcie_ops;
--
--	pci_common_init_dev(dev, &hw);
--	return 0;
- }
- 
- static const struct tegra_pcie_soc tegra20_pcie = {
-@@ -2217,13 +2194,17 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- static int tegra_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct pci_host_bridge *host;
- 	struct tegra_pcie *pcie;
-+	struct pci_bus *child;
- 	int err;
- 
--	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
--	if (!pcie)
-+	host = pci_alloc_host_bridge(sizeof(*pcie));
-+	if (!host)
- 		return -ENOMEM;
- 
-+	pcie = pci_host_bridge_priv(host);
-+
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->buses);
- 	INIT_LIST_HEAD(&pcie->ports);
-@@ -2243,6 +2224,10 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		goto put_resources;
- 
-+	err = tegra_pcie_request_resources(pcie);
-+	if (err)
-+		goto put_resources;
-+
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
- 
-@@ -2254,12 +2239,30 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	err = tegra_pcie_enable(pcie);
-+	tegra_pcie_enable_ports(pcie);
-+
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-+	host->busnr = pcie->busn.start;
-+	host->dev.parent = &pdev->dev;
-+	host->ops = &tegra_pcie_ops;
-+
-+	err = pci_register_host_bridge(host);
- 	if (err < 0) {
--		dev_err(dev, "failed to enable PCIe ports: %d\n", err);
-+		dev_err(dev, "failed to register host: %d\n", err);
- 		goto disable_msi;
- 	}
- 
-+	pci_scan_child_bus(host->bus);
-+
-+	pci_fixup_irqs(pci_common_swizzle, tegra_pcie_map_irq);
-+	pci_bus_size_bridges(host->bus);
-+	pci_bus_assign_resources(host->bus);
-+
-+	list_for_each_entry(child, &host->bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	pci_bus_add_devices(host->bus);
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
- 		err = tegra_pcie_debugfs_init(pcie);
- 		if (err < 0)
--- 
-2.10.2
+>---
+> drivers/pci/iov.c       |   18 ------------------
+> drivers/pci/pci.c       |   30 ------------------------------
+> drivers/pci/pci.h       |    6 ------
+> drivers/pci/setup-res.c |   13 +++++++------
+> 4 files changed, 7 insertions(+), 60 deletions(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index a800ba2..c9c84ba 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -554,24 +554,6 @@ void pci_iov_release(struct pci_dev *dev)
+> }
+>
+> /**
+>- * pci_iov_resource_bar - get position of the SR-IOV BAR
+>- * @dev: the PCI device
+>- * @resno: the resource number
+>- *
+>- * Returns position of the BAR encapsulated in the SR-IOV capability.
+>- */
+>-int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>-{
+>-	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
+>-		return 0;
+>-
+>-	BUG_ON(!dev->is_physfn);
+>-
+>-	return dev->sriov->pos + PCI_SRIOV_BAR +
+>-		4 * (resno - PCI_IOV_RESOURCES);
+>-}
+>-
+>-/**
+>  * pci_iov_update_resource - update a VF BAR
+>  * @dev: the PCI device
+>  * @resno: the resource number
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index 631eac2..ec3f16d 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -4827,36 +4827,6 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags)
+> }
+> EXPORT_SYMBOL(pci_select_bars);
+>
+>-/**
+>- * pci_resource_bar - get position of the BAR associated with a resource
+>- * @dev: the PCI device
+>- * @resno: the resource number
+>- * @type: the BAR type to be filled in
+>- *
+>- * Returns BAR position in config space, or 0 if the BAR is invalid.
+>- */
+>-int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+>-{
+>-	int reg;
+>-
+>-	if (resno < PCI_ROM_RESOURCE) {
+>-		*type = pci_bar_unknown;
+>-		return PCI_BASE_ADDRESS_0 + 4 * resno;
+>-	} else if (resno == PCI_ROM_RESOURCE) {
+>-		*type = pci_bar_mem32;
+>-		return dev->rom_base_reg;
+>-	} else if (resno < PCI_BRIDGE_RESOURCES) {
+>-		/* device specific resource */
+>-		*type = pci_bar_unknown;
+>-		reg = pci_iov_resource_bar(dev, resno);
+>-		if (reg)
+>-			return reg;
+>-	}
+>-
+>-	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
+>-	return 0;
+>-}
+>-
+> /* Some architectures require additional programming to enable VGA */
+> static arch_set_vga_state_t arch_set_vga_state;
+>
+>diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>index 5bfcb92..a5d37f6 100644
+>--- a/drivers/pci/pci.h
+>+++ b/drivers/pci/pci.h
+>@@ -245,7 +245,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> int pci_setup_device(struct pci_dev *dev);
+> int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+> 		    struct resource *res, unsigned int reg);
+>-int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+> void pci_configure_ari(struct pci_dev *dev);
+> void __pci_bus_size_bridges(struct pci_bus *bus,
+> 			struct list_head *realloc_head);
+>@@ -289,7 +288,6 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+> #ifdef CONFIG_PCI_IOV
+> int pci_iov_init(struct pci_dev *dev);
+> void pci_iov_release(struct pci_dev *dev);
+>-int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+> void pci_iov_update_resource(struct pci_dev *dev, int resno);
+> resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+> void pci_restore_iov_state(struct pci_dev *dev);
+>@@ -304,10 +302,6 @@ static inline void pci_iov_release(struct pci_dev *dev)
+>
+> {
+> }
+>-static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>-{
+>-	return 0;
+>-}
+> static inline void pci_restore_iov_state(struct pci_dev *dev)
+> {
+> }
+>diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>index ee0be34..09bdff7 100644
+>--- a/drivers/pci/setup-res.c
+>+++ b/drivers/pci/setup-res.c
+>@@ -32,7 +32,6 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+> 	u16 cmd;
+> 	u32 new, check, mask;
+> 	int reg;
+>-	enum pci_bar_type type;
+> 	struct resource *res = dev->resource + resno;
+>
+> 	/* Per SR-IOV spec 3.4.1.11, VF BARs are RO zero */
+>@@ -65,14 +64,16 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+> 	else
+> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>
+>-	reg = pci_resource_bar(dev, resno, &type);
+>-	if (!reg)
+>-		return;
+>-	if (type != pci_bar_unknown) {
+>+	if (resno < PCI_ROM_RESOURCE) {
+>+		reg = PCI_BASE_ADDRESS_0 + 4 * resno;
+>+	} else if (resno == PCI_ROM_RESOURCE) {
+> 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
+> 			return;
+>+
+>+		reg = dev->rom_base_reg;
+> 		new |= PCI_ROM_ADDRESS_ENABLE;
+>-	}
+>+	} else
+>+		return;
+>
+> 	/*
+> 	 * We can't update a 64-bit BAR atomically, so when possible,
+>
 
