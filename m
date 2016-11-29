@@ -1,46 +1,84 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
- <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
- <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <99d136d7-6bce-5faf-c4a9-ba55808c167d@codeaurora.org>
-Date: Fri, 11 Nov 2016 20:11:19 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57027 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751758AbcK2XYl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 18:24:41 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uATNO8Cu087530
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 18:24:40 -0500
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 271gckr4qa-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2016 18:24:40 -0500
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Wed, 30 Nov 2016 09:24:38 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8F1682BB0057
+        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id uATNOZiv50593894
+        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id uATNOZJe023971
+        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2016 10:24:35 +1100
+Date: Wed, 30 Nov 2016 10:25:58 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH] PCI: Increase VPD access timeout
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Message-Id: <20161129232558.GA14170@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/2016 3:58 PM, Bjorn Helgaas wrote:
->> I should have checked the capability here before trying to enable it. 
->> > I'll post a follow up patch on this. 
->> > 
->> > Is there any other feedback?
-> If this were completely safe to enable for every device that supported
-> it, why would there be an enable bit in Device Control?
+On Tue, Nov 29, 2016 at 12:00:40PM -0600, Matthew R. Ochs wrote:
+>The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
+>complete. When an access does not complete within this period, a warning
+>is logged and an error returned to the caller.
+>
+>While this default timeout is valid for most hardware, some devices can
+>experience longer access delays under certain circumstances. For example,
+>one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
+>scenario. These types of devices can benefit from an extended timeout.
+>
+>To support devices with a longer access delay, increase the timeout in
+>pci_vpd_wait() to 125ms. The PCI specification is silent with respect to
+>VPD delays, therefore there is no concern for violating a threshold.
+>
+>Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-reading from the ECN here.
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
+>---
+> drivers/pci/access.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>index d11cdbb..61b5a6b 100644
+>--- a/drivers/pci/access.c
+>+++ b/drivers/pci/access.c
+>@@ -355,7 +355,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+> static int pci_vpd_wait(struct pci_dev *dev)
+> {
+> 	struct pci_vpd *vpd = dev->vpd;
+>-	unsigned long timeout = jiffies + msecs_to_jiffies(50);
+>+	unsigned long timeout = jiffies + msecs_to_jiffies(125);
+> 	unsigned long max_sleep = 16;
+> 	u16 status;
+> 	int ret;
+>-- 
+>2.1.0
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The initial value is implementation specific and functions are allowed
-to set it to 1 by default.
-
-> 
-> I don't know anything about extended tags, but it worries me a little
-> when there's a "go-fast" switch and no explanation about when and why
-> we might need to go slo
-
-Based on my observation, extended tags increase the number of reads that
-can be queued up back to back downstream. Otherwise, the requests will not
-make progress until 1 tag out of 32 gets available.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
