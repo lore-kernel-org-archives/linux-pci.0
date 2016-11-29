@@ -1,113 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 3 Nov 2016 09:00:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: cov@codeaurora.org, Tomasz Nowicki <tn@semihalf.com>,
-        will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
-        jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-        wangyijing@huawei.com, msalter@redhat.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-Message-ID: <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
- <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36044 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932199AbcK2EPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Nov 2016 23:15:17 -0500
+Subject: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
+ updates
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: clsoto@us.ibm.com, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        mpe@ellerman.id.au
+Date: Mon, 28 Nov 2016 22:15:06 -0600
+Message-ID: <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 02, 2016 at 12:36:16PM -0400, Sinan Kaya wrote:
-> Hi Bjorn,
-> 
-> On 11/2/2016 12:08 PM, Bjorn Helgaas wrote:
-> > On Tue, Nov 01, 2016 at 07:06:31AM -0600, cov@codeaurora.org wrote:
-> >> Hi Bjorn,
-> >>
-> >> On 2016-10-31 15:48, Bjorn Helgaas wrote:
-> >>> On Wed, Sep 21, 2016 at 06:38:05PM -0400, Christopher Covington wrote:
-> >>>> The Qualcomm Technologies QDF2432 SoC does not support accesses
-> >>>> smaller
-> >>>> than 32 bits to the PCI configuration space. Register the appropriate
-> >>>> quirk.
-> >>>>
-> >>>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> >>>
-> >>> Hi Christopher,
-> >>>
-> >>> Can you rebase this against v4.9-rc1?  It no longer applies to my tree.
-> >>
-> >> I apologize for not being clearer. This patch depends on:
-> >>
-> >> PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
-> >> PCI/ACPI: Check platform-specific ECAM quirks
-> >>
-> >> These patches from Tomasz Nowicki were previously in your pci/ecam-v6
-> >> branch, but that seems to have come and gone. How would you like to
-> >> proceed?
-> > 
-> > Oh yes, that's right, I forgot that connection.  I'm afraid I kind of
-> > dropped the ball on that thread, so I went back and read through it
-> > again.
-> > 
-> > I *think* the current state is:
-> > 
-> >   - I'm OK with the first two patches that add the quirk
-> >     infrastructure.
-> > 
-> >   - My issue with the last three patches that add ThunderX quirks is
-> >     that there's no generic description of the ECAM address space.
-> > 
-> > So if I understand correctly, your Qualcomm patch depends only on the
-> > first two patches.
-> > 
-> > Then the question is how the Qualcomm ECAM address space is described.
-> > Your quirk overrides the default pci_generic_ecam_ops with the
-> > &pci_32b_ops, but it doesn't touch the address space part, so I assume
-> > the bus ranges and corresponding address space in your MCFG is
-> > correct.  So far, so good.
-> 
-> Qualcomm ECAM space includes both the root port and the endpoint address
-> space with a single contiguous 256 MB address space described in MCFG table.
-> There is no need to describe additional resources like PNP0C02.
+Previously pci_update_resource() used the same code path for updating
+standard BARs and VF BARs in SR-IOV capabilities.
 
-This is the crucial point I have failed to communicate clearly: the
-PNP0C02 resource is *always* required, even if the MCFG is correct.
+Split the VF BAR update into a new pci_iov_update_resource() internal
+interface, which makes it simpler to compute the BAR address (we can get
+rid of pci_resource_bar() and pci_iov_resource_bar()).
 
-The reason is that MCFG is a PCI-specific table, and it should be
-possible to boot a kernel with no PCI support.  That kernel will not
-look at the MCFG.  The PCI hardware will still be present and will
-still consume the ECAM space, so the OS must be able to discover that
-the ECAM space is not available for other devices.
+This patch:
 
-The usual way to for the OS to discover that would be via the _CRS of
-a PNP0A03 or PNP0A08 host bridge device.  _CRS is what I mean by a
-"generic" way to describe this address space, because the ACPI core
-can interpret _CRS for all ACPI devices, even if the kernel doesn't
-contain drivers for all of those devices.
+  - Renames pci_update_resource() to pci_std_update_resource(),
+  - Adds pci_iov_update_resource(),
+  - Makes pci_update_resource() a wrapper that calls the appropriate one,
 
-It turns out that we can't use the _CRS of host bridges because of the
-Producer/Consumer bit screwup [1].  So the fallback is to include the
-ECAM space in the _CRS of a PNP0C02 device.  This is what the PCI
-Firmware spec r3.0, Table 4-2, footnote 2 is talking about.
+No functional change intended.
 
-Bjorn
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c       |   49 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    1 +
+ drivers/pci/setup-res.c |   13 +++++++++++-
+ 3 files changed, 61 insertions(+), 2 deletions(-)
 
-[1] The original ACPI spec intent was that Consumer resources would be
-space like ECAM that is consumed directly by the bridge, and Producer
-resources would be the windows forwarded down to PCI.  But BIOSes
-didn't use the Producer/Consumer bit consistently, so we have to
-assume that all resources in host bridge _CRS are windows, which
-leaves us no way to describe the Consumer resources.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index d41ec29..d00ed5c 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -571,6 +571,55 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+ 
++/**
++ * pci_iov_update_resource - update a VF BAR
++ * @dev: the PCI device
++ * @resno: the resource number
++ *
++ * Update a VF BAR in the SR-IOV capability of a PF.
++ */
++void pci_iov_update_resource(struct pci_dev *dev, int resno)
++{
++	struct pci_sriov *iov = dev->is_physfn ? dev->sriov : NULL;
++	struct resource *res = dev->resource + resno;
++	int vf_bar = resno - PCI_IOV_RESOURCES;
++	struct pci_bus_region region;
++	u32 new;
++	int reg;
++
++	/*
++	 * The generic pci_restore_bars() path calls this for all devices,
++	 * including VFs and non-SR-IOV devices.  If this is not a PF, we
++	 * have nothing to do.
++	 */
++	if (!iov)
++		return;
++
++	/*
++	 * Ignore unimplemented BARs, unused resource slots for 64-bit
++	 * BARs, and non-movable resources, e.g., those described via
++	 * Enhanced Allocation.
++	 */
++	if (!res->flags)
++		return;
++
++	if (res->flags & IORESOURCE_UNSET)
++		return;
++
++	if (res->flags & IORESOURCE_PCI_FIXED)
++		return;
++
++	pcibios_resource_to_bus(dev->bus, &region, res);
++	new = region.start;
++
++	reg = iov->pos + PCI_SRIOV_BAR + 4 * vf_bar;
++	pci_write_config_dword(dev, reg, new);
++	if (res->flags & IORESOURCE_MEM_64) {
++		new = region.start >> 16 >> 16;
++		pci_write_config_dword(dev, reg + 4, new);
++	}
++}
++
+ resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
+ 						      int resno)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..5bfcb92 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -290,6 +290,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+ int pci_iov_init(struct pci_dev *dev);
+ void pci_iov_release(struct pci_dev *dev);
+ int pci_iov_resource_bar(struct pci_dev *dev, int resno);
++void pci_iov_update_resource(struct pci_dev *dev, int resno);
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index d2a32d8..ee0be34 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -25,8 +25,7 @@
+ #include <linux/slab.h>
+ #include "pci.h"
+ 
+-
+-void pci_update_resource(struct pci_dev *dev, int resno)
++static void pci_std_update_resource(struct pci_dev *dev, int resno)
+ {
+ 	struct pci_bus_region region;
+ 	bool disable;
+@@ -109,6 +108,16 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 		pci_write_config_word(dev, PCI_COMMAND, cmd);
+ }
+ 
++void pci_update_resource(struct pci_dev *dev, int resno)
++{
++	if (resno <= PCI_ROM_RESOURCE)
++		pci_std_update_resource(dev, resno);
++#ifdef CONFIG_PCI_IOV
++	else if (resno >= PCI_IOV_RESOURCES && resno < PCI_IOV_RESOURCE_END)
++		pci_iov_update_resource(dev, resno);
++#endif
++}
++
+ int pci_claim_resource(struct pci_dev *dev, int resource)
+ {
+ 	struct resource *res = &dev->resource[resource];
+
