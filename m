@@ -1,71 +1,103 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 18 Nov 2016 11:54:04 -0600
+Date: Tue, 29 Nov 2016 17:40:39 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161118175404.GI25762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F921A88@lhreml507-mbx>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, cov@codeaurora.org, dhdang@apm.com,
+        Liviu.Dudau@arm.com, msalter@redhat.com, wangyijing@huawei.com,
+        jchandra@broadcom.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        ddaney@caviumnetworks.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        jcm@redhat.com, jhugo@codeaurora.org
+Subject: Re: [PATCH V6 1/1] ARM64/PCI: Manage controller-specific information
+ on the host controller basis
+Message-ID: <20161129234039.GB7375@bhelgaas-glaptop.roam.corp.google.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1479985523-10006-1-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F921A88@lhreml507-mbx>
+In-Reply-To: <1479985523-10006-1-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 05:17:34PM +0000, Gabriele Paoloni wrote:
-> > -----Original Message-----
-> > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> > Sent: 17 November 2016 18:00
-
-> > +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-> > +reserving address space!  The static tables are for things the OS
-> > +needs to know early in boot, before it can parse the ACPI namespace.
-> > +If a new table is defined, an old OS needs to operate correctly even
-> > +though it ignores the table.  _CRS allows that because it is generic
-> > +and understood by the old OS; a static table does not.
+On Thu, Nov 24, 2016 at 12:05:23PM +0100, Tomasz Nowicki wrote:
+> Currently we use one shared global acpi_pci_root_ops structure to keep
+> controller-specific ops. Then its pointer is passed to acpi_pci_root_create()
+> and associated with host bridge instance for good. Such design implies
+> serious drawback. Any potential manipulation on the single system-wide
+> acpi_pci_root_ops leads to kernel crash. The structure content is not
+> really changing even across multiple host bridges creation thus it was not
+> the issue so far.
 > 
-> Right so if my understanding is correct you are saying that resources
-> described in the MCFG table should also be declared in PNP0C02 devices
-> so that the PNP driver can reserve these resources.
-
-Yes.
-
-> On the other side the PCI Root bridge driver should not reserve such
-> resources.
+> In preparation for adding ECAM quirks mechanism (where controller-specific
+> PCI ops may be different for each host bridge) allocate new
+> acpi_pci_root_ops and fill in with data for each bridge. Now it is safe
+> to have different controller-specific info. As a consequence free
+> acpi_pci_root_ops when host bridge is released.
 > 
-> Well if my understanding is correct I think we have a problem here:
-> http://lxr.free-electrons.com/source/drivers/pci/ecam.c#L74
+> No functional changes in this patch.
 > 
-> As you can see pci_ecam_create() will conflict with the pnp driver
-> as it will try to reserve the resources from the MCFG table...
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+
+Applied to pci/ecam for v4.10, thanks, Tomasz!
+
+> ---
+>  arch/arm64/kernel/pci.c | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
 > 
-> Maybe we need to rework pci_ecam_create() ?
-
-I think it's OK as it is.
-
-The pnp/system.c driver does try to reserve PNP0C02 resources, and it
-marks them as "not busy".  That way they appear in /proc/iomem and
-won't be allocated for anything else, but they can still be requested
-by drivers, e.g., pci/ecam.c, which will mark them "busy".
-
-This is analogous to what the PCI core does in pci_claim_resource().
-This is really a function of the ACPI/PNP *core*, which should reserve
-all _CRS resources for all devices (not just PNP0C02 devices).  But
-it's done by pnp/system.c, and only for PNP0C02, because there's a
-bunch of historical baggage there.
-
-You'll also notice that in this case, things are out of order:
-logically the pnp/system.c reservation should happen first, but in
-fact the pci/ecam.c request happens *before* the pnp/system.c one.
-That means the pnp/system.c one might fail and complain "[mem ...]
-could not be reserved".
-
-Bjorn
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index fb439c7..5c08baf 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -152,33 +152,36 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+>  
+>  	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
+>  	pci_ecam_free(ri->cfg);
+> +	kfree(ci->ops);
+>  	kfree(ri);
+>  }
+>  
+> -static struct acpi_pci_root_ops acpi_pci_root_ops = {
+> -	.release_info = pci_acpi_generic_release_info,
+> -};
+> -
+>  /* Interface called from ACPI code to setup PCI host controller */
+>  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  {
+>  	int node = acpi_get_node(root->device->handle);
+>  	struct acpi_pci_generic_root_info *ri;
+>  	struct pci_bus *bus, *child;
+> +	struct acpi_pci_root_ops *root_ops;
+>  
+>  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+>  	if (!ri)
+>  		return NULL;
+>  
+> +	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
+> +	if (!root_ops)
+> +		return NULL;
+> +
+>  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+>  	if (!ri->cfg) {
+>  		kfree(ri);
+> +		kfree(root_ops);
+>  		return NULL;
+>  	}
+>  
+> -	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
+> -	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
+> -				   ri->cfg);
+> +	root_ops->release_info = pci_acpi_generic_release_info;
+> +	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
+> +	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+>  	if (!bus)
+>  		return NULL;
+>  
+> -- 
+> 2.7.4
+> 
