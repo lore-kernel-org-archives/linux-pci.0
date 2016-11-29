@@ -1,92 +1,57 @@
-Return-Path: <julia.lawall@lip6.fr>
-Return-Path: <julia.lawall@lip6.fr>
-Date: Mon, 14 Nov 2016 22:52:04 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>, kernel-janitors@vger.kernel.org,
-    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 13/15] PCI/ASPM: use permission-specific DEVICE_ATTR
- variants
-In-Reply-To: <20161114214037.GE9868@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1611142250491.2065@hadrien>
-References: <1477769829-22230-1-git-send-email-Julia.Lawall@lip6.fr> <1477769829-22230-14-git-send-email-Julia.Lawall@lip6.fr> <20161114214037.GE9868@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v9 08/16] drivers: acpi: iort: add node match function
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ iommu@lists.linux-foundation.org
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+ <20161121100148.24769-9-lorenzo.pieralisi@arm.com>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <07ed6a31-c791-8832-530c-42ac58806848@linaro.org>
+Date: Tue, 29 Nov 2016 20:14:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20161121100148.24769-9-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-acpi@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+ Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Eric Auger <eric.auger@redhat.com>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>,
+ Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Mon, 14 Nov 2016, Bjorn Helgaas wrote:
-
-> On Sat, Oct 29, 2016 at 09:37:07PM +0200, Julia Lawall wrote:
-> > Use DEVICE_ATTR_RW for read-write attributes.  This simplifies the
-> > source code, improves readbility, and reduces the chance of
-> > inconsistencies.
-> >
-> > The semantic patch that makes this change is as follows:
-> > (http://coccinelle.lip6.fr/)
-> >
-> > // <smpl>
-> > @rw@
-> > declarer name DEVICE_ATTR;
-> > identifier x,x_show,x_store;
-> > @@
-> >
-> > DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-> >
-> > @script:ocaml@
-> > x << rw.x;
-> > x_show << rw.x_show;
-> > x_store << rw.x_store;
-> > @@
-> >
-> > if not (x^"_show" = x_show && x^"_store" = x_store)
-> > then Coccilib.include_match false
-> >
-> > @@
-> > declarer name DEVICE_ATTR_RW;
-> > identifier rw.x,rw.x_show,rw.x_store;
-> > @@
-> >
-> > - DEVICE_ATTR(x, \(0644\|S_IRUGO|S_IWUSR\), x_show, x_store);
-> > + DEVICE_ATTR_RW(x);
-> > // </smpl>
-> >
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+On 2016/11/21 18:01, Lorenzo Pieralisi wrote:
+> Device drivers (eg ARM SMMU) need to know if a specific component
+> is part of the IORT table, so that kernel data structures are not
+> initialized at initcalls time if the respective component is not
+> part of the IORT table.
 >
-> I applied this to pci/aspm to follow the herd, although it looks
-> pretty similar to the ill-fated "Replace numeric parameter like 0444
-> with macro" series (http://lwn.net/Articles/696229/).  Maybe this is
-> different because everybody except me knows what ATTR_RW means?  To
-> me, "0644" contained more information than "_RW" does.
+> To this end, this patch adds a trivial function that allows detecting
+> if a given IORT node type is present or not in the ACPI table, providing
+> an ACPI IORT equivalent for of_find_matching_node().
 >
-> I do certainly like the removal of the "_show" and "_store"
-> redundancy.
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
 
-I think that the point is the latter.  There were also a couple of cases
-where the permissions didn't match with the set of provided functions.
+Acked-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-julia
+Thanks
+Hanjun
 
->
-> > ---
-> >  drivers/pci/pcie/aspm.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > index 0ec649d..3b14d9e 100644
-> > --- a/drivers/pci/pcie/aspm.c
-> > +++ b/drivers/pci/pcie/aspm.c
-> > @@ -886,8 +886,8 @@ static ssize_t clk_ctl_store(struct device *dev,
-> >  	return n;
-> >  }
-> >
-> > -static DEVICE_ATTR(link_state, 0644, link_state_show, link_state_store);
-> > -static DEVICE_ATTR(clk_ctl, 0644, clk_ctl_show, clk_ctl_store);
-> > +static DEVICE_ATTR_RW(link_state);
-> > +static DEVICE_ATTR_RW(clk_ctl);
-> >
-> >  static char power_group[] = "power";
-> >  void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
-> >
->
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
