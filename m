@@ -1,102 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39508 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:32778 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752158AbcKJSzY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Nov 2016 13:55:24 -0500
-Subject: [PATCH] PCI: pciehp: Check for PCIe capabilities change after resume
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
-        Len Brown <lenb@kernel.org>
-Date: Thu, 10 Nov 2016 12:55:20 -0600
-Message-ID: <20161110185520.19461.9789.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1755466AbcK3AGg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Nov 2016 19:06:36 -0500
+Date: Tue, 29 Nov 2016 18:06:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, clsoto@us.ibm.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
+Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
+ updates
+Message-ID: <20161130000605.GC7375@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129045546.GB20642@gwshan>
+ <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129232028.GA8143@gwshan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161129232028.GA8143@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Len Brown reported that resume on a Dell XPS11 laptop takes longer than it
-should.  The delay is caused by pciehp scanning for a device below a Root
-Port that has nothing connected to it.
+On Wed, Nov 30, 2016 at 10:20:28AM +1100, Gavin Shan wrote:
+> On Tue, Nov 29, 2016 at 08:48:26AM -0600, Bjorn Helgaas wrote:
+> >On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
+> >> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
+> >> >Previously pci_update_resource() used the same code path for updating
+> >> >standard BARs and VF BARs in SR-IOV capabilities.
+> >> >
+> >> >Split the VF BAR update into a new pci_iov_update_resource() internal
+> >> >interface, which makes it simpler to compute the BAR address (we can get
+> >> >rid of pci_resource_bar() and pci_iov_resource_bar()).
+> >> >
+> >> >This patch:
+> >> >
+> >> >  - Renames pci_update_resource() to pci_std_update_resource(),
+> >> >  - Adds pci_iov_update_resource(),
+> >> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
+> >> >
+> >> >No functional change intended.
 
-At boot-time, the 00:1c.0 Root Port's PCI Express Capabilities Register
-(PCIe spec r3.0, sec 7.8.2) advertises a slot (PCI_EXP_FLAGS_SLOT is set),
-so pciehp claims the port.
+> >However, I don't think this code in pci_update_resource() is obviously
+> >correct:
+> >
+> >  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+> >
+> >PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
+> >property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
+> >part of the address, so on the face of it, the above could corrupt two
+> >bits of an I/O address.
+> >
+> >It's true that decode_bar() initializes flags correctly, using
+> >PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
+> >for memory BARs, but it would take a little more digging to be sure
+> >that we never set bits 2-3 of flags for an I/O resource elsewhere.
+> >
+> 
+> The BAR's property bits are probed from device-tree, not hardware
+> on some platforms (e.g. pSeries). Also, there is only one (property)
+> bit if it's a ROM BAR. So more check as below might be needed because
+> the code (without the enhancement) should also work fine.
 
-At resume-time, PCI_EXP_FLAGS_SLOT is clear, so the Root Port no longer
-advertises a slot.  But pciehp doesn't notice that change, and it reads
-Slot Status to see if anything changed.  Slot Status says a device is
-present (Ports not connected to slots are required to report "Card Present"
-per sec 7.8.11), so pciehp tries to bring up the link and scan for the
-device, which accounts for the delay.
+Ah, right, I forgot about that.  I didn't do enough digging :)
 
-Per sec 7.8.2, the PCIe Capabilities Register is all read-only, so I
-think the fact that it changes between boot- and resume-time is a
-firmware defect.
+> >How about this in pci_std_update_resource():
+> >
+> >        pcibios_resource_to_bus(dev->bus, &region, res);
+> >        new = region.start;
+> >
+> >        if (res->flags & IORESOURCE_IO) {
+> >                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+> >                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+> >        } else {
+> >                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+> >                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+> >        }
+> >
+> 
+> 	if (res->flags & IORESOURCE_IO) {
+> 		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+> 		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+> 	} else if (resno < PCI_ROM_RESOURCE) {
+> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+> 		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+> 	} else if (resno == PCI_ROM_RESOURCE) {
+> 		mask = ~((u32)IORESOURCE_ROM_ENABLE);
+> 		new |= res->flags & IORESOURCE_ROM_ENABLE);
+> 	} else {
+> 		dev_warn(&dev->dev, "BAR#%d out of range\n", resno);
+> 		return;
+> 	}
 
-Work around this by re-reading the Capabilites at resume-time and updating
-the cached copy in pci_dev->pcie_flags_reg.  Then stop using pciehp on the
-port if it no longer advertises a slot.
+After this patch, the only thing we OR into a ROM BAR value is
+PCI_ROM_ADDRESS_ENABLE, and that's done below, only if the ROM is
+already enabled.
 
-Reported-and-tested-by: Len Brown <lenb@kernel.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=99751
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_core.c |   10 ++++++++++
- drivers/pci/pci-driver.c          |   13 +++++++++++++
- 2 files changed, 23 insertions(+)
+I did update the ROM mask (to PCI_ROM_ADDRESS_MASK).  I'm not 100%
+sure about doing that -- it follows the spec, but it is a change from
+what we've been doing before.  I guess it should be safe because it
+means we're checking fewer bits than before (only the top 21 bits for
+ROMs, where we used check the top 28), so the only possible difference
+is that we might not warn about "error updating" in some case where we
+used to.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 7d32fa33..f5461cb 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -278,6 +278,9 @@ static void pciehp_remove(struct pcie_device *dev)
- {
- 	struct controller *ctrl = get_service_data(dev);
- 
-+	if (!ctrl)
-+		return;
-+
- 	cleanup_slot(ctrl);
- 	pciehp_release_ctrl(ctrl);
- }
-@@ -296,6 +299,13 @@ static int pciehp_resume(struct pcie_device *dev)
- 
- 	ctrl = get_service_data(dev);
- 
-+	if (!(pcie_caps_reg(dev->port) & PCI_EXP_FLAGS_SLOT)) {
-+		dev_info(&dev->port->dev, "No longer supports hotplug\n");
-+		pciehp_remove(dev);
-+		set_service_data(dev, NULL);
-+		return 0;
-+	}
-+
- 	/* reinitialize the chipset's event detection logic */
- 	pcie_enable_notification(ctrl);
- 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 1ccce1c..fe8e964 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -505,7 +505,20 @@ static int pci_restore_standard_config(struct pci_dev *pci_dev)
- 
- static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
- {
-+	u16 flags;
-+
- 	pci_power_up(pci_dev);
-+
-+	if (pci_dev->pcie_cap) {
-+		pci_read_config_word(pci_dev, pci_dev->pcie_cap + PCI_EXP_FLAGS,
-+				     &flags);
-+		if (pci_dev->pcie_flags_reg != flags) {
-+			dev_info(&pci_dev->dev, "PCIe Capabilities was %#06x, is %#06x after resume (possible firmware defect)\n",
-+				 pci_dev->pcie_flags_reg, flags);
-+			pci_dev->pcie_flags_reg = flags;
-+		}
-+	}
-+
- 	pci_restore_state(pci_dev);
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
- }
+I'm not really sure about the value of the "error updating" checks to
+begin with, though I guess it does help us find broken devices that
+put non-BARs where BARs are supposed to be.
 
+Bjorn
