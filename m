@@ -1,191 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50912 "EHLO mail.kernel.org"
+Received: from mail.kapsi.fi ([217.30.184.167]:59114 "EHLO mail.kapsi.fi"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752903AbcKWBGL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Nov 2016 20:06:11 -0500
-Date: Tue, 22 Nov 2016 19:06:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161123010600.GF4832@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161117175938.17465.45820.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_xW+7KAC8fHquEwHynYzpy6OoO1ZjEm5mVKMo1S8j4Nw@mail.gmail.com>
+        id S1754166AbcK3Tij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Nov 2016 14:38:39 -0500
+Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
+To: Vidya Sagar <vidyas@nvidia.com>,
+        Thierry Reding <thierry.reding@gmail.com>
+References: <20161125105718.3866-1-thierry.reding@gmail.com>
+ <20161125105718.3866-10-thierry.reding@gmail.com>
+ <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
+ <20161130174840.GB20246@ulmo.ba.sec>
+ <13197e02-a83a-c9d8-13fa-7b21f664a12c@kapsi.fi>
+ <20161130181409.GA29576@ulmo.ba.sec>
+ <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <3e8b2b5b-d779-4b3e-65f9-49ce0dcd796c@kapsi.fi>
+Date: Wed, 30 Nov 2016 21:38:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAKv+Gu_xW+7KAC8fHquEwHynYzpy6OoO1ZjEm5mVKMo1S8j4Nw@mail.gmail.com>
+In-Reply-To: <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 10:09:50AM +0000, Ard Biesheuvel wrote:
-> On 17 November 2016 at 17:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
+It would seem that it is 64-capable based on lspci and code in the 
+driver. Looks like the memory that is allocated is coming from below 4G 
+as well.
 
-> > +PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-> > +describe all the address space they consume.  In principle, this would
-> > +be all the windows they forward down to the PCI bus, as well as the
-> > +bridge registers themselves.  The bridge registers include things like
-> > +secondary/subordinate bus registers that determine the bus range below
-> > +the bridge, window registers that describe the apertures, etc.  These
-> > +are all device-specific, non-architected things, so the only way a
-> > +PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which
-> > +contain the device-specific details.  These bridge registers also
-> > +include ECAM space, since it is consumed by the bridge.
-> > +
-> > +ACPI defined a Producer/Consumer bit that was intended to distinguish
-> > +the bridge apertures from the bridge registers [4, 5].  However,
-> > +BIOSes didn't use that bit correctly, and the result is that OSes have
-> > +to assume that everything in a PCI host bridge _CRS is a window.  That
-> > +leaves no way to describe the bridge registers in the PNP0A03/PNP0A08
-> > +device itself.
-> 
-> Is that universally true? Or is it still possible to do the right
-> thing here on new ACPI architectures such as arm64?
-
-That's a very good question.  I had thought that the ACPI spec had
-given up on Consumer/Producer completely, but I was wrong.  In the 6.0
-spec, the Consumer/Producer bit is still documented in the Extended
-Address Space Descriptor (sec 6.4.3.5.4).  It is documented as
-"ignored" in the QWord, DWord, and Word descriptors (sec 6.4.3.5.1,2,3).
-
-Linux looks at the producer_consumer bit in acpi_decode_space(), which
-I think is used for all these descriptors (QWord, DWord, Word, and
-Extended).  This doesn't quite follow the spec -- we probably should
-ignore it except for Extended.  In any event, acpi_decode_space() sets
-IORESOURCE_WINDOW for Producer descriptors, but we don't test
-IORESOURCE_WINDOW in the PCI host bridge code.
-
-x86 and ia64 supply their own pci_acpi_root_prepare_resources()
-functions that call acpi_pci_probe_root_resources(), which parses _CRS
-and looks at producer_consumer.  Then they do a little arch-specific
-stuff on the result.
-
-On arm64 we use acpi_pci_probe_root_resources() directly, with no
-arch-specific stuff.
-
-On all three arches, we ignore the Consumer/Producer bit, so all the
-resources are treated as Producers, e.g., as bridge windows.
-
-I think we *could* implement an arm64 version of
-pci_acpi_root_prepare_resources() that would pay attention to the
-Consumer/Producer bit by checking IORESOURCE_WINDOW.  To be spec
-compliant, we would have to use Extended descriptors for all bridge
-windows, even if they would fit in a DWord or QWord.
-
-Should we do that?  I dunno.  I'd like to hear your opinion(s).
-
-It *would* be nice to have bridge registers in the bridge _CRS.  That
-would eliminate the need for looking up the HISI0081/PNP0C02 devices
-to find the bridge registers.  Avoiding that lookup is only a
-temporary advantage -- the next round of bridges are supposed to fully
-implement ECAM, and then we won't need to know where the registers
-are.
-
-Apart from the lookup, there's still some advantage in describing the
-registers in the PNP0A03 device instead of an unrelated PNP0C02
-device, because it makes /proc/iomem more accurate and potentially
-makes host bridge hotplug cleaner.  We would have to enhance the host
-bridge driver to do the reservations currently done by pnp/system.c.
-
-There's some value in doing it the same way as on x86, even though
-that way is somewhat broken.
-
-Whatever we decide, I think it's very important to get it figured out
-ASAP because it affects the ECAM quirks that we're trying to merge in
-v4.10.
-
-> > +The workaround is to describe the bridge registers (including ECAM
-> > +space) in PNP0C02 catch-all devices [6].  With the exception of ECAM,
-> > +the bridge register space is device-specific anyway, so the generic
-> > +PNP0A03/PNP0A08 driver (pci_root.c) has no need to know about it.  For
-> > +ECAM, pci_root.c learns about the space from either MCFG or the _CBA
-> > +method.
-> > +
-> > +Note that the PCIe spec actually does require ECAM unless there's a
-> > +standard firmware interface for config access, e.g., the ia64 SAL
-> > +interface [7].  One reason is that we want a generic host bridge
-> > +driver (pci_root.c), and a generic driver requires a generic way to
-> > +access config space.
-> > +
-> > +
-> > +[1] ACPI 6.0, sec 6.1:
-> > +    For any device that is on a non-enumerable type of bus (for
-> > +    example, an ISA bus), OSPM enumerates the devices' identifier(s)
-> > +    and the ACPI system firmware must supply an _HID object ... for
-> > +    each device to enable OSPM to do that.
-> > +
-> > +[2] ACPI 6.0, sec 3.7:
-> > +    The OS enumerates motherboard devices simply by reading through
-> > +    the ACPI Namespace looking for devices with hardware IDs.
-> > +
-> > +    Each device enumerated by ACPI includes ACPI-defined objects in
-> > +    the ACPI Namespace that report the hardware resources the device
-> > +    could occupy [_PRS], an object that reports the resources that are
-> > +    currently used by the device [_CRS], and objects for configuring
-> > +    those resources [_SRS].  The information is used by the Plug and
-> > +    Play OS (OSPM) to configure the devices.
-> > +
-> > +[3] ACPI 6.0, sec 6.2:
-> > +    OSPM uses device configuration objects to configure hardware
-> > +    resources for devices enumerated via ACPI.  Device configuration
-> > +    objects provide information about current and possible resource
-> > +    requirements, the relationship between shared resources, and
-> > +    methods for configuring hardware resources.
-> > +
-> > +    When OSPM enumerates a device, it calls _PRS to determine the
-> > +    resource requirements of the device.  It may also call _CRS to
-> > +    find the current resource settings for the device.  Using this
-> > +    information, the Plug and Play system determines what resources
-> > +    the device should consume and sets those resources by calling the
-> > +    device’s _SRS control method.
-> > +
-> > +    In ACPI, devices can consume resources (for example, legacy
-> > +    keyboards), provide resources (for example, a proprietary PCI
-> > +    bridge), or do both.  Unless otherwise specified, resources for a
-> > +    device are assumed to be taken from the nearest matching resource
-> > +    above the device in the device hierarchy.
-> > +
-> > +[4] ACPI 6.0, sec 6.4.3.5.4:
-> > +    Extended Address Space Descriptor
-> > +    General Flags: Bit [0] Consumer/Producer:
-> > +       1–This device consumes this resource
-> > +       0–This device produces and consumes this resource
-> > +
-> > +[5] ACPI 6.0, sec 19.6.43:
-> > +    ResourceUsage specifies whether the Memory range is consumed by
-> > +    this device (ResourceConsumer) or passed on to child devices
-> > +    (ResourceProducer).  If nothing is specified, then
-> > +    ResourceConsumer is assumed.
-> > +
-> > +[6] PCI Firmware 3.0, sec 4.1.2:
-> > +    If the operating system does not natively comprehend reserving the
-> > +    MMCFG region, the MMCFG region must be reserved by firmware.  The
-> > +    address range reported in the MCFG table or by _CBA method (see
-> > +    Section 4.1.3) must be reserved by declaring a motherboard
-> > +    resource.  For most systems, the motherboard resource would appear
-> > +    at the root of the ACPI namespace (under \_SB) in a node with a
-> > +    _HID of EISAID (PNP0C02), and the resources in this case should
-> > +    not be claimed in the root PCI bus’s _CRS.  The resources can
-> > +    optionally be returned in Int15 E820 or EFIGetMemoryMap as
-> > +    reserved memory but must always be reported through ACPI as a
-> > +    motherboard resource.
-> > +
-> > +[7] PCI Express 3.0, sec 7.2.2:
-> > +    For systems that are PC-compatible, or that do not implement a
-> > +    processor-architecture-specific firmware interface standard that
-> > +    allows access to the Configuration Space, the ECAM is required as
-> > +    defined in this section.
-> >
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 11/30/2016 08:39 PM, Vidya Sagar wrote:
+> Is it possible that, this NIC card's DMA is only 32-bit capable (can be
+> confirmed from lspci -vv output) and since SMMU is disabled, allocated
+> memory's physical address happen to fall beyond 0xFFFF_FFFF region, so,
+>>32-bits are stripped off by DMA controller of NIC, resulting in
+> accesses to random addresses?
+>
+>
+> On Wednesday 30 November 2016 11:44 PM, Thierry Reding wrote:
+>> * PGP Signed by an unknown key
+>>
+>> On Wed, Nov 30, 2016 at 08:06:45PM +0200, Mikko Perttunen wrote:
+>>> On 11/30/2016 07:48 PM, Thierry Reding wrote:
+>>>> On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
+>>>>> Testing this series with a Jetson TX1 + r8168e PCI-E card, it /almost/
+>>>>> works.. Relevant parts of bootlog:
+>>>>>
+>>>>> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1
+>>>>> configuration
+>>>>> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0,
+>>>>> using 4
+>>>>> lanes
+>>>>> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin
+>>>>> change,
+>>>>> signature: 00000008
+>>>>> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1,
+>>>>> using 1
+>>>>> lanes
+>>>>> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin
+>>>>> change,
+>>>>> signature: 00000000
+>>>>> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>> retrying
+>>>>> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>> retrying
+>>>>> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>> retrying
+>>>>> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>> ignoring
+>>>>> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge
+>>>>> to bus
+>>>>> 0000:00
+>>>>> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>>>> [    3.217343] pci_bus 0000:00: root bus resource [mem
+>>>>> 0x13000000-0x1fffffff]
+>>>>> [    3.224218] pci_bus 0000:00: root bus resource [mem
+>>>>> 0x20000000-0x3fffffff
+>>>>> pref]
+>>>>> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>>>> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus
+>>>>> 00-00]),
+>>>>> reconfiguring
+>>>>> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
+>>>>> 0x13000000-0x130fffff]
+>>>>> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem
+>>>>> 0x20000000-0x200fffff
+>>>>> 64bit pref]
+>>>>> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
+>>>>> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem
+>>>>> 0x20000000-0x20003fff
+>>>>> 64bit pref]
+>>>>> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem
+>>>>> 0x13000000-0x13000fff
+>>>>> 64bit]
+>>>>> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>>>>> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
+>>>>> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
+>>>>> [    3.307666] pci 0000:00:01.0:   bridge window [mem
+>>>>> 0x13000000-0x130fffff]
+>>>>> [    3.314454] pci 0000:00:01.0:   bridge window [mem
+>>>>> 0x20000000-0x200fffff
+>>>>> 64bit pref]
+>>>>> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate
+>>>>> host
+>>>>> bridge
+>>>>> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
+>>>>> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
+>>>>> interrupt
+>>>>> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME
+>>>>> interrupt
+>>>>> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+>>>>> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
+>>>>> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
+>>>>> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
+>>>>> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames:
+>>>>> 9200 bytes,
+>>>>> tx checksumming: ko]
+>>>>>
+>>>>> then
+>>>>>
+>>>>> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
+>>>>> @0x000000007a484000: EMEM address decode error (EMEM decode error)
+>>>>> [    3.717747] r8169 0000:01:00.0 eth0: link down
+>>>> Hmm... that's very odd. It seems like for some reason the PCIe
+>>>> controller wants to access memory that's below the DRAM. Do you happen
+>>>> to have the SMMU enabled for PCIe? Can you try adding some debug prints
+>>>> to the networking driver to find out where this address is coming from?
+>>> SMMU is disabled; I'll try adding debug prints. The behavior
+>>> certainly looks
+>>> pretty strange.
+>> Maybe you can also find out if at any point in the above the driver is
+>> actually accessing the I/O ports. I don't think we've ever tested that
+>> particular part very much.
+>>
+>> I seem to be using a very similar card to yours, which makes it all the
+>> more surprising that it isn't working for you.
+>>
+>> Thierry
+>>
+>> * Unknown Key
+>> * 0x7F3EB3A1
+>
