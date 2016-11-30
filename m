@@ -1,63 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42170 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:60549 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933949AbcKIPHr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Nov 2016 10:07:47 -0500
-Date: Wed, 9 Nov 2016 08:07:46 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Adi Menachem <adim@mellanox.com>
-Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-Message-ID: <20161109080746.24dd79dd@t450s.home>
-In-Reply-To: <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161106100832.41e173d5@t450s.home>
-        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        id S932758AbcK3QYJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Nov 2016 11:24:09 -0500
+Date: Wed, 30 Nov 2016 09:23:53 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Haggai Eran <haggaie@mellanox.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <John.Bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <Alexander.Deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "logang@deltatee.com" <logang@deltatee.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <Paul.Blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161130162353.GA24639@obsidianresearch.com>
+References: <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <1480357179.19407.13.camel@mellanox.com>
+ <20161128190244.GA21975@obsidianresearch.com>
+ <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 9 Nov 2016 14:49:02 +0000
-Ilya Lesokhin <ilyal@mellanox.com> wrote:
+On Wed, Nov 30, 2016 at 12:45:58PM +0200, Haggai Eran wrote:
 
-> I would virtualize the "ATS Control Register".
+> > That just forces applications to handle horrible unexpected
+> > failures. If this sort of thing is needed for correctness then OOM
+> > kill the offending process, don't corrupt its operation.
 
-And do what?
+> Yes, that sounds fine. Can we simply kill the process from the GPU driver?
+> Or do we need to extend the OOM killer to manage GPU pages?
 
-> Regarding poor behavior, I couldn't really find what happens when ATS is misconfigured, but I would assume it can cause problems.
-> The scenarios I'm concerned about are:
-> 	1. The guest enables translation caching, while the hypervisor thinks there are disabled -> Hypervisor won't issue invalidations.
+I don't know..
 
-Aren't invalidations issued by the iommu, why does the hypervisor need
-to participate?  How would a software entity induce an invalidation?
-
-> 	2. Smallest Translation Unit misconfiguration. Not sure if it will cause invalid access or only poor caching behavior.
-> 
-> Thanks,
-> Ilya
-> 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Sunday, November 06, 2016 7:09 PM
-> > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com
-> > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+> >>> From what I understand we are not really talking about kernel p2p,
+> >>> everything proposed so far is being mediated by a userspace VMA, so
+> >>> I'd focus on making that work.
 > > 
-> > On Sun, 6 Nov 2016 11:13:09 +0000
-> > Ilya Lesokhin <ilyal@mellanox.com> wrote:
-> >   
-> > > Hi
-> > > I've noticed that VFIO doesn't virtualize the ATS capability.
-> > > It seems to me that translation caching and Smallest Translation Unit is  
-> > something you would want to control on the host. Am I wrong?
+> >> Fair enough, although we will need both eventually, and I hope the
+> >> infrastructure can be shared to some degree.
 > > 
-> > What about those fields would we virtualize?  Why does the host need to be
-> > an intermediary?  Can the user induce poor behavior with direct access to
-> > them?  Thanks,
-> > 
-> > Alex  
+> > What use case do you see for in kernel?
 
+> Two cases I can think of are RDMA access to an NVMe device's controller
+> memory buffer,
+
+I'm not sure on the use model there..
+
+> and O_DIRECT operations that access GPU memory.
+
+This goes through user space so there is still a VMA..
+
+> Also, HMM's migration between two GPUs could use peer to peer in the
+> kernel, although that is intended to be handled by the GPU driver if
+> I understand correctly.
+
+Hum, presumably these migrations are VMA backed as well...
+
+> > Presumably in-kernel could use a vmap or something and the same basic
+> > flow?
+> I think we can achieve the kernel's needs with ZONE_DEVICE and DMA-API support
+> for peer to peer. I'm not sure we need vmap. We need a way to have a scatterlist
+> of MMIO pfns, and ZONE_DEVICE allows that.
+
+Well, if there is no virtual map then we are back to how do you do
+migrations and other things people seem to want to do on these
+pages. Maybe the loose 'struct page' flow is not for those users.
+
+But I think if you want kGPU or similar then you probably need vmaps
+or something similar to represent the GPU pages in kernel memory.
+
+Jason
