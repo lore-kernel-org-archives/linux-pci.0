@@ -1,126 +1,77 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Fri, 11 Nov 2016 16:49:19 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	Chen Yu <yu.c.chen@intel.com>
-Subject: Re: [PATCH] PCI: pciehp: Check for PCIe capabilities change after
- resume
-Message-ID: <20161111154919.GA8484@wunner.de>
-References: <20161110185520.19461.9789.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161110231808.GA8155@wunner.de>
- <20161111002448.GC12055@bhelgaas-glaptop.roam.corp.google.com>
- <20161111064417.GA8178@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0069.outbound.protection.outlook.com ([104.47.34.69]:12384
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1758464AbcK3R3C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Nov 2016 12:29:02 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Haggai Eran <haggaie@mellanox.com>
+References: <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <1480357179.19407.13.camel@mellanox.com>
+ <20161128190244.GA21975@obsidianresearch.com>
+ <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+ <20161130162353.GA24639@obsidianresearch.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <John.Bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <Alexander.Deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "logang@deltatee.com" <logang@deltatee.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Paul.Blinzer@amd.com" <Paul.Blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <2560aab2-426c-6e58-cb4f-77ec76e0c941@amd.com>
+Date: Wed, 30 Nov 2016 12:28:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161111064417.GA8178@wunner.de>
+In-Reply-To: <20161130162353.GA24639@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 11, 2016 at 07:44:17AM +0100, Lukas Wunner wrote:
-> On Thu, Nov 10, 2016 at 06:24:48PM -0600, Bjorn Helgaas wrote:
-> > On Fri, Nov 11, 2016 at 12:18:08AM +0100, Lukas Wunner wrote:
-> > > On Thu, Nov 10, 2016 at 12:55:20PM -0600, Bjorn Helgaas wrote:
-> > > > Len Brown reported that resume on a Dell XPS11 laptop takes longer than it
-> > > > should.  The delay is caused by pciehp scanning for a device below a Root
-> > > > Port that has nothing connected to it.
-> > > > 
-> > > > At boot-time, the 00:1c.0 Root Port's PCI Express Capabilities Register
-> > > > (PCIe spec r3.0, sec 7.8.2) advertises a slot (PCI_EXP_FLAGS_SLOT is set),
-> > > > so pciehp claims the port.
-> > > > 
-> > > > At resume-time, PCI_EXP_FLAGS_SLOT is clear, so the Root Port no longer
-> > > > advertises a slot.  But pciehp doesn't notice that change, and it reads
-> > > > Slot Status to see if anything changed.  Slot Status says a device is
-> > > > present (Ports not connected to slots are required to report "Card Present"
-> > > > per sec 7.8.11), so pciehp tries to bring up the link and scan for the
-> > > > device, which accounts for the delay.
-> > > > 
-> > > > Per sec 7.8.2, the PCIe Capabilities Register is all read-only, so I
-> > > > think the fact that it changes between boot- and resume-time is a
-> > > > firmware defect.
-> > > > 
-> > > > Work around this by re-reading the Capabilites at resume-time and updating
-> > > > the cached copy in pci_dev->pcie_flags_reg.  Then stop using pciehp on the
-> > > > port if it no longer advertises a slot.
-> > > > 
-> > > > Reported-and-tested-by: Len Brown <lenb@kernel.org>
-> > > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=99751
-> > > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > ---
-> [snip]
-> > > > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > > > index 1ccce1c..fe8e964 100644
-> > > > --- a/drivers/pci/pci-driver.c
-> > > > +++ b/drivers/pci/pci-driver.c
-> > > > @@ -505,7 +505,20 @@ static int pci_restore_standard_config(struct pci_dev *pci_dev)
-> > > >  
-> > > >  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
-> > > >  {
-> > > > +	u16 flags;
-> > > > +
-> > > >  	pci_power_up(pci_dev);
-> > > > +
-> > > > +	if (pci_dev->pcie_cap) {
-> > > > +		pci_read_config_word(pci_dev, pci_dev->pcie_cap + PCI_EXP_FLAGS,
-> > > > +				     &flags);
-> > > > +		if (pci_dev->pcie_flags_reg != flags) {
-> > > > +			dev_info(&pci_dev->dev, "PCIe Capabilities was %#06x, is %#06x after resume (possible firmware defect)\n",
-> > > > +				 pci_dev->pcie_flags_reg, flags);
-> > > > +			pci_dev->pcie_flags_reg = flags;
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > 
-> > > Is there a reason that this must happen at ->resume_noirq time rather than
-> > > ->resume time?
-> > 
-> > PM is black magic to me.  I put it here because Rafael said
-> > pci_power_up() is called for every PCI device during resume.  Possibly
-> > another location would make more sense (please suggest one, if so).
-> 
-> I think Rajat Jain had the right idea to put this in a quirk.
-> A port losing the slot capability over system sleep seems like
-> a total anomaly and nothing that we should need to worry about
-> in regular PCI code.
-> 
-> By setting the is_hotplug_bridge to false, pciehp can be prevented
-> from binding to this port in the first place.
-> 
-> That quirk needs to be executed after is_hotplug_bridge is set
-> and before pciehp_resume() is called for the first time. This
-> simple one-liner might already be sufficient, there's already a
-> quirk_hotplug_bridge() function in quirks.c, this could go right
-> next to it:
-> 
-> 
-> /*
->  * Intel Haswell-ULT root port 1 loses slot capability over system sleep,
->  * causing pciehp to fail on resume.
->  */
-> static void quirk_no_hotplug_bridge(struct pci_dev *dev)
-> {
-> 	dev->is_hotplug_bridge = 0;
-> }
-> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9c10, quirk_no_hotplug_bridge);
+On 2016-11-30 11:23 AM, Jason Gunthorpe wrote:
+>> Yes, that sounds fine. Can we simply kill the process from the GPU driver?
+>> Or do we need to extend the OOM killer to manage GPU pages?
+> I don't know..
+We could use send_sig_info to send signal from  kernel  to user space. 
+So theoretically GPU driver
+could issue KILL signal to some process.
 
-I've sent out the above before reading all of the bugzilla comments.
-Len Brown and Yinghai Lu confirm there that it's a silicon bug.
+> On Wed, Nov 30, 2016 at 12:45:58PM +0200, Haggai Eran wrote:
+>> I think we can achieve the kernel's needs with ZONE_DEVICE and DMA-API support
+>> for peer to peer. I'm not sure we need vmap. We need a way to have a scatterlist
+>> of MMIO pfns, and ZONE_DEVICE allows that.
+I do not think that using DMA-API as it is is the best solution (at 
+least in the current form):
 
-It also occured to me that this closely resembles the issue Chen Yu
-was working on regarding failing poweroff on 2015 MacBook Pros:
-That was caused by the exact same root port (00:1c.0) claiming to
-be a hotplug port and Chen Yu's solution was identical to what
-I've suggested above.  The root port in that case had device ID
-0x8c10, the above has 0x9c10.  Both are Lynx Point chipsets
-(meant to be used with Haswell CPUs):
-https://lkml.org/lkml/2016/8/19/248
+-  It deals with handles/fd for the whole allocation but client 
+could/will use sub-allocation as
+well as theoretically possible to "merge" several allocations in one 
+from GPU perspective.
+-  It require knowledge to export but because "sharing" is controlled 
+from user space it
+means that we must "export" all allocation by default
+- It deals with 'fd'/handles but user application may work with 
+addresses/pointers.
 
-It would be great if both (apparently related) issues could be
-fixed in one go, and this looks like stable material to me.
-Adding Chen Yu to cc.
-
-Thanks!
-
-Lukas
+Also current  DMA-API force each time to do all DMA table programming 
+unrelated if
+location was changed or not. With  vma / mmu  we are  able to install 
+notifier to intercept
+changes in location and update  translation tables only as needed (we do 
+not need to keep
+get_user_pages()  lock).
