@@ -1,60 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 30 Nov 2016 10:17:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161130161730.GB13411@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAADWXX_ipJ+pVmV5s2oLCKBrC5qUDASOZf=tpBfJWELExam+hQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sydney.tw.diodes.com ([59.125.111.90]:58743 "EHLO tw.diodes.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751382AbcK3IFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Nov 2016 03:05:16 -0500
+From: JC Chen/PTP <JC_Chen@tw.diodes.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: Packet Switch enumeration issue on Linux Kernel 4.2
+Date: Wed, 30 Nov 2016 07:56:46 +0000
+Message-ID: <F5ED019E51574C48AA1A2552407ABC1F028AF693F8@PTLMail2010.pericom.com>
+References: <F5ED019E51574C48AA1A2552407ABC1F02831E891B@PTLMail2010.pericom.com>
+ <CAErSpo4us2Mippa2bdyTSbXFT-UoREpN+C=w5mffjHuy=FFnpw@mail.gmail.com>
+In-Reply-To: <CAErSpo4us2Mippa2bdyTSbXFT-UoREpN+C=w5mffjHuy=FFnpw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAADWXX_ipJ+pVmV5s2oLCKBrC5qUDASOZf=tpBfJWELExam+hQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
- Duc Dang <dhdang@apm.com>, lkml <linux-kernel@vger.kernel.org>,
- linaro-acpi@lists.linaro.org,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Lv Zheng <lv.zheng@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 03:39:11PM -0800, Linus Torvalds wrote:
-> Bjorn, this email was marked as spam, because:
-> 
->   It has a from address in google.com but has failed google.com's
-> required tests for authentication
-> 
-> in particular, it looks like you used a non-google smtp server
-> (kernel.org) to send the email, so there is no DKIM hash (or perhaps
-> google just uses some other non-standard marker for "this actually
-> came from google"). So gmail marks it as spam because dmarc fails:
-> 
->        dmarc=fail (p=REJECT dis=NONE) header.from=google.com
-> 
-> Just to let you know. If you use your google.com email, you do need to
-> go through the google smtp server.
-> 
-> This may or may not be new - I didn't go and look at old messages of
-> yours, but it is possible that google.com enabled dmarc/dkim recently.
-
-Argh, thanks for letting me know.  Looks like I've had this broken for a
-long time, but I didn't notice.  I think I have it fixed so git will record
-the author as bhelgaas@google.com, but git/stgit will send email from
-helgaas@kernel.org via the kernel.org smtp server.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgQmpvcm4sDQoNCkkgY3JlYXRlIHRoZSBidWcgcmVwb3J0Lg0KDQpodHRwczovL2J1Z3ppbGxh
+Lmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTE4OTM2MQ0KDQoNClRoYW5rcywNCkpDDQoNCi0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86Ymhl
+bGdhYXNAZ29vZ2xlLmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDMwLCAyMDE2IDEx
+OjE5IEFNDQpUbzogSkMgQ2hlbi9QVFANClN1YmplY3Q6IFJlOiBQYWNrZXQgU3dpdGNoIGVudW1l
+cmF0aW9uIGlzc3VlIG9uIExpbnV4IEtlcm5lbCA0LjINCg0KT24gVHVlLCBOb3YgMjksIDIwMTYg
+YXQgODoyMCBQTSwgSkMgQ2hlbi9QVFAgPEpDX0NoZW5AdHcuZGlvZGVzLmNvbT4gd3JvdGU6DQo+
+IEhpIEJqb3JuLA0KPg0KPg0KPg0KPiBXZSBoYXZlIHR3byBwcm9kdWN0cywgb25lIGlzIFBDSS10
+by1QQ0llIHJldmVyc2UgYnJpZGdlICg5eDExMSwgDQo+IGlkPTB4MTJkOGUxMTEpLCBhbmQgYW5v
+dGhlciBvbmUgaXMgUENJZSBwYWNrZXQgc3dpdGNoICgyRzgwOCwgDQo+IGlkPTEyZDg4NjA4LCBp
+dCBpbmNsdWRlcyBvbmUgdXAgcG9ydCBhbmQgNyBkb3duIHBvcnRzKS4gV2hlbiBJIHBsdWdnZWQg
+DQo+IDl4MTExKzJHODA4K29uZSBwY2llIHdpZmkgY2FyZCBvbiBMaW51eCBLZXJuZWwgMy4xOSwg
+d2lmaSBjYXJkIGNhbiANCj4gd29yayBmaW5lLiBIb3dldmVyLCBpZiB1c2UgdGhlIHNhbWUgaGFy
+ZHdhcmUgYXJjaC4sIGJ1dCBMaW51eCBrZXJuZWwgDQo+IGlzIHVwZ3JhZGVkIHRvIDQuMiB2ZXJz
+aW9uLCB3aWZpIGNhcmQgY2FuIG5vdCB3b3JrIGZpbmUuIEFmdGVyIGNoZWNrLCANCj4gSSBmb3Vu
+ZCB0aGF0IDcgZG93biBwb3J0cyBhcmUgZGlzYXBwZWFyZWQsIGFuZCB3aWZp4oCZcyByZXNvdXJj
+ZSBpcyANCj4gY2xlYXIgKGNmZyBvZmZzZXQgMTBoIGlzIGNsZWFyKS4gV2l0aG91dCByZXNvdXJj
+ZXMsIHdpZmkgY2FyZCBjYW4gbm90IHdvcmsgbm9ybWFsbHkuDQo+DQo+DQo+DQo+IEZyb20gdGhl
+IGtlcm5lbCBkdW1wIChyZWZlciB0byBhdHRhY2hlZCBmaWxlKSwNCj4NCj4gWyAgICAwLjE3MzQy
+MV0gcGNpIDAwMDA6MDE6MDAuMDogWzEyZDg6ZTExMV0gdHlwZSAwMSBjbGFzcyAweDA2MDQwMCA9
+PiA5eDExMQ0KPiByZXZlcnNlIGJyaWRnZSBpcyBmb3VuZA0KPg0KPiBbICAgIDAuMTc0MTk1XSBw
+Y2kgMDAwMDowMjowMC4wOiBbMTJkODo4NjA4XSB0eXBlIDAxIGNsYXNzIDB4MDYwNDAwID0+IHVw
+DQo+IHBvcnQgb2YgMkc4MDhQUiBpcyBmb3VuZA0KPg0KPg0KPg0KPiBCdXQgSSBjYW4gbm90IGZp
+bmQgNyBkb3duIHBvcnRzLiBUaGV5IHNob3VsZCBiZSBvbiBCdXMgMzowMS4wLCAzOjA0LjAsIA0K
+PiAzOjA1LjAsIDM6MDYuMCwgMzowNy4wLCAzOjA4LjAgYW5kIDM6MDkuMC4gQnV0LCBJIGNhbiBu
+b3Qgc2VlIGl0IGZyb20gDQo+IGtlcm5lbCBkdW1wLiBDb3VsZCB5b3UgaGVscCB0byBkZWJ1ZyB0
+aGlzIGlzc3VlPw0KDQpTdXJlLiAgQ2FuIHlvdSBwbGVhc2UgdHJ5IGEgY3VycmVudCBrZXJuZWws
+IGlkZWFsbHkgdjQuOS1yYzcsIGJ1dCBhdCBsZWFzdCB2NC44Pw0KDQpJZiB0aGUgcHJvYmxlbSBz
+dGlsbCBleGlzdHMgaW4gYSBjdXJyZW50IGtlcm5lbCwgY2FuIHlvdSBwbGVhc2Ugb3BlbiBhIGJ1
+ZyByZXBvcnQgYXQgaHR0cDovL2J1Z3ppbGxhLmtlcm5lbC5vcmcsIG1hcmsgaXQgYXMgYSByZWdy
+ZXNzaW9uLCBhdHRhY2ggdGhlIGNvbXBsZXRlIGRtZXNnIGxvZ3MgZnJvbSAzLjE5IGFuZCA0LjIs
+IGFuZCBhdHRhY2ggdGhlIG91dHB1dCBvZiAibHNwY2kgLXZ2IiBvbiAzLjE5Pw0KDQpUaGVuIHNl
+bmQgbWUgbWFpbCB3aXRoIGEgbGluayB0byB0aGUgYnVnIHJlcG9ydCwgYW5kIGNvcHkgYXMgd2Vs
+bD8NCg0KVGhhdCB3YXkgd2UgY2FuIHRyYWNrIHRoZSByZWdyZXNzaW9uLCBhbmQgb3RoZXJzIGNh
+biBoZWxwIGRlYnVnIGl0Lg0KDQpJdCdzIGxpa2VseSB0aGF0IHdlIGNhbiBkZWJ1ZyBpdCBmcm9t
+IHRoYXQgaW5mb3JtYXRpb24sIGJ1dCBpZiB5b3Ugd2FudCB0byBiaXNlY3QgaXQgdG8gYSBzcGVj
+aWZpYyBjb21taXQgdGhhdCBicm9rZSBpdCwgdGhhdCB3b3VsZCBtYWtlIGl0IGV2ZW4gZWFzaWVy
+Lg0KDQpCam9ybg0K
