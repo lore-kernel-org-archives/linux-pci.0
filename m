@@ -1,62 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0048.outbound.protection.outlook.com ([104.47.40.48]:41967
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934194AbcKXJpj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Nov 2016 04:45:39 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
-CC: Logan Gunthorpe <logang@deltatee.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
-Date: Thu, 24 Nov 2016 10:45:18 +0100
+Received: from smtp-out6.electric.net ([192.162.217.194]:62315 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756301AbcK3SPL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2016 13:15:11 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: "clsoto@us.ibm.com" <clsoto@us.ibm.com>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v4 4/7] PCI: Don't update VF BARs while VF memory space
+ is enabled
+Date: Wed, 30 Nov 2016 17:56:05 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB02307B5@AcuExch.aculab.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161129041521.21453.33146.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20161123232503.GA13965@obsidianresearch.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 24.11.2016 um 00:25 schrieb Jason Gunthorpe:
-> There is certainly nothing about the hardware that cares
-> about ZONE_DEVICE vs System memory.
-Well that is clearly not so simple. When your ZONE_DEVICE pages describe 
-a PCI BAR and another PCI device initiates a DMA to this address the DMA 
-subsystem must be able to check if the interconnection really works.
-
-E.g. it can happen that PCI device A exports it's BAR using ZONE_DEVICE. 
-Not PCI device B (a SATA device) can directly read/write to it because 
-it is on the same bus segment, but PCI device C (a network card for 
-example) can't because it is on a different bus segment and the bridge 
-can't handle P2P transactions.
-
-We need to be able to handle such cases and fall back to bouncing 
-buffers, but I don't see that in the DMA subsystem right now.
-
-Regards,
-Christian.
+RnJvbTogQmpvcm4gSGVsZ2Fhcw0KPiBTZW50OiAyOSBOb3ZlbWJlciAyMDE2IDA0OjE1DQo+IElm
+IHdlIHVwZGF0ZSBhIFZGIEJBUiB3aGlsZSBpdCdzIGVuYWJsZWQsIHRoZXJlIGFyZSB0d28gcG90
+ZW50aWFsIHByb2JsZW1zOg0KPiANCj4gICAxKSBBbnkgZHJpdmVyIHRoYXQncyB1c2luZyB0aGUg
+VkYgaGFzIGEgY2FjaGVkIEJBUiB2YWx1ZSB0aGF0IGlzIHN0YWxlDQo+ICAgICAgYWZ0ZXIgdGhl
+IHVwZGF0ZSwgYW5kDQo+IA0KPiAgIDIpIFdlIGNhbid0IHVwZGF0ZSA2NC1iaXQgQkFScyBhdG9t
+aWNhbGx5LCBzbyB0aGUgaW50ZXJtZWRpYXRlIHN0YXRlDQo+ICAgICAgKG5ldyBsb3dlciBkd29y
+ZCB3aXRoIG9sZCB1cHBlciBkd29yZCkgbWF5IGNvbmZsaWN0IHdpdGggYW5vdGhlcg0KPiAgICAg
+IGRldmljZSwgYW5kIGFuIGFjY2VzcyBieSBhIGRyaXZlciB1bnJlbGF0ZWQgdG8gdGhlIFZGIG1h
+eSBjYXVzZSBhIGJ1cw0KPiAgICAgIGVycm9yLg0KDQpDYW4gdGhlIGhpZ2ggd29yZCBiZSBmaXJz
+dCBzZXQgdG8gYSB2YWx1ZSB0aGF0IGlzIGludmFsaWQgKGllIGEgNEcgYmxvY2sNCnRoYXQgaGFz
+IG5vIHZhbGlkIFBDSWUgc2xhdmVzKSBiZWZvcmUgdXBkYXRpbmcgdGhlIGxvdyB3b3JkIGFuZCBm
+aW5hbGx5DQp0aGUgY29ycmVjdCBoaWdoIHdvcmQuDQoNCk5vdGUgdGhhdCB0aGUgYWRkcmVzcyBv
+bmx5IGhhcyB0byBiZSBvdXRzaWRlIHRoZSByYW5nZSB0aGF0IHRoZSBicmlkZ2UNCmZvcndhcmRz
+IG9udG8gdGhhdCBzcGVjaWZpYyBidXMuDQoNCglEYXZpZA0KDQo=
