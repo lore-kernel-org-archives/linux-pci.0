@@ -1,109 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40620 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935022AbcKKWJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Nov 2016 17:09:09 -0500
-Date: Fri, 11 Nov 2016 16:09:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v4 2/4] PCI: rockchip: Mark RC as common clock
- architecture
-Message-ID: <20161111220905.GQ9868@bhelgaas-glaptop.roam.corp.google.com>
-References: <1476754889-21804-1-git-send-email-shawn.lin@rock-chips.com>
- <1476754889-21804-2-git-send-email-shawn.lin@rock-chips.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:8385 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757269AbcK3Sjt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2016 13:39:49 -0500
+Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
+To: Thierry Reding <thierry.reding@gmail.com>,
+        Mikko Perttunen <cyndis@kapsi.fi>
+References: <20161125105718.3866-1-thierry.reding@gmail.com>
+ <20161125105718.3866-10-thierry.reding@gmail.com>
+ <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
+ <20161130174840.GB20246@ulmo.ba.sec>
+ <13197e02-a83a-c9d8-13fa-7b21f664a12c@kapsi.fi>
+ <20161130181409.GA29576@ulmo.ba.sec>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        "Tomasz Nowicki" <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
+Date: Thu, 1 Dec 2016 00:09:28 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476754889-21804-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <20161130181409.GA29576@ulmo.ba.sec>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 18, 2016 at 09:41:27AM +0800, Shawn Lin wrote:
-> The default value of common clock configuration is
-> zero indicating Rockchip's RC is using asynchronous
-> clock architecture but actually we are using common
-> clock. This will confuses some EP drivers if they
-> need some different settings referring to this value.
-> So let's fix it.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v4:
-> - rebase on the next branch
-> 
-> Changes in v3:
-> - rebase the code since it isn't cleanly applied again
-> 
-> Changes in v2:
-> - rebase the code since it isn't cleanly applied after Bjorn's cleanup
-> 
->  drivers/pci/host/pcie-rockchip.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 3ede865..8e260d2 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -141,6 +141,7 @@
->  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
->  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
->  #define   PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
-> +#define   PCIE_RC_CONFIG_LCS_CCC		BIT(6)
->  #define   PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
->  #define   PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
->  #define   PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
+Is it possible that, this NIC card's DMA is only 32-bit capable (can be 
+confirmed from lspci -vv output) and since SMMU is disabled, allocated 
+memory's physical address happen to fall beyond 0xFFFF_FFFF region, so, 
+ >32-bits are stripped off by DMA controller of NIC, resulting in 
+accesses to random addresses?
 
-These look an awful lot like these generic PCIe definitions:
 
-  #define PCI_EXP_LNKCTL          16      /* Link Control */
-  #define  PCI_EXP_LNKCTL_ASPMC   0x0003  /* ASPM Control */
-  #define  PCI_EXP_LNKCTL_ASPM_L0S 0x0001 /* L0s Enable */
-  #define  PCI_EXP_LNKCTL_ASPM_L1  0x0002 /* L1 Enable */
-  #define  PCI_EXP_LNKCTL_RCB     0x0008  /* Read Completion Boundary */
-  #define  PCI_EXP_LNKCTL_LD      0x0010  /* Link Disable */
-  #define  PCI_EXP_LNKCTL_RL      0x0020  /* Retrain Link */
-  #define  PCI_EXP_LNKCTL_CCC     0x0040  /* Common Clock Configuration */
-  #define  PCI_EXP_LNKCTL_ES      0x0080  /* Extended Synch */
-  #define  PCI_EXP_LNKCTL_CLKREQ_EN 0x0100 /* Enable clkreq */
-  #define  PCI_EXP_LNKCTL_HAWD    0x0200  /* Hardware Autonomous Width Disable */
-  #define  PCI_EXP_LNKCTL_LBMIE   0x0400  /* Link Bandwidth Management Interrupt Enable */
-  #define  PCI_EXP_LNKCTL_LABIE   0x0800  /* Link Autonomous Bandwidth Interrupt Enable */
+On Wednesday 30 November 2016 11:44 PM, Thierry Reding wrote:
+> * PGP Signed by an unknown key
+>
+> On Wed, Nov 30, 2016 at 08:06:45PM +0200, Mikko Perttunen wrote:
+>> On 11/30/2016 07:48 PM, Thierry Reding wrote:
+>>> On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
+>>>> Testing this series with a Jetson TX1 + r8168e PCI-E card, it /almost/
+>>>> works.. Relevant parts of bootlog:
+>>>>
+>>>> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1 configuration
+>>>> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0, using 4
+>>>> lanes
+>>>> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin change,
+>>>> signature: 00000008
+>>>> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1, using 1
+>>>> lanes
+>>>> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin change,
+>>>> signature: 00000000
+>>>> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
+>>>> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
+>>>> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down, retrying
+>>>> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down, ignoring
+>>>> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge to bus
+>>>> 0000:00
+>>>> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>>> [    3.217343] pci_bus 0000:00: root bus resource [mem
+>>>> 0x13000000-0x1fffffff]
+>>>> [    3.224218] pci_bus 0000:00: root bus resource [mem 0x20000000-0x3fffffff
+>>>> pref]
+>>>> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>>> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]),
+>>>> reconfiguring
+>>>> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
+>>>> 0x13000000-0x130fffff]
+>>>> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem 0x20000000-0x200fffff
+>>>> 64bit pref]
+>>>> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
+>>>> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem 0x20000000-0x20003fff
+>>>> 64bit pref]
+>>>> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem 0x13000000-0x13000fff
+>>>> 64bit]
+>>>> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>>>> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
+>>>> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
+>>>> [    3.307666] pci 0000:00:01.0:   bridge window [mem 0x13000000-0x130fffff]
+>>>> [    3.314454] pci 0000:00:01.0:   bridge window [mem 0x20000000-0x200fffff
+>>>> 64bit pref]
+>>>> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host
+>>>> bridge
+>>>> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
+>>>> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
+>>>> interrupt
+>>>> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+>>>> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+>>>> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
+>>>> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
+>>>> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
+>>>> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames: 9200 bytes,
+>>>> tx checksumming: ko]
+>>>>
+>>>> then
+>>>>
+>>>> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
+>>>> @0x000000007a484000: EMEM address decode error (EMEM decode error)
+>>>> [    3.717747] r8169 0000:01:00.0 eth0: link down
+>>> Hmm... that's very odd. It seems like for some reason the PCIe
+>>> controller wants to access memory that's below the DRAM. Do you happen
+>>> to have the SMMU enabled for PCIe? Can you try adding some debug prints
+>>> to the networking driver to find out where this address is coming from?
+>> SMMU is disabled; I'll try adding debug prints. The behavior certainly looks
+>> pretty strange.
+> Maybe you can also find out if at any point in the above the driver is
+> actually accessing the I/O ports. I don't think we've ever tested that
+> particular part very much.
+>
+> I seem to be using a very similar card to yours, which makes it all the
+> more surprising that it isn't working for you.
+>
+> Thierry
+>
+> * Unknown Key
+> * 0x7F3EB3A1
 
-If these are indeed the same, I'd really like it if you could use the
-generic definitions, e.g., by something like:
-
-  #define PCIE_RC_PCIE_CAP_BASE    (PCIE_RC_CONFIG_BASE + 0xc0)
-
-  status = rockchip_pcie_read(rockchip, PCIE_RC_PCIE_CAP_BASE + PCI_EXP_LNKCTL);
-  status |= PCI_EXP_LNKCTL_CCC;
-
-That way grep has a chance to find related pieces.
-
-If they only *look* similar but are not really the same, then
-disregard this, of course.
-
-> @@ -536,6 +537,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  
->  	rockchip_pcie_set_power_limit(rockchip);
->  
-> +	/* Set RC's clock architecture as common clock */
-> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-> +	status |= PCIE_RC_CONFIG_LCS_CCC;
-> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-> +
->  	/* Enable Gen1 training */
->  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
->  			    PCIE_CLIENT_CONFIG);
-> -- 
-> 2.3.7
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
