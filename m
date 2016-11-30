@@ -1,191 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v8 07/16] drivers: acpi: implement acpi_dma_configure
-Date: Wed, 16 Nov 2016 15:29:27 +0000
-Message-Id: <20161116152936.22955-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-References: <20161116152936.22955-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:44046 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753696AbcK3AmI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2016 19:42:08 -0500
+Subject: Re: [RESEND PATCH 2/2] PCI: rockchip: Add quirk to disable RC's ASPM
+ L0s
+To: Rob Herring <robh@kernel.org>
+References: <1479096666-112668-1-git-send-email-shawn.lin@rock-chips.com>
+ <1479096666-112668-2-git-send-email-shawn.lin@rock-chips.com>
+ <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <56e13221-9889-c373-4dc5-748c6601aae7@rock-chips.com>
+Date: Wed, 30 Nov 2016 08:41:45 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqKkK15Jb3tWh1Mw7RU6d8=6RYMjSEs-c4EQySaUAwnFUA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On DT based systems, the of_dma_configure() API implements DMA
-configuration for a given device. On ACPI systems an API equivalent to
-of_dma_configure() is missing which implies that it is currently not
-possible to set-up DMA operations for devices through the ACPI generic
-kernel layer.
+Hi Rob,
 
-This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-calls that for now are just wrappers around arch_setup_dma_ops() and
-arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+On 2016/11/29 23:34, Rob Herring wrote:
+> On Sun, Nov 13, 2016 at 10:11 PM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>> Rockchip's RC outputs 100MHz reference clock but there are
+>> two methods for PHY to generate it.
+>>
+>> (1)One of them is to use system PLL to generate 100MHz clock and
+>> the PHY will relock it and filter signal noise then outputs the
+>> reference clock.
+>>
+>> (2)Another way is to share Soc's 24MHZ crystal oscillator with
+>> PHY and force PHY's DLL to generate 100MHz internally.
+>>
+>> When using case(2), the exit from L0s doesn't work fine occasionally
+>> due to the broken design of RC receiver's logical circuit. So even if
+>> we use extended-synch, it still fails for PHY to relock the bits from
+>> FTS sometimes. This will hang the system.
+>>
+>> Maybe we could argue that why not use case(1) to avoid it? The reason
+>> is that as we could see the reference clock is derived from system PLL
+>> and the path from it to PHY isn't so clean which means there are some
+>> noise introduced by power-domain and other buses can't be filterd out
+>> by PHY and we could see noise from the frequency spectrum by oscilloscope.
+>> This makes the TX compatibility test a little difficult to pass the spec.
+>> So case(1) and case(2) are both used indeed now. If using case(2), we
+>> should disable RC's L0s support, and that is why we need this property to
+>> indicate this quirk.
+>>
+>> Also after checking quirk.c, I noticed there is already a quirk for
+>> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+>> shouldn't do that as mentioned above that case(1) could still works fine
+>> with L0s.
+>>
+>> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> Cc: Brian Norris <briannorris@chromium.org>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>>
+>>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+>>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+>>  2 files changed, 11 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> index ba67b39..cfa44a7 100644
+>> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> @@ -42,6 +42,8 @@ Required properties:
+>>  Optional Property:
+>>  - ep-gpios: contain the entry for pre-reset gpio
+>>  - num-lanes: number of lanes to use
+>> +- quirk,aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+>
+> quirk is not a vendor. Drop it.
 
-Since acpi_dma_configure() is used to configure DMA operations, the
-function initializes the dma/coherent_dma masks to sane default values
-if the current masks are uninitialized (also to keep the default values
-consistent with DT systems) to make sure the device has a complete
-default DMA set-up.
+I guess you want me to drop the "quirk" prefix and just use
+aspm-no-l0s instaed?
 
-The DMA range size passed to arch_setup_dma_ops() is sized according
-to the device coherent_dma_mask (starting at address 0x0), mirroring the
-DT probing path behaviour when a dma-ranges property is not provided
-for the device being probed; this changes the current arch_setup_dma_ops()
-call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-is a NOP on all architectures but ARM/ARM64 this patch does not change
-the current kernel behaviour on them.
+>
+>> +       using 24MHz OSC for RC's PHY.
+>>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+>>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+>
+>
+>
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/glue.c     |  4 ++--
- drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c     |  3 +--
- include/acpi/acpi_bus.h |  2 ++
- include/linux/acpi.h    |  5 +++++
- 5 files changed, 50 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 5ea5dc2..f8d6564 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 
- 	attr = acpi_get_dma_attr(acpi_dev);
- 	if (attr != DEV_DMA_NOT_SUPPORTED)
--		arch_setup_dma_ops(dev, 0, 0, NULL,
--				   attr == DEV_DMA_COHERENT);
-+		acpi_dma_configure(dev, attr);
- 
- 	acpi_physnode_link_name(physical_node_name, node_id);
- 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-@@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	return 0;
- 
-  err:
-+	acpi_dma_deconfigure(dev);
- 	ACPI_COMPANION_SET(dev, NULL);
- 	put_device(dev);
- 	put_device(&acpi_dev->dev);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 035ac64..694e0b6 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 		return DEV_DMA_NON_COHERENT;
- }
- 
-+/**
-+ * acpi_dma_configure - Set-up DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ * @attr: device dma attributes
-+ */
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-+{
-+	/*
-+	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-+	 * setup the correct supported mask.
-+	 */
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	/*
-+	 * Assume dma valid range starts at 0 and covers the whole
-+	 * coherent_dma_mask.
-+	 */
-+	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-+			   attr == DEV_DMA_COHERENT);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_configure);
-+
-+/**
-+ * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-+ * @dev: The pointer to the device
-+ */
-+void acpi_dma_deconfigure(struct device *dev)
-+{
-+	arch_teardown_dma_ops(dev);
-+}
-+EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
-+
- static void acpi_init_coherency(struct acpi_device *adev)
- {
- 	unsigned long long cca = 0;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab00267..c29e07a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
- 		if (attr == DEV_DMA_NOT_SUPPORTED)
- 			dev_warn(&dev->dev, "DMA not supported.\n");
- 		else
--			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
--					   attr == DEV_DMA_COHERENT);
-+			acpi_dma_configure(&dev->dev, attr);
- 	}
- 
- 	pci_put_host_bridge_device(bridge);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index c1a524d..4242c31 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -573,6 +573,8 @@ struct acpi_pci_root {
- 
- bool acpi_dma_supported(struct acpi_device *adev);
- enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-+void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-+void acpi_dma_deconfigure(struct device *dev);
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
- 					   u64 address, bool check_children);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 6efb13c..df961f4 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -764,6 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 	return DEV_DMA_NOT_SUPPORTED;
- }
- 
-+static inline void acpi_dma_configure(struct device *dev,
-+				      enum dev_dma_attr attr) { }
-+
-+static inline void acpi_dma_deconfigure(struct device *dev) { }
-+
- #define ACPI_PTR(_ptr)	(NULL)
- 
- static inline void acpi_device_set_enumerated(struct acpi_device *adev)
 -- 
-2.10.0
+Best Regards
+Shawn Lin
 
