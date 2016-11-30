@@ -1,81 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:47863 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbcKIT5J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2016 14:57:09 -0500
-Date: Wed, 9 Nov 2016 20:58:12 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Ravi Chandra Sadineni <ravisadineni@chromium.org>
-Cc: linux-pci@vger.kernel.org, tbroch@google.com, rajatja@google.com,
-        gwendal@google.com, bhelgaas@google.com, ravisadineni@google.com,
-        keith.busch@intel.com, paul.gortmaker@windriver.com
-Subject: Re: [PATCH] pciehp_resume: don't add existing device
-Message-ID: <20161109195812.GA7528@wunner.de>
-References: <1478714735-134347-1-git-send-email-ravisadineni@chromium.org>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Wed, 30 Nov 2016 16:24:36 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 2/2] ACPI: Ignore Consumer/Producer for QWord/DWord/Word
+ Address Space
+Message-ID: <20161130162436.GA9093@red-moon>
+References: <20161129182415.7618.99129.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129184334.7618.5495.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161130120425.GA13765@red-moon>
+ <20161130155616.GA9693@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478714735-134347-1-git-send-email-ravisadineni@chromium.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161130155616.GA9693@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 10:05:35AM -0800, Ravi Chandra Sadineni wrote:
-> If a slot was occupied before supend, and nothing has changed after
-> resume, we call pciehp_enable_slot() although it fails a little
-> later with the message:
->    Device XXXX:XX:XX.X already exists at XXXX:XX:XX, cannot hot-add
->    Cannot add device at XXXX:XX:XX
+On Wed, Nov 30, 2016 at 09:56:17AM -0600, Bjorn Helgaas wrote:
+> On Wed, Nov 30, 2016 at 12:04:25PM +0000, Lorenzo Pieralisi wrote:
+> > On Tue, Nov 29, 2016 at 12:43:34PM -0600, Bjorn Helgaas wrote:
+> > > Per ACPI spec r6.0, sec 6.4.3.5.1, 2, 3, Bit [0] of General Flags (the
+> > > Consumer/Producer bit) should be ignored for QWord/DWord/Word Address Space
+> > > descriptors.  The Consumer/Producer bit is defined only for the Extended
+> > > Address Space descriptor.
+> > > 
+> > > Ignore Consumer/Producer except for Extended Address Space descriptors.
+> > > 
+> > > Note that for QWord/DWord/Word descriptors, we previously applied the
+> > > translation offset (_TRA) only when the Consumer/Producer bit was set.
+> > 
+> > "..Consumer/Producer bit was clear" ? If that bit was set:
+> > 
+> > struct acpi_resource_address->producer_consumer == ACPI_CONSUMER
+> > 
+> > and we are not applying the _TRA offset in that case, right ?
 > 
-> This was partly discussed here: https://lkml.org/lkml/2013/7/9/452
-> and I'm pulling only the part4 of that patch, since it does not change
-> anything functionally (or atleast does not seem to make it worse), but
-> prevents uncomfortable messages pointed above.
-> ---
->  drivers/pci/hotplug/pciehp_core.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
+> Right, of course.  How about this instead?
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 612b21a..873cff8 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -290,6 +290,7 @@ static int pciehp_resume(struct pcie_device *dev)
->  {
->  	struct controller *ctrl;
->  	struct slot *slot;
-> +	struct pci_bus *pbus = dev->port->subordinate;
->  	u8 status;
->  
->  	ctrl = get_service_data(dev);
-> @@ -302,10 +303,13 @@ static int pciehp_resume(struct pcie_device *dev)
->  	/* Check if slot is occupied */
->  	pciehp_get_adapter_status(slot, &status);
->  	mutex_lock(&slot->hotplug_lock);
-> -	if (status)
-> -		pciehp_enable_slot(slot);
-> -	else
-> +	if (status) {
-> +		if (list_empty(&pbus->devices))
-> +			pciehp_enable_slot(slot);
-> +	}
-> +	else {
->  		pciehp_disable_slot(slot);
-> +	}
+>     Note that for QWord/DWord/Word descriptors, we previously applied the
+>     translation offset (_TRA) only for Producers, i.e., when the Consumer/
+>     Producer bit was clear.  This patch changes that: for those descriptors,
+>     we ignore Consumer/Producer and always apply the translation offset.
 
-What if the device plugged in after suspend is a different one
-and requires e.g. an entirely different driver or different resource
-allocations?
+Yes that's a perfect description, thanks a lot !
 
-What if the device is the same but child devices have been plugged
-in during system sleep? (E.g. additional devices attached to a
-Thunderbolt daisy chain.)
+Lorenzo
 
-At the very least you need to rescan the bus here.
-
-Thanks,
-
-Lukas
-
->  	mutex_unlock(&slot->hotplug_lock);
->  	return 0;
->  }
-> -- 
-> 2.6.6
+> > > This patch changes that: for those descriptors, we ignore Consumer/Producer
+> > > and always apply the translation offset.
+> > > 
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  drivers/acpi/resource.c |   16 +++++++++++-----
+> > >  1 file changed, 11 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> > > index 2732d39e..b45cd8f 100644
+> > > --- a/drivers/acpi/resource.c
+> > > +++ b/drivers/acpi/resource.c
+> > > @@ -261,11 +261,16 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+> > >  	 * primary side. Non-bridge devices must list 0 for all Address
+> > >  	 * Translation offset bits.
+> > >  	 */
+> > > -	if (addr->producer_consumer == ACPI_PRODUCER)
+> > > +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64) {
+> > > +		if (addr->producer_consumer == ACPI_PRODUCER)
+> > > +			offset = attr->translation_offset;
+> > > +		else if (attr->translation_offset)
+> > > +			pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+> > > +				 attr->translation_offset);
+> > > +	} else {
+> > >  		offset = attr->translation_offset;
+> > > -	else if (attr->translation_offset)
+> > > -		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+> > > -			 attr->translation_offset);
+> > > +	}
+> > > +
+> > >  	start = attr->minimum + offset;
+> > >  	end = attr->maximum + offset;
+> > >  
+> > > @@ -294,7 +299,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+> > >  		return false;
+> > >  	}
+> > >  
+> > > -	if (addr->producer_consumer == ACPI_PRODUCER)
+> > > +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64 &&
+> > > +	    addr->producer_consumer == ACPI_PRODUCER)
+> > >  		res->flags |= IORESOURCE_WINDOW;
+> > >  
+> > >  	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
