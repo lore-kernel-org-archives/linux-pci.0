@@ -1,79 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ashok Raj <ashok.raj@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH 1/3] pciehp: Prioritize data-link event over presence detect
-Date: Sat, 19 Nov 2016 00:32:45 -0800
-Message-Id: <1479544367-7195-2-git-send-email-ashok.raj@intel.com>
-In-Reply-To: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
-References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 Nov 2016 09:56:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 2/2] ACPI: Ignore Consumer/Producer for QWord/DWord/Word
+ Address Space
+Message-ID: <20161130155616.GA9693@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161129182415.7618.99129.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129184334.7618.5495.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161130120425.GA13765@red-moon>
+MIME-Version: 1.0
+In-Reply-To: <20161130120425.GA13765@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch places higher precedence on a Data Link Layer Status Change
-event over the Presence Detect Change event in the case the slot status
-contains both events in the same interrupt.
+On Wed, Nov 30, 2016 at 12:04:25PM +0000, Lorenzo Pieralisi wrote:
+> On Tue, Nov 29, 2016 at 12:43:34PM -0600, Bjorn Helgaas wrote:
+> > Per ACPI spec r6.0, sec 6.4.3.5.1, 2, 3, Bit [0] of General Flags (the
+> > Consumer/Producer bit) should be ignored for QWord/DWord/Word Address Space
+> > descriptors.  The Consumer/Producer bit is defined only for the Extended
+> > Address Space descriptor.
+> > 
+> > Ignore Consumer/Producer except for Extended Address Space descriptors.
+> > 
+> > Note that for QWord/DWord/Word descriptors, we previously applied the
+> > translation offset (_TRA) only when the Consumer/Producer bit was set.
+> 
+> "..Consumer/Producer bit was clear" ? If that bit was set:
+> 
+> struct acpi_resource_address->producer_consumer == ACPI_CONSUMER
+> 
+> and we are not applying the _TRA offset in that case, right ?
 
-When both events are observed, the pciehp driver is currently relying on
-the Slot Status Presence Detect State (PDS) agree with the Link Status
-Data Link Layer Active status. The Presence Detect State, however, may
-be set to 1 through out-of-band presence detect mechanism even though
-the link is down, which creates conflicting events.
+Right, of course.  How about this instead?
 
-Since the Link Status accurately reflects the reachability of the down
-stream bus, the link change event should take precedence over a present
-detect event. This patch skips checking the PDC status we handled a link
-event in the same handler.
+    Note that for QWord/DWord/Word descriptors, we previously applied the
+    translation offset (_TRA) only for Producers, i.e., when the Consumer/
+    Producer bit was clear.  This patch changes that: for those descriptors,
+    we ignore Consumer/Producer and always apply the translation offset.
 
-Cc: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
+> > This patch changes that: for those descriptors, we ignore Consumer/Producer
+> > and always apply the translation offset.
+> > 
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/acpi/resource.c |   16 +++++++++++-----
+> >  1 file changed, 11 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> > index 2732d39e..b45cd8f 100644
+> > --- a/drivers/acpi/resource.c
+> > +++ b/drivers/acpi/resource.c
+> > @@ -261,11 +261,16 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+> >  	 * primary side. Non-bridge devices must list 0 for all Address
+> >  	 * Translation offset bits.
+> >  	 */
+> > -	if (addr->producer_consumer == ACPI_PRODUCER)
+> > +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64) {
+> > +		if (addr->producer_consumer == ACPI_PRODUCER)
+> > +			offset = attr->translation_offset;
+> > +		else if (attr->translation_offset)
+> > +			pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+> > +				 attr->translation_offset);
+> > +	} else {
+> >  		offset = attr->translation_offset;
+> > -	else if (attr->translation_offset)
+> > -		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+> > -			 attr->translation_offset);
+> > +	}
+> > +
+> >  	start = attr->minimum + offset;
+> >  	end = attr->maximum + offset;
+> >  
+> > @@ -294,7 +299,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+> >  		return false;
+> >  	}
+> >  
+> > -	if (addr->producer_consumer == ACPI_PRODUCER)
+> > +	if (ares->type == ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64 &&
+> > +	    addr->producer_consumer == ACPI_PRODUCER)
+> >  		res->flags |= IORESOURCE_WINDOW;
+> >  
+> >  	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b57fc6d..e1ebd67 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -620,8 +620,18 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
- 	}
- 
--	/* Check Presence Detect Changed */
--	if (events & PCI_EXP_SLTSTA_PDC) {
-+	/*
-+	 * Check Link Status Changed at higher precedence than Presence Detect
-+	 * Changed. The PDS value may be set to "card present" from out-of-band
-+	 * detection, which may be in conflict with a Link Down and cause the
-+	 * wrong event to queue.
-+     */
-+	if (events & PCI_EXP_SLTSTA_DLLSC) {
-+		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
-+			  link ? "Up" : "Down");
-+		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
-+					     INT_LINK_DOWN);
-+	} else if (events & PCI_EXP_SLTSTA_PDC) {
- 		present = !!(status & PCI_EXP_SLTSTA_PDS);
- 		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
- 			  present ? "" : "not ");
-@@ -636,13 +646,6 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
- 	}
- 
--	if (events & PCI_EXP_SLTSTA_DLLSC) {
--		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
--			  link ? "Up" : "Down");
--		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
--					     INT_LINK_DOWN);
--	}
--
- 	return IRQ_HANDLED;
- }
- 
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
