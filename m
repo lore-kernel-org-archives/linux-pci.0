@@ -1,122 +1,117 @@
-Return-Path: <ard.biesheuvel@linaro.org>
-Return-Path: <ard.biesheuvel@linaro.org>
-MIME-Version: 1.0
-In-Reply-To: <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20160921173129.GA20006@localhost> <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org> <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <aa37ca67-9909-e8f2-1a3e-b724cdb46c7b@codeaurora.org> <20161109200635.GM14322@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 9 Nov 2016 20:29:23 +0000
-Message-ID: <CAKv+Gu82+5oHMeSvcOL1VG4vw-kVnhq4LjCRtLMw4Nmn0rK2CA@mail.gmail.com>
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Return-Path: <gwshan@linux.vnet.ibm.com>
+Date: Thu, 1 Dec 2016 10:02:54 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christopher Covington <cov@codeaurora.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Jayachandran C <jchandra@broadcom.com>, Duc Dang <dhdang@apm.com>,
-	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>, Jeremy Linton <jeremy.linton@arm.com>,
-	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jeff Hugo <jhugo@codeaurora.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
+ updates
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129045546.GB20642@gwshan>
+ <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129232028.GA8143@gwshan>
+ <20161130000605.GC7375@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161130000605.GC7375@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161130230254.GA10567@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tue, Nov 29, 2016 at 06:06:05PM -0600, Bjorn Helgaas wrote:
+>On Wed, Nov 30, 2016 at 10:20:28AM +1100, Gavin Shan wrote:
+>> On Tue, Nov 29, 2016 at 08:48:26AM -0600, Bjorn Helgaas wrote:
+>> >On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
+>> >> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
+>> >> >Previously pci_update_resource() used the same code path for updating
+>> >> >standard BARs and VF BARs in SR-IOV capabilities.
+>> >> >
+>> >> >Split the VF BAR update into a new pci_iov_update_resource() internal
+>> >> >interface, which makes it simpler to compute the BAR address (we can get
+>> >> >rid of pci_resource_bar() and pci_iov_resource_bar()).
+>> >> >
+>> >> >This patch:
+>> >> >
+>> >> >  - Renames pci_update_resource() to pci_std_update_resource(),
+>> >> >  - Adds pci_iov_update_resource(),
+>> >> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
+>> >> >
+>> >> >No functional change intended.
+>
+>> >However, I don't think this code in pci_update_resource() is obviously
+>> >correct:
+>> >
+>> >  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+>> >
+>> >PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
+>> >property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
+>> >part of the address, so on the face of it, the above could corrupt two
+>> >bits of an I/O address.
+>> >
+>> >It's true that decode_bar() initializes flags correctly, using
+>> >PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
+>> >for memory BARs, but it would take a little more digging to be sure
+>> >that we never set bits 2-3 of flags for an I/O resource elsewhere.
+>> >
+>> 
+>> The BAR's property bits are probed from device-tree, not hardware
+>> on some platforms (e.g. pSeries). Also, there is only one (property)
+>> bit if it's a ROM BAR. So more check as below might be needed because
+>> the code (without the enhancement) should also work fine.
+>
+>Ah, right, I forgot about that.  I didn't do enough digging :)
+>
+>> >How about this in pci_std_update_resource():
+>> >
+>> >        pcibios_resource_to_bus(dev->bus, &region, res);
+>> >        new = region.start;
+>> >
+>> >        if (res->flags & IORESOURCE_IO) {
+>> >                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+>> >                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+>> >        } else {
+>> >                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>> >                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>> >        }
+>> >
+>> 
+>> 	if (res->flags & IORESOURCE_IO) {
+>> 		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+>> 		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+>> 	} else if (resno < PCI_ROM_RESOURCE) {
+>> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>> 		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>> 	} else if (resno == PCI_ROM_RESOURCE) {
+>> 		mask = ~((u32)IORESOURCE_ROM_ENABLE);
+>> 		new |= res->flags & IORESOURCE_ROM_ENABLE);
+>> 	} else {
+>> 		dev_warn(&dev->dev, "BAR#%d out of range\n", resno);
+>> 		return;
+>> 	}
+>
+>After this patch, the only thing we OR into a ROM BAR value is
+>PCI_ROM_ADDRESS_ENABLE, and that's done below, only if the ROM is
+>already enabled.
+>
+>I did update the ROM mask (to PCI_ROM_ADDRESS_MASK).  I'm not 100%
+>sure about doing that -- it follows the spec, but it is a change from
+>what we've been doing before.  I guess it should be safe because it
+>means we're checking fewer bits than before (only the top 21 bits for
+>ROMs, where we used check the top 28), so the only possible difference
+>is that we might not warn about "error updating" in some case where we
+>used to.
+>
+>I'm not really sure about the value of the "error updating" checks to
+>begin with, though I guess it does help us find broken devices that
+>put non-BARs where BARs are supposed to be.
+>
 
-On 9 November 2016 at 20:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Nov 09, 2016 at 02:25:56PM -0500, Christopher Covington wrote:
->> Hi Bjorn,
->>
-[...]
->>
->> We're working to add the PNP0C02 resource to future firmware, but it's
->> not in the current firmware. Are dmesg and /proc/iomem from the
->> current firmware interesting or should we wait for the update to file?
->
-> Note that the ECAM space is not the only thing that should be
-> described via these PNP0C02 devices.  *All* non-enumerable resources
-> should be described by the _CRS method of some ACPI device.  Here's a
-> sample from my laptop:
->
->   PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xf8000000-0xfbffffff] (base 0xf8000000)
->   system 00:01: [io  0x1800-0x189f] could not be reserved
->   system 00:01: [io  0x0800-0x087f] has been reserved
->   system 00:01: [io  0x0880-0x08ff] has been reserved
->   system 00:01: [io  0x0900-0x097f] has been reserved
->   system 00:01: [io  0x0980-0x09ff] has been reserved
->   system 00:01: [io  0x0a00-0x0a7f] has been reserved
->   system 00:01: [io  0x0a80-0x0aff] has been reserved
->   system 00:01: [io  0x0b00-0x0b7f] has been reserved
->   system 00:01: [io  0x0b80-0x0bff] has been reserved
->   system 00:01: [io  0x15e0-0x15ef] has been reserved
->   system 00:01: [io  0x1600-0x167f] has been reserved
->   system 00:01: [io  0x1640-0x165f] has been reserved
->   system 00:01: [mem 0xf8000000-0xfbffffff] could not be reserved
->   system 00:01: [mem 0xfed10000-0xfed13fff] has been reserved
->   system 00:01: [mem 0xfed18000-0xfed18fff] has been reserved
->   system 00:01: [mem 0xfed19000-0xfed19fff] has been reserved
->   system 00:01: [mem 0xfeb00000-0xfebfffff] has been reserved
->   system 00:01: [mem 0xfed20000-0xfed3ffff] has been reserved
->   system 00:01: [mem 0xfed90000-0xfed93fff] has been reserved
->   system 00:01: [mem 0xf7fe0000-0xf7ffffff] has been reserved
->   system 00:01: Plug and Play ACPI device, IDs PNP0c02 (active)
->
-> Do you have firmware in the field that may not get updated?  If so,
-> I'd like to see the whole solution for that firmware, including the
-> MCFG quirk (which tells the PCI core where the ECAM region is) and
-> whatever PNP0C02 quirk you figure out to actually reserve the region.
->
-> I proposed a PNP0C02 quirk to Duc along these lines of the below.  I
-> don't actually know if it's feasible, but it didn't look as bad as I
-> expected, so I'd kind of like somebody to try it out.  I think you
-> would have to call this via a DMI hook (do you have DMI on arm64?),
-> maybe from pnp_init() or similar.
->
+Yeah, agree. Bjorn, I don't have more comments. please take your time
+to respin the series and maybe applied it. I really want to see the
+fixes can be in 4.10 if possible :-)
 
-We do have SMBIOS/DMI on arm64, but we have been successful so far not
-to rely on it for quirks, and we'd very much like to keep it that way.
-
-Since this ACPI _CRS method has nothing to do with SMBIOS/DMI, surely
-there is a better way to wire up the reservation code to the
-information exposed by ACPI?
-
--- 
-Ard.
-
->   struct pnp_protocol pnpquirk_protocol = {
->     .name = "Plug and Play Quirks",
->   };
->
->   void quirk()
->   {
->     struct pnp_dev *dev;
->     struct resource res;
->
->     ret = pnp_register_protocol(&pnpquirk_protocol);
->     if (ret)
->       return;
->
->     dev = pnp_alloc_dev(&pnpquirk_protocol, 0, "PNP0C02");
->     if (!dev)
->       return;
->
->     res.start = XX;          /* ECAM start */
->     res.end = YY;            /* ECAM end */
->     res.flags = IORESOURCE_MEM;
->     pnp_add_resource(dev, &res);
->
->     dev->active = 1;
->     pnp_add_device(dev);
->
->     dev_info(&dev->dev, "fabricated device to reserve ECAM space %pR\n", &res);
->   }
->
-> Bjorn
+Thanks,
+Gavin
