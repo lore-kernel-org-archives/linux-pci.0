@@ -1,65 +1,135 @@
-Return-Path: <SRS0=bp2I=XY=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=bp2I=XY=arm.com=marc.zyngier@kernel.org>
-Subject: Re: ATH9 driver issues on ARM64
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
- <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
- <8520D5D51A55D047800579B094147198263A79AC@XAP-PVEXMBX02.xlnx.xilinx.com>
- <d8bc6283-8b37-76d6-8ff1-0847ee015380@arm.com>
- <8520D5D51A55D047800579B094147198263A7F11@XAP-PVEXMBX02.xlnx.xilinx.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
- "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
- Kalle Valo <kvalo@codeaurora.org>,
- "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <634133ba-f77e-bc80-751d-b77a7816dec4@arm.com>
-Date: Fri, 9 Dec 2016 11:24:00 +0000
+Return-Path: <SRS0=kTbg=XQ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=kTbg=XQ=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198263A7F11@XAP-PVEXMBX02.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20161201082932.12247.7479.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201082932.12247.7479.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 1 Dec 2016 14:17:20 +0100
+Message-ID: <CAJZ5v0hB61=17Fbf=2-K=zaRmMZkY3NVxMPHNwfF9Nr6=ey+-g@mail.gmail.com>
+Subject: Re: [PATCH v10 01/12] ACPI: Add acpi_resource_consumer() to find
+ device that claims a resource
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Christopher Covington <cov@codeaurora.org>,
+	Dongdong Liu <liudongdong3@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/12/16 11:04, Bharat Kumar Gogada wrote:
->> On 09/12/16 02:07, Bharat Kumar Gogada wrote:
->>>> On 08/12/16 18:33, Bharat Kumar Gogada wrote:
->>>>>> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
->>>>>>> 218:         61          0          0          0     GICv2  81 Level     mmc0
->>>>>>> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global
->> fault
->>>>>>> 220:        471          0          0          0     GICv2  53 Level     xuartps
->>>>>>> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
->>>>>>> 224:          3          0          0          0     dummy   1 Edge      ath9k
->>>>>>
->>>>>> What is this "dummy" controller? And if that's supposed to be a
->>>>>> legacy interrupt from the PCI device, it has the wrong trigger.
->>>>>
->>>>> Yes it is for legacy interrupt, wrong trigger means ?
->>>>
->>>> Aren't legacy interrupts supposed to be *level* triggered, and not edge?
->>>>
->>> Yes agreed.
->>> For legacy interrupts im using irq_set_chained_handler_and_data so the
->>> irq line between bridge and GIC Will not be shown here. The above how
->>> is virq for legacy, which is given by kernel, not sure why its state is set to edge.
->>
->> Well, you should try and find out. Edge triggering for legacy interrupts is a real
->> bug, and I don't think it has anything to do with arm64 (despite what the subject
->> says).
->>
-> Thanks Marc. Here is the ARM32 bit log for cat /proc/interrupts, 
-> Here also it shows edge but still scan works successfully.
+On Thu, Dec 1, 2016 at 9:29 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Add acpi_resource_consumer().  This takes a struct resource and searches
+> the ACPI namespace for a device whose current resource settings (_CRS)
+> includes the resource.  It returns the device if it exists, or NULL if no
+> device uses the resource.
+>
+> If more than one device uses the resource (this may happen in the case of
+> bridges), acpi_resource_consumer() returns the first one found by
+> acpi_get_devices() in its modified depth-first walk of the namespace.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Because it works doesn't mean it is right.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks,
+(this patch should have been CCed to linux-acpi too, however).
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> ---
+>  drivers/acpi/resource.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/acpi.h    |    7 ++++++
+>  2 files changed, 64 insertions(+)
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 56241eb..cb57962 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -664,3 +664,60 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>         return (type & types) ? 0 : 1;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
+> +
+> +static int acpi_dev_consumes_res(struct acpi_device *adev, struct resource *res)
+> +{
+> +       struct list_head resource_list;
+> +       struct resource_entry *rentry;
+> +       int ret, found = 0;
+> +
+> +       INIT_LIST_HEAD(&resource_list);
+> +       ret = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
+> +       if (ret < 0)
+> +               return 0;
+> +
+> +       list_for_each_entry(rentry, &resource_list, node) {
+> +               if (resource_contains(rentry->res, res)) {
+> +                       found = 1;
+> +                       break;
+> +               }
+> +
+> +       }
+> +
+> +       acpi_dev_free_resource_list(&resource_list);
+> +       return found;
+> +}
+> +
+> +static acpi_status acpi_res_consumer_cb(acpi_handle handle, u32 depth,
+> +                                        void *context, void **ret)
+> +{
+> +       struct resource *res = context;
+> +       struct acpi_device **consumer = (struct acpi_device **) ret;
+> +       struct acpi_device *adev;
+> +
+> +       if (acpi_bus_get_device(handle, &adev))
+> +               return AE_OK;
+> +
+> +       if (acpi_dev_consumes_res(adev, res)) {
+> +               *consumer = adev;
+> +               return AE_CTRL_TERMINATE;
+> +       }
+> +
+> +       return AE_OK;
+> +}
+> +
+> +/**
+> + * acpi_resource_consumer - Find the ACPI device that consumes @res.
+> + * @res: Resource to search for.
+> + *
+> + * Search the current resource settings (_CRS) of every ACPI device node
+> + * for @res.  If we find an ACPI device whose _CRS includes @res, return
+> + * it.  Otherwise, return NULL.
+> + */
+> +struct acpi_device *acpi_resource_consumer(struct resource *res)
+> +{
+> +       struct acpi_device *consumer = NULL;
+> +
+> +       acpi_get_devices(NULL, acpi_res_consumer_cb, res, (void **) &consumer);
+> +       return consumer;
+> +}
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index ddbeda6..b00ad73 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -419,6 +419,8 @@ static inline int acpi_dev_filter_resource_type_cb(struct acpi_resource *ares,
+>         return acpi_dev_filter_resource_type(ares, (unsigned long)arg);
+>  }
+>
+> +struct acpi_device *acpi_resource_consumer(struct resource *res);
+> +
+>  int acpi_check_resource_conflict(const struct resource *res);
+>
+>  int acpi_check_region(resource_size_t start, resource_size_t n,
+> @@ -762,6 +764,11 @@ static inline int acpi_reconfig_notifier_unregister(struct notifier_block *nb)
+>         return -EINVAL;
+>  }
+>
+> +static inline struct acpi_device *acpi_resource_consumer(struct resource *res)
+> +{
+> +       return NULL;
+> +}
+> +
+>  #endif /* !CONFIG_ACPI */
+>
+>  #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+>
