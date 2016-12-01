@@ -1,87 +1,113 @@
-Return-Path: <SRS0=ugdK=X3=mni.thm.de=tobias.johannes.klausmann@kernel.org>
-Return-Path: <SRS0=ugdK=X3=mni.thm.de=tobias.johannes.klausmann@kernel.org>
-From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-To: kvalo@codeaurora.org,
-	helgaas@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	marc.zyngier@arm.com,
-	Janusz.Dziedzic@tieto.com,
-	rmanohar@qti.qualcomm.com,
-	ath9k-devel@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org,
-	rmanohar@qca.qualcomm.com,
-	bharat.kumar.gogada@xilinx.com
-Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-Subject: [PATCH] ath9k: unlock rcu read when returning early
-Date: Mon, 12 Dec 2016 19:50:01 +0100
-Message-Id: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
-In-Reply-To: <1cFMHb-00BdWd-Ks>
-References: <1cFMHb-00BdWd-Ks>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51472 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752609AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 03:31:33 -0500
+Subject: [PATCH v10 10/12] PCI: thunder-pem: Factor out resource lookup
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Thu, 01 Dec 2016 02:30:51 -0600
+Message-ID: <20161201083051.12247.55989.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Starting with ath9k: use ieee80211_tx_status_noskb where possible
-[d94a461d7a7df68991fb9663531173f60ef89c68] the driver uses rcu_read_lock() &&
-rcu_read_unlock() yet on returning early in ath_tx_edma_tasklet() the unlock is
-missing leading to stalls and suspicious RCU usage:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
- ===============================
- [ INFO: suspicious RCU usage. ]
- 4.9.0-rc8 #11 Not tainted
- -------------------------------
- kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
+Pull the register resource lookup out of thunder_pem_init() so we can
+easily add a corresponding lookup using ACPI.  No functional change
+intended.
 
- other info that might help us debug this:
-
- RCU used illegally from idle CPU!
- rcu_scheduler_active = 1, debug_locks = 0
- RCU used illegally from extended quiescent state!
- 1 lock held by swapper/7/0:
- #0:
-  (
- rcu_read_lock
- ){......}
- , at:
- [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
-
- stack backtrace:
- CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
- Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
-  ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
-  ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
-  ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
- Call Trace:
-  <IRQ>
-  [<ffffffff8132b1e5>] dump_stack+0x68/0x93
-  [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
-  [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
-  [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
-  [<ffffffff81058631>] irq_exit+0x61/0xd0
-  [<ffffffff81018d25>] do_IRQ+0x65/0x110
-  [<ffffffff81672189>] common_interrupt+0x89/0x89
-  <EOI>
-  [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
-  [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
-  [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
-  [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
-  [<ffffffff810336f8>] start_secondary+0x148/0x170
-
-Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/host/pci-thunder-pem.c |   50 +++++++++++++++++++-----------------
+ 1 file changed, 27 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 52bfbb988611..857d5ae09a1d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2787,6 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
- 		if (list_empty(fifo_list)) {
- 			ath_txq_unlock(sc, txq);
-+			rcu_read_unlock();
- 			return;
- 		}
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 6abaf80..c3276ee 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -284,35 +284,16 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
  
--- 
-2.11.0
+-static int thunder_pem_init(struct pci_config_window *cfg)
++static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
++			    struct resource *res_pem)
+ {
+-	struct device *dev = cfg->parent;
+-	resource_size_t bar4_start;
+-	struct resource *res_pem;
+ 	struct thunder_pem_pci *pem_pci;
+-	struct platform_device *pdev;
+-
+-	/* Only OF support for now */
+-	if (!dev->of_node)
+-		return -EINVAL;
++	resource_size_t bar4_start;
+ 
+ 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
+ 	if (!pem_pci)
+ 		return -ENOMEM;
+ 
+-	pdev = to_platform_device(dev);
+-
+-	/*
+-	 * The second register range is the PEM bridge to the PCIe
+-	 * bus.  It has a different config access method than those
+-	 * devices behind the bridge.
+-	 */
+-	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	if (!res_pem) {
+-		dev_err(dev, "missing \"reg[1]\"property\n");
+-		return -EINVAL;
+-	}
+-
+ 	pem_pci->pem_reg_base = devm_ioremap(dev, res_pem->start, 0x10000);
+ 	if (!pem_pci->pem_reg_base)
+ 		return -ENOMEM;
+@@ -332,9 +313,32 @@ static int thunder_pem_init(struct pci_config_window *cfg)
+ 	return 0;
+ }
+ 
++static int thunder_pem_platform_init(struct pci_config_window *cfg)
++{
++	struct device *dev = cfg->parent;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *res_pem;
++
++	if (!dev->of_node)
++		return -EINVAL;
++
++	/*
++	 * The second register range is the PEM bridge to the PCIe
++	 * bus.  It has a different config access method than those
++	 * devices behind the bridge.
++	 */
++	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (!res_pem) {
++		dev_err(dev, "missing \"reg[1]\"property\n");
++		return -EINVAL;
++	}
++
++	return thunder_pem_init(dev, cfg, res_pem);
++}
++
+ static struct pci_ecam_ops pci_thunder_pem_ops = {
+ 	.bus_shift	= 24,
+-	.init		= thunder_pem_init,
++	.init		= thunder_pem_platform_init,
+ 	.pci_ops	= {
+ 		.map_bus	= pci_ecam_map_bus,
+ 		.read		= thunder_pem_config_read,
+
