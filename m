@@ -1,115 +1,123 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V6 2/2] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-To: Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org,
- arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
- wangzhou1@hisilicon.com, pratyush.anand@gmail.com
-References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
- <1479816529-97410-3-git-send-email-liudongdong3@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com,
- charles.chenxin@huawei.com, hanjun.guo@linaro.org, linuxarm@huawei.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <026faf89-93de-4238-f69a-ea02c57e5ee0@semihalf.com>
-Date: Tue, 22 Nov 2016 14:58:13 +0100
+Return-Path: <SRS0=Gc1N=XP=linux.vnet.ibm.com=gwshan@kernel.org>
+Return-Path: <SRS0=Gc1N=XP=linux.vnet.ibm.com=gwshan@kernel.org>
+Date: Thu, 1 Dec 2016 11:00:13 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, clsoto@us.ibm.com,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v4 3/7] PCI: Separate VF BAR updates from standard BAR
+ updates
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20161129035218.21453.93986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129041506.21453.18478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129045546.GB20642@gwshan>
+ <20161129144826.GB7285@bhelgaas-glaptop.roam.corp.google.com>
+ <20161129232028.GA8143@gwshan>
+ <20161130000605.GC7375@bhelgaas-glaptop.roam.corp.google.com>
+ <20161130230254.GA10567@gwshan>
+ <20161130234518.GA9409@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1479816529-97410-3-git-send-email-liudongdong3@huawei.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161130234518.GA9409@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20161201000013.GA15529@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22.11.2016 13:08, Dongdong Liu wrote:
-> PCIe controller in Hip05/HIP06/HIP07 SoCs is not ECAM compliant.
-> It is non ECAM only for the RC bus config space;for any other bus
-> underneath the root bus we support ECAM access.
-> Add specific quirks for PCI config space accessors.This involves:
-> 1. New initialization call hisi_pcie_init() to obtain rc base
-> addresses from PNP0C02 at the root of the ACPI namespace (under \_SB).
-> 2. New entry in common quirk array.
+On Wed, Nov 30, 2016 at 05:45:18PM -0600, Bjorn Helgaas wrote:
+>On Thu, Dec 01, 2016 at 10:02:54AM +1100, Gavin Shan wrote:
+>> On Tue, Nov 29, 2016 at 06:06:05PM -0600, Bjorn Helgaas wrote:
+>> >On Wed, Nov 30, 2016 at 10:20:28AM +1100, Gavin Shan wrote:
+>> >> On Tue, Nov 29, 2016 at 08:48:26AM -0600, Bjorn Helgaas wrote:
+>> >> >On Tue, Nov 29, 2016 at 03:55:46PM +1100, Gavin Shan wrote:
+>> >> >> On Mon, Nov 28, 2016 at 10:15:06PM -0600, Bjorn Helgaas wrote:
+>> >> >> >Previously pci_update_resource() used the same code path for updating
+>> >> >> >standard BARs and VF BARs in SR-IOV capabilities.
+>> >> >> >
+>> >> >> >Split the VF BAR update into a new pci_iov_update_resource() internal
+>> >> >> >interface, which makes it simpler to compute the BAR address (we can get
+>> >> >> >rid of pci_resource_bar() and pci_iov_resource_bar()).
+>> >> >> >
+>> >> >> >This patch:
+>> >> >> >
+>> >> >> >  - Renames pci_update_resource() to pci_std_update_resource(),
+>> >> >> >  - Adds pci_iov_update_resource(),
+>> >> >> >  - Makes pci_update_resource() a wrapper that calls the appropriate one,
+>> >> >> >
+>> >> >> >No functional change intended.
+>> >
+>> >> >However, I don't think this code in pci_update_resource() is obviously
+>> >> >correct:
+>> >> >
+>> >> >  new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+>> >> >
+>> >> >PCI_REGION_FLAG_MASK is 0xf.  For memory BARs, bits 0-3 are read-only
+>> >> >property bits.  For I/O BARs, bits 0-1 are read-only and bits 2-3 are
+>> >> >part of the address, so on the face of it, the above could corrupt two
+>> >> >bits of an I/O address.
+>> >> >
+>> >> >It's true that decode_bar() initializes flags correctly, using
+>> >> >PCI_BASE_ADDRESS_IO_MASK for I/O BARs and PCI_BASE_ADDRESS_MEM_MASK
+>> >> >for memory BARs, but it would take a little more digging to be sure
+>> >> >that we never set bits 2-3 of flags for an I/O resource elsewhere.
+>> >> >
+>> >> 
+>> >> The BAR's property bits are probed from device-tree, not hardware
+>> >> on some platforms (e.g. pSeries). Also, there is only one (property)
+>> >> bit if it's a ROM BAR. So more check as below might be needed because
+>> >> the code (without the enhancement) should also work fine.
+>> >
+>> >Ah, right, I forgot about that.  I didn't do enough digging :)
+>> >
+>> >> >How about this in pci_std_update_resource():
+>> >> >
+>> >> >        pcibios_resource_to_bus(dev->bus, &region, res);
+>> >> >        new = region.start;
+>> >> >
+>> >> >        if (res->flags & IORESOURCE_IO) {
+>> >> >                mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+>> >> >                new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+>> >> >        } else {
+>> >> >                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>> >> >                new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>> >> >        }
+>> >> >
+>> >> 
+>> >> 	if (res->flags & IORESOURCE_IO) {
+>> >> 		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+>> >> 		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+>> >> 	} else if (resno < PCI_ROM_RESOURCE) {
+>> >> 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>> >> 		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+>> >> 	} else if (resno == PCI_ROM_RESOURCE) {
+>> >> 		mask = ~((u32)IORESOURCE_ROM_ENABLE);
+>> >> 		new |= res->flags & IORESOURCE_ROM_ENABLE);
+>> >> 	} else {
+>> >> 		dev_warn(&dev->dev, "BAR#%d out of range\n", resno);
+>> >> 		return;
+>> >> 	}
+>> >
+>> >After this patch, the only thing we OR into a ROM BAR value is
+>> >PCI_ROM_ADDRESS_ENABLE, and that's done below, only if the ROM is
+>> >already enabled.
+>> >
+>> >I did update the ROM mask (to PCI_ROM_ADDRESS_MASK).  I'm not 100%
+>> >sure about doing that -- it follows the spec, but it is a change from
+>> >what we've been doing before.  I guess it should be safe because it
+>> >means we're checking fewer bits than before (only the top 21 bits for
+>> >ROMs, where we used check the top 28), so the only possible difference
+>> >is that we might not warn about "error updating" in some case where we
+>> >used to.
+>> >
+>> >I'm not really sure about the value of the "error updating" checks to
+>> >begin with, though I guess it does help us find broken devices that
+>> >put non-BARs where BARs are supposed to be.
+>> >
+>> 
+>> Yeah, agree. Bjorn, I don't have more comments. please take your time
+>> to respin the series and maybe applied it. I really want to see the
+>> fixes can be in 4.10 if possible :-)
 >
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> ---
->  MAINTAINERS                       |   1 +
->  drivers/acpi/pci_mcfg.c           |  13 +++++
->  drivers/pci/host/Kconfig          |   7 +++
->  drivers/pci/host/Makefile         |   1 +
->  drivers/pci/host/pcie-hisi-acpi.c | 119 ++++++++++++++++++++++++++++++++++++++
->  include/linux/pci-ecam.h          |   5 ++
->  6 files changed, 146 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+>These will definitely be in v4.10.  Thanks for all your help!
 >
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 1cd38a7..b224caa 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9358,6 +9358,7 @@ L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->  F:	drivers/pci/host/pcie-hisi.c
-> +F:	drivers/pci/host/pcie-hisi-acpi.c
->
->  PCIE DRIVER FOR ROCKCHIP
->  M:	Shawn Lin <shawn.lin@rock-chips.com>
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index ac21db3..3297c5a 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -57,6 +57,19 @@ struct mcfg_fixup {
->  	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
->  	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
->  	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
-> +#ifdef CONFIG_PCI_ECAM_QUIRKS
-> +	#define PCI_ACPI_QUIRK_QUAD_DOM(table_id, seg, ops) \
-> +	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
-> +	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
-> +	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
-> +	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP05   ", 0, &hisi_pcie_ops),
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP06   ", 0, &hisi_pcie_ops),
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 0, &hisi_pcie_ops),
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 4, &hisi_pcie_ops),
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 8, &hisi_pcie_ops),
-> +	PCI_ACPI_QUIRK_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-> +#endif
->  };
->
->  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index ae98644..1fbade5 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -301,4 +301,11 @@ config VMD
->  	  To compile this driver as a module, choose M here: the
->  	  module will be called vmd.
->
-> +config PCI_ECAM_QUIRKS
-> +	bool "PCI ECAM quirks for ARM64 platform"
-> +	depends on PCI_ECAM && ARM64 && ACPI
-> +	help
-> +	  Say y here to enable your platform-specific config access that
-> +	  is not ECAM compliant.
-> +
 
-ARM64 selects PCI_ECAM for ACPI anyway so we can skip it here.
-
-How about selecting PCI_ECAM_QUIRKS from ARM64 Kconfig:
-
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 30398db..9743186 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -105,6 +105,7 @@ config ARM64
-         select OF_EARLY_FLATTREE
-         select OF_RESERVED_MEM
-         select PCI_ECAM if ACPI
-+       select PCI_ECAM_QUIRKS if ACPI
-         select POWER_RESET
-         select POWER_SUPPLY
-         select SPARSE_IRQ
-
-I agree with Bjorn, we should not have to turn on platform-specific 
-config options for ARM64 & ACPI.
-
-Thanks,
-Tomasz
+Thanks for your helps actually :-)
