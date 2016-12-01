@@ -1,64 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38740 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754307AbcKXRzo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Nov 2016 12:55:44 -0500
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
- <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
-Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
-Date: Thu, 24 Nov 2016 10:55:39 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Dennis Chen <dennis.chen@arm.com>
+To: <linux-pci@vger.kernel.org>
+Subject: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not enough
+Date: Thu, 1 Dec 2016 10:15:04 +0800
+Message-ID: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>,
+ Dennis Chen <dennis.chen@arm.com>, nd@arm.com, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
+when the device doesn't have enough vectors as required, just as the 
+MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
+some drivers depending on that return value will probably fallback to
+the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
+("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
+ahci driver will fallback to single MSI mode only when the return value
+is -ENOSPC in case of required vectors is not enough, else the driver will
+use legacy interrupt which has been observed on a x86 box with 6-port SATA
+controller.
 
-On 24/11/16 02:45 AM, Christian König wrote:
-> E.g. it can happen that PCI device A exports it's BAR using ZONE_DEVICE.
-> Not PCI device B (a SATA device) can directly read/write to it because
-> it is on the same bus segment, but PCI device C (a network card for
-> example) can't because it is on a different bus segment and the bridge
-> can't handle P2P transactions.
+With this patch, when a MSI-capable device doesn't have enough MSI
+vectors as requested, it will fallback to single MSI mode while not
+legacy interrupt.
 
-Yeah, that could be an issue but in our experience we have yet to see
-it. We've tested with two separate PCI buses on different CPUs connected
-through QPI links and it works fine. (It is rather slow but I understand
-Intel has improved the bottleneck in newer CPUs than the ones we tested.)
+Signed-off-by: Dennis Chen <dennis.chen@arm.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Steve Capper <steve.capper@arm.com>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ drivers/pci/msi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It may just be older hardware that has this issue. I expect that as long
-as a failed transfer can be handled gracefully by the initiator I don't
-see a need to predetermine whether a device can see another devices memory.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ad70507..da37113 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 	if (nvec < 0)
+ 		return nvec;
+ 	if (nvec < minvec)
+-		return -EINVAL;
++		return -ENOSPC;
+ 
+ 	if (nvec > maxvec)
+ 		nvec = maxvec;
+-- 
+2.7.4
 
 
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
