@@ -1,68 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36070 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752456AbcLLQCD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Dec 2016 11:02:03 -0500
-Date: Mon, 12 Dec 2016 10:01:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, x86@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
-Message-ID: <20161212160155.GA29792@bhelgaas-glaptop.roam.corp.google.com>
-References: <ba07572b4c4fad1f60593454693a58137f518896.1480859081.git.lukas@wunner.de>
- <20161207225315.GI22129@bhelgaas-glaptop.roam.corp.google.com>
- <20161212072733.GA23597@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andy Gospodarek <gospo@broadcom.com>
+To: bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org
+Subject: [PATCH pci/host-iproc] pci-iproc: skip check for legacy IRQ on PAXC
+ buses
+Date: Thu,  1 Dec 2016 15:34:52 -0500
+Message-Id: <1480624492-32420-1-git-send-email-gospo@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ray Jui <rjui@broadcom.com>, Andy Gospodarek <gospo@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20161212072733.GA23597@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 12, 2016 at 08:27:33AM +0100, Ingo Molnar wrote:
-> 
-> * Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > On Sun, Dec 04, 2016 at 03:35:55PM +0100, Lukas Wunner wrote:
-> > > This struct never needs to be modified.  The size of pci-mid.o ELF
-> > > sections changes thusly:
-> > > 
-> > > -.data          56
-> > > +.data           0
-> > > -.rodata        32
-> > > +.rodata        88
-> > > 
-> > > Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > 
-> > Ingo, do you want this, since you've taken the previous updates?
-> > 
-> > It's trivial but doesn't apply cleanly to my tree, which makes me think
-> > it might be based on other changes I don't have.
-> 
-> It applies to upstream v4.9 cleanly, so I guess it's due to other changes you have 
-> in your tree?
-> 
-> Could you take it? Me having dabbled in drivers/pci/ is more of an outlier.
+PAXC and PAXCv2 buses do not support legacy IRQs so there is no reason
+to even try and map them.  Without a change like this, one cannot create
+VFs on Nitro ports since legacy interrupts are checked as part of the
+PCI device creation process.  Testing on PAXC hardware showed that VFs
+are properly created with only the change to not set pcie->map_irq, but
+just to be safe the change in iproc_pcie_setup will ensure that
+pdev_fixup_irq will not panic.
 
-Applied to pci/pm for v4.10.
+Signed-off-by: Andy Gospodarek <gospo@broadcom.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-platform.c | 9 ++++++++-
+ drivers/pci/host/pcie-iproc.c          | 5 ++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-It didn't apply cleanly to v4.9-rc1, which is what my v4.10 branches
-are based on.  It applies cleanly on e8a6123e9ead
-("x86/platform/intel-mid: Retrofit pci_platform_pm_ops ->get_state
-hook"), which was not in v4.9-rc1 but was merged via
-x86-urgent-for-linus (8528d662489a).
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index fd3ed9b..22d814a 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -108,7 +108,14 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	pcie->map_irq = of_irq_parse_and_map_pci;
++	/* PAXC doesn't support legacy IRQs, skip mapping */
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXC:
++	case IPROC_PCIE_PAXC_V2:
++		break;
++	default:
++		pcie->map_irq = of_irq_parse_and_map_pci;
++	}
+ 
+ 	ret = iproc_pcie_setup(pcie, &res);
+ 	if (ret)
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index cd51334..3ebc025 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -1274,7 +1274,10 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+-	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
++
++	if (pcie->map_irq)
++		pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
++
+ 	pci_bus_add_devices(bus);
+ 
+ 	return 0;
+-- 
+2.1.0
 
-I can't remember why we decided to put pci-mid.c in drivers/pci.  The
-obviously reason is that it uses pci_platform_pm_ops, which isn't
-visible outside drivers/pci, but pci-mid.c is clearly platform-
-specific, and even the name "pci_platform_pm_ops" sounds like
-something that should be implemented in the arch directories, so maybe
-pci_platform_pm_ops should be moved to include/linux/pci.h.
 
-I have strange sense of déjà vu writing this, so sorry if I'm
-repeating something.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
