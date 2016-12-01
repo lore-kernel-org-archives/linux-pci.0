@@ -1,135 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 22 Dec 2016 14:28:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>, rwright@hpe.com,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: possible dmar_init_reserved_ranges() error
-Message-ID: <20161222202803.GA16855@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
- <20161222162713.GF17255@8bytes.org>
+Return-Path: <SRS0=z8Wx=XQ=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=z8Wx=XQ=semihalf.com=tn@kernel.org>
+Subject: Re: [PATCH v10 12/12] PCI: Add MCFG quirks for Cavium ThunderX
+ pass1.x host controller
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201083106.12247.20708.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Christopher Covington
+ <cov@codeaurora.org>, Dongdong Liu <liudongdong3@huawei.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <acb37ba2-e92e-f35b-d650-798193f7c9a5@semihalf.com>
+Date: Thu, 1 Dec 2016 20:02:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161222162713.GF17255@8bytes.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161201083106.12247.20708.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 22, 2016 at 05:27:14PM +0100, Joerg Roedel wrote:
-> Hi Bjorn,
-> 
-> On Mon, Dec 19, 2016 at 03:20:44PM -0600, Bjorn Helgaas wrote:
-> > I have some questions about dmar_init_reserved_ranges().  On systems
-> > where CPU physical address space is not identity-mapped to PCI bus
-> > address space, e.g., where the PCI host bridge windows have _TRA
-> > offsets, I'm not sure we're doing the right thing.
-> > 
-> > Assume we have a PCI host bridge with _TRA that maps CPU addresses
-> > 0x80000000-0x9fffffff to PCI bus addresses 0x00000000-0x1fffffff, with
-> > two PCI devices below it:
-> > 
-> >   PCI host bridge domain 0000 [bus 00-3f]
-> >   PCI host bridge window [mem 0x80000000-0x9fffffff] (bus 0x00000000-0x1fffffff]
-> >   00:00.0: BAR 0 [mem 0x80000000-0x8ffffffff] (0x00000000-0x0fffffff on bus)
-> >   00:01.0: BAR 0 [mem 0x90000000-0x9ffffffff] (0x10000000-0x1fffffff on bus)
-> > 
-> > The IOMMU init code in dmar_init_reserved_ranges() reserves the PCI
-> > MMIO space for all devices:
-> > 
-> >   pci_iommu_init()
-> >     intel_iommu_init()
-> >       dmar_init_reserved_ranges()
-> >         reserve_iova(0x80000000-0x8ffffffff)
-> >         reserve_iova(0x90000000-0x9ffffffff)
-> > 
-> > This looks odd because we're reserving CPU physical addresses, but
-> > the IOVA space contains *PCI bus* addresses.  On most x86 systems they
-> > would be the same, but not on all.
-> 
-> Interesting, I wasn't aware of that. Looks like we are not doing the
-> right thing in dmar_init_reserved_ranges(). How is that handled without
-> an IOMMU, when the bus-addresses overlap with ram addresses?
+On 01.12.2016 09:31, Bjorn Helgaas wrote:
+> From: Tomasz Nowicki <tn@semihalf.com>
+>
+> ThunderX pass1.x requires to emulate the EA headers for on-chip devices
+> hence it has to use custom pci_thunder_ecam_ops for accessing PCI config
+> space (pci-thuner-ecam.c). Add new entries to MCFG quirk array where it can
+> be applied while probing ACPI based PCI host controller.
+>
+> ThunderX pass1.x is using the same way for accessing off-chip devices
+> (so-called PEM) as silicon pass-2.x so we need to add PEM quirk entries
+> too.
+>
+> Quirk is considered for ThunderX silicon pass1.x only which is identified
+> via MCFG revision 2.
+>
+> [bhelgaas: change Makefile/ifdefs so quirk doesn't depend on
+> CONFIG_PCI_HOST_THUNDER_ECAM]
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/acpi/pci_mcfg.c             |   15 +++++++++++++++
+>  drivers/pci/host/Makefile           |    2 +-
+>  drivers/pci/host/pci-thunder-ecam.c |    9 ++++++++-
+>  include/linux/pci-ecam.h            |    1 +
+>  4 files changed, 25 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index a48b508..cdceaf5 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -93,6 +93,21 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>  	/* SoC pass2.x */
+>  	THUNDER_PEM_QUIRK(1, 0UL),
+>  	THUNDER_PEM_QUIRK(1, 1UL),
+> +
+> +#define THUNDER_ECAM_QUIRK(rev, node)					\
+> +	{ "CAVIUM", "THUNDERX", rev, node, MCFG_BUS_ANY,		\
+> +	&pci_thunder_ecam_ops },
 
-I don't know enough about these systems to answer that.  One way would
-be to avoid overlaps, e.g., by using bus addresses
-0x80000000-0xffffffff and not putting RAM at those addresses.  Or
-maybe the host bridge could apply a constant offset to bus addresses
-before forwarding transactions up to the sytem bus.
+Nit: 0-3 and 10-11 are segment ranges:
 
-> > Assume the driver for 00:00.0 maps a page of main memory for DMA.  It
-> > may receive a dma_addr_t of 0x10000000:
-> > 
-> >   00:00.0: intel_map_page() returns dma_addr_t 0x10000000
-> >   00:00.0: issues DMA to 0x10000000
-> > 
-> > What happens here?  The DMA access should go to main memory.  In
-> > conventional PCI it would be a peer-to-peer access to device 00:01.0.
-> > Is there enough PCIe smarts (ACS or something?) to do otherwise?
-> 
-> If there is a bridge doing ACS between the devices, the IOMMU will see
-> the request and re-map it to its RAM address.
-> 
-> > The dmar_init_reserved_ranges() comment says "Reserve all PCI MMIO to
-> > avoid peer-to-peer access."  Without _TRA, CPU addresses and PCI bus
-> > addresses would be identical, and I think these reserve_iova() calls
-> > *would* prevent this situation.  So maybe we're just missing a
-> > pcibios_resource_to_bus() here?
-> 
-> I'll have a look, the AMD IOMMU driver implements this too, so it needs
-> also be fixed there. Do you know which x86 systems are configured like
-> this?
++#define THUNDER_ECAM_QUIRK(rev, seg)			\
++	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,	\
++	&pci_thunder_ecam_ops },
 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=b4873931cc8c
-added this support, and I'm pretty sure it was tested, but I don't
-know what machines it was for.  I know many large ia64 systems use
-this _TRA support, but I don't have first-hand knowledge of x86
-systems that do.
+> +	/* SoC pass1.x */
+> +	THUNDER_PEM_QUIRK(2,  0),	/* off-chip devices */
+> +	THUNDER_PEM_QUIRK(2,  1),	/* off-chip devices */
+> +	THUNDER_ECAM_QUIRK(2,  0),
+> +	THUNDER_ECAM_QUIRK(2,  1),
+> +	THUNDER_ECAM_QUIRK(2,  2),
+> +	THUNDER_ECAM_QUIRK(2,  3),
+> +	THUNDER_ECAM_QUIRK(2, 10),
+> +	THUNDER_ECAM_QUIRK(2, 11),
+> +	THUNDER_ECAM_QUIRK(2, 12),
+> +	THUNDER_ECAM_QUIRK(2, 13),
+>  };
+>
+>  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 97e6bfc..639494a 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -27,7 +27,7 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+>  obj-$(CONFIG_ARM64) += pcie-hisi.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+> -obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+> +obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+>  obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+> index d50a3dc..3f54a43 100644
+> --- a/drivers/pci/host/pci-thunder-ecam.c
+> +++ b/drivers/pci/host/pci-thunder-ecam.c
+> @@ -14,6 +14,8 @@
+>  #include <linux/pci-ecam.h>
+>  #include <linux/platform_device.h>
+>
+> +#if defined(CONFIG_PCI_HOST_THUNDER_ECAM) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
+> +
+>  static void set_val(u32 v, int where, int size, u32 *val)
+>  {
+>  	int shift = (where & 3) * 8;
+> @@ -346,7 +348,7 @@ static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
+>  	return pci_generic_config_write(bus, devfn, where, size, val);
+>  }
+>
+> -static struct pci_ecam_ops pci_thunder_ecam_ops = {
+> +struct pci_ecam_ops pci_thunder_ecam_ops = {
+>  	.bus_shift	= 20,
+>  	.pci_ops	= {
+>  		.map_bus        = pci_ecam_map_bus,
+> @@ -355,6 +357,8 @@ static struct pci_ecam_ops pci_thunder_ecam_ops = {
+>  	}
+>  };
+>
+> +#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+> +
+>  static const struct of_device_id thunder_ecam_of_match[] = {
+>  	{ .compatible = "cavium,pci-host-thunder-ecam" },
+>  	{ },
+> @@ -373,3 +377,6 @@ static struct platform_driver thunder_ecam_driver = {
+>  	.probe = thunder_ecam_probe,
+>  };
+>  builtin_platform_driver(thunder_ecam_driver);
+> +
+> +#endif
+> +#endif
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index e88d7db..2afa70b 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -63,6 +63,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+>  extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
+>  extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
+>  extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
+> +extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
 
-The untested patch below is what I was thinking for the Intel IOMMU
-driver.
+nit: thunder_pem_ecam_ops is also valid for ThunderX pass1.x too. We add 
+relevant entries to mcfg_quirks array above. Also we use passY.X for SoC 
+version.
 
-Bjorn
+extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 
+pass2.x and pass1.x */
+extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 
+pass1.x */
 
-
-commit 529a6db0b0b2ff37a0cdb49d11eee4eb6f960a48
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Dec 20 11:08:09 2016 -0600
-
-    iommu/vt-d: Reserve IOVA space for bus address, not CPU address
-    
-    IOVA space contains bus addresses, not CPU addresses.  On many systems they
-    are identical, but PCI host bridges in some systems do apply an address
-    offset when forwarding CPU MMIO transactions to PCI.  In ACPI, this is
-    expressed as a _TRA offset in the window descriptor.
-    
-    Convert the PCI resource CPU addresses to PCI bus addresses before
-    reserving them in the IOVA space.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c66c273..be78ab7 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1865,6 +1865,7 @@ static struct lock_class_key reserved_rbtree_key;
- static int dmar_init_reserved_ranges(void)
- {
- 	struct pci_dev *pdev = NULL;
-+	struct pci_bus_region region;
- 	struct iova *iova;
- 	int i;
- 
-@@ -1890,9 +1891,11 @@ static int dmar_init_reserved_ranges(void)
- 			r = &pdev->resource[i];
- 			if (!r->flags || !(r->flags & IORESOURCE_MEM))
- 				continue;
-+
-+			pcibios_resource_to_bus(pdev->bus, &region, r);
- 			iova = reserve_iova(&reserved_iova_list,
--					    IOVA_PFN(r->start),
--					    IOVA_PFN(r->end));
-+					    IOVA_PFN(region.start),
-+					    IOVA_PFN(region.end));
- 			if (!iova) {
- 				pr_err("Reserve iova failed\n");
- 				return -ENODEV;
+Thanks for this patch set Bjorn!
+Tomasz
