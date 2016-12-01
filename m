@@ -1,178 +1,159 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 6 Dec 2016 09:37:10 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Sricharan R <sricharan@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] ACPI/IORT: Make dma masks set-up IORT specific
-Message-ID: <20161206093710.GA4432@red-moon>
-References: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
- <CAJZ5v0hbc61=QCYDgHZ_KbxR7VkSSWrHVGvU47fG6hsQrSJKhw@mail.gmail.com>
+Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
+Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hbc61=QCYDgHZ_KbxR7VkSSWrHVGvU47fG6hsQrSJKhw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
+ <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <1480620053.4751.30.camel@redhat.com> <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 1 Dec 2016 14:10:10 -0800
+Message-ID: <CADaLNDkVPRPSg0aU-sxHsiJbVvEn=LxcekDt6gfXBBhc+fzhjw@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mark Salter <msalter@redhat.com>, Rafael Wysocki <rafael@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Masters <jcm@redhat.com>,
+	Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+On Thu, Dec 1, 2016 at 11:41 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Dec 01, 2016 at 02:20:53PM -0500, Mark Salter wrote:
+>> On Thu, 2016-12-01 at 12:33 -0600, Bjorn Helgaas wrote:
+>> > On Wed, Nov 30, 2016 at 03:42:53PM -0800, Duc Dang wrote:
+>
+>> > > +static struct resource xgene_v1_csr_res[] = {
+>> > > + [0] = DEFINE_RES_MEM_NAMED(0x1f2b0000UL, SZ_64K, "PCIe CSR"),
+>> > > + [1] = DEFINE_RES_MEM_NAMED(0x1f2c0000UL, SZ_64K, "PCIe CSR"),
+>> > > + [2] = DEFINE_RES_MEM_NAMED(0x1f2d0000UL, SZ_64K, "PCIe CSR"),
+>> > > + [3] = DEFINE_RES_MEM_NAMED(0x1f500000UL, SZ_64K, "PCIe CSR"),
+>> > > + [4] = DEFINE_RES_MEM_NAMED(0x1f510000UL, SZ_64K, "PCIe CSR"),
+>> > I assume these ranges are not the actual ECAM space, right?
+>> > If they *were* ECAM, I assume you would have included them in the
+>> > quirk itself in the mcfg_quirks[] table.
+>>
+>> These are base addresses for some RC mmio registers.
+>> >
+>> > >
+>> > > +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
+>> > > +{
+>> > > + struct acpi_device *adev = to_acpi_device(cfg->parent);
+>> > > + struct acpi_pci_root *root = acpi_driver_data(adev);
+>> > > + struct device *dev = cfg->parent;
+>> > > + struct xgene_pcie_port *port;
+>> > > + struct resource *csr;
+>> > > +
+>> > > + port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+>> > > + if (!port)
+>> > > +         return -ENOMEM;
+>> > > +
+>> > > + csr = &xgene_v1_csr_res[root->segment];
+>> > This makes me nervous because root->segment comes from the ACPI _SEG,
+>> > and if firmware gives us junk in _SEG, we will reference something in
+>> > the weeds.
+>>
+>> The SoC provide some number of RC bridges, each with a different base
+>> for some mmio registers. Even if segment is legitimate in MCFG, there
+>> is still a problem if a platform doesn't use the segment ordering
+>> implied by the code. But the PNP0A03 _CRS does have this base address
+>> as the first memory resource, so we could get it from there and not
+>> have hard-coded addresses and implied ording in the quirk code.
+>
+> I'm confused.  Doesn't the current code treat every item in PNP0A03
+> _CRS as a window?  Do you mean the first resource is handled
+> differently somehow?  The Consumer/Producer bit could allow us to do
+> this by marking the RC MMIO space as "Consumer", but I didn't think
+> that strategy was quite working yet.
 
-On Mon, Dec 05, 2016 at 11:18:56PM +0100, Rafael J. Wysocki wrote:
-> On Mon, Dec 5, 2016 at 1:26 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > The introduction of acpi_dma_configure() allows to configure DMA
-> > and related IOMMU for any device that is DMA capable. To achieve
-> > that goal it ensures DMA masks are set-up to sane default values
-> > before proceeding with IOMMU and DMA ops configuration.
-> >
-> > On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
-> > called for every device that has an ACPI companion, in that every device
-> > is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
-> > which has the side effect of initializing dma masks also for
-> > pseudo-devices (eg CPUs and memory nodes) and potentially for devices
-> > whose dma masks were not set-up before the acpi_dma_configure() API was
-> > introduced, which may have noxious side effects.
-> >
-> > Therefore, in preparation for IORT firmware specific DMA masks set-up,
-> > wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
-> > specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
-> > default expected behaviour on x86/ia64 systems and keeping DMA default
-> > masks set-up on IORT based (ie ARM) arch configurations.
-> >
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Robin Murphy <robin.murphy@arm.com>
-> > Cc: Tomasz Nowicki <tn@semihalf.com>
-> > Cc: Joerg Roedel <joro@8bytes.org>
-> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > Cc: Sricharan R <sricharan@codeaurora.org>
-> 
-> Acked -by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> > ---
-> > Joerg,
-> >
-> > pending Rafael's ACK on it, given the 4.10 release timing and that the
-> > series is queued via the IOMMU tree please consider applying this patch to
-> > your arm/smmu branch for 4.10, it is not fixing a bug but it is modifying
-> > the x86/ia64 code path; I prefer preventing any issue related to default
-> > dma masks on x86/ia64 so I hope it can get merged along with the rest of
-> > the ACPI IORT SMMU series.
+The first resource is defined like below. It was introduced long time
+ago to use with older version of X-Gene ECAM quirks.
+Memory32Fixed(ReadWrite, 0x1F2B0000, 0x10000, )
 
-I can apply Rafael and Hanjun's tags and resend a v2 to you if you
-prefer, it would be great if you could apply this patch to your arm/smmu
-branch for v4.10 as per description above, please let me know.
+The resource discovered during booting will be like following:
+[    0.728117] ACPI: MCFG table detected, 1 entries
+[    0.735330] ACPI: Power Resource [SCVR] (on)
+[    0.767478] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+[    0.774013] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM
+ClockPM Segments MSI]
+[    0.782864] acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME
+AER PCIeCapability]
+[    0.791331] acpi PNP0A08:00: MCFG quirk: ECAM at [mem
+0xe0d0000000-0xe0dfffffff] for [bus 00-ff] with xgene_v1_pcie_ecam_ops
+[    0.803207] acpi PNP0A08:00: ECAM at [mem
+0xe0d0000000-0xe0dfffffff] for [bus 00-ff]
+[    0.811399] Remapped I/O 0x000000e010000000 to [io  0x0000-0xffff window]
+[    0.818678] PCI host bridge to bus 0000:00
+[    0.822990] pci_bus 0000:00: root bus resource [mem 0x1f2b0000-0x1f2bffff]
+[    0.830257] pci_bus 0000:00: root bus resource [io  0x0000-0xffff
+window] (bus address [0x10000000-0x1000ffff])
+[    0.840917] pci_bus 0000:00: root bus resource [mem
+0xe040000000-0xe07fffffff window] (bus address
+[0x40000000-0x7fffffff])
+[    0.852675] pci_bus 0000:00: root bus resource [mem
+0xf000000000-0xffffffffff window]
+[    0.860950] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    0.866761] pci 0000:00:00.0: [10e8:e004] type 01 class 0x060400
+[    0.873175] pci 0000:00:00.0: supports D1 D2
+[    0.877980] pci 0000:01:00.0: [15b3:1003] type 00 class 0x020000
+[    0.884597] pci 0000:01:00.0: reg 0x10: [mem 0xe040000000-0xe0400fffff 64bit]
+[    0.892337] pci 0000:01:00.0: reg 0x18: [mem
+0xe042000000-0xe043ffffff 64bit pref]
+[    0.900694] pci 0000:01:00.0: reg 0x30: [mem 0xfff00000-0xffffffff pref]
+[    0.923853] pci_bus 0000:00: on NUMA node 0
+[    0.928269] pci 0000:00:00.0: BAR 15: assigned [mem
+0xf000000000-0xf001ffffff 64bit pref]
+[    0.936908] pci 0000:00:00.0: BAR 14: assigned [mem
+0xe040000000-0xe0401fffff]
+[    0.944539] pci 0000:01:00.0: BAR 2: assigned [mem
+0xf000000000-0xf001ffffff 64bit pref]
+[    0.953210] pci 0000:01:00.0: BAR 0: assigned [mem
+0xe040000000-0xe0400fffff 64bit]
+[    0.961430] pci 0000:01:00.0: BAR 6: assigned [mem
+0xe040100000-0xe0401fffff pref]
+[    0.969438] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    0.974690] pci 0000:00:00.0:   bridge window [mem 0xe040000000-0xe0401fffff]
+[    0.982231] pci 0000:00:00.0:   bridge window [mem
+0xf000000000-0xf001ffffff 64bit pref]
 
-Thank you !
-Lorenzo
+>
+>> I have tested a modified version of these quirks using this to
+>> get the CSR base and it works on the 3 different platforms I have
+>> access to.
+>>
+>> static int xgene_pcie_get_csr(struct device *dev, struct resource *r)
+>> {
+>>       struct acpi_device *adev = to_acpi_device(dev);
+>>       unsigned long flags;
+>>       struct list_head list;
+>>       struct resource_entry *entry;
+>>       int ret;
+>>
+>>       INIT_LIST_HEAD(&list);
+>>       flags = IORESOURCE_MEM;
+>>       ret = acpi_dev_get_resources(adev, &list,
+>>                                    acpi_dev_filter_resource_type_cb,
+>>                                    (void *)flags);
+>>       if (ret < 0) {
+>>               dev_err(dev, "failed to parse _CRS, error: %d\n", ret);
+>>               return ret;
+>>       } else if (ret == 0) {
+>>               dev_err(dev, "no memory resources present in _CRS\n");
+>>               return -EINVAL;
+>>       }
+>>
+>>       entry = list_first_entry(&list, struct resource_entry, node);
+>>       *r = *entry->res;
+>>       acpi_dev_free_resource_list(&list);
+>>       return 0;
+>> }
+>
+> The code above is identical to acpi_get_rc_addr(), which is used in
+> the acpi_get_rc_resources() path by the other quirks.  Can you use
+> that path, too, instead of reimplementing it here?
 
-> >
-> > Thanks a lot and apologies,
-> > Lorenzo
-> >
-> >  drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
-> >  drivers/acpi/scan.c       | 14 +-------------
-> >  include/linux/acpi_iort.h |  2 ++
-> >  3 files changed, 25 insertions(+), 13 deletions(-)
-> >
-> > diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> > index 47bace8..e0d2e6e 100644
-> > --- a/drivers/acpi/arm64/iort.c
-> > +++ b/drivers/acpi/arm64/iort.c
-> > @@ -547,6 +547,28 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
-> >  }
-> >
-> >  /**
-> > + * iort_set_dma_mask - Set-up dma mask for a device.
-> > + *
-> > + * @dev: device to configure
-> > + */
-> > +void iort_set_dma_mask(struct device *dev)
-> > +{
-> > +       /*
-> > +        * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-> > +        * setup the correct supported mask.
-> > +        */
-> > +       if (!dev->coherent_dma_mask)
-> > +               dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> > +
-> > +       /*
-> > +        * Set it to coherent_dma_mask by default if the architecture
-> > +        * code has not set it.
-> > +        */
-> > +       if (!dev->dma_mask)
-> > +               dev->dma_mask = &dev->coherent_dma_mask;
-> > +}
-> > +
-> > +/**
-> >   * iort_iommu_configure - Set-up IOMMU configuration for a device.
-> >   *
-> >   * @dev: device to configure
-> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> > index 80698d3..93b00cf 100644
-> > --- a/drivers/acpi/scan.c
-> > +++ b/drivers/acpi/scan.c
-> > @@ -1380,19 +1380,7 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> >  {
-> >         const struct iommu_ops *iommu;
-> >
-> > -       /*
-> > -        * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-> > -        * setup the correct supported mask.
-> > -        */
-> > -       if (!dev->coherent_dma_mask)
-> > -               dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> > -
-> > -       /*
-> > -        * Set it to coherent_dma_mask by default if the architecture
-> > -        * code has not set it.
-> > -        */
-> > -       if (!dev->dma_mask)
-> > -               dev->dma_mask = &dev->coherent_dma_mask;
-> > +       iort_set_dma_mask(dev);
-> >
-> >         iommu = iort_iommu_configure(dev);
-> >
-> > diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-> > index dcb2b60..77e0809 100644
-> > --- a/include/linux/acpi_iort.h
-> > +++ b/include/linux/acpi_iort.h
-> > @@ -35,6 +35,7 @@ bool iort_node_match(u8 type);
-> >  u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-> >  struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
-> >  /* IOMMU interface */
-> > +void iort_set_dma_mask(struct device *dev);
-> >  const struct iommu_ops *iort_iommu_configure(struct device *dev);
-> >  #else
-> >  static inline void acpi_iort_init(void) { }
-> > @@ -45,6 +46,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
-> >                                                         u32 req_id)
-> >  { return NULL; }
-> >  /* IOMMU interface */
-> > +static inline void iort_set_dma_mask(struct device *dev) { }
-> >  static inline
-> >  const struct iommu_ops *iort_iommu_configure(struct device *dev)
-> >  { return NULL; }
-> > --
-> > 2.10.0
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I will post a new version using acpi_get_rc_resources and includes
+other changes that you suggested.
+
+Regards,
+Duc Dang.
