@@ -1,103 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 8 Dec 2016 17:34:33 +0100
-From: Robert Richter <robert.richter@cavium.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [Linaro-acpi] [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI
- controller for ThunderX pass2.x silicon version
-Message-ID: <20161208163433.GK10776@rric.localdomain>
-References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
- <1479201298-25494-2-git-send-email-tn@semihalf.com>
- <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
- <e5b1f09c-ca4c-fbf0-e9d7-c943ad0df2ff@redhat.com>
- <CADaLNDm8Zp_kAqVvSd0po9S3j2rSXxtUJ1M33dW7gLZzvueweQ@mail.gmail.com>
- <30ad6c65-4a4a-6346-00f6-11250133a251@semihalf.com>
- <20161202104500.GE10776@rric.localdomain>
- <20161202162743.GB9903@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44310 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934001AbcLAUYZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 15:24:25 -0500
+Date: Thu, 1 Dec 2016 14:24:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v10 12/12] PCI: Add MCFG quirks for Cavium ThunderX
+ pass1.x host controller
+Message-ID: <20161201202416.GB8263@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201083106.12247.20708.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <acb37ba2-e92e-f35b-d650-798193f7c9a5@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <20161202162743.GB9903@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
- Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>,
- Jayachandran C <jchandra@broadcom.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann <arnd@arndb.de>,
- Rafael Wysocki <rafael@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Will Deacon <will.deacon@arm.com>,
- David Daney <ddaney@caviumnetworks.com>, Jeremy Linton <jeremy.linton@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
- linux-acpi@vger.kernel.org, Christopher Covington <cov@codeaurora.org>,
- linux-pci@vger.kernel.org, Marcin Wojtas <mw@semihalf.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <acb37ba2-e92e-f35b-d650-798193f7c9a5@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.12.16 10:27:43, Bjorn Helgaas wrote:
-> On Fri, Dec 02, 2016 at 11:45:00AM +0100, Robert Richter wrote:
-> > On 02.12.16 11:06:24, Tomasz Nowicki wrote:
-> > > On 02.12.2016 07:42, Duc Dang wrote:
-> > 
-> > > >@@ -98,16 +98,16 @@ struct mcfg_fixup {
-> > > >        { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
-> > > >        &pci_thunder_ecam_ops }
-> > > >        /* SoC pass1.x */
-> > > >-   THUNDER_PEM_QUIRK(2,  0),       /* off-chip devices */
-> > > >-   THUNDER_PEM_QUIRK(2,  1),       /* off-chip devices */
-> > > >-   THUNDER_ECAM_QUIRK(2,  0),
-> > > >-   THUNDER_ECAM_QUIRK(2,  1),
-> > > >-   THUNDER_ECAM_QUIRK(2,  2),
-> > > >-   THUNDER_ECAM_QUIRK(2,  3),
-> > > >-   THUNDER_ECAM_QUIRK(2, 10),
-> > > >-   THUNDER_ECAM_QUIRK(2, 11),
-> > > >-   THUNDER_ECAM_QUIRK(2, 12),
-> > > >-   THUNDER_ECAM_QUIRK(2, 13),
-> > > >+ THUNDER_PEM_QUIRK(2, 0UL),  /* off-chip devices */
-> > > >+ THUNDER_PEM_QUIRK(2, 1UL),  /* off-chip devices */
-> > > >+ THUNDER_ECAM_QUIRK(2, 0UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 1UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 2UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 3UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 10UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 11UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 12UL),
-> > > >+ THUNDER_ECAM_QUIRK(2, 13UL),
-> > > >
-> > > 
-> > > The UL suffix is needed for *THUNDER_PEM_QUIRK* only. THUNDER_ECAM_QUIRK is
-> > > fine.
-> > 
-> > We should better make the type cast part of the macro.
-> > 
-> > + this:
-> > 
-> > ---
-> > #define THUNDER_MCFG_RES(addr, node) \
-> >        DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
-> > ---
-> > 
-> > The args in the macro need parentheses.
+On Thu, Dec 01, 2016 at 08:02:29PM +0100, Tomasz Nowicki wrote:
+> On 01.12.2016 09:31, Bjorn Helgaas wrote:
+> >From: Tomasz Nowicki <tn@semihalf.com>
+> >
+> >ThunderX pass1.x requires to emulate the EA headers for on-chip devices
+> >hence it has to use custom pci_thunder_ecam_ops for accessing PCI config
+> >space (pci-thuner-ecam.c). Add new entries to MCFG quirk array where it can
+> >be applied while probing ACPI based PCI host controller.
+> >
+> >ThunderX pass1.x is using the same way for accessing off-chip devices
+> >(so-called PEM) as silicon pass-2.x so we need to add PEM quirk entries
+> >too.
+> >
+> >Quirk is considered for ThunderX silicon pass1.x only which is identified
+> >via MCFG revision 2.
+> >
+> >[bhelgaas: change Makefile/ifdefs so quirk doesn't depend on
+> >CONFIG_PCI_HOST_THUNDER_ECAM]
+> >Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >---
+> > drivers/acpi/pci_mcfg.c             |   15 +++++++++++++++
+> > drivers/pci/host/Makefile           |    2 +-
+> > drivers/pci/host/pci-thunder-ecam.c |    9 ++++++++-
+> > include/linux/pci-ecam.h            |    1 +
+> > 4 files changed, 25 insertions(+), 2 deletions(-)
+> >
+> >diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> >index a48b508..cdceaf5 100644
+> >--- a/drivers/acpi/pci_mcfg.c
+> >+++ b/drivers/acpi/pci_mcfg.c
+> >@@ -93,6 +93,21 @@ static struct mcfg_fixup mcfg_quirks[] = {
+> > 	/* SoC pass2.x */
+> > 	THUNDER_PEM_QUIRK(1, 0UL),
+> > 	THUNDER_PEM_QUIRK(1, 1UL),
+> >+
+> >+#define THUNDER_ECAM_QUIRK(rev, node)					\
+> >+	{ "CAVIUM", "THUNDERX", rev, node, MCFG_BUS_ANY,		\
+> >+	&pci_thunder_ecam_ops },
 > 
-> Would you mind sending me a little incremental patch doing what you
-> want?  I could try myself, but since I don't have an arm64 cross-build
-> setup, I'm working in the dark.
+> Nit: 0-3 and 10-11 are segment ranges:
+> 
+> +#define THUNDER_ECAM_QUIRK(rev, seg)			\
+> +	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,	\
+> +	&pci_thunder_ecam_ops },
 
-Your current branch looks good.
+> > extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
+> >+extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
+> 
+> nit: thunder_pem_ecam_ops is also valid for ThunderX pass1.x too. We
+> add relevant entries to mcfg_quirks array above. Also we use passY.X
+> for SoC version.
+> 
+> extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX
+> pass2.x and pass1.x */
+> extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX
+> pass1.x */
 
- 5d06f9125ec0 PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy
+I updated these with the following incremental diff.  I hope this is what
+you meant!
 
-Thanks,
-
--Robert
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index f4e9c1c..d34d196 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -95,7 +95,7 @@ static struct mcfg_fixup mcfg_quirks[] = {
+ 	THUNDER_PEM_QUIRK(1, 1UL),
+ 
+ #define THUNDER_ECAM_QUIRK(rev, seg)					\
+-	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,		\
++	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
+ 	&pci_thunder_ecam_ops }
+ 	/* SoC pass1.x */
+ 	THUNDER_PEM_QUIRK(2,  0),	/* off-chip devices */
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 2afa70b..00eb8eb 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -62,7 +62,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+ extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
+ extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
+-extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
++extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 1.x & 2.x */
+ extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
+ #endif
+ 
