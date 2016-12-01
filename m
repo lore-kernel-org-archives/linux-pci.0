@@ -1,58 +1,87 @@
-Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Fri, 30 Dec 2016 14:59:53 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Message-ID: <707035209.554.1483106393928.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <2678604.V2vzbbOmVS@aspire.rjw.lan> <3319410.EGZrQ2GPBB@aspire.rjw.lan> <1942778.Cx2ycTbRkQ@aspire.rjw.lan> <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52288 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754525AbcLAIjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 03:39:06 -0500
+Subject: [PATCH v10 02/12] PCI: Search ACPI namespace to ensure ECAM space
+ is reserved
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Thu, 01 Dec 2016 02:29:39 -0600
+Message-ID: <20161201082939.12247.55077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The proposed patch alone did not change the issue.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
+The static MCFG table tells us the base of ECAM space, but it does not
+reserve the space -- the reservation should be done via a device in the
+ACPI namespace whose _CRS includes the ECAM region.
 
------ Original Message -----
-From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Lukas Wunner" <lukas@wunner.de>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>
-Sent: Friday, December 30, 2016 2:37:17 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Add pci_ecam_verify_reservation() to check whether the ECAM space is
+reserved by an ACPI namespace device.  If it is, emit a message showing
+which device reserves it.  If not, emit a "[Firmware Bug]" warning.
 
-Yes,
-the pci_port_pm=off
-fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
-Tested on 4.9
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/ecam.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
------ Original Message -----
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-Cc: "Lukas Wunner" <lukas@wunner.de>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>
-Sent: Friday, December 30, 2016 2:52:59 AM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index 43ed08d..3805122 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -14,6 +14,7 @@
+  * version 2 (GPLv2) along with this source code.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/device.h>
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+@@ -29,6 +30,24 @@
+  */
+ static const bool per_bus_mapping = !IS_ENABLED(CONFIG_64BIT);
+ 
++static void pci_ecam_verify_reservation(struct device *dev,
++					struct resource *ecam)
++{
++#ifdef CONFIG_ACPI
++	struct acpi_device *adev;
++
++	adev = acpi_resource_consumer(ecam);
++	if (!adev) {
++		dev_warn(dev, FW_BUG "ECAM area %pR not reserved in ACPI namespace\n",
++			 ecam);
++		return;
++	}
++
++	dev_info(dev, "ECAM area %pR reserved by %s\n", ecam,
++		 dev_name(&adev->dev));
++#endif
++}
++
+ /*
+  * Create a PCI config space window
+  *  - reserve mem region
+@@ -51,6 +70,8 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ 	if (!cfg)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	pci_ecam_verify_reservation(dev, cfgres);
++
+ 	cfg->parent = dev;
+ 	cfg->ops = ops;
+ 	cfg->busr.start = busr->start;
 
-On Friday, December 30, 2016 02:50:45 AM Rafael J. Wysocki wrote:
-> On Friday, December 30, 2016 02:40:45 AM Rafael J. Wysocki wrote:
-> > On Friday, December 30, 2016 01:45:53 AM Kilian Singer wrote:
-> > > The touchpad and builtin keyboard of laptop fail.
-> > > But also connected usb keyboard and usb mouse fail.
-> > > 
-> > > In both cases mouse pointer is still moveable.
-> > 
-> > It may just be too late to turn the ports "on" once they have been suspended at
-> > least once on your system.
-> > 
-> > Please check if the appended patch makes any difference.
-> 
-> Actually, please first check if booting with pci_port_pm=off in the kernel
-> command line makes any difference.
-
-The command line option should be pcie_port_pm=off ("e" was missing), sorry.
-
-Thanks,
-Rafael
