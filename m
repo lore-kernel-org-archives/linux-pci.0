@@ -1,70 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] ACPI/IORT: Make dma masks set-up IORT specific
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Joerg Roedel
- <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- <iommu@lists.linux-foundation.org>
-References: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
-From: Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <58466EFC.3070109@huawei.com>
-Date: Tue, 6 Dec 2016 15:55:40 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51470 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753103AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 03:31:33 -0500
+Subject: [PATCH v10 07/12] PCI/ACPI: Provide acpi_get_rc_resources() for
+ ARM64 platform
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Thu, 01 Dec 2016 02:30:22 -0600
+Message-ID: <20161201083022.12247.65297.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- Sricharan R <sricharan@codeaurora.org>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-acpi@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Dennis Chen <dennis.chen@arm.com>, Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/12/5 20:26, Lorenzo Pieralisi wrote:
-> The introduction of acpi_dma_configure() allows to configure DMA
-> and related IOMMU for any device that is DMA capable. To achieve
-> that goal it ensures DMA masks are set-up to sane default values
-> before proceeding with IOMMU and DMA ops configuration.
->
-> On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
-> called for every device that has an ACPI companion, in that every device
-> is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
-> which has the side effect of initializing dma masks also for
-> pseudo-devices (eg CPUs and memory nodes) and potentially for devices
-> whose dma masks were not set-up before the acpi_dma_configure() API was
-> introduced, which may have noxious side effects.
->
-> Therefore, in preparation for IORT firmware specific DMA masks set-up,
-> wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
-> specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
-> default expected behaviour on x86/ia64 systems and keeping DMA default
-> masks set-up on IORT based (ie ARM) arch configurations.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
 
-Add this patch on top of your v9 acpi smmu patchset,
-tested on Hisilicon D03 (ARM64), devices with SMMU
-enabled work fine,
+The acpi_get_rc_resources() is used to get the RC register address that can
+not be described in MCFG.  It takes the _HID & segment to look for and
+outputs the RC address resource.  Use PNP0C02 devices to describe such RC
+address resource.  Use _UID to match segment to tell which root bus the
+PNP0C02 resource belongs to.
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+[bhelgaas: wrap in #ifdef CONFIG_PCI_QUIRKS]
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-acpi.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h      |    4 +++
+ 2 files changed, 75 insertions(+)
 
-Thanks
-Hanjun
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index d966d47..cfab024 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -29,6 +29,77 @@ const u8 pci_acpi_dsm_uuid[] = {
+ 	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+ };
+ 
++#if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
++static int acpi_get_rc_addr(struct acpi_device *adev, struct resource *res)
++{
++	struct resource_entry *entry;
++	struct list_head list;
++	unsigned long flags;
++	int ret;
++
++	INIT_LIST_HEAD(&list);
++	flags = IORESOURCE_MEM;
++	ret = acpi_dev_get_resources(adev, &list,
++				     acpi_dev_filter_resource_type_cb,
++				     (void *) flags);
++	if (ret < 0) {
++		dev_err(&adev->dev,
++			"failed to parse _CRS method, error code %d\n", ret);
++		return ret;
++	} else if (ret == 0) {
++		dev_err(&adev->dev,
++			"no IO and memory resources present in _CRS\n");
++		return -EINVAL;
++	}
++
++	entry = list_first_entry(&list, struct resource_entry, node);
++	*res = *entry->res;
++	acpi_dev_free_resource_list(&list);
++	return 0;
++}
++
++static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
++				 void **retval)
++{
++	u16 *segment = context;
++	unsigned long long uid;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
++	if (ACPI_FAILURE(status) || uid != *segment)
++		return AE_CTRL_DEPTH;
++
++	*(acpi_handle *)retval = handle;
++	return AE_CTRL_TERMINATE;
++}
++
++int acpi_get_rc_resources(const char *hid, u16 segment, struct resource *res)
++{
++	struct acpi_device *adev;
++	acpi_status status;
++	acpi_handle handle;
++	int ret;
++
++	status = acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
++	if (ACPI_FAILURE(status)) {
++		pr_err("Can't find _HID %s device\n", hid);
++		return -ENODEV;
++	}
++
++	ret = acpi_bus_get_device(handle, &adev);
++	if (ret)
++		return ret;
++
++	ret = acpi_get_rc_addr(adev, res);
++	if (ret) {
++		dev_err(&adev->dev, "can't get RC resource\n");
++		return ret;
++	}
++
++	return 0;
++}
++#endif
++
+ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+ {
+ 	acpi_status status = AE_NOT_EXIST;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..c27b0fc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++#if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
++int acpi_get_rc_resources(const char *hid, u16 segment, struct resource *res);
++#endif
++
+ #endif /* DRIVERS_PCI_H */
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
