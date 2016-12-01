@@ -1,155 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44602 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750855AbcLEM1e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 07:27:34 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Sricharan R <sricharan@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] ACPI/IORT: Make dma masks set-up IORT specific
-Date: Mon,  5 Dec 2016 12:26:19 +0000
-Message-Id: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=FwPQ=XQ=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=FwPQ=XQ=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Gabriele Paoloni <gabriele.paoloni@huawei.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, linux-acpi@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Lv Zheng <lv.zheng@intel.com>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
+Date: Thu, 01 Dec 2016 23:37:39 +0100
+Message-ID: <47776378.8X3TnsHd3Q@aspire.rjw.lan>
+In-Reply-To: <20161201223604.GC15867@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com> <20161201223604.GC15867@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-The introduction of acpi_dma_configure() allows to configure DMA
-and related IOMMU for any device that is DMA capable. To achieve
-that goal it ensures DMA masks are set-up to sane default values
-before proceeding with IOMMU and DMA ops configuration.
+On Thursday, December 01, 2016 04:36:04 PM Bjorn Helgaas wrote:
+> On Tue, Nov 29, 2016 at 03:39:48PM -0600, Bjorn Helgaas wrote:
+> > Here's another stab at this writeup.  I'd appreciate any comments!
+> > 
+> > Changes from v1 to v2:
+> >   - Consumer/Producer is defined for Extended Address Space descriptors;
+> >     should be ignored for QWord/DWord/Word Address Space descriptors
+> >   - New arches may use Extended Address Space descriptors in PNP0A03 for
+> >     bridge registers, including ECAM (if the arch adds support for this)
+> >   - Add more details about MCFG and _CBA (Lv's suggestion)
+> >   - Incorporate Rafael's suggestions
+> > 
+> > ---
+> > 
+> > Bjorn Helgaas (1):
+> >       PCI: Add information about describing PCI in ACPI
+> > 
+> > 
+> >  Documentation/PCI/00-INDEX      |    2 
+> >  Documentation/PCI/acpi-info.txt |  180 +++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 182 insertions(+)
+> >  create mode 100644 Documentation/PCI/acpi-info.txt
+> 
+> It's very late in the cycle, but I'm considering trying to squeeze
+> this into v4.9 on the grounds that:
+> 
+>   - It's only a documentation change and can't break anything, and
+> 
+>   - Distributing it more widely may help the arm64 firmware ecosystem
+> 
+> But I don't want to disseminate misleading or incorrect information,
+> so if it needs clarification or wordsmithing, or even just maturation,
+> I'll wait until v4.10.
+> 
+> The Consumer/Producer stuff, in particular, doesn't seem 100% settled
+> yet.  Your thoughts, and especially your improvements, are welcome!
 
-On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
-called for every device that has an ACPI companion, in that every device
-is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
-which has the side effect of initializing dma masks also for
-pseudo-devices (eg CPUs and memory nodes) and potentially for devices
-whose dma masks were not set-up before the acpi_dma_configure() API was
-introduced, which may have noxious side effects.
+Well, what's the drawback if it doesn't go into 4.9?
 
-Therefore, in preparation for IORT firmware specific DMA masks set-up,
-wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
-specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
-default expected behaviour on x86/ia64 systems and keeping DMA default
-masks set-up on IORT based (ie ARM) arch configurations.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
-Joerg,
-
-pending Rafael's ACK on it, given the 4.10 release timing and that the
-series is queued via the IOMMU tree please consider applying this patch to
-your arm/smmu branch for 4.10, it is not fixing a bug but it is modifying
-the x86/ia64 code path; I prefer preventing any issue related to default
-dma masks on x86/ia64 so I hope it can get merged along with the rest of
-the ACPI IORT SMMU series.
-
-Thanks a lot and apologies,
-Lorenzo
-
- drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
- drivers/acpi/scan.c       | 14 +-------------
- include/linux/acpi_iort.h |  2 ++
- 3 files changed, 25 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 47bace8..e0d2e6e 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -547,6 +547,28 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- }
- 
- /**
-+ * iort_set_dma_mask - Set-up dma mask for a device.
-+ *
-+ * @dev: device to configure
-+ */
-+void iort_set_dma_mask(struct device *dev)
-+{
-+	/*
-+	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-+	 * setup the correct supported mask.
-+	 */
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+}
-+
-+/**
-  * iort_iommu_configure - Set-up IOMMU configuration for a device.
-  *
-  * @dev: device to configure
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 80698d3..93b00cf 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1380,19 +1380,7 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- {
- 	const struct iommu_ops *iommu;
- 
--	/*
--	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
--	 * setup the correct supported mask.
--	 */
--	if (!dev->coherent_dma_mask)
--		dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
-+	iort_set_dma_mask(dev);
- 
- 	iommu = iort_iommu_configure(dev);
- 
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index dcb2b60..77e0809 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -35,6 +35,7 @@ bool iort_node_match(u8 type);
- u32 iort_msi_map_rid(struct device *dev, u32 req_id);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- /* IOMMU interface */
-+void iort_set_dma_mask(struct device *dev);
- const struct iommu_ops *iort_iommu_configure(struct device *dev);
- #else
- static inline void acpi_iort_init(void) { }
-@@ -45,6 +46,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
- 							u32 req_id)
- { return NULL; }
- /* IOMMU interface */
-+static inline void iort_set_dma_mask(struct device *dev) { }
- static inline
- const struct iommu_ops *iort_iommu_configure(struct device *dev)
- { return NULL; }
--- 
-2.10.0
-
+Thanks,
+Rafael
