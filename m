@@ -1,120 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37096 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756344AbcKWHtF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2016 02:49:05 -0500
-Received: by mail-wm0-f51.google.com with SMTP id t79so10083973wmt.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Nov 2016 23:49:04 -0800 (PST)
-Date: Wed, 23 Nov 2016 08:49:02 +0100
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Daniel Vetter <daniel@ffwll.ch>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161123074902.ph7a5cmlw3pclugx@phenom.ffwll.local>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <CAPcyv4i_5r2RVuV4F6V3ETbpKsf8jnMyQviZ7Legz3N4-v+9Og@mail.gmail.com>
- <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <CAPcyv4htu4gayz_Dpe0pnfLN4v_Kcy-fTx3B-HEfadCHvzJnhA@mail.gmail.com>
- <CAKMK7uGoXAYoazyGLbGU7svVD10WmaBtpko8BpHeNpRhST8F7g@mail.gmail.com>
- <a99fd9ea-64d8-c5d3-0b96-f96c92369601@amd.com>
- <CAKMK7uF+k5LvcPEHvtdcXQFrpKVbFxwZ32EexoU3rZ9LFhVSow@mail.gmail.com>
- <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
+Return-Path: <SRS0=1MXK=XQ=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=1MXK=XQ=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI controller for
+ ThunderX pass2.x silicon version
+To: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>
+References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+ <1479201298-25494-2-git-send-email-tn@semihalf.com>
+ <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com, arnd@arndb.de, jchandra@broadcom.com,
+ ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+ mw@semihalf.com, ddaney@caviumnetworks.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+ andrea.gallo@linaro.org, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ gabriele.paoloni@huawei.com, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, jcm@redhat.com, msalter@redhat.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <19e244f2-22f9-be94-0929-a9d96844b801@codeaurora.org>
+Date: Wed, 30 Nov 2016 20:00:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4ind0fxek7g25MX=49rDfT5X151tb4=TYudMBmUJFZZNQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2016 at 01:21:03PM -0800, Dan Williams wrote:
-> On Tue, Nov 22, 2016 at 1:03 PM, Daniel Vetter <daniel@ffwll.ch> wrote:
-> > On Tue, Nov 22, 2016 at 9:35 PM, Serguei Sagalovitch
-> > <serguei.sagalovitch@amd.com> wrote:
-> >>
-> >> On 2016-11-22 03:10 PM, Daniel Vetter wrote:
-> >>>
-> >>> On Tue, Nov 22, 2016 at 9:01 PM, Dan Williams <dan.j.williams@intel.com>
-> >>> wrote:
-> >>>>
-> >>>> On Tue, Nov 22, 2016 at 10:59 AM, Serguei Sagalovitch
-> >>>> <serguei.sagalovitch@amd.com> wrote:
-> >>>>>
-> >>>>> I personally like "device-DAX" idea but my concerns are:
-> >>>>>
-> >>>>> -  How well it will co-exists with the  DRM infrastructure /
-> >>>>> implementations
-> >>>>>     in part dealing with CPU pointers?
-> >>>>
-> >>>> Inside the kernel a device-DAX range is "just memory" in the sense
-> >>>> that you can perform pfn_to_page() on it and issue I/O, but the vma is
-> >>>> not migratable. To be honest I do not know how well that co-exists
-> >>>> with drm infrastructure.
-> >>>>
-> >>>>> -  How well we will be able to handle case when we need to
-> >>>>> "move"/"evict"
-> >>>>>     memory/data to the new location so CPU pointer should point to the
-> >>>>> new
-> >>>>> physical location/address
-> >>>>>      (and may be not in PCI device memory at all)?
-> >>>>
-> >>>> So, device-DAX deliberately avoids support for in-kernel migration or
-> >>>> overcommit. Those cases are left to the core mm or drm. The device-dax
-> >>>> interface is for cases where all that is needed is a direct-mapping to
-> >>>> a statically-allocated physical-address range be it persistent memory
-> >>>> or some other special reserved memory range.
-> >>>
-> >>> For some of the fancy use-cases (e.g. to be comparable to what HMM can
-> >>> pull off) I think we want all the magic in core mm, i.e. migration and
-> >>> overcommit. At least that seems to be the very strong drive in all
-> >>> general-purpose gpu abstractions and implementations, where memory is
-> >>> allocated with malloc, and then mapped/moved into vram/gpu address
-> >>> space through some magic,
-> >>
-> >> It is possible that there is other way around: memory is requested to be
-> >> allocated and should be kept in vram for  performance reason but due
-> >> to possible overcommit case we need at least temporally to "move" such
-> >> allocation to system memory.
-> >
-> > With migration I meant migrating both ways of course. And with stuff
-> > like numactl we can also influence where exactly the malloc'ed memory
-> > is allocated originally, at least if we'd expose the vram range as a
-> > very special numa node that happens to be far away and not hold any
-> > cpu cores.
-> 
-> I don't think we should be using numa distance to reverse engineer a
-> certain allocation behavior.  The latency data should be truthful, but
-> you're right we'll need a mechanism to keep general purpose
-> allocations out of that range by default. Btw, strict isolation is
-> another design point of device-dax, but I think in this case we're
-> describing something between the two extremes of full isolation and
-> full compatibility with existing numactl apis.
+Hi Bjorn,
 
-Yes, agreed. My idea with exposing vram sections using numa nodes wasn't
-to reuse all the existing allocation policies directly, those won't work.
-So at boot-up your default numa policy would exclude any vram nodes.
+On 11/30/2016 7:28 PM, Bjorn Helgaas wrote:
+> Actually, that raises a question for qualcomm and hisi: in the DT
+> model, we use non-ECAM config accessors in the driver, but in the ACPI
+> model, we use ECAM accessors.  It seems like the accessors should be
+> the same regardless of whether we discover the bridge via DT or ACPI.
 
-But I think (as an -mm layman) that numa gives us a lot of the tools and
-policy interface that we need to implement what we want for gpus.
+For servers, we are only setting up the PCIe controller in ECAM mode in FW.
+If somebody wants to use DT with QCOM Server (unsupported but possible),
+they need to use pci-host-ecam-generic driver.
 
-Wrt isolation: There's a sliding scale of what different users expect,
-from full auto everything, including migrating pages around if needed to
-full isolation all seems to be on the table. As long as we keep vram nodes
-out of any default allocation numasets, full isolation should be possible.
--Daniel
+Here is an example:
+
+	pcie3 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		bus-range = <0x0 0xff>;
+		linux,pci-domain = <3>;
+
+		// CPU_PHYSICAL(2)  SIZE(2)
+		reg = <0xC00 0x00000000  0x0 0x10000000>;
+ 	...
+	}
+
+I think you are referring to this driver here.
+
+obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+
+This driver is only in use by the mobile products.
+
+Sinan
+
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
