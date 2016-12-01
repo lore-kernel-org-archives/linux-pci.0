@@ -1,72 +1,59 @@
-Return-Path: <SRS0=feWU=XV=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=feWU=XV=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 6 Dec 2016 16:02:55 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v11 03/15] arm64: PCI: Add local struct device pointers
-Message-ID: <20161206160255.GD4601@red-moon>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161205232542.3957.55360.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:32922 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757669AbcLAQep (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 11:34:45 -0500
+Date: Thu, 1 Dec 2016 10:34:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, kbuild-all@01.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [pci:pci/ecam 11/12] drivers/pci/host/pci-thunder-pem.c:328:2:
+ error: 'ret' undeclared
+Message-ID: <20161201163439.GE19681@bhelgaas-glaptop.roam.corp.google.com>
+References: <201612011917.XDzbxV0b%fengguang.wu@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161205232542.3957.55360.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <201612011917.XDzbxV0b%fengguang.wu@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 05:25:42PM -0600, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Dec 01, 2016 at 07:03:21PM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/ecam
+> head:   652f5e38afee70579c8723730c08d197a90e5b3a
+> commit: 47381174ac0162a6ed29159df6eaed5f437f4c06 [11/12] PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller
+> config: arm64-defconfig (attached as .config)
+> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout 47381174ac0162a6ed29159df6eaed5f437f4c06
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=arm64 
 > 
-> Use a local "struct device *dev" for brevity.  No functional change
-> intended.
+> All errors (new ones prefixed by >>):
 > 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/arm64/kernel/pci.c |   11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
+>    drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_acpi_init':
+> >> drivers/pci/host/pci-thunder-pem.c:328:2: error: 'ret' undeclared (first use in this function)
+>      ret = acpi_get_rc_resources("THRX0002", root->segment, res_pem);
+>      ^~~
+>    drivers/pci/host/pci-thunder-pem.c:328:2: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/pci/host/pci-thunder-pem.c:328:8: error: implicit declaration of function 'acpi_get_rc_resources' [-Werror=implicit-function-declaration]
+>      ret = acpi_get_rc_resources("THRX0002", root->segment, res_pem);
+>            ^~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
+> 
+> vim +/ret +328 drivers/pci/host/pci-thunder-pem.c
+> 
+>    322	{
+>    323		struct device *dev = cfg->parent;
+>    324		struct acpi_device *adev = to_acpi_device(dev);
+>    325		struct acpi_pci_root *root = acpi_driver_data(adev);
+>    326		struct resource *res_pem;
+>    327	
+>  > 328		ret = acpi_get_rc_resources("THRX0002", root->segment, res_pem);
+>    329		if (ret) {
+>    330			dev_err(dev, "can't get rc base address\n");
+>    331			return ret;
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index acf3872..8183c98 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -121,6 +121,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  static struct pci_config_window *
->  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
->  {
-> +	struct device *dev = &root->device->dev;
->  	struct resource *bus_res = &root->secondary;
->  	u16 seg = root->segment;
->  	struct pci_config_window *cfg;
-> @@ -132,8 +133,7 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
->  		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
->  
->  	if (!root->mcfg_addr) {
-> -		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
-> -			seg, bus_res);
-> +		dev_err(dev, "%04x:%pR ECAM region not found\n", seg, bus_res);
->  		return NULL;
->  	}
->  
-> @@ -141,11 +141,10 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
->  	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
->  	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
->  	cfgres.flags = IORESOURCE_MEM;
-> -	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
-> -			      &pci_generic_ecam_ops);
-> +	cfg = pci_ecam_create(dev, &cfgres, bus_res, &pci_generic_ecam_ops);
->  	if (IS_ERR(cfg)) {
-> -		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
-> -			seg, bus_res, PTR_ERR(cfg));
-> +		dev_err(dev, "%04x:%pR error %ld mapping ECAM\n", seg, bus_res,
-> +			PTR_ERR(cfg));
->  		return NULL;
->  	}
->  
-> 
+Fixed, thanks.  All the fixes are courtesy of Dongdong.
