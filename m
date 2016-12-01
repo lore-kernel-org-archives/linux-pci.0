@@ -1,55 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:36284 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751476AbcLFWCW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 17:02:22 -0500
-Received: by mail-oi0-f42.google.com with SMTP id v84so394527077oie.3
-        for <linux-pci@vger.kernel.org>; Tue, 06 Dec 2016 14:02:22 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:59284 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750919AbcLAWJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 17:09:05 -0500
+Date: Thu, 1 Dec 2016 16:09:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, kbuild-all@01.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [pci:pci/ecam 6/13] arch/arm64/kernel/pci.c:128:2: error:
+ expected '=', ',', ';', 'asm' or '__attribute__' before 'struct'
+Message-ID: <20161201220901.GA15867@bhelgaas-glaptop.roam.corp.google.com>
+References: <201612020535.QazToTo0%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
-References: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com> <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com> <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
- <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com> <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
- <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
- <20161206163850.GC28066@obsidianresearch.com> <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
- <20161206172838.GB19318@obsidianresearch.com> <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 6 Dec 2016 14:02:19 -0800
-Message-ID: <CAPcyv4gw0rsMNvG=xMRFV0=4MkGuXis5L17Jm3fU69EZAVAS4A@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201612020535.QazToTo0%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 6, 2016 at 1:47 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> Hey,
->
->> Okay, so clearly this needs a kernel side NVMe specific allocator
->> and locking so users don't step on each other..
->
-> Yup, ideally. That's why device dax isn't ideal for this application: it
-> doesn't provide any way to prevent users from stepping on each other.
+On Fri, Dec 02, 2016 at 05:56:44AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/ecam
+> head:   f80edf4d6c053d529b4f044f867f8269f0050c72
+> commit: b13e44a1ff3af460ce7770face55ff1dc802efcf [6/13] PCI/ACPI: Extend pci_mcfg_lookup() to return ECAM config accessors
+> config: arm64-defconfig (attached as .config)
+> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout b13e44a1ff3af460ce7770face55ff1dc802efcf
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=arm64 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    arch/arm64/kernel/pci.c: In function 'pci_acpi_setup_ecam_mapping':
+> >> arch/arm64/kernel/pci.c:128:2: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'struct'
+>      struct resource cfgres;
+>      ^~~~~~
+> >> arch/arm64/kernel/pci.c:134:40: error: 'ecam_ops' undeclared (first use in this function)
+>      ret = pci_mcfg_lookup(root, &cfgres, &ecam_ops);
+>                                            ^~~~~~~~
+>    arch/arm64/kernel/pci.c:134:40: note: each undeclared identifier is reported only once for each function it appears in
+>    arch/arm64/kernel/pci.c:131:15: warning: unused variable 'bsz' [-Wunused-variable]
+>      unsigned int bsz;
+>                   ^~~
+> 
+> vim +128 arch/arm64/kernel/pci.c
+> 
+> 0cb0786b Tomasz Nowicki 2016-06-10  122  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+> 0cb0786b Tomasz Nowicki 2016-06-10  123  {
+> 1725c4a5 Bjorn Helgaas  2016-12-01  124  	struct device *dev = &root->device->dev;
+> 0cb0786b Tomasz Nowicki 2016-06-10  125  	struct resource *bus_res = &root->secondary;
+> 0cb0786b Tomasz Nowicki 2016-06-10  126  	u16 seg = root->segment;
+> b13e44a1 Tomasz Nowicki 2016-09-09  127  	struct pci_ecam_ops *ecam_ops
+> 0cb0786b Tomasz Nowicki 2016-06-10 @128  	struct resource cfgres;
 
-On this particular point I'm in the process of posting patches that
-allow device-dax sub-division, so you could carve up a bar into
-multiple devices of various sizes.
+Sorry, I broke this when I moved the acpi_resource_consumer() call here.
+I added the missing semicolon.
