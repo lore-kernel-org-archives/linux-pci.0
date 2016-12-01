@@ -1,83 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0055.outbound.protection.outlook.com ([104.47.40.55]:11136
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750916AbcKYU7z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Nov 2016 15:59:55 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <75a1f44f-c495-7d1e-7e1c-17e89555edba@amd.com>
- <45c6e878-bece-7987-aee7-0e940044158c@deltatee.com>
- <20161123190515.GA12146@obsidianresearch.com>
- <7bc38037-b6ab-943f-59db-6280e16901ab@amd.com>
- <20161123193228.GC12146@obsidianresearch.com>
- <c2c88376-5ba7-37d1-4d3e-592383ebb00a@amd.com>
- <20161123203332.GA15062@obsidianresearch.com>
- <dd60bca8-0a35-7a3a-d3ab-b95bc3d9b973@deltatee.com>
- <20161123215510.GA16311@obsidianresearch.com>
- <CAPcyv4jVDC=8AbVa9v6LcXm9n8QHgizv_+gQJC4RTd-wtTESWQ@mail.gmail.com>
- <20161123232503.GA13965@obsidianresearch.com>
- <a33ec1cd-051f-8a24-0587-68707459c25c@amd.com>
- <5e1de9ee-34f5-136d-a07e-f949d492864f@deltatee.com>
- <c60815a1-aaac-52eb-1714-66abb28bdc01@amd.com>
- <209107c7-3098-ca70-7d62-b55021d01faa@deltatee.com>
- <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        Haggai Eran <haggaie@mellanox.com>
-From: Felix Kuehling <felix.kuehling@amd.com>
-Message-ID: <fa44af1c-0c8a-7726-5100-a1f74f824a21@amd.com>
-Date: Fri, 25 Nov 2016 15:26:45 -0500
+Return-Path: <SRS0=1MXK=XQ=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=1MXK=XQ=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI controller for
+ ThunderX pass2.x silicon version
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+ <1479201298-25494-2-git-send-email-tn@semihalf.com>
+ <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
+ <19e244f2-22f9-be94-0929-a9d96844b801@codeaurora.org>
+ <20161201034817.GA19681@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ arnd@arndb.de, jchandra@broadcom.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com,
+ ddaney@caviumnetworks.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+ andrea.gallo@linaro.org, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ gabriele.paoloni@huawei.com, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, jcm@redhat.com, msalter@redhat.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <84119c18-b130-0b32-029b-bd9169a25960@codeaurora.org>
+Date: Wed, 30 Nov 2016 23:26:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <ea52d962-6c8e-92d9-eb1b-3ace4bf56126@amd.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161201034817.GA19681@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16-11-25 12:20 PM, Serguei Sagalovitch wrote:
->
->> A white list may end up being rather complicated if it has to cover
->> different CPU generations and system architectures. I feel this is a
->> decision user space could easily make.
+On 11/30/2016 10:48 PM, Bjorn Helgaas wrote:
+> On Wed, Nov 30, 2016 at 08:00:12PM -0500, Sinan Kaya wrote:
+>> Hi Bjorn,
 >>
->> Logan
-> I agreed that it is better to leave up to user space to check what is
-> working
-> and what is not. I found that write is practically always working but
-> read very
-> often not. Also sometimes system BIOS update could fix the issue.
->
-But is user mode always aware that P2P is going on or even possible? For
-example you may have a library reading a buffer from a file, but it
-doesn't necessarily know where that buffer is located (system memory,
-VRAM, ...) and it may not know what kind of the device the file is on
-(SATA drive, NVMe SSD, ...). The library will never know if all it gets
-is a pointer and a file descriptor.
+>> On 11/30/2016 7:28 PM, Bjorn Helgaas wrote:
+>>> Actually, that raises a question for qualcomm and hisi: in the DT
+>>> model, we use non-ECAM config accessors in the driver, but in the ACPI
+>>> model, we use ECAM accessors.  It seems like the accessors should be
+>>> the same regardless of whether we discover the bridge via DT or ACPI.
+>>
+>> For servers, we are only setting up the PCIe controller in ECAM mode in FW.
+>> If somebody wants to use DT with QCOM Server (unsupported but possible),
+>> they need to use pci-host-ecam-generic driver.
+>>
+>> Here is an example:
+>>
+>> 	pcie3 {
+>> 		compatible = "pci-host-ecam-generic";
+>> 		device_type = "pci";
+>> 		#address-cells = <3>;
+>> 		#size-cells = <2>;
+>> 		bus-range = <0x0 0xff>;
+>> 		linux,pci-domain = <3>;
+>>
+>> 		// CPU_PHYSICAL(2)  SIZE(2)
+>> 		reg = <0xC00 0x00000000  0x0 0x10000000>;
+>>  	...
+>> 	}
+>>
+>> I think you are referring to this driver here.
+>>
+>> obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>>
+>> This driver is only in use by the mobile products.
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/ecam&id=2bb62a60711e
+> says it's for the Qualcomm QDF2432.  Is pcie-qcom for that same
+> device, or is it for something different?
 
-The library ends up calling a read system call. Then it would be up to
-the kernel to figure out the most efficient way to read the buffer from
-the file. If supported, it could use P2P between a GPU and NVMe where
-the NVMe device performs a DMA write to VRAM.
+They are different controllers.
 
-If you put the burden of figuring out the P2P details on user mode code,
-I think it will severely limit the use cases that actually take
-advantage of it. You also risk a bunch of different implementations that
-get it wrong half the time on half the systems out there.
+Qualcomm QDF2432 only supports ECAM mode only and is designed for
+ACPI based server products by the Data Center division. 
 
-Regards,
-  Felix
+If somebody really needs device tree for QDF2432 server chip even though
+we don't officially support it, generic host driver with ECAM mode
+is the way to go.
+
+Even there, we need a small patch to pci_generic_ecam_ops as follows due
+to quirky HW.  Generic host driver won't work out of the box.
+
+struct pci_ecam_ops pci_generic_ecam_ops = {
+        .bus_shift      = 20,
+        .pci_ops        = {
+                .map_bus        = pci_ecam_map_bus,
+-                .read           = pci_generic_config_read,
++                 .read           = pci_generic_config_read32,
+-                .write          = pci_generic_config_write,
++                .write          = pci_generic_config_write32,
+        }
+};
+
+This is essentially what pci_32b_ops is. Since device-tree is not officially
+supported, we didn't bother making changes to the generic host bridge driver.
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/ecam&id=2bb62a60711e
+
+is the only thing needed for QDF2432.
+
+> 
+> I assume it's probably different because pci-host-ecam-generic uses
+> the standard ECAM accessors (pci_generic_ecam_ops), while the quirk
+> requires non-standard ones (pci_32b_ops).
+> 
+> If these are two different controllers, that's fine.  If it's the same
+> controller in both cases, the controller should be configured the same
+> way (either by FW or by the DT driver) and we should use the same
+> accessors.
+> 
+> If you have to use different accessors for the same controller, you
+> would need some explanation for the difference because it's a
+> maintenance headache to operate a device in different modes depending
+> on the environment or which driver you're using.
+> 
+> Bjorn
+> 
 
 
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
