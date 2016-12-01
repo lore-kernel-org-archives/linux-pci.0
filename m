@@ -1,157 +1,155 @@
-Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
- <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
- <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com>
-CC: Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <nsekhar@ti.com>,
-        Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5864FA60.2070603@ti.com>
-Date: Thu, 29 Dec 2016 17:28:24 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51426 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751501AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 03:31:33 -0500
+Subject: [PATCH v10 05/12] PCI/ACPI: Extend pci_mcfg_lookup() to return ECAM
+ config accessors
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Thu, 01 Dec 2016 02:30:02 -0600
+Message-ID: <20161201083002.12247.663.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Tomasz Nowicki <tn@semihalf.com>
 
-On Thursday 29 December 2016 05:23 PM, Joao Pinto wrote:
-> Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->> Hi,
->>
->> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
->>>
->>> Hi,
->>>
->>> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>>> Hi,
->>>>
->>>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
->>>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->>>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>>>>>
->>>>>>>>>> There might be hiccups because of this renaming but feel this is
->>>>>>>>>> necessary for long-term maintenance.
->>>>>>>>>
->>>>>>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>>>>>
->>>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>>>>>> also. Wouldn't be better to name it rc_controller?
->>>>>>>
->>>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>>>>>> neutral name that can cover both RC and Endpoint.
->>>>
->>>> right.
->>>>>>>
->>>>>>> I'm not a huge fan of "controller" because it feels a little bit long
->>>>>>> and while I suppose it technically does include the concept of the PCI
->>>>>>> interface of an endpoint, it still suggests more of the host side to
->>>>>>> me.
->>>>>>>
->>>>>>> Doesn't USB have a similar situation?  I see there's a
->>>>>>> drivers/usb/host/ (probably where we copied from in the first place).
->>>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
->>>>>>> share code between the master/slave sides?
->>>>>>>
->>>>>>
->>>>>> The usb/host contains the implemnentations by the spec of the several
->>>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->>>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
->>>>
->>>> right, each IP have a separate directory in USB. I thought of doing something
->>>> similar for PCI but decided against it since that would involve identifying all
->>>> the PCI IPs used and eventually result in more directories.
->>>>>> For device purposes it uses the core/ and then some of the device functions
->>>>>> are extended from the gadget/ package in which you can use mass_storage and
->>>>>> other types of functions.
->>>>
->>>> That would be similar for PCI endpoint. All endpoint specific core
->>>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>>>>>
->>>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
->>>>>> mangled inside host. I suggest:
->>>>>>
->>>>>> drivers/pci
->>>>>>  drivers/pci/core/
->>>>>>  drivers/pci/core/hotplug
->>>>>>  drivers/pci/core/pcie
->>>>>>  drivers/pci/core/<all other files inside pci/ today>
->>>>>>  drivers/pci/host
->>>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
->>>>>
->>>>> Correction:
->>>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
->>>>> drivers
->>>>>
->>>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
->>>>>
->>>>> Correction:
->>>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
->>>>>
->>>>>>  drivers/pci/endpoint -> common code
->>>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
->>>>
->>>> There are some parts of the dwc driver that is common to both root complex and
->>>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
->>>> piece in both root complex and endpoint.
->>>
->>> You are right, the config space is almost the same and some ops also common.
->>> I would suggest:
->>>
->>> drivers/pci
->>>   drivers/pci/core/
->>>     drivers/pci/core/hotplug
->>>     drivers/pci/core/pcie
->>>     drivers/pci/core/<all other files inside pci/ today>
->>>   drivers/pci/dwc
->>>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
->>>     drivers/pci/dwc/host/
->>>     drivers/pci/dwc/endpoint/
->>>
->>> What do you think?
->>
->> I don't think we should have sub-directories within dwc (USB too doesn't have
->> sub-directories). Where should the platform specific driver be kept? For
->> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
->> changes are so minimal that splitting the file won't make much sense.
->>
->> And such a change would also mean we create a separate directory for every
->> other driver present right now in pci/host.
-> 
-> I understand you idea. We can simplify it this way:
-> 
->  drivers/pci
->    drivers/pci/core/
->      drivers/pci/core/hotplug
->      drivers/pci/core/pcie
->      drivers/pci/core/<all other files inside pci/ today>
->      drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
-> and EP
-> 
-> BTW dwc states for DesigWare Controller.
-> 
-> What do you think?
+pci_mcfg_lookup() is the external interface to the generic MCFG code.
+Previously it merely looked up the ECAM base address for a given domain and
+bus range.  We want a way to add MCFG quirks, some of which may require
+special config accessors and adjustments to the ECAM address range.
 
-I'd like to avoid using different directory structures for different IPs. Lets
-try to make it uniform.
+Extend pci_mcfg_lookup() so it can return a pointer to a pci_ecam_ops
+structure and a struct resource for the ECAM address space.  For now, it
+always returns &pci_generic_ecam_ops (the standard accessor) and the
+resource described by the MCFG.
 
-Thanks
-Kishon
+No functional changes intended.
+
+[bhelgaas: changelog]
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/kernel/pci.c  |   17 +++++------------
+ drivers/acpi/pci_mcfg.c  |   28 +++++++++++++++++++++++++---
+ include/linux/pci-acpi.h |    4 +++-
+ 3 files changed, 33 insertions(+), 16 deletions(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 95e0bb4..5c08baf 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -125,24 +125,17 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 	u16 seg = root->segment;
+ 	struct pci_config_window *cfg;
+ 	struct resource cfgres;
+-	unsigned int bsz;
++	struct pci_ecam_ops *ecam_ops;
++	int ret;
+ 
+-	/* Use address from _CBA if present, otherwise lookup MCFG */
+-	if (!root->mcfg_addr)
+-		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+-
+-	if (!root->mcfg_addr) {
++	ret = pci_mcfg_lookup(root, &cfgres, &ecam_ops);
++	if (ret) {
+ 		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+ 			seg, bus_res);
+ 		return NULL;
+ 	}
+ 
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+-	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+-	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+-	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ecam_ops);
+ 	if (IS_ERR(cfg)) {
+ 		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+ 			seg, bus_res, PTR_ERR(cfg));
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index b5b376e..ffcc651 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,6 +22,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Structure to hold entries from the MCFG table */
+ struct mcfg_entry {
+@@ -35,9 +36,18 @@ struct mcfg_entry {
+ /* List to save MCFG entries */
+ static LIST_HEAD(pci_mcfg_list);
+ 
+-phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
++int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++		    struct pci_ecam_ops **ecam_ops)
+ {
++	struct pci_ecam_ops *ops = &pci_generic_ecam_ops;
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
+ 	struct mcfg_entry *e;
++	struct resource res;
++
++	/* Use address from _CBA if present, otherwise lookup MCFG */
++	if (root->mcfg_addr)
++		goto skip_lookup;
+ 
+ 	/*
+ 	 * We expect exact match, unless MCFG entry end bus covers more than
+@@ -45,10 +55,22 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+ 	 */
+ 	list_for_each_entry(e, &pci_mcfg_list, list) {
+ 		if (e->segment == seg && e->bus_start == bus_res->start &&
+-		    e->bus_end >= bus_res->end)
+-			return e->addr;
++		    e->bus_end >= bus_res->end) {
++			root->mcfg_addr = e->addr;
++		}
++
+ 	}
+ 
++	if (!root->mcfg_addr)
++		return -ENXIO;
++
++skip_lookup:
++	memset(&res, 0, sizeof(res));
++	res.start = root->mcfg_addr + (bus_res->start << 20);
++	res.end = res.start + (resource_size(bus_res) << 20) - 1;
++	res.flags = IORESOURCE_MEM;
++	*cfgres = res;
++	*ecam_ops = ops;
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7d63a66..7a4e83a 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -24,7 +24,9 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ }
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+-extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
++struct pci_ecam_ops;
++extern int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++			   struct pci_ecam_ops **ecam_ops);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+
