@@ -1,190 +1,342 @@
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
-	<Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
- <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
- <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com> <5864FA60.2070603@ti.com>
- <a6c80508-78ec-b081-3563-275c865275c5@synopsys.com> <5864FF71.4080100@ti.com>
-CC: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <nsekhar@ti.com>, Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <7895d41e-d753-8992-a11f-7aad426081b4@synopsys.com>
-Date: Thu, 29 Dec 2016 12:23:18 +0000
-MIME-Version: 1.0
-In-Reply-To: <5864FF71.4080100@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36152 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752548AbcLALwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Dec 2016 06:52:10 -0500
+Received: by mail-wm0-f51.google.com with SMTP id g23so296870073wme.1
+        for <linux-pci@vger.kernel.org>; Thu, 01 Dec 2016 03:52:09 -0800 (PST)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Javier Martinez Canillas <javier@osg.samsung.com>,
+        Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-msm@vger.kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [RFC PATCH] PCI: designware: add host_init() error handling
+Date: Thu,  1 Dec 2016 11:51:17 +0000
+Message-Id: <1480593077-15402-1-git-send-email-srinivas.kandagatla@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 12:20 PM de 12/29/2016, Kishon Vijay Abraham I escreveu:
-> Hi,
-> 
-> On Thursday 29 December 2016 05:38 PM, Joao Pinto wrote:
->> Às 11:58 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>> Hi,
->>>
->>> On Thursday 29 December 2016 05:23 PM, Joao Pinto wrote:
->>>> Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>>>> Hi,
->>>>>
->>>>> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>>>>>> Hi,
->>>>>>>
->>>>>>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
->>>>>>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->>>>>>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>>>>>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>>>>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>>>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>>>>>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>>>>>>>>
->>>>>>>>>>>>> There might be hiccups because of this renaming but feel this is
->>>>>>>>>>>>> necessary for long-term maintenance.
->>>>>>>>>>>>
->>>>>>>>>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>>>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>>>>>>>>
->>>>>>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>>>>>>>>> also. Wouldn't be better to name it rc_controller?
->>>>>>>>>>
->>>>>>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>>>>>>>>> neutral name that can cover both RC and Endpoint.
->>>>>>>
->>>>>>> right.
->>>>>>>>>>
->>>>>>>>>> I'm not a huge fan of "controller" because it feels a little bit long
->>>>>>>>>> and while I suppose it technically does include the concept of the PCI
->>>>>>>>>> interface of an endpoint, it still suggests more of the host side to
->>>>>>>>>> me.
->>>>>>>>>>
->>>>>>>>>> Doesn't USB have a similar situation?  I see there's a
->>>>>>>>>> drivers/usb/host/ (probably where we copied from in the first place).
->>>>>>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
->>>>>>>>>> share code between the master/slave sides?
->>>>>>>>>>
->>>>>>>>>
->>>>>>>>> The usb/host contains the implemnentations by the spec of the several
->>>>>>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->>>>>>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
->>>>>>>
->>>>>>> right, each IP have a separate directory in USB. I thought of doing something
->>>>>>> similar for PCI but decided against it since that would involve identifying all
->>>>>>> the PCI IPs used and eventually result in more directories.
->>>>>>>>> For device purposes it uses the core/ and then some of the device functions
->>>>>>>>> are extended from the gadget/ package in which you can use mass_storage and
->>>>>>>>> other types of functions.
->>>>>>>
->>>>>>> That would be similar for PCI endpoint. All endpoint specific core
->>>>>>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>>>>>>>>
->>>>>>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
->>>>>>>>> mangled inside host. I suggest:
->>>>>>>>>
->>>>>>>>> drivers/pci
->>>>>>>>>  drivers/pci/core/
->>>>>>>>>  drivers/pci/core/hotplug
->>>>>>>>>  drivers/pci/core/pcie
->>>>>>>>>  drivers/pci/core/<all other files inside pci/ today>
->>>>>>>>>  drivers/pci/host
->>>>>>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
->>>>>>>>
->>>>>>>> Correction:
->>>>>>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
->>>>>>>> drivers
->>>>>>>>
->>>>>>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
->>>>>>>>
->>>>>>>> Correction:
->>>>>>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
->>>>>>>>
->>>>>>>>>  drivers/pci/endpoint -> common code
->>>>>>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>>>>>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
->>>>>>>
->>>>>>> There are some parts of the dwc driver that is common to both root complex and
->>>>>>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
->>>>>>> piece in both root complex and endpoint.
->>>>>>
->>>>>> You are right, the config space is almost the same and some ops also common.
->>>>>> I would suggest:
->>>>>>
->>>>>> drivers/pci
->>>>>>   drivers/pci/core/
->>>>>>     drivers/pci/core/hotplug
->>>>>>     drivers/pci/core/pcie
->>>>>>     drivers/pci/core/<all other files inside pci/ today>
->>>>>>   drivers/pci/dwc
->>>>>>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
->>>>>>     drivers/pci/dwc/host/
->>>>>>     drivers/pci/dwc/endpoint/
->>>>>>
->>>>>> What do you think?
->>>>>
->>>>> I don't think we should have sub-directories within dwc (USB too doesn't have
->>>>> sub-directories). Where should the platform specific driver be kept? For
->>>>> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
->>>>> changes are so minimal that splitting the file won't make much sense.
->>>>>
->>>>> And such a change would also mean we create a separate directory for every
->>>>> other driver present right now in pci/host.
->>>>
->>>> I understand you idea. We can simplify it this way:
->>>>
->>>>  drivers/pci
->>>>    drivers/pci/core/
->>>>      drivers/pci/core/hotplug
->>>>      drivers/pci/core/pcie
->>>>      drivers/pci/core/<all other files inside pci/ today>
->>>>      drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
->>>> and EP
->>>>
->>>> BTW dwc states for DesigWare Controller.
->>>>
->>>> What do you think?
->>>
->>> I'd like to avoid using different directory structures for different IPs. Lets
->>> try to make it uniform.
->>
->> I understand, but mixing them all up is not a good aproach in my opinion, since
->> a SoCs using Synopsys IP will only use the common files for that IP. Today in
->> the host/ folder you have a bunch of drivers that is not clear which are using
->> Synopsys IP or not. Of course I mention Synopsys, because it is where I work,
->> but the opinion would be the same for other IP vendor.
-> 
-> right, but it has been that way always. My point is why should we disturb it
-> for the sake of adding endpoint support.
->>
->> I understand that you want to do a common Endpoint framework to be used by any
->> IP vendor based, and maybe this partition makes it a bit harder, but in my
->> personal opinion each IP vendor should have its own folder for clarity and
->> organization of the code.
->>
->> You framework should be outside those IP vendor folders and be available for
->> their drivers to use it, and so it should be completely vendor agnostic.
-> 
-> right, that's how it was designed (please see drivers/pci/endpoint/ directories
-> in RFC [1] which has the endpoint framework).
-> 
-> [1] -> https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2016_9_14_27&d=DgID-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=Usq-eV6vJQ4rVg_Jj-JzgYyH26VfwLaqXDrE_54JCmg&s=wSindfuj1wjD3QeOSzLJNPmgMyqcZNtNX0X-D5yCpqw&e= 
+This patch add support to return value from host_init() callback from
+drivers,so that the designware library can handle or pass it to proper
+place. Issue with void return type is that errors or error handling
+within host_init() callback are never know to designware code, which
+could go ahead and access registers even in error cases.
 
-Ok, I am going to check it out, thanks!
+Typical case in qcom controller driver is to turn off clks in case of
+errors, if designware code continues to read/write register when clocks
+are turned off the board would reboot/lockup.
 
->>
->>>
->>> Thanks
->>> Kishon
->>>
->>
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+
+Currently designware code does not have a way return errors generated
+as part of host_init() callback in controller drivers. This is an issue
+with controller drivers like qcom which turns off the clocks in error
+handling path. As the dw core is un aware of this would continue to
+access registers which faults resulting in board reboots/hangs. 
+
+There are two ways to solve this issue,
+one is remove error handling in the qcom controller host_init() function
+other is to handle error and pass back to dw core code which would then
+pass back to controller driver as part of dw_pcie_host_init() return value.
+
+Second option seems more sensible and correct way to fix the issue,
+this patch does the same.
+
+As part of this change to host_init() return type I had to patch other
+host controller drivers which use dw core. Most of these changes are
+harmless as I have not added any extra code other then returning 0
+from host_init().
+
+ drivers/pci/host/pci-dra7xx.c           |  4 +++-
+ drivers/pci/host/pci-exynos.c           |  4 +++-
+ drivers/pci/host/pci-imx6.c             |  4 +++-
+ drivers/pci/host/pci-keystone.c         |  4 +++-
+ drivers/pci/host/pci-layerscape.c       | 12 ++++++++----
+ drivers/pci/host/pcie-armada8k.c        |  4 +++-
+ drivers/pci/host/pcie-designware-plat.c |  4 +++-
+ drivers/pci/host/pcie-designware.c      |  4 +++-
+ drivers/pci/host/pcie-designware.h      |  2 +-
+ drivers/pci/host/pcie-qcom.c            |  6 ++++--
+ drivers/pci/host/pcie-spear13xx.c       |  4 +++-
+ 11 files changed, 37 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 9595fad..f63491c 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -127,7 +127,7 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
+ 				   LEG_EP_INTERRUPTS);
+ }
+ 
+-static void dra7xx_pcie_host_init(struct pcie_port *pp)
++static int dra7xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+ 
+@@ -142,6 +142,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx);
++
++	return 0;
+ }
+ 
+ static struct pcie_host_ops dra7xx_pcie_host_ops = {
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index f1c544b..b5a8f11 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -458,12 +458,14 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
+-static void exynos_pcie_host_init(struct pcie_port *pp)
++static int exynos_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 
+ 	exynos_pcie_establish_link(exynos_pcie);
+ 	exynos_pcie_enable_interrupts(exynos_pcie);
++
++	return 0;
+ }
+ 
+ static struct pcie_host_ops exynos_pcie_host_ops = {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index c8cefb0..4844367 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -550,7 +550,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	return ret;
+ }
+ 
+-static void imx6_pcie_host_init(struct pcie_port *pp)
++static int imx6_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 
+@@ -562,6 +562,8 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
++
++	return 0;
+ }
+ 
+ static int imx6_pcie_link_up(struct pcie_port *pp)
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 043c19a..fded7f9 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -260,7 +260,7 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
+ 	return 0;
+ }
+ 
+-static void __init ks_pcie_host_init(struct pcie_port *pp)
++static int __init ks_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+ 	u32 val;
+@@ -287,6 +287,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
+ 	 */
+ 	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
+ 			"Asynchronous external abort");
++
++	return 0;
+ }
+ 
+ static struct pcie_host_ops keystone_pcie_host_ops = {
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 6537079..d3a7266 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -103,7 +103,7 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
+ 	return 1;
+ }
+ 
+-static void ls1021_pcie_host_init(struct pcie_port *pp)
++static int ls1021_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device *dev = pp->dev;
+ 	struct ls_pcie *pcie = to_ls_pcie(pp);
+@@ -114,19 +114,21 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
+ 	if (IS_ERR(pcie->scfg)) {
+ 		dev_err(dev, "No syscfg phandle specified\n");
+ 		pcie->scfg = NULL;
+-		return;
++		return 0;
+ 	}
+ 
+ 	if (of_property_read_u32_array(dev->of_node,
+ 				       "fsl,pcie-scfg", index, 2)) {
+ 		pcie->scfg = NULL;
+-		return;
++		return 0;
+ 	}
+ 	pcie->index = index[1];
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	ls_pcie_drop_msg_tlp(pcie);
++
++	return 0;
+ }
+ 
+ static int ls_pcie_link_up(struct pcie_port *pp)
+@@ -144,7 +146,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+ 	return 1;
+ }
+ 
+-static void ls_pcie_host_init(struct pcie_port *pp)
++static int ls_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct ls_pcie *pcie = to_ls_pcie(pp);
+ 
+@@ -153,6 +155,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	ls_pcie_clear_multifunction(pcie);
+ 	ls_pcie_drop_msg_tlp(pcie);
+ 	iowrite32(0, pcie->pp.dbi_base + PCIE_DBI_RO_WR_EN);
++
++	return 0;
+ }
+ 
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index 0ac0f18..29bdd8b 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -134,12 +134,14 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
+ 		dev_err(pp->dev, "Link not up after reconfiguration\n");
+ }
+ 
+-static void armada8k_pcie_host_init(struct pcie_port *pp)
++static int armada8k_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+ 
+ 	dw_pcie_setup_rc(pp);
+ 	armada8k_pcie_establish_link(pcie);
++
++	return 0;
+ }
+ 
+ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+index 8df6312..a4f146a 100644
+--- a/drivers/pci/host/pcie-designware-plat.c
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -35,13 +35,15 @@ static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+ 	return dw_handle_msi_irq(pp);
+ }
+ 
+-static void dw_plat_pcie_host_init(struct pcie_port *pp)
++static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	dw_pcie_setup_rc(pp);
+ 	dw_pcie_wait_for_link(pp);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
++
++	return 0;
+ }
+ 
+ static struct pcie_host_ops dw_plat_pcie_host_ops = {
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index bed1999..4a81b72 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -638,7 +638,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (pp->ops->host_init)
+-		pp->ops->host_init(pp);
++		ret = pp->ops->host_init(pp);
++			if (ret < 0)
++				goto error;
+ 
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a567ea2..eacf18f 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -63,7 +63,7 @@ struct pcie_host_ops {
+ 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+ 			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+-	void (*host_init)(struct pcie_port *pp);
++	int (*host_init)(struct pcie_port *pp);
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index f37c690..14f730a 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -582,7 +582,7 @@ static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->pipe_clk);
+ }
+ 
+-static void qcom_pcie_host_init(struct pcie_port *pp)
++static int qcom_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+ 	int ret;
+@@ -611,12 +611,14 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		goto err;
+ 
+-	return;
++	return ret;
+ err:
+ 	qcom_ep_reset_assert(pcie);
+ 	phy_power_off(pcie->phy);
+ err_deinit:
+ 	pcie->ops->deinit(pcie);
++
++	return ret;
+ }
+ 
+ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 3cf197b..5f7ae90 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -174,12 +174,14 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
+-static void spear13xx_pcie_host_init(struct pcie_port *pp)
++static int spear13xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+ 
+ 	spear13xx_pcie_establish_link(spear13xx_pcie);
+ 	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
++
++	return 0;
+ }
+ 
+ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+-- 
+2.10.1
+
