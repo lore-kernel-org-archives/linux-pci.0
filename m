@@ -1,72 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:46991 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbcLBVu1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 16:50:27 -0500
-Date: Fri, 2 Dec 2016 22:50:19 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 3/3 pci/next] PCI: rcar: Add gen3 fallback
- compatibility string for pcie-rcar
-Message-ID: <20161202215016.GA21497@verge.net.au>
-References: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
- <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au>
+Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
+Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f4b949c0-f992-b0fb-5f23-f71cb1f9713e@redhat.com>
+References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
+ <1480604901.4751.17.camel@redhat.com> <f4b949c0-f992-b0fb-5f23-f71cb1f9713e@redhat.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 1 Dec 2016 11:58:12 -0800
+Message-ID: <CADaLNDnZfob-4p5U-estW8mGCDhma_vJqxS3zbDdq8brvokhAA@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+To: Jon Masters <jcm@redhat.com>
+Cc: Mark Salter <msalter@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Rafael Wysocki <rafael@kernel.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+	patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 02, 2016 at 11:37:00AM +0100, Simon Horman wrote:
-> Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
-> keeping with the both the existing fallback compatibility string for the
-> R-Car Gen 2 family and the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> ---
-> v2
-> * Move fallback binding to below SoC specific bindings it covers
->   in implementation
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
->  drivers/pci/host/pcie-rcar.c                       | 2 ++
->  2 files changed, 3 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 6cf99690eef9..eee518db90b9 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
->  	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
->  	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
->  	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
->  
->  	    When compatible with the generic version, nodes must list the
->  	    SoC-specific version corresponding to the platform first
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 85971bc276c6..72058bc7af5c 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1078,6 +1078,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->  	{ .compatible = "renesas,pcie-rcar-gen2",
->  	  .data = rcar_pcie_hw_init_gen2 },
->  	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-> +	{ .compatible = "renesas,pcie-rcar-gen3",
-> +		.data = rcar_pcie_hw_init_hw_init },
+On Thu, Dec 1, 2016 at 11:17 AM, Jon Masters <jcm@redhat.com> wrote:
+> On 12/01/2016 10:08 AM, Mark Salter wrote:
+>> On Wed, 2016-11-30 at 15:42 -0800, Duc Dang wrote:
+>
+>>> +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
+>>> +{
+>>> +    struct acpi_device *adev = to_acpi_device(cfg->parent);
+>>> +    struct acpi_pci_root *root = acpi_driver_data(adev);
+>>> +    struct device *dev = cfg->parent;
+>>> +    struct xgene_pcie_port *port;
+>>> +    struct resource *csr;
+>>> +
+>>> +    port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+>>> +    if (!port)
+>>> +            return -ENOMEM;
+>>> +
+>>> +    csr = &xgene_v1_csr_res[root->segment];
+>>
+>> This hard-coded assumption that segment N uses controller N breaks
+>> for m400 where segment 0 is using controller 3.
 
-It looks like I failed to compile-test this.
+I think the latest firmware released from us a few months back use
+segment 3 for PCIe controller 3 in MCFG table.
+>
+> This seems very fragile. So in addition to Bjorn's comment about not
+> trusting firmware provided data for the segment offset in the CSR list,
+> you will want to also determine the controller from the ACPI tree. The
+> existing code walks the ACPI hierarchy and finds the CSR that way.
+> Obviously, the goal is to avoid that in the latest incarnation, but you
+> could still determine which controller matches a given device.
 
-s/rcar_pcie_hw_init_hw_init/rcar_pcie_hw_init/
+Yes, I will look into that more.
 
->  	{},
->  };
->  
-> -- 
-> 2.7.0.rc3.207.g0ac5344
-> 
+>
+> Jon.
+>
+> --
+> Computer Architect | Sent from my Fedora powered laptop
+>
+Regards,
+Duc Dang.
