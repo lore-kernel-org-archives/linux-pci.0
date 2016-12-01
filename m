@@ -1,48 +1,59 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 6 Dec 2016 15:18:50 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Sricharan R <sricharan@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] ACPI/IORT: Make dma masks set-up IORT specific
-Message-ID: <20161206151850.GA4601@red-moon>
-References: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
- <CAJZ5v0hbc61=QCYDgHZ_KbxR7VkSSWrHVGvU47fG6hsQrSJKhw@mail.gmail.com>
- <20161206093710.GA4432@red-moon>
- <20161206132448.GA17255@8bytes.org>
+Date: Thu, 1 Dec 2016 16:36:04 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
+        linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+        linux-acpi@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Lv Zheng <lv.zheng@intel.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
+Message-ID: <20161201223604.GC15867@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161206132448.GA17255@8bytes.org>
+In-Reply-To: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 06, 2016 at 02:24:48PM +0100, Joerg Roedel wrote:
-> Hi Lorenzo,
+On Tue, Nov 29, 2016 at 03:39:48PM -0600, Bjorn Helgaas wrote:
+> Here's another stab at this writeup.  I'd appreciate any comments!
 > 
-> On Tue, Dec 06, 2016 at 09:37:10AM +0000, Lorenzo Pieralisi wrote:
-> > I can apply Rafael and Hanjun's tags and resend a v2 to you if you
-> > prefer, it would be great if you could apply this patch to your arm/smmu
-> > branch for v4.10 as per description above, please let me know.
+> Changes from v1 to v2:
+>   - Consumer/Producer is defined for Extended Address Space descriptors;
+>     should be ignored for QWord/DWord/Word Address Space descriptors
+>   - New arches may use Extended Address Space descriptors in PNP0A03 for
+>     bridge registers, including ECAM (if the arch adds support for this)
+>   - Add more details about MCFG and _CBA (Lv's suggestion)
+>   - Incorporate Rafael's suggestions
 > 
-> Yes, please collect all the tags and send me a v2 please. I'll apply it
-> the right away.
+> ---
+> 
+> Bjorn Helgaas (1):
+>       PCI: Add information about describing PCI in ACPI
+> 
+> 
+>  Documentation/PCI/00-INDEX      |    2 
+>  Documentation/PCI/acpi-info.txt |  180 +++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 182 insertions(+)
+>  create mode 100644 Documentation/PCI/acpi-info.txt
 
-Thank you very much, I have just sent it.
+It's very late in the cycle, but I'm considering trying to squeeze
+this into v4.9 on the grounds that:
 
-Thanks !
-Lorenzo
+  - It's only a documentation change and can't break anything, and
+
+  - Distributing it more widely may help the arm64 firmware ecosystem
+
+But I don't want to disseminate misleading or incorrect information,
+so if it needs clarification or wordsmithing, or even just maturation,
+I'll wait until v4.10.
+
+The Consumer/Producer stuff, in particular, doesn't seem 100% settled
+yet.  Your thoughts, and especially your improvements, are welcome!
+
+Bjorn
