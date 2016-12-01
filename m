@@ -1,44 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:47276 "EHLO mga06.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:54388 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752647AbcLGUe4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 15:34:56 -0500
-Date: Wed, 7 Dec 2016 15:44:10 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Wang Sheng-Hui <shhuiw@foxmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: ask for help: How to make pcie-dpc detect DPC feature in
- platform device?
-Message-ID: <20161207204410.GB22478@localhost.localdomain>
-References: <tencent_1274B1EA3B46AD0574878017@qq.com>
+        id S1758294AbcLASF4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 13:05:56 -0500
+Date: Thu, 1 Dec 2016 12:05:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v10 02/12] PCI: Search ACPI namespace to ensure ECAM
+ space is reserved
+Message-ID: <20161201180551.GE30746@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201082939.12247.55077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201141729.GA9974@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <tencent_1274B1EA3B46AD0574878017@qq.com>
+In-Reply-To: <20161201141729.GA9974@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 05:30:00PM -0700, Wang Sheng-Hui wrote:
-> Keith,
+On Thu, Dec 01, 2016 at 02:17:29PM +0000, Lorenzo Pieralisi wrote:
+> Hi Bjorn,
 > 
-> Sorry to trouble you.
+> Thank you very much for putting this series together !
 > 
-> I'm making up a driver (DPC supported in the device) for our private SoC system, 
-> and the driver is regarded as a platform driver.
+> On Thu, Dec 01, 2016 at 02:29:39AM -0600, Bjorn Helgaas wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > The static MCFG table tells us the base of ECAM space, but it does not
+> > reserve the space -- the reservation should be done via a device in the
+> > ACPI namespace whose _CRS includes the ECAM region.
+> > 
+> > Add pci_ecam_verify_reservation() to check whether the ECAM space is
+> > reserved by an ACPI namespace device.  If it is, emit a message showing
+> > which device reserves it.  If not, emit a "[Firmware Bug]" warning.
 > 
-> I wonder how can I make the pcie-dpc driver detect my DPC-enabled SOC and tigger
-> some action in my platform driver?
-> 
-> And one more question:
->            How to simulate DPC event in simulation env, e.g QEMU?
+> I have a question: do we want to carry out a search on a restricted set
+> of _HIDs here ? I am not sure we should consider an ECAM region matching
+> with a resource in a device _CRS whose _HID/_CID is not part of
+> {PNP0c02, PNP0A03, PNP0A08} as a success, actually I think that would be
+> a FW bug, right ?
 
-Sorry for the late reply. A lot of mailing list messages have been
-redirected to my spam folder for some reason.
+That's a good question.  I did it the simplest way I could for now,
+but we could extend that if we decide it's necessary.  Sometimes I've
+been overly zealous about looking for problems and ended up
+overengineering things or shooting myself in the foot.
 
-The pcie-dpc driver, if enabled in your kernel config, automatically
-binds to any pcie downstream or root port that has the DPC capability. If
-your DPC capable device is not seen as a root or downstream pcie port,
-then pcie-dpc won't bind to it.
+My main goal is to make sure the space is described *somewhere*, which
+is enough to keep it from being a land mine.
 
-I don't see why you couldn't emulate the capability in QEMU, but I don't
-see it implemented in any of the emulated pcie devices, so you'd have
-to get someone to implement it in one of them.
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/ecam.c |   21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> > 
+> > diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+> > index 43ed08d..3805122 100644
+> > --- a/drivers/pci/ecam.c
+> > +++ b/drivers/pci/ecam.c
+> > @@ -14,6 +14,7 @@
+> >   * version 2 (GPLv2) along with this source code.
+> >   */
+> >  
+> > +#include <linux/acpi.h>
+> >  #include <linux/device.h>
+> >  #include <linux/io.h>
+> >  #include <linux/kernel.h>
+> > @@ -29,6 +30,24 @@
+> >   */
+> >  static const bool per_bus_mapping = !IS_ENABLED(CONFIG_64BIT);
+> >  
+> > +static void pci_ecam_verify_reservation(struct device *dev,
+> > +					struct resource *ecam)
+> > +{
+> > +#ifdef CONFIG_ACPI
+> > +	struct acpi_device *adev;
+> > +
+> > +	adev = acpi_resource_consumer(ecam);
+> > +	if (!adev) {
+> > +		dev_warn(dev, FW_BUG "ECAM area %pR not reserved in ACPI namespace\n",
+> > +			 ecam);
+> > +		return;
+> > +	}
+> > +
+> > +	dev_info(dev, "ECAM area %pR reserved by %s\n", ecam,
+> > +		 dev_name(&adev->dev));
+> > +#endif
+> > +}
+> > +
+> >  /*
+> >   * Create a PCI config space window
+> >   *  - reserve mem region
+> > @@ -51,6 +70,8 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+> >  	if (!cfg)
+> >  		return ERR_PTR(-ENOMEM);
+> >  
+> > +	pci_ecam_verify_reservation(dev, cfgres);
+> > +
+> >  	cfg->parent = dev;
+> >  	cfg->ops = ops;
+> >  	cfg->busr.start = busr->start;
+> > 
