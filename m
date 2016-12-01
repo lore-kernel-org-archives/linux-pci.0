@@ -1,63 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35676 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbcLZNxC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2016 08:53:02 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bartlomiej Zolnierkiewicz'" <b.zolnierkie@samsung.com>,
-        "'Jaehoon Chung'" <jh80.chung@samsung.com>
-Cc: <linux-pci@vger.kernel.org>, <helgaas@google.com>,
-        <krzk@kernel.org>, <linux-kernel@vger.kernel.org>,
-        <javier@osg.samsung.com>, <kgene@kernel.org>,
-        <linux-samsung-soc@vger.kernel.org>
-References: <20161219081614.5403-1-jh80.chung@samsung.com> <4494696.ZtEANGFldV@amdc3058>
-In-Reply-To: <4494696.ZtEANGFldV@amdc3058>
-Subject: Re: [PATCH 0/4] PCI: exynos: cleans the minor things
-Date: Mon, 26 Dec 2016 08:52:58 -0500
-Message-ID: <000001d25f7f$5f0d2cf0$1d2786d0$@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:33566 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750708AbcLAQgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 11:36:04 -0500
+Date: Thu, 1 Dec 2016 10:35:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v10 01/12] ACPI: Add acpi_resource_consumer() to find
+ device that claims a resource
+Message-ID: <20161201163557.GF19681@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201082932.12247.7479.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0hB61=17Fbf=2-K=zaRmMZkY3NVxMPHNwfF9Nr6=ey+-g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hB61=17Fbf=2-K=zaRmMZkY3NVxMPHNwfF9Nr6=ey+-g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 20, 2016 12:36 PM, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> On Monday, December 19, 2016 05:16:10 PM Jaehoon Chung wrote:
-> > Current pci-exnoys.c is used for only EXYNOS5440.
-> > Even if there is no use-case, just cleans the codes for maintaining.
+On Thu, Dec 01, 2016 at 02:17:20PM +0100, Rafael J. Wysocki wrote:
+> On Thu, Dec 1, 2016 at 9:29 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
 > >
-> > In future, I will upstream for Exynso5433(TM2).
-> > Before sending patches for exynos5433, i want to reuse the some codse in
-> pic-exynos.c.
-> > This patch is for perparing it.
+> > Add acpi_resource_consumer().  This takes a struct resource and searches
+> > the ACPI namespace for a device whose current resource settings (_CRS)
+> > includes the resource.  It returns the device if it exists, or NULL if no
+> > device uses the resource.
 > >
-> > My Final goal is to apply the pcie-exynos5433 into v4.11.
+> > If more than one device uses the resource (this may happen in the case of
+> > bridges), acpi_resource_consumer() returns the first one found by
+> > acpi_get_devices() in its modified depth-first walk of the namespace.
 > >
-> > Jaehoon Chung (4):
-> >   PCI: exynos: replace to one register accessor from each accessors
-> >   PCI: exynos: Remove the unnecessary variables
-> >   PCI: exynos: Use the bitops API to operate the bit shifting
-> >   PCI: exynos: remove the duplicated codes
-> >
-> >  drivers/pci/host/pci-exynos.c | 260 +++++++++++++++++++----------------
-> -------
-> >  1 file changed, 116 insertions(+), 144 deletions(-)
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Best regards,
-> --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
+> (this patch should have been CCed to linux-acpi too, however).
 
+Thanks for taking a look!  I didn't CC linux-acpi because this was mostly
+to get build testing and I didn't want linux-acpi to get spammed by
+buildbot errors.  I'll add linux-acpi on future postings.
 
+Bjorn
