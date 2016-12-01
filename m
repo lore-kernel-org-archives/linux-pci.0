@@ -1,48 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57269 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752106AbcLVFy6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Dec 2016 00:54:58 -0500
-Subject: Re: [PATCH] pci: add kernel config option for disabling common PCI
- quirks
-To: Christoph Hellwig <hch@infradead.org>
-References: <1482306784-29224-1-git-send-email-john@phrozen.org>
- <20161221122213.GA32563@infradead.org>
- <8630ec3a-9424-653c-7c7a-d88554011151@phrozen.org>
- <20161221142607.GA8594@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-From: John Crispin <john@phrozen.org>
-Message-ID: <dba6a1d8-d1d6-581e-8a1b-7988ff2577e0@phrozen.org>
-Date: Thu, 22 Dec 2016 06:54:51 +0100
+Return-Path: <SRS0=zH6n=XQ=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=zH6n=XQ=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki"
+	<rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang
+	<dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington
+	<cov@codeaurora.org>,
+        "liudongdong (C)" <liudongdong3@huawei.com>
+Subject: RE: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
+Date: Thu, 1 Dec 2016 21:53:08 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F962C47@lhreml507-mbx>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20161221142607.GA8594@infradead.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 21/12/2016 15:26, Christoph Hellwig wrote:
-> On Wed, Dec 21, 2016 at 02:11:25PM +0100, John Crispin wrote:
->> I can turn it into an enable patch that is selected by default.
->>
->> The current patch disables all those quirks that are used for x86/PC
->> style machines and hence are not required in the embedded world.
-> 
-> Maybe we'll just need to reorganize the quirks so that most of them
-> arch in arch code or the affected drivers?
-> 
-
-Hi Christoph
-
-to be honest i have no opinion on this. I am currently trying to reduce
-the amount of patches that we have inside the LEDE tree. the patches
-were written by other people and then dumped on us. obviously i am
-interested to get this upstream with the least amount of effort. I am
-quite aware though that some patches will need an overhaul to be
-applicable for upstream. its not really my call if it is enough to make
-this an enable patch and review the quirks enabled by it or if the code
-needs to be moved.
-
-	John
+SGkgQmpvcm4NCg0KTWFueSBtYW55IHRoYW5rcyBmb3IgcHV0dGluZyB0aGlzIHRvZ2V0aGVyIQ0K
+DQpbLi4uXQ0KDQo+IA0KPiAgIFBDSTogQWRkIE1DRkcgcXVpcmtzIGZvciBIaVNpbGljb24gSGlw
+MDUvMDYvMDcgaG9zdCBjb250cm9sbGVycw0KPiANCj4gICAgIERvbmdkb25nJ3MgSGlTaWxpY29u
+IHF1aXJrcy4gIEhlcmUncyB3aGVyZSBpdCBnZXRzIGludGVyZXN0aW5nLiAgSQ0KPiAgICAgbW92
+ZWQgdGhpcyB0byB0aGUgZXhpc3RpbmcgcGNpZS1oaXNpLmMgaW5zdGVhZCBvZiBhZGRpbmcNCj4g
+ICAgIHBjaWUtaGlzaS1hY3BpLmMuICBJIGNoYW5nZWQgdGhlIE1ha2VmaWxlIHNvIHdlIGFsd2F5
+cyBidWlsZA0KPiAgICAgcGNpZS1oaXNpLmMgb24gQVJNNjQuICBJIGFkZGVkIGlmZGVmcyBzbyB3
+ZSBnZXQgdGhlIHF1aXJrIGNvZGUgaWYNCj4gICAgIENPTkZJR19BQ1BJIGFuZCBDT05GSUdfUENJ
+X1FVSVJLUyBhbmQgd2UgZ2V0IHRoZSBvcmlnaW5hbCBwbGF0Zm9ybQ0KPiAgICAgZHJpdmVyIGlm
+IENPTkZJR19QQ0lfSElTSS4gIEl0J3MgcG9zc2libGUgdG8gaGF2ZSBib3RoLCBhbmQgaWYgd2UN
+Cj4gICAgIHByb2Nlc3MgdGhlIE1DRkcgcXVpcmsgd2UgZ2V0IHRoZSBxdWlyayBjb2RlLg0KPiAN
+Cj4gICAgIEknbSBjb25mdXNlZCBhYm91dCB3aHkgdGhlIHF1aXJrIGFjY2Vzc29ycyBhcmUgc28g
+bXVjaCBkaWZmZXJlbnQNCj4gICAgIHRoYW4gdGhlIG9yaWdpbmFsIGFjY2Vzc29ycy4gIGhpc2lf
+cGNpZV9hY3BpX3JkX2NvbmYoKSBsb29rcyBtdWNoDQo+ICAgICBkaWZmZXJlbnQgdGhhbiBoaXNp
+X3BjaWVfY2ZnX3JlYWQoKS4gIFRoZSBvcmlnaW5hbCBkcml2ZXIgY2xhaW1zDQo+ICAgICBIaXB4
+eCBvbmx5IHN1cHBvcnRzIDMyLWJpdCBjb25maWcgYWNjZXNzZXMsIGJ1dCB0aGUgcXVpcmsNCj4g
+ICAgIGFjY2Vzc29ycyBkb24ndCBlbmZvcmNlIHRoYXQuDQoNCldlbGwgdGhlIG1haW4gcG9pbnQg
+aXMgdGhhdCBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKCkgYXNzaWduZWQgdG8NCnBjaV9vcHMucmVh
+ZCB3aGVyZWFzIGhpc2lfcGNpZV9jZmdfcmVhZCgpIGlzIGFzc2lnbmVkIHRvDQpoaXNpX3BjaWVf
+aG9zdF9vcHMucmRfb3duX2NvbmYuIFRoZSBmaXJzdCBvbmUgaXMgdXNlZCB0byBhY2Nlc3MgdGhl
+DQp3aG9sZSBwY2kgY29uZmlndXJhdGlvbiBzcGFjZSwgd2hlcmVhcyB0aGUgc2Vjb25kIGlzIGRl
+ZGljYXRlZCB0byB0aGUNCnJvb3QgY29tcGxleCAnb3duJyBjb25maWd1cmF0aW9uIHNwYWNlLg0K
+QXMgeW91IGNhbiBzZWUgYWxzbyBpbiBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKCkgd2UgZW5mb3Jj
+ZSAzMmIgYWNjZXNzDQpmb3IgdGhlIHJvb3QgY29tcGxleC4NCg0KTm93IHRoZSBtYWluIGlzc3Vl
+IGhlcmUgaXMgdGhhdCBhbGwgdGhlIGRlc2lnbndhcmUgYmFzZWQgZHJpdmVycyBjdXJyZW50bHkN
+CnVzZSB0aGUgc2FtZSBpbnN0YW5jZSBvZiBwY2lfb3BzOg0KaHR0cDovL2x4ci5mcmVlLWVsZWN0
+cm9ucy5jb20vc291cmNlL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMjTDcxMw0K
+DQpJbiBvcmRlciB0byBzb2x2ZSB0aGlzIHdlIHNob3VsZCB0dXJuIHRoZSBkZXNpZ253YXJlIHBj
+aV9vcHMgaW50byBwZXINCmRyaXZlciBpbnN0YW5jZXM7IHNlZSBteSBjb21tZW50IGluIGEgcHJl
+dmlvdXMgZGlzY3Vzc2lvbjoNCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNp
+L21zZzU2MDk3Lmh0bWwNCg0KVGhhbmtzDQoNCkdhYg0KWy4uLl0NCg==
