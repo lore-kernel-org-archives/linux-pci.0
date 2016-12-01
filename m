@@ -1,109 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54388 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:36922 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758294AbcLASF4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 13:05:56 -0500
-Date: Thu, 1 Dec 2016 12:05:51 -0600
+        id S1757890AbcLAQ5u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 11:57:50 -0500
+Date: Thu, 1 Dec 2016 10:57:20 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v10 02/12] PCI: Search ACPI namespace to ensure ECAM
- space is reserved
-Message-ID: <20161201180551.GE30746@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201082939.12247.55077.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201141729.GA9974@red-moon>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, jchandra@broadcom.com,
+        ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+        mw@semihalf.com, ddaney@caviumnetworks.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+        jeremy.linton@arm.com, liudongdong3@huawei.com,
+        gabriele.paoloni@huawei.com, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jcm@redhat.com, msalter@redhat.com,
+        Christopher Covington <cov@codeaurora.org>
+Subject: Re: [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI controller for
+ ThunderX pass2.x silicon version
+Message-ID: <20161201165720.GA30746@bhelgaas-glaptop.roam.corp.google.com>
+References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+ <1479201298-25494-2-git-send-email-tn@semihalf.com>
+ <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
+ <eba92ea8-bdab-9a3a-7b18-caaeac15db5d@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161201141729.GA9974@red-moon>
+In-Reply-To: <eba92ea8-bdab-9a3a-7b18-caaeac15db5d@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 02:17:29PM +0000, Lorenzo Pieralisi wrote:
+On Thu, Dec 01, 2016 at 09:49:51AM +0100, Tomasz Nowicki wrote:
 > Hi Bjorn,
 > 
-> Thank you very much for putting this series together !
+> On 01.12.2016 01:28, Bjorn Helgaas wrote:
+> >Hi Tomasz,
+> >
+> >On Tue, Nov 15, 2016 at 10:14:57AM +0100, Tomasz Nowicki wrote:
+> >>ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
+> >>compliant with ECAM standard. It uses non-standard configuration space
+> >>accessors (see pci_thunder_pem_ops) and custom configuration space granulation
+> >>(see bus_shift = 24). In order to access configuration space and
+> >>probe PEM as ACPI based PCI host controller we need to add MCFG quirk
+> >>infrastructure. This involves:
+> >>1. thunder_pem_init() ACPI extension so that we can probe PEM-specific
+> >>   register ranges analogously to DT
+> >>2. Export PEM pci_thunder_pem_ops structure so it is visible to MCFG quirk
+> >>   code.
+> >>3. New quirk entries for each PEM segment. Each contains platform IDs,
+> >>   mentioned pci_thunder_pem_ops and CFG resources.
+> >>
+> >>Quirk is considered for ThunderX silicon pass2.x only which is identified
+> >>via MCFG revision 1.
+> >>
+> >>Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >>---
+> >> drivers/acpi/pci_mcfg.c            |  20 +++++++
+> >> drivers/pci/host/pci-thunder-pem.c | 107 ++++++++++++++++++++++++++++++++-----
+> >> include/linux/pci-ecam.h           |   4 ++
+> >> 3 files changed, 117 insertions(+), 14 deletions(-)
+> >>
+> >>diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> >>index ac21db3..e4e2b9b 100644
+> >>--- a/drivers/acpi/pci_mcfg.c
+> >>+++ b/drivers/acpi/pci_mcfg.c
+> >>@@ -57,6 +57,26 @@ static struct mcfg_fixup mcfg_quirks[] = {
+> >> 	{ "QCOM  ", "QDF2432 ", 1, 5, MCFG_BUS_ANY, &pci_32b_ops },
+> >> 	{ "QCOM  ", "QDF2432 ", 1, 6, MCFG_BUS_ANY, &pci_32b_ops },
+> >> 	{ "QCOM  ", "QDF2432 ", 1, 7, MCFG_BUS_ANY, &pci_32b_ops },
+> >>+#ifdef CONFIG_PCI_HOST_THUNDER_PEM
+> >>+#define THUNDER_MCFG_RES(addr, node) \
+> >>+	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
+> >>+#define THUNDER_MCFG_QUIRK(rev, node) \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 4 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x88001f000000UL, node) }, \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 5 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x884057000000UL, node) }, \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 6 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x88808f000000UL, node) }, \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 7 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x89001f000000UL, node) }, \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 8 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x894057000000UL, node) }, \
+> >>+	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, \
+> >>+	  &pci_thunder_pem_ops, THUNDER_MCFG_RES(0x89808f000000UL, node) }
+> >>+	/* SoC pass2.x */
+> >>+	THUNDER_MCFG_QUIRK(1, 0UL),
+> >>+	THUNDER_MCFG_QUIRK(1, 1UL),
+> >>+#endif
+> >
+> >I want all these quirks to work without having to enable
+> >device-specific config options like CONFIG_PCI_HOST_THUNDER_PEM.
+> >
+> >I tweaked the preceding MCFG quirk support to wrap it in
+> >CONFIG_PCI_QUIRKS.  I also tweaked the qualcomm and hisi patches to
+> >move the meat of them to pci/quirks.c.  My work-in-progress is on
+> >pci/ecam, but I can't easily build for arm64, so there are likely some
+> >issues to be resolved.
 > 
-> On Thu, Dec 01, 2016 at 02:29:39AM -0600, Bjorn Helgaas wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > The static MCFG table tells us the base of ECAM space, but it does not
-> > reserve the space -- the reservation should be done via a device in the
-> > ACPI namespace whose _CRS includes the ECAM region.
-> > 
-> > Add pci_ecam_verify_reservation() to check whether the ECAM space is
-> > reserved by an ACPI namespace device.  If it is, emit a message showing
-> > which device reserves it.  If not, emit a "[Firmware Bug]" warning.
+> Please see compilation fix patch in [1] for your series.
 > 
-> I have a question: do we want to carry out a search on a restricted set
-> of _HIDs here ? I am not sure we should consider an ECAM region matching
-> with a resource in a device _CRS whose _HID/_CID is not part of
-> {PNP0c02, PNP0A03, PNP0A08} as a success, actually I think that would be
-> a FW bug, right ?
+> >
+> >I'm hoping to end up with something like this:
+> >https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/ecam&id=51ad4df79a9b7f2a66b346a46b21a785a2937469
+> >
+> >The problem with ThunderX is that the config accessors are much bigger
+> >and I don't really want to duplicate them in both pci/quirks.c and
+> >pci-thunder-pem.c.
+> >
+> >Actually, that raises a question for qualcomm and hisi: in the DT
+> >model, we use non-ECAM config accessors in the driver, but in the ACPI
+> >model, we use ECAM accessors.  It seems like the accessors should be
+> >the same regardless of whether we discover the bridge via DT or ACPI.
+> >
+> >Anyway, it's almost like we want to build pci-thunder-pem.o if
+> >CONFIG_PCI_HOST_THUNDER_PEM || (CONFIG_PCI_QUIRKS && CONFIG_ARM64).
+> >I don't know how to express that nicely.
+> >
+> >I was trying to avoid adding an ecam-quirks.c, but maybe we need to
+> >add it and collect all the different accessors there and add #ifdefs
+> >inside.
+> >
+> >Sorry, this is only half-baked, but I just wanted to throw this out in
+> >case you have any ideas.
+> 
+> I agree that pci-thunder-pem.c and pci-thunder-ecam.c are too big to
+> be duplicated. The same for new ecam-quirks.c container. So treating
+> this as a necessary evil how about:
 
-That's a good question.  I did it the simplest way I could for now,
-but we could extend that if we decide it's necessary.  Sometimes I've
-been overly zealous about looking for problems and ended up
-overengineering things or shooting myself in the foot.
+I discarded my original half-baked ecam-quirks.c idea and instead
+tried changing the Makefile and adding some ifdefs in the individual
+drivers.  It's not too pretty, but maybe better than ecam-quirks.c?
 
-My main goal is to make sure the space is described *somewhere*, which
-is enough to keep it from being a land mine.
+>  config PCI_HOST_THUNDER_PEM
+>  	bool "Cavium Thunder PCIe controller to off-chip devices"
+> -	depends on OF && ARM64
+> +	depends on ARM64
+> +	depends on OF || (ACPI && PCI_QUIRKS)
+>  	select PCI_HOST_COMMON
+> 
+> Moreover, IMO we should select PCI_QUIRKS for ARM64 && ACPI by
+> default. Then it becomes:
+>  config PCI_HOST_THUNDER_PEM
+>  	bool "Cavium Thunder PCIe controller to off-chip devices"
+> -	depends on OF && ARM64
+> +	depends on ARM64
+> +	depends on OF || ACPI
+>  	select PCI_HOST_COMMON
 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/ecam.c |   21 +++++++++++++++++++++
-> >  1 file changed, 21 insertions(+)
-> > 
-> > diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> > index 43ed08d..3805122 100644
-> > --- a/drivers/pci/ecam.c
-> > +++ b/drivers/pci/ecam.c
-> > @@ -14,6 +14,7 @@
-> >   * version 2 (GPLv2) along with this source code.
-> >   */
-> >  
-> > +#include <linux/acpi.h>
-> >  #include <linux/device.h>
-> >  #include <linux/io.h>
-> >  #include <linux/kernel.h>
-> > @@ -29,6 +30,24 @@
-> >   */
-> >  static const bool per_bus_mapping = !IS_ENABLED(CONFIG_64BIT);
-> >  
-> > +static void pci_ecam_verify_reservation(struct device *dev,
-> > +					struct resource *ecam)
-> > +{
-> > +#ifdef CONFIG_ACPI
-> > +	struct acpi_device *adev;
-> > +
-> > +	adev = acpi_resource_consumer(ecam);
-> > +	if (!adev) {
-> > +		dev_warn(dev, FW_BUG "ECAM area %pR not reserved in ACPI namespace\n",
-> > +			 ecam);
-> > +		return;
-> > +	}
-> > +
-> > +	dev_info(dev, "ECAM area %pR reserved by %s\n", ecam,
-> > +		 dev_name(&adev->dev));
-> > +#endif
-> > +}
-> > +
-> >  /*
-> >   * Create a PCI config space window
-> >   *  - reserve mem region
-> > @@ -51,6 +70,8 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
-> >  	if (!cfg)
-> >  		return ERR_PTR(-ENOMEM);
-> >  
-> > +	pci_ecam_verify_reservation(dev, cfgres);
-> > +
-> >  	cfg->parent = dev;
-> >  	cfg->ops = ops;
-> >  	cfg->busr.start = busr->start;
-> > 
+Thanks, I think you're right about needing Kconfig changes here.
+
+I incorporated the first one (with "(ACPI && PCI_QUIRKS)") because we
+shouldn't offer this Kconfig choice when PCI_QUIRKS is not set.
+
+If we only depend on ACPI here and we decide that ARM64 should *not*
+automatically select PCI_QUIRKS, we'll offer this choice even when
+PCI_QUIRKS is not set, and that seems wrong.
+
+Making it explicit here removes the non-obvious connection with the
+PCI_QUIRKS selection strateg.
+
+Bjorn
