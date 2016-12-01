@@ -1,100 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:35910 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763330AbcLSQJH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 11:09:07 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:55424 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754446AbcLAXYe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 18:24:34 -0500
+Date: Thu, 1 Dec 2016 16:22:57 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Adi Menachem <adim@mellanox.com>
+Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+Message-ID: <20161201162257.31514098@t450s.home>
+In-Reply-To: <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        <20161106100832.41e173d5@t450s.home>
+        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        <20161109080746.24dd79dd@t450s.home>
+        <VI1PR0502MB2957CCD1E8EE93A3BC6CE178D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        <20161109085326.62b47d2f@t450s.home>
+        <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <1481994562-9283-1-git-send-email-logang@deltatee.com>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
-From: Myron Stowe <myron.stowe@gmail.com>
-Date: Mon, 19 Dec 2016 09:09:05 -0700
-Message-ID: <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
-Subject: Re: [RFC 0/1] New PCI Switch Management Driver
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I guess the obvious questions is: why is a driver for a PCI switch
-necessary?  The core works with all compliant switches today and there
-are no specifics for a particular design or such.
+Revisiting this...
 
-So I guess I'd like to hear the reasoning and justifications for why a
-driver for a common device that should conform to the specifications
-and not seem to need any special considerations is required or desired
-here.
+On Wed, 9 Nov 2016 15:55:55 +0000
+Ilya Lesokhin <ilyal@mellanox.com> wrote:
 
-On Sat, Dec 17, 2016 at 10:09 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> Hi,
->
-> [Appologies: this is a resend for some people. Due to a configuration
-> error the original email was rejected by the mailing lists. I hope
-> this one makes it!]
->
-> We're looking to get some initial feedback on a new driver for
-> a line of PCIe switches produced and produced and sold by Microsemi.
-> The goal is to get the process moving to get this code included in
-> upstream hopefully for 4.11. Facebook is currently gearing up to
-> use this hardware in its Open Compute Platform and is pushing to
-> have this driver in the upstream kernel.
->
-> The following patch briefly describes the hardware and provides
-> the first draft of driver code. Currently, the driver works and
-> has been tested but is not feature complete. Thus, we are not looking
-> to get it merged immediately. However we would like some early review,
-> specifically on the interfaces and core concepts so that we don't
-> do a lot of work down a path the community would reject. Barring any
-> objections to this RFC, we will flesh out all the features
-> and provide a completed patch for inclusion in the coming weeks.
->
-> Work on a userspace tool, that utilizes this driver, is also being
-> done at [1]. The tool is currently also a bit of a skeleton and
-> will be fleshed out assuming there are no serious objections to our
-> userspace interface. In the end, the tool will be released with a
-> GPL license.
->
-> The patch is based off of the v4.9 release.
->
-> Thanks for your review,
->
-> Logan
->
-> [1] https://github.com/sbates130272/switchtec-user
->
-> Logan Gunthorpe (1):
->   MicroSemi Switchtec management interface driver
->
->  Documentation/switchtec.txt    |  54 +++
->  MAINTAINERS                    |   9 +
->  drivers/pci/Kconfig            |   1 +
->  drivers/pci/Makefile           |   1 +
->  drivers/pci/switch/Kconfig     |  13 +
->  drivers/pci/switch/Makefile    |   1 +
->  drivers/pci/switch/switchtec.c | 824 +++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/switch/switchtec.h | 119 ++++++
->  8 files changed, 1022 insertions(+)
->  create mode 100644 Documentation/switchtec.txt
->  create mode 100644 drivers/pci/switch/Kconfig
->  create mode 100644 drivers/pci/switch/Makefile
->  create mode 100644 drivers/pci/switch/switchtec.c
->  create mode 100644 drivers/pci/switch/switchtec.h
->
-> --
-> 2.1.4
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I guess hiding it is even better.
+
+AIUI, a device supporting ATS can help offload some of the iotlb
+pressure from the IOMMU, so a high performance device implementing a
+device iotlb may experience less of an impact if it can perform much
+of the iotlb work on its own.  But I suppose the question is, does the
+guest driver or even the guest OS need to be aware of ATS to get that
+benefit?  More below...
+
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Wednesday, November 09, 2016 5:53 PM
+> > To: Ilya Lesokhin <ilyal@mellanox.com>
+> > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com;
+> > Adi Menachem <adim@mellanox.com>
+> > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+> > 
+> > On Wed, 9 Nov 2016 15:25:16 +0000
+> > Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> >   
+> > > > -----Original Message-----
+> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > Sent: Wednesday, November 09, 2016 5:08 PM
+> > > > To: Ilya Lesokhin <ilyal@mellanox.com>
+> > > > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org;
+> > > > bhelgaas@google.com; Adi Menachem <adim@mellanox.com>
+> > > > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
+> > > >
+> > > > On Wed, 9 Nov 2016 14:49:02 +0000
+> > > > Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> > > >  
+> > > > > I would virtualize the "ATS Control Register".  
+> > > >
+> > > > And do what?  
+> > > I think it should be read only.  
+> > 
+> > That would violate the spec, in which case it shouldn't be virtualized, the
+> > capability should be hidden.
+> >   
+> > > > > Regarding poor behavior, I couldn't really find what happens when
+> > > > > ATS is  
+> > > > misconfigured, but I would assume it can cause problems.  
+> > > > > The scenarios I'm concerned about are:
+> > > > > 	1. The guest enables translation caching, while the hypervisor
+> > > > > thinks  
+> > > > there are disabled -> Hypervisor won't issue invalidations.
+> > > >
+> > > > Aren't invalidations issued by the iommu, why does the hypervisor
+> > > > need to participate?  How would a software entity induce an  
+> > invalidation?  
+> > > That's what one might expect from a sane design, but
+> > > http://lxr.free-electrons.com/source/drivers/iommu/intel-iommu.c?v=4.8
+> > > #L1549
+> > > seems to imply otherwise :(  
+
+This seems correct though, the device iotlb would interact with the
+physical IOMMU, so this is happening on the host.  The call path would
+be:
+
+ioctl(container, VFIO_IOMMU_UNMAP_DMA, ...)
+  vfio_fops_unl_ioctl
+     vfio_iommu_type1_ioctl
+       vfio_dma_do_unmap
+         vfio_remove_dma
+           vfio_unmap_unpin
+             iommu_unmap
+               intel_iommu_unmap
+                 iommu_flush_iotlb_psi
+                   iommu_flush_dev_iotlb
+
+For a non-iommu VM, mappings will be mostly static, so this will be
+rare.  If we had VT-d emulation support in the VM, the iommu domain
+used by the VM would map to an iommu domain in the host and any
+invalidations within that domain would trigger an unmap through to the
+host domain.
+ 
+> > > > > 	2. Smallest Translation Unit misconfiguration. Not sure if it
+> > > > > will cause  
+> > > > invalid access or only poor caching behavior.  
+
+I'm not sure about this either.  I think that ATS is enabled on the
+device prior to the guest having access to it, but could the guest
+interfere or cause poor behavior by further interaction with the ATS
+capability.  I guess my question would be whether the guest needs
+visibility or access to the ATS capability to still make use of it.  We
+certainly want to take advantage of an iotlb where available.  For a
+Linux guest we only seem to manipulate ATS enable through the iommu
+code, so I expect a non-iommu VM to leave ATS alone.  What's the best
+solution then, to hide the ATS capability, assuming that it works
+transparently on the host level?  Expose it to the guest, perhaps
+virtualizing the STU field to the VM, giving the VM enable/disable
+control?  How can we test any of this?  Thanks,
+
+Alex
