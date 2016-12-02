@@ -1,84 +1,58 @@
-Return-Path: <SRS0=uvur=X4=codeaurora.org=kvalo@kernel.org>
-Return-Path: <SRS0=uvur=X4=codeaurora.org=kvalo@kernel.org>
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-Cc: helgaas@kernel.org,  linux-kernel@vger.kernel.org,  linux-pci@vger.kernel.org,  marc.zyngier@arm.com,  Janusz.Dziedzic@tieto.com,  rmanohar@qti.qualcomm.com,  ath9k-devel@qca.qualcomm.com,  linux-wireless@vger.kernel.org,  rmanohar@qca.qualcomm.com,  bharat.kumar.gogada@xilinx.com, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath9k: unlock rcu read when returning early
-References: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
-Date: Tue, 13 Dec 2016 11:59:42 +0200
-In-Reply-To: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
-	(Tobias Klausmann's message of "Mon, 12 Dec 2016 19:50:01 +0100")
-Message-ID: <877f74175d.fsf@kamboji.qca.qualcomm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45386 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750781AbcLBQVK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Dec 2016 11:21:10 -0500
+Date: Fri, 2 Dec 2016 10:21:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Masters <jcm@redhat.com>
+Cc: linux-pci@vger.kernel.org, Al Stone <ahs3@redhat.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Christopher Covington <cov@codeaurora.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Duc Dang <dhdang@apm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Mark Salter <msalter@redhat.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Robert Richter <rrichter@cavium.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
+Subject: Re: ACPI namespace details for ARM64
+Message-ID: <20161202162101.GA9903@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
+ <1d7424da-f9f8-68e3-5571-b9fc46f13a7f@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1d7424da-f9f8-68e3-5571-b9fc46f13a7f@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
+On Thu, Dec 01, 2016 at 11:52:00PM -0500, Jon Masters wrote:
+> On 11/09/2016 05:05 PM, Bjorn Helgaas wrote:
 
-> Starting with ath9k: use ieee80211_tx_status_noskb where possible
-> [d94a461d7a7df68991fb9663531173f60ef89c68]
+> > The basic requirement is that the ACPI namespace should describe
+> > *everything* that consumes address space unless there's another
+> > standard way for the OS to find it [1, 2].
+> 
+> ...and by the way, this was a key lesson for me, too. I had not
+> fully internalized before that you don't just want to describe the
+> ECAM region in the MCFG but you also need to ensure it's properly
+> described in the ACPI namespace. Lots of good things learned.
 
-The correct format to reference a commit in the commit log is:
+I wish the ACPI spec contained explicit language to this effect, but
+if it does, I haven't found it.  There might be firmware people who
+would disagree with it.
 
-Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
-where possible") the...
+My rationale is that the OS may receive a device with no address
+space assigned, and for the OS to safely assign space, it has to know
+everything to avoid.  The devil's advocate might argue that the OS
+doesn't need full knowledge as long as firmware constrains every
+device's _PRS to avoid the possibility of conflict.  But that seems
+like it would be impractical for non-trivial systems.
 
-> the driver uses rcu_read_lock() && rcu_read_unlock() yet on returning
-> early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
-> and suspicious RCU usage:
->
->  ===============================
->  [ INFO: suspicious RCU usage. ]
->  4.9.0-rc8 #11 Not tainted
->  -------------------------------
->  kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
->
->  other info that might help us debug this:
->
->  RCU used illegally from idle CPU!
->  rcu_scheduler_active = 1, debug_locks = 0
->  RCU used illegally from extended quiescent state!
->  1 lock held by swapper/7/0:
->  #0:
->   (
->  rcu_read_lock
->  ){......}
->  , at:
->  [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
->
->  stack backtrace:
->  CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
->  Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
->   ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
->   ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
->   ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
->  Call Trace:
->   <IRQ>
->   [<ffffffff8132b1e5>] dump_stack+0x68/0x93
->   [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
->   [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
->   [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
->   [<ffffffff81058631>] irq_exit+0x61/0xd0
->   [<ffffffff81018d25>] do_IRQ+0x65/0x110
->   [<ffffffff81672189>] common_interrupt+0x89/0x89
->   <EOI>
->   [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
->   [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
->   [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
->   [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
->   [<ffffffff810336f8>] start_secondary+0x148/0x170
->
-> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-
-A fixes line and cc stable would be good to have:
-
-Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
-Cc: <stable@vger.kernel.org> # v4.9
-
-I can add those.
-
-I'm planning to push this to 4.10 but would prefer to see an ack from
-Felix (the author of d94a461d7a7d) first. I added him to Cc.
-
--- 
-Kalle Valo
+Bjorn
