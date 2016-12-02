@@ -1,46 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54540 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750833AbcLBSne (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 13:43:34 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB2Icgrc082166
-        for <linux-pci@vger.kernel.org>; Fri, 2 Dec 2016 13:42:30 -0500
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2738m9buht-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 02 Dec 2016 13:42:30 -0500
-Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Fri, 2 Dec 2016 11:42:29 -0700
-Subject: Re: [PATCH] PCI: Increase VPD access timeout
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Date: Fri, 2 Dec 2016 12:43:17 -0600
+Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
+Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
+Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
+To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>
+References: <20160921173129.GA20006@localhost>
+ <20160921223805.21652-1-cov@codeaurora.org>
+ <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
+ <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
+ <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
+ <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
+ <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
+Cc: cov@codeaurora.org, Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+        catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+        arnd@arndb.de, hanjun.guo@linaro.org, jchandra@broadcom.com,
+        dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
+        msalter@redhat.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <3a386ce0-33df-fb88-33df-88b9ca8816c7@redhat.com>
+Date: Thu, 1 Dec 2016 23:58:52 -0500
 MIME-Version: 1.0
-In-Reply-To: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <8c30026a-f9c2-6922-4154-0a832007046d@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-> The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
-> complete. When an access does not complete within this period, a warning
-> is logged and an error returned to the caller.
->
-> While this default timeout is valid for most hardware, some devices can
-> experience longer access delays under certain circumstances. For example,
-> one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
-> scenario. These types of devices can benefit from an extended timeout.
->
-> To support devices with a longer access delay, increase the timeout in
-> pci_vpd_wait() to 125ms. The PCI specification is silent with respect to
-> VPD delays, therefore there is no concern for violating a threshold.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+On 11/03/2016 10:00 AM, Bjorn Helgaas wrote:
 
-Tested-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> It turns out that we can't use the _CRS of host bridges because of the
+> Producer/Consumer bit screwup [1].  So the fallback is to include the
+> ECAM space in the _CRS of a PNP0C02 device.  This is what the PCI
+> Firmware spec r3.0, Table 4-2, footnote 2 is talking about.
+> 
+> Bjorn
+> 
+> [1] The original ACPI spec intent was that Consumer resources would be
+> space like ECAM that is consumed directly by the bridge, and Producer
+> resources would be the windows forwarded down to PCI.  But BIOSes
+> didn't use the Producer/Consumer bit consistently, so we have to
+> assume that all resources in host bridge _CRS are windows, which
+> leaves us no way to describe the Consumer resources.
 
+Aside - and now I realize you'd called this out as recently as last
+month. Alas the HPE m400 I reference on the other thread about the
+APM quirks doesn't have the motherboard resource entry so we're
+stuck with exactly the situation you describe above there.
+
+Jon.
+
+-- 
+Computer Architect | Sent from my Fedora powered laptop
