@@ -1,127 +1,140 @@
-Return-Path: <SRS0=iDPi=YF=gmail.com=tom.leiming@kernel.org>
-Return-Path: <SRS0=iDPi=YF=gmail.com=tom.leiming@kernel.org>
+Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
+Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
-References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Thu, 22 Dec 2016 16:31:43 +0800
-Message-ID: <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
-Subject: Re: [PATCH V6 0/2] Add ACPI support for HiSilicon SoCs Host Controllers
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: helgaas@kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, tn@semihalf.com,
-	wangzhou1@hisilicon.com, pratyush.anand@gmail.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Masters <jcm@redhat.com>,
-	gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
-	Hanjun Guo <hanjun.guo@linaro.org>, linuxarm@huawei.com
+In-Reply-To: <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
+References: <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com> <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 1 Dec 2016 23:36:42 -0800
+Message-ID: <CADaLNDkyCrheZLNG3_9BVgvGBW8WrA-VPWOCezz3U-g+nt5W9w@mail.gmail.com>
+Subject: Re: [PATCH v4 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+To: Jon Masters <jcm@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+	patches <patches@apm.com>
 Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dongdong,
+On Thu, Dec 1, 2016 at 11:12 PM, Jon Masters <jcm@redhat.com> wrote:
+> On 12/01/2016 09:27 PM, Duc Dang wrote:
+>> PCIe controllers in X-Gene SoCs is not ECAM compliant: software
+>> needs to configure additional controller's register to address
+>> device at bus:dev:function.
+>>
+>> The quirk will discover controller MMIO register space and configure
+>> controller registers to select and address the target secondary device.
+>>
+>> The quirk will only be applied for X-Gene PCIe MCFG table with
+>> OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
+>>
+>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>
+> So far I've tested this on an HPE ProLiant m400 (Moonshot) cartridge
+> and will test it on some other reference platforms soon. Bootlog for
+> the m400 attached in case Bjorn wants to see the output. Here's
+> what I see in /proc/iomem btw on that platform:
+>
+> # cat /proc/iomem
+> 10520000-10523fff : APMC0D18:00
+>   10520000-10523fff : APMC0D18:00
+> 10524000-10527fff : APMC0D17:00
+> 10540000-1054a0ff : APMC0D01:00
+>   10546000-10546fff : APMC0D50:00
+>   1054a000-1054a00f : APMC0D12:03
+>     1054a000-1054a00f : APMC0D12:02
+>       1054a000-1054a00f : APMC0D12:01
+>         1054a000-1054a00f : APMC0D12:00
+> 17000000-17000fff : APMC0D01:00
+> 17001000-17001fff : APMC0D01:00
+>   17001000-170013ff : APMC0D15:00
+>     17001000-170013ff : APMC0D15:00
+> 1701c000-1701cfff : APMC0D14:00
+> 1a800000-1a800fff : APMC0D0D:00
+>   1a800000-1a800fff : APMC0D0D:00
+> 1c000200-1c0002ff : APMC0D06:00
+> 1c021000-1c0210ff : APMC0D08:00
+>   1c021000-1c02101f : serial
+> 1c024000-1c024fff : APMC0D07:00
+> 1f230000-1f230fff : APMC0D0D:00
+>   1f230000-1f230fff : APMC0D0D:00
+> 1f23d000-1f23dfff : APMC0D0D:00
+>   1f23d000-1f23dfff : APMC0D0D:00
+> 1f23e000-1f23efff : APMC0D0D:00
+>   1f23e000-1f23efff : APMC0D0D:00
+> 1f2a0000-1f31ffff : APMC0D06:00
+> 1f500000-1f50ffff : PCI Bus 0000:00
+>   1f500000-1f50ffff : PNP0A08:00
+> 78800000-78800fff : APMC0D13:00
+>   78800000-78800fff : APMC0D12:03
+>     78800000-78800fff : APMC0D12:02
+>       78800000-78800fff : APMC0D12:01
+>         78800000-78800fff : APMC0D12:00
+>           78800000-78800fff : APMC0D11:00
+>           78800000-78800fff : APMC0D10:03
+>           78800000-78800fff : APMC0D10:02
+>           78800000-78800fff : APMC0D10:01
+>           78800000-78800fff : APMC0D10:00
+> 79000000-798fffff : APMC0D0E:00
+> 7c000000-7c1fffff : APMC0D12:00
+> 7c200000-7c3fffff : APMC0D12:01
+> 7c400000-7c5fffff : APMC0D12:02
+> 7c600000-7c7fffff : APMC0D12:03
+> 7e000000-7e000fff : APMC0D13:00
+> 7e200000-7e200fff : APMC0D10:03
+>   7e200000-7e200fff : APMC0D10:02
+>     7e200000-7e200fff : APMC0D10:01
+>       7e200000-7e200fff : APMC0D10:00
+> 7e600000-7e600fff : APMC0D11:00
+> 7e700000-7e700fff : APMC0D10:03
+>   7e700000-7e700fff : APMC0D10:02
+>     7e700000-7e700fff : APMC0D10:01
+>       7e700000-7e700fff : APMC0D10:00
+> 7e720000-7e720fff : APMC0D10:03
+>   7e720000-7e720fff : APMC0D10:02
+>     7e720000-7e720fff : APMC0D10:01
+>       7e720000-7e720fff : APMC0D10:00
+> 7e800000-7e800fff : APMC0D10:00
+> 7e840000-7e840fff : APMC0D10:01
+> 7e880000-7e880fff : APMC0D10:02
+> 7e8c0000-7e8c0fff : APMC0D10:03
+> 7e930000-7e930fff : APMC0D13:00
+> 4000000000-4001ffffff : System RAM
+>   4000080000-4000c3ffff : Kernel code
+>   4000db0000-400165ffff : Kernel data
+> 40023a0000-4ff733ffff : System RAM
+> 4ff7340000-4ff77cffff : reserved
+> 4ff77d0000-4ff79cffff : System RAM
+> 4ff79d0000-4ff7e7ffff : reserved
+> 4ff7e80000-4ff7e8ffff : System RAM
+> 4ff7e90000-4ff7efffff : reserved
+> 4ff7f10000-4ff800ffff : reserved
+> 4ff8010000-4fffffffff : System RAM
+> a020000000-a03fffffff : PCI Bus 0000:00
+>   a020000000-a0201fffff : PCI Bus 0000:01
+>     a020000000-a0200fffff : 0000:01:00.0
+>       a020000000-a0200fffff : mlx4_core
+>     a020100000-a0201fffff : 0000:01:00.0
+> a060000000-a07fffffff : PCI Bus 0000:00
+> a0d0000000-a0dfffffff : PCI ECAM
+> a110000000-a14fffffff : PCI Bus 0000:00
+>   a110000000-a121ffffff : PCI Bus 0000:01
+>     a110000000-a111ffffff : 0000:01:00.0
+>       a110000000-a111ffffff : mlx4_core
+>     a112000000-a121ffffff : 0000:01:00.0
+>
+> Adding a Tested-by for the record:
+>
+> Tested-by: Jon Masters <jcm@redhat.com>
 
-On Tue, Nov 22, 2016 at 8:08 PM, Dongdong Liu <liudongdong3@huawei.com> wro=
-te:
-> This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
-> PCIe controllers.
-> The two patches respectively:
->         - provides the common function acpi_get_rc_resources() for ARM64
->           platform.
->         - adds the HiSilicon ACPI specific quirks.
+Thanks a lot for testing this, Jon.
 >
-> This patchset is based on branch pci/ecam-v6
-> It can be found here:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-=
-v6)
->
-> This patchset has been tested on HiSilicon D03 board.
-> The dmesg log, /proc/iomem, and ACPI table information can be found:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D187961
->
-> v5 -> v6:
-> - change the config option to CONFIG_PCI_ECAM_QUIRKS.
-> - fix some commets about acpi_get_rc_resources().
-
-Could you post out v7 for fixing conflicts against current linus tree?
-
-BTW, I tried to fix the conflicts by myself, but still caues the following
-build failure:
-
-[tom@linux-2.6-vm]$make -j4 CROSS_COMPILE=3Daarch64-linux-gnu-
-ARCH=3Darm64 drivers/pci/host/pcie-hisi-acpi.o
-  CHK     include/config/kernel.release
-  CHK     include/generated/uapi/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CHK     include/generated/timeconst.h
-  CHK     include/generated/bounds.h
-  CHK     include/generated/asm-offsets.h
-  CALL    scripts/checksyscalls.sh
-  CC      drivers/pci/host/pcie-hisi-acpi.o
-In file included from drivers/pci/host/pcie-hisi-acpi.c:16:0:
-drivers/pci/host/../pci.h:357:18: error: conflicting types for
-=E2=80=98acpi_get_rc_resources=E2=80=99
- struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
-                  ^
-drivers/pci/host/../pci.h:352:5: note: previous declaration of
-=E2=80=98acpi_get_rc_resources=E2=80=99 was here
- int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment=
-,
-     ^
-scripts/Makefile.build:293: recipe for target
-'drivers/pci/host/pcie-hisi-acpi.o' failed
-make[1]: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 1
-Makefile:1640: recipe for target 'drivers/pci/host/pcie-hisi-acpi.o' failed
-make: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 2
-
-
-Thanks,
-Ming
-
->
-> v4 -> v5:
-> - obtain rc base addresses from PNP0C02 at the root of the ACPI
->   namespace (under \_SB) instead of from sub-device under the RC.
-> - merge the rewrited get rc resources code by Tomasz.
-> - delete unused code.
-> - drop the PATCH V4 1/2, will rework late as a separate patch.
->
-> v3 -> v4:
-> - rebase on pci/ecam-v6.
-> - delete the unnecessary link_up check code.
->
-> v2 -> v3:
-> - rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset.
-> - obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead o=
-f
->   hardcode the addresses.
-> - modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
->   Arnd comments.
->
-> v1 -> v2:
-> - rebase against Tomasz RFC V5 quirk mechanism
-> - add ACPI support for the HiSilicon Hip07 SoC PCIe controllers.
->
-> Dongdong Liu (2):
->   PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
->   PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
->
->  MAINTAINERS                       |   1 +
->  drivers/acpi/pci_mcfg.c           |  13 +++++
->  drivers/pci/host/Kconfig          |   7 +++
->  drivers/pci/host/Makefile         |   1 +
->  drivers/pci/host/pcie-hisi-acpi.c | 119 ++++++++++++++++++++++++++++++++=
-++++++
->  drivers/pci/pci-acpi.c            |  69 ++++++++++++++++++++++
->  drivers/pci/pci.h                 |   4 ++
->  include/linux/pci-ecam.h          |   5 ++
->  8 files changed, 219 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+> Jon.
 >
 > --
-> 1.9.1
+> Computer Architect | Sent from my Fedora powered laptop
 >
-
-
-
---=20
-Ming Lei
+Regards,
+Duc Dang.
