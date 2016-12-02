@@ -1,62 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51246 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932166AbcLHUnI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Dec 2016 15:43:08 -0500
-Date: Thu, 8 Dec 2016 14:43:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-        Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: Re: resume path in dra7xx and other DW-based drivers
-Message-ID: <20161208204304.GC30533@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
- <58491E7C.1070700@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <58491E7C.1070700@ti.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:36275 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933919AbcLBKhY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 05:37:24 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2 2/3 pci/next] PCI: rcar: Use gen2 fallback compatibility last
+Date: Fri,  2 Dec 2016 11:36:59 +0100
+Message-Id: <1480675020-26346-3-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
+References: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 08, 2016 at 02:19:00PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Bjorn,
-> 
-> On Thursday 08 December 2016 03:32 AM, Bjorn Helgaas wrote:
-> > Hi Kishon, et al,
-> > 
-> > Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
-> > and dra7xx_pcie_resume_noirq() restore everything necessary.  For
-> > example, the probe path has this:
-> > 
-> >   dra7xx_pcie_probe
-> >     dra7xx_add_pcie_port
-> >       dw_pcie_host_init
-> > 	dra7xx_pcie_host_init         # .host_init
-> > 	  dw_pcie_setup_rc
-> > 	    dw_pcie_prog_outbound_atu
-> > 
-> > so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
-> > path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
-> > setup would be restored.
-> 
-> DRA7xx only supported shallow power state and not deep power state. In shallow
-> power state, the register settings are not lost and hence we didn't have to
-> restore anything.
+Fallback compatibility strings should be used only if more specific ones
+are matched and the order of compatibility strings in the corresponding
+struct of_device_id should implement this.
 
-I'm not really a PM guy, so I'm not familiar with shallow power state.
-Could I have discovered from the code somehow that dra7xx suspend to
-shallow power state preserves register state?  It's nice if a reader
-can verify correctness without knowing the system-specific details.
+This does not have a run-time effect as current all relevant compatibility
+strings result in the same initialisation.
 
-Bjorn
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v2
+* New patch
+---
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 62700d1896f4..85971bc276c6 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1071,12 +1071,12 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
+-	{ .compatible = "renesas,pcie-rcar-gen2",
+-	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7790",
+ 	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7791",
+ 	  .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-rcar-gen2",
++	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+-- 
+2.7.0.rc3.207.g0ac5344
+
