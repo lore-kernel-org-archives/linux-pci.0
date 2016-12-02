@@ -1,193 +1,252 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40238 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751524AbcLEX1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:27:02 -0500
-Subject: [PATCH v11 13/15] PCI: Add MCFG quirks for Cavium ThunderX pass2.x
- host controller
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Mon, 05 Dec 2016 17:26:58 -0600
-Message-ID: <20161205232657.3957.97517.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 2 Dec 2016 15:38:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Mark Salter <msalter@redhat.com>,
+ Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
+Message-ID: <20161202153816.GA18290@red-moon>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+ <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Jon Masters <jcm@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dennis Chen <dennis.chen@arm.com>,
+ Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tn@semihalf.com>
+Rafael, Mark, Suravee,
 
-ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
-compliant with ECAM standard. It uses non-standard configuration space
-accessors (see thunder_pem_ecam_ops) and custom configuration space
-granulation (see bus_shift = 24). In order to access configuration space
-and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
-infrastructure. This involves:
-1. A new thunder_pem_acpi_init() init function to locate PEM-specific
-   register ranges using ACPI.
-2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
-   code.
-3. New quirk entries for each PEM segment. Each contains platform IDs,
-   mentioned thunder_pem_ecam_ops and CFG resources.
+On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
+> On DT based systems, the of_dma_configure() API implements DMA
+> configuration for a given device. On ACPI systems an API equivalent to
+> of_dma_configure() is missing which implies that it is currently not
+> possible to set-up DMA operations for devices through the ACPI generic
+> kernel layer.
+> 
+> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+> calls that for now are just wrappers around arch_setup_dma_ops() and
+> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+> 
+> Since acpi_dma_configure() is used to configure DMA operations, the
+> function initializes the dma/coherent_dma masks to sane default values
+> if the current masks are uninitialized (also to keep the default values
+> consistent with DT systems) to make sure the device has a complete
+> default DMA set-up.
 
-Quirk is considered for ThunderX silicon pass2.x only which is identified
-via MCFG revision 1.
+I spotted a niggle that unfortunately was hard to spot (and should not
+be a problem per se but better safe than sorry) and I am not comfortable
+with it.
 
-[bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
-quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++
- drivers/pci/host/Kconfig           |    3 ++
- drivers/pci/host/Makefile          |    2 +-
- drivers/pci/host/pci-thunder-pem.c |   44 ++++++++++++++++++++++++++++++++++++
- include/linux/pci-ecam.h           |    1 +
- 5 files changed, 67 insertions(+), 2 deletions(-)
+Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
+device coherency") in acpi_bind_one() we check if the acpi_device
+associated with a device just added supports DMA, first it was
+done with acpi_check_dma() and then commit 1831eff876bd ("device
+property: ACPI: Make use of the new DMA Attribute APIs") changed
+it to acpi_get_dma_attr().
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 540515f..4044b8b 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
- 	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
- 	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-+
-+#define THUNDER_PEM_RES(addr, seg) \
-+	DEFINE_RES_MEM(addr + (seg << 44), 0x39 * SZ_16M)
-+#define THUNDER_PEM_QUIRK(rev, seg) \
-+	{ "CAVIUM", "THUNDERX", rev, 4 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, seg) },  \
-+	{ "CAVIUM", "THUNDERX", rev, 5 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, seg) },  \
-+	{ "CAVIUM", "THUNDERX", rev, 6 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, seg) },  \
-+	{ "CAVIUM", "THUNDERX", rev, 7 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, seg) },  \
-+	{ "CAVIUM", "THUNDERX", rev, 8 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, seg) },  \
-+	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * seg), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, seg) }
-+	/* SoC pass2.x */
-+	THUNDER_PEM_QUIRK(1, 0UL),
-+	THUNDER_PEM_QUIRK(1, 1UL),
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a..1239a8e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -240,7 +240,8 @@ config PCIE_QCOM
- 
- config PCI_HOST_THUNDER_PEM
- 	bool "Cavium Thunder PCIe controller to off-chip devices"
--	depends on OF && ARM64
-+	depends on ARM64
-+	depends on OF || (ACPI && PCI_QUIRKS)
- 	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 64845f0..97e6bfc 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -28,7 +28,7 @@ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_ARM64) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
--obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-+obj-$(CONFIG_ARM64) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index c3276ee..af722eb 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -18,8 +18,12 @@
- #include <linux/init.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
-+#include "../pci.h"
-+
-+#if defined(CONFIG_PCI_HOST_THUNDER_PEM) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
- 
- #define PEM_CFG_WR 0x28
- #define PEM_CFG_RD 0x30
-@@ -313,6 +317,43 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
- 	return 0;
- }
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+
-+static int thunder_pem_acpi_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct acpi_device *adev = to_acpi_device(dev);
-+	struct acpi_pci_root *root = acpi_driver_data(adev);
-+	struct resource *res_pem;
-+	int ret;
-+
-+	res_pem = devm_kzalloc(&adev->dev, sizeof(*res_pem), GFP_KERNEL);
-+	if (!res_pem)
-+		return -ENOMEM;
-+
-+	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
-+	if (ret) {
-+		dev_err(dev, "can't get rc base address\n");
-+		return ret;
-+	}
-+
-+	return thunder_pem_init(dev, cfg, res_pem);
-+}
-+
-+struct pci_ecam_ops thunder_pem_ecam_ops = {
-+	.bus_shift	= 24,
-+	.init		= thunder_pem_acpi_init,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= thunder_pem_config_read,
-+		.write		= thunder_pem_config_write,
-+	}
-+};
-+
-+#endif
-+
-+#ifdef CONFIG_PCI_HOST_THUNDER_PEM
-+
- static int thunder_pem_platform_init(struct pci_config_window *cfg)
- {
- 	struct device *dev = cfg->parent;
-@@ -364,3 +405,6 @@ static struct platform_driver thunder_pem_driver = {
- 	.probe = thunder_pem_probe,
- };
- builtin_platform_driver(thunder_pem_driver);
-+
-+#endif
-+#endif
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index bdacbc8..e88d7db 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,6 +62,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
- #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
- extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
- extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
-+extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
- #endif
- 
- #ifdef CONFIG_PCI_HOST_GENERIC
+The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
+on _any_ acpi device we pass to acpi_bind_one() on x86, which was
+fine because we used it to call arch_setup_dma_ops(), which is a nop
+on x86. On ARM64 a _CCA method is required to define if a device
+supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
 
+Now, acpi_bind_one() is used to bind an acpi_device to its physical
+node also for pseudo-devices like cpus and memory nodes. For those
+objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
+
+So far so good, because on x86 arch_setup_dma_ops() is empty code.
+
+With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
+to call acpi_dma_configure() which is basically a nop on x86 except
+that it sets up the dma_mask/coherent_dma_mask to a sane default value
+(after all we are setting up DMA for the device so it makes sense to
+initialize the masks there if they were unset since we are configuring
+DMA for the device in question) for the given device.
+
+Problem is, as per the explanation above, we are also setting the
+default dma masks for pseudo-devices (eg CPUs) that were previously
+untouched, it should not be a problem per-se but I am not comfortable
+with that, honestly it does not make much sense.
+
+An easy "fix" would be to move the default dma masks initialization out
+of acpi_dma_configure() (as it was in previous patch versions of this
+series - I moved it to acpi_dma_configure() just a consolidation point
+for initializing the masks instead of scattering them in every
+acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
+we think that's the right thing to do (or I can send it to Rafael later
+when the code is in the merged depending on the timing) just let me
+know please.
+
+Thanks !
+Lorenzo
+
+> The DMA range size passed to arch_setup_dma_ops() is sized according
+> to the device coherent_dma_mask (starting at address 0x0), mirroring the
+> DT probing path behaviour when a dma-ranges property is not provided
+> for the device being probed; this changes the current arch_setup_dma_ops()
+> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+> is a NOP on all architectures but ARM/ARM64 this patch does not change
+> the current kernel behaviour on them.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/glue.c     |  4 ++--
+>  drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c     |  3 +--
+>  include/acpi/acpi_bus.h |  2 ++
+>  include/linux/acpi.h    |  5 +++++
+>  5 files changed, 50 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 5ea5dc2..f8d6564 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>  
+>  	attr = acpi_get_dma_attr(acpi_dev);
+>  	if (attr != DEV_DMA_NOT_SUPPORTED)
+> -		arch_setup_dma_ops(dev, 0, 0, NULL,
+> -				   attr == DEV_DMA_COHERENT);
+> +		acpi_dma_configure(dev, attr);
+>  
+>  	acpi_physnode_link_name(physical_node_name, node_id);
+>  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>  	return 0;
+>  
+>   err:
+> +	acpi_dma_deconfigure(dev);
+>  	ACPI_COMPANION_SET(dev, NULL);
+>  	put_device(dev);
+>  	put_device(&acpi_dev->dev);
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 3d1856f..45b5710 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>  		return DEV_DMA_NON_COHERENT;
+>  }
+>  
+> +/**
+> + * acpi_dma_configure - Set-up DMA configuration for the device.
+> + * @dev: The pointer to the device
+> + * @attr: device dma attributes
+> + */
+> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+> +{
+> +	/*
+> +	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
+> +	 * setup the correct supported mask.
+> +	 */
+> +	if (!dev->coherent_dma_mask)
+> +		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +
+> +	/*
+> +	 * Set it to coherent_dma_mask by default if the architecture
+> +	 * code has not set it.
+> +	 */
+> +	if (!dev->dma_mask)
+> +		dev->dma_mask = &dev->coherent_dma_mask;
+> +
+> +	/*
+> +	 * Assume dma valid range starts at 0 and covers the whole
+> +	 * coherent_dma_mask.
+> +	 */
+> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
+> +			   attr == DEV_DMA_COHERENT);
+> +}
+> +EXPORT_SYMBOL_GPL(acpi_dma_configure);
+> +
+> +/**
+> + * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
+> + * @dev: The pointer to the device
+> + */
+> +void acpi_dma_deconfigure(struct device *dev)
+> +{
+> +	arch_teardown_dma_ops(dev);
+> +}
+> +EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
+> +
+>  static void acpi_init_coherency(struct acpi_device *adev)
+>  {
+>  	unsigned long long cca = 0;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ab00267..c29e07a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
+>  		if (attr == DEV_DMA_NOT_SUPPORTED)
+>  			dev_warn(&dev->dev, "DMA not supported.\n");
+>  		else
+> -			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
+> -					   attr == DEV_DMA_COHERENT);
+> +			acpi_dma_configure(&dev->dev, attr);
+>  	}
+>  
+>  	pci_put_host_bridge_device(bridge);
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index c1a524d..4242c31 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -573,6 +573,8 @@ struct acpi_pci_root {
+>  
+>  bool acpi_dma_supported(struct acpi_device *adev);
+>  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
+> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+> +void acpi_dma_deconfigure(struct device *dev);
+>  
+>  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+>  					   u64 address, bool check_children);
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 996a29c..8d15fc5 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -765,6 +765,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>  	return DEV_DMA_NOT_SUPPORTED;
+>  }
+>  
+> +static inline void acpi_dma_configure(struct device *dev,
+> +				      enum dev_dma_attr attr) { }
+> +
+> +static inline void acpi_dma_deconfigure(struct device *dev) { }
+> +
+>  #define ACPI_PTR(_ptr)	(NULL)
+>  
+>  static inline void acpi_device_set_enumerated(struct acpi_device *adev)
+> -- 
+> 2.10.0
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
