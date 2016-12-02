@@ -1,58 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:32971 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751693AbcLTDUL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 22:20:11 -0500
-Subject: Re: [PATCH] infiniband/hfil: drop pci_link_reset()
-To: Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        <linux-rdma@vger.kernel.org>
-References: <1482129996-19255-1-git-send-email-caoj.fnst@cn.fujitsu.com>
- <1482129996-19255-2-git-send-email-caoj.fnst@cn.fujitsu.com>
- <e6f22b2d-faf7-390a-ca4d-564c6d0841b8@intel.com>
-CC: <dledford@redhat.com>, <sean.hefty@intel.com>,
-        <hal.rosenstock@gmail.com>, <linux-pci@vger.kernel.org>
-From: Cao jin <caoj.fnst@cn.fujitsu.com>
-Message-ID: <5858A2B1.1020701@cn.fujitsu.com>
-Date: Tue, 20 Dec 2016 11:17:05 +0800
+Received: from kirsty.vergenet.net ([202.4.237.240]:46991 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbcLBVu1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 16:50:27 -0500
+Date: Fri, 2 Dec 2016 22:50:19 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 3/3 pci/next] PCI: rcar: Add gen3 fallback
+ compatibility string for pcie-rcar
+Message-ID: <20161202215016.GA21497@verge.net.au>
+References: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
+ <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
-In-Reply-To: <e6f22b2d-faf7-390a-ca4d-564c6d0841b8@intel.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 12/19/2016 11:54 PM, Dennis Dalessandro wrote:
-> On 12/19/2016 01:46 AM, Cao jin wrote:
->> In AER recovery, pci_error_handlers.link_reset() is never called,
->> drop it now.
->>
->> Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+On Fri, Dec 02, 2016 at 11:37:00AM +0100, Simon Horman wrote:
+> Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
+> keeping with the both the existing fallback compatibility string for the
+> R-Car Gen 2 family and the fallback scheme being adopted wherever
+> appropriate for drivers for Renesas SoCs.
 > 
-> Is this part of a larger patch series?
-
-Not now.
-
-> If the function is never called
-> it should be removed from struct pci_error_handlers should it not? Then
-> in the same series be removed from all the drivers.
-
-Maybe we can remove the unnecessary implementation in each device first,
-if finally pci guys confirmed that .link_reset could be removed, then we
-could removed it in the future, not quite necessary to place them into
-the same series. But it is also good hear their voice first.
-
--- 
-Sincerely,
-Cao jin
-
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> ---
+> v2
+> * Move fallback binding to below SoC specific bindings it covers
+>   in implementation
+> ---
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+>  drivers/pci/host/pcie-rcar.c                       | 2 ++
+>  2 files changed, 3 insertions(+)
 > 
-> Probably should check with the folks on linux-pci about this though.
-> 
-> -Denny
-> 
-> 
-> 
-> 
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index 6cf99690eef9..eee518db90b9 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>  	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>  	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+>  	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+> +	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+>  
+>  	    When compatible with the generic version, nodes must list the
+>  	    SoC-specific version corresponding to the platform first
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 85971bc276c6..72058bc7af5c 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1078,6 +1078,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+>  	{ .compatible = "renesas,pcie-rcar-gen2",
+>  	  .data = rcar_pcie_hw_init_gen2 },
+>  	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+> +	{ .compatible = "renesas,pcie-rcar-gen3",
+> +		.data = rcar_pcie_hw_init_hw_init },
 
+It looks like I failed to compile-test this.
 
+s/rcar_pcie_hw_init_hw_init/rcar_pcie_hw_init/
+
+>  	{},
+>  };
+>  
+> -- 
+> 2.7.0.rc3.207.g0ac5344
+> 
