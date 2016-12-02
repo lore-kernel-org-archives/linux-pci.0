@@ -1,70 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58888 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:49612 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753718AbcLBRfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Dec 2016 12:35:25 -0500
-Date: Fri, 2 Dec 2016 11:35:20 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v10 11/12] PCI: Add MCFG quirks for Cavium ThunderX
- pass2.x host controller
-Message-ID: <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1754174AbcLBBVF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Dec 2016 20:21:05 -0500
+Subject: Re: [PATCH v8 3/8] thunderbolt: Communication with the ICM (firmware)
+To: Amir Levy <amir.jer.levy@intel.com>, gregkh@linuxfoundation.org
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+ <1475073870-2126-4-git-send-email-amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        mika.westerberg@intel.com, tomas.winkler@intel.com,
+        xiong.y.zhang@intel.com
+From: Andy Lutomirski <luto@kernel.org>
+Message-ID: <fe0f0a6f-488b-bbc0-8987-a9c47d9ed9b9@kernel.org>
+Date: Thu, 1 Dec 2016 17:21:01 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1475073870-2126-4-git-send-email-amir.jer.levy@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 02:30:58AM -0600, Bjorn Helgaas wrote:
-> From: Tomasz Nowicki <tn@semihalf.com>
-> 
-> ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
-> compliant with ECAM standard. It uses non-standard configuration space
-> accessors (see thunder_pem_ecam_ops) and custom configuration space
-> granulation (see bus_shift = 24). In order to access configuration space
-> and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
-> infrastructure. This involves:
-> 1. A new thunder_pem_acpi_init() init function to locate PEM-specific
->    register ranges using ACPI.
-> 2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
->    code.
-> 3. New quirk entries for each PEM segment. Each contains platform IDs,
->    mentioned thunder_pem_ecam_ops and CFG resources.
-> 
-> Quirk is considered for ThunderX silicon pass2.x only which is identified
-> via MCFG revision 1.
-> 
-> [bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
-> quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++++
->  drivers/pci/host/Makefile          |    2 +-
->  drivers/pci/host/pci-thunder-pem.c |   38 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci-ecam.h           |    1 +
->  4 files changed, 59 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index c6a6949..a48b508 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
->  	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
->  	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
->  	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-> +
-> +#define THUNDER_PEM_RES(addr, node) \
-> +	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
+On 09/28/2016 07:44 AM, Amir Levy wrote:
+> This patch provides the communication protocol between the
+> Intel Connection Manager(ICM) firmware that is operational in the
+> Thunderbolt controller in non-Apple hardware.
+> The ICM firmware-based controller is used for establishing and maintaining
+> the Thunderbolt Networking connection - we need to be able to communicate
+> with it.
 
-I assume we should do s/node/seg/ here as well?  I already did that for
-THUNDER_ECAM_QUIRK in the next patch.
+I'm a bit late to the party, but here goes.  I have two big questions:
+
+1. Why is this using netlink at all?  A system has zero or more 
+Thunderbolt controllers, they're probed just like any other PCI devices 
+(by nhi_probe() if I'm understanding correctly), they'll have nodes in 
+sysfs, etc.  Shouldn't there be a simple char device per Thunderbolt 
+controller that a daemon can connect to?  This will clean up lots of things:
+
+a) You can actually enforce one-daemon-at-a-time in a very natural way. 
+Your current code seems to try, but it's rather buggy.  Your 
+subscription count is a guess, your unsubscribe is entirely unchecked, 
+and you are entirely unable to detect if a daemon crashes AFAICT.
+
+b) You won't need all of the complexity that's currently there to figure 
+out *which* Thunderbolt device a daemon is talking to.
+
+c) You can use regular ioctl passing *structs* instead of netlink attrs. 
+  There's nothing wrong with netlink attrs, except that your driver 
+seems to have a whole lot of boilerplate that just converts back and 
+forth to regular structures.
+
+d) The userspace code that does stuff like "send message, wait 150ms, 
+receive reply, complain if no reply" goes away because ioctl is 
+synchronous.  (Or you can use read and write, but it's still simpler.)
+
+e) You could have one daemon per Thunderbolt device if you were so inclined.
+
+f) You get privilege separation in userspace.  Creating a netlink socket 
+and dropping privilege is busted^Winteresting.  Opening a device node 
+and dropping privilege works quite nicely.
+
+2. Why do you need a daemon anyway.  Functionally, what exactly does it 
+do?  (Okay, I get that it seems to talk to a giant pile of code running 
+in SMM, and I get that Intel, for some bizarre reason, wants everyone 
+except Apple to use this code in SMM, and that Apple (for entirely 
+understandable reasons) turned it off, but that's beside the point. 
+What does the user code do that's useful and that the kernel can't do 
+all by itself?  The only really interesting bit I can see is the part 
+that approves PCI devices.
+
+
+
+I'm not going to review this in detail, but here's a tiny bit:
+
+> +static int nhi_genl_unsubscribe(__always_unused struct sk_buff *u_skb,
+> +				__always_unused struct genl_info *info)
+> +{
+> +	atomic_dec_if_positive(&subscribers);
+> +
+> +	return 0;
+> +}
+> +
+
+This, for example, is really quite buggy.
+
+
+
+This entire function here:
+
+> +static int nhi_genl_query_information(__always_unused struct sk_buff *u_skb,
+> +				      struct genl_info *info)
+> +{
+> +	struct tbt_nhi_ctxt *nhi_ctxt;
+> +	struct sk_buff *skb;
+> +	bool msg_too_long;
+> +	int res = -ENODEV;
+> +	u32 *msg_head;
+> +
+> +	if (!info || !info->userhdr)
+> +		return -EINVAL;
+> +
+> +	skb = genlmsg_new(NLMSG_ALIGN(nhi_genl_family.hdrsize) +
+> +			  nla_total_size(sizeof(DRV_VERSION)) +
+> +			  nla_total_size(sizeof(nhi_ctxt->nvm_ver_offset)) +
+> +			  nla_total_size(sizeof(nhi_ctxt->num_ports)) +
+> +			  nla_total_size(sizeof(nhi_ctxt->dma_port)) +
+> +			  nla_total_size(0),	/* nhi_ctxt->support_full_e2e */
+> +			  GFP_KERNEL);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	msg_head = genlmsg_put_reply(skb, info, &nhi_genl_family, 0,
+> +				     NHI_CMD_QUERY_INFORMATION);
+> +	if (!msg_head) {
+> +		res = -ENOMEM;
+> +		goto genl_put_reply_failure;
+> +	}
+> +
+> +	if (mutex_lock_interruptible(&controllers_list_mutex)) {
+> +		res = -ERESTART;
+> +		goto genl_put_reply_failure;
+> +	}
+> +
+> +	nhi_ctxt = nhi_search_ctxt(*(u32 *)info->userhdr);
+> +	if (nhi_ctxt && !nhi_ctxt->d0_exit) {
+> +		*msg_head = nhi_ctxt->id;
+> +
+> +		msg_too_long = !!nla_put_string(skb, NHI_ATTR_DRV_VERSION,
+> +						DRV_VERSION);
+> +
+> +		msg_too_long = msg_too_long ||
+> +			       nla_put_u16(skb, NHI_ATTR_NVM_VER_OFFSET,
+> +					   nhi_ctxt->nvm_ver_offset);
+> +
+> +		msg_too_long = msg_too_long ||
+> +			       nla_put_u8(skb, NHI_ATTR_NUM_PORTS,
+> +					  nhi_ctxt->num_ports);
+> +
+> +		msg_too_long = msg_too_long ||
+> +			       nla_put_u8(skb, NHI_ATTR_DMA_PORT,
+> +					  nhi_ctxt->dma_port);
+> +
+> +		if (msg_too_long) {
+> +			res = -EMSGSIZE;
+> +			goto release_ctl_list_lock;
+> +		}
+> +
+> +		if (nhi_ctxt->support_full_e2e &&
+> +		    nla_put_flag(skb, NHI_ATTR_SUPPORT_FULL_E2E)) {
+> +			res = -EMSGSIZE;
+> +			goto release_ctl_list_lock;
+> +		}
+> +		mutex_unlock(&controllers_list_mutex);
+> +
+> +		genlmsg_end(skb, msg_head);
+> +
+> +		return genlmsg_reply(skb, info);
+> +	}
+> +
+> +release_ctl_list_lock:
+> +	mutex_unlock(&controllers_list_mutex);
+> +	genlmsg_cancel(skb, msg_head);
+> +
+> +genl_put_reply_failure:
+> +	nlmsg_free(skb);
+> +
+> +	return res;
+> +}
+
+would be about three lines of code if you used copy_to_user and a struct.
+
+
+--Andy
