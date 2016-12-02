@@ -1,85 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:36739 "EHLO
-        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750891AbcL2UpQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Dec 2016 15:45:16 -0500
-Received: by mail-lf0-f43.google.com with SMTP id t196so227448894lff.3
-        for <linux-pci@vger.kernel.org>; Thu, 29 Dec 2016 12:45:15 -0800 (PST)
-From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-arm-kernel@lists.infradead.org,
-        Simon Horman <horms@verge.net.au>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Cc: artemi.ivanov@cogentembedded.com, linux-kernel@vger.kernel.org,
-        Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Subject: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit DMA mask
-Date: Thu, 29 Dec 2016 23:45:03 +0300
-Message-Id: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:35661 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbcLBJd0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 04:33:26 -0500
+Date: Fri, 2 Dec 2016 10:33:19 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH pci/next] PCI: rcar: Add gen3 fallback compatibility
+ string for pcie-rcar
+Message-ID: <20161202093316.GA7341@verge.net.au>
+References: <1480609693-25746-1-git-send-email-horms+renesas@verge.net.au>
+ <CAMuHMdWwuQZq7FzDUtCj5gsdQra5PrSyoUk7-ycBN9pN-RYcrA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMuHMdWwuQZq7FzDUtCj5gsdQra5PrSyoUk7-ycBN9pN-RYcrA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible that PCI device supports 64-bit DMA addressing, and thus
-it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
-bridge has limitations on inbound transactions addressing. Example of
-such setup is NVME SSD device connected to RCAR PCIe controller.
+On Fri, Dec 02, 2016 at 10:19:21AM +0100, Geert Uytterhoeven wrote:
+> Hi Simon,
+> 
+> On Thu, Dec 1, 2016 at 5:28 PM, Simon Horman <horms+renesas@verge.net.au> wrote:
+> > Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
+> > keeping with the both the existing fallback compatibility string for the
+> > R-Car Gen 2 family and the fallback scheme being adopted wherever
+> > appropriate for drivers for Renesas SoCs.
+> >
+> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > ---
+> >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+> >  drivers/pci/host/pcie-rcar.c                       | 2 ++
+> >  2 files changed, 3 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > index 6cf99690eef9..eee518db90b9 100644
+> > --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > @@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+> >             "renesas,pcie-r8a7793" for the R8A7793 SoC;
+> >             "renesas,pcie-r8a7795" for the R8A7795 SoC;
+> >             "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+> > +           "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+> >
+> >             When compatible with the generic version, nodes must list the
+> >             SoC-specific version corresponding to the platform first
+> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > index 62700d1896f4..962aa3942107 100644
+> > --- a/drivers/pci/host/pcie-rcar.c
+> > +++ b/drivers/pci/host/pcie-rcar.c
+> > @@ -1077,6 +1077,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+> >           .data = rcar_pcie_hw_init_gen2 },
+> >         { .compatible = "renesas,pcie-r8a7791",
+> >           .data = rcar_pcie_hw_init_gen2 },
+> > +       { .compatible = "renesas,pcie-rcar-gen3",
+> > +         .data = rcar_pcie_hw_init_hw_init },
+> 
+> The family-specific handling should be inserted after the SoC-specific
+> handling.
+> Currently it doesn't matter, as both are handled exactly the same, but
+> it may avoid future mistakes.
+> 
+> BTW, can you please fix that for the existing entry for Gen2, too?
 
-Previously there was attempt to handle this via bus notifier: after
-driver is attached to PCI device, bridge driver gets notifier callback,
-and resets dma_mask from there. However, this is racy: PCI device driver
-could already allocate buffers and/or start i/o in probe routine.
-In NVME case, i/o is started in workqueue context, and this race gives
-"sometimes works, sometimes not" effect.
-
-Proper solution should make driver's dma_set_mask() call to fail if host
-bridge can't support mask being set.
-
-This patch makes __swiotlb_dma_supported() to check mask being set for
-PCI device against dma_mask of struct device corresponding to PCI host
-bridge (one with name "pciXXXX:YY"), if that dma_mask is set.
-
-This is the least destructive approach: currently dma_mask of that device
-object is not used anyhow, thus all existing setups will work as before,
-and modification is required only in actually affected components -
-driver of particular PCI host bridge, and dma_map_ops of particular
-platform.
-
-Signed-off-by: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
----
- arch/arm64/mm/dma-mapping.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-index 290a84f..49645277 100644
---- a/arch/arm64/mm/dma-mapping.c
-+++ b/arch/arm64/mm/dma-mapping.c
-@@ -28,6 +28,7 @@
- #include <linux/dma-contiguous.h>
- #include <linux/vmalloc.h>
- #include <linux/swiotlb.h>
-+#include <linux/pci.h>
- 
- #include <asm/cacheflush.h>
- 
-@@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
- 
- static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
- {
-+#ifdef CONFIG_PCI
-+	if (dev_is_pci(hwdev)) {
-+		struct pci_dev *pdev = to_pci_dev(hwdev);
-+		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
-+
-+		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
-+				(mask & (*br->dev.dma_mask)) != mask)
-+			return 0;
-+	}
-+#endif
- 	if (swiotlb)
- 		return swiotlb_dma_supported(hwdev, mask);
- 	return 1;
--- 
-2.1.4
-
+Sure, will do.
