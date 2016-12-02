@@ -1,85 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:36443 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751829AbcLBJTX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 04:19:23 -0500
+Received: from mail.kernel.org ([198.145.29.136]:58888 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753718AbcLBRfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Dec 2016 12:35:25 -0500
+Date: Fri, 2 Dec 2016 11:35:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v10 11/12] PCI: Add MCFG quirks for Cavium ThunderX
+ pass2.x host controller
+Message-ID: <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1480609693-25746-1-git-send-email-horms+renesas@verge.net.au>
-References: <1480609693-25746-1-git-send-email-horms+renesas@verge.net.au>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 2 Dec 2016 10:19:21 +0100
-Message-ID: <CAMuHMdWwuQZq7FzDUtCj5gsdQra5PrSyoUk7-ycBN9pN-RYcrA@mail.gmail.com>
-Subject: Re: [PATCH pci/next] PCI: rcar: Add gen3 fallback compatibility
- string for pcie-rcar
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Simon,
-
-On Thu, Dec 1, 2016 at 5:28 PM, Simon Horman <horms+renesas@verge.net.au> wrote:
-> Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
-> keeping with the both the existing fallback compatibility string for the
-> R-Car Gen 2 family and the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
->
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+On Thu, Dec 01, 2016 at 02:30:58AM -0600, Bjorn Helgaas wrote:
+> From: Tomasz Nowicki <tn@semihalf.com>
+> 
+> ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
+> compliant with ECAM standard. It uses non-standard configuration space
+> accessors (see thunder_pem_ecam_ops) and custom configuration space
+> granulation (see bus_shift = 24). In order to access configuration space
+> and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
+> infrastructure. This involves:
+> 1. A new thunder_pem_acpi_init() init function to locate PEM-specific
+>    register ranges using ACPI.
+> 2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
+>    code.
+> 3. New quirk entries for each PEM segment. Each contains platform IDs,
+>    mentioned thunder_pem_ecam_ops and CFG resources.
+> 
+> Quirk is considered for ThunderX silicon pass2.x only which is identified
+> via MCFG revision 1.
+> 
+> [bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
+> quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
->  drivers/pci/host/pcie-rcar.c                       | 2 ++
->  2 files changed, 3 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 6cf99690eef9..eee518db90b9 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
->             "renesas,pcie-r8a7793" for the R8A7793 SoC;
->             "renesas,pcie-r8a7795" for the R8A7795 SoC;
->             "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +           "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
->
->             When compatible with the generic version, nodes must list the
->             SoC-specific version corresponding to the platform first
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 62700d1896f4..962aa3942107 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1077,6 +1077,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->           .data = rcar_pcie_hw_init_gen2 },
->         { .compatible = "renesas,pcie-r8a7791",
->           .data = rcar_pcie_hw_init_gen2 },
-> +       { .compatible = "renesas,pcie-rcar-gen3",
-> +         .data = rcar_pcie_hw_init_hw_init },
+>  drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++++
+>  drivers/pci/host/Makefile          |    2 +-
+>  drivers/pci/host/pci-thunder-pem.c |   38 ++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-ecam.h           |    1 +
+>  4 files changed, 59 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index c6a6949..a48b508 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>  	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
+>  	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
+>  	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
+> +
+> +#define THUNDER_PEM_RES(addr, node) \
+> +	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
 
-The family-specific handling should be inserted after the SoC-specific
-handling.
-Currently it doesn't matter, as both are handled exactly the same, but
-it may avoid future mistakes.
-
-BTW, can you please fix that for the existing entry for Gen2, too?
-
-Thanks!
-
->         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
->         {},
->  };
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+I assume we should do s/node/seg/ here as well?  I already did that for
+THUNDER_ECAM_QUIRK in the next patch.
