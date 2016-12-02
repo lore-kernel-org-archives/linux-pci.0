@@ -1,674 +1,581 @@
-Return-Path: <SRS0=zrHt=XQ=intel.com=fengguang.wu@kernel.org>
-Return-Path: <SRS0=zrHt=XQ=intel.com=fengguang.wu@kernel.org>
-Date: Thu, 1 Dec 2016 18:52:42 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: kbuild-all@01.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: [pci:pci/ecam 9/12] drivers/pci/host/pcie-hisi.c:88:8: error:
- implicit declaration of function 'acpi_get_rc_resources'
-Message-ID: <201612011838.nMLxDd6f%fengguang.wu@intel.com>
+Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
+Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
+Subject: Re: [PATCH v4 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
+ controller
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com>
+Cc: Rafael Wysocki <rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Arnd Bergmann
+ <arnd@arndb.de>, Mark Salter <msalter@redhat.com>,
+        linux-pci@vger.kernel.org,
+        linux-arm <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
+Date: Fri, 2 Dec 2016 02:12:59 -0500
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="nFreZHaLTZJo0R7j"
+In-Reply-To: <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com>
+Content-Type: multipart/mixed;
+ boundary="------------1C47BCD760538FFBBFAD194D"
 List-ID: <linux-pci.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------1C47BCD760538FFBBFAD194D
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 
---nFreZHaLTZJo0R7j
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On 12/01/2016 09:27 PM, Duc Dang wrote:
+> PCIe controllers in X-Gene SoCs is not ECAM compliant: software
+> needs to configure additional controller's register to address
+> device at bus:dev:function.
+> 
+> The quirk will discover controller MMIO register space and configure
+> controller registers to select and address the target secondary device.
+> 
+> The quirk will only be applied for X-Gene PCIe MCFG table with
+> OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
+> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/ecam
-head:   652f5e38afee70579c8723730c08d197a90e5b3a
-commit: 7fcacb5eb93142e603f07b5d629e06e20e1a461f [9/12] PCI: Add MCFG quirks for HiSilicon Hip05/06/07 host controllers
-config: arm64-defconfig (attached as .config)
-compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        git checkout 7fcacb5eb93142e603f07b5d629e06e20e1a461f
-        # save the attached .config to linux build tree
-        make.cross ARCH=arm64 
+So far I've tested this on an HPE ProLiant m400 (Moonshot) cartridge
+and will test it on some other reference platforms soon. Bootlog for
+the m400 attached in case Bjorn wants to see the output. Here's
+what I see in /proc/iomem btw on that platform:
 
-All error/warnings (new ones prefixed by >>):
+# cat /proc/iomem 
+10520000-10523fff : APMC0D18:00
+  10520000-10523fff : APMC0D18:00
+10524000-10527fff : APMC0D17:00
+10540000-1054a0ff : APMC0D01:00
+  10546000-10546fff : APMC0D50:00
+  1054a000-1054a00f : APMC0D12:03
+    1054a000-1054a00f : APMC0D12:02
+      1054a000-1054a00f : APMC0D12:01
+        1054a000-1054a00f : APMC0D12:00
+17000000-17000fff : APMC0D01:00
+17001000-17001fff : APMC0D01:00
+  17001000-170013ff : APMC0D15:00
+    17001000-170013ff : APMC0D15:00
+1701c000-1701cfff : APMC0D14:00
+1a800000-1a800fff : APMC0D0D:00
+  1a800000-1a800fff : APMC0D0D:00
+1c000200-1c0002ff : APMC0D06:00
+1c021000-1c0210ff : APMC0D08:00
+  1c021000-1c02101f : serial
+1c024000-1c024fff : APMC0D07:00
+1f230000-1f230fff : APMC0D0D:00
+  1f230000-1f230fff : APMC0D0D:00
+1f23d000-1f23dfff : APMC0D0D:00
+  1f23d000-1f23dfff : APMC0D0D:00
+1f23e000-1f23efff : APMC0D0D:00
+  1f23e000-1f23efff : APMC0D0D:00
+1f2a0000-1f31ffff : APMC0D06:00
+1f500000-1f50ffff : PCI Bus 0000:00
+  1f500000-1f50ffff : PNP0A08:00
+78800000-78800fff : APMC0D13:00
+  78800000-78800fff : APMC0D12:03
+    78800000-78800fff : APMC0D12:02
+      78800000-78800fff : APMC0D12:01
+        78800000-78800fff : APMC0D12:00
+          78800000-78800fff : APMC0D11:00
+          78800000-78800fff : APMC0D10:03
+          78800000-78800fff : APMC0D10:02
+          78800000-78800fff : APMC0D10:01
+          78800000-78800fff : APMC0D10:00
+79000000-798fffff : APMC0D0E:00
+7c000000-7c1fffff : APMC0D12:00
+7c200000-7c3fffff : APMC0D12:01
+7c400000-7c5fffff : APMC0D12:02
+7c600000-7c7fffff : APMC0D12:03
+7e000000-7e000fff : APMC0D13:00
+7e200000-7e200fff : APMC0D10:03
+  7e200000-7e200fff : APMC0D10:02
+    7e200000-7e200fff : APMC0D10:01
+      7e200000-7e200fff : APMC0D10:00
+7e600000-7e600fff : APMC0D11:00
+7e700000-7e700fff : APMC0D10:03
+  7e700000-7e700fff : APMC0D10:02
+    7e700000-7e700fff : APMC0D10:01
+      7e700000-7e700fff : APMC0D10:00
+7e720000-7e720fff : APMC0D10:03
+  7e720000-7e720fff : APMC0D10:02
+    7e720000-7e720fff : APMC0D10:01
+      7e720000-7e720fff : APMC0D10:00
+7e800000-7e800fff : APMC0D10:00
+7e840000-7e840fff : APMC0D10:01
+7e880000-7e880fff : APMC0D10:02
+7e8c0000-7e8c0fff : APMC0D10:03
+7e930000-7e930fff : APMC0D13:00
+4000000000-4001ffffff : System RAM
+  4000080000-4000c3ffff : Kernel code
+  4000db0000-400165ffff : Kernel data
+40023a0000-4ff733ffff : System RAM
+4ff7340000-4ff77cffff : reserved
+4ff77d0000-4ff79cffff : System RAM
+4ff79d0000-4ff7e7ffff : reserved
+4ff7e80000-4ff7e8ffff : System RAM
+4ff7e90000-4ff7efffff : reserved
+4ff7f10000-4ff800ffff : reserved
+4ff8010000-4fffffffff : System RAM
+a020000000-a03fffffff : PCI Bus 0000:00
+  a020000000-a0201fffff : PCI Bus 0000:01
+    a020000000-a0200fffff : 0000:01:00.0
+      a020000000-a0200fffff : mlx4_core
+    a020100000-a0201fffff : 0000:01:00.0
+a060000000-a07fffffff : PCI Bus 0000:00
+a0d0000000-a0dfffffff : PCI ECAM
+a110000000-a14fffffff : PCI Bus 0000:00
+  a110000000-a121ffffff : PCI Bus 0000:01
+    a110000000-a111ffffff : 0000:01:00.0
+      a110000000-a111ffffff : mlx4_core
+    a112000000-a121ffffff : 0000:01:00.0
 
-   drivers/pci/host/pcie-hisi.c: In function 'hisi_pcie_init':
->> drivers/pci/host/pcie-hisi.c:88:8: error: implicit declaration of function 'acpi_get_rc_resources' [-Werror=implicit-function-declaration]
-     res = acpi_get_rc_resources("HISI0081", root->segment);
-           ^~~~~~~~~~~~~~~~~~~~~
->> drivers/pci/host/pcie-hisi.c:88:6: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
-     res = acpi_get_rc_resources("HISI0081", root->segment);
-         ^
-   cc1: some warnings being treated as errors
+Adding a Tested-by for the record:
 
-vim +/acpi_get_rc_resources +88 drivers/pci/host/pcie-hisi.c
+Tested-by: Jon Masters <jcm@redhat.com>
 
-    82		void __iomem *reg_base;
-    83	
-    84		/*
-    85		 * Retrieve RC base and size from a HISI0081 device with _UID
-    86		 * matching our segment.
-    87		 */
-  > 88		res = acpi_get_rc_resources("HISI0081", root->segment);
-    89		if (!res) {
-    90			dev_err(dev, "can't get rc base address\n");
-    91			return -ENOMEM;
+Jon.
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+Computer Architect | Sent from my Fedora powered laptop
 
---nFreZHaLTZJo0R7j
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
 
-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
+--------------1C47BCD760538FFBBFAD194D
+Content-Type: text/plain; charset=UTF-8;
+ name="dmesg-4.9.0-rc7.ecam_jcm1+.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="dmesg-4.9.0-rc7.ecam_jcm1+.txt"
 
---nFreZHaLTZJo0R7j--
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.9.0-rc7.ecam_jcm1+ (root@hp-moonshot-02-c08.khw.lab.eng.bos.redhat.com) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-11) (GCC) ) #1 SMP Fri Dec 2 01:13:24 EST 2016
+[    0.000000] Boot CPU: AArch64 Processor [500f0001]
+[    0.000000] earlycon: uart8250 at MMIO32 0x000000001c021000 (options '')
+[    0.000000] bootconsole [uart8250] enabled
+[    0.000000] efi: Getting EFI parameters from FDT:
+[    0.000000] efi: EFI v2.60 by HPE
+[    0.000000] efi:  ACPI 2.0=0x4ff8000000  SMBIOS 3.0=0x4ff7a90000  MEMATTR=0x4ff2411818 
+[    0.000000] cma: Reserved 512 MiB at 0x00000040e0000000
+[    0.000000] ACPI: Early table checksum verification disabled
+[    0.000000] ACPI: RSDP 0x0000004FF8000000 000024 (v02 HP    )
+[    0.000000] ACPI: XSDT 0x0000004FF7FF0000 000084 (v01 HP     ProLiant 00000001      01000013)
+[    0.000000] ACPI: FACP 0x0000004FF7FB0000 000114 (v06 HPE    ProLiant 00000001 HP   00000001)
+[    0.000000] ACPI: DSDT 0x0000004FF7F80000 0023CA (v05 HPE    DSDT     00000001 INTL 20160527)
+[    0.000000] ACPI: SSDT 0x0000004FF7FE0000 000032 (v02 HPE    UARTCLKS 00000001      01000013)
+[    0.000000] ACPI: BERT 0x0000004FF7FD0000 000030 (v01 HPE    ProLiant 00000002 INTL 20160527)
+[    0.000000] ACPI: HEST 0x0000004FF7FC0000 0002A8 (v01 HPE    ProLiant 00000002 INTL 20160527)
+[    0.000000] ACPI: DBG2 0x0000004FF7FA0000 0000A8 (v00 HPE    ProLiant 00000000 INTL 20160527)
+[    0.000000] ACPI: GTDT 0x0000004FF7F90000 0000E0 (v02 HPE    ProLiant 00000001 INTL 20160527)
+[    0.000000] ACPI: APIC 0x0000004FF7F70000 0002C4 (v03 HPE    ProLiant 00000001 HP   00000001)
+[    0.000000] ACPI: MCFG 0x0000004FF7F60000 00003C (v01 APM    XGENE    00000001 HP   00000001)
+[    0.000000] ACPI: SPMI 0x0000004FF7F50000 000041 (v05 HPE    ProLiant 00000001 HP   00000001)
+[    0.000000] ACPI: RASF 0x0000004FF7F40000 000030 (v01 HPE    ProLiant 00000001 HP   00000001)
+[    0.000000] ACPI: SPCR 0x0000004FF7F30000 000050 (v02 HPE    ProLiant 00000001 HP   00000001)
+[    0.000000] ACPI: SSDT 0x0000004FF7F20000 000313 (v02 HPE    PCISSDT  00000002 HPAG 00020000)
+[    0.000000] ACPI: SPCR: console: uart,mmio,0x1c021000,9600
+[    0.000000] ACPI: NUMA: Failed to initialise from firmware
+[    0.000000] NUMA: Faking a node at [mem 0x0000000000000000-0x0000004fffffffff]
+[    0.000000] NUMA: Adding memblock [0x4000000000 - 0x4001ffffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x40023a0000 - 0x4ff733ffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff7340000 - 0x4ff77cffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff77d0000 - 0x4ff79cffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff79d0000 - 0x4ff7e7ffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff7e80000 - 0x4ff7e8ffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff7e90000 - 0x4ff7efffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff7f10000 - 0x4ff800ffff] on node 0
+[    0.000000] NUMA: Adding memblock [0x4ff8010000 - 0x4fffffffff] on node 0
+[    0.000000] NUMA: Initmem setup node 0 [mem 0x4000000000-0x4fffffffff]
+[    0.000000] NUMA: NODE_DATA [mem 0x4fffff2680-0x4fffffffff]
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000004000000000-0x00000040ffffffff]
+[    0.000000]   Normal   [mem 0x0000004100000000-0x0000004fffffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000004000000000-0x0000004001ffffff]
+[    0.000000]   node   0: [mem 0x00000040023a0000-0x0000004ff733ffff]
+[    0.000000]   node   0: [mem 0x0000004ff7340000-0x0000004ff77cffff]
+[    0.000000]   node   0: [mem 0x0000004ff77d0000-0x0000004ff79cffff]
+[    0.000000]   node   0: [mem 0x0000004ff79d0000-0x0000004ff7e7ffff]
+[    0.000000]   node   0: [mem 0x0000004ff7e80000-0x0000004ff7e8ffff]
+[    0.000000]   node   0: [mem 0x0000004ff7e90000-0x0000004ff7efffff]
+[    0.000000]   node   0: [mem 0x0000004ff7f10000-0x0000004ff800ffff]
+[    0.000000]   node   0: [mem 0x0000004ff8010000-0x0000004fffffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000004000000000-0x0000004fffffffff]
+[    0.000000] On node 0 totalpages: 1048517
+[    0.000000]   DMA zone: 64 pages used for memmap
+[    0.000000]   DMA zone: 0 pages reserved
+[    0.000000]   DMA zone: 65478 pages, LIFO batch:1
+[    0.000000]   Normal zone: 960 pages used for memmap
+[    0.000000]   Normal zone: 983039 pages, LIFO batch:1
+[    0.000000] psci: is not implemented in ACPI.
+[    0.000000] percpu: Embedded 3 pages/cpu @fffffe0fffdd0000 s117504 r8192 d70912 u196608
+[    0.000000] pcpu-alloc: s117504 r8192 d70912 u196608 alloc=3*65536
+[    0.000000] pcpu-alloc: [0] 0 [0] 1 [0] 2 [0] 3 [0] 4 [0] 5 [0] 6 [0] 7 
+[    0.000000] Detected PIPT I-cache on CPU0
+[    0.000000] Built 1 zonelists in Node order, mobility grouping on.  Total pages: 1047493
+[    0.000000] Policy zone: Normal
+[    0.000000] Kernel command line: BOOT_IMAGE=/vmlinuz-4.9.0-rc7.ecam_jcm1+ root=/dev/mapper/rhel_hp--moonshot--02--c08-root ro crashkernel=auto rd.lvm.lv=rhel_hp-moonshot-02-c08/root rd.lvm.lv=rhel_hp-moonshot-02-c08/swap LANG=en_US.UTF-8 earlycon=uart8250,mmio32,0x1c021000 acpi=on console=ttyS0,115200
+[    0.000000] PID hash table entries: 4096 (order: -1, 32768 bytes)
+[    0.000000] software IO TLB [mem 0x40dbff0000-0x40dfff0000] (64MB) mapped at [fffffe00dbff0000-fffffe00dffeffff]
+[    0.000000] Memory: 66372736K/67105088K available (8252K kernel code, 1588K rwdata, 3712K rodata, 1472K init, 6969K bss, 208064K reserved, 524288K cma-reserved)
+[    0.000000] Virtual kernel memory layout:
+[    0.000000]     modules : 0xfffffc0000000000 - 0xfffffc0008000000   (   128 MB)
+[    0.000000]     vmalloc : 0xfffffc0008000000 - 0xfffffdff5fff0000   (  2045 GB)
+[    0.000000]       .text : 0xfffffc0008080000 - 0xfffffc0008890000   (  8256 KB)
+[    0.000000]     .rodata : 0xfffffc0008890000 - 0xfffffc0008c40000   (  3776 KB)
+[    0.000000]       .init : 0xfffffc0008c40000 - 0xfffffc0008db0000   (  1472 KB)
+[    0.000000]       .data : 0xfffffc0008db0000 - 0xfffffc0008f3d200   (  1589 KB)
+[    0.000000]        .bss : 0xfffffc0008f3d200 - 0xfffffc000960b640   (  6970 KB)
+[    0.000000]     fixed   : 0xfffffdff7e7d0000 - 0xfffffdff7ec00000   (  4288 KB)
+[    0.000000]     PCI I/O : 0xfffffdff7ee00000 - 0xfffffdff7fe00000   (    16 MB)
+[    0.000000]     vmemmap : 0xfffffdff80000000 - 0xfffffe0000000000   (     2 GB maximum)
+[    0.000000]               0xfffffdff80000000 - 0xfffffdff84000000   (    64 MB actual)
+[    0.000000]     memory  : 0xfffffe0000000000 - 0xfffffe1000000000   ( 65536 MB)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=8, Nodes=1
+[    0.000000] Hierarchical RCU implementation.
+[    0.000000] 	Build-time adjustment of leaf fanout to 64.
+[    0.000000] 	RCU restricting CPUs from NR_CPUS=4096 to nr_cpu_ids=8.
+[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=64, nr_cpu_ids=8
+[    0.000000] NR_IRQS:64 nr_irqs:64 0
+[    0.000000] GIC: Using split EOI/Deactivate mode
+[    0.000000] arm_arch_timer: Architected cp15 timer(s) running at 50.00MHz (phys).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0xb8812736b, max_idle_ns: 440795202655 ns
+[    0.000002] sched_clock: 56 bits at 50MHz, resolution 20ns, wraps every 4398046511100ns
+[    0.095756] Console: colour dummy device 80x25
+[    0.148965] Calibrating delay loop (skipped), value calculated using timer frequency.. 100.00 BogoMIPS (lpj=50000)
+[    0.272932] pid_max: default: 32768 minimum: 301
+[    0.328254] ACPI: Core revision 20160831
+[    0.377261] ACPI: 3 ACPI AML tables successfully acquired and loaded
+[    0.453503] Security Framework initialized
+[    0.502487] Yama: becoming mindful.
+[    0.544196] SELinux:  Initializing.
+[    0.586136] SELinux:  Starting in permissive mode
+[    0.586869] Dentry cache hash table entries: 8388608 (order: 10, 67108864 bytes)
+[    0.686272] Inode-cache hash table entries: 4194304 (order: 9, 33554432 bytes)
+[    0.777994] Mount-cache hash table entries: 131072 (order: 4, 1048576 bytes)
+[    0.862351] Mountpoint-cache hash table entries: 131072 (order: 4, 1048576 bytes)
+[    0.952645] ftrace: allocating 30405 entries in 8 pages
+[    1.039569] ASID allocator initialised with 65536 entries
+[    1.105074] Remapping and enabling EFI services.
+[    1.160335]   EFI remap 0x0000000010510000 => 0000000020000000
+[    1.230115]   EFI remap 0x0000000010548000 => 0000000020018000
+[    1.299898]   EFI remap 0x0000000017000000 => 0000000020020000
+[    1.369577]   EFI remap 0x000000001c024000 => 0000000020034000
+[    1.439257]   EFI remap 0x000000001f2a0000 => 0000000020040000
+[    1.508938]   EFI remap 0x0000004002310000 => 0000000020050000
+[    1.578618]   EFI remap 0x0000004ff7340000 => 00000000200b0000
+[    1.648298]   EFI remap 0x0000004ff79d0000 => 0000000020540000
+[    1.718341] Detected PIPT I-cache on CPU1
+[    1.718373] CPU1: Booted secondary processor [500f0001]
+[    1.718594] Detected PIPT I-cache on CPU2
+[    1.718615] CPU2: Booted secondary processor [500f0001]
+[    1.718842] Detected PIPT I-cache on CPU3
+[    1.718856] CPU3: Booted secondary processor [500f0001]
+[    1.719072] Detected PIPT I-cache on CPU4
+[    1.719093] CPU4: Booted secondary processor [500f0001]
+[    1.719300] Detected PIPT I-cache on CPU5
+[    1.719313] CPU5: Booted secondary processor [500f0001]
+[    1.719521] Detected PIPT I-cache on CPU6
+[    1.719541] CPU6: Booted secondary processor [500f0001]
+[    1.719755] Detected PIPT I-cache on CPU7
+[    1.719768] CPU7: Booted secondary processor [500f0001]
+[    1.719807] Brought up 8 CPUs
+[    2.527052] SMP: Total of 8 processors activated.
+[    2.583214] CPU features: detected feature: 32-bit EL0 Support
+[    2.652997] CPU: All CPU(s) started at EL2
+[    2.702850] devtmpfs: initialized
+[    2.742885] SMBIOS 3.0.0 present.
+[    2.782621] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+[    2.899666] atomic64_test: passed
+[    2.939319] pinctrl core: initialized pinctrl subsystem
+[    3.002210] NET: Registered protocol family 16
+[    3.094849] cpuidle: using governor menu
+[    3.141757] PCCT header not found.
+[    3.182468] vdso: 2 pages (1 code @ fffffc00088b0000, 1 data @ fffffc0008dd0000)
+[    3.270979] hw-breakpoint: found 4 breakpoint and 4 watchpoint registers.
+[    3.352618] DMA: preallocated 256 KiB pool for atomic allocations
+[    3.425557] ACPI: bus type PCI registered
+[    3.473503] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+[    3.550649] Serial: AMBA PL011 UART driver
+[    3.604874] HugeTLB registered 2 MB page size, pre-allocated 0 pages
+[    3.680904] HugeTLB registered 512 MB page size, pre-allocated 0 pages
+[    3.759544] ACPI: Added _OSI(Module Device)
+[    3.809574] ACPI: Added _OSI(Processor Device)
+[    3.862714] ACPI: Added _OSI(3.0 _SCP Extensions)
+[    3.918979] ACPI: Added _OSI(Processor Aggregator Device)
+[    3.983661] ACPI: Executed 1 blocks of module-level executable AML code
+[    4.066666] ACPI: Interpreter enabled
+[    4.110452] ACPI: Using GIC for interrupt routing
+[    4.166749] ACPI: MCFG table detected, 1 entries
+[    4.224566] ACPI: Power Resource [SCVR] (off)
+[    4.280222] ACPI: PCI Root Bridge [PCI3] (domain 0000 [bus 00-ff])
+[    4.354192] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+[    4.452277] acpi PNP0A08:00: _OSC: platform does not support [AER]
+[    4.526392] acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME PCIeCapability]
+[    4.618041] acpi PNP0A08:00: MCFG quirk: ECAM at [mem 0xa0d0000000-0xa0dfffffff] for [bus 00-ff] with xgene_v1_pcie_ecam_ops
+[    4.752751] acpi PNP0A08:00: [Firmware Bug]: ECAM area [mem 0xa0d0000000-0xa0dfffffff] not reserved in ACPI namespace
+[    4.879773] acpi PNP0A08:00: ECAM at [mem 0xa0d0000000-0xa0dfffffff] for [bus 00-ff]
+[    4.972464] Remapped I/O 0x000000a100010000 to [io  0x0000-0xffff window]
+[    5.053790] PCI host bridge to bus 0000:00
+[    5.102777] pci_bus 0000:00: root bus resource [mem 0x1f500000-0x1f50ffff]
+[    5.185045] pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus address [0x10000-0x1ffff])
+[    5.299551] pci_bus 0000:00: root bus resource [mem 0xa020000000-0xa03fffffff window] (bus address [0x20000000-0x3fffffff])
+[    5.432782] pci_bus 0000:00: root bus resource [mem 0xa060000000-0xa07fffffff window] (bus address [0x40000000-0x5fffffff])
+[    5.566012] pci_bus 0000:00: root bus resource [mem 0xa110000000-0xa14fffffff window]
+[    5.659719] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    5.725358] pci 0000:00:00.0: [10e8:e004] type 01 class 0x060400
+[    5.725429] pci 0000:00:00.0: supports D1 D2
+[    5.725769] pci 0000:01:00.0: [15b3:1007] type 00 class 0x020000
+[    5.726099] pci 0000:01:00.0: reg 0x10: [mem 0xa020000000-0xa0200fffff 64bit]
+[    5.726334] pci 0000:01:00.0: reg 0x18: [mem 0xa122000000-0xa123ffffff 64bit pref]
+[    5.726782] pci 0000:01:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
+[    5.728513] pci 0000:01:00.0: reg 0x134: [mem 0xa112000000-0xa113ffffff 64bit pref]
+[    5.728516] pci 0000:01:00.0: VF(n) BAR2 space: [mem 0xa112000000-0xa121ffffff 64bit pref] (contains BAR2 for 8 VFs)
+[    5.858575] pci_bus 0000:00: on NUMA node 0
+[    5.858596] pci 0000:00:00.0: BAR 15: assigned [mem 0xa110000000-0xa121ffffff 64bit pref]
+[    5.956467] pci 0000:00:00.0: BAR 14: assigned [mem 0xa020000000-0xa0201fffff]
+[    6.042899] pci 0000:01:00.0: BAR 2: assigned [mem 0xa110000000-0xa111ffffff 64bit pref]
+[    6.139875] pci 0000:01:00.0: BAR 9: assigned [mem 0xa112000000-0xa121ffffff 64bit pref]
+[    6.236850] pci 0000:01:00.0: BAR 0: assigned [mem 0xa020000000-0xa0200fffff 64bit]
+[    6.328628] pci 0000:01:00.0: BAR 6: assigned [mem 0xa020100000-0xa0201fffff pref]
+[    6.419214] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    6.478604] pci 0000:00:00.0:   bridge window [mem 0xa020000000-0xa0201fffff]
+[    6.563989] pci 0000:00:00.0:   bridge window [mem 0xa110000000-0xa121ffffff 64bit pref]
+[    6.661311] vgaarb: loaded
+[    6.693956] SCSI subsystem initialized
+[    6.738878] libata version 3.00 loaded.
+[    6.738926] ACPI: bus type USB registered
+[    6.786909] usbcore: registered new interface driver usbfs
+[    6.852553] usbcore: registered new interface driver hub
+[    6.916134] usbcore: registered new device driver usb
+[    6.976590] pps_core: LinuxPPS API ver. 1 registered
+[    7.035977] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    7.145293] PTP clock support registered
+[    7.192292] Registered efivars operations
+[    7.240931] NetLabel: Initializing
+[    7.281601] NetLabel:  domain hash size = 128
+[    7.333709] NetLabel:  protocols = UNLABELED CIPSOv4
+[    7.393122] NetLabel:  unlabeled traffic allowed by default
+[    7.459934] clocksource: Switched to clocksource arch_sys_counter
+[    7.549152] VFS: Disk quotas dquot_6.6.0
+[    7.596123] VFS: Dquot-cache hash table entries: 8192 (order 0, 65536 bytes)
+[    7.680705] pnp: PnP ACPI init
+[    7.717581] pnp: PnP ACPI: found 0 devices
+[    7.770079] NET: Registered protocol family 2
+[    7.822577] TCP established hash table entries: 524288 (order: 6, 4194304 bytes)
+[    7.912429] TCP bind hash table entries: 65536 (order: 4, 1048576 bytes)
+[    7.992997] TCP: Hash tables configured (established 524288 bind 65536)
+[    8.072192] UDP hash table entries: 32768 (order: 4, 1048576 bytes)
+[    8.147724] UDP-Lite hash table entries: 32768 (order: 4, 1048576 bytes)
+[    8.228576] NET: Registered protocol family 1
+[    8.280729] PCI: CLS 64 bytes, default 128
+[    8.280854] Unpacking initramfs...
+[    9.184613] Freeing initrd memory: 40640K (fffffe0f83af0000 - fffffe0f862a0000)
+[    9.272311] kvm [1]: 8-bit VMID
+[    9.309861] kvm [1]: IDMAP page: 4000884000
+[    9.359888] kvm [1]: HYP VA range: 20000000000:3ffffffffff
+[    9.425594] kvm [1]: Hyp mode initialized successfully
+[    9.487078] kvm [1]: GICV region size/alignment is unsafe, using trapping (reduced performance)
+[    9.591201] kvm [1]: vgic-v2@780cf000
+[    9.635096] kvm [1]: vgic interrupt IRQ1
+[    9.682014] kvm [1]: virtual timer IRQ4
+[    9.728216] alg: No test for __ecb-aes-neon (__driver-ecb-aes-neon)
+[    9.807218] alg: No test for __ecb-aes-neon (cryptd(__driver-ecb-aes-neon))
+[    9.891661] futex hash table entries: 2048 (order: 2, 262144 bytes)
+[    9.966722] audit: initializing netlink subsys (disabled)
+[   10.031339] audit: type=2000 audit(7.043:1): initialized
+[   10.095074] Initialise system trusted keyrings
+[   10.148374] workingset: timestamp_bits=37 max_order=20 bucket_order=0
+[   10.228891] zbud: loaded
+[   10.260564] SELinux:  Registering netfilter hooks
+[   10.338070] alg: drbg: Test 0 failed for drbg_pr_ctr_aes128
+[   10.409012] alg: drbg: Test 0 failed for drbg_nopr_ctr_aes128
+[   10.477839] alg: drbg: Test 0 failed for drbg_nopr_ctr_aes192
+[   10.546676] alg: drbg: Test 0 failed for drbg_nopr_ctr_aes256
+[   10.616496] NET: Registered protocol family 38
+[   10.669654] Key type asymmetric registered
+[   10.718642] Asymmetric key parser 'x509' registered
+[   10.777049] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 248)
+[   10.865626] io scheduler noop registered
+[   10.912532] io scheduler deadline registered (default)
+[   10.974027] io scheduler cfq registered
+[   11.020433] xgene-gpio APMC0D14:00: X-Gene GPIO driver registered.
+[   11.094468] pcieport 0000:00:00.0: can't derive routing for PCI INT A
+[   11.171541] pcieport 0000:00:00.0: PCI INT A: no GSI
+[   11.231078] pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
+[   11.312317] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+[   11.378990] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+[   11.458322] acpi ACPI0007:00: CPPC data invalid or not present
+[   11.528130] acpi ACPI0007:01: CPPC data invalid or not present
+[   11.597937] acpi ACPI0007:02: CPPC data invalid or not present
+[   11.667732] acpi ACPI0007:03: CPPC data invalid or not present
+[   11.737570] acpi ACPI0007:04: CPPC data invalid or not present
+[   11.807372] acpi ACPI0007:05: CPPC data invalid or not present
+[   11.877171] acpi ACPI0007:06: CPPC data invalid or not present
+[   11.946965] acpi ACPI0007:07: CPPC data invalid or not present
+[   12.017272] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[   12.107120] console [ttyS0] disabled
+[   12.169999] APMC0D08:00: ttyS0 at MMIO 0x1c021000 (irq = 23, base_baud = 3125000) is a U6_16550A
+[   12.275162] console [ttyS0] enabled
+[   12.282276] bootconsole [uart8250] disabled
+[   12.290991] msm_serial: driver initialized
+[   12.295331] Failed to find cpu0 device node
+[   12.299499] Unable to detect cache hierarchy from DT for CPU 0
+[   12.305469] hisi_sas: driver version v1.6
+[   12.309689] xgene-ahci APMC0D0D:00: skip clock and PHY initialization
+[   12.316107] xgene-ahci APMC0D0D:00: controller can't do NCQ, turning off CAP_NCQ
+[   12.323490] xgene-ahci APMC0D0D:00: AHCI 0001.0300 32 slots 2 ports 6 Gbps 0x3 impl platform mode
+[   12.332322] xgene-ahci APMC0D0D:00: flags: 64bit sntf pm only pmp fbs pio slum part ccc 
+[   12.340380] xgene-ahci APMC0D0D:00: port 0 is not capable of FBS
+[   12.346434] xgene-ahci APMC0D0D:00: port 1 is not capable of FBS
+[   12.352901] scsi host0: xgene-ahci
+[   12.356508] scsi host1: xgene-ahci
+[   12.359998] ata1: SATA max UDMA/133 mmio [mem 0x1a800000-0x1a800fff] port 0x100 irq 24
+[   12.367881] ata2: SATA max UDMA/133 mmio [mem 0x1a800000-0x1a800fff] port 0x180 irq 24
+[   12.375908] libphy: Fixed MDIO Bus: probed
+[   12.380221] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[   12.386750] ehci-pci: EHCI PCI platform driver
+[   12.391204] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[   12.397361] ohci-pci: OHCI PCI platform driver
+[   12.401799] uhci_hcd: USB Universal Host Controller Interface driver
+[   12.408211] usbcore: registered new interface driver usbserial
+[   12.414031] usbcore: registered new interface driver usbserial_generic
+[   12.420538] usbserial: USB Serial support registered for generic
+[   12.426614] mousedev: PS/2 mouse device common for all mice
+[   12.432413] rtc-efi rtc-efi: rtc core: registered rtc-efi as rtc0
+[   12.438724] device-mapper: uevent: version 1.0.3
+[   12.443483] device-mapper: ioctl: 4.35.0-ioctl (2016-06-23) initialised: dm-devel@redhat.com
+[   12.452521] EFI Variables Facility v0.08 2004-May-17
+[   12.458529] hidraw: raw HID events driver (C) Jiri Kosina
+[   12.463991] usbcore: registered new interface driver usbhid
+[   12.469538] usbhid: USB HID core driver
+[   12.473518] drop_monitor: Initializing network drop monitor service
+[   12.479859] ip_tables: (C) 2000-2006 Netfilter Core Team
+[   12.485173] Initializing XFRM netlink socket
+[   12.489680] NET: Registered protocol family 10
+[   12.494552] mip6: Mobile IPv6
+[   12.497521] NET: Registered protocol family 17
+[   12.502256] registered taskstats version 1
+[   12.506364] Loading compiled-in X.509 certificates
+[   12.514345] alg: No test for pkcs1pad(rsa,sha256) (pkcs1pad(rsa-generic,sha256))
+[   12.523159] Loaded X.509 cert 'Build time autogenerated kernel key: 77693cf6411eaf44ab625b1d7d0930f7f0e46073'
+[   12.533104] zswap: loaded using pool lzo/zbud
+[   12.557452] Key type big_key registered
+[   12.561445] rtc-efi rtc-efi: setting system clock to 2016-12-02 07:08:49 UTC (1480662529)
+[   12.569616] PM: Hibernation image not present or could not be loaded.
+[   12.680057] ata2: SATA link down (SStatus 0 SControl 4300)
+[   13.002940] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 4300)
+[   13.009409] ata1.00: ATA-9: XR0120GEBLT, HPS4, max UDMA/133
+[   13.014958] ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 0/32)
+[   13.021842] ata1.00: configured for UDMA/133
+[   13.026398] scsi 0:0:0:0: Direct-Access     ATA      XR0120GEBLT      HPS4 PQ: 0 ANSI: 5
+[   13.048217] sd 0:0:0:0: [sda] 234441648 512-byte logical blocks: (120 GB/112 GiB)
+[   13.048233] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[   13.060966] sd 0:0:0:0: [sda] 4096-byte physical blocks
+[   13.066263] sd 0:0:0:0: [sda] Write Protect is off
+[   13.071038] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   13.071065] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[   13.082550]  sda: sda1 sda2 sda3
+[   13.086305] sd 0:0:0:0: [sda] Attached SCSI disk
+[   13.091001] Freeing unused kernel memory: 1472K (fffffe0000c40000 - fffffe0000db0000)
+[   13.104494] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.111710] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.120229] systemd[1]: systemd 219 running in system mode. (+PAM +AUDIT +SELINUX +IMA -APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ -LZ4 -SECCOMP +BLKID +ELFUTILS +KMOD +IDN)
+[   13.138467] systemd[1]: Detected architecture arm64.
+[   13.143426] systemd[1]: Running in initial RAM disk.
+[   13.160020] systemd[1]: Set hostname to <localhost.localdomain>.
+[   13.209760] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.216398] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.223045] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.229734] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.237511] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.244368] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.251316] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.258995] random: systemd: uninitialized urandom read (16 bytes read)
+[   13.279008] systemd[1]: Reached target Local File Systems.
+[   13.284502] systemd[1]: Starting Local File Systems.
+[   13.293970] systemd[1]: Reached target Timers.
+[   13.298420] systemd[1]: Starting Timers.
+[   13.305963] systemd[1]: Reached target Swap.
+[   13.310236] systemd[1]: Starting Swap.
+[   13.769659] mlx4_core: Mellanox ConnectX core driver v2.2-1 (Feb, 2014)
+[   13.776270] mlx4_core: Initializing 0000:01:00.0
+[   20.170768] mlx4_core 0000:01:00.0: PCIe BW is different than device's capability
+[   20.178225] mlx4_core 0000:01:00.0: PCIe link speed is 5.0GT/s, device supports 8.0GT/s
+[   20.186196] mlx4_core 0000:01:00.0: PCIe link width is x8, device supports x8
+[   20.254285] mlx4_en: Mellanox ConnectX HCA Ethernet driver v2.2-1 (Feb 2014)
+[   20.261527] mlx4_en 0000:01:00.0: Activating port:1
+[   20.270054] mlx4_en: 0000:01:00.0: Port 1: Using 64 TX rings
+[   20.275694] mlx4_en: 0000:01:00.0: Port 1: Using 4 RX rings
+[   20.281248] mlx4_en: 0000:01:00.0: Port 1:   frag:0 - size:1522 prefix:0 stride:1536
+[   20.289388] mlx4_en: 0000:01:00.0: Port 1: Initializing port
+[   20.295382] mlx4_en 0000:01:00.0: registered PHC clock
+[   20.301884] mlx4_en 0000:01:00.0: Activating port:2
+[   20.311329] mlx4_en: 0000:01:00.0: Port 2: Using 64 TX rings
+[   20.316970] mlx4_en: 0000:01:00.0: Port 2: Using 4 RX rings
+[   20.322524] mlx4_en: 0000:01:00.0: Port 2:   frag:0 - size:1522 prefix:0 stride:1536
+[   20.330486] mlx4_en: 0000:01:00.0: Port 2: Initializing port
+[   20.340953] mlx4_core 0000:01:00.0 eno1: renamed from eth0
+[   20.354060] mlx4_core 0000:01:00.0 eno1d1: renamed from eth1
+[   20.509086] random: fast init done
+[   20.939043] SGI XFS with ACLs, security attributes, no debug enabled
+[   20.949572] XFS (dm-0): Mounting V5 Filesystem
+[   20.996107] XFS (dm-0): Ending clean mount
+[   21.316404] systemd-journald[184]: Received SIGTERM from PID 1 (systemd).
+[   21.332768] systemd: 20 output lines suppressed due to ratelimiting
+[   21.362297] audit: type=1404 audit(1480662538.300:2): enforcing=1 old_enforcing=0 auid=4294967295 ses=4294967295
+[   21.406592] SELinux: 32768 avtab hash slots, 104865 rules.
+[   21.436918] mlx4_en: eno1d1: Link Up
+[   21.439508] SELinux: 32768 avtab hash slots, 104865 rules.
+[   21.518982] SELinux:  8 users, 14 roles, 4983 types, 301 bools, 1 sens, 1024 cats
+[   21.518988] SELinux:  91 classes, 104865 rules
+[   21.527050] SELinux:  Permission validate_trans in class security not defined in policy.
+[   21.535131] SELinux:  Permission module_load in class system not defined in policy.
+[   21.542940] SELinux:  Class binder not defined in policy.
+[   21.548315] SELinux:  Class cap_userns not defined in policy.
+[   21.554034] SELinux:  Class cap2_userns not defined in policy.
+[   21.559839] SELinux: the above unknown classes and permissions will be allowed
+[   21.567040] SELinux:  Completing initialization.
+[   21.567041] SELinux:  Setting up existing superblocks.
+[   21.589001] audit: type=1403 audit(1480662538.527:3): policy loaded auid=4294967295 ses=4294967295
+[   21.602317] systemd[1]: Successfully loaded SELinux policy in 240.116ms.
+[   21.625267] systemd[1]: RTC configured in localtime, applying delta of -300 minutes to system time.
+[   21.685435] systemd[1]: Relabelled /dev and /run in 47.567ms.
+[   21.911601] systemd-journald[582]: Received request to flush runtime journal from PID 1
+[   22.036041] xgene-slimpro-mbox APMC0D01:00: APM X-Gene SLIMpro MailBox registered
+[   22.040712] input: Power Button as /devices/LNXSYSTM:00/PNP0C0C:00/input/input0
+[   22.041340] ACPI: Power Button [PWRB]
+[   22.049473] RPC: Registered named UNIX socket transport module.
+[   22.049475] RPC: Registered udp transport module.
+[   22.049476] RPC: Registered tcp transport module.
+[   22.049476] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[   22.159308] xgene-rng APMC0D18:00: Couldn't get the clock for RNG
+[   22.165809] xgene-gpio-sb APMC0D15:00: Support 22 gpios, 6 irqs start from pin 8
+[   22.173923] xgene-gpio-sb APMC0D15:00: X-Gene GPIO Standby driver registered
+[   22.186216] xgene-slimpro-i2c APMC0D40:00: i2c mailbox channel request failed
+[   22.217326] Adding 11722688k swap on /dev/mapper/rhel_hp--moonshot--02--c08-swap.  Priority:-1 extents:1 across:11722688k SSFS
+[   22.218880] XFS (sda2): Mounting V5 Filesystem
+[   22.282954] XFS (sda2): Ending clean mount
+[   22.341950] Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+[   22.463610] XFS (dm-2): Mounting V5 Filesystem
+[   22.497399] XFS (dm-2): Ending clean mount
+[   22.514725] <mlx4_ib> mlx4_ib_add: mlx4_ib: Mellanox ConnectX InfiniBand driver v2.2-1 (Feb 2014)
+[   22.526908] <mlx4_ib> mlx4_ib_add: counter index 2 for port 1 allocated 1
+[   22.538735] <mlx4_ib> mlx4_ib_add: counter index 3 for port 2 allocated 1
+[   22.639341] audit: type=1305 audit(1480680539.576:4): audit_pid=757 old=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:auditd_t:s0 res=1
+[   22.930086] IPv6: ADDRCONF(NETDEV_UP): eno1: link is not ready
+[   22.940637] mlx4_en: eno1:   frag:0 - size:1522 prefix:0 stride:1536
+[   23.001983] mlx4_en: eno1: Link Up
+[   23.010286] IPv6: ADDRCONF(NETDEV_UP): eno1d1: link is not ready
+[   23.017123] mlx4_en: eno1d1:   frag:0 - size:1522 prefix:0 stride:1536
+[   23.036178] Rounding down aligned max_sectors from 4294967295 to 4294967168
+[   23.089166] Loading iSCSI transport class v2.0-870.
+[   23.140692] iscsi: registered transport (iser)
+[   23.394165] RPC: Registered rdma transport module.
+[   23.398973] RPC: Registered rdma backchannel transport module.
+[   79.179310] random: crng init done
+
+--------------1C47BCD760538FFBBFAD194D--
