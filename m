@@ -1,59 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59284 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750919AbcLAWJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 17:09:05 -0500
-Date: Thu, 1 Dec 2016 16:09:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [pci:pci/ecam 6/13] arch/arm64/kernel/pci.c:128:2: error:
- expected '=', ',', ';', 'asm' or '__attribute__' before 'struct'
-Message-ID: <20161201220901.GA15867@bhelgaas-glaptop.roam.corp.google.com>
-References: <201612020535.QazToTo0%fengguang.wu@intel.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54540 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750833AbcLBSne (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 13:43:34 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB2Icgrc082166
+        for <linux-pci@vger.kernel.org>; Fri, 2 Dec 2016 13:42:30 -0500
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2738m9buht-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Fri, 02 Dec 2016 13:42:30 -0500
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Fri, 2 Dec 2016 11:42:29 -0700
+Subject: Re: [PATCH] PCI: Increase VPD access timeout
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Date: Fri, 2 Dec 2016 12:43:17 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201612020535.QazToTo0%fengguang.wu@intel.com>
+In-Reply-To: <1480442440-11540-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <8c30026a-f9c2-6922-4154-0a832007046d@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 02, 2016 at 05:56:44AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/ecam
-> head:   f80edf4d6c053d529b4f044f867f8269f0050c72
-> commit: b13e44a1ff3af460ce7770face55ff1dc802efcf [6/13] PCI/ACPI: Extend pci_mcfg_lookup() to return ECAM config accessors
-> config: arm64-defconfig (attached as .config)
-> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout b13e44a1ff3af460ce7770face55ff1dc802efcf
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm64 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    arch/arm64/kernel/pci.c: In function 'pci_acpi_setup_ecam_mapping':
-> >> arch/arm64/kernel/pci.c:128:2: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'struct'
->      struct resource cfgres;
->      ^~~~~~
-> >> arch/arm64/kernel/pci.c:134:40: error: 'ecam_ops' undeclared (first use in this function)
->      ret = pci_mcfg_lookup(root, &cfgres, &ecam_ops);
->                                            ^~~~~~~~
->    arch/arm64/kernel/pci.c:134:40: note: each undeclared identifier is reported only once for each function it appears in
->    arch/arm64/kernel/pci.c:131:15: warning: unused variable 'bsz' [-Wunused-variable]
->      unsigned int bsz;
->                   ^~~
-> 
-> vim +128 arch/arm64/kernel/pci.c
-> 
-> 0cb0786b Tomasz Nowicki 2016-06-10  122  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
-> 0cb0786b Tomasz Nowicki 2016-06-10  123  {
-> 1725c4a5 Bjorn Helgaas  2016-12-01  124  	struct device *dev = &root->device->dev;
-> 0cb0786b Tomasz Nowicki 2016-06-10  125  	struct resource *bus_res = &root->secondary;
-> 0cb0786b Tomasz Nowicki 2016-06-10  126  	u16 seg = root->segment;
-> b13e44a1 Tomasz Nowicki 2016-09-09  127  	struct pci_ecam_ops *ecam_ops
-> 0cb0786b Tomasz Nowicki 2016-06-10 @128  	struct resource cfgres;
+> The PCI core uses a fixed 50ms timeout when waiting for VPD accesses to
+> complete. When an access does not complete within this period, a warning
+> is logged and an error returned to the caller.
+>
+> While this default timeout is valid for most hardware, some devices can
+> experience longer access delays under certain circumstances. For example,
+> one of the IBM CXL Flash devices can take up to ~120ms in a worst-case
+> scenario. These types of devices can benefit from an extended timeout.
+>
+> To support devices with a longer access delay, increase the timeout in
+> pci_vpd_wait() to 125ms. The PCI specification is silent with respect to
+> VPD delays, therefore there is no concern for violating a threshold.
+>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-Sorry, I broke this when I moved the acpi_resource_consumer() call here.
-I added the missing semicolon.
+Tested-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+
