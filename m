@@ -1,51 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33566 "EHLO mail.kernel.org"
+Received: from mail.kapsi.fi ([217.30.184.167]:56911 "EHLO mail.kapsi.fi"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750708AbcLAQgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 11:36:04 -0500
-Date: Thu, 1 Dec 2016 10:35:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        id S1751056AbcLBM3l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Dec 2016 07:29:41 -0500
+Subject: Re: [PATCH v4 10/10] arm64: tegra: Enable PCIe on Jetson TX1
+To: Vidya Sagar <vidyas@nvidia.com>,
+        Thierry Reding <thierry.reding@gmail.com>
+References: <20161125105718.3866-1-thierry.reding@gmail.com>
+ <20161125105718.3866-10-thierry.reding@gmail.com>
+ <613fbc8c-07d9-d63d-bfb0-7e713dcac4f1@kapsi.fi>
+ <20161130174840.GB20246@ulmo.ba.sec>
+ <13197e02-a83a-c9d8-13fa-7b21f664a12c@kapsi.fi>
+ <20161130181409.GA29576@ulmo.ba.sec>
+ <71d84d4b-b14d-2f32-c36c-35a79e62d8bf@nvidia.com>
+ <3e8b2b5b-d779-4b3e-65f9-49ce0dcd796c@kapsi.fi>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v10 01/12] ACPI: Add acpi_resource_consumer() to find
- device that claims a resource
-Message-ID: <20161201163557.GF19681@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201082932.12247.7479.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0hB61=17Fbf=2-K=zaRmMZkY3NVxMPHNwfF9Nr6=ey+-g@mail.gmail.com>
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <eb30a054-2bf8-24f6-8e09-363c73153562@kapsi.fi>
+Date: Fri, 2 Dec 2016 14:29:29 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hB61=17Fbf=2-K=zaRmMZkY3NVxMPHNwfF9Nr6=ey+-g@mail.gmail.com>
+In-Reply-To: <3e8b2b5b-d779-4b3e-65f9-49ce0dcd796c@kapsi.fi>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 02:17:20PM +0100, Rafael J. Wysocki wrote:
-> On Thu, Dec 1, 2016 at 9:29 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > Add acpi_resource_consumer().  This takes a struct resource and searches
-> > the ACPI namespace for a device whose current resource settings (_CRS)
-> > includes the resource.  It returns the device if it exists, or NULL if no
-> > device uses the resource.
-> >
-> > If more than one device uses the resource (this may happen in the case of
-> > bridges), acpi_resource_consumer() returns the first one found by
-> > acpi_get_devices() in its modified depth-first walk of the namespace.
-> >
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> (this patch should have been CCed to linux-acpi too, however).
+I added debug prints but couldn't find any values matching the faulting 
+address. I noticed that the error only happens if a cable is plugged in 
+when I run "ifconfig enp1s0 up", so perhaps it is related to receiving a 
+frame?
 
-Thanks for taking a look!  I didn't CC linux-acpi because this was mostly
-to get build testing and I didn't want linux-acpi to get spammed by
-buildbot errors.  I'll add linux-acpi on future postings.
+In any case, since other people's cards are working, I think my issue 
+shouldn't block merging this series. If we find an issue in it then we 
+can fix it later.
 
-Bjorn
+Cheers,
+Mikko.
+
+On 30.11.2016 21:38, Mikko Perttunen wrote:
+> It would seem that it is 64-capable based on lspci and code in the
+> driver. Looks like the memory that is allocated is coming from below 4G
+> as well.
+>
+> On 11/30/2016 08:39 PM, Vidya Sagar wrote:
+>> Is it possible that, this NIC card's DMA is only 32-bit capable (can be
+>> confirmed from lspci -vv output) and since SMMU is disabled, allocated
+>> memory's physical address happen to fall beyond 0xFFFF_FFFF region, so,
+>>> 32-bits are stripped off by DMA controller of NIC, resulting in
+>> accesses to random addresses?
+>>
+>>
+>> On Wednesday 30 November 2016 11:44 PM, Thierry Reding wrote:
+>>> * PGP Signed by an unknown key
+>>>
+>>> On Wed, Nov 30, 2016 at 08:06:45PM +0200, Mikko Perttunen wrote:
+>>>> On 11/30/2016 07:48 PM, Thierry Reding wrote:
+>>>>> On Mon, Nov 28, 2016 at 06:54:44PM +0200, Mikko Perttunen wrote:
+>>>>>> Testing this series with a Jetson TX1 + r8168e PCI-E card, it
+>>>>>> /almost/
+>>>>>> works.. Relevant parts of bootlog:
+>>>>>>
+>>>>>> [    1.876191] tegra-pcie 1003000.pcie-controller: 4x1, 1x1
+>>>>>> configuration
+>>>>>> [    1.884200] tegra-pcie 1003000.pcie-controller: probing port 0,
+>>>>>> using 4
+>>>>>> lanes
+>>>>>> [    1.893368] tegra-pcie 1003000.pcie-controller: Slot present pin
+>>>>>> change,
+>>>>>> signature: 00000008
+>>>>>> [    1.948049] tegra-pcie 1003000.pcie-controller: probing port 1,
+>>>>>> using 1
+>>>>>> lanes
+>>>>>> [    1.957209] tegra-pcie 1003000.pcie-controller: Slot present pin
+>>>>>> change,
+>>>>>> signature: 00000000
+>>>>>> [    2.367748] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>>> retrying
+>>>>>> [    2.778307] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>>> retrying
+>>>>>> [    3.188888] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>>> retrying
+>>>>>> [    3.197344] tegra-pcie 1003000.pcie-controller: link 1 down,
+>>>>>> ignoring
+>>>>>> [    3.203931] tegra-pcie 1003000.pcie-controller: PCI host bridge
+>>>>>> to bus
+>>>>>> 0000:00
+>>>>>> [    3.211160] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>>>>> [    3.217343] pci_bus 0000:00: root bus resource [mem
+>>>>>> 0x13000000-0x1fffffff]
+>>>>>> [    3.224218] pci_bus 0000:00: root bus resource [mem
+>>>>>> 0x20000000-0x3fffffff
+>>>>>> pref]
+>>>>>> [    3.231525] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>>>>> [    3.237380] pci 0000:00:01.0: bridge configuration invalid ([bus
+>>>>>> 00-00]),
+>>>>>> reconfiguring
+>>>>>> [    3.254499] pci 0000:00:01.0: BAR 14: assigned [mem
+>>>>>> 0x13000000-0x130fffff]
+>>>>>> [    3.261389] pci 0000:00:01.0: BAR 15: assigned [mem
+>>>>>> 0x20000000-0x200fffff
+>>>>>> 64bit pref]
+>>>>>> [    3.269220] pci 0000:00:01.0: BAR 13: assigned [io  0x1000-0x1fff]
+>>>>>> [    3.275412] pci 0000:01:00.0: BAR 4: assigned [mem
+>>>>>> 0x20000000-0x20003fff
+>>>>>> 64bit pref]
+>>>>>> [    3.283172] pci 0000:01:00.0: BAR 2: assigned [mem
+>>>>>> 0x13000000-0x13000fff
+>>>>>> 64bit]
+>>>>>> [    3.290498] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>>>>>> [    3.296596] pci 0000:00:01.0: PCI bridge to [bus 01]
+>>>>>> [    3.301568] pci 0000:00:01.0:   bridge window [io  0x1000-0x1fff]
+>>>>>> [    3.307666] pci 0000:00:01.0:   bridge window [mem
+>>>>>> 0x13000000-0x130fffff]
+>>>>>> [    3.314454] pci 0000:00:01.0:   bridge window [mem
+>>>>>> 0x20000000-0x200fffff
+>>>>>> 64bit pref]
+>>>>>> [    3.322213] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate
+>>>>>> host
+>>>>>> bridge
+>>>>>> [    3.329257] pcieport 0000:00:01.0: enabling device (0000 -> 0003)
+>>>>>> [    3.335572] pcieport 0000:00:01.0: Signaling PME through PCIe PME
+>>>>>> interrupt
+>>>>>> [    3.342537] pci 0000:01:00.0: Signaling PME through PCIe PME
+>>>>>> interrupt
+>>>>>> [    3.349256] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+>>>>>> [    3.354858] r8169 0000:01:00.0: enabling device (0000 -> 0003)
+>>>>>> [    3.361460] r8169 0000:01:00.0 eth0: RTL8168e/8111e at
+>>>>>> 0xffff000008eae000, 98:de:d0:04:25:14, XID 0c200000 IRQ 348
+>>>>>> [    3.371812] r8169 0000:01:00.0 eth0: jumbo features [frames:
+>>>>>> 9200 bytes,
+>>>>>> tx checksumming: ko]
+>>>>>>
+>>>>>> then
+>>>>>>
+>>>>>> [    3.706240] tegra-mc 70019000.memory-controller: afiw: write
+>>>>>> @0x000000007a484000: EMEM address decode error (EMEM decode error)
+>>>>>> [    3.717747] r8169 0000:01:00.0 eth0: link down
+>>>>> Hmm... that's very odd. It seems like for some reason the PCIe
+>>>>> controller wants to access memory that's below the DRAM. Do you happen
+>>>>> to have the SMMU enabled for PCIe? Can you try adding some debug
+>>>>> prints
+>>>>> to the networking driver to find out where this address is coming
+>>>>> from?
+>>>> SMMU is disabled; I'll try adding debug prints. The behavior
+>>>> certainly looks
+>>>> pretty strange.
+>>> Maybe you can also find out if at any point in the above the driver is
+>>> actually accessing the I/O ports. I don't think we've ever tested that
+>>> particular part very much.
+>>>
+>>> I seem to be using a very similar card to yours, which makes it all the
+>>> more surprising that it isn't working for you.
+>>>
+>>> Thierry
+>>>
+>>> * Unknown Key
+>>> * 0x7F3EB3A1
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
