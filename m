@@ -1,166 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:42796 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751654AbcLEK4b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 05:56:31 -0500
-Date: Mon, 5 Dec 2016 10:57:46 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sricharan <sricharan@codeaurora.org>
-Cc: "'Rafael J. Wysocki'" <rafael@kernel.org>,
-        'Linux PCI' <linux-pci@vger.kernel.org>,
-        'Will Deacon' <will.deacon@arm.com>,
-        'Sinan Kaya' <okaya@codeaurora.org>,
-        'Tomasz Nowicki' <tn@semihalf.com>,
-        'Joerg Roedel' <joro@8bytes.org>,
-        'ACPI Devel Maling List' <linux-acpi@vger.kernel.org>,
-        'Mark Salter' <msalter@redhat.com>,
-        'Marc Zyngier' <marc.zyngier@arm.com>,
-        'Jon Masters' <jcm@redhat.com>,
-        'Eric Auger' <eric.auger@redhat.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Prem Mallappa' <prem.mallappa@broadcom.com>,
-        linux-arm-kernel@lists.infradead.org,
-        "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
-        'Linux Kernel Mailing List' <linux-kernel@vger.kernel.org>,
-        "'open list:AMD IOMMU (AMD-VI)'" <iommu@lists.linux-foundation.org>,
-        'Hanjun Guo' <hanjun.guo@linaro.org>,
-        'Suravee Suthikulpanit' <Suravee.Suthikulpanit@amd.com>,
-        'Dennis Chen' <dennis.chen@arm.com>,
-        'Robin Murphy' <robin.murphy@arm.com>,
-        'Nate Watterson' <nwatters@codeaurora.org>
-Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
-Message-ID: <20161205105746.GA19476@red-moon>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
- <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
- <20161202153816.GA18290@red-moon>
- <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com>
- <20161203103927.GA14953@red-moon>
- <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
- <003001d24edd$40d7d030$c2877090$@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <003001d24edd$40d7d030$c2877090$@codeaurora.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:36241 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933523AbcLBKhU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 05:37:20 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2 0/3 pci/next] PCI: rcar, rcar-gen2: Bindings cleanups
+Date: Fri,  2 Dec 2016 11:36:57 +0100
+Message-Id: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 03:22:02PM +0530, Sricharan wrote:
-> Hi Lorenzo,
-> 
-> >
-> >On Sat, Dec 3, 2016 at 11:39 AM, Lorenzo Pieralisi
-> ><lorenzo.pieralisi@arm.com> wrote:
-> >> On Sat, Dec 03, 2016 at 03:11:09AM +0100, Rafael J. Wysocki wrote:
-> >>> On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
-> >>> <lorenzo.pieralisi@arm.com> wrote:
-> >>> > Rafael, Mark, Suravee,
-> >>> >
-> >>> > On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
-> >>> >> On DT based systems, the of_dma_configure() API implements DMA
-> >>> >> configuration for a given device. On ACPI systems an API equivalent to
-> >>> >> of_dma_configure() is missing which implies that it is currently not
-> >>> >> possible to set-up DMA operations for devices through the ACPI generic
-> >>> >> kernel layer.
-> >>> >>
-> >>> >> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-> >>> >> calls that for now are just wrappers around arch_setup_dma_ops() and
-> >>> >> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-> >>> >> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
-> >>> >>
-> >>> >> Since acpi_dma_configure() is used to configure DMA operations, the
-> >>> >> function initializes the dma/coherent_dma masks to sane default values
-> >>> >> if the current masks are uninitialized (also to keep the default values
-> >>> >> consistent with DT systems) to make sure the device has a complete
-> >>> >> default DMA set-up.
-> >>> >
-> >>> > I spotted a niggle that unfortunately was hard to spot (and should not
-> >>> > be a problem per se but better safe than sorry) and I am not comfortable
-> >>> > with it.
-> >>> >
-> >>> > Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
-> >>> > device coherency") in acpi_bind_one() we check if the acpi_device
-> >>> > associated with a device just added supports DMA, first it was
-> >>> > done with acpi_check_dma() and then commit 1831eff876bd ("device
-> >>> > property: ACPI: Make use of the new DMA Attribute APIs") changed
-> >>> > it to acpi_get_dma_attr().
-> >>> >
-> >>> > The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
-> >>> > on _any_ acpi device we pass to acpi_bind_one() on x86, which was
-> >>> > fine because we used it to call arch_setup_dma_ops(), which is a nop
-> >>> > on x86. On ARM64 a _CCA method is required to define if a device
-> >>> > supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
-> >>> >
-> >>> > Now, acpi_bind_one() is used to bind an acpi_device to its physical
-> >>> > node also for pseudo-devices like cpus and memory nodes. For those
-> >>> > objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
-> >>> >
-> >>> > So far so good, because on x86 arch_setup_dma_ops() is empty code.
-> >>> >
-> >>> > With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
-> >>> > to call acpi_dma_configure() which is basically a nop on x86 except
-> >>> > that it sets up the dma_mask/coherent_dma_mask to a sane default value
-> >>> > (after all we are setting up DMA for the device so it makes sense to
-> >>> > initialize the masks there if they were unset since we are configuring
-> >>> > DMA for the device in question) for the given device.
-> >>> >
-> >>> > Problem is, as per the explanation above, we are also setting the
-> >>> > default dma masks for pseudo-devices (eg CPUs) that were previously
-> >>> > untouched, it should not be a problem per-se but I am not comfortable
-> >>> > with that, honestly it does not make much sense.
-> >>> >
-> >>> > An easy "fix" would be to move the default dma masks initialization out
-> >>> > of acpi_dma_configure() (as it was in previous patch versions of this
-> >>> > series - I moved it to acpi_dma_configure() just a consolidation point
-> >>> > for initializing the masks instead of scattering them in every
-> >>> > acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
-> >>> > we think that's the right thing to do (or I can send it to Rafael later
-> >>> > when the code is in the merged depending on the timing) just let me
-> >>> > know please.
-> >>>
-> >>> Why can't arch_setup_dma_ops() set those masks too?
-> >>
-> >> Because the dma masks set-up is done by the caller (see
-> >> of_dma_configure()) according to firmware configuration or
-> >> platform data knowledge. I wanted to replicate the of_dma_configure()
-> >> interface on ACPI for obvious reasons (on ARM systems), I stopped
-> >> short of adding ACPI code to mirror of_dma_get_range() equivalent
-> >> (through the _DMA object) but I am really really nervous about changing
-> >> the code path on x86 because in theory all is fine, in practice even
-> >> just setting the masks to sane values can have unexpected consequences,
-> >> I just can't know (that's why I wasn't doing it in the first iterations
-> >> of this series).
-> >>
-> >> Side note: DT with of_dma_configure() and ACPI with
-> >> acpi_create_platform_device() set the default dma mask for all
-> >> platform devices already _regardless_ of what they really are, though
-> >> arguably acpi_bind_one() touches ways more devices.
-> >>
-> >> I really think that removing the default dma masks settings from
-> >> acpi_dma_configure() is the safer thing to do for the time being (or
-> >> moving acpi_dma_configure() to acpi_create_platform_device(), where the
-> >> DMA masks are set-up by default by core ACPI. Mark, Suravee, what was
-> >> the rationale behind calling arch_setup_dma_ops() in acpi_bind_one() ?)
-> >
-> >Alternatively, you can add one more arch wrapper that will be a no-op
-> >on x86 and that will set up the default masks and call
-> >arch_setup_dma_ops() on ARM.  Then, you can invoke that from
-> >acpi_dma_configure().
-> >
-> >Or make the definition of acpi_dma_configure() itself depend on the
-> >architecture.
-> >
-> 
-> So is it better that either removing the masks from acpi_dma_configure
-> (or) creating the wrapper as Rafael mentioned, than moving
-> acpi_dma_configure itself , because with something like iommu probe
-> deferral that is tried, acpi_dma_configure is getting invoked from a
-> device's really_probe, a different path again ?
+Hi,
 
-Yes, I thought about that too. Given what I said above (ie I would like
-to extend the mask set-up with _DMA object - that is generic ACPI but
-can affect legacy x86 - and if that does not work through IORT specific
-bindings), as per Rafael suggestion I added an iort_set_dma_mask wrapper
-that is a NOP on x86, leaving acpi_dma_configure() unchanged for ARM64.
+this short series makes some bindings cleanups to the Renesas PCI drivers.
 
-Patch coming, thanks everyone.
+Simon Horman (3):
+  PCI: rcar-gen2: Use gen2 fallback compatibility last
+  PCI: rcar: Use gen2 fallback compatibility last
+  PCI: rcar: Add gen3 fallback compatibility string for pcie-rcar
 
-Lorenzo
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+ drivers/pci/host/pci-rcar-gen2.c                   | 2 +-
+ drivers/pci/host/pcie-rcar.c                       | 6 ++++--
+ 3 files changed, 6 insertions(+), 3 deletions(-)
+
+-- 
+2.7.0.rc3.207.g0ac5344
+
