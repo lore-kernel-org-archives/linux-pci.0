@@ -1,39 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        bhelgaas@google.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: keescook@chromium.org, Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] PCI: acpiphp_ibm: add __ro_after_init to ibm_apci_table_attr
-Date: Mon, 26 Dec 2016 21:06:35 +0530
-Message-Id: <1482766595-12679-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:36721 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbcLCLUT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 3 Dec 2016 06:20:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <20161202215016.GA21497@verge.net.au>
+References: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
+ <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au> <20161202215016.GA21497@verge.net.au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Sat, 3 Dec 2016 12:19:39 +0100
+Message-ID: <CAMuHMdVhiz971JTU3T3GZehfmPqFOX6XPRjG01=NZrGONSi55g@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3 pci/next] PCI: rcar: Add gen3 fallback
+ compatibility string for pcie-rcar
+To: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The object ibm_apci_table_attr of type bin_attribute structure is not
-modified after getting initialized by ibm_acpiphp_init. Apart from
-getting referenced in init it is also passed as an argument to the functions
-sysfs_{remove/create}_bin_file but both the arguments are of type const 
-struct bin_attribute *. Therefore add __ro_after_init to its declaration.
+On Fri, Dec 2, 2016 at 10:50 PM, Simon Horman <horms@verge.net.au> wrote:
+> On Fri, Dec 02, 2016 at 11:37:00AM +0100, Simon Horman wrote:
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+>> @@ -1078,6 +1078,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+>>       { .compatible = "renesas,pcie-rcar-gen2",
+>>         .data = rcar_pcie_hw_init_gen2 },
+>>       { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+>> +     { .compatible = "renesas,pcie-rcar-gen3",
+>> +             .data = rcar_pcie_hw_init_hw_init },
+>
+> It looks like I failed to compile-test this.
+>
+> s/rcar_pcie_hw_init_hw_init/rcar_pcie_hw_init/
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/pci/hotplug/acpiphp_ibm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Bummer, and my tired eyes didn't notice...
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index f6221d7..188cdfa 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -107,7 +107,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 
- static acpi_handle ibm_acpi_handle;
- static struct notification ibm_note;
--static struct bin_attribute ibm_apci_table_attr = {
-+static struct bin_attribute ibm_apci_table_attr __ro_after_init = {
- 	    .attr = {
- 		    .name = "apci_table",
- 		    .mode = S_IRUGO,
--- 
-1.9.1
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
