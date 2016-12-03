@@ -1,11 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: designware: add host_init error handling
-Date: Wed,  7 Dec 2016 10:32:49 +0000
-Message-Id: <1481106769-1404-1-git-send-email-srinivas.kandagatla@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <20161202153816.GA18290@red-moon>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+ <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
+ <20161202153816.GA18290@red-moon>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 3 Dec 2016 03:11:09 +0100
+Message-ID: <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com>
+Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -13,387 +17,96 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <tie-fei.zang@freescale.com>,
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
- linux-samsung-soc@vger.kernel.org, Pratyush Anand <pratyush.anand@gmail.com>,
- Krzysztof Kozlowski <krzk@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>,
- Javier Martinez Canillas <javier@osg.samsung.com>,
- Kukjin Kim <kgene@kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>,
- linux-arm-msm@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>, linuxppc-dev@lists.ozlabs.org,
- Lucas Stach <l.stach@pengutronix.de>
-MIME-Version: 1.0
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Dennis Chen <dennis.chen@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Nate Watterson <nwatters@codeaurora.org>,
+ Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch add support to return value from host_init() callback from drivers,
-so that the designware libary can handle or pass it to proper place. Issue with
-void return type is that errors or error handling within host_init() callback
-are never know to designware code, which could go ahead and access registers
-even in error cases.
+On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Rafael, Mark, Suravee,
+>
+> On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
+>> On DT based systems, the of_dma_configure() API implements DMA
+>> configuration for a given device. On ACPI systems an API equivalent to
+>> of_dma_configure() is missing which implies that it is currently not
+>> possible to set-up DMA operations for devices through the ACPI generic
+>> kernel layer.
+>>
+>> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+>> calls that for now are just wrappers around arch_setup_dma_ops() and
+>> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+>> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+>>
+>> Since acpi_dma_configure() is used to configure DMA operations, the
+>> function initializes the dma/coherent_dma masks to sane default values
+>> if the current masks are uninitialized (also to keep the default values
+>> consistent with DT systems) to make sure the device has a complete
+>> default DMA set-up.
+>
+> I spotted a niggle that unfortunately was hard to spot (and should not
+> be a problem per se but better safe than sorry) and I am not comfortable
+> with it.
+>
+> Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
+> device coherency") in acpi_bind_one() we check if the acpi_device
+> associated with a device just added supports DMA, first it was
+> done with acpi_check_dma() and then commit 1831eff876bd ("device
+> property: ACPI: Make use of the new DMA Attribute APIs") changed
+> it to acpi_get_dma_attr().
+>
+> The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
+> on _any_ acpi device we pass to acpi_bind_one() on x86, which was
+> fine because we used it to call arch_setup_dma_ops(), which is a nop
+> on x86. On ARM64 a _CCA method is required to define if a device
+> supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
+>
+> Now, acpi_bind_one() is used to bind an acpi_device to its physical
+> node also for pseudo-devices like cpus and memory nodes. For those
+> objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
+>
+> So far so good, because on x86 arch_setup_dma_ops() is empty code.
+>
+> With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
+> to call acpi_dma_configure() which is basically a nop on x86 except
+> that it sets up the dma_mask/coherent_dma_mask to a sane default value
+> (after all we are setting up DMA for the device so it makes sense to
+> initialize the masks there if they were unset since we are configuring
+> DMA for the device in question) for the given device.
+>
+> Problem is, as per the explanation above, we are also setting the
+> default dma masks for pseudo-devices (eg CPUs) that were previously
+> untouched, it should not be a problem per-se but I am not comfortable
+> with that, honestly it does not make much sense.
+>
+> An easy "fix" would be to move the default dma masks initialization out
+> of acpi_dma_configure() (as it was in previous patch versions of this
+> series - I moved it to acpi_dma_configure() just a consolidation point
+> for initializing the masks instead of scattering them in every
+> acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
+> we think that's the right thing to do (or I can send it to Rafael later
+> when the code is in the merged depending on the timing) just let me
+> know please.
 
-Typical case in qcom controller driver is to turn off clks in case of errors,
-if designware code continues to read/write register when clocks are turned off
-the board would reboot/lockup.
+Why can't arch_setup_dma_ops() set those masks too?
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
-Currently designware code does not have a way return errors generated
-as part of host_init() callback in controller drivers. This is an issue
-with controller drivers like qcom which turns off the clocks in error
-handling path. As the dw core is un aware of this would continue to
-access registers which faults resulting in board reboots/hangs.
-
-There are two ways to solve this issue,
-one is remove error handling in the qcom controller host_init() function
-other is to handle error and pass back to dw core code which would then
-pass back to controller driver as part of dw_pcie_host_init() return value.
-
-Second option seems more sensible and correct way to fix the issue,
-this patch does the same.
-
-As part of this change to host_init() return type I had to patch other
-ihost controller drivers which use dw core. Most of the changes to other drivers
-are to return proper error codes to upper layer.
-Only compile tested drivers.
-
-Changes since RFC:
-	- Add error handling to other drivers as suggested by Joao Pinto
-
- drivers/pci/host/pci-dra7xx.c           | 10 ++++++++--
- drivers/pci/host/pci-exynos.c           | 10 ++++++++--
- drivers/pci/host/pci-imx6.c             | 10 ++++++++--
- drivers/pci/host/pci-keystone.c         | 10 ++++++++--
- drivers/pci/host/pci-layerscape.c       | 22 +++++++++++++---------
- drivers/pci/host/pcie-armada8k.c        |  4 +++-
- drivers/pci/host/pcie-designware-plat.c | 10 ++++++++--
- drivers/pci/host/pcie-designware.c      |  4 +++-
- drivers/pci/host/pcie-designware.h      |  2 +-
- drivers/pci/host/pcie-qcom.c            |  5 +++--
- drivers/pci/host/pcie-spear13xx.c       | 10 ++++++++--
- 11 files changed, 71 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 9595fad..811f0f9 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -127,9 +127,10 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
- 				   LEG_EP_INTERRUPTS);
- }
- 
--static void dra7xx_pcie_host_init(struct pcie_port *pp)
-+static int dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-+	int ret;
- 
- 	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
- 	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
-@@ -138,10 +139,15 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
--	dra7xx_pcie_establish_link(dra7xx);
-+	ret = dra7xx_pcie_establish_link(dra7xx);
-+	if (ret < 0)
-+		return ret;
-+
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
- 	dra7xx_pcie_enable_interrupts(dra7xx);
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops dra7xx_pcie_host_ops = {
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f1c544b..c116fd9 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -458,12 +458,18 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void exynos_pcie_host_init(struct pcie_port *pp)
-+static int exynos_pcie_host_init(struct pcie_port *pp)
- {
- 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-+	int ret;
-+
-+	ret = exynos_pcie_establish_link(exynos_pcie);
-+	if (ret < 0)
-+		return ret;
- 
--	exynos_pcie_establish_link(exynos_pcie);
- 	exynos_pcie_enable_interrupts(exynos_pcie);
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops exynos_pcie_host_ops = {
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index c8cefb0..1251e92 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -550,18 +550,24 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 	return ret;
- }
- 
--static void imx6_pcie_host_init(struct pcie_port *pp)
-+static int imx6_pcie_host_init(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	int ret;
- 
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- 	imx6_pcie_init_phy(imx6_pcie);
- 	imx6_pcie_deassert_core_reset(imx6_pcie);
- 	dw_pcie_setup_rc(pp);
--	imx6_pcie_establish_link(imx6_pcie);
-+	ret = imx6_pcie_establish_link(imx6_pcie);
-+
-+	if (ret < 0)
-+		return ret;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-+
-+	return 0;
- }
- 
- static int imx6_pcie_link_up(struct pcie_port *pp)
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 043c19a..4067a75 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -260,12 +260,16 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
- 	return 0;
- }
- 
--static void __init ks_pcie_host_init(struct pcie_port *pp)
-+static int __init ks_pcie_host_init(struct pcie_port *pp)
- {
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
- 	u32 val;
-+	int ret;
-+
-+	ret = ks_pcie_establish_link(ks_pcie);
-+	if (ret < 0)
-+		return ret;
- 
--	ks_pcie_establish_link(ks_pcie);
- 	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
- 	ks_pcie_setup_interrupts(ks_pcie);
- 	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
-@@ -287,6 +291,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
- 	 */
- 	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
- 			"Asynchronous external abort");
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops keystone_pcie_host_ops = {
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 6537079..60c8b84 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -103,30 +103,32 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
- 	return 1;
- }
- 
--static void ls1021_pcie_host_init(struct pcie_port *pp)
-+static int ls1021_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device *dev = pp->dev;
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 	u32 index[2];
-+	int ret;
- 
- 	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
- 						     "fsl,pcie-scfg");
- 	if (IS_ERR(pcie->scfg)) {
- 		dev_err(dev, "No syscfg phandle specified\n");
--		pcie->scfg = NULL;
--		return;
-+		return PTR_ERR(pcie->scfg);
- 	}
- 
--	if (of_property_read_u32_array(dev->of_node,
--				       "fsl,pcie-scfg", index, 2)) {
--		pcie->scfg = NULL;
--		return;
--	}
-+	ret = of_property_read_u32_array(dev->of_node,
-+				       "fsl,pcie-scfg", index, 2);
-+	if (ret < 0)
-+		return ret;
-+
- 	pcie->index = index[1];
- 
- 	dw_pcie_setup_rc(pp);
- 
- 	ls_pcie_drop_msg_tlp(pcie);
-+
-+	return 0;
- }
- 
- static int ls_pcie_link_up(struct pcie_port *pp)
-@@ -144,7 +146,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
- 	return 1;
- }
- 
--static void ls_pcie_host_init(struct pcie_port *pp)
-+static int ls_pcie_host_init(struct pcie_port *pp)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 
-@@ -153,6 +155,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	ls_pcie_clear_multifunction(pcie);
- 	ls_pcie_drop_msg_tlp(pcie);
- 	iowrite32(0, pcie->pp.dbi_base + PCIE_DBI_RO_WR_EN);
-+
-+	return 0;
- }
- 
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index 0ac0f18..29bdd8b 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -134,12 +134,14 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
- 		dev_err(pp->dev, "Link not up after reconfiguration\n");
- }
- 
--static void armada8k_pcie_host_init(struct pcie_port *pp)
-+static int armada8k_pcie_host_init(struct pcie_port *pp)
- {
- 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
- 
- 	dw_pcie_setup_rc(pp);
- 	armada8k_pcie_establish_link(pcie);
-+
-+	return 0;
- }
- 
- static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index 1a02038..e01adbb 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -35,13 +35,19 @@ static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
- 	return dw_handle_msi_irq(pp);
- }
- 
--static void dw_plat_pcie_host_init(struct pcie_port *pp)
-+static int dw_plat_pcie_host_init(struct pcie_port *pp)
- {
-+	int ret;
-+
- 	dw_pcie_setup_rc(pp);
--	dw_pcie_wait_for_link(pp);
-+	ret = dw_pcie_wait_for_link(pp);
-+	if (ret)
-+		return ret;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops dw_plat_pcie_host_ops = {
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index bed1999..4a81b72 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -638,7 +638,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (pp->ops->host_init)
--		pp->ops->host_init(pp);
-+		ret = pp->ops->host_init(pp);
-+			if (ret < 0)
-+				goto error;
- 
- 	pp->root_bus_nr = pp->busn->start;
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a567ea2..eacf18f 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -63,7 +63,7 @@ struct pcie_host_ops {
- 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
- 			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
--	void (*host_init)(struct pcie_port *pp);
-+	int (*host_init)(struct pcie_port *pp);
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 3593640..7d5fb38 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -429,7 +429,7 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
- 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
- }
- 
--static void qcom_pcie_host_init(struct pcie_port *pp)
-+static int qcom_pcie_host_init(struct pcie_port *pp)
- {
- 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
- 	int ret;
-@@ -455,12 +455,13 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		goto err;
- 
--	return;
-+	return ret;
- err:
- 	qcom_ep_reset_assert(pcie);
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
-+	return ret;
- }
- 
- static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 3cf197b..2408f80 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -174,12 +174,18 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void spear13xx_pcie_host_init(struct pcie_port *pp)
-+static int spear13xx_pcie_host_init(struct pcie_port *pp)
- {
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-+	int ret;
-+
-+	ret = spear13xx_pcie_establish_link(spear13xx_pcie);
-+	if (ret < 0)
-+		return ret;
- 
--	spear13xx_pcie_establish_link(spear13xx_pcie);
- 	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops spear13xx_pcie_host_ops = {
--- 
-2.7.4
-
+Thanks,
+Rafael
 
 _______________________________________________
 linux-arm-kernel mailing list
