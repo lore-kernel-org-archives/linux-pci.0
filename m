@@ -1,115 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33338 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751282AbcLTHWp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 02:22:45 -0500
-Received: by mail-pg0-f68.google.com with SMTP id g1so9140059pgn.0
-        for <linux-pci@vger.kernel.org>; Mon, 19 Dec 2016 23:22:45 -0800 (PST)
-Subject: Re: [RFC PATCH v7 0/3] PCI: Introduce a way to enforce all MMIO BARs
- not to share PAGE_SIZE
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, bhelgaas@google.com
-References: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <6931390b-151e-ec62-b694-e3ff49163245@linux.vnet.ibm.com>
- <2d8d7196-9eb3-01cc-4f21-423b90bd7cf7@ozlabs.ru>
-Cc: zhong@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
-        paulus@samba.org, linuxppc-dev@lists.ozlabs.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <33088110-dd46-6a55-611a-793d82a48b50@ozlabs.ru>
-Date: Tue, 20 Dec 2016 18:22:38 +1100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 3 Dec 2016 10:39:44 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
+Message-ID: <20161203103927.GA14953@red-moon>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
+ <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
+ <20161202153816.GA18290@red-moon>
+ <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2d8d7196-9eb3-01cc-4f21-423b90bd7cf7@ozlabs.ru>
-Content-Type: text/plain; charset=koi8-r
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Dennis Chen <dennis.chen@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Nate Watterson <nwatters@codeaurora.org>,
+ Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/12/16 13:32, Alexey Kardashevskiy wrote:
-> On 15/11/16 13:53, Yongji Xie wrote:
->> Hi Bjorn,
->>
->>
->> Kindly ping. What do you think of the way to fix the bug that resources's
->> size is changed
->>
->> when using resource_alignment. Thanks.
+On Sat, Dec 03, 2016 at 03:11:09AM +0100, Rafael J. Wysocki wrote:
+> On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > Rafael, Mark, Suravee,
+> >
+> > On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
+> >> On DT based systems, the of_dma_configure() API implements DMA
+> >> configuration for a given device. On ACPI systems an API equivalent to
+> >> of_dma_configure() is missing which implies that it is currently not
+> >> possible to set-up DMA operations for devices through the ACPI generic
+> >> kernel layer.
+> >>
+> >> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+> >> calls that for now are just wrappers around arch_setup_dma_ops() and
+> >> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+> >> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+> >>
+> >> Since acpi_dma_configure() is used to configure DMA operations, the
+> >> function initializes the dma/coherent_dma masks to sane default values
+> >> if the current masks are uninitialized (also to keep the default values
+> >> consistent with DT systems) to make sure the device has a complete
+> >> default DMA set-up.
+> >
+> > I spotted a niggle that unfortunately was hard to spot (and should not
+> > be a problem per se but better safe than sorry) and I am not comfortable
+> > with it.
+> >
+> > Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
+> > device coherency") in acpi_bind_one() we check if the acpi_device
+> > associated with a device just added supports DMA, first it was
+> > done with acpi_check_dma() and then commit 1831eff876bd ("device
+> > property: ACPI: Make use of the new DMA Attribute APIs") changed
+> > it to acpi_get_dma_attr().
+> >
+> > The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
+> > on _any_ acpi device we pass to acpi_bind_one() on x86, which was
+> > fine because we used it to call arch_setup_dma_ops(), which is a nop
+> > on x86. On ARM64 a _CCA method is required to define if a device
+> > supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
+> >
+> > Now, acpi_bind_one() is used to bind an acpi_device to its physical
+> > node also for pseudo-devices like cpus and memory nodes. For those
+> > objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
+> >
+> > So far so good, because on x86 arch_setup_dma_ops() is empty code.
+> >
+> > With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
+> > to call acpi_dma_configure() which is basically a nop on x86 except
+> > that it sets up the dma_mask/coherent_dma_mask to a sane default value
+> > (after all we are setting up DMA for the device so it makes sense to
+> > initialize the masks there if they were unset since we are configuring
+> > DMA for the device in question) for the given device.
+> >
+> > Problem is, as per the explanation above, we are also setting the
+> > default dma masks for pseudo-devices (eg CPUs) that were previously
+> > untouched, it should not be a problem per-se but I am not comfortable
+> > with that, honestly it does not make much sense.
+> >
+> > An easy "fix" would be to move the default dma masks initialization out
+> > of acpi_dma_configure() (as it was in previous patch versions of this
+> > series - I moved it to acpi_dma_configure() just a consolidation point
+> > for initializing the masks instead of scattering them in every
+> > acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
+> > we think that's the right thing to do (or I can send it to Rafael later
+> > when the code is in the merged depending on the timing) just let me
+> > know please.
 > 
-> 
-> Could anyone please comment on this? Thanks!
+> Why can't arch_setup_dma_ops() set those masks too?
 
+Because the dma masks set-up is done by the caller (see
+of_dma_configure()) according to firmware configuration or
+platform data knowledge. I wanted to replicate the of_dma_configure()
+interface on ACPI for obvious reasons (on ARM systems), I stopped
+short of adding ACPI code to mirror of_dma_get_range() equivalent
+(through the _DMA object) but I am really really nervous about changing
+the code path on x86 because in theory all is fine, in practice even
+just setting the masks to sane values can have unexpected consequences,
+I just can't know (that's why I wasn't doing it in the first iterations
+of this series).
 
-Anyone, please?
+Side note: DT with of_dma_configure() and ACPI with
+acpi_create_platform_device() set the default dma mask for all
+platform devices already _regardless_ of what they really are, though
+arguably acpi_bind_one() touches ways more devices.
 
+I really think that removing the default dma masks settings from
+acpi_dma_configure() is the safer thing to do for the time being (or
+moving acpi_dma_configure() to acpi_create_platform_device(), where the
+DMA masks are set-up by default by core ACPI. Mark, Suravee, what was
+the rationale behind calling arch_setup_dma_ops() in acpi_bind_one() ?)
 
-> 
-> 
-> 
->>
->>
->> On 2016/10/26 14:53, Yongji Xie wrote:
->>> This series introduces a way for PCI resource allocator to force
->>> MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
->>> driver. Because current VFIO implementation disallows to mmap
->>> sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
->>> with other BARs for security reasons. Thus, we have to handle mmio
->>> access to these BARs in QEMU emulation rather than in guest which
->>> will cause some performance loss.
->>>
->>> In our solution, we try to make use of the existing code path of
->>> resource_alignment kernel parameter and add a macro to set default
->>> alignment for it. Thus we can define this macro by default on some
->>> archs which may easily hit the performance issue because of their
->>> 64K page.
->>>
->>> In this series, patch 1,2 fixed bugs of using resource_alignment;
->>> patch 3 adds a macro to set the default alignment of all MMIO BARs.
->>>
->>> Changelog v7:
->>> - Rebased against v4.9-rc2
->>> - Drop two merged patches
->>> - Rework the patch which fix a bug that resources's size is changed when
->>>    using resource_alignment
->>> - Add a patch that fix a bug for IOV BARs when using resource_alignment
->>>
->>> Changelog v6:
->>> - Remove the option "noresize@" of resource_alignment
->>>
->>> Changelog v5:
->>> - Rebased against v4.8-rc6
->>> - Drop the patch that forbidding disable memory decoding in
->>>    pci_reassigndev_resource_alignment()
->>>
->>> Changelog v4:
->>> - Rebased against v4.8-rc1
->>> - Drop one irrelevant patch
->>> - Drop the patch that adding wildcard to resource_alignment to enforce
->>>    the alignment of all MMIO BARs to be at least PAGE_SIZE
->>> - Change the format of option "noresize" of resource_alignment
->>> - Code style improvements
->>>
->>> Changelog v3:
->>> - Ignore enforced alignment to fixed BARs
->>> - Fix issue that disabling memory decoding when reassigning the alignment
->>> - Only enable default alignment on PowerNV platform
->>>
->>> Changelog v2:
->>> - Ignore enforced alignment to VF BARs on
->>> pci_reassigndev_resource_alignment()
->>>
->>> Yongji Xie (3):
->>>    PCI: Ignore requested alignment for IOV BARs
->>>    PCI: Restore resource's size if we expand it by using resource_alignment
->>>    PCI: Add a macro to set default alignment for all PCI devices
->>>
->>>   arch/powerpc/include/asm/pci.h |    4 ++++
->>>   drivers/pci/pci.c              |    6 +++++-
->>>   drivers/pci/setup-bus.c        |   19 +++++++++++++++++++
->>>   include/linux/pci.h            |    1 +
->>>   4 files changed, 29 insertions(+), 1 deletion(-)
->>>
->>
-> 
-> 
+Please let me know, fix-up is trivial however we decide to proceed.
 
+Thank you !
+Lorenzo
 
--- 
-Alexey
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
