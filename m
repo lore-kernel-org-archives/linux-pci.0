@@ -1,60 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58449 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752028AbcLFRMZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 12:12:25 -0500
-Date: Tue, 6 Dec 2016 09:12:13 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from mail-db5eur01on0050.outbound.protection.outlook.com ([104.47.2.50]:17856
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750971AbcLDNaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 4 Dec 2016 08:30:08 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
 To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+References: <20161123215510.GA16311@obsidianresearch.com>
+ <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+ <20161124164249.GD20818@obsidianresearch.com>
+ <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+ <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <1480357179.19407.13.camel@mellanox.com>
+ <20161128190244.GA21975@obsidianresearch.com>
+ <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+ <20161130162353.GA24639@obsidianresearch.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
         "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <John.Bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <Alexander.Deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "logang@deltatee.com" <logang@deltatee.com>,
         "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
+        "Max Gurtovoy" <maxg@mellanox.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "Paul.Blinzer@amd.com" <Paul.Blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
         "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161206171213.GA870@infradead.org>
-References: <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com>
- <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
- <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
- <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
- <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
- <20161206163850.GC28066@obsidianresearch.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Message-ID: <3781848f-d4a0-69d3-678d-c5623bac3c10@mellanox.com>
+Date: Sun, 4 Dec 2016 09:53:26 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161206163850.GC28066@obsidianresearch.com>
+In-Reply-To: <20161130162353.GA24639@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 06, 2016 at 09:38:50AM -0700, Jason Gunthorpe wrote:
-> > > I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
-> > > to accomplish in sysfs through /sys/dev/char to find the sysfs path of the
-> > > device-dax instance under the nvme device, or if you already have the nvme
-> > > sysfs path the dax instance(s) will appear under the "dax" sub-directory.
-> > 
-> > Personally I think mapping the dax resource in the sysfs tree is a nice
-> > way to do this and a bit more intuitive than mapping a /dev/nvmeX.
+On 11/30/2016 6:23 PM, Jason Gunthorpe wrote:
+>> and O_DIRECT operations that access GPU memory.
+> This goes through user space so there is still a VMA..
 > 
-> It is still not at all clear to me what userpsace is supposed to do
-> with this on nvme.. How is the CMB usable from userspace?
+>> Also, HMM's migration between two GPUs could use peer to peer in the
+>> kernel, although that is intended to be handled by the GPU driver if
+>> I understand correctly.
+> Hum, presumably these migrations are VMA backed as well...
+I guess so.
 
-I don't think trying to expose it to userspace makes any sense.
-Exposing it to in-kernel storage targets on the other hand makes a lot
-of sense.
+>>> Presumably in-kernel could use a vmap or something and the same basic
+>>> flow?
+>> I think we can achieve the kernel's needs with ZONE_DEVICE and DMA-API support
+>> for peer to peer. I'm not sure we need vmap. We need a way to have a scatterlist
+>> of MMIO pfns, and ZONE_DEVICE allows that.
+> Well, if there is no virtual map then we are back to how do you do
+> migrations and other things people seem to want to do on these
+> pages. Maybe the loose 'struct page' flow is not for those users.
+I was thinking that kernel use cases would disallow migration, similar to how 
+non-ODP MRs would work. Either they are short-lived (like an O_DIRECT transfer)
+or they can be longed lived but non-migratable (like perhaps a CMB staging buffer).
+
+> But I think if you want kGPU or similar then you probably need vmaps
+> or something similar to represent the GPU pages in kernel memory.
+Right, although sometimes the GPU pages are simply inaccessible to the CPU.
+In any case, I haven't thought about kGPU as a use-case.
