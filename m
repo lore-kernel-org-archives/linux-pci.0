@@ -1,75 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:58425 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758035AbcLQOlP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2016 09:41:15 -0500
-Message-Id: <29673654daf09bb90f975aec3f5ad57b6fc95a83.1481926599.git.lukas@wunner.de>
-In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
-References: <cover.1481926599.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 17 Dec 2016 15:39:39 +0100
-Subject: [PATCH v3 4/7] Revert "PM / Runtime: Remove the exported function
- pm_children_suspended()"
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
+Received: from gateway21.websitewelcome.com ([192.185.45.147]:59985 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750840AbcLDNov (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 4 Dec 2016 08:44:51 -0500
+Received: from cm5.websitewelcome.com (unknown [108.167.139.22])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id 7CB412E296988
+        for <linux-pci@vger.kernel.org>; Sun,  4 Dec 2016 07:23:03 -0600 (CST)
+Message-ID: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+In-Reply-To: <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+References: <20161123215510.GA16311@obsidianresearch.com>
+    <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
+    <20161124164249.GD20818@obsidianresearch.com>
+    <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
+    <20161125193252.GC16504@obsidianresearch.com>
+    <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+    <20161128165751.GB28381@obsidianresearch.com>
+    <1480357179.19407.13.camel@mellanox.com>
+    <20161128190244.GA21975@obsidianresearch.com>
+    <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+    <20161130162353.GA24639@obsidianresearch.com>
+    <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
+    <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+Date: Sun, 4 Dec 2016 07:23:00 -0600
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+From: "Stephen Bates" <sbates@raithlin.com>
+To: "Haggai Eran" <haggaie@mellanox.com>
+Cc: "Logan Gunthorpe" <logang@deltatee.com>,
+        "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Max Gurtovoy" <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 62006c1702b3b1be0c0726949e0ee0ea2326be9c which
-removed pm_children_suspended() because it had only a single caller.
-We're about to add a second caller, so establish the status quo ante.
+Hi All
 
-Cc: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/base/power/runtime.c | 3 +--
- include/linux/pm_runtime.h   | 7 +++++++
- 2 files changed, 8 insertions(+), 2 deletions(-)
+This has been a great thread (thanks to Alex for kicking it off) and I
+wanted to jump in and maybe try and put some summary around the
+discussion. I also wanted to propose we include this as a topic for LFS/MM
+because I think we need more discussion on the best way to add this
+functionality to the kernel.
 
-diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
-index 872eac4..03293c3 100644
---- a/drivers/base/power/runtime.c
-+++ b/drivers/base/power/runtime.c
-@@ -243,8 +243,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
- 		retval = -EACCES;
- 	else if (atomic_read(&dev->power.usage_count) > 0)
- 		retval = -EAGAIN;
--	else if (!dev->power.ignore_children &&
--			atomic_read(&dev->power.child_count))
-+	else if (!pm_children_suspended(dev))
- 		retval = -EBUSY;
- 
- 	/* Pending resume requests take precedence over suspends. */
-diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
-index ca4823e..7de2aa5c 100644
---- a/include/linux/pm_runtime.h
-+++ b/include/linux/pm_runtime.h
-@@ -66,6 +66,12 @@ static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
- 	dev->power.ignore_children = enable;
- }
- 
-+static inline bool pm_children_suspended(struct device *dev)
-+{
-+	return dev->power.ignore_children
-+		|| !atomic_read(&dev->power.child_count);
-+}
-+
- static inline void pm_runtime_get_noresume(struct device *dev)
- {
- 	atomic_inc(&dev->power.usage_count);
-@@ -161,6 +167,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
- static inline void pm_runtime_forbid(struct device *dev) {}
- 
- static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
-+static inline bool pm_children_suspended(struct device *dev) { return false; }
- static inline void pm_runtime_get_noresume(struct device *dev) {}
- static inline void pm_runtime_put_noidle(struct device *dev) {}
- static inline bool device_run_wake(struct device *dev) { return false; }
--- 
-2.10.2
+As far as I can tell the people looking for P2P support in the kernel fall
+into two main camps:
 
+1. Those who simply want to expose static BARs on PCIe devices that can be
+used as the source/destination for DMAs from another PCIe device. This
+group has no need for memory invalidation and are happy to use
+physical/bus addresses and not virtual addresses.
+
+2. Those who want to support devices that suffer from occasional memory
+pressure and need to invalidate memory regions from time to time. This
+camp also would like to use virtual addresses rather than physical ones to
+allow for things like migration.
+
+I am wondering if people agree with this assessment?
+
+I think something like the iopmem patches Logan and I submitted recently
+come close to addressing use case 1. There are some issues around
+routability but based on feedback to date that does not seem to be a
+show-stopper for an initial inclusion.
+
+For use-case 2 it looks like there are several options and some of them
+(like HMM) have been around for quite some time without gaining
+acceptance. I think there needs to be more discussion on this usecase and
+it could be some time before we get something upstreamable.
+
+I for one, would really like to see use case 1 get addressed soon because
+we have consumers for it coming soon in the form of CMBs for NVMe devices.
+
+Long term I think Jason summed it up really well. CPU vendors will put
+high-speed, open, switchable, coherent buses on their processors and all
+these problems will vanish. But I ain't holding my breathe for that to
+happen ;-).
+
+Cheers
+
+Stephen
