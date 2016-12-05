@@ -1,54 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21104 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1764099AbcLSRTk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Dec 2016 12:19:40 -0500
-Date: Mon, 19 Dec 2016 12:29:03 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC 0/1] New PCI Switch Management Driver
-Message-ID: <20161219172903.GB1043@localhost.localdomain>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
- <735068a7-7805-dad0-b5b0-5218a18f335c@deltatee.com>
+Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
+Subject: Re: [PATCH v10 11/12] PCI: Add MCFG quirks for Cavium ThunderX
+ pass2.x host controller
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Christopher Covington
+ <cov@codeaurora.org>, Dongdong Liu <liudongdong3@huawei.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <6e8e2a9f-e744-c91e-9686-49f5d4a68228@semihalf.com>
+Date: Mon, 5 Dec 2016 09:32:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <735068a7-7805-dad0-b5b0-5218a18f335c@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 19, 2016 at 10:06:56AM -0700, Logan Gunthorpe wrote:
-> As I noted, the hardware is compliant and works perfectly fine with the
-> in-kernel driver. However, the hardware has many additional custom
-> features that are not covered by the PCI specs. For example, it has an
-> interface to count packets that match a specific criteria. It also has
-> firmware that can be expanded to do completely custom things by the
-> user. Additionally, the switch is _very_ configurable and has a
-> configuration file that can be uploaded and downloaded.
-> 
-> All these features and more are exposed through a special management
-> endpoint that is completely separate from the standard PCI switch
-> interface. This work is a driver for that endpoint and is not required
-> to use the switch. It only makes the advanced features available to the
-> user.
+On 02.12.2016 18:35, Bjorn Helgaas wrote:
+> On Thu, Dec 01, 2016 at 02:30:58AM -0600, Bjorn Helgaas wrote:
+>> From: Tomasz Nowicki <tn@semihalf.com>
+>>
+>> ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
+>> compliant with ECAM standard. It uses non-standard configuration space
+>> accessors (see thunder_pem_ecam_ops) and custom configuration space
+>> granulation (see bus_shift = 24). In order to access configuration space
+>> and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
+>> infrastructure. This involves:
+>> 1. A new thunder_pem_acpi_init() init function to locate PEM-specific
+>>    register ranges using ACPI.
+>> 2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
+>>    code.
+>> 3. New quirk entries for each PEM segment. Each contains platform IDs,
+>>    mentioned thunder_pem_ecam_ops and CFG resources.
+>>
+>> Quirk is considered for ThunderX silicon pass2.x only which is identified
+>> via MCFG revision 1.
+>>
+>> [bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
+>> quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++++
+>>  drivers/pci/host/Makefile          |    2 +-
+>>  drivers/pci/host/pci-thunder-pem.c |   38 ++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci-ecam.h           |    1 +
+>>  4 files changed, 59 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> index c6a6949..a48b508 100644
+>> --- a/drivers/acpi/pci_mcfg.c
+>> +++ b/drivers/acpi/pci_mcfg.c
+>> @@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>>  	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
+>>  	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
+>>  	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
+>> +
+>> +#define THUNDER_PEM_RES(addr, node) \
+>> +	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
+>
+> I assume we should do s/node/seg/ here as well?  I already did that for
+> THUNDER_ECAM_QUIRK in the next patch.
+>
 
-Since the in-kernel driver binds to the device, won't this driver
-conflict with the initialization the in-kernel one already does? Bus
-master, MSI setup, etc?
+Here node means NUMA node number so it is fine.
 
-Could you also provide the reasoning against making the functionality
-this driver provides in user space?
+Thanks,
+Tomasz
