@@ -1,101 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0060.outbound.protection.outlook.com ([104.47.2.60]:19349
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750955AbcLBH7u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Dec 2016 02:59:50 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Adi Menachem <adim@mellanox.com>
-Subject: RE: Shouldn't VFIO virtualize the ATS capability?
-Date: Fri, 2 Dec 2016 07:45:16 +0000
-Message-ID: <HE1PR0502MB29554824576F19F31D16B2FAD48E0@HE1PR0502MB2955.eurprd05.prod.outlook.com>
-References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161106100832.41e173d5@t450s.home>
-        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161109080746.24dd79dd@t450s.home>
-        <VI1PR0502MB2957CCD1E8EE93A3BC6CE178D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161109085326.62b47d2f@t450s.home>
-        <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
- <20161201162257.31514098@t450s.home>
-In-Reply-To: <20161201162257.31514098@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Rafael J. Wysocki'" <rafael@kernel.org>,
+        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
+Cc: "'Linux PCI'" <linux-pci@vger.kernel.org>,
+        "'Will Deacon'" <will.deacon@arm.com>,
+        "'Sinan Kaya'" <okaya@codeaurora.org>,
+        "'Tomasz Nowicki'" <tn@semihalf.com>,
+        "'Joerg Roedel'" <joro@8bytes.org>,
+        "'ACPI Devel Maling List'" <linux-acpi@vger.kernel.org>,
+        "'Mark Salter'" <msalter@redhat.com>,
+        "'Marc Zyngier'" <marc.zyngier@arm.com>,
+        "'Jon Masters'" <jcm@redhat.com>,
+        "'Eric Auger'" <eric.auger@redhat.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Prem Mallappa'" <prem.mallappa@broadcom.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
+        "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
+        "'open list:AMD IOMMU \(AMD-VI\)'" <iommu@lists.linux-foundation.org>,
+        "'Hanjun Guo'" <hanjun.guo@linaro.org>,
+        "'Suravee Suthikulpanit'" <Suravee.Suthikulpanit@amd.com>,
+        "'Dennis Chen'" <dennis.chen@arm.com>,
+        "'Robin Murphy'" <robin.murphy@arm.com>,
+        "'Nate Watterson'" <nwatters@codeaurora.org>
+References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com> <20161121100148.24769-8-lorenzo.pieralisi@arm.com> <20161202153816.GA18290@red-moon> <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com> <20161203103927.GA14953@red-moon> <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
+Subject: RE: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
+Date: Mon, 5 Dec 2016 15:22:02 +0530
+Message-ID: <003001d24edd$40d7d030$c2877090$@codeaurora.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Friday, December 2, 2016 1:23 AM
-> To: Ilya Lesokhin <ilyal@mellanox.com>
-> Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com;
-> Adi Menachem <adim@mellanox.com>
-> Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-...=20
-> > > > > Aren't invalidations issued by the iommu, why does the
-> > > > > hypervisor need to participate?  How would a software entity
-> > > > > induce an
-> > > invalidation?
-> > > > That's what one might expect from a sane design, but
-> > > > http://lxr.free-electrons.com/source/drivers/iommu/intel-iommu.c?v
-> > > > =3D4.8
-> > > > #L1549
-> > > > seems to imply otherwise :(
->=20
-> This seems correct though, the device iotlb would interact with the physi=
-cal
-> IOMMU, so this is happening on the host.  The call path would
-> be:
->=20
-> ioctl(container, VFIO_IOMMU_UNMAP_DMA, ...)
->   vfio_fops_unl_ioctl
->      vfio_iommu_type1_ioctl
->        vfio_dma_do_unmap
->          vfio_remove_dma
->            vfio_unmap_unpin
->              iommu_unmap
->                intel_iommu_unmap
->                  iommu_flush_iotlb_psi
->                    iommu_flush_dev_iotlb
->=20
-> For a non-iommu VM, mappings will be mostly static, so this will be rare.=
-  If
-> we had VT-d emulation support in the VM, the iommu domain used by the
-> VM would map to an iommu domain in the host and any invalidations within
-> that domain would trigger an unmap through to the host domain.
+Hi Lorenzo,
 
-My concern was for the case where the host is not aware of ATS or decides n=
-ot to use it for some reason.
-In that case the guest might enable ATS and abuse the fact that the host do=
-esn't know it needs to=20
-issue invalidations to the device
+>
+>On Sat, Dec 3, 2016 at 11:39 AM, Lorenzo Pieralisi
+><lorenzo.pieralisi@arm.com> wrote:
+>> On Sat, Dec 03, 2016 at 03:11:09AM +0100, Rafael J. Wysocki wrote:
+>>> On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
+>>> <lorenzo.pieralisi@arm.com> wrote:
+>>> > Rafael, Mark, Suravee,
+>>> >
+>>> > On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
+>>> >> On DT based systems, the of_dma_configure() API implements DMA
+>>> >> configuration for a given device. On ACPI systems an API equivalent to
+>>> >> of_dma_configure() is missing which implies that it is currently not
+>>> >> possible to set-up DMA operations for devices through the ACPI generic
+>>> >> kernel layer.
+>>> >>
+>>> >> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+>>> >> calls that for now are just wrappers around arch_setup_dma_ops() and
+>>> >> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+>>> >> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+>>> >>
+>>> >> Since acpi_dma_configure() is used to configure DMA operations, the
+>>> >> function initializes the dma/coherent_dma masks to sane default values
+>>> >> if the current masks are uninitialized (also to keep the default values
+>>> >> consistent with DT systems) to make sure the device has a complete
+>>> >> default DMA set-up.
+>>> >
+>>> > I spotted a niggle that unfortunately was hard to spot (and should not
+>>> > be a problem per se but better safe than sorry) and I am not comfortable
+>>> > with it.
+>>> >
+>>> > Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
+>>> > device coherency") in acpi_bind_one() we check if the acpi_device
+>>> > associated with a device just added supports DMA, first it was
+>>> > done with acpi_check_dma() and then commit 1831eff876bd ("device
+>>> > property: ACPI: Make use of the new DMA Attribute APIs") changed
+>>> > it to acpi_get_dma_attr().
+>>> >
+>>> > The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
+>>> > on _any_ acpi device we pass to acpi_bind_one() on x86, which was
+>>> > fine because we used it to call arch_setup_dma_ops(), which is a nop
+>>> > on x86. On ARM64 a _CCA method is required to define if a device
+>>> > supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
+>>> >
+>>> > Now, acpi_bind_one() is used to bind an acpi_device to its physical
+>>> > node also for pseudo-devices like cpus and memory nodes. For those
+>>> > objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
+>>> >
+>>> > So far so good, because on x86 arch_setup_dma_ops() is empty code.
+>>> >
+>>> > With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
+>>> > to call acpi_dma_configure() which is basically a nop on x86 except
+>>> > that it sets up the dma_mask/coherent_dma_mask to a sane default value
+>>> > (after all we are setting up DMA for the device so it makes sense to
+>>> > initialize the masks there if they were unset since we are configuring
+>>> > DMA for the device in question) for the given device.
+>>> >
+>>> > Problem is, as per the explanation above, we are also setting the
+>>> > default dma masks for pseudo-devices (eg CPUs) that were previously
+>>> > untouched, it should not be a problem per-se but I am not comfortable
+>>> > with that, honestly it does not make much sense.
+>>> >
+>>> > An easy "fix" would be to move the default dma masks initialization out
+>>> > of acpi_dma_configure() (as it was in previous patch versions of this
+>>> > series - I moved it to acpi_dma_configure() just a consolidation point
+>>> > for initializing the masks instead of scattering them in every
+>>> > acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
+>>> > we think that's the right thing to do (or I can send it to Rafael later
+>>> > when the code is in the merged depending on the timing) just let me
+>>> > know please.
+>>>
+>>> Why can't arch_setup_dma_ops() set those masks too?
+>>
+>> Because the dma masks set-up is done by the caller (see
+>> of_dma_configure()) according to firmware configuration or
+>> platform data knowledge. I wanted to replicate the of_dma_configure()
+>> interface on ACPI for obvious reasons (on ARM systems), I stopped
+>> short of adding ACPI code to mirror of_dma_get_range() equivalent
+>> (through the _DMA object) but I am really really nervous about changing
+>> the code path on x86 because in theory all is fine, in practice even
+>> just setting the masks to sane values can have unexpected consequences,
+>> I just can't know (that's why I wasn't doing it in the first iterations
+>> of this series).
+>>
+>> Side note: DT with of_dma_configure() and ACPI with
+>> acpi_create_platform_device() set the default dma mask for all
+>> platform devices already _regardless_ of what they really are, though
+>> arguably acpi_bind_one() touches ways more devices.
+>>
+>> I really think that removing the default dma masks settings from
+>> acpi_dma_configure() is the safer thing to do for the time being (or
+>> moving acpi_dma_configure() to acpi_create_platform_device(), where the
+>> DMA masks are set-up by default by core ACPI. Mark, Suravee, what was
+>> the rationale behind calling arch_setup_dma_ops() in acpi_bind_one() ?)
+>
+>Alternatively, you can add one more arch wrapper that will be a no-op
+>on x86 and that will set up the default masks and call
+>arch_setup_dma_ops() on ARM.  Then, you can invoke that from
+>acpi_dma_configure().
+>
+>Or make the definition of acpi_dma_configure() itself depend on the
+>architecture.
+>
 
->=20
-> > > > > > 	2. Smallest Translation Unit misconfiguration. Not sure if it
-> > > > > > will cause
-> > > > > invalid access or only poor caching behavior.
->=20
-> I'm not sure about this either.  I think that ATS is enabled on the
-> device prior to the guest having access to it, but could the guest
-> interfere or cause poor behavior by further interaction with the ATS
-> capability.  I guess my question would be whether the guest needs
-> visibility or access to the ATS capability to still make use of it.  We
-> certainly want to take advantage of an iotlb where available.  For a
-> Linux guest we only seem to manipulate ATS enable through the iommu
-> code, so I expect a non-iommu VM to leave ATS alone.  What's the best
-> solution then, to hide the ATS capability, assuming that it works
-> transparently on the host level?  Expose it to the guest, perhaps
-> virtualizing the STU field to the VM, giving the VM enable/disable
-> control?  How can we test any of this?  Thanks,
->=20
-I don't see the benefit of exposing the capability to the guest.
-If the Host enables ATS, the guest doesn't need to take any further action =
-to benefit from the improved caching.
-If the host doesn't enable it, he won't issue invalidation either, so allow=
-ing the guest to enable it is unsafe.
+So is it better that either removing the masks from acpi_dma_configure (or)
+creating the wrapper as Rafael mentioned, than moving
+acpi_dma_configure itself , because with something like iommu probe
+deferral that is tried, acpi_dma_configure is getting invoked from a device's 
+really_probe, a different path again ?
 
-Thanks,
-Ilya
+Regards,
+ Sricharan
