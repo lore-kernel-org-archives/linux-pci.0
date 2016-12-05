@@ -1,218 +1,272 @@
-Return-Path: <SRS0=uU0d=YF=gmail.com=hjmallon@kernel.org>
-Return-Path: <SRS0=uU0d=YF=gmail.com=hjmallon@kernel.org>
-From: Harry Mallon <hjmallon@gmail.com>
-Message-Id: <F9DB0FE1-0518-4799-98A9-DA9053A86AEC@gmail.com>
-Content-Type: multipart/mixed;
- boundary="Apple-Mail=_E1435346-E096-4589-BDEF-81A10BD8412A"
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Subject: Re: lspci memory behind bridge reporting
-Date: Thu, 22 Dec 2016 13:39:58 +0000
-In-Reply-To: <20161221201635.GA31167@bhelgaas-glaptop.roam.corp.google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-References: <CDB45911-510C-459D-BCDC-17955FCC400D@gmail.com>
- <20161221201635.GA31167@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
+Subject: Re: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <b59f12bb-fe22-e8ac-719c-d8fb12f31569@semihalf.com>
+ <20161202215711.GE9903@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Christopher Covington
+ <cov@codeaurora.org>, Dongdong Liu <liudongdong3@huawei.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <2bef38c3-be46-918e-8ab3-1eb39df23edc@semihalf.com>
+Date: Mon, 5 Dec 2016 13:36:01 +0100
+MIME-Version: 1.0
+In-Reply-To: <20161202215711.GE9903@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn,
 
---Apple-Mail=_E1435346-E096-4589-BDEF-81A10BD8412A
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+On 02.12.2016 22:57, Bjorn Helgaas wrote:
+> On Fri, Dec 02, 2016 at 03:20:28PM +0100, Tomasz Nowicki wrote:
+>> dmesg from ThunderX pass2.0 (1 socket board) + small fix:
+>>
+>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> -       THUNDER_PEM_QUIRK(2,  0),       /* off-chip devices */
+>> -       THUNDER_PEM_QUIRK(2,  1),       /* off-chip devices */
+>> +       THUNDER_PEM_QUIRK(2,  0UL),     /* off-chip devices */
+>> +       THUNDER_PEM_QUIRK(2,  1UL),     /* off-chip devices */
+>
+> Thanks!  I folded this change into my branch (possibly to be updated
+> if Robert sends something better).
 
-I attach a patch with behaviour similar to what you describe. It is =
-based on the current master branch of pciutils (hash =
-4a190235224ff6dfe44adbb07ac929afea612acd).
+I believe Robert meant:
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index d34d196..8ca8ca8 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -76,7 +76,7 @@ static struct mcfg_fixup mcfg_quirks[] = {
+         HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
 
-Here is a sample taken from my machine with -vvv:
+  #define THUNDER_PEM_RES(addr, node) \
+-       DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
++       DEFINE_RES_MEM(addr + ((u64)node << 44), 0x39 * SZ_16M)
 
-        I/O behind bridge: 0000f000-00000fff [size=3DNone]
-        Memory behind bridge: f4400000-f47fffff [size=3D4M]
-        Prefetchable memory behind bridge: =
-00000000cfc00000-00000000cfcfffff [size=3D1M]
+Which means we can forget UL suffix for THUNDER_PEM_QUIRK macro:
+@@ -91,8 +91,8 @@ static struct mcfg_fixup mcfg_quirks[] = {
+         { "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, 
+     \
+           &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
+         /* SoC pass2.x */
+-       THUNDER_PEM_QUIRK(1, 0UL),
+-       THUNDER_PEM_QUIRK(1, 1UL),
++       THUNDER_PEM_QUIRK(1, 0),
++       THUNDER_PEM_QUIRK(1, 1),
 
-With -vv or -v it shows (as before but with size):
+Also, my apologies, I should have fixed parentheses in this macro from 
+the very beginning. For you convenience below incremental patch where I 
+fixed both issues:
 
-        Memory behind bridge: f4400000-f47fffff [size=3D4M]
-        Prefetchable memory behind bridge: =
-00000000cfc00000-00000000cfcfffff [size=3D1M]
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index d34d196..cf6c321 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -76,23 +76,23 @@ static struct mcfg_fixup mcfg_quirks[] = {
+         HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
 
-I have not altered anything in the tests folder yet as I am not sure =
-about how to run them.
+  #define THUNDER_PEM_RES(addr, node) \
+-       DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
++       DEFINE_RES_MEM((addr) + ((u64)(node) << 44), 0x39 * SZ_16M)
+  #define THUNDER_PEM_QUIRK(rev, node) \
+-       { "CAVIUM", "THUNDERX", rev, 4 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, node) 
+}, \
+-       { "CAVIUM", "THUNDERX", rev, 5 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, node) 
+}, \
+-       { "CAVIUM", "THUNDERX", rev, 6 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, node) 
+}, \
+-       { "CAVIUM", "THUNDERX", rev, 7 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, node) 
+}, \
+-       { "CAVIUM", "THUNDERX", rev, 8 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) 
+}, \
+-       { "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, 
+    \
+-         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
++       { "CAVIUM", "THUNDERX", (rev), 4 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, 
+(node)) }, \
++       { "CAVIUM", "THUNDERX", (rev), 5 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, 
+(node)) }, \
++       { "CAVIUM", "THUNDERX", (rev), 6 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, 
+(node)) }, \
++       { "CAVIUM", "THUNDERX", (rev), 7 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, 
+(node)) }, \
++       { "CAVIUM", "THUNDERX", (rev), 8 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, 
+(node)) }, \
++       { "CAVIUM", "THUNDERX", (rev), 9 + (10 * (node)), MCFG_BUS_ANY, 
+      \
++         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, (node)) }
+         /* SoC pass2.x */
+-       THUNDER_PEM_QUIRK(1, 0UL),
+-       THUNDER_PEM_QUIRK(1, 1UL),
++       THUNDER_PEM_QUIRK(1, 0),
++       THUNDER_PEM_QUIRK(1, 1),
 
-Harry
+  #define THUNDER_ECAM_QUIRK(rev, seg)                                   \
+         { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 00eb8eb..643c9e7 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -62,8 +62,9 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+  #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+  extern struct pci_ecam_ops pci_32b_ops;                /* 32-bit 
+accesses only */
+  extern struct pci_ecam_ops hisi_pcie_ops;      /* HiSilicon */
+-extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 1.x 
+& 2.x */
+-extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
++extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 
+pass1.x &
++                                                   pass2.x */
++extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 
+pass1.x */
+  #endif
 
+  #ifdef CONFIG_PCI_HOST_GENERIC
 
+>
+>> ACPI: MCFG table detected, 4 entries
+>> ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-1f])
+>> acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM
+>> Segments MSI]
+>> acpi PNP0A08:00: _OSC: platform does not support [PCIeHotplug PME AER]
+>> acpi PNP0A08:00: _OSC: OS now controls [PCIeCapability]
+>> acpi PNP0A08:00: ECAM area [mem 0x848000000000-0x848001ffffff]
+>> reserved by THRX0001:00
+>> acpi PNP0A08:00: ECAM at [mem 0x848000000000-0x848001ffffff] for [bus 00-1f]
+>
+> I guess we don't need MCFG quirks for these bridges, since I don't see
+> the "MCFG quirk" message?
 
---Apple-Mail=_E1435346-E096-4589-BDEF-81A10BD8412A
-Content-Disposition: attachment;
-	filename=0001-Give-more-info-on-X-behind-bridge.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="0001-Give-more-info-on-X-behind-bridge.patch"
-Content-Transfer-Encoding: quoted-printable
+Yes, this is ThunderX 1-socket pass2.x so quirks are needed for 4-9 host 
+bridges only. Below summary of where/how quirks should be applied:
 
-=46rom=20a8f0d7b68376d5d04a861893278337f2622d9c3a=20Mon=20Sep=2017=20=
-00:00:00=202001=0AFrom:=20Harry=20Mallon=20<hjmallon@gmail.com>=0ADate:=20=
-Thu,=2022=20Dec=202016=2012:39:54=20+0000=0ASubject:=20[PATCH]=20Give=20=
-more=20info=20on=20"X=20behind=20bridge"=0A=0A*=20Show=20size=20of=20=
-buffer=0A*=20Show=20[size=3DNone]=20if=20no=20size=0A---=0A=20=
-lib/types.h=20|=20=202=20++=0A=20lspci.c=20=20=20=20=20|=2043=20=
-+++++++++++++++++++++++++++++++++++++------=0A=202=20files=20changed,=20=
-39=20insertions(+),=206=20deletions(-)=0A=0Adiff=20--git=20a/lib/types.h=20=
-b/lib/types.h=0Aindex=204d23e69..93a8497=20100644=0A---=20a/lib/types.h=0A=
-+++=20b/lib/types.h=0A@@=20-42,10=20+42,12=20@@=20typedef=20unsigned=20=
-long=20long=20u64;=0A=20#ifdef=20PCI_HAVE_64BIT_ADDRESS=0A=20typedef=20=
-u64=20pciaddr_t;=0A=20#define=20PCIADDR_T_FMT=20"%08"=20PCI_U64_FMT=20=
-"x"=0A+#define=20PCIADDR_T_FMT_L=20"%016"=20PCI_U64_FMT=20"x"=0A=20=
-#define=20PCIADDR_PORT_FMT=20"%04"=20PCI_U64_FMT=20"x"=0A=20#else=0A=20=
-typedef=20u32=20pciaddr_t;=0A=20#define=20PCIADDR_T_FMT=20"%08x"=0A=
-+#define=20PCIADDR_T_FMT_L=20PCIADDR_T_FMT=0A=20#define=20=
-PCIADDR_PORT_FMT=20"%04x"=0A=20#endif=0A=20=0Adiff=20--git=20a/lspci.c=20=
-b/lspci.c=0Aindex=205b6716e..7969248=20100644=0A---=20a/lspci.c=0A+++=20=
-b/lspci.c=0A@@=20-344,6=20+344,15=20@@=20show_size(pciaddr_t=20x)=0A=20}=0A=
-=20=0A=20static=20void=0A+show_size_or_none(pciaddr_t=20base,=20=
-pciaddr_t=20limit)=0A+{=0A+=20=20if=20(limit=20>=3D=20base)=0A+=20=20=20=20=
-show_size(limit=20-=20base=20+=201);=0A+=20=20else=0A+=20=20=20=20=
-printf("=20[size=3DNone]");=0A+}=0A+=0A+static=20void=0A=20=
-show_bases(struct=20device=20*d,=20int=20cnt)=0A=20{=0A=20=20=20struct=20=
-pci_dev=20*p=20=3D=20d->dev;=0A@@=20-481,8=20+490,8=20@@=20=
-show_htype1(struct=20device=20*d)=0A=20=20=20u32=20mem_base=20=3D=20=
-get_conf_word(d,=20PCI_MEMORY_BASE);=0A=20=20=20u32=20mem_limit=20=3D=20=
-get_conf_word(d,=20PCI_MEMORY_LIMIT);=0A=20=20=20u32=20mem_type=20=3D=20=
-mem_base=20&=20PCI_MEMORY_RANGE_TYPE_MASK;=0A-=20=20u32=20pref_base=20=3D=20=
-get_conf_word(d,=20PCI_PREF_MEMORY_BASE);=0A-=20=20u32=20pref_limit=20=3D=20=
-get_conf_word(d,=20PCI_PREF_MEMORY_LIMIT);=0A+=20=20pciaddr_t=20=
-pref_base=20=3D=20get_conf_word(d,=20PCI_PREF_MEMORY_BASE);=0A+=20=20=
-pciaddr_t=20pref_limit=20=3D=20get_conf_word(d,=20=
-PCI_PREF_MEMORY_LIMIT);=0A=20=20=20u32=20pref_type=20=3D=20pref_base=20&=20=
-PCI_PREF_RANGE_TYPE_MASK;=0A=20=20=20word=20sec_stat=20=3D=20=
-get_conf_word(d,=20PCI_SEC_STATUS);=0A=20=20=20word=20brc=20=3D=20=
-get_conf_word(d,=20PCI_BRIDGE_CONTROL);=0A@@=20-508,7=20+517,11=20@@=20=
-show_htype1(struct=20device=20*d)=0A=20=09=20=20io_limit=20|=3D=20=
-(get_conf_word(d,=20PCI_IO_LIMIT_UPPER16)=20<<=2016);=0A=20=09}=0A=20=20=20=
-=20=20=20=20if=20(io_base=20<=3D=20io_limit=20||=20verb)=0A-=09=
-printf("\tI/O=20behind=20bridge:=20%08x-%08x\n",=20io_base,=20=
-io_limit+0xfff);=0A+=09{=0A+=09=20=20printf("\tI/O=20behind=20bridge:=20=
-%08x-%08x",=20io_base,=20io_limit+0xfff);=0A+=09=20=20=
-show_size_or_none(io_base,=20io_limit+0xfff);=0A+=09=20=20putchar('\n');=0A=
-+=09}=0A=20=20=20=20=20}=0A=20=0A=20=20=20if=20(mem_type=20!=3D=20=
-(mem_limit=20&=20PCI_MEMORY_RANGE_TYPE_MASK)=20||=0A@@=20-519,12=20=
-+532,16=20@@=20show_htype1(struct=20device=20*d)=0A=20=20=20=20=20=20=20=
-mem_base=20=3D=20(mem_base=20&=20PCI_MEMORY_RANGE_MASK)=20<<=2016;=0A=20=20=
-=20=20=20=20=20mem_limit=20=3D=20(mem_limit=20&=20PCI_MEMORY_RANGE_MASK)=20=
-<<=2016;=0A=20=20=20=20=20=20=20if=20(mem_base=20<=3D=20mem_limit=20||=20=
-verb)=0A-=09printf("\tMemory=20behind=20bridge:=20%08x-%08x\n",=20=
-mem_base,=20mem_limit=20+=200xfffff);=0A+=09{=0A+=09=20=20=
-printf("\tMemory=20behind=20bridge:=20%08x-%08x",=20mem_base,=20=
-mem_limit=20+=200xfffff);=0A+=09=20=20show_size_or_none(mem_base,=20=
-mem_limit=20+=200xfffff);=0A+=09=20=20putchar('\n');=0A+=09}=0A=20=20=20=20=
-=20}=0A=20=0A=20=20=20if=20(pref_type=20!=3D=20(pref_limit=20&=20=
-PCI_PREF_RANGE_TYPE_MASK)=20||=0A=20=20=20=20=20=20=20(pref_type=20!=3D=20=
-PCI_PREF_RANGE_TYPE_32=20&&=20pref_type=20!=3D=20=
-PCI_PREF_RANGE_TYPE_64))=0A-=20=20=20=20printf("\t!!!=20Unknown=20=
-prefetchable=20memory=20range=20types=20%x/%x\n",=20pref_base,=20=
-pref_limit);=0A+=20=20=20=20printf("\t!!!=20Unknown=20prefetchable=20=
-memory=20range=20types=20"=20PCIADDR_T_FMT_L=20"/"=20PCIADDR_T_FMT_L=20=
-"\n",=20pref_base,=20pref_limit);=0A=20=20=20else=0A=20=20=20=20=20{=0A=20=
-=20=20=20=20=20=20pref_base=20=3D=20(pref_base=20&=20=
-PCI_PREF_RANGE_MASK)=20<<=2016;=0A@@=20-532,13=20+549,27=20@@=20=
-show_htype1(struct=20device=20*d)=0A=20=20=20=20=20=20=20if=20(pref_base=20=
-<=3D=20pref_limit=20||=20verb)=0A=20=09{=0A=20=09=20=20if=20(pref_type=20=
-=3D=3D=20PCI_PREF_RANGE_TYPE_32)=0A-=09=20=20=20=20=
-printf("\tPrefetchable=20memory=20behind=20bridge:=20%08x-%08x\n",=20=
-pref_base,=20pref_limit=20+=200xfffff);=0A+=09=20=20=20=20{=0A+=09=20=20=20=
-=20=20=20printf("\tPrefetchable=20memory=20behind=20bridge:=20"=20=
-PCIADDR_T_FMT_L=20"-"=20PCIADDR_T_FMT_L,=20pref_base,=20pref_limit=20+=20=
-0xfffff);=0A+=09=20=20=20=20=20=20show_size_or_none(pref_base,=20=
-pref_limit=20+=200xfffff);=0A+=09=20=20=20=20=20=20putchar('\n');=0A+=09=20=
-=20=20=20}=0A=20=09=20=20else=0A+#ifdef=20PCI_HAVE_64BIT_ADDRESS=0A+=09=20=
-=20=20=20{=0A+=09=20=20=20=20=20=20pref_base=20=3D=20pref_base=20|=20(=20=
-(pciaddr_t)get_conf_long(d,=20PCI_PREF_BASE_UPPER32)=20<<=2032);=0A+=09=20=
-=20=20=20=20=20pref_limit=20=3D=20pref_limit=20|=20(=20=
-(pciaddr_t)get_conf_long(d,=20PCI_PREF_LIMIT_UPPER32)=20<<=2032);=0A+=09=20=
-=20=20=20=20=20printf("\tPrefetchable=20memory=20behind=20bridge:=20"=20=
-PCIADDR_T_FMT_L=20"-"=20PCIADDR_T_FMT_L,=20pref_base,=20pref_limit=20+=20=
-0xfffff);=0A+=09=20=20=20=20=20=20show_size_or_none(pref_base,=20=
-pref_limit=20+=200xfffff);=0A+=09=20=20=20=20=20=20putchar('\n');=0A+=09=20=
-=20=20=20}=0A+#else=0A=20=09=20=20=20=20printf("\tPrefetchable=20memory=20=
-behind=20bridge:=20%08x%08x-%08x%08x\n",=0A=20=09=09=20=20=20=
-get_conf_long(d,=20PCI_PREF_BASE_UPPER32),=0A=20=09=09=20=20=20=
-pref_base,=0A=20=09=09=20=20=20get_conf_long(d,=20=
-PCI_PREF_LIMIT_UPPER32),=0A=20=09=09=20=20=20pref_limit=20+=200xfffff);=0A=
-+#endif=0A=20=09}=0A=20=20=20=20=20}=0A=20=0A--=20=0A2.11.0=0A=0A=
+ThunderX pass2.x
+NUMA node -> segments -> ECAM compliant note
+0 -> 0-3 -> ECAM compliant
+0 -> 4-9 -> ECAM quirks (thunder_pem_ecam_ops)
+1 (optionally) -> 10-13 -> ECAM compliant
+1 (optionally) -> 14-19 -> ECAM quirks (thunder_pem_ecam_ops)
 
---Apple-Mail=_E1435346-E096-4589-BDEF-81A10BD8412A
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+ThunderX pass1.x
+NUMA node -> segments -> ECAM compliant note
+0 -> 0-3 -> ECAM quirks (pci_thunder_ecam_ops)
+0 -> 4-9 -> ECAM quirks (thunder_pem_ecam_ops)
+1 (optionally) -> 10-13 -> ECAM quirks (pci_thunder_ecam_ops)
+1 (optionally) -> 14-19 -> ECAM quirks (thunder_pem_ecam_ops)
 
+>
+>> system 00:00: [mem 0x848000000000-0x848001ffffff] could not be reserved
+>> system 00:01: [mem 0x849000000000-0x849001ffffff] could not be reserved
+>> system 00:02: [mem 0x84a000000000-0x84a001ffffff] could not be reserved
+>> system 00:03: [mem 0x84b000000000-0x84b001ffffff] could not be reserved
+>> system 00:04: [mem 0x87e0c0000000-0x87e0c0ffffff] could not be reserved
+>> system 00:04: [mem 0x88001f000000-0x880057ffffff] could not be reserved
+>> system 00:05: [mem 0x87e0c2000000-0x87e0c2ffffff] could not be reserved
+>> system 00:05: [mem 0x88808f000000-0x8880c7ffffff] could not be reserved
+>
+> Most of these match ECAM spaces, which is good.  00:04 and 00:05 each
+> have one ECAM space and one "other" space, which might be PEMx host
+> bridge registers?  That all seems good.
 
+Yes, "other" space is PEMx host bridge registers.
 
+>
+> But I assume the other bridges (PCIx) also have register space in
+> addition to ECAM, and that should be reported also.
 
+00:00, 00:01, 00:02, 00:03 are ECAM compliant so for those we need ECAM 
+region only.
 
-> On 21 Dec 2016, at 20:16, Bjorn Helgaas <helgaas@kernel.org> wrote:
->=20
-> [+cc Martin (lspci maintainer)]
->=20
-> On Wed, Dec 21, 2016 at 04:53:30PM +0000, Harry Mallon wrote:
->> Hello all,
->>=20
->> I am currently debugging a PCIE BAR assignment issue and am working =
-on a patch to save me some time in future with lspci. Would patches like =
-this be considered? Does anyone have any input on the proposed formats =
-of the readouts?
->>=20
->> 1. Currently if a bridge has no memory behind bridge it displays =
-messages like the following, for reasons of PCI implementation detail.
->>=20
->> I/O behind bridge: 0000f000-00000fff
->> Memory behind bridge: fff00000-000fffff
->> Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
->>=20
->> I would prefer:
->> I/O behind bridge: None
->> Memory behind bridge: None
->> Prefetchable memory behind bridge: None
->=20
-> Thanks for the suggestions, Harry.  I would like this, too.  Maybe
-> this with "-v":
->=20
->  I/O behind bridge: None
->=20
-> and this with "-vv":
->=20
->  I/O behind bridge: None (0000f000-00000fff)
->=20
-> There are many register values that disable the windows, and it's
-> conceivable that somebody would want to match the actual register
-> values with an analyzer trace or a piece of code.
->=20
->> 2. It would be useful for me to have access to the amount of memory =
-in these chunks (my mental hex subtraction is pretty terrible). Maybe =
-this would be displayed something like
->>=20
->> I/O behind bridge: 0000c000-0000dfff [8.00K]
->> Memory behind bridge: f4000000-f65fffff [38.00M]
->> Prefetchable memory behind bridge: 00000000e0000000-00000000f3ffffff =
-[320.00M]
->=20
-> This makes sense to me, too, though I would use the same size format
-> lspci already uses for endpoint BARs, e.g.,
->=20
->  Memory at f1000000 (64-bit, non-prefetchable) [size=3D8K]
->=20
-> Of course, BARs are always a nice power-of-two, so there's no need for
-> fractions, while bridge window sizes are much less constrained.  I
-> don't know whether it's better to use decimal places as you did, or to
-> use the largest unit size (K, M, G) that expresses the size as a whole
-> number.
->=20
-> Be sure to send any patches to Martin directly; I doubt he monitors
-> linux-pci closely.
->=20
-> Bjorn
+>
+>> root@ubuntu:~# cat /proc/iomem
+>> ...
+>> 838000000000-841fffffffff : PCI Bus 0000:00
+>>   838000000000-8380003fffff : 0000:03:00.0
+>
+> Something's missing here: we should have a clue about how we got from
+> bus 00 to bus 03.  From your dmesg, 0000:00:15.0 is a bridge from bus
+> 00 to bus 03, and its windows should appear here.  I'd expect
+> something like:
+>
+>   838000000000-841fffffffff : PCI Bus 0000:00
+>     838000000000-838fffffffff : PCI Bus 0000:03  <- 00:15.0 window
+>       838000000000-8380003fffff : 0000:03:00.0
+>
+> This window should be inserted by generic code, so I don't know how
+> this could be broken.  Your dmesg should also have something like
+> this:
+>
+>   pci 0000:00:15.0: PCI bridge to [bus 03]
+>   pci 0000:00:15.0:   bridge window [mem 0x838000000000-0x838fffffffff]
+>
+> I don't see that, maybe because this is actually a console log
+> collected without "ignore_loglevel"?  But that obviously doesn't
+> affect /proc/iomem, so I'm still puzzled about that.
 
 
---Apple-Mail=_E1435346-E096-4589-BDEF-81A10BD8412A--
+Enhanced Allocation is used for devices but not for bridges which have 
+invalid BARs in standard configuration header. Thus devices request 
+resources from first valid parent bridge (host bridge in this case).
+
+>
+>> 87e024000000-87e024000fff : ARMH0011:00
+>>   87e024000000-87e024000fff : ARMH0011:00
+>
+> This is interesting.  This must be a driver reserving these areas?
+> Normally a driver would use the driver name, not the device name.
+>
+> Ideally, I think the core should reserve the region with the device
+> name, and the driver would request it using the driver name, like
+> this:
+>
+>   843000000000-84303fffffff : 0002:01:00.0    <-- PCI core reservation
+>     843000000000-84303fffffff : thunder-nic   <-- driver request
+>
+> The ACPI core doesn't actually do the reservation, so I assume the
+> ARMH0011:00 stuff is from the driver, and it's curious that it has the
+> same region twice.
+>
+>> 87e026000000-87e0bfffffff : PCI Bus 0000:00
+>>   87e027000000-87e0277fffff : CAVA02A:00
+>
+> This is interesting, too.  CAVA02A:00 looks like an ACPI device, but
+> apparently it consumes some of the space that we think is routed to
+> PCI bus 0000:00.  I think this happens on some x86 boxes, too, but it
+> is somewhat confusing.
+
+I will take a look.
+
+>
+> Based on this, I don't see any problems with the ThunderX quirks.
+> I'd like to understand what's going on with the PCI-to-PCI bridge
+> windows in /proc/iomem, but I doubt that's related to your quirks.
+
+Yes it is not related to quirks.
+
+However, CAVA02A:00 and ARMH0011 things should be investigated.
+
+Thanks,
+Tomasz
