@@ -1,83 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:50068 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.136]:39704 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750785AbcLFVrK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Dec 2016 16:47:10 -0500
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com>
- <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
- <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
- <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
- <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
- <20161206163850.GC28066@obsidianresearch.com>
- <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
- <20161206172838.GB19318@obsidianresearch.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
-Date: Tue, 6 Dec 2016 14:47:04 -0700
+        id S1751723AbcLEX0B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:26:01 -0500
+Subject: [PATCH v11 05/15] arm64: PCI: Manage controller-specific data on
+ per-controller basis
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:25:57 -0600
+Message-ID: <20161205232557.3957.84754.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161206172838.GB19318@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+From: Tomasz Nowicki <tn@semihalf.com>
 
-> Okay, so clearly this needs a kernel side NVMe specific allocator
-> and locking so users don't step on each other..
+Currently we use one shared global acpi_pci_root_ops structure to keep
+controller-specific ops. We pass its pointer to acpi_pci_root_create() and
+associate it with a host bridge instance for good.  Such a design implies
+serious drawback. Any potential manipulation on the single system-wide
+acpi_pci_root_ops leads to kernel crash. The structure content is not
+really changing even across multiple host bridges creation; thus it was not
+an issue so far.
 
-Yup, ideally. That's why device dax isn't ideal for this application: it
-doesn't provide any way to prevent users from stepping on each other.
+In preparation for adding ECAM quirks mechanism (where controller-specific
+PCI ops may be different for each host bridge) allocate new
+acpi_pci_root_ops and fill in with data for each bridge. Now it is safe to
+have different controller-specific info. As a consequence free
+acpi_pci_root_ops when host bridge is released.
 
-> Or as Christoph says some kind of general mechanism to get these
-> bounce buffers..
+No functional changes in this patch.
 
-Yeah, I imagine a general allocate from BAR/region system would be very
-useful.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/kernel/pci.c |   17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-> Ah, I see.
-> 
-> As a first draft I'd stick with some kind of API built into the
-> /dev/nvmeX that backs the filesystem. The user app would fstat the
-> target file, open /dev/block/MAJOR(st_dev):MINOR(st_dev), do some
-> ioctl to get a CMB mmap, and then proceed from there..
-> 
-> When that is all working kernel-side, it would make sense to look at a
-> more general mechanism that could be used unprivileged??
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 7909f59..1eb42ba 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -169,33 +169,36 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+ 
+ 	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
+ 	pci_ecam_free(ri->cfg);
++	kfree(ci->ops);
+ 	kfree(ri);
+ }
+ 
+-static struct acpi_pci_root_ops acpi_pci_root_ops = {
+-	.release_info = pci_acpi_generic_release_info,
+-};
+-
+ /* Interface called from ACPI code to setup PCI host controller */
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	int node = acpi_get_node(root->device->handle);
+ 	struct acpi_pci_generic_root_info *ri;
+ 	struct pci_bus *bus, *child;
++	struct acpi_pci_root_ops *root_ops;
+ 
+ 	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+ 	if (!ri)
+ 		return NULL;
+ 
++	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
++	if (!root_ops)
++		return NULL;
++
+ 	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+ 	if (!ri->cfg) {
+ 		kfree(ri);
++		kfree(root_ops);
+ 		return NULL;
+ 	}
+ 
+-	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
+-	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
+-				   ri->cfg);
++	root_ops->release_info = pci_acpi_generic_release_info;
++	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
++	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+ 	if (!bus)
+ 		return NULL;
+ 
 
-That makes a lot of sense to me. I suggested mmapping the char device
-because it's really easy, but I can see that an ioctl on the block
-device does seem more general and device agnostic.
-
-> This is similar to the GPU issues too.. On NVMe you don't need to pin
-> the pages, you just need to lock that VMA so it doesn't get freed from
-> the NVMe CMB allocator while the IO is running...
-> Probably in the long run the get_user_pages is going to have to be
-> pushed down into drivers.. Future MMU coherent IO hardware also does
-> not need the pinning or other overheads.
-
-Yup. Yup.
-
-Logan
