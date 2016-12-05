@@ -1,48 +1,72 @@
-Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Fri, 30 Dec 2016 14:37:17 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Message-ID: <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <1942778.Cx2ycTbRkQ@aspire.rjw.lan>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <2678604.V2vzbbOmVS@aspire.rjw.lan> <3319410.EGZrQ2GPBB@aspire.rjw.lan> <1942778.Cx2ycTbRkQ@aspire.rjw.lan>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39600 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751723AbcLEXZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:25:46 -0500
+Subject: [PATCH v11 03/15] arm64: PCI: Add local struct device pointers
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:25:42 -0600
+Message-ID: <20161205232542.3957.55360.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes,
-the pci_port_pm=off
-fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
-Tested on 4.9
+From: Bjorn Helgaas <bhelgaas@google.com>
 
------ Original Message -----
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-Cc: "Lukas Wunner" <lukas@wunner.de>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>
-Sent: Friday, December 30, 2016 2:52:59 AM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Use a local "struct device *dev" for brevity.  No functional change
+intended.
 
-On Friday, December 30, 2016 02:50:45 AM Rafael J. Wysocki wrote:
-> On Friday, December 30, 2016 02:40:45 AM Rafael J. Wysocki wrote:
-> > On Friday, December 30, 2016 01:45:53 AM Kilian Singer wrote:
-> > > The touchpad and builtin keyboard of laptop fail.
-> > > But also connected usb keyboard and usb mouse fail.
-> > > 
-> > > In both cases mouse pointer is still moveable.
-> > 
-> > It may just be too late to turn the ports "on" once they have been suspended at
-> > least once on your system.
-> > 
-> > Please check if the appended patch makes any difference.
-> 
-> Actually, please first check if booting with pci_port_pm=off in the kernel
-> command line makes any difference.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/kernel/pci.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-The command line option should be pcie_port_pm=off ("e" was missing), sorry.
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index acf3872..8183c98 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -121,6 +121,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ static struct pci_config_window *
+ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ {
++	struct device *dev = &root->device->dev;
+ 	struct resource *bus_res = &root->secondary;
+ 	u16 seg = root->segment;
+ 	struct pci_config_window *cfg;
+@@ -132,8 +133,7 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+ 
+ 	if (!root->mcfg_addr) {
+-		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+-			seg, bus_res);
++		dev_err(dev, "%04x:%pR ECAM region not found\n", seg, bus_res);
+ 		return NULL;
+ 	}
+ 
+@@ -141,11 +141,10 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+ 	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+ 	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(dev, &cfgres, bus_res, &pci_generic_ecam_ops);
+ 	if (IS_ERR(cfg)) {
+-		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+-			seg, bus_res, PTR_ERR(cfg));
++		dev_err(dev, "%04x:%pR error %ld mapping ECAM\n", seg, bus_res,
++			PTR_ERR(cfg));
+ 		return NULL;
+ 	}
+ 
 
-Thanks,
-Rafael
