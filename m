@@ -1,66 +1,64 @@
-Return-Path: <SRS0=XD7a=YL=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=XD7a=YL=wunner.de=lukas@kernel.org>
-Date: Wed, 28 Dec 2016 12:29:54 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20161228112954.GA17925@wunner.de>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:46010 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752037AbcLET7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 14:59:40 -0500
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+ <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com>
+ <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+ <20161205180231.GA28133@obsidianresearch.com>
+ <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+ <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
+ <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+ <20161205191438.GA20464@obsidianresearch.com>
+ <10356964-c454-47fb-7fb3-8bf2a418b11b@deltatee.com>
+ <20161205194614.GA21132@obsidianresearch.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <d8795aa9-f93d-feff-8189-34b9d5b70287@deltatee.com>
+Date: Mon, 5 Dec 2016 12:59:29 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205194614.GA21132@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> and all the debugging you've done.  Below is a revert of the troublesome
-> commit.  Can you test it and verify that it also fixes the problem?
-> 
-> I assume Mika is looking at this and will have a better solution soon.
-> But if not, I'll queue this up for v4.10.
-
-@Kilian:  Are you using the proprietary nvidia driver?  If so,
-does the issue go away if you blacklist that driver or use nouveau
-instead?
 
 
-With a bit of googling I found dmesg and lspci output for this model:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
+On 05/12/16 12:46 PM, Jason Gunthorpe wrote:
+> NVMe might have to deal with pci-e hot-unplug, which is a similar
+> problem-class to the GPU case..
 
-The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
-0x60, 0x64.  I assume they're located behind the LPC bridge?
+Sure, but if the NVMe device gets hot-unplugged it means that all the 
+CMB mappings are useless and need to be torn down. This probably means 
+killing any process that has mappings open.
 
-The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
-registers with vga_tryget() but never releases that lock.  Intel
-chipsets have a quirk wherein I/O ports are routed to the bus to
-which the legacy PCI VGA registers are locked.  So once vga_tryget()
-is called by the nvidia driver, access to the keyboard and mouse is
-routed to bus 01 (on which the Nvidia card resides) and not to bus 00
-(on which the LPC bridge resides).
+> In any event the allocator still needs to track which regions are in
+> use and be able to hook 'free' from userspace. That does suggest it
+> should be integrated into the nvme driver and not a bolt on driver..
 
-My theory would be that if you lock the screen, the Nvidia card
-runtime suspends, allowing the root port above it to suspend,
-and then the I/O ports are no longer accessible.
+Yup, that's correct. And yes, I've never suggested this to be a bolt on 
+driver -- I always expected for it to get integrated into the nvme 
+driver. (iopmem was not meant for this.)
 
-We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
-is adjusted by writing to I/O ports of a gmux controller situated below
-the LPC bridge.  The nvidia driver locks the legacy VGA registers and
-from that point reads from the I/O ports always return 0xff.  Commit
-4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
-sought to fix it but caused other breakage which remains unfixed so far:
-https://bugzilla.kernel.org/show_bug.cgi?id=105051
-https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
-
-I've always wondered if the Intel chipsets would behave more sensibly
-if the LPC bridge had BARs specifying the I/O regions used by devices
-below it.
-
-Reverting runtime suspend for PCIe ports is not a good solution as it's
-needed for Thunderbolt runtime PM on Macs.
-
-Thanks,
-
-Lukas
+Logan
