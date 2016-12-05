@@ -1,114 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44310 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934001AbcLAUYZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 15:24:25 -0500
-Date: Thu, 1 Dec 2016 14:24:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v10 12/12] PCI: Add MCFG quirks for Cavium ThunderX
- pass1.x host controller
-Message-ID: <20161201202416.GB8263@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201083106.12247.20708.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <acb37ba2-e92e-f35b-d650-798193f7c9a5@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 5 Dec 2016 10:18:30 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Haggai Eran <haggaie@mellanox.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161205171830.GB27784@obsidianresearch.com>
+References: <20161125193252.GC16504@obsidianresearch.com>
+ <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
+ <20161128165751.GB28381@obsidianresearch.com>
+ <1480357179.19407.13.camel@mellanox.com>
+ <20161128190244.GA21975@obsidianresearch.com>
+ <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+ <20161130162353.GA24639@obsidianresearch.com>
+ <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
+ <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+ <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <acb37ba2-e92e-f35b-d650-798193f7c9a5@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 08:02:29PM +0100, Tomasz Nowicki wrote:
-> On 01.12.2016 09:31, Bjorn Helgaas wrote:
-> >From: Tomasz Nowicki <tn@semihalf.com>
-> >
-> >ThunderX pass1.x requires to emulate the EA headers for on-chip devices
-> >hence it has to use custom pci_thunder_ecam_ops for accessing PCI config
-> >space (pci-thuner-ecam.c). Add new entries to MCFG quirk array where it can
-> >be applied while probing ACPI based PCI host controller.
-> >
-> >ThunderX pass1.x is using the same way for accessing off-chip devices
-> >(so-called PEM) as silicon pass-2.x so we need to add PEM quirk entries
-> >too.
-> >
-> >Quirk is considered for ThunderX silicon pass1.x only which is identified
-> >via MCFG revision 2.
-> >
-> >[bhelgaas: change Makefile/ifdefs so quirk doesn't depend on
-> >CONFIG_PCI_HOST_THUNDER_ECAM]
-> >Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >---
-> > drivers/acpi/pci_mcfg.c             |   15 +++++++++++++++
-> > drivers/pci/host/Makefile           |    2 +-
-> > drivers/pci/host/pci-thunder-ecam.c |    9 ++++++++-
-> > include/linux/pci-ecam.h            |    1 +
-> > 4 files changed, 25 insertions(+), 2 deletions(-)
-> >
-> >diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> >index a48b508..cdceaf5 100644
-> >--- a/drivers/acpi/pci_mcfg.c
-> >+++ b/drivers/acpi/pci_mcfg.c
-> >@@ -93,6 +93,21 @@ static struct mcfg_fixup mcfg_quirks[] = {
-> > 	/* SoC pass2.x */
-> > 	THUNDER_PEM_QUIRK(1, 0UL),
-> > 	THUNDER_PEM_QUIRK(1, 1UL),
-> >+
-> >+#define THUNDER_ECAM_QUIRK(rev, node)					\
-> >+	{ "CAVIUM", "THUNDERX", rev, node, MCFG_BUS_ANY,		\
-> >+	&pci_thunder_ecam_ops },
+On Sun, Dec 04, 2016 at 07:23:00AM -0600, Stephen Bates wrote:
+> Hi All
 > 
-> Nit: 0-3 and 10-11 are segment ranges:
+> This has been a great thread (thanks to Alex for kicking it off) and I
+> wanted to jump in and maybe try and put some summary around the
+> discussion. I also wanted to propose we include this as a topic for LFS/MM
+> because I think we need more discussion on the best way to add this
+> functionality to the kernel.
 > 
-> +#define THUNDER_ECAM_QUIRK(rev, seg)			\
-> +	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,	\
-> +	&pci_thunder_ecam_ops },
+> As far as I can tell the people looking for P2P support in the kernel fall
+> into two main camps:
+> 
+> 1. Those who simply want to expose static BARs on PCIe devices that can be
+> used as the source/destination for DMAs from another PCIe device. This
+> group has no need for memory invalidation and are happy to use
+> physical/bus addresses and not virtual addresses.
 
-> > extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
-> >+extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
-> 
-> nit: thunder_pem_ecam_ops is also valid for ThunderX pass1.x too. We
-> add relevant entries to mcfg_quirks array above. Also we use passY.X
-> for SoC version.
-> 
-> extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX
-> pass2.x and pass1.x */
-> extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX
-> pass1.x */
+I didn't think there was much on this topic except for the CMB
+thing.. Even that is really a mapped kernel address..
 
-I updated these with the following incremental diff.  I hope this is what
-you meant!
+> I think something like the iopmem patches Logan and I submitted recently
+> come close to addressing use case 1. There are some issues around
+> routability but based on feedback to date that does not seem to be a
+> show-stopper for an initial inclusion.
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index f4e9c1c..d34d196 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -95,7 +95,7 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	THUNDER_PEM_QUIRK(1, 1UL),
- 
- #define THUNDER_ECAM_QUIRK(rev, seg)					\
--	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,		\
-+	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
- 	&pci_thunder_ecam_ops }
- 	/* SoC pass1.x */
- 	THUNDER_PEM_QUIRK(2,  0),	/* off-chip devices */
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 2afa70b..00eb8eb 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,7 +62,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
- #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
- extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
- extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
--extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
-+extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 1.x & 2.x */
- extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
- #endif
- 
+If it is kernel only with physical addresess we don't need a uAPI for
+it, so I'm not sure #1 is at all related to iopmem.
+
+Most people who want #1 probably can just mmap
+/sys/../pci/../resourceX to get a user handle to it, or pass around
+__iomem pointers in the kernel. This has been asked for before with
+RDMA.
+
+I'm still not really clear what iopmem is for, or why DAX should ever
+be involved in this..
+
+> For use-case 2 it looks like there are several options and some of them
+> (like HMM) have been around for quite some time without gaining
+> acceptance. I think there needs to be more discussion on this usecase and
+> it could be some time before we get something upstreamable.
+
+AFAIK, hmm makes parts easier, but isn't directly addressing this
+need..
+
+I think you need to get ZONE_DEVICE accepted for non-cachable PCI BARs
+as the first step.
+
+>From there is pretty clear we the DMA API needs to be updated to
+support that use and work can be done to solve the various problems
+there on the basis of using ZONE_DEVICE pages to figure out to the
+PCI-E end points
+
+Jason
