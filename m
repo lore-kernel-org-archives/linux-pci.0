@@ -1,44 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36013 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbcLXHdP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Dec 2016 02:33:15 -0500
-Date: Sat, 24 Dec 2016 13:03:07 +0530
-From: Rahul Krishnan <mrahul.krishnan@gmail.com>
-To: bhelgaas@google.com
-Cc: mpe@ellerman.id.au, mika.westerberg@linux.intel.com,
-        gwshan@linux.vnet.ibm.com, mayurkumar.patel@intel.com,
-        keith.busch@intel.com, julia.lawall@lip6.fr,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: hotplug: This patch removes unnecessary return
- statement using spatch tool
-Message-ID: <20161224073307.GA18826@rahul>
+Received: from mail.kernel.org ([198.145.29.136]:39420 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751427AbcLEXZX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:25:23 -0500
+Subject: [PATCH v11 00/15] PCI: ARM64 ECAM quirks
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:25:19 -0600
+Message-ID: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes unnecessary return statement using spatch tool
+Here's another try.  The biggest change is to add the APM X-Gene quirks.
 
-Signed-off-by: Rahul Krishnan <mrahul.krishnan@gmail.com>
+These are on my pci/ecam branch.  Please test and report any issues.
+Please also collect dmesg and /proc/iomem contents and I'll try to
+summarize the current ACPI firmware situation on ARM64 and update the
+writeup with recommendations for future platforms.
+
+Changes from v10 to v11:
+
+- Discard "consumer" resources from PNP0A03 host bridge windows (arm64
+  only).  This allows using consumer PNP0A03 descriptors (rather than the
+  PNP0C02 workaround used on x86) for bridge register space.
+
+- Add APM X-Gene MCFG quirks.
+
+- If ACPI and quirks are enabled, always build ThunderX, X-Gene, and
+  HiSilicon drivers on ARM64.  Add internal ifdefs so we only compile the
+  parts necessary for ACPI (the ECAM init and accessors).
+
+- s/node/seg/ in ThunderX MCFG quirk macros.
+
+- Move ECAM check for ACPI device reservation from pci_ecam_create() to
+  that arm64-specific pci_acpi_setup_ecam_mapping().
+
+- Add local "struct device *dev" pointers for brevity.
+
+- Miscellaneous build fixes.
+
 ---
- drivers/pci/hotplug/rpadlpar_core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-index dc67f39..9d0e2e1 100644
---- a/drivers/pci/hotplug/rpadlpar_core.c
-+++ b/drivers/pci/hotplug/rpadlpar_core.c
-@@ -463,8 +463,7 @@ int __init rpadlpar_io_init(void)
- 		return -EPERM;
- 	}
- 
--	rc = dlpar_sysfs_init();
--	return rc;
-+	return dlpar_sysfs_init();
- }
- 
- void rpadlpar_io_exit(void)
--- 
-2.7.4
+Bjorn Helgaas (6):
+      ACPI: Add acpi_resource_consumer() to find device that claims a resource
+      x86/PCI: Use acpi_resource_consumer() to search ACPI namespace for MMCFG
+      arm64: PCI: Add local struct device pointers
+      arm64: PCI: Search ACPI namespace to ensure ECAM space is reserved
+      arm64: PCI: Exclude ACPI "consumer" resources from host bridge windows
+      PCI: thunder-pem: Factor out resource lookup
 
+Christopher Covington (1):
+      PCI: Add MCFG quirks for Qualcomm QDF2432 host controller
+
+Dongdong Liu (2):
+      PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
+      PCI: Add MCFG quirks for HiSilicon Hip05/06/07 host controllers
+
+Duc Dang (1):
+      PCI: Add MCFG quirks for X-Gene host controller
+
+Tomasz Nowicki (5):
+      arm64: PCI: Manage controller-specific data on per-controller basis
+      PCI/ACPI: Extend pci_mcfg_lookup() to return ECAM config accessors
+      PCI/ACPI: Check for platform-specific MCFG quirks
+      PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller
+      PCI: Add MCFG quirks for Cavium ThunderX pass1.x host controller
+
+
+ arch/arm64/kernel/pci.c             |   68 ++++++++-----
+ arch/x86/pci/mmconfig-shared.c      |   69 ++-----------
+ drivers/acpi/pci_mcfg.c             |  190 ++++++++++++++++++++++++++++++++++-
+ drivers/acpi/resource.c             |   57 +++++++++++
+ drivers/pci/ecam.c                  |   12 ++
+ drivers/pci/host/Kconfig            |   10 +-
+ drivers/pci/host/Makefile           |    8 +
+ drivers/pci/host/pci-thunder-ecam.c |    9 +-
+ drivers/pci/host/pci-thunder-pem.c  |   94 +++++++++++++----
+ drivers/pci/host/pci-xgene.c        |  126 ++++++++++++++++++++++-
+ drivers/pci/host/pcie-hisi.c        |  101 +++++++++++++++++++
+ drivers/pci/pci-acpi.c              |   76 ++++++++++++++
+ drivers/pci/pci.h                   |    5 +
+ include/linux/acpi.h                |    7 +
+ include/linux/pci-acpi.h            |    4 +
+ include/linux/pci-ecam.h            |    9 ++
+ 16 files changed, 718 insertions(+), 127 deletions(-)
