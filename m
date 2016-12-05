@@ -1,417 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39741 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750813AbcLHHag (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2016 02:30:36 -0500
-Date: Thu, 8 Dec 2016 15:24:51 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        <linux-samsung-soc@vger.kernel.org>,
-        "Pratyush Anand" <pratyush.anand@gmail.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Javier Martinez Canillas <javier@osg.samsung.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        "Mingkai Hu" <mingkai.hu@freescale.com>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        <linux-kernel@vger.kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        <linuxppc-dev@lists.ozlabs.org>,
-        Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: designware: add host_init error handling
-Message-ID: <20161208152451.4b3603dd@xhacker>
-In-Reply-To: <1481106769-1404-1-git-send-email-srinivas.kandagatla@linaro.org>
-References: <1481106769-1404-1-git-send-email-srinivas.kandagatla@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:39544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751427AbcLEXZi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:25:38 -0500
+Subject: [PATCH v11 02/15] x86/PCI: Use acpi_resource_consumer() to search
+ ACPI namespace for MMCFG
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:25:34 -0600
+Message-ID: <20161205232534.3957.36884.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Srinivas,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-On Wed,  7 Dec 2016 10:32:49 +0000 Srinivas Kandagatla wrote:
+The static MCFG table tells us the base of MMCFG space, but it does not
+reserve the space -- the reservation should be done via a device in the
+ACPI namespace whose _CRS includes the MMCFG region.
 
-> This patch add support to return value from host_init() callback from drivers,
-> so that the designware libary can handle or pass it to proper place. Issue with
-> void return type is that errors or error handling within host_init() callback
-> are never know to designware code, which could go ahead and access registers
-> even in error cases.
-> 
-> Typical case in qcom controller driver is to turn off clks in case of errors,
+Replace find_mboard_resource(), which already searches for such a device,
+with the new acpi_resource_consumer() interface that does essentially the
+same thing.
 
-I have similar idea last year
+acpi_resource_consumer() is not as strict as find_mboard_resource() was:
+find_mboard_resource() only looks at PNP0C01 and PNP0C02 devices and the
+following _CRS descriptor types:
 
-https://patchwork.kernel.org/patch/7602421/
+  ACPI_RESOURCE_TYPE_FIXED_MEMORY32
+  ACPI_RESOURCE_TYPE_ADDRESS32
+  ACPI_RESOURCE_TYPE_ADDRESS64
 
-But finally I dropped the patch. The reason is PCIe supports hotplug. I
-noticed that most *errors* are due to the link can't be established, for
-example, the exynos, dra7xx in your below patch. I think FAIL_TO_ESTABLISH_LINK
-is a normal case if we didn't plug in the PCIe DP, then in this case I think
-it can't be considered as *error* and we still need to continue. What about
-your opinion?
+but acpi_resource_consumer() looks at *all* devices in the namespace and
+the following descriptor types:
 
-Thanks,
-Jisheng
+  ACPI_RESOURCE_TYPE_MEMORY24
+  ACPI_RESOURCE_TYPE_MEMORY32
+  ACPI_RESOURCE_TYPE_FIXED_MEMORY32
+  ACPI_RESOURCE_TYPE_ADDRESS16
+  ACPI_RESOURCE_TYPE_ADDRESS32
+  ACPI_RESOURCE_TYPE_ADDRESS64
+  ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64
 
-> if designware code continues to read/write register when clocks are turned off
-> the board would reboot/lockup.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
-> Currently designware code does not have a way return errors generated
-> as part of host_init() callback in controller drivers. This is an issue
-> with controller drivers like qcom which turns off the clocks in error
-> handling path. As the dw core is un aware of this would continue to
-> access registers which faults resulting in board reboots/hangs.
-> 
-> There are two ways to solve this issue,
-> one is remove error handling in the qcom controller host_init() function
-> other is to handle error and pass back to dw core code which would then
-> pass back to controller driver as part of dw_pcie_host_init() return value.
-> 
-> Second option seems more sensible and correct way to fix the issue,
-> this patch does the same.
-> 
-> As part of this change to host_init() return type I had to patch other
-> ihost controller drivers which use dw core. Most of the changes to other drivers
-> are to return proper error codes to upper layer.
-> Only compile tested drivers.
-> 
-> Changes since RFC:
-> 	- Add error handling to other drivers as suggested by Joao Pinto
-> 
->  drivers/pci/host/pci-dra7xx.c           | 10 ++++++++--
->  drivers/pci/host/pci-exynos.c           | 10 ++++++++--
->  drivers/pci/host/pci-imx6.c             | 10 ++++++++--
->  drivers/pci/host/pci-keystone.c         | 10 ++++++++--
->  drivers/pci/host/pci-layerscape.c       | 22 +++++++++++++---------
->  drivers/pci/host/pcie-armada8k.c        |  4 +++-
->  drivers/pci/host/pcie-designware-plat.c | 10 ++++++++--
->  drivers/pci/host/pcie-designware.c      |  4 +++-
->  drivers/pci/host/pcie-designware.h      |  2 +-
->  drivers/pci/host/pcie-qcom.c            |  5 +++--
->  drivers/pci/host/pcie-spear13xx.c       | 10 ++++++++--
->  11 files changed, 71 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 9595fad..811f0f9 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -127,9 +127,10 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
->  				   LEG_EP_INTERRUPTS);
->  }
->  
-> -static void dra7xx_pcie_host_init(struct pcie_port *pp)
-> +static int dra7xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-> +	int ret;
->  
->  	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
->  	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
-> @@ -138,10 +139,15 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  
->  	dw_pcie_setup_rc(pp);
->  
-> -	dra7xx_pcie_establish_link(dra7xx);
-> +	ret = dra7xx_pcie_establish_link(dra7xx);
-> +	if (ret < 0)
-> +		return ret;
-> +
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
->  	dra7xx_pcie_enable_interrupts(dra7xx);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops dra7xx_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index f1c544b..c116fd9 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -458,12 +458,18 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> -static void exynos_pcie_host_init(struct pcie_port *pp)
-> +static int exynos_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-> +	int ret;
-> +
-> +	ret = exynos_pcie_establish_link(exynos_pcie);
-> +	if (ret < 0)
-> +		return ret;
->  
-> -	exynos_pcie_establish_link(exynos_pcie);
->  	exynos_pcie_enable_interrupts(exynos_pcie);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops exynos_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index c8cefb0..1251e92 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -550,18 +550,24 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
->  	return ret;
->  }
->  
-> -static void imx6_pcie_host_init(struct pcie_port *pp)
-> +static int imx6_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +	int ret;
->  
->  	imx6_pcie_assert_core_reset(imx6_pcie);
->  	imx6_pcie_init_phy(imx6_pcie);
->  	imx6_pcie_deassert_core_reset(imx6_pcie);
->  	dw_pcie_setup_rc(pp);
-> -	imx6_pcie_establish_link(imx6_pcie);
-> +	ret = imx6_pcie_establish_link(imx6_pcie);
-> +
-> +	if (ret < 0)
-> +		return ret;
->  
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
-> +
-> +	return 0;
->  }
->  
->  static int imx6_pcie_link_up(struct pcie_port *pp)
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 043c19a..4067a75 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -260,12 +260,16 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
->  	return 0;
->  }
->  
-> -static void __init ks_pcie_host_init(struct pcie_port *pp)
-> +static int __init ks_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
->  	u32 val;
-> +	int ret;
-> +
-> +	ret = ks_pcie_establish_link(ks_pcie);
-> +	if (ret < 0)
-> +		return ret;
->  
-> -	ks_pcie_establish_link(ks_pcie);
->  	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
->  	ks_pcie_setup_interrupts(ks_pcie);
->  	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
-> @@ -287,6 +291,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
->  	 */
->  	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
->  			"Asynchronous external abort");
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops keystone_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 6537079..60c8b84 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -103,30 +103,32 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
->  	return 1;
->  }
->  
-> -static void ls1021_pcie_host_init(struct pcie_port *pp)
-> +static int ls1021_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct device *dev = pp->dev;
->  	struct ls_pcie *pcie = to_ls_pcie(pp);
->  	u32 index[2];
-> +	int ret;
->  
->  	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
->  						     "fsl,pcie-scfg");
->  	if (IS_ERR(pcie->scfg)) {
->  		dev_err(dev, "No syscfg phandle specified\n");
-> -		pcie->scfg = NULL;
-> -		return;
-> +		return PTR_ERR(pcie->scfg);
->  	}
->  
-> -	if (of_property_read_u32_array(dev->of_node,
-> -				       "fsl,pcie-scfg", index, 2)) {
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> +	ret = of_property_read_u32_array(dev->of_node,
-> +				       "fsl,pcie-scfg", index, 2);
-> +	if (ret < 0)
-> +		return ret;
-> +
->  	pcie->index = index[1];
->  
->  	dw_pcie_setup_rc(pp);
->  
->  	ls_pcie_drop_msg_tlp(pcie);
-> +
-> +	return 0;
->  }
->  
->  static int ls_pcie_link_up(struct pcie_port *pp)
-> @@ -144,7 +146,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
->  	return 1;
->  }
->  
-> -static void ls_pcie_host_init(struct pcie_port *pp)
-> +static int ls_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct ls_pcie *pcie = to_ls_pcie(pp);
->  
-> @@ -153,6 +155,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
->  	ls_pcie_clear_multifunction(pcie);
->  	ls_pcie_drop_msg_tlp(pcie);
->  	iowrite32(0, pcie->pp.dbi_base + PCIE_DBI_RO_WR_EN);
-> +
-> +	return 0;
->  }
->  
->  static int ls_pcie_msi_host_init(struct pcie_port *pp,
-> diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-> index 0ac0f18..29bdd8b 100644
-> --- a/drivers/pci/host/pcie-armada8k.c
-> +++ b/drivers/pci/host/pcie-armada8k.c
-> @@ -134,12 +134,14 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
->  		dev_err(pp->dev, "Link not up after reconfiguration\n");
->  }
->  
-> -static void armada8k_pcie_host_init(struct pcie_port *pp)
-> +static int armada8k_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
->  
->  	dw_pcie_setup_rc(pp);
->  	armada8k_pcie_establish_link(pcie);
-> +
-> +	return 0;
->  }
->  
->  static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
-> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-> index 1a02038..e01adbb 100644
-> --- a/drivers/pci/host/pcie-designware-plat.c
-> +++ b/drivers/pci/host/pcie-designware-plat.c
-> @@ -35,13 +35,19 @@ static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
->  	return dw_handle_msi_irq(pp);
->  }
->  
-> -static void dw_plat_pcie_host_init(struct pcie_port *pp)
-> +static int dw_plat_pcie_host_init(struct pcie_port *pp)
->  {
-> +	int ret;
-> +
->  	dw_pcie_setup_rc(pp);
-> -	dw_pcie_wait_for_link(pp);
-> +	ret = dw_pcie_wait_for_link(pp);
-> +	if (ret)
-> +		return ret;
->  
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops dw_plat_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index bed1999..4a81b72 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -638,7 +638,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	}
->  
->  	if (pp->ops->host_init)
-> -		pp->ops->host_init(pp);
-> +		ret = pp->ops->host_init(pp);
-> +			if (ret < 0)
-> +				goto error;
->  
->  	pp->root_bus_nr = pp->busn->start;
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index a567ea2..eacf18f 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -63,7 +63,7 @@ struct pcie_host_ops {
->  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->  			unsigned int devfn, int where, int size, u32 val);
->  	int (*link_up)(struct pcie_port *pp);
-> -	void (*host_init)(struct pcie_port *pp);
-> +	int (*host_init)(struct pcie_port *pp);
->  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->  	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
-> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-> index 3593640..7d5fb38 100644
-> --- a/drivers/pci/host/pcie-qcom.c
-> +++ b/drivers/pci/host/pcie-qcom.c
-> @@ -429,7 +429,7 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
->  	return !!(val & PCI_EXP_LNKSTA_DLLLA);
->  }
->  
-> -static void qcom_pcie_host_init(struct pcie_port *pp)
-> +static int qcom_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct qcom_pcie *pcie = to_qcom_pcie(pp);
->  	int ret;
-> @@ -455,12 +455,13 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
->  	if (ret)
->  		goto err;
->  
-> -	return;
-> +	return ret;
->  err:
->  	qcom_ep_reset_assert(pcie);
->  	phy_power_off(pcie->phy);
->  err_deinit:
->  	pcie->ops->deinit(pcie);
-> +	return ret;
->  }
->  
->  static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index 3cf197b..2408f80 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -174,12 +174,18 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> -static void spear13xx_pcie_host_init(struct pcie_port *pp)
-> +static int spear13xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> +	int ret;
-> +
-> +	ret = spear13xx_pcie_establish_link(spear13xx_pcie);
-> +	if (ret < 0)
-> +		return ret;
->  
-> -	spear13xx_pcie_establish_link(spear13xx_pcie);
->  	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops spear13xx_pcie_host_ops = {
+I think it is correct to accept the larger set of descriptor types.
+
+Note 2 to Table 4-2 of the PCI Firmware spec r3.2 does suggest that the
+MMCFG region should be declared by a PNP0C02 device.  I don't know why it
+calls out PNP0C02 specifically, unless it's related to the fact that the
+Consumer/Producer issues make it hard to use the PNP0A03 device itself.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   69 +++++-----------------------------------
+ 1 file changed, 9 insertions(+), 60 deletions(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index dd30b7e..f62ffe7 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -373,71 +373,20 @@ static int __init pci_mmcfg_check_hostbridge(void)
+ 	return !list_empty(&pci_mmcfg_list);
+ }
+ 
+-static acpi_status check_mcfg_resource(struct acpi_resource *res, void *data)
+-{
+-	struct resource *mcfg_res = data;
+-	struct acpi_resource_address64 address;
+-	acpi_status status;
+-
+-	if (res->type == ACPI_RESOURCE_TYPE_FIXED_MEMORY32) {
+-		struct acpi_resource_fixed_memory32 *fixmem32 =
+-			&res->data.fixed_memory32;
+-		if (!fixmem32)
+-			return AE_OK;
+-		if ((mcfg_res->start >= fixmem32->address) &&
+-		    (mcfg_res->end < (fixmem32->address +
+-				      fixmem32->address_length))) {
+-			mcfg_res->flags = 1;
+-			return AE_CTRL_TERMINATE;
+-		}
+-	}
+-	if ((res->type != ACPI_RESOURCE_TYPE_ADDRESS32) &&
+-	    (res->type != ACPI_RESOURCE_TYPE_ADDRESS64))
+-		return AE_OK;
+-
+-	status = acpi_resource_to_address64(res, &address);
+-	if (ACPI_FAILURE(status) ||
+-	   (address.address.address_length <= 0) ||
+-	   (address.resource_type != ACPI_MEMORY_RANGE))
+-		return AE_OK;
+-
+-	if ((mcfg_res->start >= address.address.minimum) &&
+-	    (mcfg_res->end < (address.address.minimum + address.address.address_length))) {
+-		mcfg_res->flags = 1;
+-		return AE_CTRL_TERMINATE;
+-	}
+-	return AE_OK;
+-}
+-
+-static acpi_status find_mboard_resource(acpi_handle handle, u32 lvl,
+-					void *context, void **rv)
+-{
+-	struct resource *mcfg_res = context;
+-
+-	acpi_walk_resources(handle, METHOD_NAME__CRS,
+-			    check_mcfg_resource, context);
+-
+-	if (mcfg_res->flags)
+-		return AE_CTRL_TERMINATE;
+-
+-	return AE_OK;
+-}
+-
+ static int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ {
+ 	struct resource mcfg_res;
++	struct acpi_device *adev;
+ 
+ 	mcfg_res.start = start;
+ 	mcfg_res.end = end - 1;
+-	mcfg_res.flags = 0;
++	mcfg_res.flags = IORESOURCE_MEM;
+ 
+-	acpi_get_devices("PNP0C01", find_mboard_resource, &mcfg_res, NULL);
+-
+-	if (!mcfg_res.flags)
+-		acpi_get_devices("PNP0C02", find_mboard_resource, &mcfg_res,
+-				 NULL);
++	adev = acpi_resource_consumer(&mcfg_res);
++	if (adev)
++		return 1;
+ 
+-	return mcfg_res.flags;
++	return 0;
+ }
+ 
+ typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+@@ -450,7 +399,7 @@ static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
+ 	u64 size = resource_size(&cfg->res);
+ 	u64 old_size = size;
+ 	int num_buses;
+-	char *method = with_e820 ? "E820" : "ACPI motherboard resources";
++	char *method = with_e820 ? "E820" : "ACPI namespace";
+ 
+ 	while (!is_reserved(addr, addr + size, E820_RESERVED)) {
+ 		size >>= 1;
+@@ -504,12 +453,12 @@ static int __ref pci_mmcfg_check_reserved(struct device *dev,
+ 		if (dev)
+ 			dev_info(dev, FW_INFO
+ 				 "MMCONFIG at %pR not reserved in "
+-				 "ACPI motherboard resources\n",
++				 "ACPI namespace\n",
+ 				 &cfg->res);
+ 		else
+ 			pr_info(FW_INFO PREFIX
+ 			       "MMCONFIG at %pR not reserved in "
+-			       "ACPI motherboard resources\n",
++			       "ACPI namespace\n",
+ 			       &cfg->res);
+ 	}
+ 
 
