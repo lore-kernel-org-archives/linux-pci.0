@@ -1,115 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0084.outbound.protection.outlook.com ([104.47.34.84]:6320
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752097AbcLILEQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Dec 2016 06:04:16 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
-        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: RE: ATH9 driver issues on ARM64
-Date: Fri, 9 Dec 2016 11:04:00 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263A7F11@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
- <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
- <8520D5D51A55D047800579B094147198263A79AC@XAP-PVEXMBX02.xlnx.xilinx.com>
- <d8bc6283-8b37-76d6-8ff1-0847ee015380@arm.com>
-In-Reply-To: <d8bc6283-8b37-76d6-8ff1-0847ee015380@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:53644 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751570AbcLEVVp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 16:21:45 -0500
+Date: Mon, 5 Dec 2016 15:21:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Masters <jcm@redhat.com>
+Cc: Duc Dang <dhdang@apm.com>, Mark Salter <msalter@redhat.com>,
+        Rafael Wysocki <rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-arm <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
+Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
+ controller
+Message-ID: <20161205212140.GA18259@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
+ <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <1480620053.4751.30.camel@redhat.com>
+ <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
+ <CADaLNDkVPRPSg0aU-sxHsiJbVvEn=LxcekDt6gfXBBhc+fzhjw@mail.gmail.com>
+ <20161201230736.GA17948@bhelgaas-glaptop.roam.corp.google.com>
+ <CADaLND=Ss8d-jv7wffbrtytrjj=SUnjDn9bognKUszhKguRV1A@mail.gmail.com>
+ <d77e403c-81e9-114e-6ec6-bbffaa4ac36f@redhat.com>
+ <20161202233943.GF9903@bhelgaas-glaptop.roam.corp.google.com>
+ <62dd5462-4d68-b89f-2b45-0d58bbd96bcd@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <62dd5462-4d68-b89f-2b45-0d58bbd96bcd@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 09/12/16 02:07, Bharat Kumar Gogada wrote:
-> >> On 08/12/16 18:33, Bharat Kumar Gogada wrote:
-> >>>> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
-> >>>>> 218:         61          0          0          0     GICv2  81 Leve=
-l     mmc0
-> >>>>> 219:          0          0          0          0     GICv2 187 Leve=
-l     arm-smmu global
-> fault
-> >>>>> 220:        471          0          0          0     GICv2  53 Leve=
-l     xuartps
-> >>>>> 223:          0          0          0          0     GICv2 154 Leve=
-l     fd4c0000.dma
-> >>>>> 224:          3          0          0          0     dummy   1 Edge=
-      ath9k
-> >>>>
-> >>>> What is this "dummy" controller? And if that's supposed to be a
-> >>>> legacy interrupt from the PCI device, it has the wrong trigger.
-> >>>
-> >>> Yes it is for legacy interrupt, wrong trigger means ?
+On Fri, Dec 02, 2016 at 07:33:46PM -0500, Jon Masters wrote:
+> On 12/02/2016 06:39 PM, Bjorn Helgaas wrote:
+> > On Thu, Dec 01, 2016 at 11:08:23PM -0500, Jon Masters wrote:
+> 
+> >> Let's see if I summarized this correctly...
 > >>
-> >> Aren't legacy interrupts supposed to be *level* triggered, and not edg=
-e?
+> >> 1. The MMIO registers for the host bridge itself need to be described
+> >>    somewhere, especially if we need to find those in a quirk and poke
+> >>    them. Since those registers are very much part of the bridge device,
+> >>    it makes sense for them to be in the _CRS for PNP0A08/PNP0A03.
 > >>
-> > Yes agreed.
-> > For legacy interrupts im using irq_set_chained_handler_and_data so the
-> > irq line between bridge and GIC Will not be shown here. The above how
-> > is virq for legacy, which is given by kernel, not sure why its state is=
- set to edge.
->=20
-> Well, you should try and find out. Edge triggering for legacy interrupts =
-is a real
-> bug, and I don't think it has anything to do with arm64 (despite what the=
- subject
-> says).
->=20
-Thanks Marc. Here is the ARM32 bit log for cat /proc/interrupts,=20
-Here also it shows edge but still scan works successfully.
-root@:~#cat /proc/interrupts=20
-           CPU0       CPU1      =20
- 16:          1          0     GIC-0  27 Edge      gt
- 17:          0          0     GIC-0  43 Level     ttc_clockevent
- 18:       3049       1170     GIC-0  29 Edge      twd
- 21:         43          0     GIC-0  39 Level     f8007100.adc
-141:        462          0     GIC-0  57 Level     cdns-i2c
-143:          0          0     GIC-0  35 Level     f800c000.ocmc
-144:       1259          0     GIC-0  82 Level     xuartps
-145:          3          0     GIC-0  51 Level     e000d000.spi
-146:          0          0     GIC-0  54 Level     eth0
-147:         54          0     GIC-0  56 Level     mmc0
-148:          0          0     GIC-0  45 Level     f8003000.dmac
-149:          0          0     GIC-0  46 Level     f8003000.dmac
-150:          0          0     GIC-0  47 Level     f8003000.dmac
-151:          0          0     GIC-0  48 Level     f8003000.dmac
-152:          0          0     GIC-0  49 Level     f8003000.dmac
-153:          0          0     GIC-0  72 Level     f8003000.dmac
-154:          0          0     GIC-0  73 Level     f8003000.dmac
-155:          0          0     GIC-0  74 Level     f8003000.dmac
-156:          0          0     GIC-0  75 Level     f8003000.dmac
-157:          0          0     GIC-0  40 Level     f8007000.devcfg
-163:          0          0     GIC-0  53 Level     e0002000.usb
-164:          0          0     GIC-0  41 Edge      f8005000.watchdog
-165:        158          0     GIC-0  61 Level     xilinx-pcie
-166:        122         18     dummy   1 Edge      ath9k
-IPI1:          0          0  Timer broadcast interrupts
-IPI2:       1101       2349  Rescheduling interrupts
-IPI3:         34         20  Function call interrupts
-IPI4:          0          0  CPU stop interrupts
-IPI5:          0          0  IRQ work interrupts
-IPI6:          0          0  completion interrupts
+> >> 2. The address space covering these registers MUST be described as a
+> >>    ResourceConsumer in order to avoid accidentally exposing them as
+> >>    available for use by downstream devices on the PCI bus.
+> >>
+> >> 3. The ACPI specification allows for resources of the type "Memory32Fixed".
+> >>    This is a macro that doesn't have the notion of a producer or consumer.
+> >>    HOWEVER various interpretations seem to be that this could/should
+> >>    default to being interpreted as a consumed region.
+> > 
+> > I agree; I think that per spec, Memory24, Memory32, Memory32Fixed, IO,
+> > and FixedIO should all be for consumed resources, not for bridge
+> > windows, since they don't have the notion of producer.
+> 
+> Ok. If we ultimately codify this somewhere as the general Linux kernel
+> consensus (Rafael?) then we can also go and get the various ARM server
+> specs updated to reflect this in (for e.g.) reference firmware builds.
+> 
+> > I'm pretty sure there's x86 firmware in the field that uses these for
+> > windows, so I think we have to accept that usage, at least on x86.
+> 
+> Ok. I was pondering how to even go about finding that out, but even if
+> I scheduled a job across RH's infra to look, that would be a drop in
+> the bucket of possible machines that might be out there doing this.
 
-root@Xilinx-ZC706-2016_3:~# iw dev wlnan0 scan
-BSS d8:c7:c8:26:6a:72(on wlan0)
-	TSF: 349496494967 usec (4d, 01:04:56)
-	freq: 2412
-	beacon interval: 100 TUs
-	capability: ESS ShortPreamble ShortSlotTime (0x0421)
-	signal: -47.00 dBm
-	last seen: 2170 ms ago
-.....
-....
+Hmmm, when researching this, I thought I came across a change
+specifically for a machine that used Memory32Fixed this way, but I
+can't find it now.
 
-Thanks & Regards,
-Bharat
+The only thing I did find was some old experiments with Windows that
+showed it interpreting a Memory32Fixed region as a window and putting
+PCI devices in it: https://bugzilla.kernel.org/show_bug.cgi?id=15817
+But that was a synthetic example with qemu, not a real machine in the
+field.
+
+> > Even without this patch, I don't think it's a show-stopper to have
+> > Linux mistakenly thinking this region is routed to PCI, because the
+> > driver does reserve it and the PCI core will never try to use it.
+> 
+> Ok. So are you happy with pulling in Duc's v4 patch and retaining
+> status quo on the bridge resources for 4.10?
+
+Yes, I think it looks good.  I'll finish packaging things up and
+repost the current series.
+
+Bjorn
