@@ -1,75 +1,107 @@
-Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
-Date: Mon, 12 Dec 2016 19:55:47 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv4 next 0/3] Limiting pci access
-Message-ID: <20161213005547.GA12844@localhost.localdomain>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <20161118232544.GI28386@localhost.localdomain>
- <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
- <20161128180214.GF2609@localhost.localdomain>
- <20161208175432.GA28827@bhelgaas-glaptop.roam.corp.google.com>
- <20161208193253.GK25959@localhost.localdomain>
- <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=D3qI=XU=apm.com=dhdang@kernel.org>
+Return-Path: <SRS0=D3qI=XU=apm.com=dhdang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205215318.GB22455@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
+ <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <CADaLNDm6fPQ6ekQa85fveAamJtF3+HGeOvprmgGJ4gLnMhF2_w@mail.gmail.com> <20161205215318.GB22455@bhelgaas-glaptop.roam.corp.google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Mon, 5 Dec 2016 14:09:12 -0800
+Message-ID: <CADaLND=wqO+dWJWgqqy5Wqd4zO1yRptpeq+6p_TEjSpb_7gMQQ@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rafael Wysocki <rafael@kernel.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Masters <jcm@redhat.com>,
+	Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 12, 2016 at 05:42:27PM -0600, Bjorn Helgaas wrote:
-> On Thu, Dec 08, 2016 at 02:32:53PM -0500, Keith Busch wrote:
-> > Depending on the device and the driver, there are hundreds to thousands
-> > of non-posted transactions submitted to the device to complete driver
-> > unbinding and removal. Since the device is gone, hardware has to handle
-> > that as an error condition, which is slower than the a successful
-> > non-posted transaction. Since we're doing 1000 of them for no particular
-> > reason, it takes a long time. If you hot remove a switch with multiple
-> > downstream devices, the serialized removal adds up to many seconds.
-> 
-> Another thread mentioned 1-2us as a reasonable config access cost, and
-> I'm still a little puzzled about how we get to something on the order
-> of a million times that cost.
-> 
-> I know this is all pretty hand-wavey, but 1000 config accesses to shut
-> down a device seems unreasonably high.  The entire config space is
-> only 4096 bytes, and most devices use a small fraction of that.  If
-> we're really doing 1000 accesses, it sounds like we're doing something
-> wrong, like polling without a delay or something.
+On Mon, Dec 5, 2016 at 1:53 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Dec 01, 2016 at 06:52:23PM -0800, Duc Dang wrote:
+>> On Thu, Dec 1, 2016 at 10:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+>> I made similar changes in v4 patch. The ECAM quirk will be built when
+>> ACPI and PCI_QUIRKS are enabled.
+>>
+>> When building for DT only, the ECAM quirk won't be compiled.
+>
+> Perfect.
+>
+>> >>  #define XGENE_PCIE_IP_VER_UNKN               0
+>> >>  #define XGENE_PCIE_IP_VER_1          1
+>> >> +#define XGENE_PCIE_IP_VER_2          2
+>> >
+>> > This isn't used anywhere, which makes me wonder whether it's worth
+>> > keeping it.
+>>
+>> V2 controller will use this XGENE_PCIE_IP_VER_2 (port->version =
+>> XGENE_PCIE_IP_VER_2). This will be used to indicate that the
+>> controller is V2, and to enable configuration request retry status
+>> feature (by not disable it like V1 controller).
+>
+> OK, I see.  You don't actually need XGENE_PCIE_IP_VER_2, you just need
+> port->version to be something other than XGENE_PCIE_IP_VER_1.  So this
+> is fine as it is.
+>
+>> >>  static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
+>> >>  {
+>> >> -     struct xgene_pcie_port *port = bus->sysdata;
+>> >> +     struct pci_config_window *cfg;
+>> >> +     struct xgene_pcie_port *port;
+>> >> +
+>> >> +     if (acpi_disabled)
+>> >> +             port = bus->sysdata;
+>> >> +     else {
+>> >> +             cfg = bus->sysdata;
+>> >> +             port = cfg->priv;
+>> >> +     }
+>> >
+>> > I would really, really like to figure out a way to get rid of these
+>> > "if (acpi_disabled)" checks sprinkled through here.  Is there any way
+>> > we can set up bus->sysdata to be the same, regardless of whether we're
+>> > using this as a platform driver or an ACPI quirk?
+>>
+>> Right now, I created a inline function to extract xgene_pcie_port from
+>> pci_bus. In order to get rid of acpi_disabled, I will need to make
+>> sysdata in DT case also point to pci_config_window structure, which
+>> means I will need to convert and test the DT driver to use ecam ops.
+>> It is a separate patch itself. So I think I should do it at later time
+>> (after this ECAM quirk patch). I hope you are ok with this.
+>
+> OK.  I did the simple-minded version of leaving the DT ops the same
+> but making sysdata point to a dummy pci_config_window.  Your proposal
+> of using ECAM for DT would be much better.
+>
+> It's interesting that you actually already use the same accessors
+> except that DT uses the 32-bit pci_generic_config_write32() and ACPI
+> uses the regular pci_generic_config_write(). I guess that means the
+> hardware actually *does* support sub-32 bit writes?
 
-Every time pci_find_ext_capability is called on a removed device, the
-kernel will do 481 failed config space accesses trying to find that
-capability. The kernel used to do that multiple times to find the AER
-capability under conditions common to surprise removal.
+Yes, the hardware does support sub-32 bit writes (and reads). This is
+another item in my TODO list for DT (which does not seem quite urgent
+now): switch to use pci_generic_config_write for DT. But, well, I will
+need to do that for read as well (for both ACPI and DT).
 
-But now that we cache the AER position (commit: 66b80809), we've
-eliminated by far the worst offender. The counts I'm telling you are
-still referencing the original captured traces showing long tear down
-times, so it's not up-to-date with the most recent version of the kernel.
- 
-> I measured the cost of config reads during enumeration using the TSC
-> on a 2.8GHz CPU and found the following:
-> 
->   1580 cycles, 0.565 usec (device present)
->   1230 cycles, 0.440 usec (empty slot)
->   2130 cycles, 0.761 usec (unimplemented function of multi-function device)
-> 
-> So 1-2usec does seem the right order of magnitude, and my "empty slot"
-> error responses are actually *faster* than the "device present" ones,
-> which is plausible to me because the Downstream Port can generate the
-> error response immediately without sending a packet down the link.
-> The "unimplemented function" responses take longer than the "empty
-> slot", which makes sense because the Downstream Port does have to send
-> a packet to the device, which then complains because it doesn't
-> implement that function.
-> 
-> Of course, these aren't the same case as yours, where the link used to
-> be up but is no longer.  Is there some hardware timeout to see if the
-> link will come back?
-
-Yes, the hardware does not respond immediately under this test, which
-is considered an error condition. This is a reason why PCIe Device
-Capabilities 2 Completion Timeout Ranges are recommended to be in the
-10ms range.
+>
+>> I need to define the function (xgene_get_csr_resource()) inside
+>> pci-xgene.c to duplicate the code of acpi_get_rc_addr. The reason is
+>> X-Gene firmware does not have a dedicate PNP0C02 node to declare the
+>> resource, and if I use acpi_get_rc_resources() with "PNP0A08", I got
+>> error due to acpi_bus_get_device() returns error.
+>
+> Looks good.
+>
+>> > All these init functions are almost identical.  Can we factor this out
+>> > by having wrappers that do nothing more than pass in the table and
+>> > version, and put the kzalloc and ioremap in a shared back-end?
+>>
+>> I refactor-ed these .init functions. And as a result, there are only 2
+>> ecam ops left: xgene_v1_pcie_ecam_ops and xgene_v2_pcie_ecam_ops.
+>
+> Looks good.
+>
+> Bjorn
+Regards,
+Duc Dang.
