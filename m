@@ -1,66 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54380 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:58444 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933994AbcLAMdB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 07:33:01 -0500
-Subject: [PATCH 25/39] Annotate hardware config module parameters in
- drivers/pci/hotplug/
-From: David Howells <dhowells@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Scott Murray <scott@spiteful.org>, minyard@acm.org,
-        gnomes@lxorguk.ukuu.org.uk, linux-pci@vger.kernel.org,
-        dhowells@redhat.com, linux-security-module@vger.kernel.org,
-        keyrings@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 01 Dec 2016 12:32:58 +0000
-Message-ID: <148059557836.31612.5039521915534964791.stgit@warthog.procyon.org.uk>
-In-Reply-To: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
-References: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
+        id S1751530AbcLEVx2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 16:53:28 -0500
+Date: Mon, 5 Dec 2016 15:53:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Duc Dang <dhdang@apm.com>
+Cc: Rafael Wysocki <rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+        linux-arm <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jon Masters <jcm@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
+        patches <patches@apm.com>
+Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
+ controller
+Message-ID: <20161205215318.GB22455@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
+ <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
+ <CADaLNDm6fPQ6ekQa85fveAamJtF3+HGeOvprmgGJ4gLnMhF2_w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADaLNDm6fPQ6ekQa85fveAamJtF3+HGeOvprmgGJ4gLnMhF2_w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the kernel is running in secure boot mode, we lock down the kernel to
-prevent userspace from modifying the running kernel image.  Whilst this
-includes prohibiting access to things like /dev/mem, it must also prevent
-access by means of configuring driver modules in such a way as to cause a
-device to access or modify the kernel image.
+On Thu, Dec 01, 2016 at 06:52:23PM -0800, Duc Dang wrote:
+> On Thu, Dec 1, 2016 at 10:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-To this end, annotate module_param* statements that refer to hardware
-configuration and indicate for future reference what type of parameter they
-specify.  The parameter parser in the core sees this information and can
-skip such parameters with an error message if the kernel is locked down.
-The module initialisation then runs as normal, but just sees whatever the
-default values for those parameters is.
+> I made similar changes in v4 patch. The ECAM quirk will be built when
+> ACPI and PCI_QUIRKS are enabled.
+> 
+> When building for DT only, the ECAM quirk won't be compiled.
 
-Note that we do still need to do the module initialisation because some
-drivers have viable defaults set in case parameters aren't specified and
-some drivers support automatic configuration (e.g. PNP or PCI) in addition
-to manually coded parameters.
+Perfect.
 
-This patch annotates drivers in drivers/pci/hotplug/.
+> >>  #define XGENE_PCIE_IP_VER_UNKN               0
+> >>  #define XGENE_PCIE_IP_VER_1          1
+> >> +#define XGENE_PCIE_IP_VER_2          2
+> >
+> > This isn't used anywhere, which makes me wonder whether it's worth
+> > keeping it.
+> 
+> V2 controller will use this XGENE_PCIE_IP_VER_2 (port->version =
+> XGENE_PCIE_IP_VER_2). This will be used to indicate that the
+> controller is V2, and to enable configuration request retry status
+> feature (by not disable it like V1 controller).
 
-Suggested-by: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Scott Murray <scott@spiteful.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-pci@vger.kernel.org
----
+OK, I see.  You don't actually need XGENE_PCIE_IP_VER_2, you just need
+port->version to be something other than XGENE_PCIE_IP_VER_1.  So this
+is fine as it is.
 
- drivers/pci/hotplug/cpcihp_generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> >>  static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
+> >>  {
+> >> -     struct xgene_pcie_port *port = bus->sysdata;
+> >> +     struct pci_config_window *cfg;
+> >> +     struct xgene_pcie_port *port;
+> >> +
+> >> +     if (acpi_disabled)
+> >> +             port = bus->sysdata;
+> >> +     else {
+> >> +             cfg = bus->sysdata;
+> >> +             port = cfg->priv;
+> >> +     }
+> >
+> > I would really, really like to figure out a way to get rid of these
+> > "if (acpi_disabled)" checks sprinkled through here.  Is there any way
+> > we can set up bus->sysdata to be the same, regardless of whether we're
+> > using this as a platform driver or an ACPI quirk?
+> 
+> Right now, I created a inline function to extract xgene_pcie_port from
+> pci_bus. In order to get rid of acpi_disabled, I will need to make
+> sysdata in DT case also point to pci_config_window structure, which
+> means I will need to convert and test the DT driver to use ecam ops.
+> It is a separate patch itself. So I think I should do it at later time
+> (after this ECAM quirk patch). I hope you are ok with this.
 
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index 88a44a707b96..bbf9cf8aeaad 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -220,7 +220,7 @@ module_param(first_slot, byte, 0);
- MODULE_PARM_DESC(first_slot, "Hotswap bus first slot number");
- module_param(last_slot, byte, 0);
- MODULE_PARM_DESC(last_slot, "Hotswap bus last slot number");
--module_param(port, ushort, 0);
-+module_param_hw(port, ushort, ioport, 0);
- MODULE_PARM_DESC(port, "#ENUM signal I/O port");
- module_param(enum_bit, uint, 0);
- MODULE_PARM_DESC(enum_bit, "#ENUM signal bit (0-7)");
+OK.  I did the simple-minded version of leaving the DT ops the same
+but making sysdata point to a dummy pci_config_window.  Your proposal
+of using ECAM for DT would be much better.
 
+It's interesting that you actually already use the same accessors
+except that DT uses the 32-bit pci_generic_config_write32() and ACPI
+uses the regular pci_generic_config_write(). I guess that means the
+hardware actually *does* support sub-32 bit writes?
+
+> I need to define the function (xgene_get_csr_resource()) inside
+> pci-xgene.c to duplicate the code of acpi_get_rc_addr. The reason is
+> X-Gene firmware does not have a dedicate PNP0C02 node to declare the
+> resource, and if I use acpi_get_rc_resources() with "PNP0A08", I got
+> error due to acpi_bus_get_device() returns error.
+
+Looks good.
+
+> > All these init functions are almost identical.  Can we factor this out
+> > by having wrappers that do nothing more than pass in the table and
+> > version, and put the kzalloc and ioremap in a shared back-end?
+> 
+> I refactor-ed these .init functions. And as a result, there are only 2
+> ecam ops left: xgene_v1_pcie_ecam_ops and xgene_v2_pcie_ecam_ops.
+
+Looks good.
+
+Bjorn
