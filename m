@@ -1,83 +1,71 @@
-Return-Path: <SRS0=0FGq=YL=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=0FGq=YL=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
-CC: Christoph Hellwig <hch@infradead.org>, Kishon Vijay Abraham I
-	<kishon@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<nsekhar@ti.com>, Linus Torvalds <torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
-Date: Wed, 28 Dec 2016 17:17:14 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 5 Dec 2016 11:02:31 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161205180231.GA28133@obsidianresearch.com>
+References: <20161128165751.GB28381@obsidianresearch.com>
+ <1480357179.19407.13.camel@mellanox.com>
+ <20161128190244.GA21975@obsidianresearch.com>
+ <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+ <20161130162353.GA24639@obsidianresearch.com>
+ <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
+ <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+ <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com>
+ <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
-> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>> here. I'll post the rest of EP series before the next merge window.
->>>>
->>>> There might be hiccups because of this renaming but feel this is
->>>> necessary for long-term maintenance.
->>>
->>> if we do this rename it would be great to get it to Linus NOW after
->>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>
->> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->> also. Wouldn't be better to name it rc_controller?
-> 
-> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
-> neutral name that can cover both RC and Endpoint.
-> 
-> I'm not a huge fan of "controller" because it feels a little bit long
-> and while I suppose it technically does include the concept of the PCI
-> interface of an endpoint, it still suggests more of the host side to
-> me.
-> 
-> Doesn't USB have a similar situation?  I see there's a
-> drivers/usb/host/ (probably where we copied from in the first place).
-> Is a USB gadget the USB analog of what you're doing?  How do they
-> share code between the master/slave sides?
-> 
+On Mon, Dec 05, 2016 at 09:40:38AM -0800, Dan Williams wrote:
 
-The usb/host contains the implemnentations by the spec of the several
-*hci (USB Host) and then you can have for example the USB 3.0 Designware
-Host specific ops in dwc3 and for USB 2.0 in dwc2/.
-For device purposes it uses the core/ and then some of the device functions
-are extended from the gadget/ package in which you can use mass_storage and
-other types of functions.
-
-In our case in PCI we have the core functions inside /drivers/pci and the host
-mangled inside host. I suggest:
-
-drivers/pci
- drivers/pci/core/
- drivers/pci/core/hotplug
- drivers/pci/core/pcie
- drivers/pci/core/<all other files inside pci/ today>
- drivers/pci/host
- drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
- drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
- drivers/pci/endpoint -> common code
- drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
- drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
-
-Joao
-
-> There's a drivers/ntb/hw/.  I don't know if "hw" is the *best* name,
-> but it's short and it at least conveys the idea that this code is
-> hardware-specific, not generic.
+> > If it is kernel only with physical addresess we don't need a uAPI for
+> > it, so I'm not sure #1 is at all related to iopmem.
+> >
+> > Most people who want #1 probably can just mmap
+> > /sys/../pci/../resourceX to get a user handle to it, or pass around
+> > __iomem pointers in the kernel. This has been asked for before with
+> > RDMA.
+> >
+> > I'm still not really clear what iopmem is for, or why DAX should ever
+> > be involved in this..
 > 
->>>>  drivers/pci/{host => controller}/Kconfig           |    0
->>>>  drivers/pci/{host => controller}/Makefile          |    0
->>>>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
->>>>  drivers/pci/{host => controller}/pci-dra7xx.c      |    0
->>>> ...
+> Right, by default remap_pfn_range() does not establish DMA capable
+> mappings. You can think of iopmem as remap_pfn_range() converted to
+> use devm_memremap_pages(). Given the extra constraints of
+> devm_memremap_pages() it seems reasonable to have those DMA capable
+> mappings be optionally established via a separate driver.
+
+Except the iopmem driver claims the PCI ID, and presents a block
+interface which is really *NOT* what people who have asked for this in
+the past have wanted. IIRC it was embedded stuff eg RDMA video
+directly out of a capture card or a similar kind of thinking.
+
+It is a good point about devm_memremap_pages limitations, but maybe
+that just says to create a /sys/.../resource_dmableX ?
+
+Or is there some reason why people want a filesystem on top of BAR
+memory? That does not seem to have been covered yet..
+
+Jason
