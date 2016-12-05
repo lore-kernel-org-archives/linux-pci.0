@@ -1,101 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:33858 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752721AbcL0Q1q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 11:27:46 -0500
-Date: Tue, 27 Dec 2016 18:19:16 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        kgene@kernel.org, krzk@kernel.org, javier@osg.samsung.com,
-        kishon@ti.com, will.deacon@arm.com, catalin.marinas@arm.com,
-        cpgs@samsung.com
-Subject: Re: [RFC PATCH 5/6] Documentation: pci: add the exynos5433-pcie
- binding
-Message-ID: <20161227161916.nb6yf3n2kmkzkeg2@kozik-lap>
-References: <20161226052029.10552-1-jh80.chung@samsung.com>
- <CGME20161226052031epcas5p4f151c41189f7b3811979ca1e10aab1be@epcas5p4.samsung.com>
- <20161226052029.10552-6-jh80.chung@samsung.com>
+Received: from mail.kernel.org ([198.145.29.136]:39808 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752282AbcLEX0Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:26:16 -0500
+Subject: [PATCH v11 07/15] PCI/ACPI: Extend pci_mcfg_lookup() to return ECAM
+ config accessors
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:26:12 -0600
+Message-ID: <20161205232612.3957.19378.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161226052029.10552-6-jh80.chung@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 26, 2016 at 02:20:28PM +0900, Jaehoon Chung wrote:
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  .../devicetree/bindings/pci/exynos5433-pcie.txt    | 36 ++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt b/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
-> new file mode 100644
-> index 0000000..932a847
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
-> @@ -0,0 +1,36 @@
-> +* Samsung Exynos5433 PCIe interface
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+From: Tomasz Nowicki <tn@semihalf.com>
 
-Synopsys.
+pci_mcfg_lookup() is the external interface to the generic MCFG code.
+Previously it merely looked up the ECAM base address for a given domain and
+bus range.  We want a way to add MCFG quirks, some of which may require
+special config accessors and adjustments to the ECAM address range.
 
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> +- compatible: "samsung,exynos5433-pcie"
-> +- reg: base addresses and lengths of the pcie controller,
-> +	the phy controller, additional register for the phy controller.
+Extend pci_mcfg_lookup() so it can return a pointer to a pci_ecam_ops
+structure and a struct resource for the ECAM address space.  For now, it
+always returns &pci_generic_ecam_ops (the standard accessor) and the
+resource described by the MCFG.
 
-You mentioned three regs but the example contains four of them. Is the
-config comming from snps,dw-pcie?
+No functional changes intended.
 
-> +- reg-names: Must be "elbi", "phy" and "dbi" for each regs
+[bhelgaas: changelog]
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/kernel/pci.c  |   17 +++++------------
+ drivers/acpi/pci_mcfg.c  |   28 +++++++++++++++++++++++++---
+ include/linux/pci-acpi.h |    4 +++-
+ 3 files changed, 33 insertions(+), 16 deletions(-)
 
-Again, three here, four in example.
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index ecf026d0..a16fc8e 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -137,25 +137,18 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 	struct device *dev = &root->device->dev;
+ 	struct resource *bus_res = &root->secondary;
+ 	u16 seg = root->segment;
++	struct pci_ecam_ops *ecam_ops;
+ 	struct resource cfgres;
+ 	struct acpi_device *adev;
+ 	struct pci_config_window *cfg;
+-	unsigned int bsz;
++	int ret;
+ 
+-	/* Use address from _CBA if present, otherwise lookup MCFG */
+-	if (!root->mcfg_addr)
+-		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+-
+-	if (!root->mcfg_addr) {
++	ret = pci_mcfg_lookup(root, &cfgres, &ecam_ops);
++	if (ret) {
+ 		dev_err(dev, "%04x:%pR ECAM region not found\n", seg, bus_res);
+ 		return NULL;
+ 	}
+ 
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+-	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+-	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+-	cfgres.flags = IORESOURCE_MEM;
+-
+ 	adev = acpi_resource_consumer(&cfgres);
+ 	if (adev)
+ 		dev_info(dev, "ECAM area %pR reserved by %s\n", &cfgres,
+@@ -165,7 +158,7 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 			 &cfgres);
+ 
+ 
+-	cfg = pci_ecam_create(dev, &cfgres, bus_res, &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(dev, &cfgres, bus_res, ecam_ops);
+ 	if (IS_ERR(cfg)) {
+ 		dev_err(dev, "%04x:%pR error %ld mapping ECAM\n", seg, bus_res,
+ 			PTR_ERR(cfg));
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index b5b376e..ffcc651 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,6 +22,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Structure to hold entries from the MCFG table */
+ struct mcfg_entry {
+@@ -35,9 +36,18 @@ struct mcfg_entry {
+ /* List to save MCFG entries */
+ static LIST_HEAD(pci_mcfg_list);
+ 
+-phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
++int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++		    struct pci_ecam_ops **ecam_ops)
+ {
++	struct pci_ecam_ops *ops = &pci_generic_ecam_ops;
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
+ 	struct mcfg_entry *e;
++	struct resource res;
++
++	/* Use address from _CBA if present, otherwise lookup MCFG */
++	if (root->mcfg_addr)
++		goto skip_lookup;
+ 
+ 	/*
+ 	 * We expect exact match, unless MCFG entry end bus covers more than
+@@ -45,10 +55,22 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+ 	 */
+ 	list_for_each_entry(e, &pci_mcfg_list, list) {
+ 		if (e->segment == seg && e->bus_start == bus_res->start &&
+-		    e->bus_end >= bus_res->end)
+-			return e->addr;
++		    e->bus_end >= bus_res->end) {
++			root->mcfg_addr = e->addr;
++		}
++
+ 	}
+ 
++	if (!root->mcfg_addr)
++		return -ENXIO;
++
++skip_lookup:
++	memset(&res, 0, sizeof(res));
++	res.start = root->mcfg_addr + (bus_res->start << 20);
++	res.end = res.start + (resource_size(bus_res) << 20) - 1;
++	res.flags = IORESOURCE_MEM;
++	*cfgres = res;
++	*ecam_ops = ops;
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7d63a66..7a4e83a 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -24,7 +24,9 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ }
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+-extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
++struct pci_ecam_ops;
++extern int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++			   struct pci_ecam_ops **ecam_ops);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
 
-> +- interrupt-names: Must be "intr" for legacy interrupt pin.
-> +
-> +Other common properites refer to
-> +	Documentation/devicetree/binding/pci/designware-pcie.txt
-> +
-> +Example:
-> +
-> +	pcie: pcie@15700000 {
-> +		compatible ="samsung,exynos5433-pcie", "snps,dw-pcie";
-                            ^
-			    space needed
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
-> +		interrupt-names = "intr";
-> +		clocks = <&cmu_fsys CLK_PCIE>, <&cmu_fsys CLK_PCLK_PCIE_PHY>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		num-lanes = <1>;
-> +		pinctrl-names = "default";
-> +		pinctrl-0 = <&pcie_bus>;
-> +		reg = <0x156b0000 0x1000>, <0x15680000 0x1000>,
-> +		    <0x15700000 0x1000>, <0x0c000000 0x1000>;
-
-Indentation here looks wrong. You indented it with spaces after tabs...
-but not to align with line before.
-
-Beside that, fine with me:
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-
-Best regards,
-Krzysztof
-
-
-> +		reg-names = "elbi", "phy", "dbi", "config";
-> +		ranges = <0x81000000 0 0	  0x0c001000 0 0x00010000
-> +			  0x82000000 0 0x0c011000 0x0c011000 0 0x3feefff>;
-> +		status = "disabled";
-> +	};
-> -- 
-> 2.10.2
-> 
