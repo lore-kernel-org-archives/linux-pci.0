@@ -1,138 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37410 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbcL1I6W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 03:58:22 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH] PCI: designware: add host_init() error handling
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+References: <1480593077-15402-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <f2c8ebba-e51a-5f47-2d96-c75f7e086c0e@synopsys.com>
+ <d416f9b3-20d9-0339-a4d2-9a4ba0669633@linaro.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <05a1f59e-b5da-7a6a-149e-7e9037deb7bd@synopsys.com>
+Date: Mon, 5 Dec 2016 10:24:33 +0000
 MIME-Version: 1.0
-In-Reply-To: <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
-References: <CGME20161226052030epcas5p4ea673fc4ee5c0b2664e80f53d4758553@epcas5p4.samsung.com>
- <20161226052029.10552-1-jh80.chung@samsung.com> <20161226052029.10552-2-jh80.chung@samsung.com>
- <CAFp+6iH0q9TNvPgv3_Nexm-vE6TBB_eQHXCwniO-Yn=fq+WWMg@mail.gmail.com> <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Date: Wed, 28 Dec 2016 14:28:19 +0530
-Message-ID: <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/6] phy: exynos-pcie: Add support for Exynos PCIe phy
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-samsung-soc@vger.kernel.org"
-        <linux-samsung-soc@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "robh+dt" <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kukjin Kim <kgene@kernel.org>, krzk@kernel.org,
-        javier@osg.samsung.com, kishon <kishon@ti.com>,
-        Will Deacon <will.deacon@arm.com>, catalin.marinas@arm.com,
-        CPGS <cpgs@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <d416f9b3-20d9-0339-a4d2-9a4ba0669633@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <tie-fei.zang@freescale.com>, linux-samsung-soc@vger.kernel.org,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Krzysztof Kozlowski <krzk@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>,
+ Javier Martinez
+ Canillas <javier@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>,
+ Jose Abreu <Jose.Abreu@synopsys.com>, linux-arm-msm@vger.kernel.org,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Thomas
+ Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ linux-kernel@vger.kernel.org, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>, linuxppc-dev@lists.ozlabs.org,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+=C0s 11:51 AM de 12/2/2016, Srinivas Kandagatla escreveu:
+> =
 
-On Wed, Dec 28, 2016 at 8:19 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
-> Hi Vivek,
->
-> On 12/27/2016 02:53 PM, Vivek Gautam wrote:
->> Hi Jaehoon,
+> =
+
+> On 02/12/16 10:32, Joao Pinto wrote:
 >>
+>> Hi Srinivas,
 >>
->> On Mon, Dec 26, 2016 at 10:50 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
->>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
->>> When Exynos that supported the pcie want to use the PCIe,
->>> it needs to control the phy resgister.
->>> But it should be more complex to control in their own PCIe device drivers.
+>> =C0s 11:51 AM de 12/1/2016, Srinivas Kandagatla escreveu:
+>>>  drivers/pci/host/pci-dra7xx.c           |  4 +++-
+>>>  drivers/pci/host/pci-exynos.c           |  4 +++-
+>>>  drivers/pci/host/pci-imx6.c             |  4 +++-
+>>>  drivers/pci/host/pci-keystone.c         |  4 +++-
+>>>  drivers/pci/host/pci-layerscape.c       | 12 ++++++++----
+>>>  drivers/pci/host/pcie-armada8k.c        |  4 +++-
+>>>  drivers/pci/host/pcie-designware-plat.c |  4 +++-
+>>>  drivers/pci/host/pcie-designware.c      |  4 +++-
+>>>  drivers/pci/host/pcie-designware.h      |  2 +-
+>>>  drivers/pci/host/pcie-qcom.c            |  6 ++++--
+>>>  drivers/pci/host/pcie-spear13xx.c       |  4 +++-
+>>>  11 files changed, 37 insertions(+), 15 deletions(-)
 >>>
->>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->>> ---
->>>  drivers/phy/Kconfig           |   9 ++
->>>  drivers/phy/Makefile          |   1 +
->>>  drivers/phy/phy-exynos-pcie.c | 227 ++++++++++++++++++++++++++++++++++++++++++
->>>  3 files changed, 237 insertions(+)
->>>  create mode 100644 drivers/phy/phy-exynos-pcie.c
->>>
->>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->>> index fe00f91..94b0433 100644
->>> --- a/drivers/phy/Kconfig
->>> +++ b/drivers/phy/Kconfig
->>> @@ -341,6 +341,15 @@ config PHY_EXYNOS5_USBDRD
->>>           This driver provides PHY interface for USB 3.0 DRD controller
->>>           present on Exynos5 SoC series.
->>>
->>> +config PHY_EXYNOS_PCIE
->>> +       bool "Exynos PCIe PHY driver"
 >>
->> Is there a reason for this not being 'tristate' ?
->
-> Will change.
-
-I notice that PCI_EXYNOS5433 is bool as well.
-If the host has to be 'bool' then it makes sense to have phy
-also bool as well. But if PCI_EXYNOS5433 can be made
-tristate, then this also changes to tristate.
-
->
+>> Thanks for the patch!
 >>
->>> +       depends on ARCH_EXYNOS && OF
->>> +       depends on PCI_EXYNOS5433
->>> +       select GENERIC_PHY
->>> +       help
->>> +         Enable PCIe PHY support for Exynos SoC series.
+>> In my opinion your idea is good but only qcom driver is able to detect f=
+ailure
+>> in the specific host init routine, all others have a 'return 0' even if
+>> something not well init. I would recomend that we take this issue a bit =
+further
+>> and add the error checking to all specific pci drivers in order to make =
+them as
+>> robust as qcom'.
+> I totally agree with you, I can give this a go in next version.
+
+Sure, but I think it would be better to finish now since we are on top of t=
+he
+task. I can help you if you need.
+
+Thanks Joao
+
+> =
+
+> Thanks,
+> srini
+> =
+
 >>
->> If this driver is for Exynos5433, then same should come in this help
->> text as well.
->
-> will support the other exynos series.
-> I'm working on refactoring exynos5440 with PHY generic Framework.
-> Then this drive is not for only Exnyos5433. how about?
-
-Ok, it's good then. My only concern is 'depends on PCI_EXYNOS5433'
-makes it look like it is for EXYNOS5433. I am fine if that changes as well.
-
-[...]
-
->>> +
->>> +#define PCIE_EXYNOS5433_PMU_PHY_OFFSET         0x730
->>> +#define PCIE_PHY_OFFSET(x)             ((x) * 0x4)
->>> +
->>> +/* Sysreg Fsys register offset and bit for Exynos5433 */
->>> +#define PCIE_PHY_MAC_RESET             0x208
->>> +#define PCIE_MAC_RESET_MASK            0xFF
->>> +#define PCIE_MAC_RESET                 BIT(4)
->>> +#define PCIE_L1SUB_CM_CON              0x1010
->>> +#define PCIE_REFCLK_GATING_EN          BIT(0)
->>> +#define PCIE_PHY_COMMON_RESET          0x1020
->>> +#define PCIE_PHY_RESET                 BIT(0)
->>> +#define PCIE_PHY_GLOBAL_RESET          0x1040
->>> +#define PCIE_GLOBAL_RESET              BIT(0)
->>> +#define PCIE_REFCLK                    BIT(1)
->>> +#define PCIE_REFCLK_MASK               0x16
->>> +#define PCIE_APP_REQ_EXIT_L1_MODE      BIT(5)
->>> +
->>> +enum exynos_pcie_phy_data_type {
->>> +       PCIE_PHY_TYPE_EXYNOS5433,
->>> +};
->>> +
->>> +struct exynos_pcie_phy_data {
->>> +       enum exynos_pcie_phy_data_type  ctrl_type;
+>> Thanks,
+>> Joao
 >>
->> Why do we need this controller type ?
->> If there are changes in the IP between different version,
->> then you can as well use different compatibles.
->
-> Do you mean is the using "of_device_is_compatible()"?
-
-I meant that multiple compatible strings can be added based on the
-IP versions. And any IP specific data can be put in the .data field
-of  'of_device_id' structure.
-If there's more to differentiate between the IP versions at runtime,
-you can use of_device_is_compatible().
-
-[...]
 
 
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
