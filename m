@@ -1,127 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:53148 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752564AbcLZFUk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2016 00:20:40 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
+Received: from mail.kernel.org ([198.145.29.136]:39886 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752364AbcLEX0Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Dec 2016 18:26:24 -0500
+Subject: [PATCH v11 08/15] PCI/ACPI: Check for platform-specific MCFG quirks
+From: Bjorn Helgaas <helgaas@kernel.org>
 To: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, javier@osg.samsung.com, kishon@ti.com,
-        will.deacon@arm.com, catalin.marinas@arm.com, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [RFC PATCH 6/6] ARM64: exynos: add the pcie node for TM2
-Date: Mon, 26 Dec 2016 14:20:29 +0900
-Message-id: <20161226052029.10552-7-jh80.chung@samsung.com>
-In-reply-to: <20161226052029.10552-1-jh80.chung@samsung.com>
-References: <20161226052029.10552-1-jh80.chung@samsung.com>
- <CGME20161226052031epcas1p43a300fe9e59c2af410c48861cd8554d1@epcas1p4.samsung.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Christopher Covington <cov@codeaurora.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Mon, 05 Dec 2016 17:26:19 -0600
+Message-ID: <20161205232619.3957.80398.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the Exxynos5433 pcie node for TM2.
-This pcie device is used for supporting WiFi.
+From: Tomasz Nowicki <tn@semihalf.com>
 
-And some gpios are already requested from pinctrl. so it doesn't need to
-initialize.
-GPJ2-0 is used for supplying to WiFi PCIe chip.
+The PCIe spec (r3.0, sec 7.2.2) specifies an "Enhanced Configuration Access
+Mechanism" (ECAM) for memory-mapped access to configuration space.  ECAM is
+required for PCIe systems unless there's a standard firmware interface for
+config access.
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+In the absence of a firmware interface, we use pci_generic_ecam_ops, and on
+ACPI systems, we discover the ECAM space via the MCFG table and/or the _CBA
+method.
+
+Unfortunately some systems provide MCFG but don't implement ECAM according
+to spec, so we need a mechanism for quirks to make those systems work.
+
+Add an MCFG quirk mechanism to override the config accessor functions
+and/or the memory-mapped address space.
+
+A quirk is selected if it matches all of the following:
+
+  - OEM ID
+  - OEM Table ID
+  - OEM Revision
+  - PCI segment (from _SEG)
+  - PCI bus number range (from _CRS, wildcard allowed)
+
+If the quirk specifies config accessor functions or a memory-mapped address
+range, these override the defaults.
+
+[bhelgaas: changelog, reorder quirk matching, fix oem_revision typo per
+Duc, add under #ifdef CONFIG_PCI_QUIRKS]
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Christopher Covington <cov@codeaurora.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi |  7 +++++++
- arch/arm64/boot/dts/exynos/exynos5433-tm2.dts      | 11 +++++++++--
- arch/arm64/boot/dts/exynos/exynos5433.dtsi         | 23 ++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_mcfg.c |   92 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 86 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
-index ad71247..3e8b728 100644
---- a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
-+++ b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
-@@ -183,6 +183,13 @@
- 		interrupt-controller;
- 		#interrupt-cells = <2>;
- 	};
-+
-+	pcie_wlanen: pcie-wlanen {
-+		samsung,pins = "gpj2-0";
-+		samsung,pin-function = <0>;
-+		samsung,pin-pud = <3>;
-+		samsung,pin-drv = <3>;
-+	};
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index ffcc651..1ef7285 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -33,6 +33,69 @@ struct mcfg_entry {
+ 	u8			bus_end;
  };
  
- &pinctrl_finger {
-diff --git a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
-index f21bdc2..c84a2ad 100644
---- a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
-+++ b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
-@@ -737,6 +737,15 @@
- 	bus-width = <4>;
- };
- 
-+&pcie {
-+	assigned-clocks = <&cmu_fsys CLK_MOUT_SCLK_PCIE_100_USER>,
-+			<&cmu_top CLK_MOUT_SCLK_PCIE_100>;
-+	assigned-clock-parents = <&cmu_top CLK_SCLK_PCIE_100_FSYS>,
-+			<&cmu_top CLK_MOUT_BUS_PLL_USER>;
-+	assigned-clock-rates = <0>, <100000000>;
-+	status = "okay";
++#ifdef CONFIG_PCI_QUIRKS
++struct mcfg_fixup {
++	char oem_id[ACPI_OEM_ID_SIZE + 1];
++	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
++	u32 oem_revision;
++	u16 segment;
++	struct resource bus_range;
++	struct pci_ecam_ops *ops;
++	struct resource cfgres;
 +};
 +
- &pinctrl_alive {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&initial_alive>;
-@@ -836,7 +845,6 @@
- 	pinctrl-0 = <&initial_ese>;
- 
- 	initial_ese: initial-state {
--		PIN(IN, gpj2-0, DOWN, LV1);
- 		PIN(IN, gpj2-1, DOWN, LV1);
- 		PIN(IN, gpj2-2, DOWN, LV1);
- 	};
-@@ -851,7 +859,6 @@
- 		PIN(IN, gpr3-1, DOWN, LV1);
- 		PIN(IN, gpr3-2, DOWN, LV1);
- 		PIN(IN, gpr3-3, DOWN, LV1);
--		PIN(IN, gpr3-7, NONE, LV1);
- 	};
- };
- 
-diff --git a/arch/arm64/boot/dts/exynos/exynos5433.dtsi b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
-index 2a15f18..da287f4 100644
---- a/arch/arm64/boot/dts/exynos/exynos5433.dtsi
-+++ b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
-@@ -1457,6 +1457,29 @@
- 			samsung,fsys-sysreg = <&syscon_fsys>;
- 			status = "okay";
- 		};
++#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
++						((end) - (start) + 1),	\
++						NULL, IORESOURCE_BUS)
++#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
 +
-+		pcie: pcie@15700000 {
-+			compatible = "samsung,exynos5433-pcie", "snps,dw-pcie";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "intr";
-+			clocks = <&cmu_fsys CLK_PCIE>,
-+			       <&cmu_fsys CLK_PCLK_PCIE_PHY>;
-+			clock-names = "pcie", "pcie_bus";
-+			num-lanes = <1>;
-+			pinctrl-names = "default";
-+			phys = <&pcie_phy>;
-+			phy-names = "pcie-phy";
-+			pinctrl-0 = <&pcie_bus &pcie_wlanen>;
-+			reg = <0x156b0000 0x1000>, <0x15700000 0x1000>,
-+			    <0x0c000000 0x1000>;
-+			reg-names = "elbi", "dbi", "config";
-+			ranges = <0x81000000 0 0	  0x0c001000 0 0x00010000
-+				  0x82000000 0 0x0c011000 0x0c011000 0 0x3feefff>;
-+			status = "disabled";
-+		};
- 	};
++static struct mcfg_fixup mcfg_quirks[] = {
++/*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
++};
++
++static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
++static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
++static u32 mcfg_oem_revision;
++
++static int pci_mcfg_quirk_matches(struct mcfg_fixup *f, u16 segment,
++				  struct resource *bus_range)
++{
++	if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
++	    !memcmp(f->oem_table_id, mcfg_oem_table_id,
++	            ACPI_OEM_TABLE_ID_SIZE) &&
++	    f->oem_revision == mcfg_oem_revision &&
++	    f->segment == segment &&
++	    resource_contains(&f->bus_range, bus_range))
++		return 1;
++
++	return 0;
++}
++#endif
++
++static void pci_mcfg_apply_quirks(struct acpi_pci_root *root,
++				  struct resource *cfgres,
++				  struct pci_ecam_ops **ecam_ops)
++{
++#ifdef CONFIG_PCI_QUIRKS
++	u16 segment = root->segment;
++	struct resource *bus_range = &root->secondary;
++	struct mcfg_fixup *f;
++	int i;
++
++	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
++		if (pci_mcfg_quirk_matches(f, segment, bus_range)) {
++			if (f->cfgres.start)
++				*cfgres = f->cfgres;
++			if (f->ops)
++				*ecam_ops =  f->ops;
++			dev_info(&root->device->dev, "MCFG quirk: ECAM at %pR for %pR with %ps\n",
++				 cfgres, bus_range, *ecam_ops);
++			return;
++		}
++	}
++#endif
++}
++
+ /* List to save MCFG entries */
+ static LIST_HEAD(pci_mcfg_list);
  
- 	timer: timer {
--- 
-2.10.2
+@@ -61,14 +124,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
+ 
+ 	}
+ 
+-	if (!root->mcfg_addr)
+-		return -ENXIO;
+-
+ skip_lookup:
+ 	memset(&res, 0, sizeof(res));
+-	res.start = root->mcfg_addr + (bus_res->start << 20);
+-	res.end = res.start + (resource_size(bus_res) << 20) - 1;
+-	res.flags = IORESOURCE_MEM;
++	if (root->mcfg_addr) {
++		res.start = root->mcfg_addr + (bus_res->start << 20);
++		res.end = res.start + (resource_size(bus_res) << 20) - 1;
++		res.flags = IORESOURCE_MEM;
++	}
++
++	/*
++	 * Allow quirks to override default ECAM ops and CFG resource
++	 * range.  This may even fabricate a CFG resource range in case
++	 * MCFG does not have it.  Invalid CFG start address means MCFG
++	 * firmware bug or we need another quirk in array.
++	 */
++	pci_mcfg_apply_quirks(root, &res, &ops);
++	if (!res.start)
++		return -ENXIO;
++
+ 	*cfgres = res;
+ 	*ecam_ops = ops;
+ 	return 0;
+@@ -101,6 +174,13 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
+ 		list_add(&e->list, &pci_mcfg_list);
+ 	}
+ 
++#ifdef CONFIG_PCI_QUIRKS
++	/* Save MCFG IDs and revision for quirks matching */
++	memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
++	memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
++	mcfg_oem_revision = header->oem_revision;
++#endif
++
+ 	pr_info("MCFG table detected, %d entries\n", n);
+ 	return 0;
+ }
 
