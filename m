@@ -1,79 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6152 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932403AbcLMAcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Dec 2016 19:32:50 -0500
-From: Vaibhav Shankar <vaibhav.shankar@intel.com>
-To: bhelgaas@google.com, vaibhav.shankar@intel.com,
-        mayurkumar.patel@intel.com, keith.busch@intel.com, lukas@wunner.de,
-        yinghai@kernel.org, yhlu.kernel@gmail.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: pciehp: Optimize PCIe root resume time
-Date: Mon, 12 Dec 2016 16:32:25 -0800
-Message-Id: <1481589145-22109-1-git-send-email-vaibhav.shankar@intel.com>
-In-Reply-To: <20161211011908.GA10954@linux-siqj.site>
-References: <20161211011908.GA10954@linux-siqj.site>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56133 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750841AbcLEOBp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2016 09:01:45 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB5DsgX5060659
+        for <linux-pci@vger.kernel.org>; Mon, 5 Dec 2016 08:59:22 -0500
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2756v9jgyh-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 05 Dec 2016 08:59:22 -0500
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Mon, 5 Dec 2016 11:59:20 -0200
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Cc: gpiccoli@linux.vnet.ibm.com, robh+dt@kernel.org,
+        mark.rutland@arm.com, benh@kernel.crashing.org,
+        frowand.list@gmail.com, marc.zyngier@arm.com
+Subject: [PATCH v2] of/irq: improve error report on irq discovery process failure
+Date: Mon,  5 Dec 2016 11:59:16 -0200
+Message-Id: <1480946356-16778-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Apollolake platforms, PCIe rootport takes a long time to resume
-from S3. With 100ms delay before read pci conf, rootport takes
-~200ms during resume.
+On PowerPC machines some PCI slots might not have level triggered
+interrupts capability (also know as level signaled interrupts),
+leading of_irq_parse_pci() to complain by presenting error messages
+on the kernel log - in this case, the properties "interrupt-map" and
+"interrupt-map-mask" are not present on device's node in the device
+tree.
 
-commit 2f5d8e4ff947 ("PCI: pciehp: replace unconditional sleep with
-config space access check") is the one that added the 100ms delay
-before reading pci conf.
+This patch introduces a different message for this specific case,
+and also reduces its level from error to warning. Besides, we warn
+(once) that possibly some PCI slots on the system have no level
+triggered interrupts available.
+We changed some error return codes too on function of_irq_parse_raw()
+in order other failure's cases can be presented in a more precise way.
 
-This patch includes a condition check for 100ms dealy before reading
-PCIe conf. This delay in included only when PCIe
-max_bus_speed > 5.0 GT/s. Root port takes ~16ms during resume.
+Before this patch, when an adapter was plugged in a slot without level
+interrupts capabilitiy on PowerPC, we saw a generic error message
+like this:
 
-With 100ms delay:
-[  155.102713] calling  0000:00:14.0+ @ 70, parent: pci0000:00, cb: pci_pm_resume_noirq
-[  155.119337] call 0000:00:14.0+ returned 0 after 16231 usecs
-[  155.119467] calling  0000:01:00.0+ @ 5845, parent: 0000:00:14.0, cb: pci_pm_resume_noirq
-[  155.321670] call 0000:00:14.0+ returned 0 after 185327 usecs
-[  155.321743] calling  0000:01:00.0+ @ 5849, parent: 0000:00:14.0, cb: pci_pm_resume
+    [54.239] pci 002d:70:00.0: of_irq_parse_pci() failed with rc=-22
 
-With Condition check:
-[   36.624709] calling 0000:00:14.0+ @ 4434, parent: pci0000:00, cb: pci_pm_resume_noirq
-[   36.641367] call 0000:00:14.0+ returned 0 after 16263 usecs
-[   36.652458] calling 0000:00:14.0+ @ 4443, parent: pci0000:00, cb: pci_pm_resume
-[   36.652673] call 0000:00:14.0+ returned 0 after 208 usecs
-[   36.652863] calling  0000:01:00.0+ @ 4442, parent: 0000:00:14.0, cb: pci_pm_resume
+Now, with this applied, we see the following specific message:
 
-Signed-off-by: Vaibhav Shankar <vaibhav.shankar@intel.com>
+    [16.154] pci 0014:60:00.1: of_irq_parse_pci: no interrupt-map found,
+    INTx interrupts not available
+
+Finally, we standardize the error path in of_irq_parse_raw() by always
+taking the fail path instead of returning directly from the loop.
+
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
 ---
-changes in v2:
-        - Modify patch description.
-        - Add condition check for 100ms delay before read pci conf as
-          suggested by Yinghai.
 
- drivers/pci/hotplug/pciehp_hpc.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+v2:
+  * Changed function return code to always return negative values;
+  * Improved/simplified warning outputs;
+  * Changed some return codes and some error paths in of_irq_parse_raw()
+in order to be more precise/consistent;
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b57fc6d..2b10e5f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -311,8 +311,15 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	else
- 		msleep(1000);
+ drivers/of/irq.c        | 19 ++++++++++++-------
+ drivers/of/of_pci_irq.c | 10 +++++++++-
+ 2 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 393fea8..9deee86 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -104,7 +104,7 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 	const __be32 *match_array = initial_match_array;
+ 	const __be32 *tmp, *imap, *imask, dummy_imask[] = { [0 ... MAX_PHANDLE_ARGS] = ~0 };
+ 	u32 intsize = 1, addrsize, newintsize = 0, newaddrsize = 0;
+-	int imaplen, match, i;
++	int imaplen, match, i, rc = -EINVAL;
  
--	/* wait 100ms before read pci conf, and try in 1s */
--	msleep(100);
-+	/*
-+	 * If the port supports Link speeds greater than 5.0 GT/s, we
-+	 * must wait for 100 ms after Link training completes before
-+	 * sending configuration request.
-+	 */
-+	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
-+		msleep(100);
+ #ifdef DEBUG
+ 	of_print_phandle_args("of_irq_parse_raw: ", out_irq);
+@@ -134,7 +134,7 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 	pr_debug("of_irq_parse_raw: ipar=%s, size=%d\n", of_node_full_name(ipar), intsize);
+ 
+ 	if (out_irq->args_count != intsize)
+-		return -EINVAL;
++		goto fail;
+ 
+ 	/* Look for this #address-cells. We have to implement the old linux
+ 	 * trick of looking for the parent here as some device-trees rely on it
+@@ -153,8 +153,10 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 	pr_debug(" -> addrsize=%d\n", addrsize);
+ 
+ 	/* Range check so that the temporary buffer doesn't overflow */
+-	if (WARN_ON(addrsize + intsize > MAX_PHANDLE_ARGS))
++	if (WARN_ON(addrsize + intsize > MAX_PHANDLE_ARGS)) {
++		rc = -EFAULT;
+ 		goto fail;
++	}
+ 
+ 	/* Precalculate the match array - this simplifies match loop */
+ 	for (i = 0; i < addrsize; i++)
+@@ -240,10 +242,11 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 			    newintsize, newaddrsize);
+ 
+ 			/* Check for malformed properties */
+-			if (WARN_ON(newaddrsize + newintsize > MAX_PHANDLE_ARGS))
+-				goto fail;
+-			if (imaplen < (newaddrsize + newintsize))
++			if (WARN_ON(newaddrsize + newintsize > MAX_PHANDLE_ARGS)
++			    || (imaplen < (newaddrsize + newintsize))) {
++				rc = -EFAULT;
+ 				goto fail;
++			}
+ 
+ 			imap += newaddrsize + newintsize;
+ 			imaplen -= newaddrsize + newintsize;
+@@ -271,11 +274,13 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+ 		ipar = newpar;
+ 		newpar = NULL;
+ 	}
++	rc = -ENOENT; /* No interrupt-map found */
 +
-+	/* try in 1s */
- 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
- 					PCI_DEVFN(0, 0));
+  fail:
+ 	of_node_put(ipar);
+ 	of_node_put(newpar);
  
+-	return -EINVAL;
++	return rc;
+ }
+ EXPORT_SYMBOL_GPL(of_irq_parse_raw);
+ 
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 2306313..c175d9c 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -93,7 +93,15 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+ 		goto err;
+ 	return 0;
+ err:
+-	dev_err(&pdev->dev, "of_irq_parse_pci() failed with rc=%d\n", rc);
++	if (rc == -ENOENT) {
++		dev_warn(&pdev->dev,
++			"%s: no interrupt-map found, INTx interrupts not available\n",
++			__func__);
++		pr_warn_once("%s: possibly some PCI slots don't have level triggered interrupts capability\n",
++			__func__);
++	} else {
++		dev_err(&pdev->dev, "%s: failed with rc=%d\n", __func__, rc);
++	}
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
 -- 
-1.7.9.5
+2.1.0
 
