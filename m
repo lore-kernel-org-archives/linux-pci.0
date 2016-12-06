@@ -1,214 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40110 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752282AbcLEX0r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:26:47 -0500
-Subject: [PATCH v11 11/15] PCI: Add MCFG quirks for HiSilicon Hip05/06/07
- host controllers
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 6 Dec 2016 09:43:04 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, joro@8bytes.org
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        iommu@lists.linux-foundation.org,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Sricharan R <sricharan@codeaurora.org>,
         Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Mon, 05 Dec 2016 17:26:42 -0600
-Message-ID: <20161205232642.3957.87997.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] ACPI/IORT: Make dma masks set-up IORT specific
+Message-ID: <20161206094304.GA2498@arm.com>
+References: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161205122619.25045-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dongdong Liu <liudongdong3@huawei.com>
+On Mon, Dec 05, 2016 at 12:26:19PM +0000, Lorenzo Pieralisi wrote:
+> The introduction of acpi_dma_configure() allows to configure DMA
+> and related IOMMU for any device that is DMA capable. To achieve
+> that goal it ensures DMA masks are set-up to sane default values
+> before proceeding with IOMMU and DMA ops configuration.
+> 
+> On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
+> called for every device that has an ACPI companion, in that every device
+> is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
+> which has the side effect of initializing dma masks also for
+> pseudo-devices (eg CPUs and memory nodes) and potentially for devices
+> whose dma masks were not set-up before the acpi_dma_configure() API was
+> introduced, which may have noxious side effects.
+> 
+> Therefore, in preparation for IORT firmware specific DMA masks set-up,
+> wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
+> specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
+> default expected behaviour on x86/ia64 systems and keeping DMA default
+> masks set-up on IORT based (ie ARM) arch configurations.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Sricharan R <sricharan@codeaurora.org>
+> ---
+> Joerg,
+> 
+> pending Rafael's ACK on it, given the 4.10 release timing and that the
+> series is queued via the IOMMU tree please consider applying this patch to
+> your arm/smmu branch for 4.10, it is not fixing a bug but it is modifying
+> the x86/ia64 code path; I prefer preventing any issue related to default
+> dma masks on x86/ia64 so I hope it can get merged along with the rest of
+> the ACPI IORT SMMU series.
+> 
+> Thanks a lot and apologies,
+> Lorenzo
+> 
+>  drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
+>  drivers/acpi/scan.c       | 14 +-------------
+>  include/linux/acpi_iort.h |  2 ++
+>  3 files changed, 25 insertions(+), 13 deletions(-)
 
-The PCIe controller in Hip05/Hip06/Hip07 SoCs is not completely
-ECAM-compliant.  It is non-ECAM only for the RC bus config space; for any
-other bus underneath the root bus it does support ECAM access.
+Looks straightforward to me:
 
-Add specific quirks for PCI config space accessors.  This involves:
-1. New initialization call hisi_pcie_init() to obtain RC base
-addresses from PNP0C02 at the root of the ACPI namespace (under \_SB).
-2. New entry in common quirk array.
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-[bhelgaas: move to pcie-hisi.c and change Makefile/ifdefs so quirk doesn't
-depend on CONFIG_PCI_HISI]
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_mcfg.c      |   12 +++++
- drivers/pci/host/Makefile    |    2 -
- drivers/pci/host/pcie-hisi.c |  101 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-ecam.h     |    1 
- 4 files changed, 115 insertions(+), 1 deletion(-)
+Joerg can probably just pick this on top of his queue.
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index cee33b0..540515f 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -62,6 +62,18 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	QCOM_ECAM32(5),
- 	QCOM_ECAM32(6),
- 	QCOM_ECAM32(7),
-+
-+#define HISI_QUAD_DOM(table_id, seg, ops) \
-+	{ "HISI  ", table_id, 0, seg + 0, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 1, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 2, MCFG_BUS_ANY, ops }, \
-+	{ "HISI  ", table_id, 0, seg + 3, MCFG_BUS_ANY, ops }
-+	HISI_QUAD_DOM("HIP05   ",  0, &hisi_pcie_ops),
-+	HISI_QUAD_DOM("HIP06   ",  0, &hisi_pcie_ops),
-+	HISI_QUAD_DOM("HIP07   ",  0, &hisi_pcie_ops),
-+	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
-+	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
-+	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb49..64845f0 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -25,7 +25,7 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
--obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_ARM64) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 56154c2..9bfa1ab 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -18,7 +18,106 @@
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
- #include <linux/of_device.h>
-+#include <linux/pci.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
- #include <linux/regmap.h>
-+#include "../pci.h"
-+
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+
-+static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
-+				  int size, u32 *val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
-+
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_read32(bus, devfn, where,
-+							 size, val);
-+	}
-+
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+static int hisi_pcie_acpi_wr_conf(struct pci_bus *bus, u32 devfn,
-+				  int where, int size, u32 val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	int dev = PCI_SLOT(devfn);
-+
-+	if (bus->number == cfg->busr.start) {
-+		/* access only one slot on each root port */
-+		if (dev > 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		else
-+			return pci_generic_config_write32(bus, devfn, where,
-+							  size, val);
-+	}
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				       int where)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+	void __iomem *reg_base = cfg->priv;
-+
-+	if (bus->number == cfg->busr.start)
-+		return reg_base + where;
-+	else
-+		return pci_ecam_map_bus(bus, devfn, where);
-+}
-+
-+static int hisi_pcie_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct acpi_device *adev = to_acpi_device(dev);
-+	struct acpi_pci_root *root = acpi_driver_data(adev);
-+	struct resource *res;
-+	void __iomem *reg_base;
-+	int ret;
-+
-+	/*
-+	 * Retrieve RC base and size from a HISI0081 device with _UID
-+	 * matching our segment.
-+	 */
-+	res = devm_kzalloc(dev, sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return -ENOMEM;
-+
-+	ret = acpi_get_rc_resources(dev, "HISI0081", root->segment, res);
-+	if (ret) {
-+		dev_err(dev, "can't get rc base address\n");
-+		return -ENOMEM;
-+	}
-+
-+	reg_base = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!reg_base)
-+		return -ENOMEM;
-+
-+	cfg->priv = reg_base;
-+	return 0;
-+}
-+
-+struct pci_ecam_ops hisi_pcie_ops = {
-+	.bus_shift    = 20,
-+	.init         =  hisi_pcie_init,
-+	.pci_ops      = {
-+		.map_bus    = hisi_pcie_map_bus,
-+		.read       = hisi_pcie_acpi_rd_conf,
-+		.write      = hisi_pcie_acpi_wr_conf,
-+	}
-+};
-+
-+#endif
-+
-+#ifdef CONFIG_PCI_HISI
- 
- #include "pcie-designware.h"
- 
-@@ -227,3 +326,5 @@ static struct platform_driver hisi_pcie_driver = {
- 	},
- };
- builtin_platform_driver(hisi_pcie_driver);
-+
-+#endif
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 739d233..bdacbc8 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -61,6 +61,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
- 
- #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
- extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
-+extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
- #endif
- 
- #ifdef CONFIG_PCI_HOST_GENERIC
-
+Will
