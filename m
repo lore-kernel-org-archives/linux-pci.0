@@ -1,140 +1,64 @@
-Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
-Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
-References: <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
- <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com> <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 1 Dec 2016 23:36:42 -0800
-Message-ID: <CADaLNDkyCrheZLNG3_9BVgvGBW8WrA-VPWOCezz3U-g+nt5W9w@mail.gmail.com>
-Subject: Re: [PATCH v4 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
-To: Jon Masters <jcm@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:45620 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbcLFPvs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 10:51:48 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH pci/next v3 3/3] PCI: rcar: Add gen3 fallback compatibility string for pcie-rcar
+Date: Tue,  6 Dec 2016 16:51:31 +0100
+Message-Id: <1481039491-30364-4-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+References: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 1, 2016 at 11:12 PM, Jon Masters <jcm@redhat.com> wrote:
-> On 12/01/2016 09:27 PM, Duc Dang wrote:
->> PCIe controllers in X-Gene SoCs is not ECAM compliant: software
->> needs to configure additional controller's register to address
->> device at bus:dev:function.
->>
->> The quirk will discover controller MMIO register space and configure
->> controller registers to select and address the target secondary device.
->>
->> The quirk will only be applied for X-Gene PCIe MCFG table with
->> OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
->>
->> Signed-off-by: Duc Dang <dhdang@apm.com>
->
-> So far I've tested this on an HPE ProLiant m400 (Moonshot) cartridge
-> and will test it on some other reference platforms soon. Bootlog for
-> the m400 attached in case Bjorn wants to see the output. Here's
-> what I see in /proc/iomem btw on that platform:
->
-> # cat /proc/iomem
-> 10520000-10523fff : APMC0D18:00
->   10520000-10523fff : APMC0D18:00
-> 10524000-10527fff : APMC0D17:00
-> 10540000-1054a0ff : APMC0D01:00
->   10546000-10546fff : APMC0D50:00
->   1054a000-1054a00f : APMC0D12:03
->     1054a000-1054a00f : APMC0D12:02
->       1054a000-1054a00f : APMC0D12:01
->         1054a000-1054a00f : APMC0D12:00
-> 17000000-17000fff : APMC0D01:00
-> 17001000-17001fff : APMC0D01:00
->   17001000-170013ff : APMC0D15:00
->     17001000-170013ff : APMC0D15:00
-> 1701c000-1701cfff : APMC0D14:00
-> 1a800000-1a800fff : APMC0D0D:00
->   1a800000-1a800fff : APMC0D0D:00
-> 1c000200-1c0002ff : APMC0D06:00
-> 1c021000-1c0210ff : APMC0D08:00
->   1c021000-1c02101f : serial
-> 1c024000-1c024fff : APMC0D07:00
-> 1f230000-1f230fff : APMC0D0D:00
->   1f230000-1f230fff : APMC0D0D:00
-> 1f23d000-1f23dfff : APMC0D0D:00
->   1f23d000-1f23dfff : APMC0D0D:00
-> 1f23e000-1f23efff : APMC0D0D:00
->   1f23e000-1f23efff : APMC0D0D:00
-> 1f2a0000-1f31ffff : APMC0D06:00
-> 1f500000-1f50ffff : PCI Bus 0000:00
->   1f500000-1f50ffff : PNP0A08:00
-> 78800000-78800fff : APMC0D13:00
->   78800000-78800fff : APMC0D12:03
->     78800000-78800fff : APMC0D12:02
->       78800000-78800fff : APMC0D12:01
->         78800000-78800fff : APMC0D12:00
->           78800000-78800fff : APMC0D11:00
->           78800000-78800fff : APMC0D10:03
->           78800000-78800fff : APMC0D10:02
->           78800000-78800fff : APMC0D10:01
->           78800000-78800fff : APMC0D10:00
-> 79000000-798fffff : APMC0D0E:00
-> 7c000000-7c1fffff : APMC0D12:00
-> 7c200000-7c3fffff : APMC0D12:01
-> 7c400000-7c5fffff : APMC0D12:02
-> 7c600000-7c7fffff : APMC0D12:03
-> 7e000000-7e000fff : APMC0D13:00
-> 7e200000-7e200fff : APMC0D10:03
->   7e200000-7e200fff : APMC0D10:02
->     7e200000-7e200fff : APMC0D10:01
->       7e200000-7e200fff : APMC0D10:00
-> 7e600000-7e600fff : APMC0D11:00
-> 7e700000-7e700fff : APMC0D10:03
->   7e700000-7e700fff : APMC0D10:02
->     7e700000-7e700fff : APMC0D10:01
->       7e700000-7e700fff : APMC0D10:00
-> 7e720000-7e720fff : APMC0D10:03
->   7e720000-7e720fff : APMC0D10:02
->     7e720000-7e720fff : APMC0D10:01
->       7e720000-7e720fff : APMC0D10:00
-> 7e800000-7e800fff : APMC0D10:00
-> 7e840000-7e840fff : APMC0D10:01
-> 7e880000-7e880fff : APMC0D10:02
-> 7e8c0000-7e8c0fff : APMC0D10:03
-> 7e930000-7e930fff : APMC0D13:00
-> 4000000000-4001ffffff : System RAM
->   4000080000-4000c3ffff : Kernel code
->   4000db0000-400165ffff : Kernel data
-> 40023a0000-4ff733ffff : System RAM
-> 4ff7340000-4ff77cffff : reserved
-> 4ff77d0000-4ff79cffff : System RAM
-> 4ff79d0000-4ff7e7ffff : reserved
-> 4ff7e80000-4ff7e8ffff : System RAM
-> 4ff7e90000-4ff7efffff : reserved
-> 4ff7f10000-4ff800ffff : reserved
-> 4ff8010000-4fffffffff : System RAM
-> a020000000-a03fffffff : PCI Bus 0000:00
->   a020000000-a0201fffff : PCI Bus 0000:01
->     a020000000-a0200fffff : 0000:01:00.0
->       a020000000-a0200fffff : mlx4_core
->     a020100000-a0201fffff : 0000:01:00.0
-> a060000000-a07fffffff : PCI Bus 0000:00
-> a0d0000000-a0dfffffff : PCI ECAM
-> a110000000-a14fffffff : PCI Bus 0000:00
->   a110000000-a121ffffff : PCI Bus 0000:01
->     a110000000-a111ffffff : 0000:01:00.0
->       a110000000-a111ffffff : mlx4_core
->     a112000000-a121ffffff : 0000:01:00.0
->
-> Adding a Tested-by for the record:
->
-> Tested-by: Jon Masters <jcm@redhat.com>
+Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
+keeping with the both the existing fallback compatibility string for the
+R-Car Gen 2 family and the fallback scheme being adopted wherever
+appropriate for drivers for Renesas SoCs.
 
-Thanks a lot for testing this, Jon.
->
-> Jon.
->
-> --
-> Computer Architect | Sent from my Fedora powered laptop
->
-Regards,
-Duc Dang.
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v3
+* s/rcar_pcie_hw_init_hw_init/rcar_pcie_hw_init/
+v2
+* Move fallback binding to below SoC specific bindings it covers
+  in implementation
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+ drivers/pci/host/pcie-rcar.c                       | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 6cf99690eef9..eee518db90b9 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+ 	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+ 	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
++	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+ 
+ 	    When compatible with the generic version, nodes must list the
+ 	    SoC-specific version corresponding to the platform first
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 85971bc276c6..aca85be101f8 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1078,6 +1078,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-rcar-gen2",
+ 	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+ 
+-- 
+2.7.0.rc3.207.g0ac5344
+
