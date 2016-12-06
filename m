@@ -1,109 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:60673 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753713AbcL3J4Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Dec 2016 04:56:25 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 2/3] PCI: dra7xx: Add support to force RC to work in GEN1 mode
-Date: Fri, 30 Dec 2016 15:26:13 +0530
-Message-ID: <1483091774-8332-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1483091774-8332-1-git-send-email-kishon@ti.com>
-References: <1483091774-8332-1-git-send-email-kishon@ti.com>
+Received: from ale.deltatee.com ([207.54.116.67]:49201 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751670AbcLFQwJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Dec 2016 11:52:09 -0500
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Stephen Bates <sbates@raithlin.com>
+References: <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
+ <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+ <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com>
+ <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+ <20161205180231.GA28133@obsidianresearch.com>
+ <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+ <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
+ <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+ <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+ <20161206163850.GC28066@obsidianresearch.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
+Date: Tue, 6 Dec 2016 09:51:15 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20161206163850.GC28066@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe in AM57x/DRA7x devices is by default
-configured to work in GEN2 mode.  However there
-may be situations when working in GEN1 mode is
-desired. One example is limitation i925 (PCIe GEN2
-mode not supported at junction temperatures < 0C).
+Hey,
 
-Add support to force Root Complex to work in GEN1
-mode if so desired, but don't force GEN1 mode on
-any board just yet.
+On 06/12/16 09:38 AM, Jason Gunthorpe wrote:
+>>> I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
+>>> to accomplish in sysfs through /sys/dev/char to find the sysfs path of the
+>>> device-dax instance under the nvme device, or if you already have the nvme
+>>> sysfs path the dax instance(s) will appear under the "dax" sub-directory.
+>>
+>> Personally I think mapping the dax resource in the sysfs tree is a nice
+>> way to do this and a bit more intuitive than mapping a /dev/nvmeX.
+> 
+> It is still not at all clear to me what userpsace is supposed to do
+> with this on nvme.. How is the CMB usable from userspace?
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/pci-dra7xx.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+The flow is pretty simple. For example to write to NVMe from an RDMA device:
 
-diff --git a/drivers/pci/controller/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
-index f6d0c63..587b18c 100644
---- a/drivers/pci/controller/pci-dra7xx.c
-+++ b/drivers/pci/controller/pci-dra7xx.c
-@@ -17,6 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/of_gpio.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
-@@ -63,11 +64,14 @@
- #define	LINK_UP						BIT(16)
- #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
- 
-+#define EXP_CAP_ID_OFFSET				0x70
-+
- struct dra7xx_pcie {
- 	struct pcie_port	pp;
- 	void __iomem		*base;		/* DT ti_conf */
- 	int			phy_count;	/* DT phy-names count */
- 	struct phy		**phy;
-+	int			link_gen;
- };
- 
- #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
-@@ -96,12 +100,33 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	struct pcie_port *pp = &dra7xx->pp;
- 	struct device *dev = pp->dev;
- 	u32 reg;
-+	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(dev, "link is already up\n");
- 		return 0;
- 	}
- 
-+	if (dra7xx->link_gen == 1) {
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+				 4, &reg);
-+		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
-+			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
-+			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+					  PCI_EXP_LNKCAP, 4, reg);
-+		}
-+
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+				 2, &reg);
-+		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
-+			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
-+			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+					  PCI_EXP_LNKCTL2, 2, reg);
-+		}
-+	}
-+
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
- 	reg |= LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-@@ -397,6 +422,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	reg &= ~LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
-+	dra7xx->link_gen = of_pci_get_max_link_speed(np);
-+	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
-+		dra7xx->link_gen = 2;
-+
- 	ret = dra7xx_add_pcie_port(dra7xx, pdev);
- 	if (ret < 0)
- 		goto err_gpio;
--- 
-1.7.9.5
+1) Obtain a chunk of the CMB to use as a buffer(either by mmaping
+/dev/nvmx, the device dax char device or through a block layer interface
+(which sounds like a good suggestion from Christoph, but I'm not really
+sure how it would look).
+
+2) Create an MR with the buffer and use an RDMA function to fill it with
+data from a remote host. This will cause the RDMA hardware to write
+directly to the memory in the NVMe card.
+
+3) Using O_DIRECT, write the buffer to a file on the NVMe filesystem.
+When the address reaches hardware the NVMe will recognize it as local
+memory and copy it directly there.
+
+Thus we are able to transfer data to any file on an NVMe device without
+going through system memory. This has benefits on systems with lots of
+activity in system memory but step 3 is likely to be slowish due to the
+need to pin/unpin the memory for every transaction.
+
+Logan
 
