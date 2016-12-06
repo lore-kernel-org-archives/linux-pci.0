@@ -1,54 +1,81 @@
-Return-Path: <SRS0=Jw/T=XQ=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=Jw/T=XQ=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
- controller
-To: Mark Salter <msalter@redhat.com>, Duc Dang <dhdang@apm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
- <1480604901.4751.17.camel@redhat.com>
-Cc: Rafael Wysocki <rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann
- <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-arm <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <f4b949c0-f992-b0fb-5f23-f71cb1f9713e@redhat.com>
-Date: Thu, 1 Dec 2016 14:17:04 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+In-Reply-To: <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+References: <20161128165751.GB28381@obsidianresearch.com>
+    <1480357179.19407.13.camel@mellanox.com>
+    <20161128190244.GA21975@obsidianresearch.com>
+    <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
+    <20161130162353.GA24639@obsidianresearch.com>
+    <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
+    <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
+    <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+    <20161205171830.GB27784@obsidianresearch.com>
+    <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+    <20161205180231.GA28133@obsidianresearch.com>
+    <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+    <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
+    <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+Date: Tue, 6 Dec 2016 02:06:14 -0600
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+From: "Stephen Bates" <sbates@raithlin.com>
+To: "Dan Williams" <dan.j.williams@intel.com>
+Cc: "Logan Gunthorpe" <logang@deltatee.com>,
+        "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
+        "Haggai Eran" <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "Max Gurtovoy" <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1480604901.4751.17.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/01/2016 10:08 AM, Mark Salter wrote:
-> On Wed, 2016-11-30 at 15:42 -0800, Duc Dang wrote:
+>>> I've already recommended that iopmem not be a block device and
+>>> instead be a device-dax instance. I also don't think it should claim
+>>> the PCI ID, rather the driver that wants to map one of its bars this
+>>> way can register the memory region with the device-dax core.
+>>>
+>>> I'm not sure there are enough device drivers that want to do this to
+>>> have it be a generic /sys/.../resource_dmableX capability. It still
+>>> seems to be an exotic one-off type of configuration.
+>>
+>>
+>> Yes, this is essentially my thinking. Except I think the userspace
+>> interface should really depend on the device itself. Device dax is a
+>> good  choice for many and I agree the block device approach wouldn't be
+>> ideal.
 
->> +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
->> +{
->> +	struct acpi_device *adev = to_acpi_device(cfg->parent);
->> +	struct acpi_pci_root *root = acpi_driver_data(adev);
->> +	struct device *dev = cfg->parent;
->> +	struct xgene_pcie_port *port;
->> +	struct resource *csr;
->> +
->> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
->> +	if (!port)
->> +		return -ENOMEM;
->> +
->> +	csr = &xgene_v1_csr_res[root->segment];
-> 
-> This hard-coded assumption that segment N uses controller N breaks
-> for m400 where segment 0 is using controller 3.
+I tend to agree here. The block device interface has seen quite a bit of
+resistance and /dev/dax looks like a better approach for most. We can look
+at doing it that way in v2.
 
-This seems very fragile. So in addition to Bjorn's comment about not
-trusting firmware provided data for the segment offset in the CSR list,
-you will want to also determine the controller from the ACPI tree. The
-existing code walks the ACPI hierarchy and finds the CSR that way.
-Obviously, the goal is to avoid that in the latest incarnation, but you
-could still determine which controller matches a given device.
+>>
+>> Specifically for NVME CMB: I think it would make a lot of sense to just
+>> hand out these mappings with an mmap call on /dev/nvmeX. I expect CMB
+>> buffers would be volatile and thus you wouldn't need to keep track of
+>> where in the BAR the region came from. Thus, the mmap call would just be
+>> an allocator from BAR memory. If device-dax were used, userspace would
+>> need to lookup which device-dax instance corresponds to which nvme
+>> drive.
+>>
+>
+> I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
+> to accomplish in sysfs through /sys/dev/char to find the sysfs path of the
+> device-dax instance under the nvme device, or if you already have the nvme
+> sysfs path the dax instance(s) will appear under the "dax" sub-directory.
+>
 
-Jon.
-
--- 
-Computer Architect | Sent from my Fedora powered laptop
+Personally I think mapping the dax resource in the sysfs tree is a nice
+way to do this and a bit more intuitive than mapping a /dev/nvmeX.
