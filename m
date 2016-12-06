@@ -1,126 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55424 "EHLO mx1.redhat.com"
+Received: from ale.deltatee.com ([207.54.116.67]:50068 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754446AbcLAXYe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 18:24:34 -0500
-Date: Thu, 1 Dec 2016 16:22:57 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Adi Menachem <adim@mellanox.com>
-Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-Message-ID: <20161201162257.31514098@t450s.home>
-In-Reply-To: <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-References: <VI1PR0502MB295799E38EEC9E1F939B68B5D4A40@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161106100832.41e173d5@t450s.home>
-        <VI1PR0502MB29579BD9AA9A2E85288798E4D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161109080746.24dd79dd@t450s.home>
-        <VI1PR0502MB2957CCD1E8EE93A3BC6CE178D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
-        <20161109085326.62b47d2f@t450s.home>
-        <VI1PR0502MB29571BC9B27611B9395F1504D4B90@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+        id S1750785AbcLFVrK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Dec 2016 16:47:10 -0500
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com>
+ <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+ <20161205180231.GA28133@obsidianresearch.com>
+ <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+ <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
+ <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+ <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+ <20161206163850.GC28066@obsidianresearch.com>
+ <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
+ <20161206172838.GB19318@obsidianresearch.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
+Date: Tue, 6 Dec 2016 14:47:04 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20161206172838.GB19318@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Revisiting this...
+Hey,
 
-On Wed, 9 Nov 2016 15:55:55 +0000
-Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> Okay, so clearly this needs a kernel side NVMe specific allocator
+> and locking so users don't step on each other..
 
-> I guess hiding it is even better.
+Yup, ideally. That's why device dax isn't ideal for this application: it
+doesn't provide any way to prevent users from stepping on each other.
 
-AIUI, a device supporting ATS can help offload some of the iotlb
-pressure from the IOMMU, so a high performance device implementing a
-device iotlb may experience less of an impact if it can perform much
-of the iotlb work on its own.  But I suppose the question is, does the
-guest driver or even the guest OS need to be aware of ATS to get that
-benefit?  More below...
+> Or as Christoph says some kind of general mechanism to get these
+> bounce buffers..
 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Wednesday, November 09, 2016 5:53 PM
-> > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org; bhelgaas@google.com;
-> > Adi Menachem <adim@mellanox.com>
-> > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-> > 
-> > On Wed, 9 Nov 2016 15:25:16 +0000
-> > Ilya Lesokhin <ilyal@mellanox.com> wrote:
-> >   
-> > > > -----Original Message-----
-> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > Sent: Wednesday, November 09, 2016 5:08 PM
-> > > > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > > > Cc: linux-pci@vger.kernel.org; kvm@vger.kernel.org;
-> > > > bhelgaas@google.com; Adi Menachem <adim@mellanox.com>
-> > > > Subject: Re: Shouldn't VFIO virtualize the ATS capability?
-> > > >
-> > > > On Wed, 9 Nov 2016 14:49:02 +0000
-> > > > Ilya Lesokhin <ilyal@mellanox.com> wrote:
-> > > >  
-> > > > > I would virtualize the "ATS Control Register".  
-> > > >
-> > > > And do what?  
-> > > I think it should be read only.  
-> > 
-> > That would violate the spec, in which case it shouldn't be virtualized, the
-> > capability should be hidden.
-> >   
-> > > > > Regarding poor behavior, I couldn't really find what happens when
-> > > > > ATS is  
-> > > > misconfigured, but I would assume it can cause problems.  
-> > > > > The scenarios I'm concerned about are:
-> > > > > 	1. The guest enables translation caching, while the hypervisor
-> > > > > thinks  
-> > > > there are disabled -> Hypervisor won't issue invalidations.
-> > > >
-> > > > Aren't invalidations issued by the iommu, why does the hypervisor
-> > > > need to participate?  How would a software entity induce an  
-> > invalidation?  
-> > > That's what one might expect from a sane design, but
-> > > http://lxr.free-electrons.com/source/drivers/iommu/intel-iommu.c?v=4.8
-> > > #L1549
-> > > seems to imply otherwise :(  
+Yeah, I imagine a general allocate from BAR/region system would be very
+useful.
 
-This seems correct though, the device iotlb would interact with the
-physical IOMMU, so this is happening on the host.  The call path would
-be:
+> Ah, I see.
+> 
+> As a first draft I'd stick with some kind of API built into the
+> /dev/nvmeX that backs the filesystem. The user app would fstat the
+> target file, open /dev/block/MAJOR(st_dev):MINOR(st_dev), do some
+> ioctl to get a CMB mmap, and then proceed from there..
+> 
+> When that is all working kernel-side, it would make sense to look at a
+> more general mechanism that could be used unprivileged??
 
-ioctl(container, VFIO_IOMMU_UNMAP_DMA, ...)
-  vfio_fops_unl_ioctl
-     vfio_iommu_type1_ioctl
-       vfio_dma_do_unmap
-         vfio_remove_dma
-           vfio_unmap_unpin
-             iommu_unmap
-               intel_iommu_unmap
-                 iommu_flush_iotlb_psi
-                   iommu_flush_dev_iotlb
+That makes a lot of sense to me. I suggested mmapping the char device
+because it's really easy, but I can see that an ioctl on the block
+device does seem more general and device agnostic.
 
-For a non-iommu VM, mappings will be mostly static, so this will be
-rare.  If we had VT-d emulation support in the VM, the iommu domain
-used by the VM would map to an iommu domain in the host and any
-invalidations within that domain would trigger an unmap through to the
-host domain.
- 
-> > > > > 	2. Smallest Translation Unit misconfiguration. Not sure if it
-> > > > > will cause  
-> > > > invalid access or only poor caching behavior.  
+> This is similar to the GPU issues too.. On NVMe you don't need to pin
+> the pages, you just need to lock that VMA so it doesn't get freed from
+> the NVMe CMB allocator while the IO is running...
+> Probably in the long run the get_user_pages is going to have to be
+> pushed down into drivers.. Future MMU coherent IO hardware also does
+> not need the pinning or other overheads.
 
-I'm not sure about this either.  I think that ATS is enabled on the
-device prior to the guest having access to it, but could the guest
-interfere or cause poor behavior by further interaction with the ATS
-capability.  I guess my question would be whether the guest needs
-visibility or access to the ATS capability to still make use of it.  We
-certainly want to take advantage of an iotlb where available.  For a
-Linux guest we only seem to manipulate ATS enable through the iommu
-code, so I expect a non-iommu VM to leave ATS alone.  What's the best
-solution then, to hide the ATS capability, assuming that it works
-transparently on the host level?  Expose it to the guest, perhaps
-virtualizing the STU field to the VM, giving the VM enable/disable
-control?  How can we test any of this?  Thanks,
+Yup. Yup.
 
-Alex
+Logan
