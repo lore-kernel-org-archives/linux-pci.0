@@ -1,207 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932671AbcLGWqM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 17:46:12 -0500
-Date: Wed, 7 Dec 2016 16:45:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v3 1/3] PCI: rockchip: split out rockchip_cfg_atu
-Message-ID: <20161207224523.GH22129@bhelgaas-glaptop.roam.corp.google.com>
-References: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479952462-194300-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:45601 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbcLFPvq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 10:51:46 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH pci/next v3 0/3] PCI: rcar, rcar-gen2: Bindings cleanups
+Date: Tue,  6 Dec 2016 16:51:28 +0100
+Message-Id: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 24, 2016 at 09:54:20AM +0800, Shawn Lin wrote:
-> We split out a new function, rockchip_cfg_atu, in order to
-> re-configure the atu when missing these information after
-> wakeup from S3.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+Hi,
 
-I applied the first two to pci/host-rockchip for v4.10, thanks!
+this short series makes some bindings cleanups to the Renesas PCI drivers.
 
-> ---
-> 
-> Changes in v3: None
-> Changes in v2:
-> - remove msg region support
-> 
->  drivers/pci/host/pcie-rockchip.c | 104 +++++++++++++++++++++------------------
->  1 file changed, 55 insertions(+), 49 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index b55037a..9cb84b1 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -210,6 +210,11 @@ struct rockchip_pcie {
->  	int	link_gen;
->  	struct	device *dev;
->  	struct	irq_domain *irq_domain;
-> +	u32     io_size;
-> +	int     offset;
-> +	phys_addr_t io_bus_addr;
-> +	u32     mem_size;
-> +	phys_addr_t mem_bus_addr;
->  };
->  
->  static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-> @@ -1149,6 +1154,50 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
->  	return 0;
->  }
->  
-> +static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
-> +{
-> +	int offset;
-> +	int err;
-> +	int reg_no;
-> +
-> +	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
-> +		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
-> +						AXI_WRAPPER_MEM_WRITE,
-> +						20 - 1,
-> +						rockchip->mem_bus_addr +
-> +						(reg_no << 20),
-> +						0);
-> +		if (err) {
-> +			dev_err(rockchip->dev,
-> +					"program RC mem outbound ATU failed\n");
-> +			return err;
-> +		}
-> +	}
-> +
-> +	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
-> +	if (err) {
-> +		dev_err(rockchip->dev, "program RC mem inbound ATU failed\n");
-> +		return err;
-> +	}
-> +
-> +	offset = rockchip->mem_size >> 20;
-> +	for (reg_no = 0; reg_no < (rockchip->io_size >> 20); reg_no++) {
-> +		err = rockchip_pcie_prog_ob_atu(rockchip,
-> +						reg_no + 1 + offset,
-> +						AXI_WRAPPER_IO_WRITE,
-> +						20 - 1,
-> +						rockchip->io_bus_addr +
-> +						(reg_no << 20),
-> +						0);
-> +		if (err) {
-> +			dev_err(rockchip->dev,
-> +					"program RC io outbound ATU failed\n");
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return err;
-> +}
->  static int rockchip_pcie_probe(struct platform_device *pdev)
->  {
->  	struct rockchip_pcie *rockchip;
-> @@ -1158,13 +1207,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	resource_size_t io_base;
->  	struct resource	*mem;
->  	struct resource	*io;
-> -	phys_addr_t io_bus_addr = 0;
-> -	u32 io_size;
-> -	phys_addr_t mem_bus_addr = 0;
-> -	u32 mem_size = 0;
-> -	int reg_no;
->  	int err;
-> -	int offset;
->  
->  	LIST_HEAD(res);
->  
-> @@ -1231,14 +1274,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		goto err_vpcie;
->  
->  	/* Get the I/O and memory ranges from DT */
-> -	io_size = 0;
->  	resource_list_for_each_entry(win, &res) {
->  		switch (resource_type(win->res)) {
->  		case IORESOURCE_IO:
->  			io = win->res;
->  			io->name = "I/O";
-> -			io_size = resource_size(io);
-> -			io_bus_addr = io->start - win->offset;
-> +			rockchip->io_size = resource_size(io);
-> +			rockchip->io_bus_addr = io->start - win->offset;
->  			err = pci_remap_iospace(io, io_base);
->  			if (err) {
->  				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> @@ -1249,8 +1291,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		case IORESOURCE_MEM:
->  			mem = win->res;
->  			mem->name = "MEM";
-> -			mem_size = resource_size(mem);
-> -			mem_bus_addr = mem->start - win->offset;
-> +			rockchip->mem_size = resource_size(mem);
-> +			rockchip->mem_bus_addr = mem->start - win->offset;
->  			break;
->  		case IORESOURCE_BUS:
->  			rockchip->root_bus_nr = win->res->start;
-> @@ -1260,45 +1302,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		}
->  	}
->  
-> -	if (mem_size) {
-> -		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
-> -			err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
-> -							AXI_WRAPPER_MEM_WRITE,
-> -							20 - 1,
-> -							mem_bus_addr +
-> -							(reg_no << 20),
-> -							0);
-> -			if (err) {
-> -				dev_err(dev, "program RC mem outbound ATU failed\n");
-> -				goto err_vpcie;
-> -			}
-> -		}
-> -	}
-> -
-> -	err = rockchip_pcie_prog_ib_atu(rockchip, 2, 32 - 1, 0x0, 0);
-> -	if (err) {
-> -		dev_err(dev, "program RC mem inbound ATU failed\n");
-> +	err = rockchip_cfg_atu(rockchip);
-> +	if (err)
->  		goto err_vpcie;
-> -	}
-> -
-> -	offset = mem_size >> 20;
-> -
-> -	if (io_size) {
-> -		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
-> -			err = rockchip_pcie_prog_ob_atu(rockchip,
-> -							reg_no + 1 + offset,
-> -							AXI_WRAPPER_IO_WRITE,
-> -							20 - 1,
-> -							io_bus_addr +
-> -							(reg_no << 20),
-> -							0);
-> -			if (err) {
-> -				dev_err(dev, "program RC io outbound ATU failed\n");
-> -				goto err_vpcie;
-> -			}
-> -		}
-> -	}
-> -
->  	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
->  	if (!bus) {
->  		err = -ENOMEM;
-> -- 
-> 1.9.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes v2->v3:
+* Reworded changelogs to indicate that re-ordering struct of_device_id
+  entries does not effect run-time behaviour
+* Corrected compile error due to typo in symbol name
+Changes v1->v2:
+* re-order struct of_device_id entries
+
+Simon Horman (3):
+  PCI: rcar-gen2: Use gen2 fallback compatibility last
+  PCI: rcar: Use gen2 fallback compatibility last
+  PCI: rcar: Add gen3 fallback compatibility string for pcie-rcar
+
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+ drivers/pci/host/pci-rcar-gen2.c                   | 2 +-
+ drivers/pci/host/pcie-rcar.c                       | 5 +++--
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+-- 
+2.7.0.rc3.207.g0ac5344
+
