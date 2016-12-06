@@ -1,71 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2016 11:02:31 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161205180231.GA28133@obsidianresearch.com>
-References: <20161128165751.GB28381@obsidianresearch.com>
- <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com>
- <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
- <20161130162353.GA24639@obsidianresearch.com>
- <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:45620 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752839AbcLFPvt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 10:51:49 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH pci/next v3 1/3] PCI: rcar-gen2: Use gen2 fallback compatibility last
+Date: Tue,  6 Dec 2016 16:51:29 +0100
+Message-Id: <1481039491-30364-2-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+References: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 09:40:38AM -0800, Dan Williams wrote:
+Improve readability by listing fallback compatibility strings
+after the more-specific compatibility strings they provide a fallback for.
 
-> > If it is kernel only with physical addresess we don't need a uAPI for
-> > it, so I'm not sure #1 is at all related to iopmem.
-> >
-> > Most people who want #1 probably can just mmap
-> > /sys/../pci/../resourceX to get a user handle to it, or pass around
-> > __iomem pointers in the kernel. This has been asked for before with
-> > RDMA.
-> >
-> > I'm still not really clear what iopmem is for, or why DAX should ever
-> > be involved in this..
-> 
-> Right, by default remap_pfn_range() does not establish DMA capable
-> mappings. You can think of iopmem as remap_pfn_range() converted to
-> use devm_memremap_pages(). Given the extra constraints of
-> devm_memremap_pages() it seems reasonable to have those DMA capable
-> mappings be optionally established via a separate driver.
+This does not effect run-time behaviour as it is the order in the DTB that
+determines which compatibility string is used.
 
-Except the iopmem driver claims the PCI ID, and presents a block
-interface which is really *NOT* what people who have asked for this in
-the past have wanted. IIRC it was embedded stuff eg RDMA video
-directly out of a capture card or a similar kind of thinking.
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v3
+* Reworded changelog: the ordering does not effect run-time behaviour
+v2
+* New patch
+---
+ drivers/pci/host/pci-rcar-gen2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It is a good point about devm_memremap_pages limitations, but maybe
-that just says to create a /sys/.../resource_dmableX ?
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index 1eeefa4df64c..85348590848b 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -430,10 +430,10 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ }
+ 
+ static struct of_device_id rcar_pci_of_match[] = {
+-	{ .compatible = "renesas,pci-rcar-gen2", },
+ 	{ .compatible = "renesas,pci-r8a7790", },
+ 	{ .compatible = "renesas,pci-r8a7791", },
+ 	{ .compatible = "renesas,pci-r8a7794", },
++	{ .compatible = "renesas,pci-rcar-gen2", },
+ 	{ },
+ };
+ 
+-- 
+2.7.0.rc3.207.g0ac5344
 
-Or is there some reason why people want a filesystem on top of BAR
-memory? That does not seem to have been covered yet..
-
-Jason
