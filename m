@@ -1,95 +1,58 @@
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Thu, 29 Dec 2016 10:58:44 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:45620 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbcLFPvv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 10:51:51 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH pci/next v3 2/3] PCI: rcar: Use gen2 fallback compatibility last
+Date: Tue,  6 Dec 2016 16:51:30 +0100
+Message-Id: <1481039491-30364-3-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+References: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Lukas and Bjorn,
-I am using the nouveau driver.
-dmesg and lspci --vv is attached as a comment to the bug rebort
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c15
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c16
+Improve readability by listing fallback compatibility strings
+after the more-specific compatibility strings they provide a fallback for.
 
-I could completely deactivate nvidia in the bios...
+This does not effect run-time behaviour as it is the order in the DTB that
+determines which compatibility string is used.
 
-Best regards
-Kilian
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v3
+* Reworded changelog: the ordering does not effect run-time behaviour
+v2
+* New patch
+---
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
------ Original Message -----
-From: "Bjorn Helgaas" <helgaas@kernel.org>
-To: "Lukas Wunner" <lukas@wunner.de>
-Cc: "Kilian Singer" <kilian.singer@quantumtechnology.info>, linux-pci@vger.kernel.org, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Wednesday, December 28, 2016 5:18:16 PM
-Subject: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 62700d1896f4..85971bc276c6 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1071,12 +1071,12 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
+-	{ .compatible = "renesas,pcie-rcar-gen2",
+-	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7790",
+ 	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7791",
+ 	  .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-rcar-gen2",
++	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+-- 
+2.7.0.rc3.207.g0ac5344
 
-On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
-> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> > and all the debugging you've done.  Below is a revert of the troublesome
-> > commit.  Can you test it and verify that it also fixes the problem?
-> > 
-> > I assume Mika is looking at this and will have a better solution soon.
-> > But if not, I'll queue this up for v4.10.
-> 
-> @Kilian:  Are you using the proprietary nvidia driver?  If so,
-> does the issue go away if you blacklist that driver or use nouveau
-> instead?
-> 
-> 
-> With a bit of googling I found dmesg and lspci output for this model:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
-> 
-> The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
-> 0x60, 0x64.  I assume they're located behind the LPC bridge?
-> 
-> The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
-> registers with vga_tryget() but never releases that lock.  Intel
-> chipsets have a quirk wherein I/O ports are routed to the bus to
-> which the legacy PCI VGA registers are locked.  So once vga_tryget()
-> is called by the nvidia driver, access to the keyboard and mouse is
-> routed to bus 01 (on which the Nvidia card resides) and not to bus 00
-> (on which the LPC bridge resides).
-
-Interesting.  A spec reference would be a good addition to whatever
-fix is proposed.
-
-> My theory would be that if you lock the screen, the Nvidia card
-> runtime suspends, allowing the root port above it to suspend,
-> and then the I/O ports are no longer accessible.
-> 
-> We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
-> is adjusted by writing to I/O ports of a gmux controller situated below
-> the LPC bridge.  The nvidia driver locks the legacy VGA registers and
-> from that point reads from the I/O ports always return 0xff.  Commit
-> 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
-> sought to fix it but caused other breakage which remains unfixed so far:
-> https://bugzilla.kernel.org/show_bug.cgi?id=105051
-> https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
-> 
-> I've always wondered if the Intel chipsets would behave more sensibly
-> if the LPC bridge had BARs specifying the I/O regions used by devices
-> below it.
-> 
-> Reverting runtime suspend for PCIe ports is not a good solution as it's
-> needed for Thunderbolt runtime PM on Macs.
-
-The choices are:
-
-  1) Fix the regression and preserve runtime PM for PCIe ports
-  2) Fix the regression by reverting runtime PM for PCIe ports
-
-Obviously we hope for 1).  Preserving runtime PM without fixing the
-regression isn't even on the list.  I know this is Linux 101, so I
-apologize for restating the obvious.
-
-Bjorn
