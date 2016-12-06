@@ -1,43 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53382 "EHLO mail.kernel.org"
+Received: from 8bytes.org ([81.169.241.247]:58760 "EHLO theia.8bytes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752948AbcLASCL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 13:02:11 -0500
-Date: Thu, 1 Dec 2016 12:01:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+        id S1752079AbcLFP7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Dec 2016 10:59:14 -0500
+Date: Tue, 6 Dec 2016 16:58:18 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Sricharan R <sricharan@codeaurora.org>,
         Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
-Message-ID: <20161201180130.GD30746@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] ACPI/IORT: Make dma masks set-up IORT specific
+Message-ID: <20161206155817.GA27203@8bytes.org>
+References: <20161206142011.11859-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161206142011.11859-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 02:29:22AM -0600, Bjorn Helgaas wrote:
-> This is what I've collected on my pci/ecam branch so far.  This is
-> preliminary and probably doesn't even build since I made several
-> changes, but at least it's a strawman.  I called it v10 to keep it
-> separate from the previous postings of the various pieces.
+On Tue, Dec 06, 2016 at 02:20:11PM +0000, Lorenzo Pieralisi wrote:
+>  drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
+>  drivers/acpi/scan.c       | 14 +-------------
+>  include/linux/acpi_iort.h |  2 ++
+>  3 files changed, 25 insertions(+), 13 deletions(-)
 
-I don't want to spam the list with a zillion revisions, but I updated
-the branch with the build and acpi_resource_consumer() fixes, thanks
-to Dongdong, Tomasz, Rober, and Lorenzo.  Current head is:
-
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=f80edf4d6c05
-
-If you test this, please mention the SHA1 you're testing and collect
-the dmesg log and /proc/iomem contents.
-
-I'll post the full set again soon, hopefully including the X-Gene
-quirks.
-
-Bjorn
+Applied, thanks.
