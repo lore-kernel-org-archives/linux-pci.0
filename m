@@ -1,81 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:33598 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755330AbcLSJta (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 04:49:30 -0500
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:36284 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751476AbcLFWCW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 17:02:22 -0500
+Received: by mail-oi0-f42.google.com with SMTP id v84so394527077oie.3
+        for <linux-pci@vger.kernel.org>; Tue, 06 Dec 2016 14:02:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1482064022-8998-1-git-send-email-ykaneko0929@gmail.com>
-References: <1482064022-8998-1-git-send-email-ykaneko0929@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 19 Dec 2016 10:49:28 +0100
-Message-ID: <CAMuHMdVOUUM3hZ0sfTcs5PFqfvrYR9Sk3egibpuxb-4a80U02A@mail.gmail.com>
-Subject: Re: [PATCH pci/next] PCI: rcar: Add compatible string for r8a7796
-To: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Simon Horman <horms@verge.net.au>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+In-Reply-To: <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
+References: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com> <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+ <20161205180231.GA28133@obsidianresearch.com> <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+ <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com> <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+ <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+ <20161206163850.GC28066@obsidianresearch.com> <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
+ <20161206172838.GB19318@obsidianresearch.com> <bedaa7a2-e42d-da83-5c2b-9d639b0397c5@deltatee.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 6 Dec 2016 14:02:19 -0800
+Message-ID: <CAPcyv4gw0rsMNvG=xMRFV0=4MkGuXis5L17Jm3fU69EZAVAS4A@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kaneko-san,
-
-On Sun, Dec 18, 2016 at 1:27 PM, Yoshihiro Kaneko <ykaneko0929@gmail.com> wrote:
-> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+On Tue, Dec 6, 2016 at 1:47 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+> Hey,
 >
-> This patch adds support for r8a7796.
+>> Okay, so clearly this needs a kernel side NVMe specific allocator
+>> and locking so users don't step on each other..
 >
-> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-> ---
->
-> This patch is based on the next branch of the pci tree.
->
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
->  drivers/pci/host/pcie-rcar.c                       | 1 +
->  2 files changed, 2 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index eee518d..34712d6 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -6,6 +6,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
->             "renesas,pcie-r8a7791" for the R8A7791 SoC;
->             "renesas,pcie-r8a7793" for the R8A7793 SoC;
->             "renesas,pcie-r8a7795" for the R8A7795 SoC;
-> +           "renesas,pcie-r8a7796" for the R8A7796 SoC;
->             "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
->             "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
->
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index aca85be..02e5777 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1078,6 +1078,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
->         { .compatible = "renesas,pcie-rcar-gen2",
->           .data = rcar_pcie_hw_init_gen2 },
->         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-> +       { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
->         { .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
->         {},
+> Yup, ideally. That's why device dax isn't ideal for this application: it
+> doesn't provide any way to prevent users from stepping on each other.
 
-Given the driver already matches against "renesas,pcie-rcar-gen3",
-and mainline arch/arm64/boot/dts/renesas/r8a7796.dtsi doesn't have pcie
-nodes yet, I think there's no need to update the driver, only the bindings.
-
-Hence if you drop the last chunk, you can add my
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+On this particular point I'm in the process of posting patches that
+allow device-dax sub-division, so you could carve up a bar into
+multiple devices of various sizes.
