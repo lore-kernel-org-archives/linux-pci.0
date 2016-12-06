@@ -1,81 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52710 "EHLO mail.kernel.org"
+Received: from quartz.orcorp.ca ([184.70.90.242]:56645 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753256AbcLNCzB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Dec 2016 21:55:01 -0500
-Date: Tue, 13 Dec 2016 20:54:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCHv4 next 1/3] pci: Add is_removed state
-Message-ID: <20161214025456.GA16425@bhelgaas-glaptop.roam.corp.google.com>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <1477695497-6207-2-git-send-email-keith.busch@intel.com>
- <20161213205614.GA30106@bhelgaas-glaptop.roam.corp.google.com>
- <20161213230731.GC12113@localhost.localdomain>
- <20161214025007.GA13597@bhelgaas-glaptop.roam.corp.google.com>
+        id S1752041AbcLFR2z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Dec 2016 12:28:55 -0500
+Date: Tue, 6 Dec 2016 10:28:38 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
+        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
+        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
+        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
+        "ben.sander@amd.com" <ben.sander@amd.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20161206172838.GB19318@obsidianresearch.com>
+References: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+ <20161205171830.GB27784@obsidianresearch.com>
+ <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
+ <20161205180231.GA28133@obsidianresearch.com>
+ <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
+ <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
+ <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+ <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+ <20161206163850.GC28066@obsidianresearch.com>
+ <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161214025007.GA13597@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <ec136c34-417d-8a55-c176-2c1d759a5fb8@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 08:50:07PM -0600, Bjorn Helgaas wrote:
-> [+cc Alan, Greg]
+On Tue, Dec 06, 2016 at 09:51:15AM -0700, Logan Gunthorpe wrote:
+> Hey,
 > 
-> On Tue, Dec 13, 2016 at 06:07:31PM -0500, Keith Busch wrote:
-> > On Tue, Dec 13, 2016 at 02:56:14PM -0600, Bjorn Helgaas wrote:
-> > > On Fri, Oct 28, 2016 at 06:58:15PM -0400, Keith Busch wrote:
-> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > index 0e49f70..2115d19 100644
-> > > > --- a/include/linux/pci.h
-> > > > +++ b/include/linux/pci.h
-> > > > @@ -341,6 +341,7 @@ struct pci_dev {
-> > > >  	unsigned int	multifunction:1;/* Part of multi-function device */
-> > > >  	/* keep track of device state */
-> > > >  	unsigned int	is_added:1;
-> > > > +	unsigned int	is_removed:1;	/* device was surprise removed */
-> > > >  	unsigned int	is_busmaster:1; /* device is busmaster */
-> > > >  	unsigned int	no_msi:1;	/* device may not use msi */
-> > > >  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
-> > > > @@ -417,6 +418,12 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
-> > > >  	return (pdev->error_state != pci_channel_io_normal);
-> > > >  }
-> > > >  
-> > > > +static inline int pci_set_removed(struct pci_dev *pdev, void *unused)
-> > > > +{
-> > > > +	pdev->is_removed = 1;
-> > > 
-> > > This makes me slightly worried because this is a bitfield and there's
-> > > no locking.  A concurrent write to some nearby field can corrupt
-> > > things.  It doesn't look *likely*, but it's a lot of work to be
-> > > convinced that this is completely safe, especially since the writer is
-> > > running on behalf of the bridge, and the target is a child of the
-> > > bridge.
-> > > 
-> > > The USB HCD_FLAG_DEAD and HCD_FLAG_HW_ACCESSIBLE flags are somewhat
-> > > similar.  Maybe we can leverage some of that design?
+> On 06/12/16 09:38 AM, Jason Gunthorpe wrote:
+> >>> I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
+> >>> to accomplish in sysfs through /sys/dev/char to find the sysfs path of the
+> >>> device-dax instance under the nvme device, or if you already have the nvme
+> >>> sysfs path the dax instance(s) will appear under the "dax" sub-directory.
+> >>
+> >> Personally I think mapping the dax resource in the sysfs tree is a nice
+> >> way to do this and a bit more intuitive than mapping a /dev/nvmeX.
 > > 
-> > A bit field with atomic accessors sounds good to me. Do you want to
-> > see all the struct pci_dev bit flags converted to that model? If so,
-> > I can send you a prep patch that does that first.
+> > It is still not at all clear to me what userpsace is supposed to do
+> > with this on nvme.. How is the CMB usable from userspace?
 > 
-> This is still blue-sky, "what if?" thinking on my part.  I was
-> starting to wonder if we could make something generic that could be
-> used for your is_removed work and also for the USB stuff.
+> The flow is pretty simple. For example to write to NVMe from an RDMA device:
 > 
-> The USB HCD_FLAG_DEAD is set by usb_hc_died(), which is frequently
-> used by drivers after an MMIO read returns ~0.  HCD_FLAG_HW_ACCESSIBLE
-> seems to encode part of the idea of "this device is powered up enough
-> to respond", which is sort of similar to what PCI does with
-> dev->current_state.
-> 
-> If there were generic PCI interfaces like pci_dev_died() and a
-> pci_dev_dead() predicate, I wonder if USB could use them instead of
-> rolling their own?
+> 1) Obtain a chunk of the CMB to use as a buffer(either by mmaping
+> /dev/nvmx, the device dax char device or through a block layer interface
+> (which sounds like a good suggestion from Christoph, but I'm not really
+> sure how it would look).
 
-But I guess all the world is not PCI -- there are non-PCI USB host
-controllers, so it's not quite that simple.
+Okay, so clearly this needs a kernel side NVMe specific allocator
+and locking so users don't step on each other..
+
+Or as Christoph says some kind of general mechanism to get these
+bounce buffers..
+
+> 2) Create an MR with the buffer and use an RDMA function to fill it with
+> data from a remote host. This will cause the RDMA hardware to write
+> directly to the memory in the NVMe card.
+> 
+> 3) Using O_DIRECT, write the buffer to a file on the NVMe filesystem.
+> When the address reaches hardware the NVMe will recognize it as local
+> memory and copy it directly there.
+
+Ah, I see.
+
+As a first draft I'd stick with some kind of API built into the
+/dev/nvmeX that backs the filesystem. The user app would fstat the
+target file, open /dev/block/MAJOR(st_dev):MINOR(st_dev), do some
+ioctl to get a CMB mmap, and then proceed from there..
+
+When that is all working kernel-side, it would make sense to look at a
+more general mechanism that could be used unprivileged??
+
+> Thus we are able to transfer data to any file on an NVMe device without
+> going through system memory. This has benefits on systems with lots of
+> activity in system memory but step 3 is likely to be slowish due to the
+> need to pin/unpin the memory for every transaction.
+
+This is similar to the GPU issues too.. On NVMe you don't need to pin
+the pages, you just need to lock that VMA so it doesn't get freed from
+the NVMe CMB allocator while the IO is running...
+
+Probably in the long run the get_user_pages is going to have to be
+pushed down into drivers.. Future MMU coherent IO hardware also does
+not need the pinning or other overheads.
+
+Jason
