@@ -1,98 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39994 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752282AbcLEX0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:26:43 -0500
-Subject: [PATCH v11 10/15] PCI: Add MCFG quirks for Qualcomm QDF2432 host
- controller
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Mon, 05 Dec 2016 17:26:35 -0600
-Message-ID: <20161205232635.3957.26738.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org
+Subject: [PATCH v2] ACPI/IORT: Make dma masks set-up IORT specific
+Date: Tue,  6 Dec 2016 14:20:11 +0000
+Message-Id: <20161206142011.11859-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Tomasz Nowicki <tn@semihalf.com>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ linux-acpi@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+ Dennis Chen <dennis.chen@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Sricharan R <sricharan@codeaurora.org>,
+ Prem Mallappa <prem.mallappa@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christopher Covington <cov@codeaurora.org>
+The introduction of acpi_dma_configure() allows to configure DMA
+and related IOMMU for any device that is DMA capable. To achieve
+that goal it ensures DMA masks are set-up to sane default values
+before proceeding with IOMMU and DMA ops configuration.
 
-The Qualcomm Technologies QDF2432 SoC does not support accesses smaller
-than 32 bits to the PCI configuration space.  Register the appropriate
-quirk.
+On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
+called for every device that has an ACPI companion, in that every device
+is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
+which has the side effect of initializing dma masks also for
+pseudo-devices (eg CPUs and memory nodes) and potentially for devices
+whose dma masks were not set-up before the acpi_dma_configure() API was
+introduced, which may have noxious side effects.
 
-[bhelgaas: add QCOM_ECAM32 macro, ifdef for ACPI and PCI_QUIRKS]
-Signed-off-by: Christopher Covington <cov@codeaurora.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Therefore, in preparation for IORT firmware specific DMA masks set-up,
+wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
+specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
+default expected behaviour on x86/ia64 systems and keeping DMA default
+masks set-up on IORT based (ie ARM) arch configurations.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Sricharan R <sricharan@codeaurora.org>
 ---
- drivers/acpi/pci_mcfg.c  |   11 +++++++++++
- drivers/pci/ecam.c       |   12 ++++++++++++
- include/linux/pci-ecam.h |    4 ++++
- 3 files changed, 27 insertions(+)
+Hi Joerg,
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 1ef7285..cee33b0 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -51,6 +51,17 @@ struct mcfg_fixup {
- 
- static struct mcfg_fixup mcfg_quirks[] = {
- /*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
-+
-+#define QCOM_ECAM32(seg) \
-+	{ "QCOM  ", "QDF2432 ", 1, seg, MCFG_BUS_ANY, &pci_32b_ops }
-+	QCOM_ECAM32(0),
-+	QCOM_ECAM32(1),
-+	QCOM_ECAM32(2),
-+	QCOM_ECAM32(3),
-+	QCOM_ECAM32(4),
-+	QCOM_ECAM32(5),
-+	QCOM_ECAM32(6),
-+	QCOM_ECAM32(7),
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 43ed08d..2fee61b 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -162,3 +162,15 @@ struct pci_ecam_ops pci_generic_ecam_ops = {
- 		.write		= pci_generic_config_write,
- 	}
- };
-+
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+/* ECAM ops for 32-bit access only (non-compliant) */
-+struct pci_ecam_ops pci_32b_ops = {
-+	.bus_shift	= 20,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= pci_generic_config_read32,
-+		.write		= pci_generic_config_write32,
-+	}
-+};
-+#endif
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 7adad20..739d233 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -59,6 +59,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- /* default ECAM ops */
- extern struct pci_ecam_ops pci_generic_ecam_ops;
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
-+#endif
-+
- #ifdef CONFIG_PCI_HOST_GENERIC
- /* for DT-based PCI controllers that support ECAM */
- int pci_host_common_probe(struct platform_device *pdev,
+as discussed please apply it to your arm/smmu branch (and consequently
+to -next) in order to get this queued along with the rest of the ACPI IORT
+SMMU series for v4.10.
 
+Thank you !
+Lorenzo
+
+v1 -> v2
+	- Added review tags
+
+ drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
+ drivers/acpi/scan.c       | 14 +-------------
+ include/linux/acpi_iort.h |  2 ++
+ 3 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 47bace8..e0d2e6e 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -547,6 +547,28 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ }
+ 
+ /**
++ * iort_set_dma_mask - Set-up dma mask for a device.
++ *
++ * @dev: device to configure
++ */
++void iort_set_dma_mask(struct device *dev)
++{
++	/*
++	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
++	 * setup the correct supported mask.
++	 */
++	if (!dev->coherent_dma_mask)
++		dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	/*
++	 * Set it to coherent_dma_mask by default if the architecture
++	 * code has not set it.
++	 */
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
++}
++
++/**
+  * iort_iommu_configure - Set-up IOMMU configuration for a device.
+  *
+  * @dev: device to configure
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 80698d3..93b00cf 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1380,19 +1380,7 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
+ 	const struct iommu_ops *iommu;
+ 
+-	/*
+-	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
+-	 * setup the correct supported mask.
+-	 */
+-	if (!dev->coherent_dma_mask)
+-		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-
+-	/*
+-	 * Set it to coherent_dma_mask by default if the architecture
+-	 * code has not set it.
+-	 */
+-	if (!dev->dma_mask)
+-		dev->dma_mask = &dev->coherent_dma_mask;
++	iort_set_dma_mask(dev);
+ 
+ 	iommu = iort_iommu_configure(dev);
+ 
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index dcb2b60..77e0809 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -35,6 +35,7 @@ bool iort_node_match(u8 type);
+ u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ /* IOMMU interface */
++void iort_set_dma_mask(struct device *dev);
+ const struct iommu_ops *iort_iommu_configure(struct device *dev);
+ #else
+ static inline void acpi_iort_init(void) { }
+@@ -45,6 +46,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+ 							u32 req_id)
+ { return NULL; }
+ /* IOMMU interface */
++static inline void iort_set_dma_mask(struct device *dev) { }
+ static inline
+ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ { return NULL; }
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
