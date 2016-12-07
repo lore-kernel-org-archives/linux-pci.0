@@ -1,58 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35852 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759582AbcLRM1K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Dec 2016 07:27:10 -0500
-From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Simon Horman <horms@verge.net.au>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [PATCH pci/next] PCI: rcar: Add compatible string for r8a7796
-Date: Sun, 18 Dec 2016 21:27:02 +0900
-Message-Id: <1482064022-8998-1-git-send-email-ykaneko0929@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:46044 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752156AbcLGWJK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Dec 2016 17:09:10 -0500
+Date: Wed, 7 Dec 2016 16:02:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+        Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: resume path in dra7xx and other DW-based drivers
+Message-ID: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Hi Kishon, et al,
 
-This patch adds support for r8a7796.
+Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
+and dra7xx_pcie_resume_noirq() restore everything necessary.  For
+example, the probe path has this:
 
-Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
----
+  dra7xx_pcie_probe
+    dra7xx_add_pcie_port
+      dw_pcie_host_init
+	dra7xx_pcie_host_init         # .host_init
+	  dw_pcie_setup_rc
+	    dw_pcie_prog_outbound_atu
 
-This patch is based on the next branch of the pci tree.
+so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
+path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
+setup would be restored.
 
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
- drivers/pci/host/pcie-rcar.c                       | 1 +
- 2 files changed, 2 insertions(+)
+Related to this, dra7xx_pcie_resume_noirq() contains phy init and
+power-on code that is duplicated in dra7xx_pcie_probe().  It seems
+like that ought to be done by a common function instead of being cut
+and pasted.
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-index eee518d..34712d6 100644
---- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -6,6 +6,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
- 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
- 	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
- 	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
-+	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
- 	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
- 	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
- 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index aca85be..02e5777 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1078,6 +1078,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 	{ .compatible = "renesas,pcie-rcar-gen2",
- 	  .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
- 	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
- 	{},
- };
--- 
-1.9.1
+I haven't looked in detail at all the other DW-based drivers; dra7xx
+just happens to be first in alphabetical order :)  But I suspect I'd
+have the same question about them.
 
+Bjorn
