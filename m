@@ -1,75 +1,44 @@
-Return-Path: <SRS0=bSjs=YF=8bytes.org=joro@kernel.org>
-Return-Path: <SRS0=bSjs=YF=8bytes.org=joro@kernel.org>
-Date: Thu, 22 Dec 2016 17:27:14 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: David Woodhouse <dwmw2@infradead.org>, rwright@hpe.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: possible dmar_init_reserved_ranges() error
-Message-ID: <20161222162713.GF17255@8bytes.org>
-References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:47276 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752647AbcLGUe4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Dec 2016 15:34:56 -0500
+Date: Wed, 7 Dec 2016 15:44:10 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Wang Sheng-Hui <shhuiw@foxmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: ask for help: How to make pcie-dpc detect DPC feature in
+ platform device?
+Message-ID: <20161207204410.GB22478@localhost.localdomain>
+References: <tencent_1274B1EA3B46AD0574878017@qq.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <tencent_1274B1EA3B46AD0574878017@qq.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Mon, Dec 19, 2016 at 03:20:44PM -0600, Bjorn Helgaas wrote:
-> I have some questions about dmar_init_reserved_ranges().  On systems
-> where CPU physical address space is not identity-mapped to PCI bus
-> address space, e.g., where the PCI host bridge windows have _TRA
-> offsets, I'm not sure we're doing the right thing.
+On Mon, Oct 17, 2016 at 05:30:00PM -0700, Wang Sheng-Hui wrote:
+> Keith,
 > 
-> Assume we have a PCI host bridge with _TRA that maps CPU addresses
-> 0x80000000-0x9fffffff to PCI bus addresses 0x00000000-0x1fffffff, with
-> two PCI devices below it:
+> Sorry to trouble you.
 > 
->   PCI host bridge domain 0000 [bus 00-3f]
->   PCI host bridge window [mem 0x80000000-0x9fffffff] (bus 0x00000000-0x1fffffff]
->   00:00.0: BAR 0 [mem 0x80000000-0x8ffffffff] (0x00000000-0x0fffffff on bus)
->   00:01.0: BAR 0 [mem 0x90000000-0x9ffffffff] (0x10000000-0x1fffffff on bus)
+> I'm making up a driver (DPC supported in the device) for our private SoC system, 
+> and the driver is regarded as a platform driver.
 > 
-> The IOMMU init code in dmar_init_reserved_ranges() reserves the PCI
-> MMIO space for all devices:
+> I wonder how can I make the pcie-dpc driver detect my DPC-enabled SOC and tigger
+> some action in my platform driver?
 > 
->   pci_iommu_init()
->     intel_iommu_init()
->       dmar_init_reserved_ranges()
->         reserve_iova(0x80000000-0x8ffffffff)
->         reserve_iova(0x90000000-0x9ffffffff)
-> 
-> This looks odd because we're reserving CPU physical addresses, but
-> the IOVA space contains *PCI bus* addresses.  On most x86 systems they
-> would be the same, but not on all.
+> And one more question:
+>            How to simulate DPC event in simulation env, e.g QEMU?
 
-Interesting, I wasn't aware of that. Looks like we are not doing the
-right thing in dmar_init_reserved_ranges(). How is that handled without
-an IOMMU, when the bus-addresses overlap with ram addresses?
- 
-> Assume the driver for 00:00.0 maps a page of main memory for DMA.  It
-> may receive a dma_addr_t of 0x10000000:
-> 
->   00:00.0: intel_map_page() returns dma_addr_t 0x10000000
->   00:00.0: issues DMA to 0x10000000
-> 
-> What happens here?  The DMA access should go to main memory.  In
-> conventional PCI it would be a peer-to-peer access to device 00:01.0.
-> Is there enough PCIe smarts (ACS or something?) to do otherwise?
+Sorry for the late reply. A lot of mailing list messages have been
+redirected to my spam folder for some reason.
 
-If there is a bridge doing ACS between the devices, the IOMMU will see
-the request and re-map it to its RAM address.
+The pcie-dpc driver, if enabled in your kernel config, automatically
+binds to any pcie downstream or root port that has the DPC capability. If
+your DPC capable device is not seen as a root or downstream pcie port,
+then pcie-dpc won't bind to it.
 
-> The dmar_init_reserved_ranges() comment says "Reserve all PCI MMIO to
-> avoid peer-to-peer access."  Without _TRA, CPU addresses and PCI bus
-> addresses would be identical, and I think these reserve_iova() calls
-> *would* prevent this situation.  So maybe we're just missing a
-> pcibios_resource_to_bus() here?
-
-I'll have a look, the AMD IOMMU driver implements this too, so it needs
-also be fixed there. Do you know which x86 systems are configured like
-this?
-
-
-	Joerg
+I don't see why you couldn't emulate the capability in QEMU, but I don't
+see it implemented in any of the emulated pcie devices, so you'd have
+to get someone to implement it in one of them.
