@@ -1,57 +1,69 @@
-Return-Path: <SRS0=x9c6=XW=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=x9c6=XW=intel.com=keith.busch@kernel.org>
-Date: Wed, 7 Dec 2016 19:04:33 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 3/3] pciehp: Fix race condition handling surprise
- link-down
-Message-ID: <20161208000433.GD25959@localhost.localdomain>
-References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
- <1479544367-7195-4-git-send-email-ashok.raj@intel.com>
- <20161207234054.GL22129@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932583AbcLGWxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Dec 2016 17:53:19 -0500
+Date: Wed, 7 Dec 2016 16:53:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: x86@kernel.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
+Message-ID: <20161207225315.GI22129@bhelgaas-glaptop.roam.corp.google.com>
+References: <ba07572b4c4fad1f60593454693a58137f518896.1480859081.git.lukas@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161207234054.GL22129@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <ba07572b4c4fad1f60593454693a58137f518896.1480859081.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 07, 2016 at 05:40:54PM -0600, Bjorn Helgaas wrote:
-> On Sat, Nov 19, 2016 at 12:32:47AM -0800, Ashok Raj wrote:
-> > --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> > @@ -182,6 +182,7 @@ static void pciehp_power_thread(struct work_struct *work)
-> >  	switch (info->req) {
-> >  	case DISABLE_REQ:
-> >  		mutex_lock(&p_slot->hotplug_lock);
-> > +		p_slot->state = POWEROFF_STATE;
+On Sun, Dec 04, 2016 at 03:35:55PM +0100, Lukas Wunner wrote:
+> This struct never needs to be modified.  The size of pci-mid.o ELF
+> sections changes thusly:
 > 
-> It sounds right that p_slot->state should be protected.
+> -.data          56
+> +.data           0
+> -.rodata        32
+> +.rodata        88
 > 
-> It looks like handle_button_press_event() and
-> pciehp_sysfs_enable_slot() hold p_slot->lock while updating
-> p_slot->state.
-> 
-> You're setting "state = POWEROFF_STATE" while holding
-> p_slot->hotplug_lock (not p_slot->lock).  Four lines down, we set
-> "state = STATIC_STATE", but this time we're holding p_slot->lock.
-> 
-> What is the difference between the p_slot->lock and
-> p_slot->hotplug_lock?  Do we need both?  How do we know which one to
-> use?
-> 
-> I'm very confused.
+> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-This is _very_ confusing. :)
+Ingo, do you want this, since you've taken the previous updates?
 
-The p_slot->hotplug_lock serializes a power off and a power on event. We
-only want to set the state when one of those events gets to execute
-rather than when the event is queued. Changing the state when the event
-is queued can trigger a never ending up-down sequence.
+It's trivial but doesn't apply cleanly to my tree, which makes me think
+it might be based on other changes I don't have.
 
-It currently looks safe to nest the p_slot->lock under the
-p_slot->hotplug_lock if that is you recommendation.
-
-Alternatively we could fix this if we used an ordered work queue for
-the slot's work, but that is a significantly more complex change.
+> ---
+> 
+> Link to Andy's ack:
+> https://www.spinics.net/lists/linux-pci/msg54977.html
+> 
+> Link to Bjorn's ack:
+> https://www.spinics.net/lists/linux-pci/msg56476.html
+> 
+>  drivers/pci/pci-mid.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
+> index c7f3408..1c4af72 100644
+> --- a/drivers/pci/pci-mid.c
+> +++ b/drivers/pci/pci-mid.c
+> @@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
+>  	return false;
+>  }
+>  
+> -static struct pci_platform_pm_ops mid_pci_platform_pm = {
+> +static const struct pci_platform_pm_ops mid_pci_platform_pm = {
+>  	.is_manageable	= mid_pci_power_manageable,
+>  	.set_state	= mid_pci_set_power_state,
+>  	.get_state	= mid_pci_get_power_state,
+> -- 
+> 2.10.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
