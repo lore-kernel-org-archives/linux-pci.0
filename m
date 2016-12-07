@@ -1,484 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hpe.com ([15.233.16.89]:40233 "EHLO
-        g2t1383g.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934580AbcLQAz2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2016 19:55:28 -0500
-Subject: Bar 0 assignment issue when hot plugged by pci core
-References: <91e1fe99-25bc-fd5d-7d28-bafcff73b101@hpe.com>
-To: linux-pci@vger.kernel.org
-Cc: helgass@kernel.org, linux-newbie@vger.kernel.org
-From: divakar <divakar.chitturi@hpe.com>
-Message-ID: <ebed5757-ff14-6802-f392-6dbcc2723ab6@hpe.com>
-Date: Fri, 16 Dec 2016 16:53:28 -0800
+Received: from mail.kernel.org ([198.145.29.136]:33818 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752364AbcLGUgL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Dec 2016 15:36:11 -0500
+Date: Wed, 7 Dec 2016 14:36:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geliang Tang <geliangtang@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: spear: use builtin_platform_driver
+Message-ID: <20161207203606.GE22129@bhelgaas-glaptop.roam.corp.google.com>
+References: <fad445bc8162cd07a298b25a18614773c86ec227.1479912870.git.geliangtang@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <91e1fe99-25bc-fd5d-7d28-bafcff73b101@hpe.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fad445bc8162cd07a298b25a18614773c86ec227.1479912870.git.geliangtang@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am reposting this msg hoping to get some help. Sorry if this is not encouraged.
+On Wed, Nov 23, 2016 at 10:55:07PM +0800, Geliang Tang wrote:
+> Use builtin_platform_driver() helper to simplify the code.
+> 
+> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
 
+Applied to pci/host-spear for v4.10, thanks!
 
-Hi All,
-
-Scenario 1:
-I am seeing BAR 0 assignment issue for one of the devices (Device A) downstream to pcie switch when i insert (hotplug) the card (with the plx switch and devices on it) after linux boots and enter the command prompt. 
-However BAR 0 is assigned successfully to a different device (Device B) on different port of the same pcie switch.
-
-Scenario 2:
-In contrast, when i plug the card in the system first and power on, all the devices (Device A and Device B) downstream to the pcie switch are allocated BAR 0.
-
-Questions:
-1. How can i get pci/pciehp to assign memory/BAR 0 to Device A (45:00.x) in Scenario 1.
-2. Can this be caused by wrong config space settings for Device A ? If yes which register/field i should be looking at ?
-3. How is the memory address assigned for Device B ( 44:00.x) change between Scenario 1 (0xd6000000) and scenario 2 (183ffe808000 ).
-4. Why do i see BAR 7 : failed to assign memory. All operations to the device are working fine. so can i ignore this ?
-
- 
-Setup:
-Currently running 3.19 ( linux yocto ). Also tried on 4.4.16 ( linux yocto ). Below log is from running 4.4.16 kernel
-pcie switch has inbuilt hotplug controller and pcieport driver binds to all the ports. All downstream ports are hotplug enabled which is bound by pciehp service driver.
-I checked that BIOS has allocated enough memory for all the devices ( scenario 2 proves 
-
-It would be of great help if someone can point out what am i missing, or how i can solve this. Without solving Question 1, i am not able to successfully enable the device driver for Device A in the hotplug situation, where the error will be something like "can't enable device: BAR 0 [] not claimed "
-
-
-Thanks
-Divakar
-
-
-
-Sorry for removing some of the company information from the device details as the product is still under development.
-
-Scenario 1: HOTPLUG ( Insert the card after linux booted )
-
-BEFORE card Inserted
-
- \-[0000:00]-+-00.0
-             +-01.0-[01-26]----00.0-[02-26]--+-09.0-[03-0b]--
-             |                               +-0a.0-[0c-14]--
-             |                               +-0b.0-[15-1d]--
-             |                               \-0c.0-[1e-26]--
-             +-02.0-[27]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-02.2-[28-2a]--+-00.0
-             |               \-00.1
-             +-03.0-[2b]--
-             +-03.1-[2c]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-03.2-[2d-52]--+-00.0-[2e-52]--+-01.0-[2f-37]--
-             |               |               +-02.0-[38-40]--
-             |               |               +-03.0-[41-49]--
-             |               |               \-04.0-[4a-52]--
-             |               +-00.1
-             |               +-00.2
-             |               +-00.3
-             |               \-00.4
-             +-05.0
-             +-05.1
-             +-05.2
-             +-05.4
-             +-14.0
-             +-1a.0
-
-Hot plug enabled for port of pcie switch where cards can be inserted.
-
-dmesg | grep pciehp
-[    6.851607] pciehp 0000:02:09.0:pcie24: Slot #9 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.863882] pciehp 0000:02:09.0:pcie24: service driver pciehp loaded
-[    6.863888] pciehp 0000:02:0a.0:pcie24: Slot #10 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.876262] pciehp 0000:02:0a.0:pcie24: service driver pciehp loaded
-[    6.876267] pciehp 0000:02:0b.0:pcie24: Slot #11 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.888639] pciehp 0000:02:0b.0:pcie24: service driver pciehp loaded
-[    6.888644] pciehp 0000:02:0c.0:pcie24: Slot #12 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.901016] pciehp 0000:02:0c.0:pcie24: service driver pciehp loaded
-[    6.901022] pciehp 0000:2e:01.0:pcie24: Slot #1 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.913298] pciehp 0000:2e:01.0:pcie24: service driver pciehp loaded
-[    6.913304] pciehp 0000:2e:02.0:pcie24: Slot #2 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.925581] pciehp 0000:2e:02.0:pcie24: service driver pciehp loaded
-[    6.925587] pciehp 0000:2e:03.0:pcie24: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.937862] pciehp 0000:2e:03.0:pcie24: service driver pciehp loaded
-[    6.937868] pciehp 0000:2e:04.0:pcie24: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep-
-[    6.950142] pciehp 0000:2e:04.0:pcie24: service driver pciehp loaded
-[    6.987039] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
-
- 
-
-AFTER Card (with pcie switch and devices on it) Insertion
-
- \-[0000:00]-+-00.0
-             +-01.0-[01-26]----00.0-[02-26]--+-09.0-[03-0b]--
-             |                               +-0a.0-[0c-14]--
-             |                               +-0b.0-[15-1d]--
-             |                               \-0c.0-[1e-26]--
-             +-02.0-[27]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-02.2-[28-2a]--+-00.0
-             |               \-00.1
-             +-03.0-[2b]--
-             +-03.1-[2c]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-03.2-[2d-52]--+-00.0-[2e-52]--+-01.0-[2f-37]--
-             |               |               +-02.0-[38-40]--
-             |               |               +-03.0-[41-49]--+-00.0-[42-46]--+-01.0-[43]----00.0
-             |               |               |               |               +-02.0-[44]--+-00.0
-             |               |               |               |               |            \-00.1
-             |               |               |               |               +-04.0-[45]--+-00.0
-             |               |               |               |               |            +-00.1
-             |               |               |               |               |            +-00.2
-             |               |               |               |               |            \-00.3
-             |               |               |               |               \-0a.0-[46]--+-00.0
-             |               |               |               |                            +-00.1
-             |               |               |               |                            +-00.2
-             |               |               |               |                            \-00.3
-             |               |               |               +-00.1
-             |               |               |               +-00.2
-             |               |               |               +-00.3
-             |               |               |               \-00.4
-             |               |               \-04.0-[4a-52]--
-             |               +-00.1
-             |               +-00.2
-             |               +-00.3
-             |               \-00.4
-             +-05.0
-             +-05.1
-             +-05.2
-             +-05.4
-             +-14.0
-
-When card inserted ( hotplugged ) messages i see
-
-pciehp 0000:2e:03.0:pcie24: Card present on Slot(3)
-pci 0000:41:00.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.1: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.2: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.3: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.4: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:42:01.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:42:02.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:42:04.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:42:0a.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:41:00.0: PCI bridge to [bus 42-ff]
-pci 0000:42:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:42:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:42:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:42:0a.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:43:00.0: Max Payload Size set to 256 (was 128, max 256)
-pci 0000:42:01.0: PCI bridge to [bus 43-ff]
-pci 0000:44:00.0: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:44:00.1: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:42:02.0: PCI bridge to [bus 44-ff]
-pci 0000:45:00.0: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:45:00.1: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:45:00.2: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:45:00.3: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:42:04.0: PCI bridge to [bus 45-ff]
-pci 0000:46:00.0: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:46:00.1: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:46:00.2: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:46:00.3: can't set Max Payload Size to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-pci 0000:42:0a.0: PCI bridge to [bus 46-ff]
-pci 0000:41:00.0: BAR 9: assigned [mem 0xd5000000-0xd6ffffff 64bit pref]
-pci 0000:41:00.0: BAR 8: assigned [mem 0x91000000-0x914fffff]
-pci 0000:41:00.0: BAR 0: assigned [mem 0x91500000-0x9153ffff]
-pci 0000:41:00.1: BAR 0: assigned [mem 0x91540000-0x91541fff]
-pci 0000:41:00.2: BAR 0: assigned [mem 0x91542000-0x91543fff]
-pci 0000:41:00.3: BAR 0: assigned [mem 0x91544000-0x91545fff]
-pci 0000:41:00.4: BAR 0: assigned [mem 0x91546000-0x91547fff]
-pci 0000:41:00.0: BAR 7: no space for [io  size 0x2000]
-pci 0000:41:00.0: BAR 7: failed to assign [io  size 0x2000]
-pci 0000:41:00.0: BAR 7: no space for [io  size 0x2000]
-pci 0000:41:00.0: BAR 7: failed to assign [io  size 0x2000]
-pci 0000:42:02.0: BAR 9: assigned [mem 0xd5000000-0xd63fffff 64bit pref]
-pci 0000:42:01.0: BAR 8: assigned [mem 0x91000000-0x910fffff]
-pci 0000:42:02.0: BAR 8: assigned [mem 0x91100000-0x912fffff]
-pci 0000:42:04.0: BAR 9: assigned [mem 0xd6400000-0xd67fffff 64bit pref]
-pci 0000:42:0a.0: BAR 8: assigned [mem 0x91300000-0x914fffff]
-pci 0000:42:0a.0: BAR 9: assigned [mem 0xd6800000-0xd6dfffff 64bit pref]
-pci 0000:42:02.0: BAR 7: no space for [io  size 0x1000]
-pci 0000:42:02.0: BAR 7: failed to assign [io  size 0x1000]
-pci 0000:42:0a.0: BAR 7: no space for [io  size 0x1000]
-pci 0000:42:0a.0: BAR 7: failed to assign [io  size 0x1000]
-pci 0000:42:0a.0: BAR 7: no space for [io  size 0x1000]
-pci 0000:42:0a.0: BAR 7: failed to assign [io  size 0x1000]
-pci 0000:42:02.0: BAR 7: no space for [io  size 0x1000]
-pci 0000:42:02.0: BAR 7: failed to assign [io  size 0x1000]
-pci 0000:43:00.0: BAR 0: assigned [mem 0x91000000-0x9103ffff]
-pci 0000:42:01.0: PCI bridge to [bus 43]
-pci 0000:42:01.0:   bridge window [mem 0x91000000-0x910fffff]
-pci 0000:44:00.0: BAR 2: assigned [mem 0xd5000000-0xd57fffff 64bit pref]
-pci 0000:44:00.1: BAR 2: assigned [mem 0xd5800000-0xd5ffffff 64bit pref]
-pci 0000:44:00.0: BAR 0: assigned [mem 0xd6000000-0xd6007fff 64bit pref]
-pci 0000:44:00.1: BAR 0: assigned [mem 0xd6008000-0xd600ffff 64bit pref]
-pci 0000:42:02.0: PCI bridge to [bus 44]
-pci 0000:42:02.0:   bridge window [mem 0x91100000-0x912fffff]
-pci 0000:42:02.0:   bridge window [mem 0xd5000000-0xd63fffff 64bit pref]
-pci 0000:42:04.0: PCI bridge to [bus 45]
-pci 0000:42:04.0:   bridge window [mem 0xd6400000-0xd67fffff 64bit pref]
-pci 0000:42:0a.0: PCI bridge to [bus 46]
-pci 0000:42:0a.0:   bridge window [mem 0x91300000-0x914fffff]
-pci 0000:42:0a.0:   bridge window [mem 0xd6800000-0xd6dfffff 64bit pref]
-pci 0000:41:00.0: PCI bridge to [bus 42-46]
-pci 0000:41:00.0:   bridge window [mem 0x91000000-0x914fffff]
-pci 0000:41:00.0:   bridge window [mem 0xd5000000-0xd6ffffff 64bit pref]
-pcieport 0000:2e:03.0: PCI bridge to [bus 41-49]
-pcieport 0000:2e:03.0:   bridge window [io  0xa000-0xafff]
-pcieport 0000:2e:03.0:   bridge window [mem 0x91000000-0x917fffff]
-pcieport 0000:2e:03.0:   bridge window [mem 0xd5000000-0xdc7fffff 64bit pref]
-pcieport 0000:41:00.0: enabling device (0000 -> 0002)
-pcieport 0000:42:01.0: enabling device (0000 -> 0002)
-pcieport 0000:42:02.0: enabling device (0000 -> 0002)
-pciehp 0000:42:02.0:pcie24: Slot #2 AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise- Interlock- NoCompl- LLActRep-
-pcieport 0000:42:04.0: enabling device (0000 -> 0002)
-pcieport 0000:42:0a.0: enabling device (0000 -> 0002)
-pciehp 0000:42:0a.0:pcie24: Slot #10 AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise- Interlock- NoCompl- LLActRep-
-
-
-Device A : Memory not assigned
-lspci -vvv -s 45:*
-45:00.0 
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Region 0: Memory at <unassigned> (64-bit, prefetchable) [disabled] [size=1M]
-	Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [78] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [80] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM not supported, Exit Latency L0s <4us, L1 <1us
-			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Multi-Function Virtual Channel <?>
-	Capabilities: [200 v1] Vendor Specific Information:
-
-
-Device B : Region 0 assigned
-lspci -vvv -s 44:*
-44:00.0 
-	Subsystem: 
-	Physical Slot: 2-2
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Interrupt: pin A routed to IRQ 0
-	Region 0: Memory at d6000000 (64-bit, prefetchable) [disabled] [size=32K]
-	Region 2: Memory at d5000000 (64-bit, prefetchable) [disabled] [size=8M]
-	Capabilities: [48] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] Vital Product Data
-pcilib: sysfs_read_vpd: read failed: Connection timed out
-		Not readable
-	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [a0] MSI-X: Enable- Count=1 Masked-
-		Vector table: BAR=0 offset=00000000
-		PBA: BAR=0 offset=00000000
-	Capabilities: [ac] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM L0s L1, Exit Latency L0s <2us, L1 <4us
-			ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x2, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Via WAKE#
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [13c v1] Device Serial Number 00-00-00-00-00-00-00-00
-	Capabilities: [150 v1] Power Budgeting <?>
-	Capabilities: [160 v1] Virtual Channel
-		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
-		Arb:	Fixed- WRR32- WRR64- WRR128-
-		Ctrl:	ArbSelect=Fixed
-		Status:	InProgress-
-		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-			Status:	NegoPending- InProgress-
-	Capabilities: [180 v1] Vendor Specific Information: ID=0000 Rev=0 Len=028 <?>
-	Capabilities: [1b0 v1] Latency Tolerance Reporting
-		Max snoop latency: 0ns
-		Max no snoop latency: 0ns
-	Capabilities: [250 v1] #12
-
-
- 
-
-Scenario 2: COLD boot ( when card is inserted in the slot before power on )
-
-\-[0000:00]-+-00.0
-             +-01.0-[01-26]----00.0-[02-26]--+-09.0-[03-0b]--
-             |                               +-0a.0-[0c-14]--
-             |                               +-0b.0-[15-1d]--
-             |                               \-0c.0-[1e-26]--
-             +-02.0-[27]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-02.2-[28-2a]--+-00.0
-             |               \-00.1
-             +-03.0-[2b]--
-             +-03.1-[2c]--+-00.0
-             |            +-00.1
-             |            +-00.2
-             |            \-00.3
-             +-03.2-[2d-57]--+-00.0-[2e-57]--+-01.0-[2f-37]--
-             |               |               +-02.0-[38-40]--
-             |               |               +-03.0-[41-4e]--+-00.0-[42-46]--+-01.0-[43]----00.0
-             |               |               |               |               +-02.0-[44]--+-00.0
-             |               |               |               |               |            \-00.1
-             |               |               |               |               +-04.0-[45]--+-00.0
-             |               |               |               |               |            +-00.1
-             |               |               |               |               |            +-00.2
-             |               |               |               |               |            \-00.3
-             |               |               |               |               \-0a.0-[46]--+-00.0
-             |               |               |               |                            +-00.1
-             |               |               |               |                            +-00.2
-             |               |               |               |                            \-00.3
-             |               |               |               +-00.1
-             |               |               |               +-00.2
-             |               |               |               +-00.3
-             |               |               |               \-00.4
-             |               |               \-04.0-[4f-57]--
-             |               +-00.1
-             |               +-00.2
-             |               +-00.3
-             |               \-00.4
-Device A
-lspci -vvv -s 45:00.0
-45:00.0 
-	Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Region 0: Memory at 183fff000000 (64-bit, prefetchable) [size=1M]
-	Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [78] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [80] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM not supported, Exit Latency L0s <4us, L1 <1us
-			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Multi-Function Virtual Channel <?>
-	Capabilities: [200 v1] Vendor Specific Information: 
-
-Device B
-lspci -vvv -s 44:00.0
-44:00.0 
-	Subsystem: 
-	Physical Slot: 2-2
-	Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Interrupt: pin A routed to IRQ 10
-	Region 0: Memory at 183ffe808000 (64-bit, prefetchable) [size=32K]
-	Region 2: Memory at 183ffe000000 (64-bit, prefetchable) [size=8M]
-	Capabilities: [48] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] Vital Product Data
-pcilib: sysfs_read_vpd: read failed: Connection timed out
-		Not readable
-	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [a0] MSI-X: Enable- Count=1 Masked-
-		Vector table: BAR=0 offset=00000000
-		PBA: BAR=0 offset=00000000
-	Capabilities: [ac] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM L0s L1, Exit Latency L0s <2us, L1 <4us
-			ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x2, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Via WAKE#
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [13c v1] Device Serial Number 00-00-00-00-00-00-00-00
-	Capabilities: [150 v1] Power Budgeting <?>
-	Capabilities: [160 v1] Virtual Channel
-		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
-		Arb:	Fixed- WRR32- WRR64- WRR128-
-		Ctrl:	ArbSelect=Fixed
-		Status:	InProgress-
-		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-			Status:	NegoPending- InProgress-
-	Capabilities: [180 v1] Vendor Specific Information: ID=0000 Rev=0 Len=028 <?>
-	Capabilities: [1b0 v1] Latency Tolerance Reporting
-		Max snoop latency: 0ns
-		Max no snoop latency: 0ns
-	Capabilities: [250 v1] #12 
-
-
+> ---
+>  drivers/pci/host/pcie-spear13xx.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 3cf197b..dafe8b8 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -296,8 +296,4 @@ static struct platform_driver spear13xx_pcie_driver = {
+>  	},
+>  };
+>  
+> -static int __init spear13xx_pcie_init(void)
+> -{
+> -	return platform_driver_register(&spear13xx_pcie_driver);
+> -}
+> -device_initcall(spear13xx_pcie_init);
+> +builtin_platform_driver(spear13xx_pcie_driver);
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
