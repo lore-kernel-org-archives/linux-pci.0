@@ -1,52 +1,105 @@
-Return-Path: <SRS0=DdPg=XV=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=DdPg=XV=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
- controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
- <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
- <1480620053.4751.30.camel@redhat.com>
- <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
- <CADaLNDkVPRPSg0aU-sxHsiJbVvEn=LxcekDt6gfXBBhc+fzhjw@mail.gmail.com>
- <20161201230736.GA17948@bhelgaas-glaptop.roam.corp.google.com>
- <CADaLND=Ss8d-jv7wffbrtytrjj=SUnjDn9bognKUszhKguRV1A@mail.gmail.com>
- <d77e403c-81e9-114e-6ec6-bbffaa4ac36f@redhat.com>
- <20161202233943.GF9903@bhelgaas-glaptop.roam.corp.google.com>
- <62dd5462-4d68-b89f-2b45-0d58bbd96bcd@redhat.com>
- <20161205212140.GA18259@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Duc Dang <dhdang@apm.com>, Mark Salter <msalter@redhat.com>,
-        Rafael Wysocki <rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann
- <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-arm <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <aac9391d-8803-f5e8-f4e4-d7e56d54c05c@redhat.com>
-Date: Tue, 6 Dec 2016 14:46:00 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0043.outbound.protection.outlook.com ([104.47.33.43]:11712
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752105AbcLHSd2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Dec 2016 13:33:28 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: RE: ATH9 driver issues on ARM64
+Date: Thu, 8 Dec 2016 18:33:17 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+In-Reply-To: <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161205212140.GA18259@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2016 04:21 PM, Bjorn Helgaas wrote:
-> On Fri, Dec 02, 2016 at 07:33:46PM -0500, Jon Masters wrote:
+> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+>=20
+> Two things:
+>=20
+> > Here is the cat /proc/interrupts (after we do interface up):
+> >
+> > root@:~# ifconfig wlan0 up
+> > [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
+> >            CPU0       CPU1       CPU2       CPU3
+> >   1:          0          0          0          0     GICv2  29 Edge    =
+  arch_timer
+> >   2:      19873      20058      19089      17435     GICv2  30 Edge    =
+  arch_timer
+> >  12:          0          0          0          0     GICv2 156 Level   =
+  zynqmp-dma
+> >  13:          0          0          0          0     GICv2 157 Level   =
+  zynqmp-dma
+> >  14:          0          0          0          0     GICv2 158 Level   =
+  zynqmp-dma
+> >  15:          0          0          0          0     GICv2 159 Level   =
+  zynqmp-dma
+> >  16:          0          0          0          0     GICv2 160 Level   =
+  zynqmp-dma
+> >  17:          0          0          0          0     GICv2 161 Level   =
+  zynqmp-dma
+> >  18:          0          0          0          0     GICv2 162 Level   =
+  zynqmp-dma
+> >  19:          0          0          0          0     GICv2 163 Level   =
+  zynqmp-dma
+> >  20:          0          0          0          0     GICv2 164 Level   =
+  Mali_GP_MMU, Mali_GP,
+> Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+>=20
+> I'm not even going to consider looking at something that is running out o=
+f tree
+> code. So please start things with a fresh kernel that doesn't contain stu=
+ff we
+> can't debug.
+>=20
+Ok will test with fresh kernel.
 
->>> Even without this patch, I don't think it's a show-stopper to have
->>> Linux mistakenly thinking this region is routed to PCI, because the
->>> driver does reserve it and the PCI core will never try to use it.
->>
->> Ok. So are you happy with pulling in Duc's v4 patch and retaining
->> status quo on the bridge resources for 4.10?
-> 
-> Yes, I think it looks good.  I'll finish packaging things up and
-> repost the current series.
+> >  30:          0          0          0          0     GICv2  95 Level   =
+  eth0, eth0
+> > 206:        314          0          0          0     GICv2  49 Level   =
+  cdns-i2c
+> > 207:         40          0          0          0     GICv2  50 Level   =
+  cdns-i2c
+> > 209:          0          0          0          0     GICv2 150 Level   =
+  nwl_pcie:misc
+> > 214:         12          0          0          0     GICv2  47 Level   =
+  ff0f0000.spi
+> > 215:          0          0          0          0     GICv2  58 Level   =
+  ffa60000.rtc
+> > 216:          0          0          0          0     GICv2  59 Level   =
+  ffa60000.rtc
+> > 217:          0          0          0          0     GICv2 165 Level   =
+  ahci-ceva[fd0c0000.ahci]
+> > 218:         61          0          0          0     GICv2  81 Level   =
+  mmc0
+> > 219:          0          0          0          0     GICv2 187 Level   =
+  arm-smmu global fault
+> > 220:        471          0          0          0     GICv2  53 Level   =
+  xuartps
+> > 223:          0          0          0          0     GICv2 154 Level   =
+  fd4c0000.dma
+> > 224:          3          0          0          0     dummy   1 Edge    =
+  ath9k
+>=20
+> What is this "dummy" controller? And if that's supposed to be a legacy in=
+terrupt
+> from the PCI device, it has the wrong trigger.
 
-Ok, great. So you're still pretty confident we'll have "out of the box"
-booting on these machines for 4.10? :)
+Yes it is for legacy interrupt, wrong trigger means ?=20
 
-Jon.
-
--- 
-Computer Architect | Sent from my Fedora powered laptop
+Thanks & Regards,
+Bharat
