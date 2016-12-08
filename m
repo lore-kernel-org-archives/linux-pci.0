@@ -1,70 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:19006 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753713AbcL3J4W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Dec 2016 04:56:22 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 1/3] PCI: dra7xx: simplify the probe code
-Date: Fri, 30 Dec 2016 15:26:12 +0530
-Message-ID: <1483091774-8332-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1483091774-8332-1-git-send-email-kishon@ti.com>
-References: <1483091774-8332-1-git-send-email-kishon@ti.com>
+Received: from mail.kernel.org ([198.145.29.136]:35530 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751540AbcLHS0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Dec 2016 13:26:38 -0500
+Date: Thu, 8 Dec 2016 12:26:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Gospodarek <gospo@broadcom.com>
+Cc: bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>
+Subject: Re: [PATCH pci/host-iproc] pci-iproc: skip check for legacy IRQ on
+ PAXC buses
+Message-ID: <20161208182634.GA30533@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480624492-32420-1-git-send-email-gospo@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1480624492-32420-1-git-send-email-gospo@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Use the new devm_gpiod_get_optional() to
-simplify the probe code.
+On Thu, Dec 01, 2016 at 03:34:52PM -0500, Andy Gospodarek wrote:
+> PAXC and PAXCv2 buses do not support legacy IRQs so there is no reason
+> to even try and map them.  Without a change like this, one cannot create
+> VFs on Nitro ports since legacy interrupts are checked as part of the
+> PCI device creation process.  Testing on PAXC hardware showed that VFs
+> are properly created with only the change to not set pcie->map_irq, but
+> just to be safe the change in iproc_pcie_setup will ensure that
+> pdev_fixup_irq will not panic.
+> 
+> Signed-off-by: Andy Gospodarek <gospo@broadcom.com>
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/pci/controller/pci-dra7xx.c |   21 +++++----------------
- 1 file changed, 5 insertions(+), 16 deletions(-)
+Applied to pci/host-iproc for v4.10 with Ray's acked-by, thanks!
 
-diff --git a/drivers/pci/controller/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
-index 9595fad..f6d0c63 100644
---- a/drivers/pci/controller/pci-dra7xx.c
-+++ b/drivers/pci/controller/pci-dra7xx.c
-@@ -320,9 +320,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	char name[10];
--	int gpio_sel;
--	enum of_gpio_flags flags;
--	unsigned long gpio_flags;
-+	struct gpio_desc *reset;
- 
- 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
- 	if (!dra7xx)
-@@ -388,19 +386,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
- 
--	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
--	if (gpio_is_valid(gpio_sel)) {
--		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
--				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
--		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
--					    "pcie_reset");
--		if (ret) {
--			dev_err(dev, "gpio%d request failed, ret %d\n",
--				gpio_sel, ret);
--			goto err_gpio;
--		}
--	} else if (gpio_sel == -EPROBE_DEFER) {
--		ret = -EPROBE_DEFER;
-+	reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
-+	if (IS_ERR(reset)) {
-+		ret = PTR_ERR(reset);
-+		dev_err(&pdev->dev, "gpio request failed, ret %d\n", ret);
- 		goto err_gpio;
- 	}
- 
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/host/pcie-iproc-platform.c | 9 ++++++++-
+>  drivers/pci/host/pcie-iproc.c          | 5 ++++-
+>  2 files changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> index fd3ed9b..22d814a 100644
+> --- a/drivers/pci/host/pcie-iproc-platform.c
+> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> @@ -108,7 +108,14 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> -	pcie->map_irq = of_irq_parse_and_map_pci;
+> +	/* PAXC doesn't support legacy IRQs, skip mapping */
+> +	switch (pcie->type) {
+> +	case IPROC_PCIE_PAXC:
+> +	case IPROC_PCIE_PAXC_V2:
+> +		break;
+> +	default:
+> +		pcie->map_irq = of_irq_parse_and_map_pci;
+> +	}
+>  
+>  	ret = iproc_pcie_setup(pcie, &res);
+>  	if (ret)
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index cd51334..3ebc025 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -1274,7 +1274,10 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  
+>  	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+> -	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+> +
+> +	if (pcie->map_irq)
+> +		pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+> +
+>  	pci_bus_add_devices(bus);
+>  
+>  	return 0;
+> -- 
+> 2.1.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
