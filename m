@@ -1,44 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:53423 "EHLO
-        lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754903AbcLNKze (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2016 05:55:34 -0500
-Subject: Re: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
-To: Christoph Hellwig <hch@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
- <1473600688-24043-7-git-send-email-hch@lst.de>
- <1c24ae65-067f-52fc-edfa-af2d0e222a19@xs4all.nl>
- <20161214102913.GA30236@lst.de>
- <c5453c65-1256-338f-0ff1-6499d11987af@xs4all.nl>
- <20161214104731.GA30382@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
-        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
-        alex.williamson@redhat.com, kvm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Message-ID: <8b7143ae-1034-c247-0a94-184a050d137a@xs4all.nl>
-Date: Wed, 14 Dec 2016 11:52:33 +0100
+Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
+Subject: Re: ATH9 driver issues on ARM64
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+ <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+ "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+ Kalle Valo <kvalo@codeaurora.org>,
+ "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
+Date: Thu, 8 Dec 2016 19:09:33 +0000
 MIME-Version: 1.0
-In-Reply-To: <20161214104731.GA30382@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/12/16 11:47, Christoph Hellwig wrote:
-> On Wed, Dec 14, 2016 at 11:37:17AM +0100, Hans Verkuil wrote:
->> Completely forgot this. Is it OK to queue it for 4.11? Or is it blocking
->> other follow-up work you want to do for 4.10?
->
-> My plan was to see if Bjorn would take the patch to do the trivial removal
-> of pci_enable_msix_exact and pci_enable_msix_range even as a late 4.10 patch
-> given it's so harmless, but either way there is follow work pending ASAP
-> so getting it in for 4.10 would be very helpful.
->
+On 08/12/16 18:33, Bharat Kumar Gogada wrote:
+>> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+>>
+>> Two things:
+>>
+>>> Here is the cat /proc/interrupts (after we do interface up):
+>>>
+>>> root@:~# ifconfig wlan0 up
+>>> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
+>>>            CPU0       CPU1       CPU2       CPU3
+>>>   1:          0          0          0          0     GICv2  29 Edge      arch_timer
+>>>   2:      19873      20058      19089      17435     GICv2  30 Edge      arch_timer
 
-OK, then I'll make a pull request for 4.10 tomorrow.
+By the way, please use a recent kernel. Seeing edge here means you're
+running with something that is a bit old (and broken). And since you
+haven't even said what revision of the kernel you're using, hslping you
+is not an easy task. tglx told you something similar about a week ago.
 
-Regards,
+>>>  12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
+>>>  13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
+>>>  14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
+>>>  15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
+>>>  16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
+>>>  17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
+>>>  18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
+>>>  19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
+>>>  20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP,
+>> Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+>>
+>> I'm not even going to consider looking at something that is running out of tree
+>> code. So please start things with a fresh kernel that doesn't contain stuff we
+>> can't debug.
+>>
+> Ok will test with fresh kernel.
+> 
+>>>  30:          0          0          0          0     GICv2  95 Level     eth0, eth0
+>>> 206:        314          0          0          0     GICv2  49 Level     cdns-i2c
+>>> 207:         40          0          0          0     GICv2  50 Level     cdns-i2c
+>>> 209:          0          0          0          0     GICv2 150 Level     nwl_pcie:misc
+>>> 214:         12          0          0          0     GICv2  47 Level     ff0f0000.spi
+>>> 215:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
+>>> 216:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
+>>> 217:          0          0          0          0     GICv2 165 Level     ahci-ceva[fd0c0000.ahci]
+>>> 218:         61          0          0          0     GICv2  81 Level     mmc0
+>>> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global fault
+>>> 220:        471          0          0          0     GICv2  53 Level     xuartps
+>>> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
+>>> 224:          3          0          0          0     dummy   1 Edge      ath9k
+>>
+>> What is this "dummy" controller? And if that's supposed to be a legacy interrupt
+>> from the PCI device, it has the wrong trigger.
+> 
+> Yes it is for legacy interrupt, wrong trigger means ? 
 
-	Hans
+Aren't legacy interrupts supposed to be *level* triggered, and not edge?
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
