@@ -1,101 +1,87 @@
-Return-Path: <SRS0=kBte=XQ=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=kBte=XQ=linutronix.de=tglx@kernel.org>
-Date: Thu, 1 Dec 2016 10:41:56 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-    Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-    "arnd@arndb.de" <arnd@arndb.de>, "qnguyen@apm.com" <qnguyen@apm.com>,
-    "jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-    "sudeep.holla@arm.com" <sudeep.holla@arm.com>
-Subject: RE: CPU stall with TP-Link wifi PCIe card
-In-Reply-To: <8520D5D51A55D047800579B094147198263A1E2B@XAP-PVEXMBX02.xlnx.xilinx.com>
-Message-ID: <alpine.DEB.2.20.1612011012320.3453@nanos>
-References: <8520D5D51A55D047800579B094147198263A1E2B@XAP-PVEXMBX02.xlnx.xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([59.151.112.132]:17125 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750989AbcLHIMV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2016 03:12:21 -0500
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC: <linasvepstas@gmail.com>, <bhelgaas@google.com>, <corbet@lwn.net>
+Subject: [PATCH] pci-error-recover: doc cleanup
+Date: Thu, 8 Dec 2016 16:16:14 +0800
+Message-ID: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 1 Dec 2016, Bharat Kumar Gogada wrote:
+Include typo fix; white space shooting; mistake correction.
 
-> After further debugging found that irq_enable is not being invoked by
-> kernel in kernel/irq/chip.c after the few interrupts when we do wlan
-> scan.
->
-> In ARM64, when an interrupt arises who invokes irq_disable(struct
-> irq_desc *desc)/irq_enable(struct irq_desc *desc) functions.
+Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+---
+ Documentation/PCI/pci-error-recovery.txt | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-What invokes irq_disable()/irq_enable()? In which function is this
-happening? There are exactly three places in the interrupt core which
-invoke irq_disable():
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index ac26869c7db4..fcb29cdbeb1b 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -11,7 +11,7 @@
+ 
+ Many PCI bus controllers are able to detect a variety of hardware
+ PCI errors on the bus, such as parity errors on the data and address
+-busses, as well as SERR and PERR errors.  Some of the more advanced
++buses, as well as SERR and PERR errors.  Some of the more advanced
+ chipsets are able to deal with these errors; these include PCI-E chipsets,
+ and the PCI-host bridges found on IBM Power4, Power5 and Power6-based
+ pSeries boxes. A typical action taken is to disconnect the affected device,
+@@ -175,7 +175,7 @@ is STEP 6 (Permanent Failure).
+ >>> a value of 0xff on read, and writes will be dropped. If more than
+ >>> EEH_MAX_FAILS I/O's are attempted to a frozen adapter, EEH
+ >>> assumes that the device driver has gone into an infinite loop
+->>> and prints an error to syslog.  A reboot is then required to 
++>>> and prints an error to syslog.  A reboot is then required to
+ >>> get the device working again.
+ 
+ STEP 2: MMIO Enabled
+@@ -234,7 +234,7 @@ STEP 3: Link Reset
+ ------------------
+ The platform resets the link, and then calls the link_reset() callback
+ on all affected device drivers.  This is a PCI-Express specific state
+-and is done whenever a non-fatal error has been detected that can be
++and is done whenever a fatal error has been detected that can be
+ "solved" by resetting the link. This call informs the driver of the
+ reset and the driver should check to see if the device appears to be
+ in working condition.
+@@ -256,7 +256,7 @@ STEP 4: Slot Reset
+ ------------------
+ 
+ In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+-the platform will perform a slot reset on the requesting PCI device(s). 
++the platform will perform a slot reset on the requesting PCI device(s).
+ The actual steps taken by a platform to perform a slot reset
+ will be platform-dependent. Upon completion of slot reset, the
+ platform will call the device slot_reset() callback.
+@@ -276,7 +276,7 @@ configuration registers to initialize to their default conditions.
+ 
+ For most PCI devices, a soft reset will be sufficient for recovery.
+ Optional fundamental reset is provided to support a limited number
+-of PCI Express PCI devices  for which a soft reset is not sufficient
++of PCI Express PCI devices for which a soft reset is not sufficient
+ for recovery.
+ 
+ If the platform supports PCI hotplug, then the reset might be
+@@ -321,7 +321,7 @@ driver performs device init only from PCI function 0:
+ 		Same as above.
+ 
+ Drivers for PCI Express cards that require a fundamental reset must
+-set the needs_freset bit in the pci_dev structure in their probe function.  
++set the needs_freset bit in the pci_dev structure in their probe function.
+ For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
+ PCI card types:
+ 
+-- 
+2.1.0
 
-__disable_irq(), which is invoked from disable_irq() and
-		 disable_irq_nosync() and suspend_device_irq()
-       
-irq_pm_check_wakeup(), whis suspend/wakeup related
 
-note_interrupt(), which disables interrupt when the handler refuses to
-		  handle them.
 
-There is nothing in the core code which invokes irq_disable/enable() pairs
-in any interrupt handling code path and I have no idea how ARM64 would do
-that.
-
-> From my debugging for successful interrupt handling
-> irq_disable->handler->irq_enabling is happening, irrespective of
-> IRQD_IRQ_DISABLED state, is it correct ?
-
-To be honest, I have not the faintest clue what you are trying to
-explain/ask.
-
-> > Just to add, im using 4.6 kernel version. And the card is working on ARM, X86
-> > machine.
-> > 
-> > > Subject: CPU stall with TP-Link wifi PCIe card
-> > >
-> > > Hi,
-> > >
-> > > We are testing TP-link wifi PCIe card(TL-WDN4800) on our soc
-> > > (pcie-xilinx- nwl.c). This card is using legacy interrupts and it
-> > > doesn't support MSI.
-
-That card information is useless. Which driver is handling the card?
-
-You are neither telling which interrupt controller is used for this legacy
-interrupt.
-
-> > > When we do scan on wifi interface(using "iw dev wlan0 scan") cpu is
-> > > getting stalled making whole system hang.
-> > >
-> > > After debugging found that IRQ is being disabled after getting 1 or 2
-> > > interrupts immediately after we run the scan command.
-> > >
-> > > But interrupts are being received to root port continuously but not
-> > > being serviced by EP due to following condition, due to continuous
-> > > interrupts cpu is getting stalled.
-> > >
-> > > In handle_simple_irq:
-> > >
-> > > if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
-> > >                 desc->istate |= IRQS_PENDING;
-> > >                 goto out_unlock;
-> > >   }
-> > >
-> > > The irqd_irq_disabled(&desc->irq_data) is returning 1 after 1 or 2
-> > > interrupts after we scan.
-
-So the interrupt is disabled, but it's not masked in hardware.
-
-> > > Can any one tell why irq is going into disabled state ?
-> > >
-> > > What might be the source that's making it go into disabled state ?
-
-Simply a call to disable_irq() or disable_irq_nosync().
-
-If you can come up with some coherent information about the problem instead
-of weird theories and useless conclusions then we might be able to help.
-
-Thanks,
-
-	tglx
