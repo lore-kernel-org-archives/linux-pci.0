@@ -1,96 +1,75 @@
-Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
-Date: Tue, 13 Dec 2016 18:18:40 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv4 next 0/3] Limiting pci access
-Message-ID: <20161213231840.GD12113@localhost.localdomain>
-References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
- <20161118232544.GI28386@localhost.localdomain>
- <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
- <20161128180214.GF2609@localhost.localdomain>
- <20161208175432.GA28827@bhelgaas-glaptop.roam.corp.google.com>
- <20161208193253.GK25959@localhost.localdomain>
- <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
- <20161213005547.GA12844@localhost.localdomain>
- <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56046 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753343AbcLHO4Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Dec 2016 09:56:24 -0500
+Date: Thu, 8 Dec 2016 08:56:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@qca.qualcomm.com
+Subject: Re: ATH9 driver issues on ARM64
+Message-ID: <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 02:50:12PM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 12, 2016 at 07:55:47PM -0500, Keith Busch wrote:
-> > On Mon, Dec 12, 2016 at 05:42:27PM -0600, Bjorn Helgaas wrote:
-> > > On Thu, Dec 08, 2016 at 02:32:53PM -0500, Keith Busch wrote:
-> > > > Depending on the device and the driver, there are hundreds to thousands
-> > > > of non-posted transactions submitted to the device to complete driver
-> > > > unbinding and removal. Since the device is gone, hardware has to handle
-> > > > that as an error condition, which is slower than the a successful
-> > > > non-posted transaction. Since we're doing 1000 of them for no particular
-> > > > reason, it takes a long time. If you hot remove a switch with multiple
-> > > > downstream devices, the serialized removal adds up to many seconds.
-> > > 
-> > > Another thread mentioned 1-2us as a reasonable config access cost, and
-> > > I'm still a little puzzled about how we get to something on the order
-> > > of a million times that cost.
-> > > 
-> > > I know this is all pretty hand-wavey, but 1000 config accesses to shut
-> > > down a device seems unreasonably high.  The entire config space is
-> > > only 4096 bytes, and most devices use a small fraction of that.  If
-> > > we're really doing 1000 accesses, it sounds like we're doing something
-> > > wrong, like polling without a delay or something.
-> > 
-> > Every time pci_find_ext_capability is called on a removed device, the
-> > kernel will do 481 failed config space accesses trying to find that
-> > capability. The kernel used to do that multiple times to find the AER
-> > capability under conditions common to surprise removal.
-> 
-> Right, that's a perfect example.  I'd rather fix issues like this by
-> caching the position as you did with AER.  The "removed" bit makes
-> these issues "go away" without addressing the underlying problem.
-> 
-> We might still need a "removed" bit for other reasons, but I want to
-> be clear about those reasons, not just throw it in under the general
-> "make it go fast" umbrella.
-> 
-> > But now that we cache the AER position (commit: 66b80809), we've
-> > eliminated by far the worst offender. The counts I'm telling you are
-> > still referencing the original captured traces showing long tear down
-> > times, so it's not up-to-date with the most recent version of the kernel.
-> >  
-> > > I measured the cost of config reads during enumeration using the TSC
-> > > on a 2.8GHz CPU and found the following:
-> > > 
-> > >   1580 cycles, 0.565 usec (device present)
-> > >   1230 cycles, 0.440 usec (empty slot)
-> > >   2130 cycles, 0.761 usec (unimplemented function of multi-function device)
-> > > 
-> > > So 1-2usec does seem the right order of magnitude, and my "empty slot"
-> > > error responses are actually *faster* than the "device present" ones,
-> > > which is plausible to me because the Downstream Port can generate the
-> > > error response immediately without sending a packet down the link.
-> > > The "unimplemented function" responses take longer than the "empty
-> > > slot", which makes sense because the Downstream Port does have to send
-> > > a packet to the device, which then complains because it doesn't
-> > > implement that function.
-> > > 
-> > > Of course, these aren't the same case as yours, where the link used to
-> > > be up but is no longer.  Is there some hardware timeout to see if the
-> > > link will come back?
-> > 
-> > Yes, the hardware does not respond immediately under this test, which
-> > is considered an error condition. This is a reason why PCIe Device
-> > Capabilities 2 Completion Timeout Ranges are recommended to be in the
-> > 10ms range.
-> 
-> And we're apparently still doing a lot of these accesses?  I'm still
-> curious about exactly what these are, because it may be that we're
-> doing more than necessary.
+[+cc Kalle, ath9k list]
 
-It's the MSI-x masking that's our next highest contributor. Masking
-vectors still requires non-posted commands, and since they're not going
-through managed API accessors like config space uses, the removed flag
-is needed for checking before doing significant MMIO.
+On Thu, Dec 08, 2016 at 01:49:42PM +0000, Bharat Kumar Gogada wrote:
+> Hi,
+> 
+> Did anyone test Atheros ATH9 driver(drivers/net/wireless/ath/ath9k/)
+> on ARM64.  The end point is TP link wifi card with which supports
+> only legacy interrupts.
+
+If it works on other arches and the arm64 PCI enumeration works, my
+first guess would be an INTx issue, e.g., maybe the driver is waiting
+for an interrupt that never arrives.
+
+> We are trying to test it on ARM64 with
+> (drivers/pci/host/pcie-xilinx-nwl.c) as root port.
+> 
+> EP is getting enumerated and able to link up. 
+> 
+> But when we start scan system gets hanged.
+
+When you say the system hangs when you start a scan, I assume you mean
+a wifi scan, not the PCI enumeration.  A problem with a wifi scan
+might cause a *process* to hang, but it shouldn't hang the entire
+system.
+
+> When we took trace we see that after we start scan assert message is
+> sent but there is no de assert from end point.
+
+Are you talking about a trace from a PCIe analyzer?  Do you see an
+Assert_INTx PCIe message on the link?
+
+> What might cause end point not sending de assert ?
+
+If the endpoint doesn't send a Deassert_INTx message, I expect that
+would mean the driver didn't service the interrupt and remove the
+condition that caused the device to assert the interrupt in the first
+place.
+
+If the driver didn't receive the interrupt, it couldn't service it, of
+course.  You could add a printk in the ath9k interrupt service
+routine to see if you ever get there.
+
+> We are not seeing any issues on 32-bit ARM platform and X86
+> platform. 
+
+Can you collect a dmesg log (or, if the system hang means you can't
+collect that, a console log with "ignore_loglevel"), and "lspci -vv"
+output as root?  That should have clues about whether the INTx got
+routed correctly.  /proc/interrupts should also show whether we're
+receiving interrupts from the device.
+
+Bjorn
