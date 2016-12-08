@@ -1,42 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:45601 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbcLFPvq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2016 10:51:46 -0500
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH pci/next v3 0/3] PCI: rcar, rcar-gen2: Bindings cleanups
-Date: Tue,  6 Dec 2016 16:51:28 +0100
-Message-Id: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+Received: from mail.kernel.org ([198.145.29.136]:59836 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753017AbcLHSFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Dec 2016 13:05:42 -0500
+Date: Thu, 8 Dec 2016 12:05:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ashok Raj <ashok.raj@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] Fix improper handling of pcie hotplug events.
+Message-ID: <20161208180538.GB28421@bhelgaas-glaptop.roam.corp.google.com>
+References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sat, Nov 19, 2016 at 12:32:44AM -0800, Ashok Raj wrote:
+> This patch series fixes pciehp for certain special conditions observed during
+> testing.
+> 
+> Ashok Raj (3):
+>   pciehp: Prioritize data-link event over presence detect
+>   pciehp: Fix led status when enabling already enabled slot.
 
-this short series makes some bindings cleanups to the Renesas PCI drivers.
+I applied the above on pci/hotplug for v4.10, without the stable
+annotation.  If we get reports that would justify stable backports, we
+can always request that later.  The ideal thing would be to get those
+reports soon enough that we can reference them in the changelog and
+add the stable annotations back before these get merged for v4.10.
 
-Changes v2->v3:
-* Reworded changelogs to indicate that re-ordering struct of_device_id
-  entries does not effect run-time behaviour
-* Corrected compile error due to typo in symbol name
-Changes v1->v2:
-* re-order struct of_device_id entries
+>   pciehp: Fix race condition handling surprise link-down
 
-Simon Horman (3):
-  PCI: rcar-gen2: Use gen2 fallback compatibility last
-  PCI: rcar: Use gen2 fallback compatibility last
-  PCI: rcar: Add gen3 fallback compatibility string for pcie-rcar
+I'm holding off on this one, pending resolution of the locking
+question.
 
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
- drivers/pci/host/pci-rcar-gen2.c                   | 2 +-
- drivers/pci/host/pcie-rcar.c                       | 5 +++--
- 3 files changed, 5 insertions(+), 3 deletions(-)
-
--- 
-2.7.0.rc3.207.g0ac5344
-
+>  drivers/pci/hotplug/pciehp_ctrl.c |  6 +++---
+>  drivers/pci/hotplug/pciehp_hpc.c  | 21 ++++++++++++---------
+>  2 files changed, 15 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
