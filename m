@@ -1,72 +1,53 @@
-Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
-Subject: Re: [PATCH v10 11/12] PCI: Add MCFG quirks for Cavium ThunderX
- pass2.x host controller
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Christopher Covington
- <cov@codeaurora.org>, Dongdong Liu <liudongdong3@huawei.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <6e8e2a9f-e744-c91e-9686-49f5d4a68228@semihalf.com>
-Date: Mon, 5 Dec 2016 09:32:02 +0100
+Return-Path: <SRS0=vIIj=XX=axis.com=niklas.cassel@kernel.org>
+Return-Path: <SRS0=vIIj=XX=axis.com=niklas.cassel@kernel.org>
+Subject: Re: resume path in dra7xx and other DW-based drivers
+To: Bjorn Helgaas <helgaas@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+References: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>, Richard
+ Zhu <Richard.Zhu@freescale.com>, Lucas Stach <l.stach@pengutronix.de>, Murali
+ Karicheri <m-karicheri2@ti.com>, Minghuan Lian <minghuan.Lian@freescale.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jesper Nilsson
+	<jespern@axis.com>, Pratyush Anand <pratyush.anand@gmail.com>, Jose Abreu
+	<Jose.Abreu@synopsys.com>, Stanimir Varbanov <svarbanov@mm-sol.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <7b11c552-4cc5-ade2-76dc-f310fc20e3a1@axis.com>
+Date: Thu, 8 Dec 2016 09:25:02 +0100
 MIME-Version: 1.0
-In-Reply-To: <20161202173520.GC9903@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.12.2016 18:35, Bjorn Helgaas wrote:
-> On Thu, Dec 01, 2016 at 02:30:58AM -0600, Bjorn Helgaas wrote:
->> From: Tomasz Nowicki <tn@semihalf.com>
->>
->> ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
->> compliant with ECAM standard. It uses non-standard configuration space
->> accessors (see thunder_pem_ecam_ops) and custom configuration space
->> granulation (see bus_shift = 24). In order to access configuration space
->> and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
->> infrastructure. This involves:
->> 1. A new thunder_pem_acpi_init() init function to locate PEM-specific
->>    register ranges using ACPI.
->> 2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
->>    code.
->> 3. New quirk entries for each PEM segment. Each contains platform IDs,
->>    mentioned thunder_pem_ecam_ops and CFG resources.
->>
->> Quirk is considered for ThunderX silicon pass2.x only which is identified
->> via MCFG revision 1.
->>
->> [bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
->> quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++++
->>  drivers/pci/host/Makefile          |    2 +-
->>  drivers/pci/host/pci-thunder-pem.c |   38 ++++++++++++++++++++++++++++++++++++
->>  include/linux/pci-ecam.h           |    1 +
->>  4 files changed, 59 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index c6a6949..a48b508 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
->>  	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
->>  	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
->>  	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
->> +
->> +#define THUNDER_PEM_RES(addr, node) \
->> +	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
+On 12/07/2016 11:02 PM, Bjorn Helgaas wrote:
+> Hi Kishon, et al,
 >
-> I assume we should do s/node/seg/ here as well?  I already did that for
-> THUNDER_ECAM_QUIRK in the next patch.
+> Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
+> and dra7xx_pcie_resume_noirq() restore everything necessary.  For
+> example, the probe path has this:
 >
+>   dra7xx_pcie_probe
+>     dra7xx_add_pcie_port
+>       dw_pcie_host_init
+> 	dra7xx_pcie_host_init         # .host_init
+> 	  dw_pcie_setup_rc
+> 	    dw_pcie_prog_outbound_atu
+>
+> so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
+> path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
+> setup would be restored.
+>
+> Related to this, dra7xx_pcie_resume_noirq() contains phy init and
+> power-on code that is duplicated in dra7xx_pcie_probe().  It seems
+> like that ought to be done by a common function instead of being cut
+> and pasted.
+>
+> I haven't looked in detail at all the other DW-based drivers; dra7xx
+> just happens to be first in alphabetical order :)  But I suspect I'd
+> have the same question about them.
 
-Here node means NUMA node number so it is fine.
+There doesn't appear to be any DW-based driver supporting
+suspend/resume other than dra7xx :)
 
-Thanks,
-Tomasz
+
+>
+> Bjorn
