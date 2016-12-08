@@ -1,70 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:40947 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753728AbcL0KSh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 05:18:37 -0500
-Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
-To: Alim Akhtar <alim.akhtar@samsung.com>,
-        Pankaj Dubey <pankaj.dubey@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: krzk@kernel.org, kgene@kernel.org, jingoohan1@gmail.com,
-        bhelgaas@google.com, sanath@samsung.com,
-        Niyas Ahmed S T <niyas.ahmed@samsung.com>,
-        CPGS <cpgs@samsung.com>
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <a4200793-19dd-3727-505c-5840a8ec72bb@samsung.com>
-Date: Tue, 27 Dec 2016 19:18:33 +0900
-MIME-version: 1.0
-In-reply-to: <58620B5A.1060900@samsung.com>
-Content-type: text/plain; charset=windows-1252
-References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
- <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
- <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com>
- <5860E6F7.2090703@samsung.com>
- <79b89c49-a9de-3daa-9afa-b8f36304a226@samsung.com>
- <5861CE23.9060202@samsung.com>
- <6de4bc5b-05fb-793f-d3ab-b1c6ee19cfeb@samsung.com>
- <58620B5A.1060900@samsung.com>
+Received: from mail.kernel.org ([198.145.29.136]:58076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752496AbcLHPMD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Dec 2016 10:12:03 -0500
+Date: Thu, 8 Dec 2016 09:11:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 3/3] pciehp: Fix race condition handling surprise
+ link-down
+Message-ID: <20161208151158.GB19822@bhelgaas-glaptop.roam.corp.google.com>
+References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
+ <1479544367-7195-4-git-send-email-ashok.raj@intel.com>
+ <20161207234054.GL22129@bhelgaas-glaptop.roam.corp.google.com>
+ <20161208000433.GD25959@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161208000433.GD25959@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Alim,
-
-On 12/27/2016 03:34 PM, Alim Akhtar wrote:
-> Hi Jaehoon,
+On Wed, Dec 07, 2016 at 07:04:33PM -0500, Keith Busch wrote:
+> On Wed, Dec 07, 2016 at 05:40:54PM -0600, Bjorn Helgaas wrote:
+> > On Sat, Nov 19, 2016 at 12:32:47AM -0800, Ashok Raj wrote:
+> > > --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> > > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> > > @@ -182,6 +182,7 @@ static void pciehp_power_thread(struct work_struct *work)
+> > >  	switch (info->req) {
+> > >  	case DISABLE_REQ:
+> > >  		mutex_lock(&p_slot->hotplug_lock);
+> > > +		p_slot->state = POWEROFF_STATE;
+> > 
+> > It sounds right that p_slot->state should be protected.
+> > 
+> > It looks like handle_button_press_event() and
+> > pciehp_sysfs_enable_slot() hold p_slot->lock while updating
+> > p_slot->state.
+> > 
+> > You're setting "state = POWEROFF_STATE" while holding
+> > p_slot->hotplug_lock (not p_slot->lock).  Four lines down, we set
+> > "state = STATIC_STATE", but this time we're holding p_slot->lock.
+> > 
+> > What is the difference between the p_slot->lock and
+> > p_slot->hotplug_lock?  Do we need both?  How do we know which one to
+> > use?
+> > 
+> > I'm very confused.
 > 
-[snip]
->>
->> Ah. Right..And i'm doing the refactoring to reuse the current pci-exynos.c.
-> There is a nice refactoring patch posted by Pankaj recently @
-> https://lkml.org/lkml/2016/12/23/73
-> I would suggest you to rebase your work on this top.
-
-Well, i don't think so. Pankaj's patch might be good way..but i can't agree about a few point.
-If based on Pankaj's patch, it's more complex..
-
-why put the ops callback for getting clock and mem resource?
-
-If PHY generic framework is used, it's unnecessary. because it needs to get elbi and dbi resources.
-clock resources("pcie" and "pcie_bus") are general things.
-
-If Pankaj's patch is applied, also need to make the exynos5433_pcie_* callback functions?
-It doesn't make sense.
-
-I want to know maintainer's opinion..we can just touch a little for supporting All Exynos SoCs.
-
-Best Regards,
-Jaehoon Chung
-
+> This is _very_ confusing. :)
 > 
->> Maybe..Today or Tomorrow..I will send the patches..At that time, could you also check them?
->> Any comments might be helpful to me! :)
->>
-> Will wait for you patches :-)
+> The p_slot->hotplug_lock serializes a power off and a power on event. We
+> only want to set the state when one of those events gets to execute
+> rather than when the event is queued. Changing the state when the event
+> is queued can trigger a never ending up-down sequence.
 > 
->> Best Regards,
->> Jaehoon Chung
->>
-[snip]
+> It currently looks safe to nest the p_slot->lock under the
+> p_slot->hotplug_lock if that is you recommendation.
 
+I'm not making a recommendation; that would take a lot more thought
+than I've given this.
+
+There are at least three locks in pciehp:
+
+  struct controller.ctrl_lock
+  struct slot.lock
+  struct slot.hotplug_lock
+
+There shouldn't really be any performance paths in pciehp, so I'm
+pretty doubtful that we need such complicated locking.
+
+> Alternatively we could fix this if we used an ordered work queue for
+> the slot's work, but that is a significantly more complex change.
+
+You mean we can currently execute things from the work queue in a
+different order than they were enqueued?  That sounds ... difficult to
+analyze, to say the least.
+
+I don't know much about work queues, and Documentation/workqueue.txt
+doesn't mention alloc_ordered_workqueue().  Is that what you are
+referring to?
+
+Bjorn
