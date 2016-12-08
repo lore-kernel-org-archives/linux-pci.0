@@ -1,93 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2016 10:18:30 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Haggai Eran <haggaie@mellanox.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161205171830.GB27784@obsidianresearch.com>
-References: <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
- <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com>
- <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
- <20161130162353.GA24639@obsidianresearch.com>
- <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
+Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
+Subject: Re: ATH9 driver issues on ARM64
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+ "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+ Kalle Valo <kvalo@codeaurora.org>,
+ "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+Date: Thu, 8 Dec 2016 18:07:05 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 04, 2016 at 07:23:00AM -0600, Stephen Bates wrote:
-> Hi All
+On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+
+Two things:
+
+> Here is the cat /proc/interrupts (after we do interface up):
 > 
-> This has been a great thread (thanks to Alex for kicking it off) and I
-> wanted to jump in and maybe try and put some summary around the
-> discussion. I also wanted to propose we include this as a topic for LFS/MM
-> because I think we need more discussion on the best way to add this
-> functionality to the kernel.
-> 
-> As far as I can tell the people looking for P2P support in the kernel fall
-> into two main camps:
-> 
-> 1. Those who simply want to expose static BARs on PCIe devices that can be
-> used as the source/destination for DMAs from another PCIe device. This
-> group has no need for memory invalidation and are happy to use
-> physical/bus addresses and not virtual addresses.
+> root@:~# ifconfig wlan0 up
+> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts 
+>            CPU0       CPU1       CPU2       CPU3       
+>   1:          0          0          0          0     GICv2  29 Edge      arch_timer
+>   2:      19873      20058      19089      17435     GICv2  30 Edge      arch_timer
+>  12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
+>  13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
+>  14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
+>  15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
+>  16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
+>  17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
+>  18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
+>  19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
+>  20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
 
-I didn't think there was much on this topic except for the CMB
-thing.. Even that is really a mapped kernel address..
+I'm not even going to consider looking at something that is running out
+of tree code. So please start things with a fresh kernel that doesn't
+contain stuff we can't debug.
 
-> I think something like the iopmem patches Logan and I submitted recently
-> come close to addressing use case 1. There are some issues around
-> routability but based on feedback to date that does not seem to be a
-> show-stopper for an initial inclusion.
+>  30:          0          0          0          0     GICv2  95 Level     eth0, eth0
+> 206:        314          0          0          0     GICv2  49 Level     cdns-i2c
+> 207:         40          0          0          0     GICv2  50 Level     cdns-i2c
+> 209:          0          0          0          0     GICv2 150 Level     nwl_pcie:misc
+> 214:         12          0          0          0     GICv2  47 Level     ff0f0000.spi
+> 215:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
+> 216:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
+> 217:          0          0          0          0     GICv2 165 Level     ahci-ceva[fd0c0000.ahci]
+> 218:         61          0          0          0     GICv2  81 Level     mmc0
+> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global fault
+> 220:        471          0          0          0     GICv2  53 Level     xuartps
+> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
+> 224:          3          0          0          0     dummy   1 Edge      ath9k
 
-If it is kernel only with physical addresess we don't need a uAPI for
-it, so I'm not sure #1 is at all related to iopmem.
+What is this "dummy" controller? And if that's supposed to be a legacy
+interrupt from the PCI device, it has the wrong trigger.
 
-Most people who want #1 probably can just mmap
-/sys/../pci/../resourceX to get a user handle to it, or pass around
-__iomem pointers in the kernel. This has been asked for before with
-RDMA.
+Thanks,
 
-I'm still not really clear what iopmem is for, or why DAX should ever
-be involved in this..
-
-> For use-case 2 it looks like there are several options and some of them
-> (like HMM) have been around for quite some time without gaining
-> acceptance. I think there needs to be more discussion on this usecase and
-> it could be some time before we get something upstreamable.
-
-AFAIK, hmm makes parts easier, but isn't directly addressing this
-need..
-
-I think you need to get ZONE_DEVICE accepted for non-cachable PCI BARs
-as the first step.
-
->From there is pretty clear we the DMA API needs to be updated to
-support that use and work can be done to solve the various problems
-there on the basis of using ZONE_DEVICE pages to figure out to the
-PCI-E end points
-
-Jason
+	M.
+-- 
+Jazz is not dead. It just smells funny...
