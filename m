@@ -1,55 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:34376 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751201AbcLEQx1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2016 11:53:27 -0500
-Received: by mail-pg0-f48.google.com with SMTP id x23so138495638pgx.1
-        for <linux-pci@vger.kernel.org>; Mon, 05 Dec 2016 08:52:42 -0800 (PST)
-Date: Mon, 5 Dec 2016 08:52:40 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci-hyperv: use kmalloc to allocate hypercall params
- buffer
-Message-ID: <20161205085240.23f686fc@xeon-e3>
-In-Reply-To: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
-References: <1478642678-31659-1-git-send-email-longli@exchange.microsoft.com>
+Return-Path: <SRS0=DQv2=XX=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=DQv2=XX=intel.com=keith.busch@kernel.org>
+Date: Thu, 8 Dec 2016 12:20:58 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 3/3] pciehp: Fix race condition handling surprise
+ link-down
+Message-ID: <20161208172058.GH25959@localhost.localdomain>
+References: <1479544367-7195-1-git-send-email-ashok.raj@intel.com>
+ <1479544367-7195-4-git-send-email-ashok.raj@intel.com>
+ <20161207234054.GL22129@bhelgaas-glaptop.roam.corp.google.com>
+ <20161208000433.GD25959@localhost.localdomain>
+ <20161208151158.GB19822@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161208151158.GB19822@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue,  8 Nov 2016 14:04:38 -0800
-Long Li <longli@exchange.microsoft.com> wrote:
+On Thu, Dec 08, 2016 at 09:11:58AM -0600, Bjorn Helgaas wrote:
+> On Wed, Dec 07, 2016 at 07:04:33PM -0500, Keith Busch wrote:
+> > 
+> > It currently looks safe to nest the p_slot->lock under the
+> > p_slot->hotplug_lock if that is you recommendation.
+> 
+> I'm not making a recommendation; that would take a lot more thought
+> than I've given this.
+> 
+> There are at least three locks in pciehp:
+> 
+>   struct controller.ctrl_lock
+>   struct slot.lock
+>   struct slot.hotplug_lock
+> 
+> There shouldn't really be any performance paths in pciehp, so I'm
+> pretty doubtful that we need such complicated locking.
 
-> +	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
-> +
-> +	params = &hbus->retarget_msi_interrupt_params;
-> +	memset(params, 0, sizeof(*params));
-> +	params->partition_id = HV_PARTITION_ID_SELF;
-> +	params->source = 1; /* MSI(-X) */
-> +	params->address = msi_desc->msg.address_lo;
-> +	params->data = msi_desc->msg.data;
-> +	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
->  			   (hbus->hdev->dev_instance.b[4] << 16) |
->  			   (hbus->hdev->dev_instance.b[7] << 8) |
->  			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
->  			   PCI_FUNC(pdev->devfn);
-> -	params.vector = cfg->vector;
-> +	params->vector = cfg->vector;
->  
->  	for_each_cpu_and(cpu, dest, cpu_online_mask)
-> -		params.vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-> +		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
-> +
-> +	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
->  
-> -	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
-> +	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
+They are protecting different things, but I agree it looks like room
+for simplification exists.
+ 
+> > Alternatively we could fix this if we used an ordered work queue for
+> > the slot's work, but that is a significantly more complex change.
+> 
+> You mean we can currently execute things from the work queue in a
+> different order than they were enqueued?  That sounds ... difficult to
+> analyze, to say the least.
 
-It looks like the additional locking here is being overly paranoid.
-The caller is already holding the irq descriptor lock. Look at fixup_irqs.
+The events are dequeued in order, but they don't wait for the previous
+to complete, so pciehp's current work queue can have multiple events
+executing in parallel. That's part of why rapid pciehp slot events are
+a little more difficult to follow, and I think we may even be unsafely
+relying on the order the mutexes are obtained from these work events.
+
+Partly unrelated, we could process surprise removals significantly
+faster (microseconds vs. seconds), with the limited pci access series
+here, giving fewer simultaneously executing events to consider:
+
+ https://www.spinics.net/lists/linux-pci/msg55585.html
+
+Do you have any concerns with that series?
+
+> I don't know much about work queues, and Documentation/workqueue.txt
+> doesn't mention alloc_ordered_workqueue().  Is that what you are
+> referring to?
+
+Yes, the alloc_ordered_workqueue is what I had in mind, though switching
+to that is not as simple as calling the different API. I am looking into
+that for longer term, but for the incremental fix, do you think we can
+go forward with Raj's proposal?
