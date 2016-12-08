@@ -1,68 +1,417 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35722 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934271AbcLMTlc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2016 14:41:32 -0500
-Date: Tue, 13 Dec 2016 13:41:15 -0600
-From: Rob Herring <robh@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
-Message-ID: <20161213194115.tqacbotxgsvphoje@rob-hp-laptop>
-References: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39741 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750813AbcLHHag (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2016 02:30:36 -0500
+Date: Thu, 8 Dec 2016 15:24:51 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        <linux-samsung-soc@vger.kernel.org>,
+        "Pratyush Anand" <pratyush.anand@gmail.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Javier Martinez Canillas <javier@osg.samsung.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        <linux-arm-msm@vger.kernel.org>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        "Mingkai Hu" <mingkai.hu@freescale.com>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        <linux-kernel@vger.kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        <linuxppc-dev@lists.ozlabs.org>,
+        Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: designware: add host_init error handling
+Message-ID: <20161208152451.4b3603dd@xhacker>
+In-Reply-To: <1481106769-1404-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1481106769-1404-1-git-send-email-srinivas.kandagatla@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 12, 2016 at 07:51:27PM +0800, Shawn Lin wrote:
-> Rockchip's RC outputs 100MHz reference clock but there are
-> two methods for PHY to generate it.
-> 
-> (1)One of them is to use system PLL to generate 100MHz clock and
-> the PHY will relock it and filter signal noise then outputs the
-> reference clock.
-> 
-> (2)Another way is to share Soc's 24MHZ crystal oscillator with
-> PHY and force PHY's DLL to generate 100MHz internally.
-> 
-> When using case(2), the exit from L0s doesn't work fine occasionally
-> due to the broken design of RC receiver's logical circuit. So even if
-> we use extended-synch, it still fails for PHY to relock the bits from
-> FTS sometimes. This will hang the system.
-> 
-> Maybe we could argue that why not use case(1) to avoid it? The reason
-> is that as we could see the reference clock is derived from system PLL
-> and the path from it to PHY isn't so clean which means there are some
-> noise introduced by power-domain and other buses can't be filterd out
-> by PHY and we could see noise from the frequency spectrum by
-> oscilloscope. This makes the TX compatibility test a little difficult
-> to pass the spec. So case(1) and case(2) are both used indeed now. If
-> using case(2), we should disable RC's L0s support, and that is why we
-> need this property to indicate this quirk.
-> 
-> Also after checking quirk.c, I noticed there is already a quirk for
-> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
-> shouldn't do that as mentioned above that case(1) could still works fine
-> with L0s.
-> 
-> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Cc: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v2:
-> - drop the quirk prefix
-> 
->  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
->  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
->  2 files changed, 11 insertions(+)
+Hi Srinivas,
 
-Acked-by: Rob Herring <robh@kernel.org>
+On Wed,  7 Dec 2016 10:32:49 +0000 Srinivas Kandagatla wrote:
+
+> This patch add support to return value from host_init() callback from drivers,
+> so that the designware libary can handle or pass it to proper place. Issue with
+> void return type is that errors or error handling within host_init() callback
+> are never know to designware code, which could go ahead and access registers
+> even in error cases.
+> 
+> Typical case in qcom controller driver is to turn off clks in case of errors,
+
+I have similar idea last year
+
+https://patchwork.kernel.org/patch/7602421/
+
+But finally I dropped the patch. The reason is PCIe supports hotplug. I
+noticed that most *errors* are due to the link can't be established, for
+example, the exynos, dra7xx in your below patch. I think FAIL_TO_ESTABLISH_LINK
+is a normal case if we didn't plug in the PCIe DP, then in this case I think
+it can't be considered as *error* and we still need to continue. What about
+your opinion?
+
+Thanks,
+Jisheng
+
+> if designware code continues to read/write register when clocks are turned off
+> the board would reboot/lockup.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+> Currently designware code does not have a way return errors generated
+> as part of host_init() callback in controller drivers. This is an issue
+> with controller drivers like qcom which turns off the clocks in error
+> handling path. As the dw core is un aware of this would continue to
+> access registers which faults resulting in board reboots/hangs.
+> 
+> There are two ways to solve this issue,
+> one is remove error handling in the qcom controller host_init() function
+> other is to handle error and pass back to dw core code which would then
+> pass back to controller driver as part of dw_pcie_host_init() return value.
+> 
+> Second option seems more sensible and correct way to fix the issue,
+> this patch does the same.
+> 
+> As part of this change to host_init() return type I had to patch other
+> ihost controller drivers which use dw core. Most of the changes to other drivers
+> are to return proper error codes to upper layer.
+> Only compile tested drivers.
+> 
+> Changes since RFC:
+> 	- Add error handling to other drivers as suggested by Joao Pinto
+> 
+>  drivers/pci/host/pci-dra7xx.c           | 10 ++++++++--
+>  drivers/pci/host/pci-exynos.c           | 10 ++++++++--
+>  drivers/pci/host/pci-imx6.c             | 10 ++++++++--
+>  drivers/pci/host/pci-keystone.c         | 10 ++++++++--
+>  drivers/pci/host/pci-layerscape.c       | 22 +++++++++++++---------
+>  drivers/pci/host/pcie-armada8k.c        |  4 +++-
+>  drivers/pci/host/pcie-designware-plat.c | 10 ++++++++--
+>  drivers/pci/host/pcie-designware.c      |  4 +++-
+>  drivers/pci/host/pcie-designware.h      |  2 +-
+>  drivers/pci/host/pcie-qcom.c            |  5 +++--
+>  drivers/pci/host/pcie-spear13xx.c       | 10 ++++++++--
+>  11 files changed, 71 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 9595fad..811f0f9 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -127,9 +127,10 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
+>  				   LEG_EP_INTERRUPTS);
+>  }
+>  
+> -static void dra7xx_pcie_host_init(struct pcie_port *pp)
+> +static int dra7xx_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> +	int ret;
+>  
+>  	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
+>  	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
+> @@ -138,10 +139,15 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+>  
+>  	dw_pcie_setup_rc(pp);
+>  
+> -	dra7xx_pcie_establish_link(dra7xx);
+> +	ret = dra7xx_pcie_establish_link(dra7xx);
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		dw_pcie_msi_init(pp);
+>  	dra7xx_pcie_enable_interrupts(dra7xx);
+> +
+> +	return 0;
+>  }
+>  
+>  static struct pcie_host_ops dra7xx_pcie_host_ops = {
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index f1c544b..c116fd9 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -458,12 +458,18 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
+>  	return 0;
+>  }
+>  
+> -static void exynos_pcie_host_init(struct pcie_port *pp)
+> +static int exynos_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> +	int ret;
+> +
+> +	ret = exynos_pcie_establish_link(exynos_pcie);
+> +	if (ret < 0)
+> +		return ret;
+>  
+> -	exynos_pcie_establish_link(exynos_pcie);
+>  	exynos_pcie_enable_interrupts(exynos_pcie);
+> +
+> +	return 0;
+>  }
+>  
+>  static struct pcie_host_ops exynos_pcie_host_ops = {
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c8cefb0..1251e92 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -550,18 +550,24 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>  	return ret;
+>  }
+>  
+> -static void imx6_pcie_host_init(struct pcie_port *pp)
+> +static int imx6_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +	int ret;
+>  
+>  	imx6_pcie_assert_core_reset(imx6_pcie);
+>  	imx6_pcie_init_phy(imx6_pcie);
+>  	imx6_pcie_deassert_core_reset(imx6_pcie);
+>  	dw_pcie_setup_rc(pp);
+> -	imx6_pcie_establish_link(imx6_pcie);
+> +	ret = imx6_pcie_establish_link(imx6_pcie);
+> +
+> +	if (ret < 0)
+> +		return ret;
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		dw_pcie_msi_init(pp);
+> +
+> +	return 0;
+>  }
+>  
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 043c19a..4067a75 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -260,12 +260,16 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
+>  	return 0;
+>  }
+>  
+> -static void __init ks_pcie_host_init(struct pcie_port *pp)
+> +static int __init ks_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+>  	u32 val;
+> +	int ret;
+> +
+> +	ret = ks_pcie_establish_link(ks_pcie);
+> +	if (ret < 0)
+> +		return ret;
+>  
+> -	ks_pcie_establish_link(ks_pcie);
+>  	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
+>  	ks_pcie_setup_interrupts(ks_pcie);
+>  	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
+> @@ -287,6 +291,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
+>  	 */
+>  	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
+>  			"Asynchronous external abort");
+> +
+> +	return 0;
+>  }
+>  
+>  static struct pcie_host_ops keystone_pcie_host_ops = {
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 6537079..60c8b84 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -103,30 +103,32 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
+>  	return 1;
+>  }
+>  
+> -static void ls1021_pcie_host_init(struct pcie_port *pp)
+> +static int ls1021_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct device *dev = pp->dev;
+>  	struct ls_pcie *pcie = to_ls_pcie(pp);
+>  	u32 index[2];
+> +	int ret;
+>  
+>  	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+>  						     "fsl,pcie-scfg");
+>  	if (IS_ERR(pcie->scfg)) {
+>  		dev_err(dev, "No syscfg phandle specified\n");
+> -		pcie->scfg = NULL;
+> -		return;
+> +		return PTR_ERR(pcie->scfg);
+>  	}
+>  
+> -	if (of_property_read_u32_array(dev->of_node,
+> -				       "fsl,pcie-scfg", index, 2)) {
+> -		pcie->scfg = NULL;
+> -		return;
+> -	}
+> +	ret = of_property_read_u32_array(dev->of_node,
+> +				       "fsl,pcie-scfg", index, 2);
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	pcie->index = index[1];
+>  
+>  	dw_pcie_setup_rc(pp);
+>  
+>  	ls_pcie_drop_msg_tlp(pcie);
+> +
+> +	return 0;
+>  }
+>  
+>  static int ls_pcie_link_up(struct pcie_port *pp)
+> @@ -144,7 +146,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+>  	return 1;
+>  }
+>  
+> -static void ls_pcie_host_init(struct pcie_port *pp)
+> +static int ls_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct ls_pcie *pcie = to_ls_pcie(pp);
+>  
+> @@ -153,6 +155,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+>  	ls_pcie_clear_multifunction(pcie);
+>  	ls_pcie_drop_msg_tlp(pcie);
+>  	iowrite32(0, pcie->pp.dbi_base + PCIE_DBI_RO_WR_EN);
+> +
+> +	return 0;
+>  }
+>  
+>  static int ls_pcie_msi_host_init(struct pcie_port *pp,
+> diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+> index 0ac0f18..29bdd8b 100644
+> --- a/drivers/pci/host/pcie-armada8k.c
+> +++ b/drivers/pci/host/pcie-armada8k.c
+> @@ -134,12 +134,14 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
+>  		dev_err(pp->dev, "Link not up after reconfiguration\n");
+>  }
+>  
+> -static void armada8k_pcie_host_init(struct pcie_port *pp)
+> +static int armada8k_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+>  
+>  	dw_pcie_setup_rc(pp);
+>  	armada8k_pcie_establish_link(pcie);
+> +
+> +	return 0;
+>  }
+>  
+>  static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+> index 1a02038..e01adbb 100644
+> --- a/drivers/pci/host/pcie-designware-plat.c
+> +++ b/drivers/pci/host/pcie-designware-plat.c
+> @@ -35,13 +35,19 @@ static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+>  	return dw_handle_msi_irq(pp);
+>  }
+>  
+> -static void dw_plat_pcie_host_init(struct pcie_port *pp)
+> +static int dw_plat_pcie_host_init(struct pcie_port *pp)
+>  {
+> +	int ret;
+> +
+>  	dw_pcie_setup_rc(pp);
+> -	dw_pcie_wait_for_link(pp);
+> +	ret = dw_pcie_wait_for_link(pp);
+> +	if (ret)
+> +		return ret;
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		dw_pcie_msi_init(pp);
+> +
+> +	return 0;
+>  }
+>  
+>  static struct pcie_host_ops dw_plat_pcie_host_ops = {
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index bed1999..4a81b72 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -638,7 +638,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	}
+>  
+>  	if (pp->ops->host_init)
+> -		pp->ops->host_init(pp);
+> +		ret = pp->ops->host_init(pp);
+> +			if (ret < 0)
+> +				goto error;
+>  
+>  	pp->root_bus_nr = pp->busn->start;
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index a567ea2..eacf18f 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -63,7 +63,7 @@ struct pcie_host_ops {
+>  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+>  			unsigned int devfn, int where, int size, u32 val);
+>  	int (*link_up)(struct pcie_port *pp);
+> -	void (*host_init)(struct pcie_port *pp);
+> +	int (*host_init)(struct pcie_port *pp);
+>  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+>  	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+> index 3593640..7d5fb38 100644
+> --- a/drivers/pci/host/pcie-qcom.c
+> +++ b/drivers/pci/host/pcie-qcom.c
+> @@ -429,7 +429,7 @@ static int qcom_pcie_link_up(struct pcie_port *pp)
+>  	return !!(val & PCI_EXP_LNKSTA_DLLLA);
+>  }
+>  
+> -static void qcom_pcie_host_init(struct pcie_port *pp)
+> +static int qcom_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+>  	int ret;
+> @@ -455,12 +455,13 @@ static void qcom_pcie_host_init(struct pcie_port *pp)
+>  	if (ret)
+>  		goto err;
+>  
+> -	return;
+> +	return ret;
+>  err:
+>  	qcom_ep_reset_assert(pcie);
+>  	phy_power_off(pcie->phy);
+>  err_deinit:
+>  	pcie->ops->deinit(pcie);
+> +	return ret;
+>  }
+>  
+>  static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 3cf197b..2408f80 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -174,12 +174,18 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
+>  	return 0;
+>  }
+>  
+> -static void spear13xx_pcie_host_init(struct pcie_port *pp)
+> +static int spear13xx_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+> +	int ret;
+> +
+> +	ret = spear13xx_pcie_establish_link(spear13xx_pcie);
+> +	if (ret < 0)
+> +		return ret;
+>  
+> -	spear13xx_pcie_establish_link(spear13xx_pcie);
+>  	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
+> +
+> +	return 0;
+>  }
+>  
+>  static struct pcie_host_ops spear13xx_pcie_host_ops = {
+
