@@ -1,71 +1,103 @@
-Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
-Message-Id: <d931ba2adbbdcda4c04b677fb8a196a8e35c025d.1481926599.git.lukas@wunner.de>
-In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
-References: <cover.1481926599.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 17 Dec 2016 15:39:39 +0100
-Subject: [PATCH v3 2/7] PCI: Allow runtime PM on Thunderbolt ports
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 8 Dec 2016 17:34:33 +0100
+From: Robert Richter <robert.richter@cavium.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [Linaro-acpi] [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI
+ controller for ThunderX pass2.x silicon version
+Message-ID: <20161208163433.GK10776@rric.localdomain>
+References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
+ <1479201298-25494-2-git-send-email-tn@semihalf.com>
+ <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
+ <e5b1f09c-ca4c-fbf0-e9d7-c943ad0df2ff@redhat.com>
+ <CADaLNDm8Zp_kAqVvSd0po9S3j2rSXxtUJ1M33dW7gLZzvueweQ@mail.gmail.com>
+ <30ad6c65-4a4a-6346-00f6-11250133a251@semihalf.com>
+ <20161202104500.GE10776@rric.localdomain>
+ <20161202162743.GB9903@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+In-Reply-To: <20161202162743.GB9903@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+ Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>,
+ Jayachandran C <jchandra@broadcom.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann <arnd@arndb.de>,
+ Rafael Wysocki <rafael@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Will Deacon <will.deacon@arm.com>,
+ David Daney <ddaney@caviumnetworks.com>, Jeremy Linton <jeremy.linton@arm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+ linux-acpi@vger.kernel.org, Christopher Covington <cov@codeaurora.org>,
+ linux-pci@vger.kernel.org, Marcin Wojtas <mw@semihalf.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently PCIe ports are only allowed to go to D3 if the BIOS is dated
-2015 or newer to avoid potential issues with old chipsets.  However for
-Thunderbolt we know that even the oldest controller, Light Ridge (2010),
-is able to suspend its ports to D3 just fine.
+On 02.12.16 10:27:43, Bjorn Helgaas wrote:
+> On Fri, Dec 02, 2016 at 11:45:00AM +0100, Robert Richter wrote:
+> > On 02.12.16 11:06:24, Tomasz Nowicki wrote:
+> > > On 02.12.2016 07:42, Duc Dang wrote:
+> > 
+> > > >@@ -98,16 +98,16 @@ struct mcfg_fixup {
+> > > >        { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
+> > > >        &pci_thunder_ecam_ops }
+> > > >        /* SoC pass1.x */
+> > > >-   THUNDER_PEM_QUIRK(2,  0),       /* off-chip devices */
+> > > >-   THUNDER_PEM_QUIRK(2,  1),       /* off-chip devices */
+> > > >-   THUNDER_ECAM_QUIRK(2,  0),
+> > > >-   THUNDER_ECAM_QUIRK(2,  1),
+> > > >-   THUNDER_ECAM_QUIRK(2,  2),
+> > > >-   THUNDER_ECAM_QUIRK(2,  3),
+> > > >-   THUNDER_ECAM_QUIRK(2, 10),
+> > > >-   THUNDER_ECAM_QUIRK(2, 11),
+> > > >-   THUNDER_ECAM_QUIRK(2, 12),
+> > > >-   THUNDER_ECAM_QUIRK(2, 13),
+> > > >+ THUNDER_PEM_QUIRK(2, 0UL),  /* off-chip devices */
+> > > >+ THUNDER_PEM_QUIRK(2, 1UL),  /* off-chip devices */
+> > > >+ THUNDER_ECAM_QUIRK(2, 0UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 1UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 2UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 3UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 10UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 11UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 12UL),
+> > > >+ THUNDER_ECAM_QUIRK(2, 13UL),
+> > > >
+> > > 
+> > > The UL suffix is needed for *THUNDER_PEM_QUIRK* only. THUNDER_ECAM_QUIRK is
+> > > fine.
+> > 
+> > We should better make the type cast part of the macro.
+> > 
+> > + this:
+> > 
+> > ---
+> > #define THUNDER_MCFG_RES(addr, node) \
+> >        DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
+> > ---
+> > 
+> > The args in the macro need parentheses.
+> 
+> Would you mind sending me a little incremental patch doing what you
+> want?  I could try myself, but since I don't have an arm64 cross-build
+> setup, I'm working in the dark.
 
-We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-released two EFI security updates in 2015 which encompass all machines
-with Thunderbolt, but the achieved power saving should be made available
-to users even if they haven't updated their BIOS.  To this end,
-special-case Thunderbolt in pci_bridge_d3_possible().
+Your current branch looks good.
 
-This allows the Thunderbolt controller to power down but the root port
-to which the Thunderbolt controller is attached remains in D0 unless
-the EFI update is installed.  Users can pass pcie_port_pm=force on the
-kernel command line if they cannot install the EFI update but still want
-to benefit from the additional power saving of putting the root port
-into D3.  In practice, root ports can be suspended to D3 without issues
-at least on 2012 Ivy Bridge machines.
+ 5d06f9125ec0 PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy
 
-If the BIOS cut-off date is ever lowered to 2010, the Thunderbolt
-special case can be removed.
+Thanks,
 
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+-Robert
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d..8ed098d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  * @bridge: Bridge to check
-  *
-  * This function checks if it is possible to move the bridge to D3.
-- * Currently we only allow D3 for recent enough PCIe ports.
-+ * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
-  */
- bool pci_bridge_d3_possible(struct pci_dev *bridge)
- {
-@@ -2258,6 +2258,11 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		    year >= 2015) {
- 			return true;
- 		}
-+
-+		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-+		if (bridge->is_thunderbolt)
-+			return true;
-+
- 		break;
- 	}
- 
--- 
-2.10.2
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
