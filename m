@@ -1,38 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:39068 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750812AbcLSIQS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 03:16:18 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH 0/4] PCI: exynos: cleans the minor things
-Date: Mon, 19 Dec 2016 17:16:10 +0900
-Message-id: <20161219081614.5403-1-jh80.chung@samsung.com>
+Received: from ms.lwn.net ([45.79.88.28]:46808 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932758AbcLIOhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Dec 2016 09:37:18 -0500
+Date: Fri, 9 Dec 2016 07:37:13 -0700
+From: Jonathan Corbet <corbet@lwn.net>
+To: Cao jin <caoj.fnst@cn.fujitsu.com>
+Cc: <linasvepstas@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci-error-recover: doc cleanup
+Message-ID: <20161209073713.43ed92ea@lwn.net>
+In-Reply-To: <584A513B.9080409@cn.fujitsu.com>
+References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+        <20161208070539.0f00ce71@lwn.net>
+        <58496AA4.5030602@cn.fujitsu.com>
+        <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
+        <584A513B.9080409@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current pci-exnoys.c is used for only EXYNOS5440.
-Even if there is no use-case, just cleans the codes for maintaining.
+On Fri, 9 Dec 2016 14:37:47 +0800
+Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
 
-In future, I will upstream for Exynso5433(TM2).
-Before sending patches for exynos5433, i want to reuse the some codse in pic-exynos.c.
-This patch is for perparing it.
+> I am little confused too, even not sure if we are talking the same
+> *fatal error*, I am talking the fatal error defined in PCI Express spec,
+> chapter 6.2.2.2.1:
 
-My Final goal is to apply the pcie-exynos5433 into v4.11.
+Therein lies my original discomfort with the change; it didn't seem to
+make sense to talk about recovering from a fatal error.  Perhaps making
+it "is done whenever a fatal error (as defined in section 6.2.2.2.1) has
+been detected that can be "solved" by resetting the link" or something
+like that to make it clear how the term is being used?
 
-Jaehoon Chung (4):
-  PCI: exynos: replace to one register accessor from each accessors
-  PCI: exynos: Remove the unnecessary variables
-  PCI: exynos: Use the bitops API to operate the bit shifting
-  PCI: exynos: remove the duplicated codes
+Thanks,
 
- drivers/pci/host/pci-exynos.c | 260 +++++++++++++++++++-----------------------
- 1 file changed, 116 insertions(+), 144 deletions(-)
-
--- 
-2.10.2
-
+jon
