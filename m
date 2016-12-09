@@ -1,113 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51472 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752609AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 03:31:33 -0500
-Subject: [PATCH v10 10/12] PCI: thunder-pem: Factor out resource lookup
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Thu, 01 Dec 2016 02:30:51 -0600
-Message-ID: <20161201083051.12247.55989.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=bp2I=XY=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=bp2I=XY=arm.com=marc.zyngier@kernel.org>
+Subject: Re: ATH9 driver issues on ARM64
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+ <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
+ <8520D5D51A55D047800579B094147198263A79AC@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <d8bc6283-8b37-76d6-8ff1-0847ee015380@arm.com>
+ <8520D5D51A55D047800579B094147198263A7F11@XAP-PVEXMBX02.xlnx.xilinx.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+ "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+ Kalle Valo <kvalo@codeaurora.org>,
+ "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <634133ba-f77e-bc80-751d-b77a7816dec4@arm.com>
+Date: Fri, 9 Dec 2016 11:24:00 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198263A7F11@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 09/12/16 11:04, Bharat Kumar Gogada wrote:
+>> On 09/12/16 02:07, Bharat Kumar Gogada wrote:
+>>>> On 08/12/16 18:33, Bharat Kumar Gogada wrote:
+>>>>>> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+>>>>>>> 218:         61          0          0          0     GICv2  81 Level     mmc0
+>>>>>>> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global
+>> fault
+>>>>>>> 220:        471          0          0          0     GICv2  53 Level     xuartps
+>>>>>>> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
+>>>>>>> 224:          3          0          0          0     dummy   1 Edge      ath9k
+>>>>>>
+>>>>>> What is this "dummy" controller? And if that's supposed to be a
+>>>>>> legacy interrupt from the PCI device, it has the wrong trigger.
+>>>>>
+>>>>> Yes it is for legacy interrupt, wrong trigger means ?
+>>>>
+>>>> Aren't legacy interrupts supposed to be *level* triggered, and not edge?
+>>>>
+>>> Yes agreed.
+>>> For legacy interrupts im using irq_set_chained_handler_and_data so the
+>>> irq line between bridge and GIC Will not be shown here. The above how
+>>> is virq for legacy, which is given by kernel, not sure why its state is set to edge.
+>>
+>> Well, you should try and find out. Edge triggering for legacy interrupts is a real
+>> bug, and I don't think it has anything to do with arm64 (despite what the subject
+>> says).
+>>
+> Thanks Marc. Here is the ARM32 bit log for cat /proc/interrupts, 
+> Here also it shows edge but still scan works successfully.
 
-Pull the register resource lookup out of thunder_pem_init() so we can
-easily add a corresponding lookup using ACPI.  No functional change
-intended.
+Because it works doesn't mean it is right.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-thunder-pem.c |   50 +++++++++++++++++++-----------------
- 1 file changed, 27 insertions(+), 23 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index 6abaf80..c3276ee 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -284,35 +284,16 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return pci_generic_config_write(bus, devfn, where, size, val);
- }
- 
--static int thunder_pem_init(struct pci_config_window *cfg)
-+static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
-+			    struct resource *res_pem)
- {
--	struct device *dev = cfg->parent;
--	resource_size_t bar4_start;
--	struct resource *res_pem;
- 	struct thunder_pem_pci *pem_pci;
--	struct platform_device *pdev;
--
--	/* Only OF support for now */
--	if (!dev->of_node)
--		return -EINVAL;
-+	resource_size_t bar4_start;
- 
- 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
- 	if (!pem_pci)
- 		return -ENOMEM;
- 
--	pdev = to_platform_device(dev);
--
--	/*
--	 * The second register range is the PEM bridge to the PCIe
--	 * bus.  It has a different config access method than those
--	 * devices behind the bridge.
--	 */
--	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	if (!res_pem) {
--		dev_err(dev, "missing \"reg[1]\"property\n");
--		return -EINVAL;
--	}
--
- 	pem_pci->pem_reg_base = devm_ioremap(dev, res_pem->start, 0x10000);
- 	if (!pem_pci->pem_reg_base)
- 		return -ENOMEM;
-@@ -332,9 +313,32 @@ static int thunder_pem_init(struct pci_config_window *cfg)
- 	return 0;
- }
- 
-+static int thunder_pem_platform_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	struct resource *res_pem;
-+
-+	if (!dev->of_node)
-+		return -EINVAL;
-+
-+	/*
-+	 * The second register range is the PEM bridge to the PCIe
-+	 * bus.  It has a different config access method than those
-+	 * devices behind the bridge.
-+	 */
-+	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!res_pem) {
-+		dev_err(dev, "missing \"reg[1]\"property\n");
-+		return -EINVAL;
-+	}
-+
-+	return thunder_pem_init(dev, cfg, res_pem);
-+}
-+
- static struct pci_ecam_ops pci_thunder_pem_ops = {
- 	.bus_shift	= 24,
--	.init		= thunder_pem_init,
-+	.init		= thunder_pem_platform_init,
- 	.pci_ops	= {
- 		.map_bus	= pci_ecam_map_bus,
- 		.read		= thunder_pem_config_read,
-
+	M.
+-- 
+Jazz is not dead. It just smells funny...
