@@ -1,122 +1,75 @@
-Return-Path: <SRS0=j0GF=XY=xilinx.com=bharatku@kernel.org>
-Return-Path: <SRS0=j0GF=XY=xilinx.com=bharatku@kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
-	"rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>, Kalle Valo
-	<kvalo@codeaurora.org>, "ath9k-devel@qca.qualcomm.com"
-	<ath9k-devel@qca.qualcomm.com>
-Subject: RE: ATH9 driver issues on ARM64
-Date: Fri, 9 Dec 2016 02:07:19 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263A79AC@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
- <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
-In-Reply-To: <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ashok Raj <ashok.raj@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>, linux-kernel@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH] pciehp: Fix race condition handling surprise link-down
+Date: Fri,  9 Dec 2016 13:06:04 -0800
+Message-Id: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 08/12/16 18:33, Bharat Kumar Gogada wrote:
-> >> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
-> >>
-> >> Two things:
-> >>
-> >>> Here is the cat /proc/interrupts (after we do interface up):
-> >>>
-> >>> root@:~# ifconfig wlan0 up
-> >>> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> >>> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
-> >>>            CPU0       CPU1       CPU2       CPU3
-> >>>   1:          0          0          0          0     GICv2  29 Edge  =
-    arch_timer
-> >>>   2:      19873      20058      19089      17435     GICv2  30 Edge  =
-    arch_timer
->=20
-> By the way, please use a recent kernel. Seeing edge here means you're run=
-ning
-> with something that is a bit old (and broken). And since you haven't even=
- said
-> what revision of the kernel you're using, hslping you is not an easy task=
-. tglx told
-> you something similar about a week ago.
->=20
-> >>>  12:          0          0          0          0     GICv2 156 Level =
-    zynqmp-dma
-> >>>  13:          0          0          0          0     GICv2 157 Level =
-    zynqmp-dma
-> >>>  14:          0          0          0          0     GICv2 158 Level =
-    zynqmp-dma
-> >>>  15:          0          0          0          0     GICv2 159 Level =
-    zynqmp-dma
-> >>>  16:          0          0          0          0     GICv2 160 Level =
-    zynqmp-dma
-> >>>  17:          0          0          0          0     GICv2 161 Level =
-    zynqmp-dma
-> >>>  18:          0          0          0          0     GICv2 162 Level =
-    zynqmp-dma
-> >>>  19:          0          0          0          0     GICv2 163 Level =
-    zynqmp-dma
-> >>>  20:          0          0          0          0     GICv2 164 Level =
-    Mali_GP_MMU,
-> Mali_GP,
-> >> Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
-> >>
-> >> I'm not even going to consider looking at something that is running
-> >> out of tree code. So please start things with a fresh kernel that
-> >> doesn't contain stuff we can't debug.
-> >>
-> > Ok will test with fresh kernel.
-> >
-> >>>  30:          0          0          0          0     GICv2  95 Level =
-    eth0, eth0
-> >>> 206:        314          0          0          0     GICv2  49 Level =
-    cdns-i2c
-> >>> 207:         40          0          0          0     GICv2  50 Level =
-    cdns-i2c
-> >>> 209:          0          0          0          0     GICv2 150 Level =
-    nwl_pcie:misc
-This irq line is handling miscellaneous interrupts this shows level trigger=
-ed.=20
-> >>> 214:         12          0          0          0     GICv2  47 Level =
-    ff0f0000.spi
-> >>> 215:          0          0          0          0     GICv2  58 Level =
-    ffa60000.rtc
-> >>> 216:          0          0          0          0     GICv2  59 Level =
-    ffa60000.rtc
-> >>> 217:          0          0          0          0     GICv2 165 Level =
-    ahci-
-> ceva[fd0c0000.ahci]
-> >>> 218:         61          0          0          0     GICv2  81 Level =
-    mmc0
-> >>> 219:          0          0          0          0     GICv2 187 Level =
-    arm-smmu global fault
-> >>> 220:        471          0          0          0     GICv2  53 Level =
-    xuartps
-> >>> 223:          0          0          0          0     GICv2 154 Level =
-    fd4c0000.dma
-> >>> 224:          3          0          0          0     dummy   1 Edge  =
-    ath9k
-> >>
-> >> What is this "dummy" controller? And if that's supposed to be a
-> >> legacy interrupt from the PCI device, it has the wrong trigger.
-> >
-> > Yes it is for legacy interrupt, wrong trigger means ?
->=20
-> Aren't legacy interrupts supposed to be *level* triggered, and not edge?
->=20
-Yes agreed.
-For legacy interrupts im using irq_set_chained_handler_and_data so the irq =
-line between bridge and GIC
-Will not be shown here. The above how is virq for legacy, which is given by=
- kernel, not sure why its state is set
-to edge.
+Changes from v1:
+	Address comments from Bjorn:
+		Added p_slot->lock mutex around changes to p_slot->state
+		Updated commit message to call out mutex names
 
+A surprise link down may retrain very quickly, causing the same slot to
+generate a link up event before handling the link down completes.
 
-Thanks & Regards,
-Bharat=20
+Since the link is active, the power off work queued from the first link
+down will cause a second down event when the power is disabled. The second
+down event should be ignored because the slot is already powering off;
+however, the "link up" event sets the slot state to POWERON before the
+event to handle this is enqueued, making the second down event believe
+it needs to do something. This creates a constant link up and down
+event cycle.
+
+This patch fixes that by setting the p_slot->state only when the work to
+handle the power event is executing, protected by the p_slot->hotplug_lock.
+
+To: Bjorn Helgass <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>
+
+Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index ec0b4c1..4cf4772 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	switch (info->req) {
+ 	case DISABLE_REQ:
+ 		mutex_lock(&p_slot->hotplug_lock);
++		mutex_lock(&p_slot->lock);
++		p_slot->state = POWEROFF_STATE;
++		mutex_unlock(&p_slot->lock);
+ 		pciehp_disable_slot(p_slot);
+ 		mutex_unlock(&p_slot->hotplug_lock);
+ 		mutex_lock(&p_slot->lock);
+@@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
+ 		break;
+ 	case ENABLE_REQ:
+ 		mutex_lock(&p_slot->hotplug_lock);
++		mutex_lock(&p_slot->lock);
++		p_slot->state = POWERON_STATE;
++		mutex_unlock(&p_slot->lock);
+ 		ret = pciehp_enable_slot(p_slot);
+ 		mutex_unlock(&p_slot->hotplug_lock);
+ 		if (ret)
+@@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+ {
+ 	struct power_work_info *info;
+ 
+-	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
+-
+ 	info = kmalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+-- 
+2.7.4
