@@ -1,69 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50912 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932583AbcLGWxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 17:53:19 -0500
-Date: Wed, 7 Dec 2016 16:53:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: x86@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] x86/platform/intel-mid: Constify mid_pci_platform_pm
-Message-ID: <20161207225315.GI22129@bhelgaas-glaptop.roam.corp.google.com>
-References: <ba07572b4c4fad1f60593454693a58137f518896.1480859081.git.lukas@wunner.de>
+Received: from cn.fujitsu.com ([59.151.112.132]:65337 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752375AbcLIHrr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2016 02:47:47 -0500
+Subject: Re: [PATCH] pci-error-recover: doc cleanup
+To: <linasvepstas@gmail.com>
+References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+ <20161208070539.0f00ce71@lwn.net> <58496AA4.5030602@cn.fujitsu.com>
+ <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
+CC: Jonathan Corbet <corbet@lwn.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+Message-ID: <584A513B.9080409@cn.fujitsu.com>
+Date: Fri, 9 Dec 2016 14:37:47 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ba07572b4c4fad1f60593454693a58137f518896.1480859081.git.lukas@wunner.de>
+In-Reply-To: <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 04, 2016 at 03:35:55PM +0100, Lukas Wunner wrote:
-> This struct never needs to be modified.  The size of pci-mid.o ELF
-> sections changes thusly:
-> 
-> -.data          56
-> +.data           0
-> -.rodata        32
-> +.rodata        88
-> 
-> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-Ingo, do you want this, since you've taken the previous updates?
 
-It's trivial but doesn't apply cleanly to my tree, which makes me think
-it might be based on other changes I don't have.
+On 12/09/2016 02:24 PM, Linas Vepstas wrote:
+> I suppose I'm confused, but I recall that link resets are non-fatal.
+> Fatal errors typically require that the the pci adapter be completely
+> reset, any adapter firmware to be reloaded from scratch, the device
+> driver has to kill all device state and start from scratch. Its huge.
+> If the fatal error is on pci device that is under a block device
+> holding a file system, then (usually) there is no way to recover,
+> because the block layer (and file system) cannot deal with a block
+> device that disappeared and then reappeared some few seconds later.
+> (maybe some future zfs or lvm or btrfs might be able to deal with
+> this, but not today)
+> 
+> By contrast, link resets are far more gentle: the device driver might
+> have to discard some half-full FIFO's, or cancel some in-flight
+> commands, but can otherwise gracefully recover without telling the
+> higher layers that there were any problems.
+> 
+> --linas
+> 
 
-> ---
+I am little confused too, even not sure if we are talking the same
+*fatal error*, I am talking the fatal error defined in PCI Express spec,
+chapter 6.2.2.2.1:
+
+Fatal errors are uncorrectable error conditions which render the
+particular Link and related hardware unreliable. For Fatal errors, a
+reset of the components on the Link may be required to return to
+reliable operation. Platform handling of Fatal errors, and any efforts
+to limit the effects of these errors, is platform implementation specific.
+
+Link reset means set *secondary bus reset* bit in pci bridge config
+space, can reset the link and device simultaneously, is the strongest
+kind of reset as I know.
+
+> On Thu, Dec 8, 2016 at 10:13 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
+>>
+>>
+>> On 12/08/2016 10:05 PM, Jonathan Corbet wrote:
+>>> On Thu, 8 Dec 2016 16:16:14 +0800
+>>> Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
+>>>
+>>>>  The platform resets the link, and then calls the link_reset() callback
+>>>>  on all affected device drivers.  This is a PCI-Express specific state
+>>>> -and is done whenever a non-fatal error has been detected that can be
+>>>> +and is done whenever a fatal error has been detected that can be
+>>>>  "solved" by resetting the link. This call informs the driver of the
+>>>
+>>> As far as I can tell, the original text was correct here; why do you
+>>> think this change needs to be made?
+>>>
+>>
+>> See do_recovery() in aer core, reset_link() is called only seeing fatal
+>> error.
+>>
+>> --
+>> Sincerely,
+>> Cao jin
+>>
+>>
 > 
-> Link to Andy's ack:
-> https://www.spinics.net/lists/linux-pci/msg54977.html
 > 
-> Link to Bjorn's ack:
-> https://www.spinics.net/lists/linux-pci/msg56476.html
 > 
->  drivers/pci/pci-mid.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-mid.c b/drivers/pci/pci-mid.c
-> index c7f3408..1c4af72 100644
-> --- a/drivers/pci/pci-mid.c
-> +++ b/drivers/pci/pci-mid.c
-> @@ -54,7 +54,7 @@ static bool mid_pci_need_resume(struct pci_dev *dev)
->  	return false;
->  }
->  
-> -static struct pci_platform_pm_ops mid_pci_platform_pm = {
-> +static const struct pci_platform_pm_ops mid_pci_platform_pm = {
->  	.is_manageable	= mid_pci_power_manageable,
->  	.set_state	= mid_pci_set_power_state,
->  	.get_state	= mid_pci_get_power_state,
-> -- 
-> 2.10.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Sincerely,
+Cao jin
+
+
