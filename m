@@ -1,70 +1,104 @@
-Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=Sy98=XX=arm.com=marc.zyngier@kernel.org>
-Subject: Re: ATH9 driver issues on ARM64
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
- "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
- Kalle Valo <kvalo@codeaurora.org>,
- "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
-Date: Thu, 8 Dec 2016 18:07:05 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59014 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934021AbcLIQZd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Dec 2016 11:25:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <5845B980.2030609@linux.vnet.ibm.com>
+References: <1480946356-16778-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <CAL_JsqKg4+SANVuhfjFQRrC4Ax7OhAjwuBpo0Xes9UFevFAdWg@mail.gmail.com> <5845B980.2030609@linux.vnet.ibm.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Fri, 9 Dec 2016 10:25:08 -0600
+Message-ID: <CAL_JsqJQEYmxbUaL5qhym1MHRvUbo=PvUWDMKRDqLnBhuJAYzQ@mail.gmail.com>
+Subject: Re: [PATCH v2] of/irq: improve error report on irq discovery process failure
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+On Mon, Dec 5, 2016 at 1:01 PM, Guilherme G. Piccoli
+<gpiccoli@linux.vnet.ibm.com> wrote:
+> On 12/05/2016 12:28 PM, Rob Herring wrote:
+>> On Mon, Dec 5, 2016 at 7:59 AM, Guilherme G. Piccoli
+>> <gpiccoli@linux.vnet.ibm.com> wrote:
+>>> On PowerPC machines some PCI slots might not have level triggered
+>>> interrupts capability (also know as level signaled interrupts),
+>>> leading of_irq_parse_pci() to complain by presenting error messages
+>>> on the kernel log - in this case, the properties "interrupt-map" and
+>>> "interrupt-map-mask" are not present on device's node in the device
+>>> tree.
+>>>
+>>> This patch introduces a different message for this specific case,
+>>> and also reduces its level from error to warning. Besides, we warn
+>>> (once) that possibly some PCI slots on the system have no level
+>>> triggered interrupts available.
+>>> We changed some error return codes too on function of_irq_parse_raw()
+>>> in order other failure's cases can be presented in a more precise way.
+>>>
+>>> Before this patch, when an adapter was plugged in a slot without level
+>>> interrupts capabilitiy on PowerPC, we saw a generic error message
+>>> like this:
+>>>
+>>>     [54.239] pci 002d:70:00.0: of_irq_parse_pci() failed with rc=-22
+>>>
+>>> Now, with this applied, we see the following specific message:
+>>>
+>>>     [16.154] pci 0014:60:00.1: of_irq_parse_pci: no interrupt-map found,
+>>>     INTx interrupts not available
+>>>
+>>> Finally, we standardize the error path in of_irq_parse_raw() by always
+>>> taking the fail path instead of returning directly from the loop.
+>>>
+>>> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+>>> ---
+>>>
+>>> v2:
+>>>   * Changed function return code to always return negative values;
+>>
+>> Are you sure this is safe? This is tricky because of differing values
+>> of NO_IRQ (0 or -1).
+>
+> Thanks Rob, but this is purely bad wording from myself. I'm sorry - I
+> meant to say that I changed only my positive return code (that was
+> suggested to be removed in the prior revision) to negative return code!
+>
+> So, I changed only code I added myself in v1 =)
+>
+>
+>>
+>>>   * Improved/simplified warning outputs;
+>>>   * Changed some return codes and some error paths in of_irq_parse_raw()
+>>> in order to be more precise/consistent;
+>>
+>> This too could have some side effects on callers.
+>>
+>> Not saying don't do these changes, just need some assurances this has
+>> been considered.
+>
+> Thanks for your attention. I performed a quick investigation before
+> changing this, all the places that use the return values are just
+> getting "true/false" information from that, meaning they just are
+> comparing to 0 basically. So change -EINVAL to -ENOENT wouldn't hurt any
+> user of these return values, it'll only become more informative IMHO.
+>
+> Now, regarding the only error path that was changed: for some reason,
+> this was the only place in which we didn't goto fail label in case of
+> failure - it was added by a legacy commit from Ben, dated from 2006:
+> 006b64de60 ("[POWERPC] Make OF irq map code detect more error cases").
+> Then it was carried by Grant Likely's commit 7dc2e1134a ("of/irq: merge
+> irq mapping code"), 6-year old commit.
+> I wasn't able to imagine a scenario in which changing this would break
+> something; I believe the change improve consistency, but I'd remove it
+> if you or somebody else thinks it worth be removed.
 
-Two things:
+Okay. It's a bit late for 4.10 now and want this to be in -next for a
+while, so I'll queue it after the merge window.
 
-> Here is the cat /proc/interrupts (after we do interface up):
-> 
-> root@:~# ifconfig wlan0 up
-> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts 
->            CPU0       CPU1       CPU2       CPU3       
->   1:          0          0          0          0     GICv2  29 Edge      arch_timer
->   2:      19873      20058      19089      17435     GICv2  30 Edge      arch_timer
->  12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
->  13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
->  14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
->  15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
->  16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
->  17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
->  18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
->  19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
->  20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
-
-I'm not even going to consider looking at something that is running out
-of tree code. So please start things with a fresh kernel that doesn't
-contain stuff we can't debug.
-
->  30:          0          0          0          0     GICv2  95 Level     eth0, eth0
-> 206:        314          0          0          0     GICv2  49 Level     cdns-i2c
-> 207:         40          0          0          0     GICv2  50 Level     cdns-i2c
-> 209:          0          0          0          0     GICv2 150 Level     nwl_pcie:misc
-> 214:         12          0          0          0     GICv2  47 Level     ff0f0000.spi
-> 215:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
-> 216:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
-> 217:          0          0          0          0     GICv2 165 Level     ahci-ceva[fd0c0000.ahci]
-> 218:         61          0          0          0     GICv2  81 Level     mmc0
-> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global fault
-> 220:        471          0          0          0     GICv2  53 Level     xuartps
-> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
-> 224:          3          0          0          0     dummy   1 Edge      ath9k
-
-What is this "dummy" controller? And if that's supposed to be a legacy
-interrupt from the PCI device, it has the wrong trigger.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Rob
