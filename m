@@ -1,272 +1,122 @@
-Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=Mg8j=XU=semihalf.com=tn@kernel.org>
-Subject: Re: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <b59f12bb-fe22-e8ac-719c-d8fb12f31569@semihalf.com>
- <20161202215711.GE9903@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Christopher Covington
- <cov@codeaurora.org>, Dongdong Liu <liudongdong3@huawei.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <2bef38c3-be46-918e-8ab3-1eb39df23edc@semihalf.com>
-Date: Mon, 5 Dec 2016 13:36:01 +0100
+Return-Path: <SRS0=j0GF=XY=xilinx.com=bharatku@kernel.org>
+Return-Path: <SRS0=j0GF=XY=xilinx.com=bharatku@kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+	"rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>, Kalle Valo
+	<kvalo@codeaurora.org>, "ath9k-devel@qca.qualcomm.com"
+	<ath9k-devel@qca.qualcomm.com>
+Subject: RE: ATH9 driver issues on ARM64
+Date: Fri, 9 Dec 2016 02:07:19 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263A79AC@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <48ec7cdf-5a5f-bd4a-3ba2-a7bb294e161f@arm.com>
+ <8520D5D51A55D047800579B094147198263A77C5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
+In-Reply-To: <6a718bb8-f827-8b7f-ac10-f924cbc5e463@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161202215711.GE9903@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 02.12.2016 22:57, Bjorn Helgaas wrote:
-> On Fri, Dec 02, 2016 at 03:20:28PM +0100, Tomasz Nowicki wrote:
->> dmesg from ThunderX pass2.0 (1 socket board) + small fix:
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> -       THUNDER_PEM_QUIRK(2,  0),       /* off-chip devices */
->> -       THUNDER_PEM_QUIRK(2,  1),       /* off-chip devices */
->> +       THUNDER_PEM_QUIRK(2,  0UL),     /* off-chip devices */
->> +       THUNDER_PEM_QUIRK(2,  1UL),     /* off-chip devices */
->
-> Thanks!  I folded this change into my branch (possibly to be updated
-> if Robert sends something better).
-
-I believe Robert meant:
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index d34d196..8ca8ca8 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -76,7 +76,7 @@ static struct mcfg_fixup mcfg_quirks[] = {
-         HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-
-  #define THUNDER_PEM_RES(addr, node) \
--       DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
-+       DEFINE_RES_MEM(addr + ((u64)node << 44), 0x39 * SZ_16M)
-
-Which means we can forget UL suffix for THUNDER_PEM_QUIRK macro:
-@@ -91,8 +91,8 @@ static struct mcfg_fixup mcfg_quirks[] = {
-         { "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, 
-     \
-           &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
-         /* SoC pass2.x */
--       THUNDER_PEM_QUIRK(1, 0UL),
--       THUNDER_PEM_QUIRK(1, 1UL),
-+       THUNDER_PEM_QUIRK(1, 0),
-+       THUNDER_PEM_QUIRK(1, 1),
-
-Also, my apologies, I should have fixed parentheses in this macro from 
-the very beginning. For you convenience below incremental patch where I 
-fixed both issues:
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index d34d196..cf6c321 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -76,23 +76,23 @@ static struct mcfg_fixup mcfg_quirks[] = {
-         HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-
-  #define THUNDER_PEM_RES(addr, node) \
--       DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
-+       DEFINE_RES_MEM((addr) + ((u64)(node) << 44), 0x39 * SZ_16M)
-  #define THUNDER_PEM_QUIRK(rev, node) \
--       { "CAVIUM", "THUNDERX", rev, 4 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, node) 
-}, \
--       { "CAVIUM", "THUNDERX", rev, 5 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, node) 
-}, \
--       { "CAVIUM", "THUNDERX", rev, 6 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, node) 
-}, \
--       { "CAVIUM", "THUNDERX", rev, 7 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, node) 
-}, \
--       { "CAVIUM", "THUNDERX", rev, 8 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) 
-}, \
--       { "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY, 
-    \
--         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
-+       { "CAVIUM", "THUNDERX", (rev), 4 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, 
-(node)) }, \
-+       { "CAVIUM", "THUNDERX", (rev), 5 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, 
-(node)) }, \
-+       { "CAVIUM", "THUNDERX", (rev), 6 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, 
-(node)) }, \
-+       { "CAVIUM", "THUNDERX", (rev), 7 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, 
-(node)) }, \
-+       { "CAVIUM", "THUNDERX", (rev), 8 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, 
-(node)) }, \
-+       { "CAVIUM", "THUNDERX", (rev), 9 + (10 * (node)), MCFG_BUS_ANY, 
-      \
-+         &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, (node)) }
-         /* SoC pass2.x */
--       THUNDER_PEM_QUIRK(1, 0UL),
--       THUNDER_PEM_QUIRK(1, 1UL),
-+       THUNDER_PEM_QUIRK(1, 0),
-+       THUNDER_PEM_QUIRK(1, 1),
-
-  #define THUNDER_ECAM_QUIRK(rev, seg)                                   \
-         { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 00eb8eb..643c9e7 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,8 +62,9 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
-  #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-  extern struct pci_ecam_ops pci_32b_ops;                /* 32-bit 
-accesses only */
-  extern struct pci_ecam_ops hisi_pcie_ops;      /* HiSilicon */
--extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 1.x 
-& 2.x */
--extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
-+extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 
-pass1.x &
-+                                                   pass2.x */
-+extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 
-pass1.x */
-  #endif
-
-  #ifdef CONFIG_PCI_HOST_GENERIC
-
->
->> ACPI: MCFG table detected, 4 entries
->> ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-1f])
->> acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM
->> Segments MSI]
->> acpi PNP0A08:00: _OSC: platform does not support [PCIeHotplug PME AER]
->> acpi PNP0A08:00: _OSC: OS now controls [PCIeCapability]
->> acpi PNP0A08:00: ECAM area [mem 0x848000000000-0x848001ffffff]
->> reserved by THRX0001:00
->> acpi PNP0A08:00: ECAM at [mem 0x848000000000-0x848001ffffff] for [bus 00-1f]
->
-> I guess we don't need MCFG quirks for these bridges, since I don't see
-> the "MCFG quirk" message?
-
-Yes, this is ThunderX 1-socket pass2.x so quirks are needed for 4-9 host 
-bridges only. Below summary of where/how quirks should be applied:
-
-ThunderX pass2.x
-NUMA node -> segments -> ECAM compliant note
-0 -> 0-3 -> ECAM compliant
-0 -> 4-9 -> ECAM quirks (thunder_pem_ecam_ops)
-1 (optionally) -> 10-13 -> ECAM compliant
-1 (optionally) -> 14-19 -> ECAM quirks (thunder_pem_ecam_ops)
-
-ThunderX pass1.x
-NUMA node -> segments -> ECAM compliant note
-0 -> 0-3 -> ECAM quirks (pci_thunder_ecam_ops)
-0 -> 4-9 -> ECAM quirks (thunder_pem_ecam_ops)
-1 (optionally) -> 10-13 -> ECAM quirks (pci_thunder_ecam_ops)
-1 (optionally) -> 14-19 -> ECAM quirks (thunder_pem_ecam_ops)
-
->
->> system 00:00: [mem 0x848000000000-0x848001ffffff] could not be reserved
->> system 00:01: [mem 0x849000000000-0x849001ffffff] could not be reserved
->> system 00:02: [mem 0x84a000000000-0x84a001ffffff] could not be reserved
->> system 00:03: [mem 0x84b000000000-0x84b001ffffff] could not be reserved
->> system 00:04: [mem 0x87e0c0000000-0x87e0c0ffffff] could not be reserved
->> system 00:04: [mem 0x88001f000000-0x880057ffffff] could not be reserved
->> system 00:05: [mem 0x87e0c2000000-0x87e0c2ffffff] could not be reserved
->> system 00:05: [mem 0x88808f000000-0x8880c7ffffff] could not be reserved
->
-> Most of these match ECAM spaces, which is good.  00:04 and 00:05 each
-> have one ECAM space and one "other" space, which might be PEMx host
-> bridge registers?  That all seems good.
-
-Yes, "other" space is PEMx host bridge registers.
-
->
-> But I assume the other bridges (PCIx) also have register space in
-> addition to ECAM, and that should be reported also.
-
-00:00, 00:01, 00:02, 00:03 are ECAM compliant so for those we need ECAM 
-region only.
-
->
->> root@ubuntu:~# cat /proc/iomem
->> ...
->> 838000000000-841fffffffff : PCI Bus 0000:00
->>   838000000000-8380003fffff : 0000:03:00.0
->
-> Something's missing here: we should have a clue about how we got from
-> bus 00 to bus 03.  From your dmesg, 0000:00:15.0 is a bridge from bus
-> 00 to bus 03, and its windows should appear here.  I'd expect
-> something like:
->
->   838000000000-841fffffffff : PCI Bus 0000:00
->     838000000000-838fffffffff : PCI Bus 0000:03  <- 00:15.0 window
->       838000000000-8380003fffff : 0000:03:00.0
->
-> This window should be inserted by generic code, so I don't know how
-> this could be broken.  Your dmesg should also have something like
-> this:
->
->   pci 0000:00:15.0: PCI bridge to [bus 03]
->   pci 0000:00:15.0:   bridge window [mem 0x838000000000-0x838fffffffff]
->
-> I don't see that, maybe because this is actually a console log
-> collected without "ignore_loglevel"?  But that obviously doesn't
-> affect /proc/iomem, so I'm still puzzled about that.
+> On 08/12/16 18:33, Bharat Kumar Gogada wrote:
+> >> On 08/12/16 15:29, Bharat Kumar Gogada wrote:
+> >>
+> >> Two things:
+> >>
+> >>> Here is the cat /proc/interrupts (after we do interface up):
+> >>>
+> >>> root@:~# ifconfig wlan0 up
+> >>> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> >>> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
+> >>>            CPU0       CPU1       CPU2       CPU3
+> >>>   1:          0          0          0          0     GICv2  29 Edge  =
+    arch_timer
+> >>>   2:      19873      20058      19089      17435     GICv2  30 Edge  =
+    arch_timer
+>=20
+> By the way, please use a recent kernel. Seeing edge here means you're run=
+ning
+> with something that is a bit old (and broken). And since you haven't even=
+ said
+> what revision of the kernel you're using, hslping you is not an easy task=
+. tglx told
+> you something similar about a week ago.
+>=20
+> >>>  12:          0          0          0          0     GICv2 156 Level =
+    zynqmp-dma
+> >>>  13:          0          0          0          0     GICv2 157 Level =
+    zynqmp-dma
+> >>>  14:          0          0          0          0     GICv2 158 Level =
+    zynqmp-dma
+> >>>  15:          0          0          0          0     GICv2 159 Level =
+    zynqmp-dma
+> >>>  16:          0          0          0          0     GICv2 160 Level =
+    zynqmp-dma
+> >>>  17:          0          0          0          0     GICv2 161 Level =
+    zynqmp-dma
+> >>>  18:          0          0          0          0     GICv2 162 Level =
+    zynqmp-dma
+> >>>  19:          0          0          0          0     GICv2 163 Level =
+    zynqmp-dma
+> >>>  20:          0          0          0          0     GICv2 164 Level =
+    Mali_GP_MMU,
+> Mali_GP,
+> >> Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+> >>
+> >> I'm not even going to consider looking at something that is running
+> >> out of tree code. So please start things with a fresh kernel that
+> >> doesn't contain stuff we can't debug.
+> >>
+> > Ok will test with fresh kernel.
+> >
+> >>>  30:          0          0          0          0     GICv2  95 Level =
+    eth0, eth0
+> >>> 206:        314          0          0          0     GICv2  49 Level =
+    cdns-i2c
+> >>> 207:         40          0          0          0     GICv2  50 Level =
+    cdns-i2c
+> >>> 209:          0          0          0          0     GICv2 150 Level =
+    nwl_pcie:misc
+This irq line is handling miscellaneous interrupts this shows level trigger=
+ed.=20
+> >>> 214:         12          0          0          0     GICv2  47 Level =
+    ff0f0000.spi
+> >>> 215:          0          0          0          0     GICv2  58 Level =
+    ffa60000.rtc
+> >>> 216:          0          0          0          0     GICv2  59 Level =
+    ffa60000.rtc
+> >>> 217:          0          0          0          0     GICv2 165 Level =
+    ahci-
+> ceva[fd0c0000.ahci]
+> >>> 218:         61          0          0          0     GICv2  81 Level =
+    mmc0
+> >>> 219:          0          0          0          0     GICv2 187 Level =
+    arm-smmu global fault
+> >>> 220:        471          0          0          0     GICv2  53 Level =
+    xuartps
+> >>> 223:          0          0          0          0     GICv2 154 Level =
+    fd4c0000.dma
+> >>> 224:          3          0          0          0     dummy   1 Edge  =
+    ath9k
+> >>
+> >> What is this "dummy" controller? And if that's supposed to be a
+> >> legacy interrupt from the PCI device, it has the wrong trigger.
+> >
+> > Yes it is for legacy interrupt, wrong trigger means ?
+>=20
+> Aren't legacy interrupts supposed to be *level* triggered, and not edge?
+>=20
+Yes agreed.
+For legacy interrupts im using irq_set_chained_handler_and_data so the irq =
+line between bridge and GIC
+Will not be shown here. The above how is virq for legacy, which is given by=
+ kernel, not sure why its state is set
+to edge.
 
 
-Enhanced Allocation is used for devices but not for bridges which have 
-invalid BARs in standard configuration header. Thus devices request 
-resources from first valid parent bridge (host bridge in this case).
-
->
->> 87e024000000-87e024000fff : ARMH0011:00
->>   87e024000000-87e024000fff : ARMH0011:00
->
-> This is interesting.  This must be a driver reserving these areas?
-> Normally a driver would use the driver name, not the device name.
->
-> Ideally, I think the core should reserve the region with the device
-> name, and the driver would request it using the driver name, like
-> this:
->
->   843000000000-84303fffffff : 0002:01:00.0    <-- PCI core reservation
->     843000000000-84303fffffff : thunder-nic   <-- driver request
->
-> The ACPI core doesn't actually do the reservation, so I assume the
-> ARMH0011:00 stuff is from the driver, and it's curious that it has the
-> same region twice.
->
->> 87e026000000-87e0bfffffff : PCI Bus 0000:00
->>   87e027000000-87e0277fffff : CAVA02A:00
->
-> This is interesting, too.  CAVA02A:00 looks like an ACPI device, but
-> apparently it consumes some of the space that we think is routed to
-> PCI bus 0000:00.  I think this happens on some x86 boxes, too, but it
-> is somewhat confusing.
-
-I will take a look.
-
->
-> Based on this, I don't see any problems with the ThunderX quirks.
-> I'd like to understand what's going on with the PCI-to-PCI bridge
-> windows in /proc/iomem, but I doubt that's related to your quirks.
-
-Yes it is not related to quirks.
-
-However, CAVA02A:00 and ARMH0011 things should be investigated.
-
-Thanks,
-Tomasz
+Thanks & Regards,
+Bharat=20
