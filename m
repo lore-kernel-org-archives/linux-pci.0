@@ -1,82 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36032 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:32788 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750966AbcL1QSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Dec 2016 11:18:21 -0500
-Date: Wed, 28 Dec 2016 10:18:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
- <20161228112954.GA17925@wunner.de>
+        id S1753744AbcLIQLY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Dec 2016 11:11:24 -0500
+Date: Fri, 9 Dec 2016 09:11:23 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Linas Vepstas <linasvepstas@gmail.com>
+Cc: Cao jin <caoj.fnst@cn.fujitsu.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-doc@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci-error-recover: doc cleanup
+Message-ID: <20161209091123.110c351a@t450s.home>
+In-Reply-To: <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
+References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+        <20161208070539.0f00ce71@lwn.net>
+        <58496AA4.5030602@cn.fujitsu.com>
+        <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
+        <584A513B.9080409@cn.fujitsu.com>
+        <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161228112954.GA17925@wunner.de>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
-> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> > and all the debugging you've done.  Below is a revert of the troublesome
-> > commit.  Can you test it and verify that it also fixes the problem?
-> > 
-> > I assume Mika is looking at this and will have a better solution soon.
-> > But if not, I'll queue this up for v4.10.
-> 
-> @Kilian:  Are you using the proprietary nvidia driver?  If so,
-> does the issue go away if you blacklist that driver or use nouveau
-> instead?
-> 
-> 
-> With a bit of googling I found dmesg and lspci output for this model:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
-> 
-> The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
-> 0x60, 0x64.  I assume they're located behind the LPC bridge?
-> 
-> The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
-> registers with vga_tryget() but never releases that lock.  Intel
-> chipsets have a quirk wherein I/O ports are routed to the bus to
-> which the legacy PCI VGA registers are locked.  So once vga_tryget()
-> is called by the nvidia driver, access to the keyboard and mouse is
-> routed to bus 01 (on which the Nvidia card resides) and not to bus 00
-> (on which the LPC bridge resides).
+On Fri, 9 Dec 2016 14:44:25 +0800
+Linas Vepstas <linasvepstas@gmail.com> wrote:
 
-Interesting.  A spec reference would be a good addition to whatever
-fix is proposed.
-
-> My theory would be that if you lock the screen, the Nvidia card
-> runtime suspends, allowing the root port above it to suspend,
-> and then the I/O ports are no longer accessible.
+> On Fri, Dec 9, 2016 at 2:37 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
+> >
+> >
+> > On 12/09/2016 02:24 PM, Linas Vepstas wrote:  
+> >> I suppose I'm confused, but I recall that link resets are non-fatal.
+> >> Fatal errors typically require that the the pci adapter be completely
+> >> reset, any adapter firmware to be reloaded from scratch, the device
+> >> driver has to kill all device state and start from scratch. Its huge.
+> >> If the fatal error is on pci device that is under a block device
+> >> holding a file system, then (usually) there is no way to recover,
+> >> because the block layer (and file system) cannot deal with a block
+> >> device that disappeared and then reappeared some few seconds later.
+> >> (maybe some future zfs or lvm or btrfs might be able to deal with
+> >> this, but not today)
+> >>
+> >> By contrast, link resets are far more gentle: the device driver might
+> >> have to discard some half-full FIFO's, or cancel some in-flight
+> >> commands, but can otherwise gracefully recover without telling the
+> >> higher layers that there were any problems.
+> >>
+> >> --linas
+> >>  
+> >
+> > I am little confused too, even not sure if we are talking the same
+> > *fatal error*, I am talking the fatal error defined in PCI Express spec,
+> > chapter 6.2.2.2.1:
+> >
+> > Fatal errors are uncorrectable error conditions which render the
+> > particular Link and related hardware unreliable. For Fatal errors, a
+> > reset of the components on the Link may be required to return to
+> > reliable operation. Platform handling of Fatal errors, and any efforts
+> > to limit the effects of these errors, is platform implementation specific.
+> >
+> > Link reset means set *secondary bus reset* bit in pci bridge config
+> > space, can reset the link and device simultaneously, is the strongest
+> > kind of reset as I know.  
 > 
-> We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
-> is adjusted by writing to I/O ports of a gmux controller situated below
-> the LPC bridge.  The nvidia driver locks the legacy VGA registers and
-> from that point reads from the I/O ports always return 0xff.  Commit
-> 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
-> sought to fix it but caused other breakage which remains unfixed so far:
-> https://bugzilla.kernel.org/show_bug.cgi?id=105051
-> https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
+> OK, well, its been far too many years, and I don't have the PCI spec
+> at my fingertips.
+> Isn't there a link reset that can be performed, without forcing a device reset?
 > 
-> I've always wondered if the Intel chipsets would behave more sensibly
-> if the LPC bridge had BARs specifying the I/O regions used by devices
-> below it.
+> The intent was that some PCI link errors are due to vibration,
+> ground-bounce, humidity, etc. and that these errors can be detected
+> and do not corrupt the device state or the device driver state.  Since
+> they are not associated with data corruption (or rather, the
+> corruption is local to the link), these can be recovered by reseting
+> just the link, without resetting the whole adapter. They may require
+> reseting some device-driver state, but not all of it.
 > 
-> Reverting runtime suspend for PCIe ports is not a good solution as it's
-> needed for Thunderbolt runtime PM on Macs.
+> However, this was all decided before the PCI-E spec was written, so
+> maybe the newer PCI-E specs now say something different.
 
-The choices are:
+Perhaps you're thinking of link retraining?  That sort of error would
+be considered correctable, not fatal.  Fatal errors are uncorrected
+errors and a bigger hammer is needed to deal with them, such as a link
+reset.  Thanks,
 
-  1) Fix the regression and preserve runtime PM for PCIe ports
-  2) Fix the regression by reverting runtime PM for PCIe ports
-
-Obviously we hope for 1).  Preserving runtime PM without fixing the
-regression isn't even on the list.  I know this is Linux 101, so I
-apologize for restating the obvious.
-
-Bjorn
+Alex
