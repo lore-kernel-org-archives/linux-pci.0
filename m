@@ -1,55 +1,75 @@
-Return-Path: <SRS0=zH6n=XQ=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=zH6n=XQ=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki"
-	<rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang
-	<dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington
-	<cov@codeaurora.org>,
-        "liudongdong (C)" <liudongdong3@huawei.com>
-Subject: RE: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
-Date: Thu, 1 Dec 2016 21:53:08 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F962C47@lhreml507-mbx>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49256 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752443AbcLJA1t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Dec 2016 19:27:49 -0500
+Date: Fri, 9 Dec 2016 18:27:44 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vaibhav Shankar <vaibhav.shankar@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, venkateswarlu.v.vinjamuri@intel.com,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Optimize PCIe root resume time
+Message-ID: <20161210002744.GB8381@bhelgaas-glaptop.roam.corp.google.com>
+References: <1481323406-12865-1-git-send-email-vaibhav.shankar@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481323406-12865-1-git-send-email-vaibhav.shankar@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4NCg0KTWFueSBtYW55IHRoYW5rcyBmb3IgcHV0dGluZyB0aGlzIHRvZ2V0aGVyIQ0K
-DQpbLi4uXQ0KDQo+IA0KPiAgIFBDSTogQWRkIE1DRkcgcXVpcmtzIGZvciBIaVNpbGljb24gSGlw
-MDUvMDYvMDcgaG9zdCBjb250cm9sbGVycw0KPiANCj4gICAgIERvbmdkb25nJ3MgSGlTaWxpY29u
-IHF1aXJrcy4gIEhlcmUncyB3aGVyZSBpdCBnZXRzIGludGVyZXN0aW5nLiAgSQ0KPiAgICAgbW92
-ZWQgdGhpcyB0byB0aGUgZXhpc3RpbmcgcGNpZS1oaXNpLmMgaW5zdGVhZCBvZiBhZGRpbmcNCj4g
-ICAgIHBjaWUtaGlzaS1hY3BpLmMuICBJIGNoYW5nZWQgdGhlIE1ha2VmaWxlIHNvIHdlIGFsd2F5
-cyBidWlsZA0KPiAgICAgcGNpZS1oaXNpLmMgb24gQVJNNjQuICBJIGFkZGVkIGlmZGVmcyBzbyB3
-ZSBnZXQgdGhlIHF1aXJrIGNvZGUgaWYNCj4gICAgIENPTkZJR19BQ1BJIGFuZCBDT05GSUdfUENJ
-X1FVSVJLUyBhbmQgd2UgZ2V0IHRoZSBvcmlnaW5hbCBwbGF0Zm9ybQ0KPiAgICAgZHJpdmVyIGlm
-IENPTkZJR19QQ0lfSElTSS4gIEl0J3MgcG9zc2libGUgdG8gaGF2ZSBib3RoLCBhbmQgaWYgd2UN
-Cj4gICAgIHByb2Nlc3MgdGhlIE1DRkcgcXVpcmsgd2UgZ2V0IHRoZSBxdWlyayBjb2RlLg0KPiAN
-Cj4gICAgIEknbSBjb25mdXNlZCBhYm91dCB3aHkgdGhlIHF1aXJrIGFjY2Vzc29ycyBhcmUgc28g
-bXVjaCBkaWZmZXJlbnQNCj4gICAgIHRoYW4gdGhlIG9yaWdpbmFsIGFjY2Vzc29ycy4gIGhpc2lf
-cGNpZV9hY3BpX3JkX2NvbmYoKSBsb29rcyBtdWNoDQo+ICAgICBkaWZmZXJlbnQgdGhhbiBoaXNp
-X3BjaWVfY2ZnX3JlYWQoKS4gIFRoZSBvcmlnaW5hbCBkcml2ZXIgY2xhaW1zDQo+ICAgICBIaXB4
-eCBvbmx5IHN1cHBvcnRzIDMyLWJpdCBjb25maWcgYWNjZXNzZXMsIGJ1dCB0aGUgcXVpcmsNCj4g
-ICAgIGFjY2Vzc29ycyBkb24ndCBlbmZvcmNlIHRoYXQuDQoNCldlbGwgdGhlIG1haW4gcG9pbnQg
-aXMgdGhhdCBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKCkgYXNzaWduZWQgdG8NCnBjaV9vcHMucmVh
-ZCB3aGVyZWFzIGhpc2lfcGNpZV9jZmdfcmVhZCgpIGlzIGFzc2lnbmVkIHRvDQpoaXNpX3BjaWVf
-aG9zdF9vcHMucmRfb3duX2NvbmYuIFRoZSBmaXJzdCBvbmUgaXMgdXNlZCB0byBhY2Nlc3MgdGhl
-DQp3aG9sZSBwY2kgY29uZmlndXJhdGlvbiBzcGFjZSwgd2hlcmVhcyB0aGUgc2Vjb25kIGlzIGRl
-ZGljYXRlZCB0byB0aGUNCnJvb3QgY29tcGxleCAnb3duJyBjb25maWd1cmF0aW9uIHNwYWNlLg0K
-QXMgeW91IGNhbiBzZWUgYWxzbyBpbiBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKCkgd2UgZW5mb3Jj
-ZSAzMmIgYWNjZXNzDQpmb3IgdGhlIHJvb3QgY29tcGxleC4NCg0KTm93IHRoZSBtYWluIGlzc3Vl
-IGhlcmUgaXMgdGhhdCBhbGwgdGhlIGRlc2lnbndhcmUgYmFzZWQgZHJpdmVycyBjdXJyZW50bHkN
-CnVzZSB0aGUgc2FtZSBpbnN0YW5jZSBvZiBwY2lfb3BzOg0KaHR0cDovL2x4ci5mcmVlLWVsZWN0
-cm9ucy5jb20vc291cmNlL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMjTDcxMw0K
-DQpJbiBvcmRlciB0byBzb2x2ZSB0aGlzIHdlIHNob3VsZCB0dXJuIHRoZSBkZXNpZ253YXJlIHBj
-aV9vcHMgaW50byBwZXINCmRyaXZlciBpbnN0YW5jZXM7IHNlZSBteSBjb21tZW50IGluIGEgcHJl
-dmlvdXMgZGlzY3Vzc2lvbjoNCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNp
-L21zZzU2MDk3Lmh0bWwNCg0KVGhhbmtzDQoNCkdhYg0KWy4uLl0NCg==
+[+cc Yinghai, author of 2f5d8e4ff947]
+
+On Fri, Dec 09, 2016 at 02:43:26PM -0800, Vaibhav Shankar wrote:
+> On Apollolake platforms, PCIe rootport takes a long time to resume
+> from S3. With 100ms delay before read pci conf, rootport takes
+> ~200ms during resume.
+> 
+> commit 2f5d8e4ff947 ("PCI: pciehp: replace unconditional sleep with
+> config space access check") is the one that added the 100ms delay
+> before reading pci conf.
+> 
+> This patch removes the 100ms delay.By removing the delay, the
+> PCIe root port takes ~16ms during resume. As per PCIe spec, we
+> only require 1000ms delay. This delay is provide by
+> pci_bus_check_dev() function.
+> 
+> With 100ms delay:
+> [  155.102713] calling  0000:00:14.0+ @ 70, parent: pci0000:00, cb: pci_pm_resume_noirq
+> [  155.119337] call 0000:00:14.0+ returned 0 after 16231 usecs
+> [  155.119467] calling  0000:01:00.0+ @ 5845, parent: 0000:00:14.0, cb: pci_pm_resume_noirq
+> [  155.321670] call 0000:00:14.0+ returned 0 after 185327 usecs
+> [  155.321743] calling  0000:01:00.0+ @ 5849, parent: 0000:00:14.0, cb: pci_pm_resume
+> 
+> After removing 100ms delay:
+> [   36.624709] calling  0000:00:14.0+ @ 4434, parent: pci0000:00, cb: pci_pm_resume_noirq
+> [   36.641367] call 0000:00:14.0+ returned 0 after 16263 usecs
+> [   36.652458] calling  0000:00:14.0+ @ 4443, parent: pci0000:00, cb: pci_pm_resume
+> [   36.652673] call 0000:00:14.0+ returned 0 after 208 usecs
+> [   36.652863] calling  0000:01:00.0+ @ 4442, parent: 0000:00:14.0, cb: pci_pm_resume
+> 
+> Signed-off-by: Vaibhav Shankar <vaibhav.shankar@intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 5c24e93..08357e7 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -311,8 +311,6 @@ int pciehp_check_link_status(struct controller *ctrl)
+>  	else
+>  		msleep(1000);
+>  
+> -	/* wait 100ms before read pci conf, and try in 1s */
+> -	msleep(100);
+>  	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
+>  					PCI_DEVFN(0, 0));
+>  
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
