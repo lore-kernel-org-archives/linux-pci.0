@@ -1,73 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55335 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754620AbcLNCkR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2016 21:40:17 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBE2eBXs022328
-        for <linux-pci@vger.kernel.org>; Tue, 13 Dec 2016 21:40:16 -0500
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27ap8j125j-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 13 Dec 2016 21:40:15 -0500
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Wed, 14 Dec 2016 12:39:55 +1000
-Date: Wed, 14 Dec 2016 13:39:50 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: linasvepstas@gmail.com, Cao jin <caoj.fnst@cn.fujitsu.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-doc@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci-error-recover: doc cleanup
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
- <20161208070539.0f00ce71@lwn.net>
- <58496AA4.5030602@cn.fujitsu.com>
- <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
- <3ed3151c-eeef-940c-8a9c-49cf53a51d49@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3ed3151c-eeef-940c-8a9c-49cf53a51d49@au1.ibm.com>
-Message-Id: <20161214023949.GA9896@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ugdK=X3=mni.thm.de=tobias.johannes.klausmann@kernel.org>
+Return-Path: <SRS0=ugdK=X3=mni.thm.de=tobias.johannes.klausmann@kernel.org>
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+To: kvalo@codeaurora.org,
+	helgaas@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	marc.zyngier@arm.com,
+	Janusz.Dziedzic@tieto.com,
+	rmanohar@qti.qualcomm.com,
+	ath9k-devel@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org,
+	rmanohar@qca.qualcomm.com,
+	bharat.kumar.gogada@xilinx.com
+Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Subject: [PATCH] ath9k: unlock rcu read when returning early
+Date: Mon, 12 Dec 2016 19:50:01 +0100
+Message-Id: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
+In-Reply-To: <1cFMHb-00BdWd-Ks>
+References: <1cFMHb-00BdWd-Ks>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 09, 2016 at 05:50:17PM +1100, Andrew Donnellan wrote:
->On 09/12/16 17:24, Linas Vepstas wrote:
->>I suppose I'm confused, but I recall that link resets are non-fatal.
->>Fatal errors typically require that the the pci adapter be completely
->>reset, any adapter firmware to be reloaded from scratch, the device
->>driver has to kill all device state and start from scratch. Its huge.
->
->Is there a difference in terminology between an AER fatal error and what
->EEH/IBM people think of as a fatal error?
->
+Starting with ath9k: use ieee80211_tx_status_noskb where possible
+[d94a461d7a7df68991fb9663531173f60ef89c68] the driver uses rcu_read_lock() &&
+rcu_read_unlock() yet on returning early in ath_tx_edma_tasklet() the unlock is
+missing leading to stalls and suspicious RCU usage:
 
-They are different things. AER fatal error can lead to frozen PE error,
-not fenced PHB error basing on the configuration on PHB.
+ ===============================
+ [ INFO: suspicious RCU usage. ]
+ 4.9.0-rc8 #11 Not tainted
+ -------------------------------
+ kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
 
->>If the fatal error is on pci device that is under a block device
->>holding a file system, then (usually) there is no way to recover,
->>because the block layer (and file system) cannot deal with a block
->>device that disappeared and then reappeared some few seconds later.
->>(maybe some future zfs or lvm or btrfs might be able to deal with
->>this, but not today)
->
->Is this still true? I'm not at all familiar with the block device side of it,
->but the cxlflash driver has reasonably full EEH support, including surviving
->a full PHB fence and complete reset.
->
+ other info that might help us debug this:
 
-It's still true, especially when the recovery is going to affect the
-rootfs. On completion of error recovery, the driver (if necessary)
-and filesystem needs to be reloaded which depends on script or daemon
-and they are unavailable in this scenario.
+ RCU used illegally from idle CPU!
+ rcu_scheduler_active = 1, debug_locks = 0
+ RCU used illegally from extended quiescent state!
+ 1 lock held by swapper/7/0:
+ #0:
+  (
+ rcu_read_lock
+ ){......}
+ , at:
+ [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
 
-Thanks,
-Gavin
+ stack backtrace:
+ CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+ Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+  ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+  ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+  ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+ Call Trace:
+  <IRQ>
+  [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+  [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+  [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+  [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+  [<ffffffff81058631>] irq_exit+0x61/0xd0
+  [<ffffffff81018d25>] do_IRQ+0x65/0x110
+  [<ffffffff81672189>] common_interrupt+0x89/0x89
+  <EOI>
+  [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+  [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+  [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+  [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+  [<ffffffff810336f8>] start_secondary+0x148/0x170
 
+Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52bfbb988611..857d5ae09a1d 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2787,6 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
+ 		if (list_empty(fifo_list)) {
+ 			ath_txq_unlock(sc, txq);
++			rcu_read_unlock();
+ 			return;
+ 		}
+ 
+-- 
+2.11.0
