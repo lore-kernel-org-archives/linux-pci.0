@@ -1,124 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0085.outbound.protection.outlook.com ([104.47.42.85]:53157
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750709AbcL1C1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Dec 2016 21:27:22 -0500
-From: Satanand Burla <satananda.burla@caviumnetworks.com>
-To: <mj@ucw.cz>, <linux-pci@vger.kernel.org>
-CC: Satanand Burla <satananda.burla@caviumnetworks.com>
-Subject: [PATCH v2] pciutils: Add decode for Atomic Ops in lspci
-Date: Tue, 27 Dec 2016 15:52:36 -0800
-Message-ID: <1482882756-12151-1-git-send-email-satananda.burla@caviumnetworks.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:49284 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750696AbcLLSa1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Dec 2016 13:30:27 -0500
+Date: Mon, 12 Dec 2016 11:30:20 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gregory CLEMENT <gregory.clement@free-electrons.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
+ enabled
+Message-ID: <20161212183020.GA30274@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds support for decoding Atomic ops added in ECN
-https://pcisig.com/sites/default/files/specification_documents/ECN_Atomic_Ops_080417.pdf
+The PCI core will write to the bridge window config multiple times
+while they are enabled. This can lead to mbus failures like:
 
-Signed-off-by: Satanand Burla <satananda.burla@caviumnetworks.com>
+ mvebu_mbus: cannot add window '4:e8', conflicts with another window
+ mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
+
+For me this is happening during a hotplug cycle. The PCI core is
+not changing the values, just writing them twice while active.
+
+The patch addresses the general case of any change to an active window,
+but not atomically. The code is slightly refactored so io and mem
+can share more of the window logic.
+
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 ---
- lib/header.h |  6 ++++++
- ls-caps.c    | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+)
+ drivers/pci/host/pci-mvebu.c | 101 +++++++++++++++++++++++++------------------
+ 1 file changed, 60 insertions(+), 41 deletions(-)
 
-diff --git a/lib/header.h b/lib/header.h
-index a556638..6d81cb7 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -859,7 +859,13 @@
- #define  PCI_EXP_DEV2_TIMEOUT_RANGE(x)	((x) & 0xf) /* Completion Timeout Ranges Supported */
- #define  PCI_EXP_DEV2_TIMEOUT_VALUE(x)	((x) & 0xf) /* Completion Timeout Value */
- #define  PCI_EXP_DEV2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable Supported */
-+#define  PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN	0x0040	/* AtomicOp RequesterEnable */
-+#define  PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK	0x0080	/* AtomicOp Egress Blocking */
- #define  PCI_EXP_DEV2_ARI		0x0020	/* ARI Forwarding */
-+#define  PCI_EXP_DEVCAP2_ATOMICOP_ROUTING	0x0040	/* AtomicOp Routing Supported */
-+#define  PCI_EXP_DEVCAP2_32BIT_ATOMICOP_COMP	0x0080	/* 32bit AtomicOp Completer Supported */
-+#define  PCI_EXP_DEVCAP2_64BIT_ATOMICOP_COMP	0x0100	/* 64bit AtomicOp Completer Supported */
-+#define  PCI_EXP_DEVCAP2_128BIT_CAS_COMP	0x0200	/* 128bit CAS Completer Supported */
- #define  PCI_EXP_DEV2_LTR		0x0400	/* LTR enabled */
- #define  PCI_EXP_DEV2_OBFF(x)		(((x) >> 13) & 3) /* OBFF enabled */
- #define PCI_EXP_DEVSTA2			0x2a	/* Device Status */
-diff --git a/ls-caps.c b/ls-caps.c
-index 7ff6c67..07e818f 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -961,11 +961,31 @@ static const char *cap_express_devctl2_obff(int obff)
-     }
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 307f81d6b479af..af724731b22f53 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -133,6 +133,12 @@ struct mvebu_pcie {
+ 	int nports;
+ };
+ 
++struct mvebu_pcie_window {
++	phys_addr_t base;
++	phys_addr_t remap;
++	size_t size;
++};
++
+ /* Structure representing one PCIe interface */
+ struct mvebu_pcie_port {
+ 	char *name;
+@@ -150,10 +156,8 @@ struct mvebu_pcie_port {
+ 	struct mvebu_sw_pci_bridge bridge;
+ 	struct device_node *dn;
+ 	struct mvebu_pcie *pcie;
+-	phys_addr_t memwin_base;
+-	size_t memwin_size;
+-	phys_addr_t iowin_base;
+-	size_t iowin_size;
++	struct mvebu_pcie_window memwin;
++	struct mvebu_pcie_window iowin;
+ 	u32 saved_pcie_stat;
+ };
+ 
+@@ -379,23 +383,45 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
+ 	}
  }
  
-+static int
-+device_has_memory_space_bar(struct device *d)
++static void mvebu_pcie_set_window(struct mvebu_pcie_port *port,
++				  unsigned int target, unsigned int attribute,
++				  const struct mvebu_pcie_window *desired,
++				  struct mvebu_pcie_window *cur)
 +{
-+  struct pci_dev *p = d->dev;
-+  int i, found = 0;
++	if (desired->base == cur->base && desired->remap == cur->remap &&
++	    desired->size == cur->size)
++		return;
 +
-+  for (i=0; i<6; i++)
-+    if (p->base_addr[i] && p->size[i])
-+      {
-+        if (!(p->base_addr[i] & PCI_BASE_ADDRESS_SPACE_IO))
-+          {
-+            found = 1;
-+            break;
-+          }
-+      }
-+  return found;
++	if (cur->size != 0) {
++		mvebu_pcie_del_windows(port, cur->base, cur->size);
++		cur->size = 0;
++		cur->base = 0;
++
++		/*
++		 * If something tries to change the window while it is enabled
++		 * the change will not be done atomically. That would be
++		 * difficult to do in the general case.
++		 */
++	}
++
++	if (desired->size == 0)
++		return;
++
++	mvebu_pcie_add_windows(port, target, attribute, desired->base,
++			       desired->size, desired->remap);
++	*cur = *desired;
 +}
 +
- static void cap_express_dev2(struct device *d, int where, int type)
+ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
  {
-   u32 l;
-   u16 w;
-+  int has_mem_bar = 0;
+-	phys_addr_t iobase;
++	struct mvebu_pcie_window desired = {};
  
-+  has_mem_bar = device_has_memory_space_bar(d);
-   l = get_conf_long(d, where + PCI_EXP_DEVCAP2);
-   printf("\t\tDevCap2: Completion Timeout: %s, TimeoutDis%c, LTR%c, OBFF %s",
- 	cap_express_dev2_timeout_range(PCI_EXP_DEV2_TIMEOUT_RANGE(l)),
-@@ -976,6 +996,20 @@ static void cap_express_dev2(struct device *d, int where, int type)
-     printf(" ARIFwd%c\n", FLAG(l, PCI_EXP_DEV2_ARI));
-   else
-     printf("\n");
-+  if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
-+      type == PCI_EXP_TYPE_DOWNSTREAM || has_mem_bar)
-+    {
-+       printf("\t\tAtomicOpsCap:");
-+       if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
-+           type == PCI_EXP_TYPE_DOWNSTREAM)
-+         printf(" Routing%c", FLAG(l, PCI_EXP_DEVCAP2_ATOMICOP_ROUTING));
-+       if (type == PCI_EXP_TYPE_ROOT_PORT || has_mem_bar)
-+         printf(" 32bit%c 64bit%c 128bitCAS%c",
-+		FLAG(l, PCI_EXP_DEVCAP2_32BIT_ATOMICOP_COMP),
-+		FLAG(l, PCI_EXP_DEVCAP2_64BIT_ATOMICOP_COMP),
-+		FLAG(l, PCI_EXP_DEVCAP2_128BIT_CAS_COMP));
-+       printf("\n");
-+    }
+ 	/* Are the new iobase/iolimit values invalid? */
+ 	if (port->bridge.iolimit < port->bridge.iobase ||
+ 	    port->bridge.iolimitupper < port->bridge.iobaseupper ||
+ 	    !(port->bridge.command & PCI_COMMAND_IO)) {
+-
+-		/* If a window was configured, remove it */
+-		if (port->iowin_base) {
+-			mvebu_pcie_del_windows(port, port->iowin_base,
+-					       port->iowin_size);
+-			port->iowin_base = 0;
+-			port->iowin_size = 0;
+-		}
+-
++		mvebu_pcie_set_window(port, port->io_target, port->io_attr,
++				      &desired, &port->iowin);
+ 		return;
+ 	}
  
-   w = get_conf_word(d, where + PCI_EXP_DEVCTL2);
-   printf("\t\tDevCtl2: Completion Timeout: %s, TimeoutDis%c, LTR%c, OBFF %s",
-@@ -987,6 +1021,19 @@ static void cap_express_dev2(struct device *d, int where, int type)
-     printf(" ARIFwd%c\n", FLAG(w, PCI_EXP_DEV2_ARI));
-   else
-     printf("\n");
-+  if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
-+      type == PCI_EXP_TYPE_DOWNSTREAM || type == PCI_EXP_TYPE_ENDPOINT ||
-+      type == PCI_EXP_TYPE_ROOT_INT_EP || type == PCI_EXP_TYPE_LEG_END)
-+    {
-+      printf("\t\tAtomicOpsCtl:");
-+      if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_ENDPOINT ||
-+          type == PCI_EXP_TYPE_ROOT_INT_EP || type == PCI_EXP_TYPE_LEG_END)
-+        printf(" ReqEn%c", FLAG(w, PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN));
-+      if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_UPSTREAM ||
-+          type == PCI_EXP_TYPE_DOWNSTREAM)
-+        printf(" EgressBlck%c", FLAG(w, PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK));
-+      printf("\n");
-+    }
+@@ -412,32 +438,27 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+ 	 * specifications. iobase is the bus address, port->iowin_base
+ 	 * is the CPU address.
+ 	 */
+-	iobase = ((port->bridge.iobase & 0xF0) << 8) |
+-		(port->bridge.iobaseupper << 16);
+-	port->iowin_base = port->pcie->io.start + iobase;
+-	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+-			    (port->bridge.iolimitupper << 16)) -
+-			    iobase) + 1;
+-
+-	mvebu_pcie_add_windows(port, port->io_target, port->io_attr,
+-			       port->iowin_base, port->iowin_size,
+-			       iobase);
++	desired.remap = ((port->bridge.iobase & 0xF0) << 8) |
++			(port->bridge.iobaseupper << 16);
++	desired.base = port->pcie->io.start + desired.remap;
++	desired.size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
++			 (port->bridge.iolimitupper << 16)) -
++			desired.remap) +
++		       1;
++
++	mvebu_pcie_set_window(port, port->io_target, port->io_attr, &desired,
++			      &port->iowin);
  }
  
- static const char *cap_express_link2_speed(int type)
+ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ {
++	struct mvebu_pcie_window desired = {.remap = MVEBU_MBUS_NO_REMAP};
++
+ 	/* Are the new membase/memlimit values invalid? */
+ 	if (port->bridge.memlimit < port->bridge.membase ||
+ 	    !(port->bridge.command & PCI_COMMAND_MEMORY)) {
+-
+-		/* If a window was configured, remove it */
+-		if (port->memwin_base) {
+-			mvebu_pcie_del_windows(port, port->memwin_base,
+-					       port->memwin_size);
+-			port->memwin_base = 0;
+-			port->memwin_size = 0;
+-		}
+-
++		mvebu_pcie_set_window(port, port->mem_target, port->mem_attr,
++				      &desired, &port->memwin);
+ 		return;
+ 	}
+ 
+@@ -447,14 +468,12 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ 	 * window to setup, according to the PCI-to-PCI bridge
+ 	 * specifications.
+ 	 */
+-	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
+-	port->memwin_size  =
+-		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+-		port->memwin_base + 1;
+-
+-	mvebu_pcie_add_windows(port, port->mem_target, port->mem_attr,
+-			       port->memwin_base, port->memwin_size,
+-			       MVEBU_MBUS_NO_REMAP);
++	desired.base = ((port->bridge.membase & 0xFFF0) << 16);
++	desired.size = (((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
++		       desired.base + 1;
++
++	mvebu_pcie_set_window(port, port->mem_target, port->mem_attr, &desired,
++			      &port->memwin);
+ }
+ 
+ /*
 -- 
 2.7.4
-
