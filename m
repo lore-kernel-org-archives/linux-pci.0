@@ -1,121 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Myron Stowe <myron.stowe@gmail.com>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <735068a7-7805-dad0-b5b0-5218a18f335c@deltatee.com>
-Date: Mon, 19 Dec 2016 10:06:56 -0700
-MIME-Version: 1.0
-In-Reply-To: <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/1] New PCI Switch Management Driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:39985 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751615AbcLLLwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Dec 2016 06:52:10 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
+Date: Mon, 12 Dec 2016 19:51:27 +0800
+Message-Id: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+Rockchip's RC outputs 100MHz reference clock but there are
+two methods for PHY to generate it.
 
-On 19/12/16 09:09 AM, Myron Stowe wrote:
-> I guess the obvious questions is: why is a driver for a PCI switch
-> necessary?  The core works with all compliant switches today and there
-> are no specifics for a particular design or such.
+(1)One of them is to use system PLL to generate 100MHz clock and
+the PHY will relock it and filter signal noise then outputs the
+reference clock.
 
-> So I guess I'd like to hear the reasoning and justifications for why a
-> driver for a common device that should conform to the specifications
-> and not seem to need any special considerations is required or desired
-> here.
+(2)Another way is to share Soc's 24MHZ crystal oscillator with
+PHY and force PHY's DLL to generate 100MHz internally.
 
-As I noted, the hardware is compliant and works perfectly fine with the
-in-kernel driver. However, the hardware has many additional custom
-features that are not covered by the PCI specs. For example, it has an
-interface to count packets that match a specific criteria. It also has
-firmware that can be expanded to do completely custom things by the
-user. Additionally, the switch is _very_ configurable and has a
-configuration file that can be uploaded and downloaded.
+When using case(2), the exit from L0s doesn't work fine occasionally
+due to the broken design of RC receiver's logical circuit. So even if
+we use extended-synch, it still fails for PHY to relock the bits from
+FTS sometimes. This will hang the system.
 
-All these features and more are exposed through a special management
-endpoint that is completely separate from the standard PCI switch
-interface. This work is a driver for that endpoint and is not required
-to use the switch. It only makes the advanced features available to the
-user.
+Maybe we could argue that why not use case(1) to avoid it? The reason
+is that as we could see the reference clock is derived from system PLL
+and the path from it to PHY isn't so clean which means there are some
+noise introduced by power-domain and other buses can't be filterd out
+by PHY and we could see noise from the frequency spectrum by
+oscilloscope. This makes the TX compatibility test a little difficult
+to pass the spec. So case(1) and case(2) are both used indeed now. If
+using case(2), we should disable RC's L0s support, and that is why we
+need this property to indicate this quirk.
 
-Does that make sense?
+Also after checking quirk.c, I noticed there is already a quirk for
+disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+shouldn't do that as mentioned above that case(1) could still works fine
+with L0s.
 
-Thanks,
+Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Logan
+---
+
+Changes in v2:
+- drop the quirk prefix
+
+ Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+ drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index 71aeda1..1453a73 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -43,6 +43,8 @@ Required properties:
+ - interrupt-map-mask and interrupt-map: standard PCI properties
+ 
+ Optional Property:
++- aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
++	using 24MHz OSC for RC's PHY.
+ - ep-gpios: contain the entry for pre-reset gpio
+ - num-lanes: number of lanes to use
+ - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f2dca7b..35988fc 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -140,6 +140,8 @@
+ #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
+ #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+ #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
++#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
++#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+ #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+@@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
+ 
++	/* Clear L0s from RC's link cap */
++	if (of_property_read_bool(dev->of_node, "apsm-no-l0s")) {
++		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LINK_CAP);
++		status &= ~PCIE_RC_CONFIG_LINK_CAP_L0S;
++		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
++	}
++
+ 	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+ 
+ 	rockchip_pcie_write(rockchip,
+-- 
+1.9.1
 
 
-> On Sat, Dec 17, 2016 at 10:09 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
->> Hi,
->>
->> [Appologies: this is a resend for some people. Due to a configuration
->> error the original email was rejected by the mailing lists. I hope
->> this one makes it!]
->>
->> We're looking to get some initial feedback on a new driver for
->> a line of PCIe switches produced and produced and sold by Microsemi.
->> The goal is to get the process moving to get this code included in
->> upstream hopefully for 4.11. Facebook is currently gearing up to
->> use this hardware in its Open Compute Platform and is pushing to
->> have this driver in the upstream kernel.
->>
->> The following patch briefly describes the hardware and provides
->> the first draft of driver code. Currently, the driver works and
->> has been tested but is not feature complete. Thus, we are not looking
->> to get it merged immediately. However we would like some early review,
->> specifically on the interfaces and core concepts so that we don't
->> do a lot of work down a path the community would reject. Barring any
->> objections to this RFC, we will flesh out all the features
->> and provide a completed patch for inclusion in the coming weeks.
->>
->> Work on a userspace tool, that utilizes this driver, is also being
->> done at [1]. The tool is currently also a bit of a skeleton and
->> will be fleshed out assuming there are no serious objections to our
->> userspace interface. In the end, the tool will be released with a
->> GPL license.
->>
->> The patch is based off of the v4.9 release.
->>
->> Thanks for your review,
->>
->> Logan
->>
->> [1] https://github.com/sbates130272/switchtec-user
->>
->> Logan Gunthorpe (1):
->>   MicroSemi Switchtec management interface driver
->>
->>  Documentation/switchtec.txt    |  54 +++
->>  MAINTAINERS                    |   9 +
->>  drivers/pci/Kconfig            |   1 +
->>  drivers/pci/Makefile           |   1 +
->>  drivers/pci/switch/Kconfig     |  13 +
->>  drivers/pci/switch/Makefile    |   1 +
->>  drivers/pci/switch/switchtec.c | 824 +++++++++++++++++++++++++++++++++++++++++
->>  drivers/pci/switch/switchtec.h | 119 ++++++
->>  8 files changed, 1022 insertions(+)
->>  create mode 100644 Documentation/switchtec.txt
->>  create mode 100644 drivers/pci/switch/Kconfig
->>  create mode 100644 drivers/pci/switch/Makefile
->>  create mode 100644 drivers/pci/switch/switchtec.c
->>  create mode 100644 drivers/pci/switch/switchtec.h
->>
->> --
->> 2.1.4
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
