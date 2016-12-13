@@ -1,122 +1,84 @@
-Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
-Message-Id: <7a82ceafe7d9af7609408c042bb9bf55af5a1a86.1481926599.git.lukas@wunner.de>
-In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
-References: <cover.1481926599.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 17 Dec 2016 15:39:39 +0100
-Subject: [PATCH v3 1/7] PCI: Recognize Thunderbolt devices
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <SRS0=uvur=X4=codeaurora.org=kvalo@kernel.org>
+Return-Path: <SRS0=uvur=X4=codeaurora.org=kvalo@kernel.org>
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Cc: helgaas@kernel.org,  linux-kernel@vger.kernel.org,  linux-pci@vger.kernel.org,  marc.zyngier@arm.com,  Janusz.Dziedzic@tieto.com,  rmanohar@qti.qualcomm.com,  ath9k-devel@qca.qualcomm.com,  linux-wireless@vger.kernel.org,  rmanohar@qca.qualcomm.com,  bharat.kumar.gogada@xilinx.com, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] ath9k: unlock rcu read when returning early
+References: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
+Date: Tue, 13 Dec 2016 11:59:42 +0200
+In-Reply-To: <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
+	(Tobias Klausmann's message of "Mon, 12 Dec 2016 19:50:01 +0100")
+Message-ID: <877f74175d.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-We're about to allow runtime PM on Thunderbolt ports in
-pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
-hotplug ports in pci_dev_check_d3cold().  In both cases we need to
-uniquely identify if a PCI device belongs to a Thunderbolt controller.
+Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
 
-We also have the need to detect presence of a Thunderbolt controller in
-drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros cannot
-switch external DP/HDMI ports between GPUs if they have Thunderbolt.
+> Starting with ath9k: use ieee80211_tx_status_noskb where possible
+> [d94a461d7a7df68991fb9663531173f60ef89c68]
 
-Furthermore, in multiple places in the DRM subsystem we need to detect
-whether a GPU is on-board or attached with Thunderbolt.  As an example,
-Thunderbolt-attached GPUs shall not be registered with vga_switcheroo.
+The correct format to reference a commit in the commit log is:
 
-Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234
-on devices belonging to a Thunderbolt controller which allows us to
-recognize them.
+Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
+where possible") the...
 
-Detect presence of this VSEC on device probe and cache it in a newly
-added is_thunderbolt bit in struct pci_dev which can then be queried by
-pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and others.
+> the driver uses rcu_read_lock() && rcu_read_unlock() yet on returning
+> early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
+> and suspicious RCU usage:
+>
+>  ===============================
+>  [ INFO: suspicious RCU usage. ]
+>  4.9.0-rc8 #11 Not tainted
+>  -------------------------------
+>  kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
+>
+>  other info that might help us debug this:
+>
+>  RCU used illegally from idle CPU!
+>  rcu_scheduler_active = 1, debug_locks = 0
+>  RCU used illegally from extended quiescent state!
+>  1 lock held by swapper/7/0:
+>  #0:
+>   (
+>  rcu_read_lock
+>  ){......}
+>  , at:
+>  [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
+>
+>  stack backtrace:
+>  CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+>  Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+>   ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+>   ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+>   ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+>  Call Trace:
+>   <IRQ>
+>   [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+>   [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+>   [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+>   [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+>   [<ffffffff81058631>] irq_exit+0x61/0xd0
+>   [<ffffffff81018d25>] do_IRQ+0x65/0x110
+>   [<ffffffff81672189>] common_interrupt+0x89/0x89
+>   <EOI>
+>   [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+>   [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+>   [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+>   [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+>   [<ffffffff810336f8>] start_secondary+0x148/0x170
+>
+> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
 
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.h   |  2 ++
- drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 3 files changed, 37 insertions(+)
+A fixes line and cc stable would be good to have:
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index cb17db2..45c2b81 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -3,6 +3,8 @@
- 
- #define PCI_FIND_CAP_TTL	48
- 
-+#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-+
- extern const unsigned char pcie_link_speed[];
- 
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e164b5c..891a8fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 		pdev->is_hotplug_bridge = 1;
- }
- 
-+static void set_pcie_vendor_specific(struct pci_dev *dev)
-+{
-+	int vsec = 0;
-+	u32 header;
-+
-+	while ((vsec = pci_find_next_ext_capability(dev, vsec,
-+						    PCI_EXT_CAP_ID_VNDR))) {
-+		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-+
-+		/* Is the device part of a Thunderbolt controller? */
-+		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
-+		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT)
-+			dev->is_thunderbolt = 1;
-+	}
-+
-+	/*
-+	 * Is the device attached with Thunderbolt?  Walk upwards and check for
-+	 * each encountered bridge if it's part of a Thunderbolt controller.
-+	 * Reaching the host bridge means dev is soldered to the mainboard.
-+	 */
-+	if (!dev->is_thunderbolt) {
-+		struct pci_dev *parent = dev;
-+
-+		while ((parent = pci_upstream_bridge(parent)))
-+			if (parent->is_thunderbolt) {
-+				dev->is_thunderbolt = 1;
-+				break;
-+			}
-+	}
-+}
-+
- /**
-  * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
-  * @dev: PCI device
-@@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	/* need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
- 
-+	/* need to have dev->cfg_size ready */
-+	set_pcie_vendor_specific(dev);
-+
- 	/* "Unknown power state" */
- 	dev->current_state = PCI_UNKNOWN;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..3c775e8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -358,6 +358,7 @@ struct pci_dev {
- 	unsigned int	is_virtfn:1;
- 	unsigned int	reset_fn:1;
- 	unsigned int    is_hotplug_bridge:1;
-+	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
+Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
+Cc: <stable@vger.kernel.org> # v4.9
+
+I can add those.
+
+I'm planning to push this to 4.10 but would prefer to see an ack from
+Felix (the author of d94a461d7a7d) first. I added him to Cc.
+
 -- 
-2.10.2
+Kalle Valo
