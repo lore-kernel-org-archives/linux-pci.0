@@ -1,68 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 19 Dec 2016 07:35:15 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
-Message-ID: <20161219063515.GA5814@kroah.com>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <1481994562-9283-2-git-send-email-logang@deltatee.com>
- <20161218075141.GE29850@kroah.com>
- <d7c26e15-34f3-26d4-e13a-f24b4a9034c3@deltatee.com>
+Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
+Date: Tue, 13 Dec 2016 18:18:40 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Message-ID: <20161213231840.GD12113@localhost.localdomain>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <20161118232544.GI28386@localhost.localdomain>
+ <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
+ <20161128180214.GF2609@localhost.localdomain>
+ <20161208175432.GA28827@bhelgaas-glaptop.roam.corp.google.com>
+ <20161208193253.GK25959@localhost.localdomain>
+ <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213005547.GA12844@localhost.localdomain>
+ <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d7c26e15-34f3-26d4-e13a-f24b4a9034c3@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 18, 2016 at 10:20:47AM -0700, Logan Gunthorpe wrote:
-> Hi Greg,
-> 
-> Thanks for the quick review!
-> 
-> On 18/12/16 12:51 AM, Greg Kroah-Hartman wrote:
-> > On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
-> > > +struct switchtec_dev {
-> > > +	struct pci_dev *pdev;
-> > > +	struct msix_entry *msix;
-> > > +	struct device *dev;
-> > > +	struct kref kref;
+On Tue, Dec 13, 2016 at 02:50:12PM -0600, Bjorn Helgaas wrote:
+> On Mon, Dec 12, 2016 at 07:55:47PM -0500, Keith Busch wrote:
+> > On Mon, Dec 12, 2016 at 05:42:27PM -0600, Bjorn Helgaas wrote:
+> > > On Thu, Dec 08, 2016 at 02:32:53PM -0500, Keith Busch wrote:
+> > > > Depending on the device and the driver, there are hundreds to thousands
+> > > > of non-posted transactions submitted to the device to complete driver
+> > > > unbinding and removal. Since the device is gone, hardware has to handle
+> > > > that as an error condition, which is slower than the a successful
+> > > > non-posted transaction. Since we're doing 1000 of them for no particular
+> > > > reason, it takes a long time. If you hot remove a switch with multiple
+> > > > downstream devices, the serialized removal adds up to many seconds.
+> > > 
+> > > Another thread mentioned 1-2us as a reasonable config access cost, and
+> > > I'm still a little puzzled about how we get to something on the order
+> > > of a million times that cost.
+> > > 
+> > > I know this is all pretty hand-wavey, but 1000 config accesses to shut
+> > > down a device seems unreasonably high.  The entire config space is
+> > > only 4096 bytes, and most devices use a small fraction of that.  If
+> > > we're really doing 1000 accesses, it sounds like we're doing something
+> > > wrong, like polling without a delay or something.
 > > 
-> > Why do you have a pointer to a device, yet a kref as well?  Just have
-> > this structure embed a 'struct device' in itself, like you did for a
-> > kref, and you will be fine.  Otherwise you are dealing with two
-> > different sets of reference counting here, for no good reason.
+> > Every time pci_find_ext_capability is called on a removed device, the
+> > kernel will do 481 failed config space accesses trying to find that
+> > capability. The kernel used to do that multiple times to find the AER
+> > capability under conditions common to surprise removal.
 > 
-> Ok, understood. I had referenced the device dax driver which did it this way
-> in 4.8 but looks like it was changed to the way you suggest in 4.9.
+> Right, that's a perfect example.  I'd rather fix issues like this by
+> caching the position as you did with AER.  The "removed" bit makes
+> these issues "go away" without addressing the underlying problem.
 > 
-> > > +#define stdev_pdev(stdev) ((stdev)->pdev)
-> > > +#define stdev_pdev_dev(stdev) (&stdev_pdev(stdev)->dev)
-> > > +#define stdev_name(stdev) pci_name(stdev_pdev(stdev))
-> > > +#define stdev_dev(stdev) ((stdev)->dev)
+> We might still need a "removed" bit for other reasons, but I want to
+> be clear about those reasons, not just throw it in under the general
+> "make it go fast" umbrella.
+> 
+> > But now that we cache the AER position (commit: 66b80809), we've
+> > eliminated by far the worst offender. The counts I'm telling you are
+> > still referencing the original captured traces showing long tear down
+> > times, so it's not up-to-date with the most recent version of the kernel.
+> >  
+> > > I measured the cost of config reads during enumeration using the TSC
+> > > on a 2.8GHz CPU and found the following:
+> > > 
+> > >   1580 cycles, 0.565 usec (device present)
+> > >   1230 cycles, 0.440 usec (empty slot)
+> > >   2130 cycles, 0.761 usec (unimplemented function of multi-function device)
+> > > 
+> > > So 1-2usec does seem the right order of magnitude, and my "empty slot"
+> > > error responses are actually *faster* than the "device present" ones,
+> > > which is plausible to me because the Downstream Port can generate the
+> > > error response immediately without sending a packet down the link.
+> > > The "unimplemented function" responses take longer than the "empty
+> > > slot", which makes sense because the Downstream Port does have to send
+> > > a packet to the device, which then complains because it doesn't
+> > > implement that function.
+> > > 
+> > > Of course, these aren't the same case as yours, where the link used to
+> > > be up but is no longer.  Is there some hardware timeout to see if the
+> > > link will come back?
 > > 
-> > Ick, just open code these please.  That's a huge hint your use of the
-> > driver model is not correct :)
+> > Yes, the hardware does not respond immediately under this test, which
+> > is considered an error condition. This is a reason why PCIe Device
+> > Capabilities 2 Completion Timeout Ranges are recommended to be in the
+> > 10ms range.
 > 
-> Ok, will do. For reference, I was copying
-> 
-> drivers/ntb/hw/intel/ntb_hw_intel.h
-> 
-> which does a similar thing.
+> And we're apparently still doing a lot of these accesses?  I'm still
+> curious about exactly what these are, because it may be that we're
+> doing more than necessary.
 
-No need to copy bad code, I suggest fixing that up as well :)
-
-thanks,
-
-greg k-h
+It's the MSI-x masking that's our next highest contributor. Masking
+vectors still requires non-posted commands, and since they're not going
+through managed API accessors like config space uses, the removed flag
+is needed for checking before doing significant MMIO.
