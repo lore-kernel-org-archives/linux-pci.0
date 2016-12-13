@@ -1,75 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56046 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753343AbcLHO4Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Dec 2016 09:56:24 -0500
-Date: Thu, 8 Dec 2016 08:56:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
-        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@qca.qualcomm.com
-Subject: Re: ATH9 driver issues on ARM64
-Message-ID: <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Fe7y=X4=mni.thm.de=tobias.johannes.klausmann@kernel.org>
+Return-Path: <SRS0=Fe7y=X4=mni.thm.de=tobias.johannes.klausmann@kernel.org>
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+To: kvalo@codeaurora.org,
+	helgaas@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	marc.zyngier@arm.com,
+	Janusz.Dziedzic@tieto.com,
+	ath9k-devel@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org,
+	rmanohar@qca.qualcomm.com,
+	bharat.kumar.gogada@xilinx.com
+Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
+	"# v4 . 9" <stable@vger.kernel.org>
+Subject: [PATCH v2] ath9k: do not return early to fix rcu unlocking
+Date: Tue, 13 Dec 2016 18:08:07 +0100
+Message-Id: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
+In-Reply-To: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
+References: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Kalle, ath9k list]
+Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
+where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
+returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
+and suspicious RCU usage:
 
-On Thu, Dec 08, 2016 at 01:49:42PM +0000, Bharat Kumar Gogada wrote:
-> Hi,
-> 
-> Did anyone test Atheros ATH9 driver(drivers/net/wireless/ath/ath9k/)
-> on ARM64.  The end point is TP link wifi card with which supports
-> only legacy interrupts.
+ ===============================
+ [ INFO: suspicious RCU usage. ]
+ 4.9.0-rc8 #11 Not tainted
+ -------------------------------
+ kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
 
-If it works on other arches and the arm64 PCI enumeration works, my
-first guess would be an INTx issue, e.g., maybe the driver is waiting
-for an interrupt that never arrives.
+ other info that might help us debug this:
 
-> We are trying to test it on ARM64 with
-> (drivers/pci/host/pcie-xilinx-nwl.c) as root port.
-> 
-> EP is getting enumerated and able to link up. 
-> 
-> But when we start scan system gets hanged.
+ RCU used illegally from idle CPU!
+ rcu_scheduler_active = 1, debug_locks = 0
+ RCU used illegally from extended quiescent state!
+ 1 lock held by swapper/7/0:
+ #0:
+  (
+ rcu_read_lock
+ ){......}
+ , at:
+ [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
 
-When you say the system hangs when you start a scan, I assume you mean
-a wifi scan, not the PCI enumeration.  A problem with a wifi scan
-might cause a *process* to hang, but it shouldn't hang the entire
-system.
+ stack backtrace:
+ CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+ Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+  ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+  ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+  ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+ Call Trace:
+  <IRQ>
+  [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+  [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+  [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+  [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+  [<ffffffff81058631>] irq_exit+0x61/0xd0
+  [<ffffffff81018d25>] do_IRQ+0x65/0x110
+  [<ffffffff81672189>] common_interrupt+0x89/0x89
+  <EOI>
+  [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+  [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+  [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+  [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+  [<ffffffff810336f8>] start_secondary+0x148/0x170
 
-> When we took trace we see that after we start scan assert message is
-> sent but there is no de assert from end point.
+Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
+Cc: <stable@vger.kernel.org> # v4.9
 
-Are you talking about a trace from a PCIe analyzer?  Do you see an
-Assert_INTx PCIe message on the link?
+---
+v2: break instead of unlock (rename patch) [Felix Fietkau],
+    fix reference to commit [Kalle Valo]
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> What might cause end point not sending de assert ?
-
-If the endpoint doesn't send a Deassert_INTx message, I expect that
-would mean the driver didn't service the interrupt and remove the
-condition that caused the device to assert the interrupt in the first
-place.
-
-If the driver didn't receive the interrupt, it couldn't service it, of
-course.  You could add a printk in the ath9k interrupt service
-routine to see if you ever get there.
-
-> We are not seeing any issues on 32-bit ARM platform and X86
-> platform. 
-
-Can you collect a dmesg log (or, if the system hang means you can't
-collect that, a console log with "ignore_loglevel"), and "lspci -vv"
-output as root?  That should have clues about whether the INTx got
-routed correctly.  /proc/interrupts should also show whether we're
-receiving interrupts from the device.
-
-Bjorn
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52bfbb988611..e47286bf378e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2787,7 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
+ 		if (list_empty(fifo_list)) {
+ 			ath_txq_unlock(sc, txq);
+-			return;
++			break;
+ 		}
+ 
+ 		bf = list_first_entry(fifo_list, struct ath_buf, list);
+-- 
+2.11.0
