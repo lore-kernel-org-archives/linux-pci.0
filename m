@@ -1,252 +1,119 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 2 Dec 2016 15:38:16 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Mark Salter <msalter@redhat.com>,
- Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
-Message-ID: <20161202153816.GA18290@red-moon>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
- <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49530 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936527AbcLMU4c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Dec 2016 15:56:32 -0500
+Date: Tue, 13 Dec 2016 14:56:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv4 next 1/3] pci: Add is_removed state
+Message-ID: <20161213205614.GA30106@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <1477695497-6207-2-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20161121100148.24769-8-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, Eric Auger <eric.auger@redhat.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Jon Masters <jcm@redhat.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dennis Chen <dennis.chen@arm.com>,
- Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477695497-6207-2-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael, Mark, Suravee,
-
-On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
-> On DT based systems, the of_dma_configure() API implements DMA
-> configuration for a given device. On ACPI systems an API equivalent to
-> of_dma_configure() is missing which implies that it is currently not
-> possible to set-up DMA operations for devices through the ACPI generic
-> kernel layer.
+On Fri, Oct 28, 2016 at 06:58:15PM -0400, Keith Busch wrote:
+> This adds a new state for devices that were once in the system, but
+> unexpectedly removed. This is so device tear down functions can observe
+> the device is not accessible so it may skip attempting to initialize
+> the hardware.
 > 
-> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-> calls that for now are just wrappers around arch_setup_dma_ops() and
-> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+> The pciehp and pcie-dpc drivers are aware of when the link is down,
+> so these explicitly set this flag when its handlers detect the device
+> is gone.
 > 
-> Since acpi_dma_configure() is used to configure DMA operations, the
-> function initializes the dma/coherent_dma masks to sane default values
-> if the current masks are uninitialized (also to keep the default values
-> consistent with DT systems) to make sure the device has a complete
-> default DMA set-up.
-
-I spotted a niggle that unfortunately was hard to spot (and should not
-be a problem per se but better safe than sorry) and I am not comfortable
-with it.
-
-Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
-device coherency") in acpi_bind_one() we check if the acpi_device
-associated with a device just added supports DMA, first it was
-done with acpi_check_dma() and then commit 1831eff876bd ("device
-property: ACPI: Make use of the new DMA Attribute APIs") changed
-it to acpi_get_dma_attr().
-
-The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
-on _any_ acpi device we pass to acpi_bind_one() on x86, which was
-fine because we used it to call arch_setup_dma_ops(), which is a nop
-on x86. On ARM64 a _CCA method is required to define if a device
-supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
-
-Now, acpi_bind_one() is used to bind an acpi_device to its physical
-node also for pseudo-devices like cpus and memory nodes. For those
-objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
-
-So far so good, because on x86 arch_setup_dma_ops() is empty code.
-
-With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
-to call acpi_dma_configure() which is basically a nop on x86 except
-that it sets up the dma_mask/coherent_dma_mask to a sane default value
-(after all we are setting up DMA for the device so it makes sense to
-initialize the masks there if they were unset since we are configuring
-DMA for the device in question) for the given device.
-
-Problem is, as per the explanation above, we are also setting the
-default dma masks for pseudo-devices (eg CPUs) that were previously
-untouched, it should not be a problem per-se but I am not comfortable
-with that, honestly it does not make much sense.
-
-An easy "fix" would be to move the default dma masks initialization out
-of acpi_dma_configure() (as it was in previous patch versions of this
-series - I moved it to acpi_dma_configure() just a consolidation point
-for initializing the masks instead of scattering them in every
-acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
-we think that's the right thing to do (or I can send it to Rafael later
-when the code is in the merged depending on the timing) just let me
-know please.
-
-Thanks !
-Lorenzo
-
-> The DMA range size passed to arch_setup_dma_ops() is sized according
-> to the device coherent_dma_mask (starting at address 0x0), mirroring the
-> DT probing path behaviour when a dma-ranges property is not provided
-> for the device being probed; this changes the current arch_setup_dma_ops()
-> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-> is a NOP on all architectures but ARM/ARM64 this patch does not change
-> the current kernel behaviour on them.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
 > ---
->  drivers/acpi/glue.c     |  4 ++--
->  drivers/acpi/scan.c     | 40 ++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c     |  3 +--
->  include/acpi/acpi_bus.h |  2 ++
->  include/linux/acpi.h    |  5 +++++
->  5 files changed, 50 insertions(+), 4 deletions(-)
+>  drivers/pci/hotplug/pciehp_pci.c | 5 +++++
+>  drivers/pci/pcie/pcie-dpc.c      | 4 ++++
+>  include/linux/pci.h              | 7 +++++++
+>  3 files changed, 16 insertions(+)
 > 
-> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> index 5ea5dc2..f8d6564 100644
-> --- a/drivers/acpi/glue.c
-> +++ b/drivers/acpi/glue.c
-> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index 9e69403..7560961 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -109,6 +109,11 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  				break;
+>  			}
+>  		}
+> +		if (!presence) {
+> +			pci_set_removed(dev, NULL);
+> +			if (pci_has_subordinate(dev))
+> +				pci_walk_bus(dev->subordinate, pci_set_removed, NULL);
+> +		}
+>  		pci_stop_and_remove_bus_device(dev);
+>  		/*
+>  		 * Ensure that no new Requests will be generated from
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 9811b14..7818c88 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/init.h>
+>  #include <linux/pci.h>
+>  #include <linux/pcieport_if.h>
+> +#include "../pci.h"
 >  
->  	attr = acpi_get_dma_attr(acpi_dev);
->  	if (attr != DEV_DMA_NOT_SUPPORTED)
-> -		arch_setup_dma_ops(dev, 0, 0, NULL,
-> -				   attr == DEV_DMA_COHERENT);
-> +		acpi_dma_configure(dev, attr);
->  
->  	acpi_physnode_link_name(physical_node_name, node_id);
->  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  	return 0;
->  
->   err:
-> +	acpi_dma_deconfigure(dev);
->  	ACPI_COMPANION_SET(dev, NULL);
->  	put_device(dev);
->  	put_device(&acpi_dev->dev);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 3d1856f..45b5710 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1370,6 +1370,46 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  		return DEV_DMA_NON_COHERENT;
->  }
->  
-> +/**
-> + * acpi_dma_configure - Set-up DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + * @attr: device dma attributes
-> + */
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> +{
-> +	/*
-> +	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-> +	 * setup the correct supported mask.
-> +	 */
-> +	if (!dev->coherent_dma_mask)
-> +		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +
-> +	/*
-> +	 * Set it to coherent_dma_mask by default if the architecture
-> +	 * code has not set it.
-> +	 */
-> +	if (!dev->dma_mask)
-> +		dev->dma_mask = &dev->coherent_dma_mask;
-> +
-> +	/*
-> +	 * Assume dma valid range starts at 0 and covers the whole
-> +	 * coherent_dma_mask.
-> +	 */
-> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-> +			   attr == DEV_DMA_COHERENT);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_dma_configure);
-> +
-> +/**
-> + * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + */
-> +void acpi_dma_deconfigure(struct device *dev)
-> +{
-> +	arch_teardown_dma_ops(dev);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_dma_deconfigure);
-> +
->  static void acpi_init_coherency(struct acpi_device *adev)
->  {
->  	unsigned long long cca = 0;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ab00267..c29e07a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1738,8 +1738,7 @@ static void pci_dma_configure(struct pci_dev *dev)
->  		if (attr == DEV_DMA_NOT_SUPPORTED)
->  			dev_warn(&dev->dev, "DMA not supported.\n");
->  		else
-> -			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
-> -					   attr == DEV_DMA_COHERENT);
-> +			acpi_dma_configure(&dev->dev, attr);
+>  struct dpc_dev {
+>  	struct pcie_device	*dev;
+> @@ -46,6 +47,9 @@ static void interrupt_event_handler(struct work_struct *work)
+>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>  					 bus_list) {
+>  		pci_dev_get(dev);
+> +		pci_set_removed(dev, NULL);
+> +		if (pci_has_subordinate(dev))
+> +			pci_walk_bus(dev->subordinate, pci_set_removed, NULL);
+>  		pci_stop_and_remove_bus_device(dev);
+>  		pci_dev_put(dev);
 >  	}
->  
->  	pci_put_host_bridge_device(bridge);
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index c1a524d..4242c31 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -573,6 +573,8 @@ struct acpi_pci_root {
->  
->  bool acpi_dma_supported(struct acpi_device *adev);
->  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-> +void acpi_dma_deconfigure(struct device *dev);
->  
->  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
->  					   u64 address, bool check_children);
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 996a29c..8d15fc5 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -765,6 +765,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  	return DEV_DMA_NOT_SUPPORTED;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0e49f70..2115d19 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -341,6 +341,7 @@ struct pci_dev {
+>  	unsigned int	multifunction:1;/* Part of multi-function device */
+>  	/* keep track of device state */
+>  	unsigned int	is_added:1;
+> +	unsigned int	is_removed:1;	/* device was surprise removed */
+>  	unsigned int	is_busmaster:1; /* device is busmaster */
+>  	unsigned int	no_msi:1;	/* device may not use msi */
+>  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+> @@ -417,6 +418,12 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>  	return (pdev->error_state != pci_channel_io_normal);
 >  }
 >  
-> +static inline void acpi_dma_configure(struct device *dev,
-> +				      enum dev_dma_attr attr) { }
-> +
-> +static inline void acpi_dma_deconfigure(struct device *dev) { }
-> +
->  #define ACPI_PTR(_ptr)	(NULL)
->  
->  static inline void acpi_device_set_enumerated(struct acpi_device *adev)
-> -- 
-> 2.10.0
-> 
+> +static inline int pci_set_removed(struct pci_dev *pdev, void *unused)
+> +{
+> +	pdev->is_removed = 1;
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This makes me slightly worried because this is a bitfield and there's
+no locking.  A concurrent write to some nearby field can corrupt
+things.  It doesn't look *likely*, but it's a lot of work to be
+convinced that this is completely safe, especially since the writer is
+running on behalf of the bridge, and the target is a child of the
+bridge.
+
+The USB HCD_FLAG_DEAD and HCD_FLAG_HW_ACCESSIBLE flags are somewhat
+similar.  Maybe we can leverage some of that design?
+
+> +	return 0;
+> +}
+> +
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
