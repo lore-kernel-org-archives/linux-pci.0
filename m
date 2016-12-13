@@ -1,72 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60490 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750900AbcLBVWz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Dec 2016 16:22:55 -0500
-Date: Fri, 2 Dec 2016 15:22:51 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hanjun Guo <guohanjun@huawei.com>
-Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>
-Subject: Re: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
-Message-ID: <20161202212251.GD9903@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <d3f1a4ca-99e6-f0a5-d20b-d2753058d93d@huawei.com>
- <8f4a67d4-549a-34e9-8ef7-ec99961d60e5@huawei.com>
- <20161201163105.GB19681@bhelgaas-glaptop.roam.corp.google.com>
- <42eec2b2-6ced-25a1-95d3-3b22e3b71bec@huawei.com>
- <58412DAF.1090001@huawei.com>
+Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=vrCD=X4=intel.com=keith.busch@kernel.org>
+Date: Mon, 12 Dec 2016 19:55:47 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Message-ID: <20161213005547.GA12844@localhost.localdomain>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <20161118232544.GI28386@localhost.localdomain>
+ <20161123160906.GB16033@bhelgaas-glaptop.roam.corp.google.com>
+ <20161128180214.GF2609@localhost.localdomain>
+ <20161208175432.GA28827@bhelgaas-glaptop.roam.corp.google.com>
+ <20161208193253.GK25959@localhost.localdomain>
+ <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <58412DAF.1090001@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 02, 2016 at 04:15:43PM +0800, Hanjun Guo wrote:
-> On 2016/12/2 11:46, Dongdong Liu wrote:
-> > Hi Bjorn
-> >
-> > 在 2016/12/2 0:31, Bjorn Helgaas 写道:
-> >> On Thu, Dec 01, 2016 at 10:04:48PM +0800, Dongdong Liu wrote:
-> >>> ...
-> >>> Aftet fixing the compile errors. I tested on HiSilicon D03 board. It works ok.
-> >>> The dmesg is as below
-> >>
-> >> Thanks very much for testing this!  A few comments below.
-> >>
-> >>> root@(none)$ dmesg
-> >>> [    0.000000] Booting Linux on physical CPU 0x10000
-> >>> [    0.000000] Linux version 4.9.0-rc1-gaf05ef2-dirty (l00290354@linux-ioko) (gcc version 4.9.3 20150211 (prerelease) (20150316) ) #257 SMP PREEMPT Thu Dec 1 22:13:05 CST 2016
-> >>> [    0.000000] Boot CPU: AArch64 Processor [411fd071]
-> >>> [    0.000000] earlycon: hisilpcuart0 at MMIO 0x00000000a01b0000 (options '0,0x2f8')
-> >>> [    0.000000] bootconsole [hisilpcuart0] enabled
-> >>> [    0.000000] efi: Getting EFI parameters from FDT:
-> >>> [    0.000000] efi: EFI v2.60 by EDK II
-> >>> [    0.000000] efi:  SMBIOS=0x3f110000  SMBIOS 3.0=0x39ce0000  ACPI=0x39db0000  ACPI 2.0=0x39db0014  MEMATTR=0x3c945018
-> >>
-> >> On x86 we normally have info about the machine and BIOS, e.g.,
-> >>
-> >>   DMI: LENOVO 20FCS12V03/20FCS12V03, BIOS N1FET40W (1.14 ) 04/18/2016
-> >>
-> >> I think this comes from dmi_present(), and it looks like we should
-> >> call that via arm64_dmi_init().  Any idea why we don't see that info?
-> >> Is it just missing from the SMBIOS table?  I think it's useful to
-> >> have for debugging problems.
-> >
-> > I need to ask my colleagues about this, then reply.
+On Mon, Dec 12, 2016 at 05:42:27PM -0600, Bjorn Helgaas wrote:
+> On Thu, Dec 08, 2016 at 02:32:53PM -0500, Keith Busch wrote:
+> > Depending on the device and the driver, there are hundreds to thousands
+> > of non-posted transactions submitted to the device to complete driver
+> > unbinding and removal. Since the device is gone, hardware has to handle
+> > that as an error condition, which is slower than the a successful
+> > non-posted transaction. Since we're doing 1000 of them for no particular
+> > reason, it takes a long time. If you hot remove a switch with multiple
+> > downstream devices, the serialized removal adds up to many seconds.
 > 
-> git grep -w "DMI:"
-> drivers/firmware/dmi_scan.c:                      printk(KERN_DEBUG "DMI: %s\n", dmi_ids_string);
-> drivers/firmware/dmi_scan.c:                      pr_debug("DMI: %s\n", dmi_ids_string);
+> Another thread mentioned 1-2us as a reasonable config access cost, and
+> I'm still a little puzzled about how we get to something on the order
+> of a million times that cost.
 > 
-> It's a pr_debug information, seems we didn't enable the debug print?
+> I know this is all pretty hand-wavey, but 1000 config accesses to shut
+> down a device seems unreasonably high.  The entire config space is
+> only 4096 bytes, and most devices use a small fraction of that.  If
+> we're really doing 1000 accesses, it sounds like we're doing something
+> wrong, like polling without a delay or something.
 
-Yeah, probably.  Looks like somebody else was deceived into thinking that
-pr_debug() is equivalent to printk(KERN_DEBUG).
+Every time pci_find_ext_capability is called on a removed device, the
+kernel will do 481 failed config space accesses trying to find that
+capability. The kernel used to do that multiple times to find the AER
+capability under conditions common to surprise removal.
 
-Bjorn
+But now that we cache the AER position (commit: 66b80809), we've
+eliminated by far the worst offender. The counts I'm telling you are
+still referencing the original captured traces showing long tear down
+times, so it's not up-to-date with the most recent version of the kernel.
+ 
+> I measured the cost of config reads during enumeration using the TSC
+> on a 2.8GHz CPU and found the following:
+> 
+>   1580 cycles, 0.565 usec (device present)
+>   1230 cycles, 0.440 usec (empty slot)
+>   2130 cycles, 0.761 usec (unimplemented function of multi-function device)
+> 
+> So 1-2usec does seem the right order of magnitude, and my "empty slot"
+> error responses are actually *faster* than the "device present" ones,
+> which is plausible to me because the Downstream Port can generate the
+> error response immediately without sending a packet down the link.
+> The "unimplemented function" responses take longer than the "empty
+> slot", which makes sense because the Downstream Port does have to send
+> a packet to the device, which then complains because it doesn't
+> implement that function.
+> 
+> Of course, these aren't the same case as yours, where the link used to
+> be up but is no longer.  Is there some hardware timeout to see if the
+> link will come back?
+
+Yes, the hardware does not respond immediately under this test, which
+is considered an error condition. This is a reason why PCIe Device
+Capabilities 2 Completion Timeout Ranges are recommended to be in the
+10ms range.
