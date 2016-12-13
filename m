@@ -1,51 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58661 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752094AbcLFOem (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Dec 2016 09:34:42 -0500
-Subject: Re: [PATCH] xen/pci: Bubble up error and fix description.
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        boris.ostrovsky@oracle.com, bhelgaas@google.com, x86@kernel.org,
-        linux-pci@vger.kernel.org
-References: <1481034501-716-1-git-send-email-konrad.wilk@oracle.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-From: Juergen Gross <jgross@suse.com>
-Message-ID: <fe789d9e-8493-8931-02d3-8dd22092946b@suse.com>
-Date: Tue, 6 Dec 2016 15:34:37 +0100
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35722 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934271AbcLMTlc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2016 14:41:32 -0500
+Date: Tue, 13 Dec 2016 13:41:15 -0600
+From: Rob Herring <robh@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
+Message-ID: <20161213194115.tqacbotxgsvphoje@rob-hp-laptop>
+References: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1481034501-716-1-git-send-email-konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/16 15:28, Konrad Rzeszutek Wilk wrote:
-> The function is never called under PV guests, and only shows up
-> when MSI (or MSI-X) cannot be allocated. Convert the message
-> to include the error value.
+On Mon, Dec 12, 2016 at 07:51:27PM +0800, Shawn Lin wrote:
+> Rockchip's RC outputs 100MHz reference clock but there are
+> two methods for PHY to generate it.
 > 
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-
-Reviewed-by: Juergen Gross <jgross@suse.com>
-
+> (1)One of them is to use system PLL to generate 100MHz clock and
+> the PHY will relock it and filter signal noise then outputs the
+> reference clock.
+> 
+> (2)Another way is to share Soc's 24MHZ crystal oscillator with
+> PHY and force PHY's DLL to generate 100MHz internally.
+> 
+> When using case(2), the exit from L0s doesn't work fine occasionally
+> due to the broken design of RC receiver's logical circuit. So even if
+> we use extended-synch, it still fails for PHY to relock the bits from
+> FTS sometimes. This will hang the system.
+> 
+> Maybe we could argue that why not use case(1) to avoid it? The reason
+> is that as we could see the reference clock is derived from system PLL
+> and the path from it to PHY isn't so clean which means there are some
+> noise introduced by power-domain and other buses can't be filterd out
+> by PHY and we could see noise from the frequency spectrum by
+> oscilloscope. This makes the TX compatibility test a little difficult
+> to pass the spec. So case(1) and case(2) are both used indeed now. If
+> using case(2), we should disable RC's L0s support, and that is why we
+> need this property to indicate this quirk.
+> 
+> Also after checking quirk.c, I noticed there is already a quirk for
+> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+> shouldn't do that as mentioned above that case(1) could still works fine
+> with L0s.
+> 
+> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Cc: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
 > ---
->  arch/x86/pci/xen.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index bedfab9..e1fb269 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -264,8 +264,8 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	return 0;
->  
->  error:
-> -	dev_err(&dev->dev,
-> -		"Xen PCI frontend has not registered MSI/MSI-X support!\n");
-> +	dev_err(&dev->dev, "Failed to create MSI%s! ret=%d!\n",
-> +		type == PCI_CAP_ID_MSI ? "" : "-X", irq);
->  	return irq;
->  }
->  
+> Changes in v2:
+> - drop the quirk prefix
 > 
+>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+>  2 files changed, 11 insertions(+)
 
+Acked-by: Rob Herring <robh@kernel.org>
