@@ -1,106 +1,78 @@
-Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com>
-CC: Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <nsekhar@ti.com>,
-        Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5864A335.9000203@ti.com>
-Date: Thu, 29 Dec 2016 11:16:29 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52962 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753220AbcLNC7L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Dec 2016 21:59:11 -0500
+Date: Tue, 13 Dec 2016 20:50:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCHv4 next 1/3] pci: Add is_removed state
+Message-ID: <20161214025007.GA13597@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <1477695497-6207-2-git-send-email-keith.busch@intel.com>
+ <20161213205614.GA30106@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213230731.GC12113@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161213230731.GC12113@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+[+cc Alan, Greg]
 
-On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
-> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>
->>>>>> There might be hiccups because of this renaming but feel this is
->>>>>> necessary for long-term maintenance.
->>>>>
->>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>
->>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>> also. Wouldn't be better to name it rc_controller?
->>>
->>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>> neutral name that can cover both RC and Endpoint.
-
-right.
->>>
->>> I'm not a huge fan of "controller" because it feels a little bit long
->>> and while I suppose it technically does include the concept of the PCI
->>> interface of an endpoint, it still suggests more of the host side to
->>> me.
->>>
->>> Doesn't USB have a similar situation?  I see there's a
->>> drivers/usb/host/ (probably where we copied from in the first place).
->>> Is a USB gadget the USB analog of what you're doing?  How do they
->>> share code between the master/slave sides?
->>>
->>
->> The usb/host contains the implemnentations by the spec of the several
->> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
-
-right, each IP have a separate directory in USB. I thought of doing something
-similar for PCI but decided against it since that would involve identifying all
-the PCI IPs used and eventually result in more directories.
->> For device purposes it uses the core/ and then some of the device functions
->> are extended from the gadget/ package in which you can use mass_storage and
->> other types of functions.
-
-That would be similar for PCI endpoint. All endpoint specific core
-functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>
->> In our case in PCI we have the core functions inside /drivers/pci and the host
->> mangled inside host. I suggest:
->>
->> drivers/pci
->>  drivers/pci/core/
->>  drivers/pci/core/hotplug
->>  drivers/pci/core/pcie
->>  drivers/pci/core/<all other files inside pci/ today>
->>  drivers/pci/host
->>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+On Tue, Dec 13, 2016 at 06:07:31PM -0500, Keith Busch wrote:
+> On Tue, Dec 13, 2016 at 02:56:14PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Oct 28, 2016 at 06:58:15PM -0400, Keith Busch wrote:
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index 0e49f70..2115d19 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -341,6 +341,7 @@ struct pci_dev {
+> > >  	unsigned int	multifunction:1;/* Part of multi-function device */
+> > >  	/* keep track of device state */
+> > >  	unsigned int	is_added:1;
+> > > +	unsigned int	is_removed:1;	/* device was surprise removed */
+> > >  	unsigned int	is_busmaster:1; /* device is busmaster */
+> > >  	unsigned int	no_msi:1;	/* device may not use msi */
+> > >  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+> > > @@ -417,6 +418,12 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+> > >  	return (pdev->error_state != pci_channel_io_normal);
+> > >  }
+> > >  
+> > > +static inline int pci_set_removed(struct pci_dev *pdev, void *unused)
+> > > +{
+> > > +	pdev->is_removed = 1;
+> > 
+> > This makes me slightly worried because this is a bitfield and there's
+> > no locking.  A concurrent write to some nearby field can corrupt
+> > things.  It doesn't look *likely*, but it's a lot of work to be
+> > convinced that this is completely safe, especially since the writer is
+> > running on behalf of the bridge, and the target is a child of the
+> > bridge.
+> > 
+> > The USB HCD_FLAG_DEAD and HCD_FLAG_HW_ACCESSIBLE flags are somewhat
+> > similar.  Maybe we can leverage some of that design?
 > 
-> Correction:
-> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
-> drivers
-> 
->>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
-> 
-> Correction:
-> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
-> 
->>  drivers/pci/endpoint -> common code
->>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
+> A bit field with atomic accessors sounds good to me. Do you want to
+> see all the struct pci_dev bit flags converted to that model? If so,
+> I can send you a prep patch that does that first.
 
-There are some parts of the dwc driver that is common to both root complex and
-endpoint. Where should that be? I'm sure no one wants to duplicate the common
-piece in both root complex and endpoint.
+This is still blue-sky, "what if?" thinking on my part.  I was
+starting to wonder if we could make something generic that could be
+used for your is_removed work and also for the USB stuff.
 
-[1] -> https://lkml.org/lkml/2016/9/14/27
+The USB HCD_FLAG_DEAD is set by usb_hc_died(), which is frequently
+used by drivers after an MMIO read returns ~0.  HCD_FLAG_HW_ACCESSIBLE
+seems to encode part of the idea of "this device is powered up enough
+to respond", which is sort of similar to what PCI does with
+dev->current_state.
 
-Thanks
-Kishon
+If there were generic PCI interfaces like pci_dev_died() and a
+pci_dev_dead() predicate, I wonder if USB could use them instead of
+rolling their own?
+
+Bjorn
