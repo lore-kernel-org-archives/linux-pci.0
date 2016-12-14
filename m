@@ -1,93 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:48077 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753728AbcL0W5p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 17:57:45 -0500
-Subject: Re: [RFC PATCH 3/6] ARM64: dts: exynos5433: add the pcie_phy node for
- PCIe
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        kgene@kernel.org, javier@osg.samsung.com, kishon@ti.com,
-        will.deacon@arm.com, catalin.marinas@arm.com, cpgs@samsung.com
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <43872be0-191e-2b6d-adcc-3ce0b88b44c7@samsung.com>
-Date: Wed, 28 Dec 2016 07:57:30 +0900
-MIME-version: 1.0
-In-reply-to: <20161227161134.ds67t5byucphwkjg@kozik-lap>
-Content-type: text/plain; charset=utf-8
-References: <20161226052029.10552-1-jh80.chung@samsung.com>
- <CGME20161226052031epcas5p451b1352d6c8c5205a69246c2994b9506@epcas5p4.samsung.com>
- <20161226052029.10552-4-jh80.chung@samsung.com>
- <20161227161134.ds67t5byucphwkjg@kozik-lap>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40762 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933125AbcLNXYf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2016 18:24:35 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBENNjZS069938
+        for <linux-pci@vger.kernel.org>; Wed, 14 Dec 2016 18:24:34 -0500
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27bdm75qvd-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 14 Dec 2016 18:24:34 -0500
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Thu, 15 Dec 2016 09:24:31 +1000
+Date: Thu, 15 Dec 2016 10:24:25 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: tglx@linutronix.de, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, hch@lst.de,
+        linuxppc-dev@lists.ozlabs.org, stable@vger.kernel.org.#.v4.9+,
+        gabriel@krisman.be
+Subject: Re: [PATCH] genirq/affinity: fix node generation from cpumask
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1481738472-2671-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481738472-2671-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Message-Id: <20161214232425.GA13182@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/28/2016 01:11 AM, Krzysztof Kozlowski wrote:
-> On Mon, Dec 26, 2016 at 02:20:26PM +0900, Jaehoon Chung wrote:
->> To use the generic PHY framework, adds the pcie_phy node.
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  arch/arm64/boot/dts/exynos/exynos5433.dtsi | 14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/exynos/exynos5433.dtsi b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
->> index 64226d5..2a15f18 100644
->> --- a/arch/arm64/boot/dts/exynos/exynos5433.dtsi
->> +++ b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
->> @@ -805,6 +805,11 @@
->>  			reg = <0x145f0000 0x1038>;
->>  		};
->>  
->> +		syscon_fsys: syscon@156f0000 {
->> +			compatible = "syscon";
->> +			reg = <0x156f0000 0x1044>;
->> +		};
->> +
->>  		gsc_0: video-scaler@13C00000 {
->>  			compatible = "samsung,exynos5433-gsc";
->>  			reg = <0x13c00000 0x1000>;
->> @@ -1443,6 +1448,15 @@
->>  				status = "disabled";
->>  			};
->>  		};
->> +
->> +		pcie_phy: pcie-phy@15680000 {
->> +			#phy-cells = <0>;
->> +			compatible = "samsung,exynos5433-pcie-phy";
-> 
-> Mostly we use the convention of compatible being first property.
-> 
->> +			reg = <0x15680000 0x1000>;
->> +			samsung,pmureg-phandle = <&pmu_system_controller>;
->> +			samsung,fsys-sysreg = <&syscon_fsys>;
->> +			status = "okay";
-> 
-> Why do you need to put status=okay here?
+On Wed, Dec 14, 2016 at 04:01:12PM -0200, Guilherme G. Piccoli wrote:
+>Commit 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading
+>infrastructure") introduced a better IRQ spreading mechanism, taking
+>account of the available NUMA nodes in the machine.
+>
+>Problem is that the algorithm of retrieving the nodemask iterates
+>"linearly" based on the number of online nodes - some architectures
+>present non-linear node distribution among the nodemask, like PowerPC.
+>If this is the case, the algorithm lead to a wrong node count number
+>and therefore to a bad/incomplete IRQ affinity distribution.
+>
+>For example, this problem were found in a machine with 128 CPUs and two
+>nodes, namely nodes 0 and 8 (instead of 0 and 1, if it was linearly
+>distributed). This led to a wrong affinity distribution which then led to
+>a bad mq allocation for nvme driver.
+>
+>Finally, we take the opportunity to fix a comment regarding the affinity
+>distribution when we have _more_ nodes than vectors.
+>
+>Fixes: 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading infrastructure")
+>Reported-by: Gabriel Krisman Bertazi <gabriel@krisman.be>
+>Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+>Cc: stable@vger.kernel.org # v4.9+
+>Cc: Christoph Hellwig <hch@lst.de>
+>Cc: linuxppc-dev@lists.ozlabs.org
+>Cc: linux-pci@vger.kernel.org
+>---
 
-Not need. Will remove.
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Best Regards,
-Jaehoon Chung
+There is one picky comment as below, but you don't have to fix it :)
 
-> 
-> Best regards,
-> Krzysztof
-> 
->> +		};
->>  	};
->>  
->>  	timer: timer {
->> -- 
->> 2.10.2
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
+> kernel/irq/affinity.c | 8 ++++----
+> 1 file changed, 4 insertions(+), 4 deletions(-)
+>
+>diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+>index 9be9bda..464eaf0 100644
+>--- a/kernel/irq/affinity.c
+>+++ b/kernel/irq/affinity.c
+>@@ -37,15 +37,15 @@ static void irq_spread_init_one(struct cpumask *irqmsk, struct cpumask *nmsk,
+>
+> static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
+> {
+>-	int n, nodes;
+>+	int n, nodes = 0;
+>
+> 	/* Calculate the number of nodes in the supplied affinity mask */
+>-	for (n = 0, nodes = 0; n < num_online_nodes(); n++) {
+>+	for_each_online_node(n)
+> 		if (cpumask_intersects(mask, cpumask_of_node(n))) {
+> 			node_set(n, *nodemsk);
+> 			nodes++;
+> 		}
+>-	}
+>+
+
+It'd better to keep the brackets so that we needn't add them when adding
+more code into the block next time.
+
+> 	return nodes;
+> }
+>
+>@@ -82,7 +82,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+> 	nodes = get_nodes_in_cpumask(cpu_online_mask, &nodemsk);
+>
+> 	/*
+>-	 * If the number of nodes in the mask is less than or equal the
+>+	 * If the number of nodes in the mask is greater than or equal the
+> 	 * number of vectors we just spread the vectors across the nodes.
+> 	 */
+> 	if (affv <= nodes) {
+
+Thanks,
+Gavin
 
