@@ -1,84 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0071.outbound.protection.outlook.com ([104.47.2.71]:13440
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750778AbcLDLLN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 4 Dec 2016 06:11:13 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <20161123215510.GA16311@obsidianresearch.com>
- <91d28749-bc64-622f-56a1-26c00e6b462a@deltatee.com>
- <20161124164249.GD20818@obsidianresearch.com>
- <3f2d2db3-fb75-2422-2a18-a8497fd5d70e@amd.com>
- <20161125193252.GC16504@obsidianresearch.com>
- <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com>
- <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com>
- <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
- <20161130162353.GA24639@obsidianresearch.com>
- <2560aab2-426c-6e58-cb4f-77ec76e0c941@amd.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <John.Bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <Alexander.Deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "logang@deltatee.com" <logang@deltatee.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "Max Gurtovoy" <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Paul.Blinzer@amd.com" <Paul.Blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-From: Haggai Eran <haggaie@mellanox.com>
-Message-ID: <f0d4652f-291e-a700-c2ef-8134d8d21e51@mellanox.com>
-Date: Sun, 4 Dec 2016 09:33:09 +0200
+Received: from mail.kernel.org ([198.145.29.136]:52710 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753256AbcLNCzB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Dec 2016 21:55:01 -0500
+Date: Tue, 13 Dec 2016 20:54:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCHv4 next 1/3] pci: Add is_removed state
+Message-ID: <20161214025456.GA16425@bhelgaas-glaptop.roam.corp.google.com>
+References: <1477695497-6207-1-git-send-email-keith.busch@intel.com>
+ <1477695497-6207-2-git-send-email-keith.busch@intel.com>
+ <20161213205614.GA30106@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213230731.GC12113@localhost.localdomain>
+ <20161214025007.GA13597@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2560aab2-426c-6e58-cb4f-77ec76e0c941@amd.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161214025007.GA13597@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/30/2016 7:28 PM, Serguei Sagalovitch wrote:
-> On 2016-11-30 11:23 AM, Jason Gunthorpe wrote:
->>> Yes, that sounds fine. Can we simply kill the process from the GPU driver?
->>> Or do we need to extend the OOM killer to manage GPU pages?
->> I don't know..
-> We could use send_sig_info to send signal from  kernel  to user space. So theoretically GPU driver
-> could issue KILL signal to some process.
+On Tue, Dec 13, 2016 at 08:50:07PM -0600, Bjorn Helgaas wrote:
+> [+cc Alan, Greg]
 > 
->> On Wed, Nov 30, 2016 at 12:45:58PM +0200, Haggai Eran wrote:
->>> I think we can achieve the kernel's needs with ZONE_DEVICE and DMA-API support
->>> for peer to peer. I'm not sure we need vmap. We need a way to have a scatterlist
->>> of MMIO pfns, and ZONE_DEVICE allows that.
-> I do not think that using DMA-API as it is is the best solution (at least in the current form):
+> On Tue, Dec 13, 2016 at 06:07:31PM -0500, Keith Busch wrote:
+> > On Tue, Dec 13, 2016 at 02:56:14PM -0600, Bjorn Helgaas wrote:
+> > > On Fri, Oct 28, 2016 at 06:58:15PM -0400, Keith Busch wrote:
+> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > index 0e49f70..2115d19 100644
+> > > > --- a/include/linux/pci.h
+> > > > +++ b/include/linux/pci.h
+> > > > @@ -341,6 +341,7 @@ struct pci_dev {
+> > > >  	unsigned int	multifunction:1;/* Part of multi-function device */
+> > > >  	/* keep track of device state */
+> > > >  	unsigned int	is_added:1;
+> > > > +	unsigned int	is_removed:1;	/* device was surprise removed */
+> > > >  	unsigned int	is_busmaster:1; /* device is busmaster */
+> > > >  	unsigned int	no_msi:1;	/* device may not use msi */
+> > > >  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+> > > > @@ -417,6 +418,12 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+> > > >  	return (pdev->error_state != pci_channel_io_normal);
+> > > >  }
+> > > >  
+> > > > +static inline int pci_set_removed(struct pci_dev *pdev, void *unused)
+> > > > +{
+> > > > +	pdev->is_removed = 1;
+> > > 
+> > > This makes me slightly worried because this is a bitfield and there's
+> > > no locking.  A concurrent write to some nearby field can corrupt
+> > > things.  It doesn't look *likely*, but it's a lot of work to be
+> > > convinced that this is completely safe, especially since the writer is
+> > > running on behalf of the bridge, and the target is a child of the
+> > > bridge.
+> > > 
+> > > The USB HCD_FLAG_DEAD and HCD_FLAG_HW_ACCESSIBLE flags are somewhat
+> > > similar.  Maybe we can leverage some of that design?
+> > 
+> > A bit field with atomic accessors sounds good to me. Do you want to
+> > see all the struct pci_dev bit flags converted to that model? If so,
+> > I can send you a prep patch that does that first.
 > 
-> -  It deals with handles/fd for the whole allocation but client could/will use sub-allocation as
-> well as theoretically possible to "merge" several allocations in one from GPU perspective.
-> -  It require knowledge to export but because "sharing" is controlled from user space it
-> means that we must "export" all allocation by default
-> - It deals with 'fd'/handles but user application may work with addresses/pointers.
-
-Aren't you confusing DMABUF and DMA-API? DMA-API is how you program the IOMMU (dma_map_page/dma_map_sg/etc.).
-The comment above is just about the need to extend this API to allow mapping peer device pages to bus addresses.
-
-In the past I sent an RFC for using DMABUF for peer to peer. I think it had some
-advantages for legacy devices. I agree that working with addresses and pointers through
-something like HMM/ODP is much more flexible and easier to program from user-space.
-For legacy, DMABUF would have allowed you a way to pin the pages so the GPU knows not to
-move them. However, that can probably also be achieved simply via the reference count
-on ZONE_DEVICE pages. The other nice thing about DMABUF is that it migrate the buffer
-itself during attachment according to the requirements of the device that is attaching,
-so you can automatically decide in the exporter whether to use p2p or a staging buffer.
-
+> This is still blue-sky, "what if?" thinking on my part.  I was
+> starting to wonder if we could make something generic that could be
+> used for your is_removed work and also for the USB stuff.
 > 
-> Also current  DMA-API force each time to do all DMA table programming unrelated if
-> location was changed or not. With  vma / mmu  we are  able to install notifier to intercept
-> changes in location and update  translation tables only as needed (we do not need to keep
-> get_user_pages()  lock).
-I agree.
+> The USB HCD_FLAG_DEAD is set by usb_hc_died(), which is frequently
+> used by drivers after an MMIO read returns ~0.  HCD_FLAG_HW_ACCESSIBLE
+> seems to encode part of the idea of "this device is powered up enough
+> to respond", which is sort of similar to what PCI does with
+> dev->current_state.
+> 
+> If there were generic PCI interfaces like pci_dev_died() and a
+> pci_dev_dead() predicate, I wonder if USB could use them instead of
+> rolling their own?
+
+But I guess all the world is not PCI -- there are non-PCI USB host
+controllers, so it's not quite that simple.
