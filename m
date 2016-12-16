@@ -1,66 +1,46 @@
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Fri, 30 Dec 2016 00:20:34 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20161229175028.GA18510@wunner.de>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:38939 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759764AbcLPLuN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2016 06:50:13 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH pci/next] PCI: rcar: return ENODEV code when PCIe card does not insert
+Date: Fri, 16 Dec 2016 12:50:04 +0100
+Message-Id: <1481889004-26124-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
+From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 
-did not help.
+R-Car PCIe does not support hotplug so it is appropriate to
+treat the absence of a PCIe card as an ENODEV error.
 
-Also I noticed on each boot directly after initramfs I get
-mmc0: Unknown contrller version. You may experience problems.
+Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+[simon: updated changelog]
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pci/host/pcie-rcar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On all versions of the kernel.
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index aca85be101f8..0d9b96c3c49d 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1165,7 +1165,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	err = hw_init_fn(pcie);
+ 	if (err) {
+ 		dev_info(dev, "PCIe link down\n");
+-		err = 0;
++		err = -ENODEV;
+ 		goto err_pm_put;
+ 	}
+ 
+-- 
+2.7.0.rc3.207.g0ac5344
 
-
------ Original Message -----
-From: "Lukas Wunner" <lukas@wunner.de>
-To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Thursday, December 29, 2016 6:50:28 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-
-On Thu, Dec 29, 2016 at 05:20:22PM +0100, Kilian Singer wrote:
-> One thing that was always weird in my debian system is, 
-> that even with working lock screen on the 4.7.0-1 version.
-> The lock screen is not a black screen but instead seems to
-> be a static screenshot of the desktop.
-
-This sounds like an issue with the i915 driver.  When the static
-screenshot is shown, i915 may have turned on panel self-refresh
-(PSR).  There were numerous PSR issues.
-
-
-> I know it is a repetition of what I have written above but this behaviour
-> (comment 19) should be contrasted to the behaviour on the 4.8 and 4.9
-> kernel which make my system unresponsive:
-> Here the desktop is non static. I can see xclock ticking. The mouse
-> moves. But any keyboard interaction or mouse click is not possible anymore.
-
-It's very odd that this should be related to a root port suspending.
-If mouse movements are still visible, the I/O ports of the keyboard
-and mouse must still be accessible.
-
-Perhaps you could apply the attached small debug patch, this will
-log a message whenever a device runtime suspends/resumes, so it
-should log when the root port that's causing trouble goes to D3.
-Then we would at least know which one it is.
-
-My money is on the root port above the Nvidia card, you can also
-try to keep that one awake with
-echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
-
-Thanks,
-
-Lukas
