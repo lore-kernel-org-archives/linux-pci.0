@@ -1,71 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:45687 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752581AbcLESj0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 13:39:26 -0500
-To: Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <20161128165751.GB28381@obsidianresearch.com>
- <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com>
- <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
- <20161130162353.GA24639@obsidianresearch.com>
- <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com>
- <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
-Date: Mon, 5 Dec 2016 11:39:13 -0700
+Return-Path: <SRS0=GZLN=X7=redhat.com=prarit@kernel.org>
+Return-Path: <SRS0=GZLN=X7=redhat.com=prarit@kernel.org>
+Message-ID: <58541AC6.90900@redhat.com>
+Date: Fri, 16 Dec 2016 11:48:06 -0500
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci@vger.kernel.org, alex.williamson@redhat.com, darcari@redhat.com,
+        mstowe@redhat.com, bhelgaas@google.com, lukas@wunner.de,
+        keith.busch@intel.com, mika.westerberg@linux.intel.com
+Subject: Re: [PATCH] pci: Only disable MSI/X and enable INTx if shutdown function
+ has been called
+References: <1478627867-28795-1-git-send-email-prarit@redhat.com> <20161109170529.GJ14322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20161109170529.GJ14322@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/16 11:08 AM, Dan Williams wrote:
-> I've already recommended that iopmem not be a block device and instead
-> be a device-dax instance. I also don't think it should claim the PCI
-> ID, rather the driver that wants to map one of its bars this way can
-> register the memory region with the device-dax core.
->
-> I'm not sure there are enough device drivers that want to do this to
-> have it be a generic /sys/.../resource_dmableX capability. It still
-> seems to be an exotic one-off type of configuration.
+On 11/09/2016 12:05 PM, Bjorn Helgaas wrote:
+> Hi Prarit,
+> 
+> Is there a bugzilla or other archive of configuration/dmesg/other info
+> related to this problem?  I'd really like to connect this fix to a
+> problem report, and it would help me review the patch as well.
 
-Yes, this is essentially my thinking. Except I think the userspace 
-interface should really depend on the device itself. Device dax is a 
-good  choice for many and I agree the block device approach wouldn't be 
-ideal.
+Bjorn, have you had a chance to look at this?
 
-Specifically for NVME CMB: I think it would make a lot of sense to just 
-hand out these mappings with an mmap call on /dev/nvmeX. I expect CMB 
-buffers would be volatile and thus you wouldn't need to keep track of 
-where in the BAR the region came from. Thus, the mmap call would just be 
-an allocator from BAR memory. If device-dax were used, userspace would 
-need to lookup which device-dax instance corresponds to which nvme drive.
+I had opened
 
-Logan
+https://bugzilla.kernel.org/show_bug.cgi?id=187351
 
+P.
 
+> 
+> On Tue, Nov 08, 2016 at 12:57:47PM -0500, Prarit Bhargava wrote:
+>> Bjorn,
+>>
+>> We have seen this at Red Hat on various drivers: nouveau, ahci, mei_me, and
+>> pcieport (so far).  Google search for "unhandled irq 16" yields many results
+>> reporting similar behavior during shutdown indicating that this problem is
+>> widespread.  I can cause this to happen on a "stable" system by adding a 3
+>> second delay in pci_device_shutdown() which causes the number of spurious
+>> interrupts to exceed the 100000 limit and display the warning below for the
+>> primarily the nouveau driver, and occasionally for the other mentioned drivers.
+>>
+>> A patch for this was proposed and rejected here for being too risky:
+>>
+>> https://patchwork.kernel.org/patch/5990701/
+>>
+>> I also originally posted a patch to resolve this here:
+>>
+>> http://marc.info/?l=linux-pci&m=147705209308588&w=2
+>>
+>> and several other patch suggestions were made.  The problem with all of these
+>> solutions is that there is some risk associated with them (kdump, kvm, etc.)
+>> and they are papering over the real issue that the PCI shutdown should not
+>> blindly switch to INTx for all devices.
+>>
+>> I am reproposing the original suggested patch.  There is some risk associated
+>> with this but I don't think it is any more or any less than the other patches,
+>> and it seems like the other patches are only applying band-aids to the problem.
+>>
+>> [Aside: Lukas Wunner asked why does this always happen on IRQ 16 (even when the
+>> legacy device says IRQ 32 in lspci)?
+>>
+>> The PCI irq pins A, B, C, and D are routed according to the ACPI _PRT table for
+>> the device.  _In general_, I have noted a consistent pattern for PCI irq pins
+>> such that
+>>
+>> 	irq pin A is IRQ 0x10 (16)
+>> 	irq pin B is IRQ 0x11 (17)
+>> 	irq pin C is IRQ 0x12 (18)
+>> 	irq pin D is IRQ 0x13 (19)
+>>
+>> Since the device's IRQ is hooked up to pin A we're seeing the unhandled
+>> interrupt on IRQ 16.]
+>>
+>> I have tested this on various systems with KVM and kdump (and kdump on
+>> KVM) and didn't see any issues.
+>>
+>> NOTE: In my testing this resolves the problem with PCI based serial ports
+>> cutting off their output during shutdown.  Again, this can be tracked to the
+>> PCI shutdown path switching between MSI & INTx independently of the driver.
+>>
+>> ----8<----
+>>
+>> The following unhandled IRQ warning is seen during shutdown:
+>>
+>> irq 16: nobody cared (try booting with the "irqpoll" option)
+>> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
+>> Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/01/2016
+>>  0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
+>>  ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
+>>  0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
+>> Call Trace:
+>>  <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
+>>  [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
+>>  [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
+>>  [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
+>>  [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
+>>  [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
+>>  [<ffffffff8102edfb>] handle_irq+0xab/0x130
+>>  [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
+>>  [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
+>>  [<ffffffff81704502>] common_interrupt+0x82/0x82
+>>  <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
+>>  [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
+>>  [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
+>>  [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
+>>  [<ffffffff816f6da7>] rest_init+0x77/0x80
+>>  [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
+>>  [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
+>>  [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
+>>  [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
+>>  [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
+>>
+>> pci_device_shutdown() is called on each PCI device, and does
+>>
+>>         if (drv && drv->shutdown)
+>>                 drv->shutdown(pci_dev);
+>>         pci_msi_shutdown(pci_dev);
+>>         pci_msix_shutdown(pci_dev);
+>>
+>> The pci_msi_shutdown() and pci_msix_shutdown() functions both call
+>> pci_intx_for_msi() which enables the INTx interrupt asynchronously of the
+>> driver.
+>>
+>> The problem is that the driver may not have a shutdown function and the
+>> device remains active.  The driver continues to operate the PCI device and the
+>> device interrupts to generate INTx.  The driver, however, has not registered a
+>> handler for INTx and the interrupt line remains set which leads to an unhandled
+>> IRQ warning.
+>>
+>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+>> Cc: alex.williamson@redhat.com
+>> Cc: darcari@redhat.com
+>> Cc: mstowe@redhat.com
+>> Cc: bhelgaas@google.com
+>> Cc: lukas@wunner.de
+>> Cc: keith.busch@intel.com
+>> Cc: mika.westerberg@linux.intel.com
+>> ---
+>>  drivers/pci/pci-driver.c |    7 ++++---
+>>  1 file changed, 4 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 1ccce1cd6aca..87c35db5a564 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -461,10 +461,11 @@ static void pci_device_shutdown(struct device *dev)
+>>  
+>>  	pm_runtime_resume(dev);
+>>  
+>> -	if (drv && drv->shutdown)
+>> +	if (drv && drv->shutdown) {
+>>  		drv->shutdown(pci_dev);
+>> -	pci_msi_shutdown(pci_dev);
+>> -	pci_msix_shutdown(pci_dev);
+>> +		pci_msi_shutdown(pci_dev);
+>> +		pci_msix_shutdown(pci_dev);
+>> +	}
+>>  
+>>  	/*
+>>  	 * If this is a kexec reboot, turn off Bus Master bit on the
+>> -- 
+>> 1.7.9.3
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
