@@ -1,54 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34068 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752156AbcLGUjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 15:39:09 -0500
-Date: Wed, 7 Dec 2016 14:32:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geliang Tang <geliangtang@gmail.com>
-Cc: Ley Foon Tan <lftan@altera.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: altera: use builtin_platform_driver
-Message-ID: <20161207203204.GD22129@bhelgaas-glaptop.roam.corp.google.com>
-References: <b12dde3b7465f3bba35ab7a9226b464f30f27412.1479912709.git.geliangtang@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b12dde3b7465f3bba35ab7a9226b464f30f27412.1479912709.git.geliangtang@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
+Message-Id: <a3d5ab2363b2155feeb27cd97d503e375570f2d6.1481926599.git.lukas@wunner.de>
+In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 17 Dec 2016 15:39:39 +0100
+Subject: [PATCH v3 3/7] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 10:52:22PM +0800, Geliang Tang wrote:
-> Use builtin_platform_driver() helper to simplify the code.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+Hotplug ports generally block their parents from suspending to D3hot as
+otherwise their interrupts couldn't be delivered.
 
-Thanks, Geliang.  I already applied an identical patch from Wei Yongjun
-that will appear in v4.10.
+An exception are Thunderbolt host controllers:  They have a separate
+GPIO pin to side-band signal plug events even if the controller is
+powered down or its parent ports are suspended to D3.  They can be told
+apart from Thunderbolt controllers in attached devices by checking if
+they're situated below a non-Thunderbolt device (typically a root port,
+or the downstream port of a PCIe switch in the case of the MacPro6,1).
 
-> ---
->  drivers/pci/host/pcie-altera.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index b0ac4df..eefcb38 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -641,8 +641,4 @@ static struct platform_driver altera_pcie_driver = {
->  	},
->  };
->  
-> -static int altera_pcie_init(void)
-> -{
-> -	return platform_driver_register(&altera_pcie_driver);
-> -}
-> -device_initcall(altera_pcie_init);
-> +builtin_platform_driver(altera_pcie_driver);
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
+of a host controller must not block runtime PM on the upstream bridge as
+power to the chip is only cut once the upstream bridge has suspended.
+Amend the condition in pci_dev_check_d3cold() accordingly.
+
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Amir Levy <amir.jer.levy@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8ed098d..0b03fe7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 
+ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ {
++	struct pci_dev *parent, *grandparent;
+ 	bool *d3cold_ok = data;
+ 
+ 	if (/* The device needs to be allowed to go D3cold ... */
+@@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ 	    !pci_power_manageable(dev) ||
+ 
+ 	    /* Hotplug interrupts cannot be delivered if the link is down. */
+-	    dev->is_hotplug_bridge)
++	    (dev->is_hotplug_bridge &&
++
++		/*
++		 * Exception:  Thunderbolt host controllers have a pin to
++		 * side-band signal plug events.  Their hotplug ports are
++		 * recognizable by having a non-Thunderbolt device as
++		 * grandparent.
++		 */
++		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
++				 (grandparent = pci_upstream_bridge(parent)) &&
++						!grandparent->is_thunderbolt)))
+ 
+ 		*d3cold_ok = false;
+ 
+-- 
+2.10.2
