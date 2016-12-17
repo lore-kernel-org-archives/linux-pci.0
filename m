@@ -1,141 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20161203103927.GA14953@red-moon>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com>
- <20161121100148.24769-8-lorenzo.pieralisi@arm.com> <20161202153816.GA18290@red-moon>
- <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com> <20161203103927.GA14953@red-moon>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 5 Dec 2016 02:21:20 +0100
-Message-ID: <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
-Subject: Re: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Mark Salter <msalter@redhat.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:58425 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758035AbcLQOlP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2016 09:41:15 -0500
+Message-Id: <29673654daf09bb90f975aec3f5ad57b6fc95a83.1481926599.git.lukas@wunner.de>
+In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 17 Dec 2016 15:39:39 +0100
+Subject: [PATCH v3 4/7] Revert "PM / Runtime: Remove the exported function
+ pm_children_suspended()"
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 3, 2016 at 11:39 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Sat, Dec 03, 2016 at 03:11:09AM +0100, Rafael J. Wysocki wrote:
->> On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > Rafael, Mark, Suravee,
->> >
->> > On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
->> >> On DT based systems, the of_dma_configure() API implements DMA
->> >> configuration for a given device. On ACPI systems an API equivalent to
->> >> of_dma_configure() is missing which implies that it is currently not
->> >> possible to set-up DMA operations for devices through the ACPI generic
->> >> kernel layer.
->> >>
->> >> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
->> >> calls that for now are just wrappers around arch_setup_dma_ops() and
->> >> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
->> >> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
->> >>
->> >> Since acpi_dma_configure() is used to configure DMA operations, the
->> >> function initializes the dma/coherent_dma masks to sane default values
->> >> if the current masks are uninitialized (also to keep the default values
->> >> consistent with DT systems) to make sure the device has a complete
->> >> default DMA set-up.
->> >
->> > I spotted a niggle that unfortunately was hard to spot (and should not
->> > be a problem per se but better safe than sorry) and I am not comfortable
->> > with it.
->> >
->> > Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
->> > device coherency") in acpi_bind_one() we check if the acpi_device
->> > associated with a device just added supports DMA, first it was
->> > done with acpi_check_dma() and then commit 1831eff876bd ("device
->> > property: ACPI: Make use of the new DMA Attribute APIs") changed
->> > it to acpi_get_dma_attr().
->> >
->> > The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
->> > on _any_ acpi device we pass to acpi_bind_one() on x86, which was
->> > fine because we used it to call arch_setup_dma_ops(), which is a nop
->> > on x86. On ARM64 a _CCA method is required to define if a device
->> > supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
->> >
->> > Now, acpi_bind_one() is used to bind an acpi_device to its physical
->> > node also for pseudo-devices like cpus and memory nodes. For those
->> > objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
->> >
->> > So far so good, because on x86 arch_setup_dma_ops() is empty code.
->> >
->> > With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
->> > to call acpi_dma_configure() which is basically a nop on x86 except
->> > that it sets up the dma_mask/coherent_dma_mask to a sane default value
->> > (after all we are setting up DMA for the device so it makes sense to
->> > initialize the masks there if they were unset since we are configuring
->> > DMA for the device in question) for the given device.
->> >
->> > Problem is, as per the explanation above, we are also setting the
->> > default dma masks for pseudo-devices (eg CPUs) that were previously
->> > untouched, it should not be a problem per-se but I am not comfortable
->> > with that, honestly it does not make much sense.
->> >
->> > An easy "fix" would be to move the default dma masks initialization out
->> > of acpi_dma_configure() (as it was in previous patch versions of this
->> > series - I moved it to acpi_dma_configure() just a consolidation point
->> > for initializing the masks instead of scattering them in every
->> > acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
->> > we think that's the right thing to do (or I can send it to Rafael later
->> > when the code is in the merged depending on the timing) just let me
->> > know please.
->>
->> Why can't arch_setup_dma_ops() set those masks too?
->
-> Because the dma masks set-up is done by the caller (see
-> of_dma_configure()) according to firmware configuration or
-> platform data knowledge. I wanted to replicate the of_dma_configure()
-> interface on ACPI for obvious reasons (on ARM systems), I stopped
-> short of adding ACPI code to mirror of_dma_get_range() equivalent
-> (through the _DMA object) but I am really really nervous about changing
-> the code path on x86 because in theory all is fine, in practice even
-> just setting the masks to sane values can have unexpected consequences,
-> I just can't know (that's why I wasn't doing it in the first iterations
-> of this series).
->
-> Side note: DT with of_dma_configure() and ACPI with
-> acpi_create_platform_device() set the default dma mask for all
-> platform devices already _regardless_ of what they really are, though
-> arguably acpi_bind_one() touches ways more devices.
->
-> I really think that removing the default dma masks settings from
-> acpi_dma_configure() is the safer thing to do for the time being (or
-> moving acpi_dma_configure() to acpi_create_platform_device(), where the
-> DMA masks are set-up by default by core ACPI. Mark, Suravee, what was
-> the rationale behind calling arch_setup_dma_ops() in acpi_bind_one() ?)
+This reverts commit 62006c1702b3b1be0c0726949e0ee0ea2326be9c which
+removed pm_children_suspended() because it had only a single caller.
+We're about to add a second caller, so establish the status quo ante.
 
-Alternatively, you can add one more arch wrapper that will be a no-op
-on x86 and that will set up the default masks and call
-arch_setup_dma_ops() on ARM.  Then, you can invoke that from
-acpi_dma_configure().
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/base/power/runtime.c | 3 +--
+ include/linux/pm_runtime.h   | 7 +++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Or make the definition of acpi_dma_configure() itself depend on the
-architecture.
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index 872eac4..03293c3 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -243,8 +243,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
+ 		retval = -EACCES;
+ 	else if (atomic_read(&dev->power.usage_count) > 0)
+ 		retval = -EAGAIN;
+-	else if (!dev->power.ignore_children &&
+-			atomic_read(&dev->power.child_count))
++	else if (!pm_children_suspended(dev))
+ 		retval = -EBUSY;
+ 
+ 	/* Pending resume requests take precedence over suspends. */
+diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
+index ca4823e..7de2aa5c 100644
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -66,6 +66,12 @@ static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
+ 	dev->power.ignore_children = enable;
+ }
+ 
++static inline bool pm_children_suspended(struct device *dev)
++{
++	return dev->power.ignore_children
++		|| !atomic_read(&dev->power.child_count);
++}
++
+ static inline void pm_runtime_get_noresume(struct device *dev)
+ {
+ 	atomic_inc(&dev->power.usage_count);
+@@ -161,6 +167,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
+ static inline void pm_runtime_forbid(struct device *dev) {}
+ 
+ static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
++static inline bool pm_children_suspended(struct device *dev) { return false; }
+ static inline void pm_runtime_get_noresume(struct device *dev) {}
+ static inline void pm_runtime_put_noidle(struct device *dev) {}
+ static inline bool device_run_wake(struct device *dev) { return false; }
+-- 
+2.10.2
 
-Thanks,
-Rafael
