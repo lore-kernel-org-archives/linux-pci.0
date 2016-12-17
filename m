@@ -1,149 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:57956 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbcL1JqV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 04:46:21 -0500
-Subject: Re: [RFC PATCH 1/6] phy: exynos-pcie: Add support for Exynos PCIe phy
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: linux-pci@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-samsung-soc@vger.kernel.org"
-        <linux-samsung-soc@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        robh+dt <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kukjin Kim <kgene@kernel.org>, krzk@kernel.org,
-        javier@osg.samsung.com, kishon <kishon@ti.com>,
-        Will Deacon <will.deacon@arm.com>, catalin.marinas@arm.com,
-        CPGS <cpgs@samsung.com>
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <ebdb57b1-9a24-f83e-ac26-887f7a2263d3@samsung.com>
-Date: Wed, 28 Dec 2016 18:35:08 +0900
-MIME-version: 1.0
-In-reply-to: <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
-Content-type: text/plain; charset=utf-8
-References: <CGME20161226052030epcas5p4ea673fc4ee5c0b2664e80f53d4758553@epcas5p4.samsung.com>
- <20161226052029.10552-1-jh80.chung@samsung.com>
- <20161226052029.10552-2-jh80.chung@samsung.com>
- <CAFp+6iH0q9TNvPgv3_Nexm-vE6TBB_eQHXCwniO-Yn=fq+WWMg@mail.gmail.com>
- <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
- <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:50171 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758035AbcLQOli (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2016 09:41:38 -0500
+Message-Id: <aabc95e7905504b5b3bcd2e6852797117b42e3fb.1481926599.git.lukas@wunner.de>
+In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 17 Dec 2016 15:39:39 +0100
+Subject: [PATCH v3 5/7] PM: Make requirements of dev_pm_domain_set() more
+ precise
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Tomeu Vizoso <tomeu.vizoso@collabora.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vivek,
+Since commit 989561de9b51 ("PM / Domains: add setter for dev.pm_domain")
+a PM domain may only be assigned to unbound devices.
 
-On 12/28/2016 05:58 PM, Vivek Gautam wrote:
-> Hi Jaehoon,
-> 
-> On Wed, Dec 28, 2016 at 8:19 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
->> Hi Vivek,
->>
->> On 12/27/2016 02:53 PM, Vivek Gautam wrote:
->>> Hi Jaehoon,
->>>
->>>
->>> On Mon, Dec 26, 2016 at 10:50 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
->>>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
->>>> When Exynos that supported the pcie want to use the PCIe,
->>>> it needs to control the phy resgister.
->>>> But it should be more complex to control in their own PCIe device drivers.
->>>>
->>>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->>>> ---
->>>>  drivers/phy/Kconfig           |   9 ++
->>>>  drivers/phy/Makefile          |   1 +
->>>>  drivers/phy/phy-exynos-pcie.c | 227 ++++++++++++++++++++++++++++++++++++++++++
->>>>  3 files changed, 237 insertions(+)
->>>>  create mode 100644 drivers/phy/phy-exynos-pcie.c
->>>>
->>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->>>> index fe00f91..94b0433 100644
->>>> --- a/drivers/phy/Kconfig
->>>> +++ b/drivers/phy/Kconfig
->>>> @@ -341,6 +341,15 @@ config PHY_EXYNOS5_USBDRD
->>>>           This driver provides PHY interface for USB 3.0 DRD controller
->>>>           present on Exynos5 SoC series.
->>>>
->>>> +config PHY_EXYNOS_PCIE
->>>> +       bool "Exynos PCIe PHY driver"
->>>
->>> Is there a reason for this not being 'tristate' ?
->>
->> Will change.
-> 
-> I notice that PCI_EXYNOS5433 is bool as well.
-> If the host has to be 'bool' then it makes sense to have phy
-> also bool as well. But if PCI_EXYNOS5433 can be made
-> tristate, then this also changes to tristate.
+The motivation was not made explicit in the changelog other than "in the
+general case that can cause problems and also [...] we can simplify code
+quite a bit if we can always assume that".  Rafael J. Wysocki elaborated
+in a mailing list conversation that "setting a PM domain generally
+changes the set of PM callbacks for the device and it may not be safe to
+call it after the driver has been bound".
 
-Right. I understood what you said.
+The concern seems to be that if a device is put to sleep and its PM
+callbacks are changed, the device may end up in an undefined state or
+not resume at all.  The real underlying requirement is thus to ensure
+that the device is awake and execution of its PM callbacks is prevented
+while the PM domain is assigned.  Unbound devices happen to fulfill this
+requirement, but bound devices can be made to satisfy it as well:
+The caller can prevent execution of PM ops with lock_system_sleep() and
+by holding a runtime PM reference to the device.
 
-> 
->>
->>>
->>>> +       depends on ARCH_EXYNOS && OF
->>>> +       depends on PCI_EXYNOS5433
->>>> +       select GENERIC_PHY
->>>> +       help
->>>> +         Enable PCIe PHY support for Exynos SoC series.
->>>
->>> If this driver is for Exynos5433, then same should come in this help
->>> text as well.
->>
->> will support the other exynos series.
->> I'm working on refactoring exynos5440 with PHY generic Framework.
->> Then this drive is not for only Exnyos5433. how about?
-> 
-> Ok, it's good then. My only concern is 'depends on PCI_EXYNOS5433'
-> makes it look like it is for EXYNOS5433. I am fine if that changes as well.
+Accordingly, adjust dev_pm_domain_set() to WARN only if the device is in
+the midst of a system sleep transition, or runtime PM is enabled and the
+device is either not active or may become inactive imminently (because
+it has no active children or its refcount is zero).
 
-I will not put PCI_EXYNOS5433, just will use the PCI_EXYNOS.
-Because it will be supported only one file as pci-exynos.c
+The change is required to support runtime PM for Thunderbolt on the Mac,
+which poses the unique issue that a child device (the NHI) needs to
+assign a PM domain to its grandparent (the upstream bridge).  Because
+the grandparent's driver is built-in and the child's driver is a module,
+the grandparent is usually already bound when the child probes,
+resulting in a WARN splat when calling dev_pm_domain_set().  However the
+PM core guarantees both that the grandparent is active and that system
+sleep is not commenced until the child has finished probing.  So in this
+case it is safe to call dev_pm_domain_set() from the child's ->probe
+hook and the WARN splat is entirely gratuitous.
 
-> 
-> [...]
-> 
->>>> +
->>>> +#define PCIE_EXYNOS5433_PMU_PHY_OFFSET         0x730
->>>> +#define PCIE_PHY_OFFSET(x)             ((x) * 0x4)
->>>> +
->>>> +/* Sysreg Fsys register offset and bit for Exynos5433 */
->>>> +#define PCIE_PHY_MAC_RESET             0x208
->>>> +#define PCIE_MAC_RESET_MASK            0xFF
->>>> +#define PCIE_MAC_RESET                 BIT(4)
->>>> +#define PCIE_L1SUB_CM_CON              0x1010
->>>> +#define PCIE_REFCLK_GATING_EN          BIT(0)
->>>> +#define PCIE_PHY_COMMON_RESET          0x1020
->>>> +#define PCIE_PHY_RESET                 BIT(0)
->>>> +#define PCIE_PHY_GLOBAL_RESET          0x1040
->>>> +#define PCIE_GLOBAL_RESET              BIT(0)
->>>> +#define PCIE_REFCLK                    BIT(1)
->>>> +#define PCIE_REFCLK_MASK               0x16
->>>> +#define PCIE_APP_REQ_EXIT_L1_MODE      BIT(5)
->>>> +
->>>> +enum exynos_pcie_phy_data_type {
->>>> +       PCIE_PHY_TYPE_EXYNOS5433,
->>>> +};
->>>> +
->>>> +struct exynos_pcie_phy_data {
->>>> +       enum exynos_pcie_phy_data_type  ctrl_type;
->>>
->>> Why do we need this controller type ?
->>> If there are changes in the IP between different version,
->>> then you can as well use different compatibles.
->>
->> Do you mean is the using "of_device_is_compatible()"?
-> 
-> I meant that multiple compatible strings can be added based on the
-> IP versions. And any IP specific data can be put in the .data field
-> of  'of_device_id' structure.
-> If there's more to differentiate between the IP versions at runtime,
-> you can use of_device_is_compatible().
-> 
-> [...]
-> 
-> 
-> 
+Note that commit e79aee49bcf9 ("PM: Avoid false-positive warnings in
+dev_pm_domain_set()") modified the WARN to not apply if a PM domain is
+removed.  This is unsafe as it allows removal of the PM domain while
+the device is asleep.  The present commit rectifies this.
+
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Tomeu Vizoso <tomeu.vizoso@collabora.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/base/power/common.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
+index f6a9ad5..d02c1e0 100644
+--- a/drivers/base/power/common.c
++++ b/drivers/base/power/common.c
+@@ -13,6 +13,7 @@
+ #include <linux/pm_clock.h>
+ #include <linux/acpi.h>
+ #include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "power.h"
+ 
+@@ -136,8 +137,10 @@ EXPORT_SYMBOL_GPL(dev_pm_domain_detach);
+  * @dev: Device whose PM domain is to be set.
+  * @pd: PM domain to be set, or NULL.
+  *
+- * Sets the PM domain the device belongs to. The PM domain of a device needs
+- * to be set before its probe finishes (it's bound to a driver).
++ * Sets the PM domain the device belongs to.  The PM domain of a device needs
++ * to be set while the device is awake.  This is guaranteed during ->probe.
++ * Otherwise the caller is responsible for ensuring wakefulness, e.g. by
++ * holding a runtime PM reference as well as invoking lock_system_sleep().
+  *
+  * This function must be called with the device lock held.
+  */
+@@ -146,8 +149,12 @@ void dev_pm_domain_set(struct device *dev, struct dev_pm_domain *pd)
+ 	if (dev->pm_domain == pd)
+ 		return;
+ 
+-	WARN(pd && device_is_bound(dev),
+-	     "PM domains can only be changed for unbound devices\n");
++	WARN(dev->power.is_prepared || dev->power.is_suspended ||
++	     (pm_runtime_enabled(dev) &&
++	      (dev->power.runtime_status != RPM_ACTIVE ||
++	       (pm_children_suspended(dev) &&
++		!atomic_read(&dev->power.usage_count)))),
++	     "PM domains can only be changed for awake devices\n");
+ 	dev->pm_domain = pd;
+ 	device_pm_check_callbacks(dev);
+ }
+-- 
+2.10.2
 
