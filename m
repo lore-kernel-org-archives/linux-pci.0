@@ -1,89 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32788 "EHLO mx1.redhat.com"
+Received: from ale.deltatee.com ([207.54.116.67]:57820 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753744AbcLIQLY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Dec 2016 11:11:24 -0500
-Date: Fri, 9 Dec 2016 09:11:23 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Linas Vepstas <linasvepstas@gmail.com>
-Cc: Cao jin <caoj.fnst@cn.fujitsu.com>,
+        id S1752296AbcLQRpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 17 Dec 2016 12:45:32 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
         Jonathan Corbet <corbet@lwn.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-doc@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci-error-recover: doc cleanup
-Message-ID: <20161209091123.110c351a@t450s.home>
-In-Reply-To: <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
-References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
-        <20161208070539.0f00ce71@lwn.net>
-        <58496AA4.5030602@cn.fujitsu.com>
-        <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
-        <584A513B.9080409@cn.fujitsu.com>
-        <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Sat, 17 Dec 2016 10:09:21 -0700
+Message-Id: <1481994562-9283-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 0/1] New PCI Switch Management Driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 9 Dec 2016 14:44:25 +0800
-Linas Vepstas <linasvepstas@gmail.com> wrote:
+Hi,
 
-> On Fri, Dec 9, 2016 at 2:37 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
-> >
-> >
-> > On 12/09/2016 02:24 PM, Linas Vepstas wrote:  
-> >> I suppose I'm confused, but I recall that link resets are non-fatal.
-> >> Fatal errors typically require that the the pci adapter be completely
-> >> reset, any adapter firmware to be reloaded from scratch, the device
-> >> driver has to kill all device state and start from scratch. Its huge.
-> >> If the fatal error is on pci device that is under a block device
-> >> holding a file system, then (usually) there is no way to recover,
-> >> because the block layer (and file system) cannot deal with a block
-> >> device that disappeared and then reappeared some few seconds later.
-> >> (maybe some future zfs or lvm or btrfs might be able to deal with
-> >> this, but not today)
-> >>
-> >> By contrast, link resets are far more gentle: the device driver might
-> >> have to discard some half-full FIFO's, or cancel some in-flight
-> >> commands, but can otherwise gracefully recover without telling the
-> >> higher layers that there were any problems.
-> >>
-> >> --linas
-> >>  
-> >
-> > I am little confused too, even not sure if we are talking the same
-> > *fatal error*, I am talking the fatal error defined in PCI Express spec,
-> > chapter 6.2.2.2.1:
-> >
-> > Fatal errors are uncorrectable error conditions which render the
-> > particular Link and related hardware unreliable. For Fatal errors, a
-> > reset of the components on the Link may be required to return to
-> > reliable operation. Platform handling of Fatal errors, and any efforts
-> > to limit the effects of these errors, is platform implementation specific.
-> >
-> > Link reset means set *secondary bus reset* bit in pci bridge config
-> > space, can reset the link and device simultaneously, is the strongest
-> > kind of reset as I know.  
-> 
-> OK, well, its been far too many years, and I don't have the PCI spec
-> at my fingertips.
-> Isn't there a link reset that can be performed, without forcing a device reset?
-> 
-> The intent was that some PCI link errors are due to vibration,
-> ground-bounce, humidity, etc. and that these errors can be detected
-> and do not corrupt the device state or the device driver state.  Since
-> they are not associated with data corruption (or rather, the
-> corruption is local to the link), these can be recovered by reseting
-> just the link, without resetting the whole adapter. They may require
-> reseting some device-driver state, but not all of it.
-> 
-> However, this was all decided before the PCI-E spec was written, so
-> maybe the newer PCI-E specs now say something different.
+[Appologies: this is a resend for some people. Due to a configuration
+error the original email was rejected by the mailing lists. I hope
+this one makes it!]
 
-Perhaps you're thinking of link retraining?  That sort of error would
-be considered correctable, not fatal.  Fatal errors are uncorrected
-errors and a bigger hammer is needed to deal with them, such as a link
-reset.  Thanks,
+We're looking to get some initial feedback on a new driver for
+a line of PCIe switches produced and produced and sold by Microsemi.
+The goal is to get the process moving to get this code included in
+upstream hopefully for 4.11. Facebook is currently gearing up to
+use this hardware in its Open Compute Platform and is pushing to
+have this driver in the upstream kernel.
 
-Alex
+The following patch briefly describes the hardware and provides
+the first draft of driver code. Currently, the driver works and
+has been tested but is not feature complete. Thus, we are not looking
+to get it merged immediately. However we would like some early review,
+specifically on the interfaces and core concepts so that we don't
+do a lot of work down a path the community would reject. Barring any
+objections to this RFC, we will flesh out all the features
+and provide a completed patch for inclusion in the coming weeks.
+
+Work on a userspace tool, that utilizes this driver, is also being
+done at [1]. The tool is currently also a bit of a skeleton and
+will be fleshed out assuming there are no serious objections to our
+userspace interface. In the end, the tool will be released with a
+GPL license.
+
+The patch is based off of the v4.9 release.
+
+Thanks for your review,
+
+Logan
+
+[1] https://github.com/sbates130272/switchtec-user
+
+Logan Gunthorpe (1):
+  MicroSemi Switchtec management interface driver
+
+ Documentation/switchtec.txt    |  54 +++
+ MAINTAINERS                    |   9 +
+ drivers/pci/Kconfig            |   1 +
+ drivers/pci/Makefile           |   1 +
+ drivers/pci/switch/Kconfig     |  13 +
+ drivers/pci/switch/Makefile    |   1 +
+ drivers/pci/switch/switchtec.c | 824 +++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/switch/switchtec.h | 119 ++++++
+ 8 files changed, 1022 insertions(+)
+ create mode 100644 Documentation/switchtec.txt
+ create mode 100644 drivers/pci/switch/Kconfig
+ create mode 100644 drivers/pci/switch/Makefile
+ create mode 100644 drivers/pci/switch/switchtec.c
+ create mode 100644 drivers/pci/switch/switchtec.h
+
+--
+2.1.4
