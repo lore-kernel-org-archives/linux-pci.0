@@ -1,55 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46044 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752156AbcLGWJK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 17:09:10 -0500
-Date: Wed, 7 Dec 2016 16:02:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-        Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: resume path in dra7xx and other DW-based drivers
-Message-ID: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=HrOF=YA=wunner.de=lukas@kernel.org>
+Message-Id: <cover.1481926599.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 17 Dec 2016 15:39:39 +0100
+Subject: [PATCH v3 0/7] Runtime PM for Thunderbolt on Macs
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Tomeu Vizoso <tomeu.vizoso@collabora.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon, et al,
+Power down Thunderbolt controllers on Macs when nothing is plugged in
+to save around 2W per controller.
 
-Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
-and dra7xx_pcie_resume_noirq() restore everything necessary.  For
-example, the probe path has this:
+Apple provides an ACPI-based (but nonstandard) mechanism to cut power
+and signal hotplug during powerdown.  The usual way to implement such
+nonstandard mechanisms seems to be a struct dev_pm_domain.
+E.g. vga_switcheroo uses that for Optimus GPUs which control power
+with ACPI DSMs.  Hence this third iteration of the series uses that
+as well.  In v2 a more complicated approach was employed wherein power
+control was exerted by a PCIe port service driver instead.
 
-  dra7xx_pcie_probe
-    dra7xx_add_pcie_port
-      dw_pcie_host_init
-	dra7xx_pcie_host_init         # .host_init
-	  dw_pcie_setup_rc
-	    dw_pcie_prog_outbound_atu
+All the prep work went into 4.9 and 4.10, shrinking this series to just
+7 patches:
 
-so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
-path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
-setup would be restored.
+- The actual "meat" of the series (to borrow a term from Bjorn) is in
+  patches [6/7] and [7/7].  These two need an ack from Andreas.
 
-Related to this, dra7xx_pcie_resume_noirq() contains phy init and
-power-on code that is duplicated in dra7xx_pcie_probe().  It seems
-like that ought to be done by a common function instead of being cut
-and pasted.
+- Patches [1/7] to [3/7] need an ack from Bjorn (and possibly Rafael or
+  Mika).  They're fairly small and just add a bit to struct pci_dev
+  signifying that a device is part of a Thunderbolt daisy chain, then
+  use that bit to modify runtime PM for PCIe ports.  I'm also cc'ing
+  Tomas and Amir at Intel Israel, if you guys have comments please shout.
 
-I haven't looked in detail at all the other DW-based drivers; dra7xx
-just happens to be first in alphabetical order :)  But I suspect I'd
-have the same question about them.
+- Patches [4/7] and [5/7] need an ack from Rafael.  Their sole purpose
+  is to avoid a gratuitous WARN splat when assigning the struct
+  dev_pm_domain.
 
-Bjorn
+I've pushed the patches to GitHub to ease reviewing/fetching:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v3
+
+Link to the previous iteration (v2, May 2016):
+http://www.spinics.net/lists/linux-pci/msg51158.html
+
+Thanks,
+
+Lukas
+
+
+Lukas Wunner (7):
+  PCI: Recognize Thunderbolt devices
+  PCI: Allow runtime PM on Thunderbolt ports
+  PCI: Don't block runtime PM for Thunderbolt host hotplug ports
+  Revert "PM / Runtime: Remove the exported function
+    pm_children_suspended()"
+  PM: Make requirements of dev_pm_domain_set() more precise
+  thunderbolt: Power down controller when idle
+  thunderbolt: Runtime suspend NHI when idle
+
+ drivers/base/power/common.c  |  15 +-
+ drivers/base/power/runtime.c |   3 +-
+ drivers/pci/pci.c            |  20 ++-
+ drivers/pci/pci.h            |   2 +
+ drivers/pci/probe.c          |  34 +++++
+ drivers/thunderbolt/Kconfig  |   3 +-
+ drivers/thunderbolt/Makefile |   4 +-
+ drivers/thunderbolt/nhi.c    |   5 +
+ drivers/thunderbolt/power.c  | 356 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/power.h  |  37 +++++
+ drivers/thunderbolt/switch.c |   9 ++
+ drivers/thunderbolt/tb.c     |  13 ++
+ drivers/thunderbolt/tb.h     |   2 +
+ include/linux/pci.h          |   1 +
+ include/linux/pm_runtime.h   |   7 +
+ 15 files changed, 500 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/thunderbolt/power.c
+ create mode 100644 drivers/thunderbolt/power.h
+
+-- 
+2.10.2
