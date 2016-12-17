@@ -1,76 +1,169 @@
-Return-Path: <SRS0=7cta=YD=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=7cta=YD=ti.com=kishon@kernel.org>
-Subject: Re: resume path in dra7xx and other DW-based drivers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
- <58491E7C.1070700@ti.com>
- <20161208204304.GC30533@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
-        Richard
- Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali
- Karicheri <m-karicheri2@ti.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel
-	<niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Pratyush
- Anand <pratyush.anand@gmail.com>,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5858CED7.4020004@ti.com>
-Date: Tue, 20 Dec 2016 11:55:27 +0530
-MIME-Version: 1.0
-In-Reply-To: <20161208204304.GC30533@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:59657 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756618AbcLQOma (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2016 09:42:30 -0500
+Message-Id: <541d11e1d18f6bba3cf2454ba8c119ab31dc3655.1481926599.git.lukas@wunner.de>
+In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 17 Dec 2016 15:39:39 +0100
+Subject: [PATCH v3 7/7] thunderbolt: Runtime suspend NHI when idle
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Amir Levy <amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Runtime suspend the NHI when no Thunderbolt devices have been plugged in
+for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
 
-On Friday 09 December 2016 02:13 AM, Bjorn Helgaas wrote:
-> On Thu, Dec 08, 2016 at 02:19:00PM +0530, Kishon Vijay Abraham I wrote:
->> Hi Bjorn,
->>
->> On Thursday 08 December 2016 03:32 AM, Bjorn Helgaas wrote:
->>> Hi Kishon, et al,
->>>
->>> Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
->>> and dra7xx_pcie_resume_noirq() restore everything necessary.  For
->>> example, the probe path has this:
->>>
->>>   dra7xx_pcie_probe
->>>     dra7xx_add_pcie_port
->>>       dw_pcie_host_init
->>> 	dra7xx_pcie_host_init         # .host_init
->>> 	  dw_pcie_setup_rc
->>> 	    dw_pcie_prog_outbound_atu
->>>
->>> so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
->>> path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
->>> setup would be restored.
->>
->> DRA7xx only supported shallow power state and not deep power state. In shallow
->> power state, the register settings are not lost and hence we didn't have to
->> restore anything.
-> 
-> I'm not really a PM guy, so I'm not familiar with shallow power state.
-> Could I have discovered from the code somehow that dra7xx suspend to
-> shallow power state preserves register state?  It's nice if a reader
-> can verify correctness without knowing the system-specific details.
+The NHI is not able to detect plug events while suspended, it relies on
+the GPE handler to resume it on hotplug.
 
-Some drivers like drivers/mmc/host/omap_hsmmc.c saves the register contents
-(omap_hsmmc_context_save) and then in runtime_resume checks if the register
-contents are still same (omap_hsmmc_context_restore). Do you think we have to
-do something like that for dra7xx?
+After the NHI resumes, it takes about 700 ms until a hotplug event
+appears on the RX ring.  In case autosuspend_delay_ms has been reduced
+to 0 by the user, we need to wait in tb_resume() to avoid going back to
+sleep before we had a chance to detect a hotplugged device.  A runtime
+pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
+awake while the hotplug event is processed.
 
-omap_hsmmc.c is used by a lot of platforms some of which loses the context
-during suspend. Since dra7xx doesn't loose context, not sure if we have to do
-something like omap_hsmmc.
+Apart from that we acquire a runtime pm ref for each newly allocated
+switch (except for the root switch) and drop one when a switch is freed,
+thereby ensuring the NHI stays active as long as devices are plugged in.
+This behaviour is identical to the macOS driver.
 
-Thanks
-Kishon
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/nhi.c    |  2 ++
+ drivers/thunderbolt/power.c  |  9 +++++++++
+ drivers/thunderbolt/switch.c |  9 +++++++++
+ drivers/thunderbolt/tb.c     | 13 +++++++++++++
+ 4 files changed, 33 insertions(+)
+
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 88fb2fb..319ed81 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -632,6 +632,8 @@ static const struct dev_pm_ops nhi_pm_ops = {
+ 					    * pci-tunnels stay alive.
+ 					    */
+ 	.restore_noirq = nhi_resume_noirq,
++	.runtime_suspend = nhi_suspend_noirq,
++	.runtime_resume = nhi_resume_noirq,
+ };
+ 
+ static struct pci_device_id nhi_ids[] = {
+diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
+index 4d7c6a0..1b5f066 100644
+--- a/drivers/thunderbolt/power.c
++++ b/drivers/thunderbolt/power.c
+@@ -320,6 +320,12 @@ void thunderbolt_power_init(struct tb *tb)
+ 
+ 	tb->power = power;
+ 
++	pm_runtime_allow(nhi_dev);
++	pm_runtime_set_autosuspend_delay(nhi_dev, 10000);
++	pm_runtime_use_autosuspend(nhi_dev);
++	pm_runtime_mark_last_busy(nhi_dev);
++	pm_runtime_put_autosuspend(nhi_dev);
++
+ 	return;
+ 
+ err:
+@@ -336,6 +342,9 @@ void thunderbolt_power_fini(struct tb *tb)
+ 	if (!power)
+ 		return;
+ 
++	pm_runtime_get(nhi_dev);
++	pm_runtime_forbid(nhi_dev);
++
+ 	tb->power = NULL;
+ 	dev_pm_domain_set(upstream_dev, NULL);
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c6f30b1..422fe6e 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ #include "tb.h"
+@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
+ 	if (!sw->is_unplugged)
+ 		tb_plug_events_active(sw, false);
+ 
++	if (sw != sw->tb->root_switch) {
++		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
++		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
++	}
++
+ 	kfree(sw->ports);
+ 	kfree(sw->drom);
+ 	kfree(sw);
+@@ -420,6 +426,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
++	if (tb->root_switch)
++		pm_runtime_get(&tb->nhi->pdev->dev);
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 24b6d30..a3fedf9 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "tb.h"
+ #include "tb_regs.h"
+@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct device *dev = &tb->nhi->pdev->dev;
+ 	struct tb_switch *sw;
+ 	struct tb_port *port;
++
++	pm_runtime_get(dev);
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
+ }
+ 
+ /**
+@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+ 	tb_info(tb, "resume finished\n");
++
++	/*
++	 * If runtime resuming due to a hotplug event (rather than resuming
++	 * from system sleep), wait for it to arrive. May take about 700 ms.
++	 */
++	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
++		msleep(1000);
+ }
+-- 
+2.10.2
+
