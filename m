@@ -1,41 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 1 Dec 2016 09:52:43 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dennis Chen <dennis.chen@arm.com>
-Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
- enough
-Message-ID: <20161201085243.GA24684@lst.de>
-References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 17 Dec 2016 23:51:41 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
+Message-ID: <20161218075141.GE29850@kroah.com>
+References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
+ <1481994562-9283-2-git-send-email-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- Steve Capper <steve.capper@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Tom Long Nguyen <tom.l.nguyen@intel.com>, Tejun Heo <tj@kernel.org>,
- nd@arm.com, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481994562-9283-2-git-send-email-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dennis,
+On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
+> +struct switchtec_dev {
+> +	struct pci_dev *pdev;
+> +	struct msix_entry *msix;
+> +	struct device *dev;
+> +	struct kref kref;
 
-I've fixed ahci to treat all errors the same in the meantime, please
-try latest Linux tree.  That being said I don't like the different
-error returns from __pci_enable_msi_range (and __pci_enable_msix_range),
-but they have been there for a while.
+Why do you have a pointer to a device, yet a kref as well?  Just have
+this structure embed a 'struct device' in itself, like you did for a
+kref, and you will be fine.  Otherwise you are dealing with two
+different sets of reference counting here, for no good reason.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +
+> +	unsigned int event_irq;
+> +
+> +	void __iomem *mmio;
+> +	struct mrpc_regs __iomem *mmio_mrpc;
+> +	struct ntb_info_regs __iomem *mmio_ntb;
+> +	struct part_cfg_regs __iomem *mmio_part_cfg;
+> +
+> +	/*
+> +	 * The mrpc mutex must be held when accessing the other
+> +	 * mrpc fields
+> +	 */
+> +	struct mutex mrpc_mutex;
+> +	struct list_head mrpc_queue;
+> +	int mrpc_busy;
+> +	struct work_struct mrpc_work;
+> +	struct delayed_work mrpc_timeout;
+> +};
+> +
+> +#define stdev_pdev(stdev) ((stdev)->pdev)
+> +#define stdev_pdev_dev(stdev) (&stdev_pdev(stdev)->dev)
+> +#define stdev_name(stdev) pci_name(stdev_pdev(stdev))
+> +#define stdev_dev(stdev) ((stdev)->dev)
+
+Ick, just open code these please.  That's a huge hint your use of the
+driver model is not correct :)
+
+thanks,
+
+greg k-h
