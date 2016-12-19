@@ -1,61 +1,81 @@
-Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
-Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:33598 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755330AbcLSJta (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 04:49:30 -0500
 MIME-Version: 1.0
-In-Reply-To: <f4b949c0-f992-b0fb-5f23-f71cb1f9713e@redhat.com>
-References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
- <1480604901.4751.17.camel@redhat.com> <f4b949c0-f992-b0fb-5f23-f71cb1f9713e@redhat.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 1 Dec 2016 11:58:12 -0800
-Message-ID: <CADaLNDnZfob-4p5U-estW8mGCDhma_vJqxS3zbDdq8brvokhAA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
-To: Jon Masters <jcm@redhat.com>
-Cc: Mark Salter <msalter@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Rafael Wysocki <rafael@kernel.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-	patches <patches@apm.com>
+In-Reply-To: <1482064022-8998-1-git-send-email-ykaneko0929@gmail.com>
+References: <1482064022-8998-1-git-send-email-ykaneko0929@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 19 Dec 2016 10:49:28 +0100
+Message-ID: <CAMuHMdVOUUM3hZ0sfTcs5PFqfvrYR9Sk3egibpuxb-4a80U02A@mail.gmail.com>
+Subject: Re: [PATCH pci/next] PCI: rcar: Add compatible string for r8a7796
+To: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Simon Horman <horms@verge.net.au>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 1, 2016 at 11:17 AM, Jon Masters <jcm@redhat.com> wrote:
-> On 12/01/2016 10:08 AM, Mark Salter wrote:
->> On Wed, 2016-11-30 at 15:42 -0800, Duc Dang wrote:
->
->>> +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
->>> +{
->>> +    struct acpi_device *adev = to_acpi_device(cfg->parent);
->>> +    struct acpi_pci_root *root = acpi_driver_data(adev);
->>> +    struct device *dev = cfg->parent;
->>> +    struct xgene_pcie_port *port;
->>> +    struct resource *csr;
->>> +
->>> +    port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
->>> +    if (!port)
->>> +            return -ENOMEM;
->>> +
->>> +    csr = &xgene_v1_csr_res[root->segment];
->>
->> This hard-coded assumption that segment N uses controller N breaks
->> for m400 where segment 0 is using controller 3.
+Hi Kaneko-san,
 
-I think the latest firmware released from us a few months back use
-segment 3 for PCIe controller 3 in MCFG table.
+On Sun, Dec 18, 2016 at 1:27 PM, Yoshihiro Kaneko <ykaneko0929@gmail.com> wrote:
+> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 >
-> This seems very fragile. So in addition to Bjorn's comment about not
-> trusting firmware provided data for the segment offset in the CSR list,
-> you will want to also determine the controller from the ACPI tree. The
-> existing code walks the ACPI hierarchy and finds the CSR that way.
-> Obviously, the goal is to avoid that in the latest incarnation, but you
-> could still determine which controller matches a given device.
+> This patch adds support for r8a7796.
+>
+> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+> Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+> ---
+>
+> This patch is based on the next branch of the pci tree.
+>
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+>  drivers/pci/host/pcie-rcar.c                       | 1 +
+>  2 files changed, 2 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index eee518d..34712d6 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -6,6 +6,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>             "renesas,pcie-r8a7791" for the R8A7791 SoC;
+>             "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>             "renesas,pcie-r8a7795" for the R8A7795 SoC;
+> +           "renesas,pcie-r8a7796" for the R8A7796 SoC;
+>             "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+>             "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index aca85be..02e5777 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1078,6 +1078,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+>         { .compatible = "renesas,pcie-rcar-gen2",
+>           .data = rcar_pcie_hw_init_gen2 },
+>         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+> +       { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
+>         { .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
+>         {},
 
-Yes, I will look into that more.
+Given the driver already matches against "renesas,pcie-rcar-gen3",
+and mainline arch/arm64/boot/dts/renesas/r8a7796.dtsi doesn't have pcie
+nodes yet, I think there's no need to update the driver, only the bindings.
 
->
-> Jon.
->
-> --
-> Computer Architect | Sent from my Fedora powered laptop
->
-Regards,
-Duc Dang.
+Hence if you drop the last chunk, you can add my
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
