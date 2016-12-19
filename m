@@ -1,173 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52258 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:34772 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750775AbcLAIjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 03:39:06 -0500
-Subject: [PATCH v10 03/12] x86/PCI: Use acpi_resource_consumer() to search
- ACPI namespace for MMCFG
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Thu, 01 Dec 2016 02:29:46 -0600
-Message-ID: <20161201082946.12247.69256.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S933092AbcLSR05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Dec 2016 12:26:57 -0500
+To: Keith Busch <keith.busch@intel.com>
+References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
+ <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
+ <735068a7-7805-dad0-b5b0-5218a18f335c@deltatee.com>
+ <20161219172903.GB1043@localhost.localdomain>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <7a537ea0-afb1-48d5-0706-5066dfaef1dd@deltatee.com>
+Date: Mon, 19 Dec 2016 10:26:50 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20161219172903.GB1043@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 0/1] New PCI Switch Management Driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
 
-The static MCFG table tells us the base of MMCFG space, but it does not
-reserve the space -- the reservation should be done via a device in the
-ACPI namespace whose _CRS includes the MMCFG region.
 
-Replace find_mboard_resource(), which already searches for such a device,
-with the new acpi_resource_consumer() interface that does essentially the
-same thing.
+On 19/12/16 10:29 AM, Keith Busch wrote:
+> Since the in-kernel driver binds to the device, won't this driver
+> conflict with the initialization the in-kernel one already does? Bus
+> master, MSI setup, etc?
 
-acpi_resource_consumer() is not as strict as find_mboard_resource() was:
-find_mboard_resource() only looks at PNP0C01 and PNP0C02 devices and the
-following _CRS descriptor types:
+No. The management interface is on a completely separate PCI endpoint.
+So from the kernels perspective, the management interface is just
+another PCI device. It has the same vendor and device ID as the switch
+but uses separate class codes so it can be bound by an independent driver.
 
-  ACPI_RESOURCE_TYPE_FIXED_MEMORY32
-  ACPI_RESOURCE_TYPE_ADDRESS32
-  ACPI_RESOURCE_TYPE_ADDRESS64
+> Could you also provide the reasoning against making the functionality
+> this driver provides in user space?
 
-but acpi_resource_consumer() looks at *all* devices in the namespace and
-the following descriptor types:
+I'm not sure how you mean. I suppose we could write a UIO driver but
+that seemed like an ugly solution to me and doesn't seem like an
+approach the community prefers. We do have to make use of interrupts so
+simply using /sys/bus/pci/.../resourceN wouldn't work either.
 
-  ACPI_RESOURCE_TYPE_MEMORY24
-  ACPI_RESOURCE_TYPE_MEMORY32
-  ACPI_RESOURCE_TYPE_FIXED_MEMORY32
-  ACPI_RESOURCE_TYPE_ADDRESS16
-  ACPI_RESOURCE_TYPE_ADDRESS32
-  ACPI_RESOURCE_TYPE_ADDRESS64
-  ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64
-
-I think it is correct to accept the larger set of descriptor types.
-
-Note 2 to Table 4-2 of the PCI Firmware spec r3.2 does suggest that the
-MMCFG region should be declared by a PNP0C02 device.  I don't know why it
-calls out PNP0C02 specifically, unless it's related to the fact that the
-Consumer/Producer issues make it hard to use the PNP0A03 device itself.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/mmconfig-shared.c |   69 +++++-----------------------------------
- 1 file changed, 9 insertions(+), 60 deletions(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index dd30b7e..f62ffe7 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -373,71 +373,20 @@ static int __init pci_mmcfg_check_hostbridge(void)
- 	return !list_empty(&pci_mmcfg_list);
- }
- 
--static acpi_status check_mcfg_resource(struct acpi_resource *res, void *data)
--{
--	struct resource *mcfg_res = data;
--	struct acpi_resource_address64 address;
--	acpi_status status;
--
--	if (res->type == ACPI_RESOURCE_TYPE_FIXED_MEMORY32) {
--		struct acpi_resource_fixed_memory32 *fixmem32 =
--			&res->data.fixed_memory32;
--		if (!fixmem32)
--			return AE_OK;
--		if ((mcfg_res->start >= fixmem32->address) &&
--		    (mcfg_res->end < (fixmem32->address +
--				      fixmem32->address_length))) {
--			mcfg_res->flags = 1;
--			return AE_CTRL_TERMINATE;
--		}
--	}
--	if ((res->type != ACPI_RESOURCE_TYPE_ADDRESS32) &&
--	    (res->type != ACPI_RESOURCE_TYPE_ADDRESS64))
--		return AE_OK;
--
--	status = acpi_resource_to_address64(res, &address);
--	if (ACPI_FAILURE(status) ||
--	   (address.address.address_length <= 0) ||
--	   (address.resource_type != ACPI_MEMORY_RANGE))
--		return AE_OK;
--
--	if ((mcfg_res->start >= address.address.minimum) &&
--	    (mcfg_res->end < (address.address.minimum + address.address.address_length))) {
--		mcfg_res->flags = 1;
--		return AE_CTRL_TERMINATE;
--	}
--	return AE_OK;
--}
--
--static acpi_status find_mboard_resource(acpi_handle handle, u32 lvl,
--					void *context, void **rv)
--{
--	struct resource *mcfg_res = context;
--
--	acpi_walk_resources(handle, METHOD_NAME__CRS,
--			    check_mcfg_resource, context);
--
--	if (mcfg_res->flags)
--		return AE_CTRL_TERMINATE;
--
--	return AE_OK;
--}
--
- static int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
- {
- 	struct resource mcfg_res;
-+	struct acpi_device *adev;
- 
- 	mcfg_res.start = start;
- 	mcfg_res.end = end - 1;
--	mcfg_res.flags = 0;
-+	mcfg_res.flags = IORESOURCE_MEM;
- 
--	acpi_get_devices("PNP0C01", find_mboard_resource, &mcfg_res, NULL);
--
--	if (!mcfg_res.flags)
--		acpi_get_devices("PNP0C02", find_mboard_resource, &mcfg_res,
--				 NULL);
-+	adev = acpi_resource_consumer(&mcfg_res);
-+	if (adev)
-+		return 1;
- 
--	return mcfg_res.flags;
-+	return 0;
- }
- 
- typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
-@@ -450,7 +399,7 @@ static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
- 	u64 size = resource_size(&cfg->res);
- 	u64 old_size = size;
- 	int num_buses;
--	char *method = with_e820 ? "E820" : "ACPI motherboard resources";
-+	char *method = with_e820 ? "E820" : "ACPI namespace";
- 
- 	while (!is_reserved(addr, addr + size, E820_RESERVED)) {
- 		size >>= 1;
-@@ -504,12 +453,12 @@ static int __ref pci_mmcfg_check_reserved(struct device *dev,
- 		if (dev)
- 			dev_info(dev, FW_INFO
- 				 "MMCONFIG at %pR not reserved in "
--				 "ACPI motherboard resources\n",
-+				 "ACPI namespace\n",
- 				 &cfg->res);
- 		else
- 			pr_info(FW_INFO PREFIX
- 			       "MMCONFIG at %pR not reserved in "
--			       "ACPI motherboard resources\n",
-+			       "ACPI namespace\n",
- 			       &cfg->res);
- 	}
- 
-
+Logan
