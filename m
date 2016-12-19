@@ -1,128 +1,38 @@
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
-	<Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
-CC: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <nsekhar@ti.com>, Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com>
-Date: Thu, 29 Dec 2016 10:38:02 +0000
-MIME-Version: 1.0
-In-Reply-To: <5864A335.9000203@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:39068 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750812AbcLSIQS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 03:16:18 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH 0/4] PCI: exynos: cleans the minor things
+Date: Mon, 19 Dec 2016 17:16:10 +0900
+Message-id: <20161219081614.5403-1-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Current pci-exnoys.c is used for only EXYNOS5440.
+Even if there is no use-case, just cleans the codes for maintaining.
 
-Hi,
+In future, I will upstream for Exynso5433(TM2).
+Before sending patches for exynos5433, i want to reuse the some codse in pic-exynos.c.
+This patch is for perparing it.
 
-Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
-> Hi,
-> 
-> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
->> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>>
->>>>>>> There might be hiccups because of this renaming but feel this is
->>>>>>> necessary for long-term maintenance.
->>>>>>
->>>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>>
->>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>>> also. Wouldn't be better to name it rc_controller?
->>>>
->>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>>> neutral name that can cover both RC and Endpoint.
-> 
-> right.
->>>>
->>>> I'm not a huge fan of "controller" because it feels a little bit long
->>>> and while I suppose it technically does include the concept of the PCI
->>>> interface of an endpoint, it still suggests more of the host side to
->>>> me.
->>>>
->>>> Doesn't USB have a similar situation?  I see there's a
->>>> drivers/usb/host/ (probably where we copied from in the first place).
->>>> Is a USB gadget the USB analog of what you're doing?  How do they
->>>> share code between the master/slave sides?
->>>>
->>>
->>> The usb/host contains the implemnentations by the spec of the several
->>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
-> 
-> right, each IP have a separate directory in USB. I thought of doing something
-> similar for PCI but decided against it since that would involve identifying all
-> the PCI IPs used and eventually result in more directories.
->>> For device purposes it uses the core/ and then some of the device functions
->>> are extended from the gadget/ package in which you can use mass_storage and
->>> other types of functions.
-> 
-> That would be similar for PCI endpoint. All endpoint specific core
-> functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>>
->>> In our case in PCI we have the core functions inside /drivers/pci and the host
->>> mangled inside host. I suggest:
->>>
->>> drivers/pci
->>>  drivers/pci/core/
->>>  drivers/pci/core/hotplug
->>>  drivers/pci/core/pcie
->>>  drivers/pci/core/<all other files inside pci/ today>
->>>  drivers/pci/host
->>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
->>
->> Correction:
->> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
->> drivers
->>
->>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
->>
->> Correction:
->> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
->>
->>>  drivers/pci/endpoint -> common code
->>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
-> 
-> There are some parts of the dwc driver that is common to both root complex and
-> endpoint. Where should that be? I'm sure no one wants to duplicate the common
-> piece in both root complex and endpoint.
+My Final goal is to apply the pcie-exynos5433 into v4.11.
 
-You are right, the config space is almost the same and some ops also common.
-I would suggest:
+Jaehoon Chung (4):
+  PCI: exynos: replace to one register accessor from each accessors
+  PCI: exynos: Remove the unnecessary variables
+  PCI: exynos: Use the bitops API to operate the bit shifting
+  PCI: exynos: remove the duplicated codes
 
-drivers/pci
-  drivers/pci/core/
-    drivers/pci/core/hotplug
-    drivers/pci/core/pcie
-    drivers/pci/core/<all other files inside pci/ today>
-  drivers/pci/dwc
-    drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
-    drivers/pci/dwc/host/
-    drivers/pci/dwc/endpoint/
+ drivers/pci/host/pci-exynos.c | 260 +++++++++++++++++++-----------------------
+ 1 file changed, 116 insertions(+), 144 deletions(-)
 
-What do you think?
+-- 
+2.10.2
 
-Thanks.
-
-> 
-> [1] -> https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2016_9_14_27&d=DgID-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=E9ExIpzr6vIxD1dZDQcUzR5Y-MLqjT1aO_A96qhd_Dk&s=9vvw2jAdXsYlzu0KriDWnmdHa3H_GPFP5Ti2dbM865A&e= 
-> 
-> Thanks
-> Kishon
-> 
