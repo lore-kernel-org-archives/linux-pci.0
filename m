@@ -1,63 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43648 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932295AbcLGSR4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 13:17:56 -0500
-Date: Wed, 7 Dec 2016 12:17:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drivers/pci/host/vmd: Fix suspend handlers unused warning
-Message-ID: <20161207181752.GB22129@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161126182957.6144-1-bp@alien8.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 19 Dec 2016 07:35:15 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
+Message-ID: <20161219063515.GA5814@kroah.com>
+References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
+ <1481994562-9283-2-git-send-email-logang@deltatee.com>
+ <20161218075141.GE29850@kroah.com>
+ <d7c26e15-34f3-26d4-e13a-f24b4a9034c3@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161126182957.6144-1-bp@alien8.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d7c26e15-34f3-26d4-e13a-f24b4a9034c3@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 26, 2016 at 07:29:57PM +0100, Borislav Petkov wrote:
-> From: Borislav Petkov <bp@suse.de>
+On Sun, Dec 18, 2016 at 10:20:47AM -0700, Logan Gunthorpe wrote:
+> Hi Greg,
 > 
-> Fix:
+> Thanks for the quick review!
 > 
->   drivers/pci/host/vmd.c:731:12: warning: ‘vmd_suspend’ defined but not used [-Wunused-function]
->    static int vmd_suspend(struct device *dev)
->               ^
->   drivers/pci/host/vmd.c:739:12: warning: ‘vmd_resume’ defined but not used [-Wunused-function]
->    static int vmd_resume(struct device *dev)
->               ^
+> On 18/12/16 12:51 AM, Greg Kroah-Hartman wrote:
+> > On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
+> > > +struct switchtec_dev {
+> > > +	struct pci_dev *pdev;
+> > > +	struct msix_entry *msix;
+> > > +	struct device *dev;
+> > > +	struct kref kref;
+> > 
+> > Why do you have a pointer to a device, yet a kref as well?  Just have
+> > this structure embed a 'struct device' in itself, like you did for a
+> > kref, and you will be fine.  Otherwise you are dealing with two
+> > different sets of reference counting here, for no good reason.
 > 
-> Signed-off-by: Borislav Petkov <bp@suse.de>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
+> Ok, understood. I had referenced the device dax driver which did it this way
+> in 4.8 but looks like it was changed to the way you suggest in 4.9.
+> 
+> > > +#define stdev_pdev(stdev) ((stdev)->pdev)
+> > > +#define stdev_pdev_dev(stdev) (&stdev_pdev(stdev)->dev)
+> > > +#define stdev_name(stdev) pci_name(stdev_pdev(stdev))
+> > > +#define stdev_dev(stdev) ((stdev)->dev)
+> > 
+> > Ick, just open code these please.  That's a huge hint your use of the
+> > driver model is not correct :)
+> 
+> Ok, will do. For reference, I was copying
+> 
+> drivers/ntb/hw/intel/ntb_hw_intel.h
+> 
+> which does a similar thing.
 
-Applied with Keith's reviewed-by to pci/host-vmd for v4.10, thanks!
+No need to copy bad code, I suggest fixing that up as well :)
 
-> ---
->  drivers/pci/host/vmd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index 37e29b580be3..0e7f8f319fe3 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -727,7 +727,7 @@ static void vmd_remove(struct pci_dev *dev)
->  	irq_domain_remove(vmd->irq_domain);
->  }
->  
-> -#ifdef CONFIG_PM
-> +#ifdef CONFIG_PM_SLEEP
->  static int vmd_suspend(struct device *dev)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> -- 
-> 2.10.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks,
+
+greg k-h
