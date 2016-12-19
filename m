@@ -1,72 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39600 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751723AbcLEXZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:25:46 -0500
-Subject: [PATCH v11 03/15] arm64: PCI: Add local struct device pointers
-From: Bjorn Helgaas <helgaas@kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:36100 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932728AbcLSIRn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 03:17:43 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
 To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Mon, 05 Dec 2016 17:25:42 -0600
-Message-ID: <20161205232542.3957.55360.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH 0/4] PCI: exynos: cleans the minor things
+Date: Mon, 19 Dec 2016 17:17:36 +0900
+Message-id: <20161219081740.5457-1-jh80.chung@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Current pci-exnoys.c is used for only EXYNOS5440.
+Even if there is no use-case, just cleans the codes for maintaining.
 
-Use a local "struct device *dev" for brevity.  No functional change
-intended.
+In future, I will upstream for Exynso5433(TM2).
+Before sending patches for exynos5433, i want to reuse the some codse in pic-exynos.c.
+This patch is for perparing it.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/arm64/kernel/pci.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+My Final goal is to apply the pcie-exynos5433 into v4.11.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index acf3872..8183c98 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -121,6 +121,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- static struct pci_config_window *
- pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
- {
-+	struct device *dev = &root->device->dev;
- 	struct resource *bus_res = &root->secondary;
- 	u16 seg = root->segment;
- 	struct pci_config_window *cfg;
-@@ -132,8 +133,7 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
- 		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
- 
- 	if (!root->mcfg_addr) {
--		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
--			seg, bus_res);
-+		dev_err(dev, "%04x:%pR ECAM region not found\n", seg, bus_res);
- 		return NULL;
- 	}
- 
-@@ -141,11 +141,10 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
- 	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
- 	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
- 	cfgres.flags = IORESOURCE_MEM;
--	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
--			      &pci_generic_ecam_ops);
-+	cfg = pci_ecam_create(dev, &cfgres, bus_res, &pci_generic_ecam_ops);
- 	if (IS_ERR(cfg)) {
--		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
--			seg, bus_res, PTR_ERR(cfg));
-+		dev_err(dev, "%04x:%pR error %ld mapping ECAM\n", seg, bus_res,
-+			PTR_ERR(cfg));
- 		return NULL;
- 	}
- 
+Jaehoon Chung (4):
+  PCI: exynos: replace to one register accessor from each accessors
+  PCI: exynos: Remove the unnecessary variables
+  PCI: exynos: Use the bitops API to operate the bit shifting
+  PCI: exynos: remove the duplicated codes
+
+ drivers/pci/host/pci-exynos.c | 260 +++++++++++++++++++-----------------------
+ 1 file changed, 116 insertions(+), 144 deletions(-)
+
+-- 
+2.10.2
 
