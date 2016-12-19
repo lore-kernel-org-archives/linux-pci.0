@@ -1,94 +1,50 @@
-Return-Path: <SRS0=Fe7y=X4=mni.thm.de=tobias.johannes.klausmann@kernel.org>
-Return-Path: <SRS0=Fe7y=X4=mni.thm.de=tobias.johannes.klausmann@kernel.org>
-From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-To: kvalo@codeaurora.org,
-	helgaas@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	marc.zyngier@arm.com,
-	Janusz.Dziedzic@tieto.com,
-	ath9k-devel@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org,
-	rmanohar@qca.qualcomm.com,
-	bharat.kumar.gogada@xilinx.com
-Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
-	"# v4 . 9" <stable@vger.kernel.org>
-Subject: [PATCH v2] ath9k: do not return early to fix rcu unlocking
-Date: Tue, 13 Dec 2016 18:08:07 +0100
-Message-Id: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
-In-Reply-To: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
-References: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 19 Dec 2016 12:02:02 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>, linux-doc@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
+Message-ID: <20161219170201.GA1043@localhost.localdomain>
+References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
+ <1481994562-9283-2-git-send-email-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481994562-9283-2-git-send-email-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
-where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
-returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
-and suspicious RCU usage:
+On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
+> Microsemi's "Switchtec" line of PCI switch devices is already
+> supported by the kernel with standard PCI switch drivers. However, the
+> Switchtec device advertises a special management endpoint which
+> enables some additional functionality. This includes:
+> 
+>  * Packet and Byte Counters
+>  * Firmware Upgrades
+>  * Event and Error logs
+>  * Querying port link status
+>  * Custom user firmware commands
+> 
+> This patch introduces the switchtec kernel module which provides
+> pci driver that exposes a char device. The char device provides
+> userspace access to this interface through read, write and (optionally)
+> poll calls. Currently no ioctls have been implemented but a couple
+> may be added in a later revision.
+> 
+> A short text file is provided which documents the switchtec driver
+> and outlines the semantics of using the char device.
 
- ===============================
- [ INFO: suspicious RCU usage. ]
- 4.9.0-rc8 #11 Not tainted
- -------------------------------
- kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
-
- other info that might help us debug this:
-
- RCU used illegally from idle CPU!
- rcu_scheduler_active = 1, debug_locks = 0
- RCU used illegally from extended quiescent state!
- 1 lock held by swapper/7/0:
- #0:
-  (
- rcu_read_lock
- ){......}
- , at:
- [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
-
- stack backtrace:
- CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
- Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
-  ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
-  ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
-  ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
- Call Trace:
-  <IRQ>
-  [<ffffffff8132b1e5>] dump_stack+0x68/0x93
-  [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
-  [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
-  [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
-  [<ffffffff81058631>] irq_exit+0x61/0xd0
-  [<ffffffff81018d25>] do_IRQ+0x65/0x110
-  [<ffffffff81672189>] common_interrupt+0x89/0x89
-  <EOI>
-  [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
-  [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
-  [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
-  [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
-  [<ffffffff810336f8>] start_secondary+0x148/0x170
-
-Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
-Cc: <stable@vger.kernel.org> # v4.9
-
----
-v2: break instead of unlock (rename patch) [Felix Fietkau],
-    fix reference to commit [Kalle Valo]
----
- drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 52bfbb988611..e47286bf378e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2787,7 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
- 		if (list_empty(fifo_list)) {
- 			ath_txq_unlock(sc, txq);
--			return;
-+			break;
- 		}
- 
- 		bf = list_first_entry(fifo_list, struct ath_buf, list);
--- 
-2.11.0
+Some of this would be simplified if you use the managed device API's:
+devm_request_irq, pcim_enable_device, pcim_iomap, etc...
