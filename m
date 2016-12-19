@@ -1,53 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36721 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbcLCLUT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 3 Dec 2016 06:20:19 -0500
+Received: from mga05.intel.com ([192.55.52.43]:14483 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754880AbcLSM2g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Dec 2016 07:28:36 -0500
+Date: Mon, 19 Dec 2016 14:24:07 +0200
+From: Mika Westerberg <mika.westerberg@intel.com>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: Amir Levy <amir.jer.levy@intel.com>, gregkh@linuxfoundation.org,
+        andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
+        tomas.winkler@intel.com, xiong.y.zhang@intel.com
+Subject: Re: [PATCH v8 3/8] thunderbolt: Communication with the ICM (firmware)
+Message-ID: <20161219122407.GQ1460@lahna.fi.intel.com>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+ <1475073870-2126-4-git-send-email-amir.jer.levy@intel.com>
+ <fe0f0a6f-488b-bbc0-8987-a9c47d9ed9b9@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20161202215016.GA21497@verge.net.au>
-References: <1480675020-26346-1-git-send-email-horms+renesas@verge.net.au>
- <1480675020-26346-4-git-send-email-horms+renesas@verge.net.au> <20161202215016.GA21497@verge.net.au>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Sat, 3 Dec 2016 12:19:39 +0100
-Message-ID: <CAMuHMdVhiz971JTU3T3GZehfmPqFOX6XPRjG01=NZrGONSi55g@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3 pci/next] PCI: rcar: Add gen3 fallback
- compatibility string for pcie-rcar
-To: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fe0f0a6f-488b-bbc0-8987-a9c47d9ed9b9@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 2, 2016 at 10:50 PM, Simon Horman <horms@verge.net.au> wrote:
-> On Fri, Dec 02, 2016 at 11:37:00AM +0100, Simon Horman wrote:
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -1078,6 +1078,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->>       { .compatible = "renesas,pcie-rcar-gen2",
->>         .data = rcar_pcie_hw_init_gen2 },
->>       { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
->> +     { .compatible = "renesas,pcie-rcar-gen3",
->> +             .data = rcar_pcie_hw_init_hw_init },
+On Thu, Dec 01, 2016 at 05:21:01PM -0800, Andy Lutomirski wrote:
+> On 09/28/2016 07:44 AM, Amir Levy wrote:
+> > This patch provides the communication protocol between the
+> > Intel Connection Manager(ICM) firmware that is operational in the
+> > Thunderbolt controller in non-Apple hardware.
+> > The ICM firmware-based controller is used for establishing and maintaining
+> > the Thunderbolt Networking connection - we need to be able to communicate
+> > with it.
+> 
+> I'm a bit late to the party, but here goes.  I have two big questions:
 >
-> It looks like I failed to compile-test this.
->
-> s/rcar_pcie_hw_init_hw_init/rcar_pcie_hw_init/
+> 1. Why is this using netlink at all?  A system has zero or more Thunderbolt
+> controllers, they're probed just like any other PCI devices (by nhi_probe()
+> if I'm understanding correctly), they'll have nodes in sysfs, etc.
+> Shouldn't there be a simple char device per Thunderbolt controller that a
+> daemon can connect to?  This will clean up lots of things:
+> 
+> a) You can actually enforce one-daemon-at-a-time in a very natural way. Your
+> current code seems to try, but it's rather buggy.  Your subscription count
+> is a guess, your unsubscribe is entirely unchecked, and you are entirely
+> unable to detect if a daemon crashes AFAICT.
+> 
+> b) You won't need all of the complexity that's currently there to figure out
+> *which* Thunderbolt device a daemon is talking to.
+> 
+> c) You can use regular ioctl passing *structs* instead of netlink attrs.
+> There's nothing wrong with netlink attrs, except that your driver seems to
+> have a whole lot of boilerplate that just converts back and forth to regular
+> structures.
+> 
+> d) The userspace code that does stuff like "send message, wait 150ms,
+> receive reply, complain if no reply" goes away because ioctl is synchronous.
+> (Or you can use read and write, but it's still simpler.)
+> 
+> e) You could have one daemon per Thunderbolt device if you were so inclined.
+> 
+> f) You get privilege separation in userspace.  Creating a netlink socket and
+> dropping privilege is busted^Winteresting.  Opening a device node and
+> dropping privilege works quite nicely.
 
-Bummer, and my tired eyes didn't notice...
+I agree with your points. Using a char device here instead seems to be
+the right way to go forward.
 
-Gr{oetje,eeting}s,
+There is small problem, though. On non-Apple systems the host controller
+only appears when something is connected to thunderbolt ports. So the
+char device would not be there all the time. However, I think we can
+still notify the userspace by sending an extra uevent when we detect
+there is a PCIe device or inter-domain connection plugged in.
 
-                        Geert
+> 2. Why do you need a daemon anyway.  Functionally, what exactly does it do?
+> (Okay, I get that it seems to talk to a giant pile of code running in SMM,
+> and I get that Intel, for some bizarre reason, wants everyone except Apple
+> to use this code in SMM, and that Apple (for entirely understandable
+> reasons) turned it off, but that's beside the point. What does the user code
+> do that's useful and that the kernel can't do all by itself?  The only
+> really interesting bit I can see is the part that approves PCI devices.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+As far as I can tell it is used to notify user (via dbus, I guess) that
+there is a new PCIe device or inter-domain connection (networking)
+available and it needs to be approved before it can be used.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+I don't think anything prevents the kernel to do all this (Amir, Michael
+can correct me if I'm mistaken).
+
+In fact we could provide a simple "tbtadm" tool, built on top of the
+char device that can be used to list and approve devices from shell
+command line. That could also allow user to turn on "auto-approve" mode
+or similar where the kernel approves all connected devices automatically
+(if such functionality is wanted).
+
+The daemon can still be useful for listening uevents generated by the
+driver and forwarding approval requests to user.
+
+> I'm not going to review this in detail, but here's a tiny bit:
+> 
+> > +static int nhi_genl_unsubscribe(__always_unused struct sk_buff *u_skb,
+> > +				__always_unused struct genl_info *info)
+> > +{
+> > +	atomic_dec_if_positive(&subscribers);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> 
+> This, for example, is really quite buggy.
+
+OK.
+
+> This entire function here:
+> 
+> > +static int nhi_genl_query_information(__always_unused struct sk_buff *u_skb,
+> > +				      struct genl_info *info)
+> > +{
+> > +	struct tbt_nhi_ctxt *nhi_ctxt;
+> > +	struct sk_buff *skb;
+> > +	bool msg_too_long;
+> > +	int res = -ENODEV;
+> > +	u32 *msg_head;
+> > +
+> > +	if (!info || !info->userhdr)
+> > +		return -EINVAL;
+> > +
+> > +	skb = genlmsg_new(NLMSG_ALIGN(nhi_genl_family.hdrsize) +
+> > +			  nla_total_size(sizeof(DRV_VERSION)) +
+> > +			  nla_total_size(sizeof(nhi_ctxt->nvm_ver_offset)) +
+> > +			  nla_total_size(sizeof(nhi_ctxt->num_ports)) +
+> > +			  nla_total_size(sizeof(nhi_ctxt->dma_port)) +
+> > +			  nla_total_size(0),	/* nhi_ctxt->support_full_e2e */
+> > +			  GFP_KERNEL);
+> > +	if (!skb)
+> > +		return -ENOMEM;
+> > +
+> > +	msg_head = genlmsg_put_reply(skb, info, &nhi_genl_family, 0,
+> > +				     NHI_CMD_QUERY_INFORMATION);
+> > +	if (!msg_head) {
+> > +		res = -ENOMEM;
+> > +		goto genl_put_reply_failure;
+> > +	}
+> > +
+> > +	if (mutex_lock_interruptible(&controllers_list_mutex)) {
+> > +		res = -ERESTART;
+> > +		goto genl_put_reply_failure;
+> > +	}
+> > +
+> > +	nhi_ctxt = nhi_search_ctxt(*(u32 *)info->userhdr);
+> > +	if (nhi_ctxt && !nhi_ctxt->d0_exit) {
+> > +		*msg_head = nhi_ctxt->id;
+> > +
+> > +		msg_too_long = !!nla_put_string(skb, NHI_ATTR_DRV_VERSION,
+> > +						DRV_VERSION);
+> > +
+> > +		msg_too_long = msg_too_long ||
+> > +			       nla_put_u16(skb, NHI_ATTR_NVM_VER_OFFSET,
+> > +					   nhi_ctxt->nvm_ver_offset);
+> > +
+> > +		msg_too_long = msg_too_long ||
+> > +			       nla_put_u8(skb, NHI_ATTR_NUM_PORTS,
+> > +					  nhi_ctxt->num_ports);
+> > +
+> > +		msg_too_long = msg_too_long ||
+> > +			       nla_put_u8(skb, NHI_ATTR_DMA_PORT,
+> > +					  nhi_ctxt->dma_port);
+> > +
+> > +		if (msg_too_long) {
+> > +			res = -EMSGSIZE;
+> > +			goto release_ctl_list_lock;
+> > +		}
+> > +
+> > +		if (nhi_ctxt->support_full_e2e &&
+> > +		    nla_put_flag(skb, NHI_ATTR_SUPPORT_FULL_E2E)) {
+> > +			res = -EMSGSIZE;
+> > +			goto release_ctl_list_lock;
+> > +		}
+> > +		mutex_unlock(&controllers_list_mutex);
+> > +
+> > +		genlmsg_end(skb, msg_head);
+> > +
+> > +		return genlmsg_reply(skb, info);
+> > +	}
+> > +
+> > +release_ctl_list_lock:
+> > +	mutex_unlock(&controllers_list_mutex);
+> > +	genlmsg_cancel(skb, msg_head);
+> > +
+> > +genl_put_reply_failure:
+> > +	nlmsg_free(skb);
+> > +
+> > +	return res;
+> > +}
+> 
+> would be about three lines of code if you used copy_to_user and a struct.
+
+Understood.
+
+Thanks Andy for your comments.
+
+We will rework the driver to take your suggestions into account and
+expose a char device instead of using netlink.
+
+Meanwhile we will continue in the github to add new features and support
+the new Thunderbolt HW generation.
