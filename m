@@ -1,86 +1,115 @@
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Fri, 30 Dec 2016 15:48:55 +0100
-Message-ID: <1632481.oxtR6eTD5i@aspire.rjw.lan>
-In-Reply-To: <15778800.7CbgT5Og6y@aspire.rjw.lan>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <15778800.7CbgT5Og6y@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33338 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751282AbcLTHWp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 02:22:45 -0500
+Received: by mail-pg0-f68.google.com with SMTP id g1so9140059pgn.0
+        for <linux-pci@vger.kernel.org>; Mon, 19 Dec 2016 23:22:45 -0800 (PST)
+Subject: Re: [RFC PATCH v7 0/3] PCI: Introduce a way to enforce all MMIO BARs
+ not to share PAGE_SIZE
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, bhelgaas@google.com
+References: <1477464813-2499-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <6931390b-151e-ec62-b694-e3ff49163245@linux.vnet.ibm.com>
+ <2d8d7196-9eb3-01cc-4f21-423b90bd7cf7@ozlabs.ru>
+Cc: zhong@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
+        paulus@samba.org, linuxppc-dev@lists.ozlabs.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <33088110-dd46-6a55-611a-793d82a48b50@ozlabs.ru>
+Date: Tue, 20 Dec 2016 18:22:38 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2d8d7196-9eb3-01cc-4f21-423b90bd7cf7@ozlabs.ru>
+Content-Type: text/plain; charset=koi8-r
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 30, 2016 01:19:14 AM Rafael J. Wysocki wrote:
-> On Wednesday, December 28, 2016 10:18:16 AM Bjorn Helgaas wrote:
-> > On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
-> > > On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> > > > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> > > > and all the debugging you've done.  Below is a revert of the troublesome
-> > > > commit.  Can you test it and verify that it also fixes the problem?
-> > > > 
-> > > > I assume Mika is looking at this and will have a better solution soon.
-> > > > But if not, I'll queue this up for v4.10.
-> > > 
-> > > @Kilian:  Are you using the proprietary nvidia driver?  If so,
-> > > does the issue go away if you blacklist that driver or use nouveau
-> > > instead?
-> > > 
-> > > 
-> > > With a bit of googling I found dmesg and lspci output for this model:
-> > > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
-> > > 
-> > > The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
-> > > 0x60, 0x64.  I assume they're located behind the LPC bridge?
-> > > 
-> > > The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
-> > > registers with vga_tryget() but never releases that lock.  Intel
-> > > chipsets have a quirk wherein I/O ports are routed to the bus to
-> > > which the legacy PCI VGA registers are locked.  So once vga_tryget()
-> > > is called by the nvidia driver, access to the keyboard and mouse is
-> > > routed to bus 01 (on which the Nvidia card resides) and not to bus 00
-> > > (on which the LPC bridge resides).
-> > 
-> > Interesting.  A spec reference would be a good addition to whatever
-> > fix is proposed.
-> > 
-> > > My theory would be that if you lock the screen, the Nvidia card
-> > > runtime suspends, allowing the root port above it to suspend,
-> > > and then the I/O ports are no longer accessible.
-> > > 
-> > > We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
-> > > is adjusted by writing to I/O ports of a gmux controller situated below
-> > > the LPC bridge.  The nvidia driver locks the legacy VGA registers and
-> > > from that point reads from the I/O ports always return 0xff.  Commit
-> > > 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
-> > > sought to fix it but caused other breakage which remains unfixed so far:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=105051
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
-> > > 
-> > > I've always wondered if the Intel chipsets would behave more sensibly
-> > > if the LPC bridge had BARs specifying the I/O regions used by devices
-> > > below it.
-> > > 
-> > > Reverting runtime suspend for PCIe ports is not a good solution as it's
-> > > needed for Thunderbolt runtime PM on Macs.
-> > 
-> > The choices are:
-> > 
-> >   1) Fix the regression and preserve runtime PM for PCIe ports
-> >   2) Fix the regression by reverting runtime PM for PCIe ports
-> > 
-> > Obviously we hope for 1).  Preserving runtime PM without fixing the
-> > regression isn't even on the list.  I know this is Linux 101, so I
-> > apologize for restating the obvious.
+On 01/12/16 13:32, Alexey Kardashevskiy wrote:
+> On 15/11/16 13:53, Yongji Xie wrote:
+>> Hi Bjorn,
+>>
+>>
+>> Kindly ping. What do you think of the way to fix the bug that resources's
+>> size is changed
+>>
+>> when using resource_alignment. Thanks.
 > 
-> There is a couple of obvious things we can do other than reverting, though.
 > 
-> Like for example changing the cutoff date we have in there to cover the Kilian's
-> system.
+> Could anyone please comment on this? Thanks!
 
-And I hope you realize that this revert isn't even sufficient to fix the Kilian's
-machine entirely (system suspend/resume issues will remain after it).
 
-Thanks,
-Rafael
+Anyone, please?
+
+
+> 
+> 
+> 
+>>
+>>
+>> On 2016/10/26 14:53, Yongji Xie wrote:
+>>> This series introduces a way for PCI resource allocator to force
+>>> MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
+>>> driver. Because current VFIO implementation disallows to mmap
+>>> sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
+>>> with other BARs for security reasons. Thus, we have to handle mmio
+>>> access to these BARs in QEMU emulation rather than in guest which
+>>> will cause some performance loss.
+>>>
+>>> In our solution, we try to make use of the existing code path of
+>>> resource_alignment kernel parameter and add a macro to set default
+>>> alignment for it. Thus we can define this macro by default on some
+>>> archs which may easily hit the performance issue because of their
+>>> 64K page.
+>>>
+>>> In this series, patch 1,2 fixed bugs of using resource_alignment;
+>>> patch 3 adds a macro to set the default alignment of all MMIO BARs.
+>>>
+>>> Changelog v7:
+>>> - Rebased against v4.9-rc2
+>>> - Drop two merged patches
+>>> - Rework the patch which fix a bug that resources's size is changed when
+>>>    using resource_alignment
+>>> - Add a patch that fix a bug for IOV BARs when using resource_alignment
+>>>
+>>> Changelog v6:
+>>> - Remove the option "noresize@" of resource_alignment
+>>>
+>>> Changelog v5:
+>>> - Rebased against v4.8-rc6
+>>> - Drop the patch that forbidding disable memory decoding in
+>>>    pci_reassigndev_resource_alignment()
+>>>
+>>> Changelog v4:
+>>> - Rebased against v4.8-rc1
+>>> - Drop one irrelevant patch
+>>> - Drop the patch that adding wildcard to resource_alignment to enforce
+>>>    the alignment of all MMIO BARs to be at least PAGE_SIZE
+>>> - Change the format of option "noresize" of resource_alignment
+>>> - Code style improvements
+>>>
+>>> Changelog v3:
+>>> - Ignore enforced alignment to fixed BARs
+>>> - Fix issue that disabling memory decoding when reassigning the alignment
+>>> - Only enable default alignment on PowerNV platform
+>>>
+>>> Changelog v2:
+>>> - Ignore enforced alignment to VF BARs on
+>>> pci_reassigndev_resource_alignment()
+>>>
+>>> Yongji Xie (3):
+>>>    PCI: Ignore requested alignment for IOV BARs
+>>>    PCI: Restore resource's size if we expand it by using resource_alignment
+>>>    PCI: Add a macro to set default alignment for all PCI devices
+>>>
+>>>   arch/powerpc/include/asm/pci.h |    4 ++++
+>>>   drivers/pci/pci.c              |    6 +++++-
+>>>   drivers/pci/setup-bus.c        |   19 +++++++++++++++++++
+>>>   include/linux/pci.h            |    1 +
+>>>   4 files changed, 29 insertions(+), 1 deletion(-)
+>>>
+>>
+> 
+> 
+
+
+-- 
+Alexey
