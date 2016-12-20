@@ -1,137 +1,187 @@
-Return-Path: <SRS0=/5l7=YF=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=/5l7=YF=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V6 0/2] Add ACPI support for HiSilicon SoCs Host
- Controllers
-To: Ming Lei <tom.leiming@gmail.com>
-References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
- <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
-CC: <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        "Rafael J. Wysocki"
-	<rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:36627 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762236AbcLTL2y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 06:28:54 -0500
+Date: Tue, 20 Dec 2016 12:28:56 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Andreas Noever <andreas.noever@gmail.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux ACPI
-	<linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List
-	<linux-kernel@vger.kernel.org>,
-        Jon Masters <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, Hanjun Guo
-	<hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <0acc4062-cc05-f1b5-7e5d-a06a5f299d97@huawei.com>
-Date: Thu, 22 Dec 2016 20:30:39 +0800
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Amir Levy <amir.jer.levy@intel.com>
+Subject: Re: [PATCH v3 6/7] thunderbolt: Power down controller when idle
+Message-ID: <20161220112856.GA14428@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de>
+ <df0bb7cd6a3e11ec12d3e1a6c1f98351f4aea3ce.1481926599.git.lukas@wunner.de>
+ <CAHp75VfzuTaBpZd+Hu2uHbhAPHzHQDdPOwOvb9ejP2j22OWoog@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHp75VfzuTaBpZd+Hu2uHbhAPHzHQDdPOwOvb9ejP2j22OWoog@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ming
+On Mon, Dec 19, 2016 at 01:05:10AM +0200, Andy Shevchenko wrote:
+> On Sat, Dec 17, 2016 at 4:39 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > Document and implement Apple's ACPI-based (but nonstandard) pm mechanism
+> > for Thunderbolt.  Briefly, an ACPI method provided by Apple is used to
+> > cut power to the controller.  A GPE is enabled while the controller is
+> > powered down which sideband-signals a plug event, whereupon we reinstate
+> > power using the ACPI method.
+> >
+> > This saves 1.7 W on machines with a Light Ridge controller and is
+> > reported to save 4 W on Cactus Ridge 4C and Falcon Ridge 4C.  (I believe
+> > 4 W includes the bus power drawn by Apple's Gigabit Ethernet adapter.)
+> > It fixes (at least partially) a power regression introduced in 3.17 by
+> > commit 7bc5a2bad0b8 ("ACPI: Support _OSI("Darwin") correctly").
+> >
+> 
+> > +++ b/drivers/thunderbolt/power.c
+> > @@ -0,0 +1,347 @@
+> 
+> > +#include <linux/delay.h>
+> > +#include <linux/pci.h>
+> > +#include <linux/pm_runtime.h>
+> > +
+> > +#include "power.h"
+> > +
+> 
+> > +#ifdef pr_fmt
+> > +#undef pr_fmt
+> > +#endif
+> > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
+> 
+> Perhaps just define pr_fmt before any other include?
+> We have such check where actually default pr_fmt is defined. No need
+> to duplicate.
 
-The latest patchset is [PATCH v11 00/15] PCI: ARM64 ECAM quirks
-You can get them from https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git (pci/ecam)
+If I put the '#define pr_fmt(fmt)' line above all includes, I get:
 
-Thanks
-Dongdong
-在 2016/12/22 16:31, Ming Lei 写道:
-> Hi Dongdong,
->
-> On Tue, Nov 22, 2016 at 8:08 PM, Dongdong Liu <liudongdong3@huawei.com> wrote:
->> This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
->> PCIe controllers.
->> The two patches respectively:
->>         - provides the common function acpi_get_rc_resources() for ARM64
->>           platform.
->>         - adds the HiSilicon ACPI specific quirks.
->>
->> This patchset is based on branch pci/ecam-v6
->> It can be found here:
->> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-v6)
->>
->> This patchset has been tested on HiSilicon D03 board.
->> The dmesg log, /proc/iomem, and ACPI table information can be found:
->> https://bugzilla.kernel.org/show_bug.cgi?id=187961
->>
->> v5 -> v6:
->> - change the config option to CONFIG_PCI_ECAM_QUIRKS.
->> - fix some commets about acpi_get_rc_resources().
->
-> Could you post out v7 for fixing conflicts against current linus tree?
->
-> BTW, I tried to fix the conflicts by myself, but still caues the following
-> build failure:
->
-> [tom@linux-2.6-vm]$make -j4 CROSS_COMPILE=aarch64-linux-gnu-
-> ARCH=arm64 drivers/pci/host/pcie-hisi-acpi.o
->   CHK     include/config/kernel.release
->   CHK     include/generated/uapi/linux/version.h
->   CHK     include/generated/utsrelease.h
->   CHK     include/generated/timeconst.h
->   CHK     include/generated/bounds.h
->   CHK     include/generated/asm-offsets.h
->   CALL    scripts/checksyscalls.sh
->   CC      drivers/pci/host/pcie-hisi-acpi.o
-> In file included from drivers/pci/host/pcie-hisi-acpi.c:16:0:
-> drivers/pci/host/../pci.h:357:18: error: conflicting types for
-> ‘acpi_get_rc_resources’
->  struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
->                   ^
-> drivers/pci/host/../pci.h:352:5: note: previous declaration of
-> ‘acpi_get_rc_resources’ was here
->  int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
->      ^
-> scripts/Makefile.build:293: recipe for target
-> 'drivers/pci/host/pcie-hisi-acpi.o' failed
-> make[1]: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 1
-> Makefile:1640: recipe for target 'drivers/pci/host/pcie-hisi-acpi.o' failed
-> make: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 2
->
->
-> Thanks,
-> Ming
->
->>
->> v4 -> v5:
->> - obtain rc base addresses from PNP0C02 at the root of the ACPI
->>   namespace (under \_SB) instead of from sub-device under the RC.
->> - merge the rewrited get rc resources code by Tomasz.
->> - delete unused code.
->> - drop the PATCH V4 1/2, will rework late as a separate patch.
->>
->> v3 -> v4:
->> - rebase on pci/ecam-v6.
->> - delete the unnecessary link_up check code.
->>
->> v2 -> v3:
->> - rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset.
->> - obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead of
->>   hardcode the addresses.
->> - modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
->>   Arnd comments.
->>
->> v1 -> v2:
->> - rebase against Tomasz RFC V5 quirk mechanism
->> - add ACPI support for the HiSilicon Hip07 SoC PCIe controllers.
->>
->> Dongdong Liu (2):
->>   PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
->>   PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
->>
->>  MAINTAINERS                       |   1 +
->>  drivers/acpi/pci_mcfg.c           |  13 +++++
->>  drivers/pci/host/Kconfig          |   7 +++
->>  drivers/pci/host/Makefile         |   1 +
->>  drivers/pci/host/pcie-hisi-acpi.c | 119 ++++++++++++++++++++++++++++++++++++++
->>  drivers/pci/pci-acpi.c            |  69 ++++++++++++++++++++++
->>  drivers/pci/pci.h                 |   4 ++
->>  include/linux/pci-ecam.h          |   5 ++
->>  8 files changed, 219 insertions(+)
->>  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
->>
->> --
->> 1.9.1
->>
->
->
->
+    include/linux/ratelimit.h: In function 'ratelimit_state_exit':
+    drivers/thunderbolt/power.c:93:49: error: implicit declaration of function 'dev_name'
+
+This is caused by 6b1d174b0c27 which was introduced this August.
+
+
+If I try to solve this by including <linux/device.h> before the
+'#define pr_fmt(fmt)' line, I get:
+
+    drivers/thunderbolt/power.c:95:0: warning: "pr_fmt" redefined
+     #define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
+     ^
+    In file included from /root/kernel/linux/include/linux/kernel.h:13:0,
+                 from /root/kernel/linux/include/linux/list.h:8,
+                 from /root/kernel/linux/include/linux/kobject.h:20,
+                 from /root/kernel/linux/include/linux/device.h:17,
+                 from /root/kernel/linux/drivers/thunderbolt/power.c:93:
+    include/linux/printk.h:260:0: note: this is the location of the previous definition
+     #define pr_fmt(fmt) fmt
+     ^
+
+
+So it seems there's no alternative to the '#undef pr_fmt'.
+
+
+> > +       /* prevent interrupts during system sleep transition */
+> > +       if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
+> > +               pr_err("cannot disable wake GPE, resuming\n");
+> 
+> dev_err?
+
+This is intentionally pr_err for cosmetic reasons. :-)
+
+With dev_err it would look like this in dmesg:
+
+    pcieport 0000:05:00.0: cannot disable wake GPE, resuming
+
+With pr_err it looks like this:
+
+    thunderbolt 0000:05:00.0: cannot disable wake GPE, resuming
+
+Thus, someone grepping for this error message will get a hint that
+they have to look in drivers/thunderbolt/ rather than drivers/pci/pcie/.
+
+The code of this PM callback is located in the thunderbolt driver,
+which binds to the NHI, 0000:07:00.0.  But the PM callback is
+assigned to the upstream bridge, which is the grandparent of the NHI,
+0000:05:00.0.  The pr_fmt is crafted such that the KBUILD_MODNAME
+("thunderbolt") is logged rather than "pcieport".  So I use pr_*
+in the PM callbacks assigned to the upstream bridge and dev_*
+in thunderbolt_power_init() / _fini() (which is executed in the
+context of the NHI).
+
+This is also much nicer for end users looking at dmesg.  E.g. when
+the chip is suspended, it looks like this:
+
+    thunderbolt 0000:07:00.0: suspending...
+    thunderbolt 0000:07:00.0: stopping RX ring 0
+    thunderbolt 0000:07:00.0: disabling interrupt at register 0x38204 bit 0 (0x1 -> 0x0)
+    thunderbolt 0000:07:00.0: stopping TX ring 0
+    thunderbolt 0000:07:00.0: disabling interrupt at register 0x38200 bit 0 (0x1 -> 0x0)
+    thunderbolt 0000:07:00.0: control channel stopped
+    thunderbolt 0000:07:00.0: suspend finished
+    thunderbolt 0000:05:00.0: powering down
+
+It would be confusing for end users if it would say here that
+the pcieport is powering down.
+
+
+> > +       /*
+> > +        * On gen 2 controllers, the wake GPE fires as long as the controller
+> > +        * is powered up. Poll until it's powered down before enabling the GPE.
+> > +        */
+> > +       for (i = 0; i < 300; i++) {
+> 
+> 300 is magic.
+[...]
+> Why 800? Perhaps comment on this.
+
+We mimic the behaviour of the macOS driver here which polls up to
+300 times with a 1 ms delay.  I've now extended the comment above
+in my working branch to explain this.
+
+
+> > +err:
+> 
+> err_resume: ?
+
+Ok.
+
+
+> > +err:
+> 
+> err_free: ?
+
+Ok.
+
+
+> > +void thunderbolt_power_fini(struct tb *tb)
+> > +{
+> > +       struct device *nhi_dev = &tb->nhi->pdev->dev;
+> > +       struct device *upstream_dev = nhi_dev->parent->parent;
+> > +       struct tb_power *power = tb->power;
+> > +
+> 
+> > +       if (!power)
+> > +               return;
+> 
+> Would be the case?
+
+That would be the case if thunderbolt_power_init() failed, then we
+have to skip removing the GPE handler and all that.  I've now added
+a comment to explain this.
+
+I've also discovered and fixed a bug in thunderbolt_power_init(),
+in the "cannot find upstream bridge" error path I have to remove
+the GPE handler.
+
+I'll wait a bit if there's further feedback and will post a
+rectified version probably next week, after the merge window
+has closed.
+
+Thanks!
+
+Lukas
