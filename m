@@ -1,56 +1,76 @@
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCHv2] PCI: QDF2432 32 bit config space accessors
-To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>
-References: <20160921173129.GA20006@localhost>
- <20160921223805.21652-1-cov@codeaurora.org>
- <20161031214833.GB14603@bhelgaas-glaptop.roam.corp.google.com>
- <dbf40b73baa71155f39e13d6e51073aa@codeaurora.org>
- <20161102160820.GA6568@bhelgaas-glaptop.roam.corp.google.com>
- <3fd26a0d-a5c2-c385-866e-b957dffb7dda@codeaurora.org>
- <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
-Cc: cov@codeaurora.org, Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
-        catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
-        arnd@arndb.de, hanjun.guo@linaro.org, jchandra@broadcom.com,
-        dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
-        msalter@redhat.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <3a386ce0-33df-fb88-33df-88b9ca8816c7@redhat.com>
-Date: Thu, 1 Dec 2016 23:58:52 -0500
+Return-Path: <SRS0=7cta=YD=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=7cta=YD=ti.com=kishon@kernel.org>
+Subject: Re: resume path in dra7xx and other DW-based drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20161207220234.GG22129@bhelgaas-glaptop.roam.corp.google.com>
+ <58491E7C.1070700@ti.com>
+ <20161208204304.GC30533@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+        Richard
+ Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Murali
+ Karicheri <m-karicheri2@ti.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel
+	<niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Pratyush
+ Anand <pratyush.anand@gmail.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5858CED7.4020004@ti.com>
+Date: Tue, 20 Dec 2016 11:55:27 +0530
 MIME-Version: 1.0
-In-Reply-To: <20161103140058.GA31142@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20161208204304.GC30533@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/03/2016 10:00 AM, Bjorn Helgaas wrote:
+Hi Bjorn,
 
-> It turns out that we can't use the _CRS of host bridges because of the
-> Producer/Consumer bit screwup [1].  So the fallback is to include the
-> ECAM space in the _CRS of a PNP0C02 device.  This is what the PCI
-> Firmware spec r3.0, Table 4-2, footnote 2 is talking about.
+On Friday 09 December 2016 02:13 AM, Bjorn Helgaas wrote:
+> On Thu, Dec 08, 2016 at 02:19:00PM +0530, Kishon Vijay Abraham I wrote:
+>> Hi Bjorn,
+>>
+>> On Thursday 08 December 2016 03:32 AM, Bjorn Helgaas wrote:
+>>> Hi Kishon, et al,
+>>>
+>>> Does dra7xx suspend/resume work?  I'm not sure dra7xx_pcie_resume()
+>>> and dra7xx_pcie_resume_noirq() restore everything necessary.  For
+>>> example, the probe path has this:
+>>>
+>>>   dra7xx_pcie_probe
+>>>     dra7xx_add_pcie_port
+>>>       dw_pcie_host_init
+>>> 	dra7xx_pcie_host_init         # .host_init
+>>> 	  dw_pcie_setup_rc
+>>> 	    dw_pcie_prog_outbound_atu
+>>>
+>>> so I think it programs the ATU in dw_pcie_setup_rc().  But the resume
+>>> path doesn't call dw_pcie_setup_rc(), so I don't see where the ATU
+>>> setup would be restored.
+>>
+>> DRA7xx only supported shallow power state and not deep power state. In shallow
+>> power state, the register settings are not lost and hence we didn't have to
+>> restore anything.
 > 
-> Bjorn
-> 
-> [1] The original ACPI spec intent was that Consumer resources would be
-> space like ECAM that is consumed directly by the bridge, and Producer
-> resources would be the windows forwarded down to PCI.  But BIOSes
-> didn't use the Producer/Consumer bit consistently, so we have to
-> assume that all resources in host bridge _CRS are windows, which
-> leaves us no way to describe the Consumer resources.
+> I'm not really a PM guy, so I'm not familiar with shallow power state.
+> Could I have discovered from the code somehow that dra7xx suspend to
+> shallow power state preserves register state?  It's nice if a reader
+> can verify correctness without knowing the system-specific details.
 
-Aside - and now I realize you'd called this out as recently as last
-month. Alas the HPE m400 I reference on the other thread about the
-APM quirks doesn't have the motherboard resource entry so we're
-stuck with exactly the situation you describe above there.
+Some drivers like drivers/mmc/host/omap_hsmmc.c saves the register contents
+(omap_hsmmc_context_save) and then in runtime_resume checks if the register
+contents are still same (omap_hsmmc_context_restore). Do you think we have to
+do something like that for dra7xx?
 
-Jon.
+omap_hsmmc.c is used by a lot of platforms some of which loses the context
+during suspend. Since dra7xx doesn't loose context, not sure if we have to do
+something like omap_hsmmc.
 
--- 
-Computer Architect | Sent from my Fedora powered laptop
+Thanks
+Kishon
