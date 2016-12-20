@@ -1,66 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:60325 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753253AbcLRRU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Dec 2016 12:20:58 -0500
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <1481994562-9283-2-git-send-email-logang@deltatee.com>
- <20161218075141.GE29850@kroah.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <d7c26e15-34f3-26d4-e13a-f24b4a9034c3@deltatee.com>
-Date: Sun, 18 Dec 2016 10:20:47 -0700
+Received: from cn.fujitsu.com ([59.151.112.132]:32971 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751693AbcLTDUL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 22:20:11 -0500
+Subject: Re: [PATCH] infiniband/hfil: drop pci_link_reset()
+To: Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        <linux-rdma@vger.kernel.org>
+References: <1482129996-19255-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+ <1482129996-19255-2-git-send-email-caoj.fnst@cn.fujitsu.com>
+ <e6f22b2d-faf7-390a-ca4d-564c6d0841b8@intel.com>
+CC: <dledford@redhat.com>, <sean.hefty@intel.com>,
+        <hal.rosenstock@gmail.com>, <linux-pci@vger.kernel.org>
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+Message-ID: <5858A2B1.1020701@cn.fujitsu.com>
+Date: Tue, 20 Dec 2016 11:17:05 +0800
 MIME-Version: 1.0
-In-Reply-To: <20161218075141.GE29850@kroah.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
+In-Reply-To: <e6f22b2d-faf7-390a-ca4d-564c6d0841b8@intel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
 
-Thanks for the quick review!
 
-On 18/12/16 12:51 AM, Greg Kroah-Hartman wrote:
-> On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
->> +struct switchtec_dev {
->> +	struct pci_dev *pdev;
->> +	struct msix_entry *msix;
->> +	struct device *dev;
->> +	struct kref kref;
->
-> Why do you have a pointer to a device, yet a kref as well?  Just have
-> this structure embed a 'struct device' in itself, like you did for a
-> kref, and you will be fine.  Otherwise you are dealing with two
-> different sets of reference counting here, for no good reason.
+On 12/19/2016 11:54 PM, Dennis Dalessandro wrote:
+> On 12/19/2016 01:46 AM, Cao jin wrote:
+>> In AER recovery, pci_error_handlers.link_reset() is never called,
+>> drop it now.
+>>
+>> Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+> 
+> Is this part of a larger patch series?
 
-Ok, understood. I had referenced the device dax driver which did it this 
-way in 4.8 but looks like it was changed to the way you suggest in 4.9.
+Not now.
 
->> +#define stdev_pdev(stdev) ((stdev)->pdev)
->> +#define stdev_pdev_dev(stdev) (&stdev_pdev(stdev)->dev)
->> +#define stdev_name(stdev) pci_name(stdev_pdev(stdev))
->> +#define stdev_dev(stdev) ((stdev)->dev)
->
-> Ick, just open code these please.  That's a huge hint your use of the
-> driver model is not correct :)
+> If the function is never called
+> it should be removed from struct pci_error_handlers should it not? Then
+> in the same series be removed from all the drivers.
 
-Ok, will do. For reference, I was copying
+Maybe we can remove the unnecessary implementation in each device first,
+if finally pci guys confirmed that .link_reset could be removed, then we
+could removed it in the future, not quite necessary to place them into
+the same series. But it is also good hear their voice first.
 
-drivers/ntb/hw/intel/ntb_hw_intel.h
+-- 
+Sincerely,
+Cao jin
 
-which does a similar thing.
+> 
+> Probably should check with the folks on linux-pci about this though.
+> 
+> -Denny
+> 
+> 
+> 
+> 
 
-Logan
+
