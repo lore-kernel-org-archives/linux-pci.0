@@ -1,73 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:39068 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932178AbcLSIQ0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 03:16:26 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33890 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753889AbcLTShS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 13:37:18 -0500
+From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
 To: linux-pci@vger.kernel.org
-Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH 4/4] PCI: exynos: remove the duplicated codes
-Date: Mon, 19 Dec 2016 17:16:14 +0900
-Message-id: <20161219081614.5403-5-jh80.chung@samsung.com>
-In-reply-to: <20161219081614.5403-1-jh80.chung@samsung.com>
-References: <20161219081614.5403-1-jh80.chung@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Simon Horman <horms@verge.net.au>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
+Subject: [PATCH v2 pci/next] PCI: rcar: Add compatible string for r8a7796
+Date: Wed, 21 Dec 2016 03:37:06 +0900
+Message-Id: <1482259026-7180-1-git-send-email-ykaneko0929@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removed the duplicated codes.
-It can use the more simply than now.
+From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+This patch adds support for r8a7796.
+
+Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- drivers/pci/host/pci-exynos.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index d705bfe..33562cf 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -116,30 +116,24 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
+This patch is based on the next branch of the pci tree.
+
+v2 [Yoshihiro Kaneko]
+* As suggested by Geert Uytterhoeven
+  Dropped the update of the driver.
+
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index eee518d..34712d6 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -6,6 +6,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+ 	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+ 	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
++	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
+ 	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+ 	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
  
--	if (on) {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
--	} else {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
--	}
-+	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
- }
- 
- static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
- 
--	if (on) {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
--	} else {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
--	}
-+	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
- }
- 
- static void exynos_pcie_assert_core_reset(struct exynos_pcie *ep)
 -- 
-2.10.2
+1.9.1
 
