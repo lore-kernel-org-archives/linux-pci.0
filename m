@@ -1,70 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161129213955.15663.21173.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <d7e1adbe-91a2-1a76-93b3-c880f9635e5e@jonmasters.org>
-Date: Tue, 13 Dec 2016 04:09:39 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:44098 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933735AbcLTINn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Dec 2016 03:13:43 -0500
+Date: Tue, 20 Dec 2016 10:09:16 +0200
+From: Mika Westerberg <mika.westerberg@intel.com>
+To: Mario.Limonciello@dell.com
+Cc: luto@kernel.org, amir.jer.levy@intel.com,
+        gregkh@linuxfoundation.org, andreas.noever@gmail.com,
+        bhelgaas@google.com, corbet@lwn.net, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        linux-doc@vger.kernel.org, thunderbolt-linux@intel.com,
+        tomas.winkler@intel.com, xiong.y.zhang@intel.com
+Subject: Re: [PATCH v8 3/8] thunderbolt: Communication with the ICM (firmware)
+Message-ID: <20161220080916.GV1460@lahna.fi.intel.com>
+References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+ <1475073870-2126-4-git-send-email-amir.jer.levy@intel.com>
+ <fe0f0a6f-488b-bbc0-8987-a9c47d9ed9b9@kernel.org>
+ <20161219122407.GQ1460@lahna.fi.intel.com>
+ <05d9c1db67af410981bbb9672071a237@ausx13mpc120.AMER.DELL.COM>
 MIME-Version: 1.0
-In-Reply-To: <20161129213955.15663.21173.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
- linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
- linux-acpi@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Lv Zheng <lv.zheng@intel.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <05d9c1db67af410981bbb9672071a237@ausx13mpc120.AMER.DELL.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/29/2016 04:39 PM, Bjorn Helgaas wrote:
+On Mon, Dec 19, 2016 at 05:21:39PM +0000, Mario.Limonciello@dell.com wrote:
+> Dell - Internal Use - Confidential  
+> 
+> > 
+> > There is small problem, though. On non-Apple systems the host controller only
+> > appears when something is connected to thunderbolt ports. So the char device
+> > would not be there all the time. However, I think we can still notify the
+> > userspace by sending an extra uevent when we detect there is a PCIe device or
+> > inter-domain connection plugged in.
+> > 
+> 
+> Why couldn't you just create it the first time a device is plugged into a Thunderbolt
+> port and leave it until the module is cleaned up?  If the host controller goes to sleep
+> an event could be sent to the daemon to let it know it disappeared and not to expect
+> data on the char device for now, but leave the node around. 
 
-> +New architectures should be able to use "Consumer" Extended Address Space
-> +descriptors in the PNP0A03 device for bridge registers, including ECAM,
-> +although a strict interpretation of [6] might prohibit this.  Old x86 and
-> +ia64 kernels assume all address space descriptors, including "Consumer"
-> +Extended Address Space ones, are windows, so it would not be safe to
-> +describe bridge registers this way on those architectures.
-
-<snip>
-
-> +[6] PCI Firmware 3.0, sec 4.1.2:
-
-<snip>
-
-Thanks for the revised writeup, Bjorn. It's great. I'm trying to get the
-above clarified explicitly in terms of the spec, and in terms of what
-other Operating Systems would like to see as general preference.
-
-To your point about second generation ARM (server) systems: we're actually
-on generation 3+ now and finally getting to the point where people are
-listening. A great many times over the past few years, people have had
-to be sat on until they did what was needed. Fortunately, we are going
-to finally have upstream kernels (and distros based upon them) that
-boot out of the box on compliant hardware and will be able to point
-people at the usual "upstream first" messaging we've been pushing.
-
-I had originally fallen for the SoC koolaid that PCIe was not essential,
-and was convinced fairly early that this was nonsense. But it has taken
-a few years for everyone else to get onto that bandwagon. First you give
-them exactly what they know and love (a 1-2 socket Xeon class machine
-with lots of PCIe lanes), then you go and fix the design to give them
-what they actually need (which logically enumerates as PCIe but isn't) ;)
-
-Jon.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+We don't do that for USB memory sticks (or any other removable media)
+either - once you disconnect the device the nodes are also removed. I
+suppose same goes with USB network adapters, which is closest to
+thunderbolt networking I can think of.
