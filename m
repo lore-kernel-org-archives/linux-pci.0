@@ -1,80 +1,147 @@
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Subject: Re: ACPI namespace details for ARM64
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Al Stone <ahs3@redhat.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Christopher Covington <cov@codeaurora.org>,
-        Don Dutile <ddutile@redhat.com>,
-        Dongdong Liu <liudongdong3@huawei.com>, Duc Dang <dhdang@apm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Mark Salter <msalter@redhat.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Robert Richter <rrichter@cavium.com>,
-        Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-        linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <1d7424da-f9f8-68e3-5571-b9fc46f13a7f@redhat.com>
-Date: Thu, 1 Dec 2016 23:52:00 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34007 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755263AbcLTNoc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 08:44:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20161220112856.GA14428@wunner.de>
+References: <cover.1481926599.git.lukas@wunner.de> <df0bb7cd6a3e11ec12d3e1a6c1f98351f4aea3ce.1481926599.git.lukas@wunner.de>
+ <CAHp75VfzuTaBpZd+Hu2uHbhAPHzHQDdPOwOvb9ejP2j22OWoog@mail.gmail.com> <20161220112856.GA14428@wunner.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 20 Dec 2016 15:44:31 +0200
+Message-ID: <CAHp75Vf1ejYPi_Td769-by=_9HrhCVwif5z6-EkTbTswzUds8w@mail.gmail.com>
+Subject: Re: [PATCH v3 6/7] thunderbolt: Power down controller when idle
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Amir Levy <amir.jer.levy@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/09/2016 05:05 PM, Bjorn Helgaas wrote:
+On Tue, Dec 20, 2016 at 1:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Mon, Dec 19, 2016 at 01:05:10AM +0200, Andy Shevchenko wrote:
+>> On Sat, Dec 17, 2016 at 4:39 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>> > Document and implement Apple's ACPI-based (but nonstandard) pm mechanism
+>> > for Thunderbolt.  Briefly, an ACPI method provided by Apple is used to
+>> > cut power to the controller.  A GPE is enabled while the controller is
+>> > powered down which sideband-signals a plug event, whereupon we reinstate
+>> > power using the ACPI method.
+>> >
+>> > This saves 1.7 W on machines with a Light Ridge controller and is
+>> > reported to save 4 W on Cactus Ridge 4C and Falcon Ridge 4C.  (I believe
+>> > 4 W includes the bus power drawn by Apple's Gigabit Ethernet adapter.)
+>> > It fixes (at least partially) a power regression introduced in 3.17 by
+>> > commit 7bc5a2bad0b8 ("ACPI: Support _OSI("Darwin") correctly").
 
-> We've been working through the details of getting ACPI to work on
-> arm64, and there have been lots of questions about what this means for
-> PCI.  I've outlined this for several people individually, but I'm
-> going to send this separately, apart from a specific patch series, to
-> make sure we're all on the same page.  Please correct my errors and
-> misunderstandings.
+>> > +++ b/drivers/thunderbolt/power.c
+>> > @@ -0,0 +1,347 @@
+>>
+>> > +#include <linux/delay.h>
+>> > +#include <linux/pci.h>
+>> > +#include <linux/pm_runtime.h>
+>> > +
+>> > +#include "power.h"
+>> > +
+>>
+>> > +#ifdef pr_fmt
+>> > +#undef pr_fmt
+>> > +#endif
+>> > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
+>>
+>> Perhaps just define pr_fmt before any other include?
+>> We have such check where actually default pr_fmt is defined. No need
+>> to duplicate.
+>
+> If I put the '#define pr_fmt(fmt)' line above all includes, I get:
+>
+>     include/linux/ratelimit.h: In function 'ratelimit_state_exit':
+>     drivers/thunderbolt/power.c:93:49: error: implicit declaration of function 'dev_name'
+>
+> This is caused by 6b1d174b0c27 which was introduced this August.
+>
+>
+> If I try to solve this by including <linux/device.h> before the
 
-Thanks so much again for writing this.
+Not before, but rather after?
 
-When we originally created the SBBR (Server Base Boot Requirements) we
-were very vague about things like PCI. On x86, it "just worked", and so
-we said generic things about MCFG tables and implementing PCI correctly,
-but we didn't think of all of the many ways it might be done badly. In
-that respect, Intel and AMD have spoiled us over the years (thanks!) :)
+printk.h defines default pr_fmt. What you need is to define it before.
 
-Since then, we've had a lot of opportunity to learn about buggy IP
-that's out there and we've done a lot to have it fixed, and to get
-all of the vendors to take care of these problems before their next
-generation silicon lands. Indeed, we're doing a lot more on the pre
-silicon front as well these days, but that's for another time.
+> '#define pr_fmt(fmt)' line, I get:
+>
+>     drivers/thunderbolt/power.c:95:0: warning: "pr_fmt" redefined
+>      #define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
+>      ^
+>     In file included from /root/kernel/linux/include/linux/kernel.h:13:0,
+>                  from /root/kernel/linux/include/linux/list.h:8,
+>                  from /root/kernel/linux/include/linux/kobject.h:20,
+>                  from /root/kernel/linux/include/linux/device.h:17,
+>                  from /root/kernel/linux/drivers/thunderbolt/power.c:93:
+>     include/linux/printk.h:260:0: note: this is the location of the previous definition
+>      #define pr_fmt(fmt) fmt
+>      ^
+>
+>
+> So it seems there's no alternative to the '#undef pr_fmt'.
 
-And of course, once you have all the Linux distros and other OSes out
-there, it's easier for the next wave to come along anyway. It will
-either boot for them, or it won't. And if it doesn't boot, the
-vendors will have two choices: upstream a fix and get every distro to
-pick it up at some future point (and wait until then because you won't
-even be able to boot the installation media to install an update) or
-don't make the mistake in the first place and fix it pre-silicon.
+Imagine how many drivers could suffer of this. So, something is wrong
+either in your code, in headers, or in both. But many drivers for now
+are using cusotm pr_fmt() in a way I described.
 
-What I would like to get out of this experience is not only the
-summary you've written, which we will point people to as a living
-document, but also a more useful update to the ARM SBBR that spells
-out the many actual requirements and expectations. I want to go a
-lot further and start prescribing lots of other things in the next
-major update to the SBBR (everything from "you will map your RAM at
-zero", and you will implement your SMMU topology in this way...")
-that were too hand wavy before, but definitely want a giant section
-on how to do PCI right. So we'll come ping you for input on that :)
+>> > +       /* prevent interrupts during system sleep transition */
+>> > +       if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
+>> > +               pr_err("cannot disable wake GPE, resuming\n");
+>>
+>> dev_err?
+>
+> This is intentionally pr_err for cosmetic reasons. :-)
+>
+> With dev_err it would look like this in dmesg:
+>
+>     pcieport 0000:05:00.0: cannot disable wake GPE, resuming
+>
+> With pr_err it looks like this:
+>
+>     thunderbolt 0000:05:00.0: cannot disable wake GPE, resuming
+>
+> Thus, someone grepping for this error message will get a hint that
+> they have to look in drivers/thunderbolt/ rather than drivers/pci/pcie/.
+>
+> The code of this PM callback is located in the thunderbolt driver,
+> which binds to the NHI, 0000:07:00.0.  But the PM callback is
+> assigned to the upstream bridge, which is the grandparent of the NHI,
+> 0000:05:00.0.  The pr_fmt is crafted such that the KBUILD_MODNAME
+> ("thunderbolt") is logged rather than "pcieport".  So I use pr_*
+> in the PM callbacks assigned to the upstream bridge and dev_*
+> in thunderbolt_power_init() / _fini() (which is executed in the
+> context of the NHI).
 
-> The basic requirement is that the ACPI namespace should describe
-> *everything* that consumes address space unless there's another
-> standard way for the OS to find it [1, 2].
+I understand rationale, here my question: could pcie bridge driver
+replace name for the port which serves as thunderbolt?
 
-...and by the way, this was a key lesson for me, too. I had not
-fully internalized before that you don't just want to describe the
-ECAM region in the MCFG but you also need to ensure it's properly
-described in the ACPI namespace. Lots of good things learned.
+>> > +void thunderbolt_power_fini(struct tb *tb)
+>> > +{
+>> > +       struct device *nhi_dev = &tb->nhi->pdev->dev;
+>> > +       struct device *upstream_dev = nhi_dev->parent->parent;
+>> > +       struct tb_power *power = tb->power;
+>> > +
+>>
+>> > +       if (!power)
+>> > +               return;
+>>
+>> Would be the case?
+>
+> That would be the case if thunderbolt_power_init() failed, then we
+> have to skip removing the GPE handler and all that.  I've now added
+> a comment to explain this.
 
-Jon.
+And you can't do this outside because outside has no knowledge what is
+tb_power is. Am I right?
 
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+With Best Regards,
+Andy Shevchenko
