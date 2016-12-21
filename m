@@ -1,165 +1,70 @@
-Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
-Return-Path: <SRS0=odQV=XR=apm.com=dhdang@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57210 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751990AbcLUUQm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Dec 2016 15:16:42 -0500
+Date: Wed, 21 Dec 2016 14:16:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Harry Mallon <hjmallon@gmail.com>
+Cc: linux-pci@vger.kernel.org, Martin Mares <mj@ucw.cz>
+Subject: Re: lspci memory behind bridge reporting
+Message-ID: <20161221201635.GA31167@bhelgaas-glaptop.roam.corp.google.com>
+References: <CDB45911-510C-459D-BCDC-17955FCC400D@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <175F32B0-C73F-4250-9E60-3CE7409F0B0C@redhat.com>
-References: <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
- <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com>
- <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com> <CADaLNDkyCrheZLNG3_9BVgvGBW8WrA-VPWOCezz3U-g+nt5W9w@mail.gmail.com>
- <175F32B0-C73F-4250-9E60-3CE7409F0B0C@redhat.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Fri, 2 Dec 2016 11:39:20 -0800
-Message-ID: <CADaLNDmWRn+UKzF8PH2LmYCSF+NhHaw26RTN+QoaByh1wS7jfQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
-To: Jon Masters <jcm@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CDB45911-510C-459D-BCDC-17955FCC400D@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 2, 2016 at 12:11 AM, Jon Masters <jcm@redhat.com> wrote:
-> You're welcome.
->
-> (Unrelated) Note that I added a console=3D and earlycon in my test (and g=
-ot the baud rate wrong for the console but nevermind...was ssh'd in after t=
-he earlycon output I cared about anyway) because of some other cleanup work=
- for the SPCR parsing that apparently is still not quite fixed for upstream=
-, or rather, there is a need to match on the 32-bit access required for the=
- UART and that isn't happening so it's not getting setup. Folks are trackin=
-g that one and fixing it though.
+[+cc Martin (lspci maintainer)]
 
-I don't see this console issue on X-Gene1 (Mustang board). I tried
-with X-Gene 2 as well. I used both console=3DttyS0,115200 and
-earlycon=3Duart8250,mmio32,0x1c020000. Are you setting baudrate to
-115200 or something else?
+On Wed, Dec 21, 2016 at 04:53:30PM +0000, Harry Mallon wrote:
+> Hello all,
+> 
+> I am currently debugging a PCIE BAR assignment issue and am working on a patch to save me some time in future with lspci. Would patches like this be considered? Does anyone have any input on the proposed formats of the readouts?
+> 
+> 1. Currently if a bridge has no memory behind bridge it displays messages like the following, for reasons of PCI implementation detail.
+> 
+> I/O behind bridge: 0000f000-00000fff
+> Memory behind bridge: fff00000-000fffff
+> Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+> 
+> I would prefer:
+> I/O behind bridge: None
+> Memory behind bridge: None
+> Prefetchable memory behind bridge: None
 
->
-> --
-> Computer Architect | Sent from my 64-bit #ARM Powered phone
->
->> On Dec 2, 2016, at 02:37, Duc Dang <dhdang@apm.com> wrote:
->>
->>> On Thu, Dec 1, 2016 at 11:12 PM, Jon Masters <jcm@redhat.com> wrote:
->>>> On 12/01/2016 09:27 PM, Duc Dang wrote:
->>>> PCIe controllers in X-Gene SoCs is not ECAM compliant: software
->>>> needs to configure additional controller's register to address
->>>> device at bus:dev:function.
->>>>
->>>> The quirk will discover controller MMIO register space and configure
->>>> controller registers to select and address the target secondary device=
-.
->>>>
->>>> The quirk will only be applied for X-Gene PCIe MCFG table with
->>>> OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
->>>>
->>>> Signed-off-by: Duc Dang <dhdang@apm.com>
->>>
->>> So far I've tested this on an HPE ProLiant m400 (Moonshot) cartridge
->>> and will test it on some other reference platforms soon. Bootlog for
->>> the m400 attached in case Bjorn wants to see the output. Here's
->>> what I see in /proc/iomem btw on that platform:
->>>
->>> # cat /proc/iomem
->>> 10520000-10523fff : APMC0D18:00
->>>  10520000-10523fff : APMC0D18:00
->>> 10524000-10527fff : APMC0D17:00
->>> 10540000-1054a0ff : APMC0D01:00
->>>  10546000-10546fff : APMC0D50:00
->>>  1054a000-1054a00f : APMC0D12:03
->>>    1054a000-1054a00f : APMC0D12:02
->>>      1054a000-1054a00f : APMC0D12:01
->>>        1054a000-1054a00f : APMC0D12:00
->>> 17000000-17000fff : APMC0D01:00
->>> 17001000-17001fff : APMC0D01:00
->>>  17001000-170013ff : APMC0D15:00
->>>    17001000-170013ff : APMC0D15:00
->>> 1701c000-1701cfff : APMC0D14:00
->>> 1a800000-1a800fff : APMC0D0D:00
->>>  1a800000-1a800fff : APMC0D0D:00
->>> 1c000200-1c0002ff : APMC0D06:00
->>> 1c021000-1c0210ff : APMC0D08:00
->>>  1c021000-1c02101f : serial
->>> 1c024000-1c024fff : APMC0D07:00
->>> 1f230000-1f230fff : APMC0D0D:00
->>>  1f230000-1f230fff : APMC0D0D:00
->>> 1f23d000-1f23dfff : APMC0D0D:00
->>>  1f23d000-1f23dfff : APMC0D0D:00
->>> 1f23e000-1f23efff : APMC0D0D:00
->>>  1f23e000-1f23efff : APMC0D0D:00
->>> 1f2a0000-1f31ffff : APMC0D06:00
->>> 1f500000-1f50ffff : PCI Bus 0000:00
->>>  1f500000-1f50ffff : PNP0A08:00
->>> 78800000-78800fff : APMC0D13:00
->>>  78800000-78800fff : APMC0D12:03
->>>    78800000-78800fff : APMC0D12:02
->>>      78800000-78800fff : APMC0D12:01
->>>        78800000-78800fff : APMC0D12:00
->>>          78800000-78800fff : APMC0D11:00
->>>          78800000-78800fff : APMC0D10:03
->>>          78800000-78800fff : APMC0D10:02
->>>          78800000-78800fff : APMC0D10:01
->>>          78800000-78800fff : APMC0D10:00
->>> 79000000-798fffff : APMC0D0E:00
->>> 7c000000-7c1fffff : APMC0D12:00
->>> 7c200000-7c3fffff : APMC0D12:01
->>> 7c400000-7c5fffff : APMC0D12:02
->>> 7c600000-7c7fffff : APMC0D12:03
->>> 7e000000-7e000fff : APMC0D13:00
->>> 7e200000-7e200fff : APMC0D10:03
->>>  7e200000-7e200fff : APMC0D10:02
->>>    7e200000-7e200fff : APMC0D10:01
->>>      7e200000-7e200fff : APMC0D10:00
->>> 7e600000-7e600fff : APMC0D11:00
->>> 7e700000-7e700fff : APMC0D10:03
->>>  7e700000-7e700fff : APMC0D10:02
->>>    7e700000-7e700fff : APMC0D10:01
->>>      7e700000-7e700fff : APMC0D10:00
->>> 7e720000-7e720fff : APMC0D10:03
->>>  7e720000-7e720fff : APMC0D10:02
->>>    7e720000-7e720fff : APMC0D10:01
->>>      7e720000-7e720fff : APMC0D10:00
->>> 7e800000-7e800fff : APMC0D10:00
->>> 7e840000-7e840fff : APMC0D10:01
->>> 7e880000-7e880fff : APMC0D10:02
->>> 7e8c0000-7e8c0fff : APMC0D10:03
->>> 7e930000-7e930fff : APMC0D13:00
->>> 4000000000-4001ffffff : System RAM
->>>  4000080000-4000c3ffff : Kernel code
->>>  4000db0000-400165ffff : Kernel data
->>> 40023a0000-4ff733ffff : System RAM
->>> 4ff7340000-4ff77cffff : reserved
->>> 4ff77d0000-4ff79cffff : System RAM
->>> 4ff79d0000-4ff7e7ffff : reserved
->>> 4ff7e80000-4ff7e8ffff : System RAM
->>> 4ff7e90000-4ff7efffff : reserved
->>> 4ff7f10000-4ff800ffff : reserved
->>> 4ff8010000-4fffffffff : System RAM
->>> a020000000-a03fffffff : PCI Bus 0000:00
->>>  a020000000-a0201fffff : PCI Bus 0000:01
->>>    a020000000-a0200fffff : 0000:01:00.0
->>>      a020000000-a0200fffff : mlx4_core
->>>    a020100000-a0201fffff : 0000:01:00.0
->>> a060000000-a07fffffff : PCI Bus 0000:00
->>> a0d0000000-a0dfffffff : PCI ECAM
->>> a110000000-a14fffffff : PCI Bus 0000:00
->>>  a110000000-a121ffffff : PCI Bus 0000:01
->>>    a110000000-a111ffffff : 0000:01:00.0
->>>      a110000000-a111ffffff : mlx4_core
->>>    a112000000-a121ffffff : 0000:01:00.0
->>>
->>> Adding a Tested-by for the record:
->>>
->>> Tested-by: Jon Masters <jcm@redhat.com>
->>
->> Thanks a lot for testing this, Jon.
->>>
->>> Jon.
->>>
->>> --
->>> Computer Architect | Sent from my Fedora powered laptop
->>>
->> Regards,
->> Duc Dang.
+Thanks for the suggestions, Harry.  I would like this, too.  Maybe
+this with "-v":
+
+  I/O behind bridge: None
+
+and this with "-vv":
+
+  I/O behind bridge: None (0000f000-00000fff)
+
+There are many register values that disable the windows, and it's
+conceivable that somebody would want to match the actual register
+values with an analyzer trace or a piece of code.
+
+> 2. It would be useful for me to have access to the amount of memory in these chunks (my mental hex subtraction is pretty terrible). Maybe this would be displayed something like
+> 
+> I/O behind bridge: 0000c000-0000dfff [8.00K]
+> Memory behind bridge: f4000000-f65fffff [38.00M]
+> Prefetchable memory behind bridge: 00000000e0000000-00000000f3ffffff [320.00M]
+
+This makes sense to me, too, though I would use the same size format
+lspci already uses for endpoint BARs, e.g.,
+
+  Memory at f1000000 (64-bit, non-prefetchable) [size=8K]
+
+Of course, BARs are always a nice power-of-two, so there's no need for
+fractions, while bridge window sizes are much less constrained.  I
+don't know whether it's better to use decimal places as you did, or to
+use the largest unit size (K, M, G) that expresses the size as a whole
+number.
+
+Be sure to send any patches to Martin directly; I doubt he monitors
+linux-pci closely.
+
+Bjorn
