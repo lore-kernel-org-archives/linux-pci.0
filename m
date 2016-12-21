@@ -1,101 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:36100 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932728AbcLSIRs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2016 03:17:48 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH 3/4] PCI: exynos: Use the bitops API to operate the bit shifting
-Date: Mon, 19 Dec 2016 17:17:39 +0900
-Message-id: <20161219081740.5457-4-jh80.chung@samsung.com>
-In-reply-to: <20161219081740.5457-1-jh80.chung@samsung.com>
-References: <20161219081740.5457-1-jh80.chung@samsung.com>
+Received: from nbd.name ([46.4.11.11]:35803 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755902AbcLUHxP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Dec 2016 02:53:15 -0500
+From: John Crispin <john@phrozen.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Gabor Juhos <juhosg@openwrt.org>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH] pci: add kernel config option for disabling common PCI quirks
+Date: Wed, 21 Dec 2016 08:53:04 +0100
+Message-Id: <1482306784-29224-1-git-send-email-john@phrozen.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just use the bitops api to operate the bit.
+From: Gabor Juhos <juhosg@openwrt.org>
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+These quirks do not effect small small plastic routers. These routers tend
+to have very little flash space. This patch adds a new option that allows
+us to build a kernel without including the common quirks, thus saving us
+valuable flash space.
+
+When building an image for a MIPS/Ralink router with this option enabled
+it will reduce the size of an uncompressed uImage by 12KB.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/pci/host/pci-exynos.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Hi Bjorn,
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index d64e8f1..d705bfe 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -40,19 +40,19 @@ struct exynos_pcie {
+This patch has been lingering inside the OpenWrt for some years. I am not
+sure if this is the best way to remove the quirks from the build. Let me
+know if you prefer a different way of solving this.
+
+	John
+
+ drivers/pci/Kconfig  |   10 ++++++++++
+ drivers/pci/quirks.c |    6 ++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6555eb7..967bcd5 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -71,6 +71,16 @@ config XEN_PCIDEV_FRONTEND
+           The PCI device frontend driver allows the kernel to import arbitrary
+           PCI devices from a PCI backend to support PCI driver domains.
  
- /* PCIe ELBI registers */
- #define PCIE_IRQ_PULSE			0x000
--#define IRQ_INTA_ASSERT			(0x1 << 0)
--#define IRQ_INTB_ASSERT			(0x1 << 2)
--#define IRQ_INTC_ASSERT			(0x1 << 4)
--#define IRQ_INTD_ASSERT			(0x1 << 6)
-+#define IRQ_INTA_ASSERT			BIT(0)
-+#define IRQ_INTB_ASSERT			BIT(2)
-+#define IRQ_INTC_ASSERT			BIT(4)
-+#define IRQ_INTD_ASSERT			BIT(6)
- #define PCIE_IRQ_LEVEL			0x004
- #define PCIE_IRQ_SPECIAL		0x008
- #define PCIE_IRQ_EN_PULSE		0x00c
- #define PCIE_IRQ_EN_LEVEL		0x010
--#define IRQ_MSI_ENABLE			(0x1 << 2)
-+#define IRQ_MSI_ENABLE			BIT(2)
- #define PCIE_IRQ_EN_SPECIAL		0x014
- #define PCIE_PWR_RESET			0x018
- #define PCIE_CORE_RESET			0x01c
--#define PCIE_CORE_RESET_ENABLE		(0x1 << 0)
-+#define PCIE_CORE_RESET_ENABLE		BIT(0)
- #define PCIE_STICKY_RESET		0x020
- #define PCIE_NONSTICKY_RESET		0x024
- #define PCIE_APP_INIT_RESET		0x028
-@@ -61,7 +61,7 @@ struct exynos_pcie {
- #define PCIE_ELBI_LTSSM_ENABLE		0x1
- #define PCIE_ELBI_SLV_AWMISC		0x11c
- #define PCIE_ELBI_SLV_ARMISC		0x120
--#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-+#define PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
++config PCI_DISABLE_COMMON_QUIRKS
++	bool "PCI disable common quirks"
++	depends on PCI
++        default n
++	help
++	  Say Y here if you do not wish to include the common quirks inside
++	  your kernel This is usefull for devices with scarce memory.
++
++	  If you don't know what to do here, say N.
++
+ config HT_IRQ
+ 	bool "Interrupts on hypertransport devices"
+ 	default y
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c232729..afe181e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -41,6 +41,7 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+ 				PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
  
- /* PCIe Purple registers */
- #define PCIE_PHY_GLOBAL_RESET		0x000
-@@ -79,27 +79,27 @@ struct exynos_pcie {
- #define PCIE_PHY_DCC_FEEDBACK		0x014
- #define PCIE_PHY_PLL_DIV_1		0x05c
- #define PCIE_PHY_COMMON_POWER		0x064
--#define PCIE_PHY_COMMON_PD_CMN		(0x1 << 3)
-+#define PCIE_PHY_COMMON_PD_CMN		BIT(3)
- #define PCIE_PHY_TRSV0_EMP_LVL		0x084
- #define PCIE_PHY_TRSV0_DRV_LVL		0x088
- #define PCIE_PHY_TRSV0_RXCDR		0x0ac
- #define PCIE_PHY_TRSV0_POWER		0x0c4
--#define PCIE_PHY_TRSV0_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV0_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV0_LVCC		0x0dc
- #define PCIE_PHY_TRSV1_EMP_LVL		0x144
- #define PCIE_PHY_TRSV1_RXCDR		0x16c
- #define PCIE_PHY_TRSV1_POWER		0x184
--#define PCIE_PHY_TRSV1_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV1_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV1_LVCC		0x19c
- #define PCIE_PHY_TRSV2_EMP_LVL		0x204
- #define PCIE_PHY_TRSV2_RXCDR		0x22c
- #define PCIE_PHY_TRSV2_POWER		0x244
--#define PCIE_PHY_TRSV2_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV2_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV2_LVCC		0x25c
- #define PCIE_PHY_TRSV3_EMP_LVL		0x2c4
- #define PCIE_PHY_TRSV3_RXCDR		0x2ec
- #define PCIE_PHY_TRSV3_POWER		0x304
--#define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV3_LVCC		0x31c
++#ifndef CONFIG_PCI_DISABLE_COMMON_QUIRKS
+ /* The Mellanox Tavor device gives false positive parity errors
+  * Mark this device with a broken_parity_status, to allow
+  * PCI scanning code to "skip" this now blacklisted device.
+@@ -3015,6 +3016,7 @@ static void quirk_intel_mc_errata(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
  
- static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
++#endif /* !CONFIG_PCI_DISABLE_COMMON_QUIRKS */
+ 
+ /*
+  * Ivytown NTB BAR sizes are misreported by the hardware due to an erratum.  To
+@@ -3071,6 +3073,8 @@ static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
+ 	}
+ }
+ 
++#ifndef CONFIG_PCI_DISABLE_COMMON_QUIRKS
++
+ /*
+  * Some BIOS implementations leave the Intel GPU interrupts enabled,
+  * even though no one is handling them (f.e. i915 driver is never loaded).
+@@ -3105,6 +3109,8 @@ static void disable_igfx_irq(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+ 
++#endif /* !CONFIG_PCI_DISABLE_COMMON_QUIRKS */
++
+ /*
+  * PCI devices which are on Intel chips can skip the 10ms delay
+  * before entering D3 mode.
 -- 
-2.10.2
+1.7.10.4
 
