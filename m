@@ -1,133 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52282 "EHLO mail.kernel.org"
+Received: from nbd.name ([46.4.11.11]:57269 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754968AbcLAIjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 03:39:06 -0500
-Subject: [PATCH v10 01/12] ACPI: Add acpi_resource_consumer() to find device
- that claims a resource
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Thu, 01 Dec 2016 02:29:32 -0600
-Message-ID: <20161201082932.12247.7479.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1752106AbcLVFy6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Dec 2016 00:54:58 -0500
+Subject: Re: [PATCH] pci: add kernel config option for disabling common PCI
+ quirks
+To: Christoph Hellwig <hch@infradead.org>
+References: <1482306784-29224-1-git-send-email-john@phrozen.org>
+ <20161221122213.GA32563@infradead.org>
+ <8630ec3a-9424-653c-7c7a-d88554011151@phrozen.org>
+ <20161221142607.GA8594@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+From: John Crispin <john@phrozen.org>
+Message-ID: <dba6a1d8-d1d6-581e-8a1b-7988ff2577e0@phrozen.org>
+Date: Thu, 22 Dec 2016 06:54:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20161221142607.GA8594@infradead.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
 
-Add acpi_resource_consumer().  This takes a struct resource and searches
-the ACPI namespace for a device whose current resource settings (_CRS)
-includes the resource.  It returns the device if it exists, or NULL if no
-device uses the resource.
 
-If more than one device uses the resource (this may happen in the case of
-bridges), acpi_resource_consumer() returns the first one found by
-acpi_get_devices() in its modified depth-first walk of the namespace.
+On 21/12/2016 15:26, Christoph Hellwig wrote:
+> On Wed, Dec 21, 2016 at 02:11:25PM +0100, John Crispin wrote:
+>> I can turn it into an enable patch that is selected by default.
+>>
+>> The current patch disables all those quirks that are used for x86/PC
+>> style machines and hence are not required in the embedded world.
+> 
+> Maybe we'll just need to reorganize the quirks so that most of them
+> arch in arch code or the affected drivers?
+> 
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/resource.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h    |    7 ++++++
- 2 files changed, 64 insertions(+)
+Hi Christoph
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 56241eb..cb57962 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -664,3 +664,60 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 	return (type & types) ? 0 : 1;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
-+
-+static int acpi_dev_consumes_res(struct acpi_device *adev, struct resource *res)
-+{
-+	struct list_head resource_list;
-+	struct resource_entry *rentry;
-+	int ret, found = 0;
-+
-+	INIT_LIST_HEAD(&resource_list);
-+	ret = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
-+	if (ret < 0)
-+		return 0;
-+
-+	list_for_each_entry(rentry, &resource_list, node) {
-+		if (resource_contains(rentry->res, res)) {
-+			found = 1;
-+			break;
-+		}
-+
-+	}
-+
-+	acpi_dev_free_resource_list(&resource_list);
-+	return found;
-+}
-+
-+static acpi_status acpi_res_consumer_cb(acpi_handle handle, u32 depth,
-+					 void *context, void **ret)
-+{
-+	struct resource *res = context;
-+	struct acpi_device **consumer = (struct acpi_device **) ret;
-+	struct acpi_device *adev;
-+
-+	if (acpi_bus_get_device(handle, &adev))
-+		return AE_OK;
-+
-+	if (acpi_dev_consumes_res(adev, res)) {
-+		*consumer = adev;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+/**
-+ * acpi_resource_consumer - Find the ACPI device that consumes @res.
-+ * @res: Resource to search for.
-+ *
-+ * Search the current resource settings (_CRS) of every ACPI device node
-+ * for @res.  If we find an ACPI device whose _CRS includes @res, return
-+ * it.  Otherwise, return NULL.
-+ */
-+struct acpi_device *acpi_resource_consumer(struct resource *res)
-+{
-+	struct acpi_device *consumer = NULL;
-+
-+	acpi_get_devices(NULL, acpi_res_consumer_cb, res, (void **) &consumer);
-+	return consumer;
-+}
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index ddbeda6..b00ad73 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -419,6 +419,8 @@ static inline int acpi_dev_filter_resource_type_cb(struct acpi_resource *ares,
- 	return acpi_dev_filter_resource_type(ares, (unsigned long)arg);
- }
- 
-+struct acpi_device *acpi_resource_consumer(struct resource *res);
-+
- int acpi_check_resource_conflict(const struct resource *res);
- 
- int acpi_check_region(resource_size_t start, resource_size_t n,
-@@ -762,6 +764,11 @@ static inline int acpi_reconfig_notifier_unregister(struct notifier_block *nb)
- 	return -EINVAL;
- }
- 
-+static inline struct acpi_device *acpi_resource_consumer(struct resource *res)
-+{
-+	return NULL;
-+}
-+
- #endif	/* !CONFIG_ACPI */
- 
- #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+to be honest i have no opinion on this. I am currently trying to reduce
+the amount of patches that we have inside the LEDE tree. the patches
+were written by other people and then dumped on us. obviously i am
+interested to get this upstream with the least amount of effort. I am
+quite aware though that some patches will need an overhaul to be
+applicable for upstream. its not really my call if it is enough to make
+this an enable patch and review the quirks enabled by it or if the code
+needs to be moved.
 
+	John
