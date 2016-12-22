@@ -1,45 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51912 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932777AbcLGW5n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Dec 2016 17:57:43 -0500
-Date: Wed, 7 Dec 2016 16:57:39 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [PATCH pci/next v3 0/3] PCI: rcar, rcar-gen2: Bindings cleanups
-Message-ID: <20161207225739.GJ22129@bhelgaas-glaptop.roam.corp.google.com>
-References: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
+Return-Path: <SRS0=/5l7=YF=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=/5l7=YF=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V6 0/2] Add ACPI support for HiSilicon SoCs Host
+ Controllers
+To: Ming Lei <tom.leiming@gmail.com>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+ <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
+CC: <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        "Rafael J. Wysocki"
+	<rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux ACPI
+	<linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List
+	<linux-kernel@vger.kernel.org>,
+        Jon Masters <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, Hanjun Guo
+	<hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <0acc4062-cc05-f1b5-7e5d-a06a5f299d97@huawei.com>
+Date: Thu, 22 Dec 2016 20:30:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481039491-30364-1-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 06, 2016 at 04:51:28PM +0100, Simon Horman wrote:
-> Hi,
-> 
-> this short series makes some bindings cleanups to the Renesas PCI drivers.
-> 
-> Changes v2->v3:
-> * Reworded changelogs to indicate that re-ordering struct of_device_id
->   entries does not effect run-time behaviour
-> * Corrected compile error due to typo in symbol name
-> Changes v1->v2:
-> * re-order struct of_device_id entries
-> 
-> Simon Horman (3):
->   PCI: rcar-gen2: Use gen2 fallback compatibility last
->   PCI: rcar: Use gen2 fallback compatibility last
->   PCI: rcar: Add gen3 fallback compatibility string for pcie-rcar
-> 
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
->  drivers/pci/host/pci-rcar-gen2.c                   | 2 +-
->  drivers/pci/host/pcie-rcar.c                       | 5 +++--
->  3 files changed, 5 insertions(+), 3 deletions(-)
+Hi Ming
 
-Applied to pci/host-rcar for v4.10, thanks!
+The latest patchset is [PATCH v11 00/15] PCI: ARM64 ECAM quirks
+You can get them from https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git (pci/ecam)
+
+Thanks
+Dongdong
+在 2016/12/22 16:31, Ming Lei 写道:
+> Hi Dongdong,
+>
+> On Tue, Nov 22, 2016 at 8:08 PM, Dongdong Liu <liudongdong3@huawei.com> wrote:
+>> This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
+>> PCIe controllers.
+>> The two patches respectively:
+>>         - provides the common function acpi_get_rc_resources() for ARM64
+>>           platform.
+>>         - adds the HiSilicon ACPI specific quirks.
+>>
+>> This patchset is based on branch pci/ecam-v6
+>> It can be found here:
+>> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-v6)
+>>
+>> This patchset has been tested on HiSilicon D03 board.
+>> The dmesg log, /proc/iomem, and ACPI table information can be found:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=187961
+>>
+>> v5 -> v6:
+>> - change the config option to CONFIG_PCI_ECAM_QUIRKS.
+>> - fix some commets about acpi_get_rc_resources().
+>
+> Could you post out v7 for fixing conflicts against current linus tree?
+>
+> BTW, I tried to fix the conflicts by myself, but still caues the following
+> build failure:
+>
+> [tom@linux-2.6-vm]$make -j4 CROSS_COMPILE=aarch64-linux-gnu-
+> ARCH=arm64 drivers/pci/host/pcie-hisi-acpi.o
+>   CHK     include/config/kernel.release
+>   CHK     include/generated/uapi/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CHK     include/generated/timeconst.h
+>   CHK     include/generated/bounds.h
+>   CHK     include/generated/asm-offsets.h
+>   CALL    scripts/checksyscalls.sh
+>   CC      drivers/pci/host/pcie-hisi-acpi.o
+> In file included from drivers/pci/host/pcie-hisi-acpi.c:16:0:
+> drivers/pci/host/../pci.h:357:18: error: conflicting types for
+> ‘acpi_get_rc_resources’
+>  struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
+>                   ^
+> drivers/pci/host/../pci.h:352:5: note: previous declaration of
+> ‘acpi_get_rc_resources’ was here
+>  int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
+>      ^
+> scripts/Makefile.build:293: recipe for target
+> 'drivers/pci/host/pcie-hisi-acpi.o' failed
+> make[1]: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 1
+> Makefile:1640: recipe for target 'drivers/pci/host/pcie-hisi-acpi.o' failed
+> make: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 2
+>
+>
+> Thanks,
+> Ming
+>
+>>
+>> v4 -> v5:
+>> - obtain rc base addresses from PNP0C02 at the root of the ACPI
+>>   namespace (under \_SB) instead of from sub-device under the RC.
+>> - merge the rewrited get rc resources code by Tomasz.
+>> - delete unused code.
+>> - drop the PATCH V4 1/2, will rework late as a separate patch.
+>>
+>> v3 -> v4:
+>> - rebase on pci/ecam-v6.
+>> - delete the unnecessary link_up check code.
+>>
+>> v2 -> v3:
+>> - rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset.
+>> - obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead of
+>>   hardcode the addresses.
+>> - modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
+>>   Arnd comments.
+>>
+>> v1 -> v2:
+>> - rebase against Tomasz RFC V5 quirk mechanism
+>> - add ACPI support for the HiSilicon Hip07 SoC PCIe controllers.
+>>
+>> Dongdong Liu (2):
+>>   PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
+>>   PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+>>
+>>  MAINTAINERS                       |   1 +
+>>  drivers/acpi/pci_mcfg.c           |  13 +++++
+>>  drivers/pci/host/Kconfig          |   7 +++
+>>  drivers/pci/host/Makefile         |   1 +
+>>  drivers/pci/host/pcie-hisi-acpi.c | 119 ++++++++++++++++++++++++++++++++++++++
+>>  drivers/pci/pci-acpi.c            |  69 ++++++++++++++++++++++
+>>  drivers/pci/pci.h                 |   4 ++
+>>  include/linux/pci-ecam.h          |   5 ++
+>>  8 files changed, 219 insertions(+)
+>>  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+>>
+>> --
+>> 1.9.1
+>>
+>
+>
+>
