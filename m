@@ -1,31 +1,127 @@
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Fri, 30 Dec 2016 02:50:45 +0100
-Message-ID: <3319410.EGZrQ2GPBB@aspire.rjw.lan>
-In-Reply-To: <2678604.V2vzbbOmVS@aspire.rjw.lan>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <ee766ef2-04a0-9014-9b82-5c507665ba5a@quantumtechnology.info> <2678604.V2vzbbOmVS@aspire.rjw.lan>
+Return-Path: <SRS0=iDPi=YF=gmail.com=tom.leiming@kernel.org>
+Return-Path: <SRS0=iDPi=YF=gmail.com=tom.leiming@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+References: <1479816529-97410-1-git-send-email-liudongdong3@huawei.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Thu, 22 Dec 2016 16:31:43 +0800
+Message-ID: <CACVXFVMidDQO-hj6tivv=t2BGTbDXK5TH9ommLES67qFJpTNBg@mail.gmail.com>
+Subject: Re: [PATCH V6 0/2] Add ACPI support for HiSilicon SoCs Host Controllers
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, tn@semihalf.com,
+	wangzhou1@hisilicon.com, pratyush.anand@gmail.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Masters <jcm@redhat.com>,
+	gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+	Hanjun Guo <hanjun.guo@linaro.org>, linuxarm@huawei.com
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 30, 2016 02:40:45 AM Rafael J. Wysocki wrote:
-> On Friday, December 30, 2016 01:45:53 AM Kilian Singer wrote:
-> > The touchpad and builtin keyboard of laptop fail.
-> > But also connected usb keyboard and usb mouse fail.
-> > 
-> > In both cases mouse pointer is still moveable.
-> 
-> It may just be too late to turn the ports "on" once they have been suspended at
-> least once on your system.
-> 
-> Please check if the appended patch makes any difference.
+Hi Dongdong,
 
-Actually, please first check if booting with pci_port_pm=off in the kernel
-command line makes any difference.
+On Tue, Nov 22, 2016 at 8:08 PM, Dongdong Liu <liudongdong3@huawei.com> wro=
+te:
+> This patchset adds ACPI support for the HiSilicon Hip05/Hip06/Hip07 SoC
+> PCIe controllers.
+> The two patches respectively:
+>         - provides the common function acpi_get_rc_resources() for ARM64
+>           platform.
+>         - adds the HiSilicon ACPI specific quirks.
+>
+> This patchset is based on branch pci/ecam-v6
+> It can be found here:
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git(pci/ecam-=
+v6)
+>
+> This patchset has been tested on HiSilicon D03 board.
+> The dmesg log, /proc/iomem, and ACPI table information can be found:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D187961
+>
+> v5 -> v6:
+> - change the config option to CONFIG_PCI_ECAM_QUIRKS.
+> - fix some commets about acpi_get_rc_resources().
+
+Could you post out v7 for fixing conflicts against current linus tree?
+
+BTW, I tried to fix the conflicts by myself, but still caues the following
+build failure:
+
+[tom@linux-2.6-vm]$make -j4 CROSS_COMPILE=3Daarch64-linux-gnu-
+ARCH=3Darm64 drivers/pci/host/pcie-hisi-acpi.o
+  CHK     include/config/kernel.release
+  CHK     include/generated/uapi/linux/version.h
+  CHK     include/generated/utsrelease.h
+  CHK     include/generated/timeconst.h
+  CHK     include/generated/bounds.h
+  CHK     include/generated/asm-offsets.h
+  CALL    scripts/checksyscalls.sh
+  CC      drivers/pci/host/pcie-hisi-acpi.o
+In file included from drivers/pci/host/pcie-hisi-acpi.c:16:0:
+drivers/pci/host/../pci.h:357:18: error: conflicting types for
+=E2=80=98acpi_get_rc_resources=E2=80=99
+ struct resource *acpi_get_rc_resources(const char *hid, u16 segment);
+                  ^
+drivers/pci/host/../pci.h:352:5: note: previous declaration of
+=E2=80=98acpi_get_rc_resources=E2=80=99 was here
+ int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment=
+,
+     ^
+scripts/Makefile.build:293: recipe for target
+'drivers/pci/host/pcie-hisi-acpi.o' failed
+make[1]: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 1
+Makefile:1640: recipe for target 'drivers/pci/host/pcie-hisi-acpi.o' failed
+make: *** [drivers/pci/host/pcie-hisi-acpi.o] Error 2
+
 
 Thanks,
-Rafael
+Ming
+
+>
+> v4 -> v5:
+> - obtain rc base addresses from PNP0C02 at the root of the ACPI
+>   namespace (under \_SB) instead of from sub-device under the RC.
+> - merge the rewrited get rc resources code by Tomasz.
+> - delete unused code.
+> - drop the PATCH V4 1/2, will rework late as a separate patch.
+>
+> v3 -> v4:
+> - rebase on pci/ecam-v6.
+> - delete the unnecessary link_up check code.
+>
+> v2 -> v3:
+> - rebase against 4.9-rc1 and add Tomasz quirks V6 pathcset.
+> - obtain rc base addresses from PNP0C02 as subdevice of PNP0A03 instead o=
+f
+>   hardcode the addresses.
+> - modify hisi_pcie_acpi_rd_conf/hisi_pcie_acpi_wr_conf() according to
+>   Arnd comments.
+>
+> v1 -> v2:
+> - rebase against Tomasz RFC V5 quirk mechanism
+> - add ACPI support for the HiSilicon Hip07 SoC PCIe controllers.
+>
+> Dongdong Liu (2):
+>   PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform
+>   PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+>
+>  MAINTAINERS                       |   1 +
+>  drivers/acpi/pci_mcfg.c           |  13 +++++
+>  drivers/pci/host/Kconfig          |   7 +++
+>  drivers/pci/host/Makefile         |   1 +
+>  drivers/pci/host/pcie-hisi-acpi.c | 119 ++++++++++++++++++++++++++++++++=
+++++++
+>  drivers/pci/pci-acpi.c            |  69 ++++++++++++++++++++++
+>  drivers/pci/pci.h                 |   4 ++
+>  include/linux/pci-ecam.h          |   5 ++
+>  8 files changed, 219 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+>
+> --
+> 1.9.1
+>
+
+
+
+--=20
+Ming Lei
