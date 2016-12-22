@@ -1,93 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 1 Dec 2016 17:27:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161201232732.GB17948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201223604.GC15867@bhelgaas-glaptop.roam.corp.google.com>
- <47776378.8X3TnsHd3Q@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:27423 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750727AbcLVIxO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Dec 2016 03:53:14 -0500
+To: <linux-pci@vger.kernel.org>
+CC: <gabriele.paoloni@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        Wei Xu <xuwei5@hisilicon.com>, <zhangzhihai@hisilicon.com>,
+        <jiashi.lin@hisilicon.com>, <wangzhou1@hisilicon.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Help about MSI support in PCI Express Bus support driver
+Message-ID: <585B9411.7050006@hisilicon.com>
+Date: Thu, 22 Dec 2016 16:51:29 +0800
 MIME-Version: 1.0
-In-Reply-To: <47776378.8X3TnsHd3Q@aspire.rjw.lan>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
- Duc Dang <dhdang@apm.com>, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, linux-acpi@vger.kernel.org,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Lv Zheng <lv.zheng@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 11:37:39PM +0100, Rafael J. Wysocki wrote:
-> On Thursday, December 01, 2016 04:36:04 PM Bjorn Helgaas wrote:
-> > On Tue, Nov 29, 2016 at 03:39:48PM -0600, Bjorn Helgaas wrote:
-> > > Here's another stab at this writeup.  I'd appreciate any comments!
-> > > 
-> > > Changes from v1 to v2:
-> > >   - Consumer/Producer is defined for Extended Address Space descriptors;
-> > >     should be ignored for QWord/DWord/Word Address Space descriptors
-> > >   - New arches may use Extended Address Space descriptors in PNP0A03 for
-> > >     bridge registers, including ECAM (if the arch adds support for this)
-> > >   - Add more details about MCFG and _CBA (Lv's suggestion)
-> > >   - Incorporate Rafael's suggestions
-> > > 
-> > > ---
-> > > 
-> > > Bjorn Helgaas (1):
-> > >       PCI: Add information about describing PCI in ACPI
-> > > 
-> > > 
-> > >  Documentation/PCI/00-INDEX      |    2 
-> > >  Documentation/PCI/acpi-info.txt |  180 +++++++++++++++++++++++++++++++++++++++
-> > >  2 files changed, 182 insertions(+)
-> > >  create mode 100644 Documentation/PCI/acpi-info.txt
-> > 
-> > It's very late in the cycle, but I'm considering trying to squeeze
-> > this into v4.9 on the grounds that:
-> > 
-> >   - It's only a documentation change and can't break anything, and
-> > 
-> >   - Distributing it more widely may help the arm64 firmware ecosystem
-> > 
-> > But I don't want to disseminate misleading or incorrect information,
-> > so if it needs clarification or wordsmithing, or even just maturation,
-> > I'll wait until v4.10.
-> > 
-> > The Consumer/Producer stuff, in particular, doesn't seem 100% settled
-> > yet.  Your thoughts, and especially your improvements, are welcome!
-> 
-> Well, what's the drawback if it doesn't go into 4.9?
+Hi All,
 
-Only that it's not as easily accessible.  ARM64 ACPI firmware is brand
-new.  Neither the firmware nor the kernel developers, nor even the
-hardware designers, have the benefit of all the x86/ia64 history, so I
-wrote this to try to come to a common understanding of what Linux
-expects.
+I have noticed that MSI support in PCI Express Bus support driver does not match
+with the PCIe spec.
 
-The first generation of ARM64 hardware is already in the field, and it
-has teething problems in hardware, firmware, and kernel.  For example,
-the current MCFG quirk situation: the ECAM hardware doesn't work quite
-per spec, the ACPI firmware doesn't describe the address space
-completely, and we don't really have consensus on how the firmware
-should communicate register space to the kernel.
+In function init_service_irqs, we get interrupts of all PCIe port services.
+We only use one MSI for all the PCIe port services, which does not match with
+PCIe3.0 spec.
 
-We're hoping the second generation can fix some of these problems, and
-I think this is the time to try to influence that.
+Interrupt Message Number bits are used to indicate which MSI vector will be used
+for a PCIe port service. The related definitions can be found in 6.2.4.1.2 for AER,
+6.7.3.4 for hotplug, 6.2.10.1 for DPC, 6.1.6 for PME.
 
-Bjorn
+So do we have a plan to fix this feature? just like what we did in pcie_port_enable_msix.
+Please let me know if I missed something.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It will be very appreciated if anyone can share ideas about this problem!
+
+Thanks,
+Zhou
+
