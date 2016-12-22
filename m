@@ -1,78 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57153 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751455AbcLETPo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 14:15:44 -0500
-Date: Mon, 5 Dec 2016 12:14:38 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161205191438.GA20464@obsidianresearch.com>
-References: <20161130162353.GA24639@obsidianresearch.com>
- <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com>
- <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
- <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
- <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
+Return-Path: <SRS0=bSjs=YF=8bytes.org=joro@kernel.org>
+Return-Path: <SRS0=bSjs=YF=8bytes.org=joro@kernel.org>
+Date: Thu, 22 Dec 2016 17:27:14 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>, rwright@hpe.com,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: possible dmar_init_reserved_ranges() error
+Message-ID: <20161222162713.GF17255@8bytes.org>
+References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 10:48:58AM -0800, Dan Williams wrote:
-> On Mon, Dec 5, 2016 at 10:39 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> > On 05/12/16 11:08 AM, Dan Williams wrote:
-> >>
-> >> I've already recommended that iopmem not be a block device and instead
-> >> be a device-dax instance. I also don't think it should claim the PCI
-> >> ID, rather the driver that wants to map one of its bars this way can
-> >> register the memory region with the device-dax core.
-> >>
-> >> I'm not sure there are enough device drivers that want to do this to
-> >> have it be a generic /sys/.../resource_dmableX capability. It still
-> >> seems to be an exotic one-off type of configuration.
-> >
-> >
-> > Yes, this is essentially my thinking. Except I think the userspace interface
-> > should really depend on the device itself. Device dax is a good  choice for
-> > many and I agree the block device approach wouldn't be ideal.
-> >
-> > Specifically for NVME CMB: I think it would make a lot of sense to just hand
-> > out these mappings with an mmap call on /dev/nvmeX. I expect CMB buffers
-> > would be volatile and thus you wouldn't need to keep track of where in the
-> > BAR the region came from. Thus, the mmap call would just be an allocator
-> > from BAR memory. If device-dax were used, userspace would need to lookup
-> > which device-dax instance corresponds to which nvme drive.
+Hi Bjorn,
+
+On Mon, Dec 19, 2016 at 03:20:44PM -0600, Bjorn Helgaas wrote:
+> I have some questions about dmar_init_reserved_ranges().  On systems
+> where CPU physical address space is not identity-mapped to PCI bus
+> address space, e.g., where the PCI host bridge windows have _TRA
+> offsets, I'm not sure we're doing the right thing.
 > 
-> I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
-> to accomplish in sysfs through /sys/dev/char to find the sysfs path
-> of
+> Assume we have a PCI host bridge with _TRA that maps CPU addresses
+> 0x80000000-0x9fffffff to PCI bus addresses 0x00000000-0x1fffffff, with
+> two PCI devices below it:
+> 
+>   PCI host bridge domain 0000 [bus 00-3f]
+>   PCI host bridge window [mem 0x80000000-0x9fffffff] (bus 0x00000000-0x1fffffff]
+>   00:00.0: BAR 0 [mem 0x80000000-0x8ffffffff] (0x00000000-0x0fffffff on bus)
+>   00:01.0: BAR 0 [mem 0x90000000-0x9ffffffff] (0x10000000-0x1fffffff on bus)
+> 
+> The IOMMU init code in dmar_init_reserved_ranges() reserves the PCI
+> MMIO space for all devices:
+> 
+>   pci_iommu_init()
+>     intel_iommu_init()
+>       dmar_init_reserved_ranges()
+>         reserve_iova(0x80000000-0x8ffffffff)
+>         reserve_iova(0x90000000-0x9ffffffff)
+> 
+> This looks odd because we're reserving CPU physical addresses, but
+> the IOVA space contains *PCI bus* addresses.  On most x86 systems they
+> would be the same, but not on all.
 
-But CMB sounds much more like the GPU case where there is a
-specialized allocator handing out the BAR to consumers, so I'm not
-sure a general purpose chardev makes a lot of sense?
+Interesting, I wasn't aware of that. Looks like we are not doing the
+right thing in dmar_init_reserved_ranges(). How is that handled without
+an IOMMU, when the bus-addresses overlap with ram addresses?
+ 
+> Assume the driver for 00:00.0 maps a page of main memory for DMA.  It
+> may receive a dma_addr_t of 0x10000000:
+> 
+>   00:00.0: intel_map_page() returns dma_addr_t 0x10000000
+>   00:00.0: issues DMA to 0x10000000
+> 
+> What happens here?  The DMA access should go to main memory.  In
+> conventional PCI it would be a peer-to-peer access to device 00:01.0.
+> Is there enough PCIe smarts (ACS or something?) to do otherwise?
 
-Jason
+If there is a bridge doing ACS between the devices, the IOMMU will see
+the request and re-map it to its RAM address.
+
+> The dmar_init_reserved_ranges() comment says "Reserve all PCI MMIO to
+> avoid peer-to-peer access."  Without _TRA, CPU addresses and PCI bus
+> addresses would be identical, and I think these reserve_iova() calls
+> *would* prevent this situation.  So maybe we're just missing a
+> pcibios_resource_to_bus() here?
+
+I'll have a look, the AMD IOMMU driver implements this too, so it needs
+also be fixed there. Do you know which x86 systems are configured like
+this?
+
+
+	Joerg
