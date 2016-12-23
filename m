@@ -1,60 +1,33 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>
-CC: <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [RFC PATCH] ACPI/PCI: Fix bus range comparation in pci_mcfg_lookup
-Date: Thu, 22 Dec 2016 17:07:43 +0800
-Message-ID: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <SRS0=hkQX=YG=8bytes.org=joro@kernel.org>
+Return-Path: <SRS0=hkQX=YG=8bytes.org=joro@kernel.org>
+Date: Fri, 23 Dec 2016 11:35:48 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Raj, Ashok" <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org,
+	David Woodhouse <dwmw2@infradead.org>, linux-kernel@vger.kernel.org,
+	rwright@hpe.com
+Subject: Re: possible dmar_init_reserved_ranges() error
+Message-ID: <20161223103548.GH17255@8bytes.org>
+References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
+ <20161222162713.GF17255@8bytes.org>
+ <20161222202803.GA16855@bhelgaas-glaptop.roam.corp.google.com>
+ <20161222233238.GA20861@otc-nc-03>
+ <20161222234508.GA20924@otc-nc-03>
+ <20161223004801.GA1096@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161223004801.GA1096@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
-host bridge should be in the coverage of bus range of related PCIe segment.
+On Thu, Dec 22, 2016 at 06:48:01PM -0600, Bjorn Helgaas wrote:
+> If we didn't want to use pcibios_resource_to_bus() here for some
+> reason, we should at least add a comment about why we think it's OK to
+> use a CPU physical address as an IOVA.
 
-This patch will support this kind of scenario:
+Even if there are no such x86 systems out there, I think it doesn't hurt
+to handle the possibility correctly in the IOMMU drivers.
 
-MCFG:
-	bus range: 0x00~0xff.
-	segment: 0.
-DSDT:
-	host bridge 1:
-		bus range: 0x00~0x1f.
-		segment: 0.
-	host bridge 2:
-		bus range: 0x20~0x4f.
-		segment: 0.
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/acpi/pci_mcfg.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index b5b376e..46a3e32 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
- 	struct mcfg_entry *e;
- 
- 	/*
--	 * We expect exact match, unless MCFG entry end bus covers more than
--	 * specified by caller.
-+	 * We expect the range in bus_res in the coverage of MCFG bus range.
- 	 */
- 	list_for_each_entry(e, &pci_mcfg_list, list) {
--		if (e->segment == seg && e->bus_start == bus_res->start &&
-+		if (e->segment == seg && e->bus_start <= bus_res->start &&
- 		    e->bus_end >= bus_res->end)
- 			return e->addr;
- 	}
--- 
-1.9.1
-
+	Joerg
