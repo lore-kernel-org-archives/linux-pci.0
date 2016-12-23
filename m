@@ -1,159 +1,138 @@
-Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
-Return-Path: <SRS0=hbVC=XQ=apm.com=dhdang@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Rob Herring <robh+dt@kernel.org>, Frank Rowand <frowand.list@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCHv2 3/3] of: pci: remove unused MSI controller helpers
+Date: Fri, 23 Dec 2016 10:20:54 +0100
+Message-Id: <1482484854-26418-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1482484854-26418-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1482484854-26418-1-git-send-email-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
-References: <1480549373-2123-1-git-send-email-dhdang@apm.com>
- <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
- <1480620053.4751.30.camel@redhat.com> <20161201194114.GA8263@bhelgaas-glaptop.roam.corp.google.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 1 Dec 2016 14:10:10 -0800
-Message-ID: <CADaLNDkVPRPSg0aU-sxHsiJbVvEn=LxcekDt6gfXBBhc+fzhjw@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mark Salter <msalter@redhat.com>, Rafael Wysocki <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Masters <jcm@redhat.com>,
-	Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 1, 2016 at 11:41 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Dec 01, 2016 at 02:20:53PM -0500, Mark Salter wrote:
->> On Thu, 2016-12-01 at 12:33 -0600, Bjorn Helgaas wrote:
->> > On Wed, Nov 30, 2016 at 03:42:53PM -0800, Duc Dang wrote:
->
->> > > +static struct resource xgene_v1_csr_res[] = {
->> > > + [0] = DEFINE_RES_MEM_NAMED(0x1f2b0000UL, SZ_64K, "PCIe CSR"),
->> > > + [1] = DEFINE_RES_MEM_NAMED(0x1f2c0000UL, SZ_64K, "PCIe CSR"),
->> > > + [2] = DEFINE_RES_MEM_NAMED(0x1f2d0000UL, SZ_64K, "PCIe CSR"),
->> > > + [3] = DEFINE_RES_MEM_NAMED(0x1f500000UL, SZ_64K, "PCIe CSR"),
->> > > + [4] = DEFINE_RES_MEM_NAMED(0x1f510000UL, SZ_64K, "PCIe CSR"),
->> > I assume these ranges are not the actual ECAM space, right?
->> > If they *were* ECAM, I assume you would have included them in the
->> > quirk itself in the mcfg_quirks[] table.
->>
->> These are base addresses for some RC mmio registers.
->> >
->> > >
->> > > +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
->> > > +{
->> > > + struct acpi_device *adev = to_acpi_device(cfg->parent);
->> > > + struct acpi_pci_root *root = acpi_driver_data(adev);
->> > > + struct device *dev = cfg->parent;
->> > > + struct xgene_pcie_port *port;
->> > > + struct resource *csr;
->> > > +
->> > > + port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
->> > > + if (!port)
->> > > +         return -ENOMEM;
->> > > +
->> > > + csr = &xgene_v1_csr_res[root->segment];
->> > This makes me nervous because root->segment comes from the ACPI _SEG,
->> > and if firmware gives us junk in _SEG, we will reference something in
->> > the weeds.
->>
->> The SoC provide some number of RC bridges, each with a different base
->> for some mmio registers. Even if segment is legitimate in MCFG, there
->> is still a problem if a platform doesn't use the segment ordering
->> implied by the code. But the PNP0A03 _CRS does have this base address
->> as the first memory resource, so we could get it from there and not
->> have hard-coded addresses and implied ording in the quirk code.
->
-> I'm confused.  Doesn't the current code treat every item in PNP0A03
-> _CRS as a window?  Do you mean the first resource is handled
-> differently somehow?  The Consumer/Producer bit could allow us to do
-> this by marking the RC MMIO space as "Consumer", but I didn't think
-> that strategy was quite working yet.
+All the users of the small MSI controller API have been migrated to use
+the generic MSI infrastructure instead. We no longer need a global
+chained list of msi_controller. Instead, MSI controllers are now
+represented as irq domains attached to OF nodes, and the resolution
+between a device requesting an MSI and the corresponding MSI controller
+is done by the generic interrupt resolution logic.
 
-The first resource is defined like below. It was introduced long time
-ago to use with older version of X-Gene ECAM quirks.
-Memory32Fixed(ReadWrite, 0x1F2B0000, 0x10000, )
+Therefore, this API is now completely useless, and can be removed from
+the kernel.
 
-The resource discovered during booting will be like following:
-[    0.728117] ACPI: MCFG table detected, 1 entries
-[    0.735330] ACPI: Power Resource [SCVR] (on)
-[    0.767478] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
-[    0.774013] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM
-ClockPM Segments MSI]
-[    0.782864] acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME
-AER PCIeCapability]
-[    0.791331] acpi PNP0A08:00: MCFG quirk: ECAM at [mem
-0xe0d0000000-0xe0dfffffff] for [bus 00-ff] with xgene_v1_pcie_ecam_ops
-[    0.803207] acpi PNP0A08:00: ECAM at [mem
-0xe0d0000000-0xe0dfffffff] for [bus 00-ff]
-[    0.811399] Remapped I/O 0x000000e010000000 to [io  0x0000-0xffff window]
-[    0.818678] PCI host bridge to bus 0000:00
-[    0.822990] pci_bus 0000:00: root bus resource [mem 0x1f2b0000-0x1f2bffff]
-[    0.830257] pci_bus 0000:00: root bus resource [io  0x0000-0xffff
-window] (bus address [0x10000000-0x1000ffff])
-[    0.840917] pci_bus 0000:00: root bus resource [mem
-0xe040000000-0xe07fffffff window] (bus address
-[0x40000000-0x7fffffff])
-[    0.852675] pci_bus 0000:00: root bus resource [mem
-0xf000000000-0xffffffffff window]
-[    0.860950] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.866761] pci 0000:00:00.0: [10e8:e004] type 01 class 0x060400
-[    0.873175] pci 0000:00:00.0: supports D1 D2
-[    0.877980] pci 0000:01:00.0: [15b3:1003] type 00 class 0x020000
-[    0.884597] pci 0000:01:00.0: reg 0x10: [mem 0xe040000000-0xe0400fffff 64bit]
-[    0.892337] pci 0000:01:00.0: reg 0x18: [mem
-0xe042000000-0xe043ffffff 64bit pref]
-[    0.900694] pci 0000:01:00.0: reg 0x30: [mem 0xfff00000-0xffffffff pref]
-[    0.923853] pci_bus 0000:00: on NUMA node 0
-[    0.928269] pci 0000:00:00.0: BAR 15: assigned [mem
-0xf000000000-0xf001ffffff 64bit pref]
-[    0.936908] pci 0000:00:00.0: BAR 14: assigned [mem
-0xe040000000-0xe0401fffff]
-[    0.944539] pci 0000:01:00.0: BAR 2: assigned [mem
-0xf000000000-0xf001ffffff 64bit pref]
-[    0.953210] pci 0000:01:00.0: BAR 0: assigned [mem
-0xe040000000-0xe0400fffff 64bit]
-[    0.961430] pci 0000:01:00.0: BAR 6: assigned [mem
-0xe040100000-0xe0401fffff pref]
-[    0.969438] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.974690] pci 0000:00:00.0:   bridge window [mem 0xe040000000-0xe0401fffff]
-[    0.982231] pci 0000:00:00.0:   bridge window [mem
-0xf000000000-0xf001ffffff 64bit pref]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+Changes since v1:
+ - Rebased on v4.9.
+ - Added ACKs from Marc Zyngier and Rob Herring, given on the v1 (the
+   patch hasn't changed except from resolving the conflicts when
+   rebasing on v4.9, and those conflicts were trivial since this patch
+   only removes code).
+---
+ drivers/of/of_pci.c    | 45 ---------------------------------------------
+ include/linux/of_pci.h | 11 -----------
+ 2 files changed, 56 deletions(-)
 
->
->> I have tested a modified version of these quirks using this to
->> get the CSR base and it works on the 3 different platforms I have
->> access to.
->>
->> static int xgene_pcie_get_csr(struct device *dev, struct resource *r)
->> {
->>       struct acpi_device *adev = to_acpi_device(dev);
->>       unsigned long flags;
->>       struct list_head list;
->>       struct resource_entry *entry;
->>       int ret;
->>
->>       INIT_LIST_HEAD(&list);
->>       flags = IORESOURCE_MEM;
->>       ret = acpi_dev_get_resources(adev, &list,
->>                                    acpi_dev_filter_resource_type_cb,
->>                                    (void *)flags);
->>       if (ret < 0) {
->>               dev_err(dev, "failed to parse _CRS, error: %d\n", ret);
->>               return ret;
->>       } else if (ret == 0) {
->>               dev_err(dev, "no memory resources present in _CRS\n");
->>               return -EINVAL;
->>       }
->>
->>       entry = list_first_entry(&list, struct resource_entry, node);
->>       *r = *entry->res;
->>       acpi_dev_free_resource_list(&list);
->>       return 0;
->> }
->
-> The code above is identical to acpi_get_rc_addr(), which is used in
-> the acpi_get_rc_resources() path by the other quirks.  Can you use
-> that path, too, instead of reimplementing it here?
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index b58be12..3ea9631 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -264,51 +264,6 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+-#ifdef CONFIG_PCI_MSI
+-
+-static LIST_HEAD(of_pci_msi_chip_list);
+-static DEFINE_MUTEX(of_pci_msi_chip_mutex);
+-
+-int of_pci_msi_chip_add(struct msi_controller *chip)
+-{
+-	if (!of_property_read_bool(chip->of_node, "msi-controller"))
+-		return -EINVAL;
+-
+-	mutex_lock(&of_pci_msi_chip_mutex);
+-	list_add(&chip->list, &of_pci_msi_chip_list);
+-	mutex_unlock(&of_pci_msi_chip_mutex);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
+-
+-void of_pci_msi_chip_remove(struct msi_controller *chip)
+-{
+-	mutex_lock(&of_pci_msi_chip_mutex);
+-	list_del(&chip->list);
+-	mutex_unlock(&of_pci_msi_chip_mutex);
+-}
+-EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
+-
+-struct msi_controller *of_pci_find_msi_chip_by_node(struct device_node *of_node)
+-{
+-	struct msi_controller *c;
+-
+-	mutex_lock(&of_pci_msi_chip_mutex);
+-	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
+-		if (c->of_node == of_node) {
+-			mutex_unlock(&of_pci_msi_chip_mutex);
+-			return c;
+-		}
+-	}
+-	mutex_unlock(&of_pci_msi_chip_mutex);
+-
+-	return NULL;
+-}
+-EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
+-
+-#endif /* CONFIG_PCI_MSI */
+-
+ /**
+  * of_pci_map_rid - Translate a requester ID through a downstream mapping.
+  * @np: root complex device node.
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 7fd5cfc..77471bf 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -78,15 +78,4 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+ }
+ #endif
+ 
+-#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+-int of_pci_msi_chip_add(struct msi_controller *chip);
+-void of_pci_msi_chip_remove(struct msi_controller *chip);
+-struct msi_controller *of_pci_find_msi_chip_by_node(struct device_node *of_node);
+-#else
+-static inline int of_pci_msi_chip_add(struct msi_controller *chip) { return -EINVAL; }
+-static inline void of_pci_msi_chip_remove(struct msi_controller *chip) { }
+-static inline struct msi_controller *
+-of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; }
+-#endif
+-
+ #endif
+-- 
+2.7.4
 
-I will post a new version using acpi_get_rc_resources and includes
-other changes that you suggested.
 
-Regards,
-Duc Dang.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
