@@ -1,85 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:35461 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751327AbcLERkk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2016 12:40:40 -0500
-Received: by mail-oi0-f44.google.com with SMTP id b126so348513786oia.2
-        for <linux-pci@vger.kernel.org>; Mon, 05 Dec 2016 09:40:40 -0800 (PST)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Rob Herring <robh+dt@kernel.org>, Frank Rowand <frowand.list@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCHv2 0/3] pci: remove msi_controller registration API
+Date: Fri, 23 Dec 2016 10:20:51 +0100
+Message-Id: <1482484854-26418-1-git-send-email-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20161205171830.GB27784@obsidianresearch.com>
-References: <20161125193252.GC16504@obsidianresearch.com> <d9e064a0-9c47-3e41-3154-cece8c70a119@mellanox.com>
- <20161128165751.GB28381@obsidianresearch.com> <1480357179.19407.13.camel@mellanox.com>
- <20161128190244.GA21975@obsidianresearch.com> <c0ddccf3-52ce-d883-a57a-70d8a1febf85@mellanox.com>
- <20161130162353.GA24639@obsidianresearch.com> <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com> <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 5 Dec 2016 09:40:38 -0800
-Message-ID: <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 5, 2016 at 9:18 AM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Sun, Dec 04, 2016 at 07:23:00AM -0600, Stephen Bates wrote:
->> Hi All
->>
->> This has been a great thread (thanks to Alex for kicking it off) and I
->> wanted to jump in and maybe try and put some summary around the
->> discussion. I also wanted to propose we include this as a topic for LFS/MM
->> because I think we need more discussion on the best way to add this
->> functionality to the kernel.
->>
->> As far as I can tell the people looking for P2P support in the kernel fall
->> into two main camps:
->>
->> 1. Those who simply want to expose static BARs on PCIe devices that can be
->> used as the source/destination for DMAs from another PCIe device. This
->> group has no need for memory invalidation and are happy to use
->> physical/bus addresses and not virtual addresses.
->
-> I didn't think there was much on this topic except for the CMB
-> thing.. Even that is really a mapped kernel address..
->
->> I think something like the iopmem patches Logan and I submitted recently
->> come close to addressing use case 1. There are some issues around
->> routability but based on feedback to date that does not seem to be a
->> show-stopper for an initial inclusion.
->
-> If it is kernel only with physical addresess we don't need a uAPI for
-> it, so I'm not sure #1 is at all related to iopmem.
->
-> Most people who want #1 probably can just mmap
-> /sys/../pci/../resourceX to get a user handle to it, or pass around
-> __iomem pointers in the kernel. This has been asked for before with
-> RDMA.
->
-> I'm still not really clear what iopmem is for, or why DAX should ever
-> be involved in this..
+Hello,
 
-Right, by default remap_pfn_range() does not establish DMA capable
-mappings. You can think of iopmem as remap_pfn_range() converted to
-use devm_memremap_pages(). Given the extra constraints of
-devm_memremap_pages() it seems reasonable to have those DMA capable
-mappings be optionally established via a separate driver.
+This small patch series aims at removing the small msi_controller
+registration API implemented in drivers/of/of_pci.c.
+
+In order to do so, it moves the last two users of this API to the
+generic MSI support:
+
+ - The pci-aardvark driver is moved to use the generic MSI
+   support. This driver is both the provider of the MSI capability and
+   the consumer of this capability.
+
+ - The pci-mvebu driver is cleaned up from using the msi_controller
+   registration API. This driver is only consuming MSI capabilies from
+   another driver (irq-armada-370-xp) which was migrated to the
+   generic MSI support some time ago. Therefore, this patch is simply
+   removing dead code.
+
+Finally, the last commit removed the now unused API.
+
+Changes between v1 to v2 are described in each individual patch.
+
+Thanks,
+
+Thomas
+
+Thomas Petazzoni (3):
+  pci: pci-aardvark: move to MSI handling using generic MSI support
+  pci: pci-mvebu: remove useless MSI enabling code
+  of: pci: remove unused MSI controller helpers
+
+ drivers/of/of_pci.c             |  45 -----------
+ drivers/pci/host/pci-aardvark.c | 172 +++++++++++++++-------------------------
+ drivers/pci/host/pci-mvebu.c    |  17 ----
+ include/linux/of_pci.h          |  11 ---
+ 4 files changed, 66 insertions(+), 179 deletions(-)
+
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
