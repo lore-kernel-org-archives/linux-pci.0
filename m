@@ -1,182 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51428 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751418AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 03:31:33 -0500
-Subject: [PATCH v10 06/12] PCI/ACPI: Check for platform-specific MCFG quirks
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Thu, 01 Dec 2016 02:30:09 -0600
-Message-ID: <20161201083009.12247.56470.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1482565780.1928.1.camel@perches.com>
+Subject: Re: [PATCH] pci: hotplug: This patch removes unnecessary return
+ statement using spatch tool
+From: Joe Perches <joe@perches.com>
+To: Rahul Krishnan <mrahul.krishnan@gmail.com>, bhelgaas@google.com
+Cc: mpe@ellerman.id.au, mika.westerberg@linux.intel.com,
+        gwshan@linux.vnet.ibm.com, mayurkumar.patel@intel.com,
+        keith.busch@intel.com, julia.lawall@lip6.fr,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 23 Dec 2016 23:49:40 -0800
+In-Reply-To: <20161224073307.GA18826@rahul>
+References: <20161224073307.GA18826@rahul>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tn@semihalf.com>
+On Sat, 2016-12-24 at 13:03 +0530, Rahul Krishnan wrote:
+> This patch removes unnecessary return statement using spatch tool
+[]
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+[]
+> @@ -463,8 +463,7 @@ int __init rpadlpar_io_init(void)
+>  		return -EPERM;
+>  	}
+>  
+> -	rc = dlpar_sysfs_init();
+> -	return rc;
+> +	return dlpar_sysfs_init();
+>  }
+>  
+>  void rpadlpar_io_exit(void)
 
-The PCIe spec (r3.0, sec 7.2.2) specifies an "Enhanced Configuration Access
-Mechanism" (ECAM) for memory-mapped access to configuration space.  ECAM is
-required for PCIe systems unless there's a standard firmware interface for
-config access.
+If you are going to submit these types
+of patches, please make sure you compile
+test them before sending so that you can
+look at new warnings.
 
-In the absence of a firmware interface, we use pci_generic_ecam_ops, and on
-ACPI systems, we discover the ECAM space via the MCFG table and/or the _CBA
-method.
-
-Unfortunately some systems provide MCFG but don't implement ECAM according
-to spec, so we need a mechanism for quirks to make those systems work.
-
-Add an MCFG quirk mechanism to override the config accessor functions
-and/or the memory-mapped address space.
-
-A quirk is selected if it matches all of the following:
-
-  - OEM ID
-  - OEM Table ID
-  - OEM Revision
-  - PCI segment (from _SEG)
-  - PCI bus number range (from _CRS, wildcard allowed)
-
-If the quirk specifies config accessor functions or a memory-mapped address
-range, these override the defaults.
-
-[bhelgaas: changelog, reorder quirk matching, fix oem_revision typo per
-Duc, add under #ifdef CONFIG_PCI_QUIRKS]
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Christopher Covington <cov@codeaurora.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_mcfg.c |   92 ++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 86 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index ffcc651..1ef7285 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -33,6 +33,69 @@ struct mcfg_entry {
- 	u8			bus_end;
- };
- 
-+#ifdef CONFIG_PCI_QUIRKS
-+struct mcfg_fixup {
-+	char oem_id[ACPI_OEM_ID_SIZE + 1];
-+	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
-+	u32 oem_revision;
-+	u16 segment;
-+	struct resource bus_range;
-+	struct pci_ecam_ops *ops;
-+	struct resource cfgres;
-+};
-+
-+#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-+						((end) - (start) + 1),	\
-+						NULL, IORESOURCE_BUS)
-+#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
-+
-+static struct mcfg_fixup mcfg_quirks[] = {
-+/*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
-+};
-+
-+static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-+static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
-+static u32 mcfg_oem_revision;
-+
-+static int pci_mcfg_quirk_matches(struct mcfg_fixup *f, u16 segment,
-+				  struct resource *bus_range)
-+{
-+	if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
-+	    !memcmp(f->oem_table_id, mcfg_oem_table_id,
-+	            ACPI_OEM_TABLE_ID_SIZE) &&
-+	    f->oem_revision == mcfg_oem_revision &&
-+	    f->segment == segment &&
-+	    resource_contains(&f->bus_range, bus_range))
-+		return 1;
-+
-+	return 0;
-+}
-+#endif
-+
-+static void pci_mcfg_apply_quirks(struct acpi_pci_root *root,
-+				  struct resource *cfgres,
-+				  struct pci_ecam_ops **ecam_ops)
-+{
-+#ifdef CONFIG_PCI_QUIRKS
-+	u16 segment = root->segment;
-+	struct resource *bus_range = &root->secondary;
-+	struct mcfg_fixup *f;
-+	int i;
-+
-+	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
-+		if (pci_mcfg_quirk_matches(f, segment, bus_range)) {
-+			if (f->cfgres.start)
-+				*cfgres = f->cfgres;
-+			if (f->ops)
-+				*ecam_ops =  f->ops;
-+			dev_info(&root->device->dev, "MCFG quirk: ECAM at %pR for %pR with %ps\n",
-+				 cfgres, bus_range, *ecam_ops);
-+			return;
-+		}
-+	}
-+#endif
-+}
-+
- /* List to save MCFG entries */
- static LIST_HEAD(pci_mcfg_list);
- 
-@@ -61,14 +124,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
- 
- 	}
- 
--	if (!root->mcfg_addr)
--		return -ENXIO;
--
- skip_lookup:
- 	memset(&res, 0, sizeof(res));
--	res.start = root->mcfg_addr + (bus_res->start << 20);
--	res.end = res.start + (resource_size(bus_res) << 20) - 1;
--	res.flags = IORESOURCE_MEM;
-+	if (root->mcfg_addr) {
-+		res.start = root->mcfg_addr + (bus_res->start << 20);
-+		res.end = res.start + (resource_size(bus_res) << 20) - 1;
-+		res.flags = IORESOURCE_MEM;
-+	}
-+
-+	/*
-+	 * Allow quirks to override default ECAM ops and CFG resource
-+	 * range.  This may even fabricate a CFG resource range in case
-+	 * MCFG does not have it.  Invalid CFG start address means MCFG
-+	 * firmware bug or we need another quirk in array.
-+	 */
-+	pci_mcfg_apply_quirks(root, &res, &ops);
-+	if (!res.start)
-+		return -ENXIO;
-+
- 	*cfgres = res;
- 	*ecam_ops = ops;
- 	return 0;
-@@ -101,6 +174,13 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
- 		list_add(&e->list, &pci_mcfg_list);
- 	}
- 
-+#ifdef CONFIG_PCI_QUIRKS
-+	/* Save MCFG IDs and revision for quirks matching */
-+	memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
-+	memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
-+	mcfg_oem_revision = header->oem_revision;
-+#endif
-+
- 	pr_info("MCFG table detected, %d entries\n", n);
- 	return 0;
- }
-
+Now rc is unused and its declaration
+should be removed.
