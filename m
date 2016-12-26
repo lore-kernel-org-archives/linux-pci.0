@@ -1,144 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752282AbcLEX0g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:26:36 -0500
-Subject: [PATCH v11 09/15] PCI/ACPI: Provide acpi_get_rc_resources() for
- ARM64 platform
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Mon, 05 Dec 2016 17:26:27 -0600
-Message-ID: <20161205232627.3957.37778.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:35676 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbcLZNxC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2016 08:53:02 -0500
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Bartlomiej Zolnierkiewicz'" <b.zolnierkie@samsung.com>,
+        "'Jaehoon Chung'" <jh80.chung@samsung.com>
+Cc: <linux-pci@vger.kernel.org>, <helgaas@google.com>,
+        <krzk@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <javier@osg.samsung.com>, <kgene@kernel.org>,
+        <linux-samsung-soc@vger.kernel.org>
+References: <20161219081614.5403-1-jh80.chung@samsung.com> <4494696.ZtEANGFldV@amdc3058>
+In-Reply-To: <4494696.ZtEANGFldV@amdc3058>
+Subject: Re: [PATCH 0/4] PCI: exynos: cleans the minor things
+Date: Mon, 26 Dec 2016 08:52:58 -0500
+Message-ID: <000001d25f7f$5f0d2cf0$1d2786d0$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dongdong Liu <liudongdong3@huawei.com>
+On Tuesday, December 20, 2016 12:36 PM, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> On Monday, December 19, 2016 05:16:10 PM Jaehoon Chung wrote:
+> > Current pci-exnoys.c is used for only EXYNOS5440.
+> > Even if there is no use-case, just cleans the codes for maintaining.
+> >
+> > In future, I will upstream for Exynso5433(TM2).
+> > Before sending patches for exynos5433, i want to reuse the some codse in
+> pic-exynos.c.
+> > This patch is for perparing it.
+> >
+> > My Final goal is to apply the pcie-exynos5433 into v4.11.
+> >
+> > Jaehoon Chung (4):
+> >   PCI: exynos: replace to one register accessor from each accessors
+> >   PCI: exynos: Remove the unnecessary variables
+> >   PCI: exynos: Use the bitops API to operate the bit shifting
+> >   PCI: exynos: remove the duplicated codes
+> >
+> >  drivers/pci/host/pci-exynos.c | 260 +++++++++++++++++++----------------
+> -------
+> >  1 file changed, 116 insertions(+), 144 deletions(-)
+> 
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-The acpi_get_rc_resources() is used to get the RC register address that can
-not be described in MCFG.  It takes the _HID & segment to look for and
-outputs the RC address resource.  Use PNP0C02 devices to describe such RC
-address resource.  Use _UID to match segment to tell which root bus the
-PNP0C02 resource belongs to.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-[bhelgaas: add dev argument, wrap in #ifdef CONFIG_PCI_QUIRKS]
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-acpi.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h      |    5 +++
- 2 files changed, 81 insertions(+)
+Best regards,
+Jingoo Han
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index d966d47..92384de 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -29,6 +29,82 @@ const u8 pci_acpi_dsm_uuid[] = {
- 	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
- };
- 
-+#if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
-+static int acpi_get_rc_addr(struct acpi_device *adev, struct resource *res)
-+{
-+	struct device *dev = &adev->dev;
-+	struct resource_entry *entry;
-+	struct list_head list;
-+	unsigned long flags;
-+	int ret;
-+
-+	INIT_LIST_HEAD(&list);
-+	flags = IORESOURCE_MEM;
-+	ret = acpi_dev_get_resources(adev, &list,
-+				     acpi_dev_filter_resource_type_cb,
-+				     (void *) flags);
-+	if (ret < 0) {
-+		dev_err(dev, "failed to parse _CRS method, error code %d\n",
-+			ret);
-+		return ret;
-+	}
-+
-+	if (ret == 0) {
-+		dev_err(dev, "no IO and memory resources present in _CRS\n");
-+		return -EINVAL;
-+	}
-+
-+	entry = list_first_entry(&list, struct resource_entry, node);
-+	*res = *entry->res;
-+	acpi_dev_free_resource_list(&list);
-+	return 0;
-+}
-+
-+static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
-+				 void **retval)
-+{
-+	u16 *segment = context;
-+	unsigned long long uid;
-+	acpi_status status;
-+
-+	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
-+	if (ACPI_FAILURE(status) || uid != *segment)
-+		return AE_CTRL_DEPTH;
-+
-+	*(acpi_handle *)retval = handle;
-+	return AE_CTRL_TERMINATE;
-+}
-+
-+int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
-+			  struct resource *res)
-+{
-+	struct acpi_device *adev;
-+	acpi_status status;
-+	acpi_handle handle;
-+	int ret;
-+
-+	status = acpi_get_devices(hid, acpi_match_rc, &segment, &handle);
-+	if (ACPI_FAILURE(status)) {
-+		dev_err(dev, "can't find _HID %s device to locate resources\n",
-+			hid);
-+		return -ENODEV;
-+	}
-+
-+	ret = acpi_bus_get_device(handle, &adev);
-+	if (ret)
-+		return ret;
-+
-+	ret = acpi_get_rc_addr(adev, res);
-+	if (ret) {
-+		dev_err(dev, "can't get resource from %s\n",
-+			dev_name(&adev->dev));
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
- phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
- {
- 	acpi_status status = AE_NOT_EXIST;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4518562..72b128e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -356,4 +356,9 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+#if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
-+int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
-+			  struct resource *res);
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
+> 
+> Best regards,
+> --
+> Bartlomiej Zolnierkiewicz
+> Samsung R&D Institute Poland
+> Samsung Electronics
+
 
