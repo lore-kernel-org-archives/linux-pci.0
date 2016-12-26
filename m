@@ -1,153 +1,127 @@
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
-	<Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
- <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
-CC: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <nsekhar@ti.com>, Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com>
-Date: Thu, 29 Dec 2016 11:53:36 +0000
-MIME-Version: 1.0
-In-Reply-To: <5864F812.5050605@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:53148 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752564AbcLZFUk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2016 00:20:40 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, javier@osg.samsung.com, kishon@ti.com,
+        will.deacon@arm.com, catalin.marinas@arm.com, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [RFC PATCH 6/6] ARM64: exynos: add the pcie node for TM2
+Date: Mon, 26 Dec 2016 14:20:29 +0900
+Message-id: <20161226052029.10552-7-jh80.chung@samsung.com>
+In-reply-to: <20161226052029.10552-1-jh80.chung@samsung.com>
+References: <20161226052029.10552-1-jh80.chung@samsung.com>
+ <CGME20161226052031epcas1p43a300fe9e59c2af410c48861cd8554d1@epcas1p4.samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
-> Hi,
-> 
-> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
->>
->> Hi,
->>
->> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>> Hi,
->>>
->>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
->>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>>>>
->>>>>>>>> There might be hiccups because of this renaming but feel this is
->>>>>>>>> necessary for long-term maintenance.
->>>>>>>>
->>>>>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>>>>
->>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>>>>> also. Wouldn't be better to name it rc_controller?
->>>>>>
->>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>>>>> neutral name that can cover both RC and Endpoint.
->>>
->>> right.
->>>>>>
->>>>>> I'm not a huge fan of "controller" because it feels a little bit long
->>>>>> and while I suppose it technically does include the concept of the PCI
->>>>>> interface of an endpoint, it still suggests more of the host side to
->>>>>> me.
->>>>>>
->>>>>> Doesn't USB have a similar situation?  I see there's a
->>>>>> drivers/usb/host/ (probably where we copied from in the first place).
->>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
->>>>>> share code between the master/slave sides?
->>>>>>
->>>>>
->>>>> The usb/host contains the implemnentations by the spec of the several
->>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
->>>
->>> right, each IP have a separate directory in USB. I thought of doing something
->>> similar for PCI but decided against it since that would involve identifying all
->>> the PCI IPs used and eventually result in more directories.
->>>>> For device purposes it uses the core/ and then some of the device functions
->>>>> are extended from the gadget/ package in which you can use mass_storage and
->>>>> other types of functions.
->>>
->>> That would be similar for PCI endpoint. All endpoint specific core
->>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>>>>
->>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
->>>>> mangled inside host. I suggest:
->>>>>
->>>>> drivers/pci
->>>>>  drivers/pci/core/
->>>>>  drivers/pci/core/hotplug
->>>>>  drivers/pci/core/pcie
->>>>>  drivers/pci/core/<all other files inside pci/ today>
->>>>>  drivers/pci/host
->>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
->>>>
->>>> Correction:
->>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
->>>> drivers
->>>>
->>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
->>>>
->>>> Correction:
->>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
->>>>
->>>>>  drivers/pci/endpoint -> common code
->>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
->>>
->>> There are some parts of the dwc driver that is common to both root complex and
->>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
->>> piece in both root complex and endpoint.
->>
->> You are right, the config space is almost the same and some ops also common.
->> I would suggest:
->>
->> drivers/pci
->>   drivers/pci/core/
->>     drivers/pci/core/hotplug
->>     drivers/pci/core/pcie
->>     drivers/pci/core/<all other files inside pci/ today>
->>   drivers/pci/dwc
->>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
->>     drivers/pci/dwc/host/
->>     drivers/pci/dwc/endpoint/
->>
->> What do you think?
-> 
-> I don't think we should have sub-directories within dwc (USB too doesn't have
-> sub-directories). Where should the platform specific driver be kept? For
-> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
-> changes are so minimal that splitting the file won't make much sense.
-> 
-> And such a change would also mean we create a separate directory for every
-> other driver present right now in pci/host.
+Add the Exxynos5433 pcie node for TM2.
+This pcie device is used for supporting WiFi.
 
-I understand you idea. We can simplify it this way:
+And some gpios are already requested from pinctrl. so it doesn't need to
+initialize.
+GPJ2-0 is used for supplying to WiFi PCIe chip.
 
- drivers/pci
-   drivers/pci/core/
-     drivers/pci/core/hotplug
-     drivers/pci/core/pcie
-     drivers/pci/core/<all other files inside pci/ today>
-     drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
-and EP
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+ arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi |  7 +++++++
+ arch/arm64/boot/dts/exynos/exynos5433-tm2.dts      | 11 +++++++++--
+ arch/arm64/boot/dts/exynos/exynos5433.dtsi         | 23 ++++++++++++++++++++++
+ 3 files changed, 39 insertions(+), 2 deletions(-)
 
-BTW dwc states for DesigWare Controller.
+diff --git a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
+index ad71247..3e8b728 100644
+--- a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
++++ b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
+@@ -183,6 +183,13 @@
+ 		interrupt-controller;
+ 		#interrupt-cells = <2>;
+ 	};
++
++	pcie_wlanen: pcie-wlanen {
++		samsung,pins = "gpj2-0";
++		samsung,pin-function = <0>;
++		samsung,pin-pud = <3>;
++		samsung,pin-drv = <3>;
++	};
+ };
+ 
+ &pinctrl_finger {
+diff --git a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
+index f21bdc2..c84a2ad 100644
+--- a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
++++ b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
+@@ -737,6 +737,15 @@
+ 	bus-width = <4>;
+ };
+ 
++&pcie {
++	assigned-clocks = <&cmu_fsys CLK_MOUT_SCLK_PCIE_100_USER>,
++			<&cmu_top CLK_MOUT_SCLK_PCIE_100>;
++	assigned-clock-parents = <&cmu_top CLK_SCLK_PCIE_100_FSYS>,
++			<&cmu_top CLK_MOUT_BUS_PLL_USER>;
++	assigned-clock-rates = <0>, <100000000>;
++	status = "okay";
++};
++
+ &pinctrl_alive {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&initial_alive>;
+@@ -836,7 +845,6 @@
+ 	pinctrl-0 = <&initial_ese>;
+ 
+ 	initial_ese: initial-state {
+-		PIN(IN, gpj2-0, DOWN, LV1);
+ 		PIN(IN, gpj2-1, DOWN, LV1);
+ 		PIN(IN, gpj2-2, DOWN, LV1);
+ 	};
+@@ -851,7 +859,6 @@
+ 		PIN(IN, gpr3-1, DOWN, LV1);
+ 		PIN(IN, gpr3-2, DOWN, LV1);
+ 		PIN(IN, gpr3-3, DOWN, LV1);
+-		PIN(IN, gpr3-7, NONE, LV1);
+ 	};
+ };
+ 
+diff --git a/arch/arm64/boot/dts/exynos/exynos5433.dtsi b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
+index 2a15f18..da287f4 100644
+--- a/arch/arm64/boot/dts/exynos/exynos5433.dtsi
++++ b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
+@@ -1457,6 +1457,29 @@
+ 			samsung,fsys-sysreg = <&syscon_fsys>;
+ 			status = "okay";
+ 		};
++
++		pcie: pcie@15700000 {
++			compatible = "samsung,exynos5433-pcie", "snps,dw-pcie";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "intr";
++			clocks = <&cmu_fsys CLK_PCIE>,
++			       <&cmu_fsys CLK_PCLK_PCIE_PHY>;
++			clock-names = "pcie", "pcie_bus";
++			num-lanes = <1>;
++			pinctrl-names = "default";
++			phys = <&pcie_phy>;
++			phy-names = "pcie-phy";
++			pinctrl-0 = <&pcie_bus &pcie_wlanen>;
++			reg = <0x156b0000 0x1000>, <0x15700000 0x1000>,
++			    <0x0c000000 0x1000>;
++			reg-names = "elbi", "dbi", "config";
++			ranges = <0x81000000 0 0	  0x0c001000 0 0x00010000
++				  0x82000000 0 0x0c011000 0x0c011000 0 0x3feefff>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	timer: timer {
+-- 
+2.10.2
 
-What do you think?
-
-Thanks
-
-> 
-> Thanks
-> Kishon
-> 
