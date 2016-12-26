@@ -1,113 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:50171 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758035AbcLQOli (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2016 09:41:38 -0500
-Message-Id: <aabc95e7905504b5b3bcd2e6852797117b42e3fb.1481926599.git.lukas@wunner.de>
-In-Reply-To: <cover.1481926599.git.lukas@wunner.de>
-References: <cover.1481926599.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 17 Dec 2016 15:39:39 +0100
-Subject: [PATCH v3 5/7] PM: Make requirements of dev_pm_domain_set() more
- precise
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Tomeu Vizoso <tomeu.vizoso@collabora.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jaehoon Chung'" <jh80.chung@samsung.com>,
+ "'Pankaj Dubey'" <pankaj.dubey@samsung.com>,
+ <linux-kernel@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
+ <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
+ <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com>
+In-Reply-To: <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com>
+Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
+Date: Mon, 26 Dec 2016 09:43:31 -0500
+Message-ID: <000201d25f86$6ee20bd0$4ca62370$@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'CPGS' <cpgs@samsung.com>, 'Niyas Ahmed S T' <niyas.ahmed@samsung.com>,
+ krzk@kernel.org, kgene@kernel.org, alim.akhtar@samsung.com,
+ bhelgaas@google.com, sanath@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 989561de9b51 ("PM / Domains: add setter for dev.pm_domain")
-a PM domain may only be assigned to unbound devices.
+Jaehoon Chung wtote:
+> 
+> Hi Pankaj,
+> 
+> On 12/23/2016 07:56 PM, Pankaj Dubey wrote:
+> > From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+> >
+> > Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
+> > This patch does refactoring of Exynos PCIe driver to extend support
+> > for other Exynos SoC.
+> >
+> > Following are the main changes done via this patch:
+> > 1) It adds separate structs for memory, clock resources.
+> > 2) It add exynos_pcie_ops struct which will allow us to support the
+> > differences in resources in different Exynos SoC.
+> 
+> It's nice to me for reusing this file.
+> but after considering too many times, i decided not to use this file.
+> 
+> I'm not sure what block base is..actually this pci-exynos.c is really
+> black-box.
+> (No one maintains this file, even Samsung didn't care.)
+> Who is using this?
+> If Someone can share the information about exynos5440, i can refactor
+> everything.
+> Otherwise, there are two solution..
+> 
+> One is "adding the new pci-exynos.c" likes pci-exynos5433.c
 
-The motivation was not made explicit in the changelog other than "in the
-general case that can cause problems and also [...] we can simplify code
-quite a bit if we can always assume that".  Rafael J. Wysocki elaborated
-in a mailing list conversation that "setting a PM domain generally
-changes the set of PM callbacks for the device and it may not be safe to
-call it after the driver has been bound".
+As Bjorn mentioned earlier, I agree with this option.
 
-The concern seems to be that if a device is put to sleep and its PM
-callbacks are changed, the device may end up in an undefined state or
-not resume at all.  The real underlying requirement is thus to ensure
-that the device is awake and execution of its PM callbacks is prevented
-while the PM domain is assigned.  Unbound devices happen to fulfill this
-requirement, but bound devices can be made to satisfy it as well:
-The caller can prevent execution of PM ops with lock_system_sleep() and
-by holding a runtime PM reference to the device.
+> Other is "refactor this file" under assuming the each register's usage.
 
-Accordingly, adjust dev_pm_domain_set() to WARN only if the device is in
-the midst of a system sleep transition, or runtime PM is enabled and the
-device is either not active or may become inactive imminently (because
-it has no active children or its refcount is zero).
+But, if possible, I prefer this option.
+I am not sure that it cannot make the code dirty.
+Maybe, you need to discuss with hardware design engineers.
 
-The change is required to support runtime PM for Thunderbolt on the Mac,
-which poses the unique issue that a child device (the NHI) needs to
-assign a PM domain to its grandparent (the upstream bridge).  Because
-the grandparent's driver is built-in and the child's driver is a module,
-the grandparent is usually already bound when the child probes,
-resulting in a WARN splat when calling dev_pm_domain_set().  However the
-PM core guarantees both that the grandparent is active and that system
-sleep is not commenced until the child has finished probing.  So in this
-case it is safe to call dev_pm_domain_set() from the child's ->probe
-hook and the WARN splat is entirely gratuitous.
+> 
+> I want to use the PHY generic Framework for EXYNOS PCIe.
+> 
+> If you or other guys really want to use the pci-exynos.c for other exynos,
+> I will rework with PHY generic framework. Then i will resend the my
+> patches as V2.
 
-Note that commit e79aee49bcf9 ("PM: Avoid false-positive warnings in
-dev_pm_domain_set()") modified the WARN to not apply if a PM domain is
-removed.  This is unsafe as it allows removal of the PM domain while
-the device is asleep.  The present commit rectifies this.
+When I submitted the pci-exynos.c, there was no PHY generic framework.
+But, currently, using PHY generic framework is mandatory, as other PCIe host
+driver did.
+I think that we should use PHY generic framework for new SoCs.
 
-Cc: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Tomeu Vizoso <tomeu.vizoso@collabora.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/base/power/common.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> One more thing..Does anyone know what the usage of block base is?
+> Can i use that register as "syscon"?
 
-diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
-index f6a9ad5..d02c1e0 100644
---- a/drivers/base/power/common.c
-+++ b/drivers/base/power/common.c
-@@ -13,6 +13,7 @@
- #include <linux/pm_clock.h>
- #include <linux/acpi.h>
- #include <linux/pm_domain.h>
-+#include <linux/pm_runtime.h>
- 
- #include "power.h"
- 
-@@ -136,8 +137,10 @@ EXPORT_SYMBOL_GPL(dev_pm_domain_detach);
-  * @dev: Device whose PM domain is to be set.
-  * @pd: PM domain to be set, or NULL.
-  *
-- * Sets the PM domain the device belongs to. The PM domain of a device needs
-- * to be set before its probe finishes (it's bound to a driver).
-+ * Sets the PM domain the device belongs to.  The PM domain of a device needs
-+ * to be set while the device is awake.  This is guaranteed during ->probe.
-+ * Otherwise the caller is responsible for ensuring wakefulness, e.g. by
-+ * holding a runtime PM reference as well as invoking lock_system_sleep().
-  *
-  * This function must be called with the device lock held.
-  */
-@@ -146,8 +149,12 @@ void dev_pm_domain_set(struct device *dev, struct dev_pm_domain *pd)
- 	if (dev->pm_domain == pd)
- 		return;
- 
--	WARN(pd && device_is_bound(dev),
--	     "PM domains can only be changed for unbound devices\n");
-+	WARN(dev->power.is_prepared || dev->power.is_suspended ||
-+	     (pm_runtime_enabled(dev) &&
-+	      (dev->power.runtime_status != RPM_ACTIVE ||
-+	       (pm_children_suspended(dev) &&
-+		!atomic_read(&dev->power.usage_count)))),
-+	     "PM domains can only be changed for awake devices\n");
- 	dev->pm_domain = pd;
- 	device_pm_check_callbacks(dev);
- }
--- 
-2.10.2
+'Block' is very specific registers for 5440.
+Other Exynos SoCs do not use that registers.
+Actually, it is not the same with 'syscon'.
+But, you can assume 'block' as 'syscon'.
 
+Best regards,
+Jingoo Han
+
+> 
+> Best Regards,
+> Jaehoon Chung
+> 
+[.....]
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
