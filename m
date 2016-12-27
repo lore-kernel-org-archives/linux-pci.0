@@ -1,55 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:34772 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933092AbcLSR05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Dec 2016 12:26:57 -0500
-To: Keith Busch <keith.busch@intel.com>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <CAL-B5D3g=ZWRg7Qh8_KumJkdg6F2+2a8=HCz2US7a4g2tKC0Lw@mail.gmail.com>
- <735068a7-7805-dad0-b5b0-5218a18f335c@deltatee.com>
- <20161219172903.GB1043@localhost.localdomain>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7a537ea0-afb1-48d5-0706-5066dfaef1dd@deltatee.com>
-Date: Mon, 19 Dec 2016 10:26:50 -0700
-MIME-Version: 1.0
-In-Reply-To: <20161219172903.GB1043@localhost.localdomain>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 0/1] New PCI Switch Management Driver
+Received: from mailout2.samsung.com ([203.254.224.25]:40947 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753728AbcL0KSh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 05:18:37 -0500
+Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+        Pankaj Dubey <pankaj.dubey@samsung.com>,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: krzk@kernel.org, kgene@kernel.org, jingoohan1@gmail.com,
+        bhelgaas@google.com, sanath@samsung.com,
+        Niyas Ahmed S T <niyas.ahmed@samsung.com>,
+        CPGS <cpgs@samsung.com>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <a4200793-19dd-3727-505c-5840a8ec72bb@samsung.com>
+Date: Tue, 27 Dec 2016 19:18:33 +0900
+MIME-version: 1.0
+In-reply-to: <58620B5A.1060900@samsung.com>
+Content-type: text/plain; charset=windows-1252
+References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
+ <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
+ <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com>
+ <5860E6F7.2090703@samsung.com>
+ <79b89c49-a9de-3daa-9afa-b8f36304a226@samsung.com>
+ <5861CE23.9060202@samsung.com>
+ <6de4bc5b-05fb-793f-d3ab-b1c6ee19cfeb@samsung.com>
+ <58620B5A.1060900@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Alim,
 
+On 12/27/2016 03:34 PM, Alim Akhtar wrote:
+> Hi Jaehoon,
+> 
+[snip]
+>>
+>> Ah. Right..And i'm doing the refactoring to reuse the current pci-exynos.c.
+> There is a nice refactoring patch posted by Pankaj recently @
+> https://lkml.org/lkml/2016/12/23/73
+> I would suggest you to rebase your work on this top.
 
-On 19/12/16 10:29 AM, Keith Busch wrote:
-> Since the in-kernel driver binds to the device, won't this driver
-> conflict with the initialization the in-kernel one already does? Bus
-> master, MSI setup, etc?
+Well, i don't think so. Pankaj's patch might be good way..but i can't agree about a few point.
+If based on Pankaj's patch, it's more complex..
 
-No. The management interface is on a completely separate PCI endpoint.
-So from the kernels perspective, the management interface is just
-another PCI device. It has the same vendor and device ID as the switch
-but uses separate class codes so it can be bound by an independent driver.
+why put the ops callback for getting clock and mem resource?
 
-> Could you also provide the reasoning against making the functionality
-> this driver provides in user space?
+If PHY generic framework is used, it's unnecessary. because it needs to get elbi and dbi resources.
+clock resources("pcie" and "pcie_bus") are general things.
 
-I'm not sure how you mean. I suppose we could write a UIO driver but
-that seemed like an ugly solution to me and doesn't seem like an
-approach the community prefers. We do have to make use of interrupts so
-simply using /sys/bus/pci/.../resourceN wouldn't work either.
+If Pankaj's patch is applied, also need to make the exynos5433_pcie_* callback functions?
+It doesn't make sense.
 
-Logan
+I want to know maintainer's opinion..we can just touch a little for supporting All Exynos SoCs.
+
+Best Regards,
+Jaehoon Chung
+
+> 
+>> Maybe..Today or Tomorrow..I will send the patches..At that time, could you also check them?
+>> Any comments might be helpful to me! :)
+>>
+> Will wait for you patches :-)
+> 
+>> Best Regards,
+>> Jaehoon Chung
+>>
+[snip]
+
