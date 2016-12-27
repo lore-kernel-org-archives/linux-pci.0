@@ -1,37 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:38943 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750738AbcLUKTE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Dec 2016 05:19:04 -0500
-Date: Wed, 21 Dec 2016 11:19:15 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: John Crispin <john@phrozen.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH] pci: add kernel config option for disabling common PCI
- quirks
-Message-ID: <20161221101915.GC14781@wunner.de>
-References: <1482306784-29224-1-git-send-email-john@phrozen.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482306784-29224-1-git-send-email-john@phrozen.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:35243 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754785AbcL0NgT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 08:36:19 -0500
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+        jingoohan1@gmail.com, Niyas Ahmed S T <niyas.ahmed@samsung.com>,
+        krzk@kernel.org, jh80.chung@samsung.com, kgene@kernel.org,
+        alim.akhtar@samsung.com, bhelgaas@google.com, sanath@samsung.com
+Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
+Date: Tue, 27 Dec 2016 14:35:54 +0100
+Message-id: <3335251.c58Y1Zf7PB@amdc3058>
+In-reply-to: <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
+ <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 21, 2016 at 08:53:04AM +0100, John Crispin wrote:
-> From: Gabor Juhos <juhosg@openwrt.org>
+
+Hi,
+
+On Friday, December 23, 2016 04:26:27 PM Pankaj Dubey wrote:
+> From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
 > 
-> These quirks do not effect small small plastic routers. These routers tend
-> to have very little flash space. This patch adds a new option that allows
-> us to build a kernel without including the common quirks, thus saving us
-> valuable flash space.
+> Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
+> This patch does refactoring of Exynos PCIe driver to extend support
+> for other Exynos SoC.
 > 
-> When building an image for a MIPS/Ralink router with this option enabled
-> it will reduce the size of an uncompressed uImage by 12KB.
+> Following are the main changes done via this patch:
+> 1) It adds separate structs for memory, clock resources.
+> 2) It add exynos_pcie_ops struct which will allow us to support the
+> differences in resources in different Exynos SoC.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
 
-There's already a PCI_QUIRKS config option defined in init/Kconfig,
-why isn't this sufficient?  Do you want *some* quirks but not others?
+I would also like to see the explanation for 1) (as already
+requested by Jingoo).  Otherwise it all looks fine to me:
 
-Thanks,
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Lukas
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
