@@ -1,11 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org
-Subject: [PATCH v2] ACPI/IORT: Make dma masks set-up IORT specific
-Date: Tue,  6 Dec 2016 14:20:11 +0000
-Message-Id: <20161206142011.11859-1-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
+To: Jingoo Han <jingoohan1@gmail.com>,
+ 'Pankaj Dubey' <pankaj.dubey@samsung.com>, linux-kernel@vger.kernel.org,
+ linux-samsung-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <2855bb4c-1296-dea3-56c8-e554d1fea8f9@samsung.com>
+Date: Tue, 27 Dec 2016 10:12:36 +0900
+MIME-version: 1.0
+In-reply-to: <000201d25f86$6ee20bd0$4ca62370$@gmail.com>
+References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
+ <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
+ <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com>
+ <000201d25f86$6ee20bd0$4ca62370$@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -13,152 +21,101 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Tomasz Nowicki <tn@semihalf.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-acpi@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Dennis Chen <dennis.chen@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Sricharan R <sricharan@codeaurora.org>,
- Prem Mallappa <prem.mallappa@broadcom.com>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>
-MIME-Version: 1.0
+Cc: 'CPGS' <cpgs@samsung.com>, 'Niyas Ahmed S T' <niyas.ahmed@samsung.com>,
+ krzk@kernel.org, kgene@kernel.org, alim.akhtar@samsung.com,
+ bhelgaas@google.com, sanath@samsung.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The introduction of acpi_dma_configure() allows to configure DMA
-and related IOMMU for any device that is DMA capable. To achieve
-that goal it ensures DMA masks are set-up to sane default values
-before proceeding with IOMMU and DMA ops configuration.
+Dear Jingoo,
 
-On x86/ia64 systems, through acpi_bind_one(), acpi_dma_configure() is
-called for every device that has an ACPI companion, in that every device
-is considered DMA capable on x86/ia64 systems (ie acpi_get_dma_attr() API),
-which has the side effect of initializing dma masks also for
-pseudo-devices (eg CPUs and memory nodes) and potentially for devices
-whose dma masks were not set-up before the acpi_dma_configure() API was
-introduced, which may have noxious side effects.
+On 12/26/2016 11:43 PM, Jingoo Han wrote:
+> Jaehoon Chung wtote:
+>>
+>> Hi Pankaj,
+>>
+>> On 12/23/2016 07:56 PM, Pankaj Dubey wrote:
+>>> From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+>>>
+>>> Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
+>>> This patch does refactoring of Exynos PCIe driver to extend support
+>>> for other Exynos SoC.
+>>>
+>>> Following are the main changes done via this patch:
+>>> 1) It adds separate structs for memory, clock resources.
+>>> 2) It add exynos_pcie_ops struct which will allow us to support the
+>>> differences in resources in different Exynos SoC.
+>>
+>> It's nice to me for reusing this file.
+>> but after considering too many times, i decided not to use this file.
+>>
+>> I'm not sure what block base is..actually this pci-exynos.c is really
+>> black-box.
+>> (No one maintains this file, even Samsung didn't care.)
+>> Who is using this?
+>> If Someone can share the information about exynos5440, i can refactor
+>> everything.
+>> Otherwise, there are two solution..
+>>
+>> One is "adding the new pci-exynos.c" likes pci-exynos5433.c
+> 
+> As Bjorn mentioned earlier, I agree with this option.
+> 
+>> Other is "refactor this file" under assuming the each register's usage.
+> 
+> But, if possible, I prefer this option.
+> I am not sure that it cannot make the code dirty.
+> Maybe, you need to discuss with hardware design engineers.
+> 
+>>
+>> I want to use the PHY generic Framework for EXYNOS PCIe.
+>>
+>> If you or other guys really want to use the pci-exynos.c for other exynos,
+>> I will rework with PHY generic framework. Then i will resend the my
+>> patches as V2.
+> 
+> When I submitted the pci-exynos.c, there was no PHY generic framework.
+> But, currently, using PHY generic framework is mandatory, as other PCIe host
+> driver did.
+> I think that we should use PHY generic framework for new SoCs.
+> 
+>>
+>> One more thing..Does anyone know what the usage of block base is?
+>> Can i use that register as "syscon"?
+> 
+> 'Block' is very specific registers for 5440.
+> Other Exynos SoCs do not use that registers.
+> Actually, it is not the same with 'syscon'.
+> But, you can assume 'block' as 'syscon'.
 
-Therefore, in preparation for IORT firmware specific DMA masks set-up,
-wrap the default DMA masks set-up in acpi_dma_configure() inside an IORT
-specific wrapper that reverts to a NOP on x86/ia64 systems, restoring the
-default expected behaviour on x86/ia64 systems and keeping DMA default
-masks set-up on IORT based (ie ARM) arch configurations.
+Great! I want to know it. Then i will refactor this file for all other Exynos SoCs.
+And Could you check my RFC patches? Maybe i missed your email in my RFC patches.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
-Hi Joerg,
+https://lkml.org/lkml/2016/12/26/6
 
-as discussed please apply it to your arm/smmu branch (and consequently
-to -next) in order to get this queued along with the rest of the ACPI IORT
-SMMU series for v4.10.
+Best Regards,
+Jaehoon Chung
 
-Thank you !
-Lorenzo
-
-v1 -> v2
-	- Added review tags
-
- drivers/acpi/arm64/iort.c | 22 ++++++++++++++++++++++
- drivers/acpi/scan.c       | 14 +-------------
- include/linux/acpi_iort.h |  2 ++
- 3 files changed, 25 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 47bace8..e0d2e6e 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -547,6 +547,28 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- }
- 
- /**
-+ * iort_set_dma_mask - Set-up dma mask for a device.
-+ *
-+ * @dev: device to configure
-+ */
-+void iort_set_dma_mask(struct device *dev)
-+{
-+	/*
-+	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
-+	 * setup the correct supported mask.
-+	 */
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+}
-+
-+/**
-  * iort_iommu_configure - Set-up IOMMU configuration for a device.
-  *
-  * @dev: device to configure
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 80698d3..93b00cf 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1380,19 +1380,7 @@ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- {
- 	const struct iommu_ops *iommu;
- 
--	/*
--	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
--	 * setup the correct supported mask.
--	 */
--	if (!dev->coherent_dma_mask)
--		dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
-+	iort_set_dma_mask(dev);
- 
- 	iommu = iort_iommu_configure(dev);
- 
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index dcb2b60..77e0809 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -35,6 +35,7 @@ bool iort_node_match(u8 type);
- u32 iort_msi_map_rid(struct device *dev, u32 req_id);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- /* IOMMU interface */
-+void iort_set_dma_mask(struct device *dev);
- const struct iommu_ops *iort_iommu_configure(struct device *dev);
- #else
- static inline void acpi_iort_init(void) { }
-@@ -45,6 +46,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
- 							u32 req_id)
- { return NULL; }
- /* IOMMU interface */
-+static inline void iort_set_dma_mask(struct device *dev) { }
- static inline
- const struct iommu_ops *iort_iommu_configure(struct device *dev)
- { return NULL; }
--- 
-2.10.0
+> 
+> Best regards,
+> Jingoo Han
+> 
+>>
+>> Best Regards,
+>> Jaehoon Chung
+>>
+> [.....]
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
 
 
 _______________________________________________
