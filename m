@@ -1,125 +1,136 @@
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Thu, 29 Dec 2016 17:20:22 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:41330 "EHLO
+        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755569AbcL0A0J (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2016 19:26:09 -0500
+Date: Tue, 27 Dec 2016 01:19:47 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Satanand Burla <satananda.burla@caviumnetworks.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pciutils: Add decode for Atomic Ops in lspci
+Message-ID: <mj+md-20161227.001441.74860.nikam@ucw.cz>
+References: <1482797232-13210-1-git-send-email-satananda.burla@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1482797232-13210-1-git-send-email-satananda.burla@caviumnetworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi!
 
-I know it is a repetition of what I have written above but this behaviour (comment 19) should be contrasted to the behaviour on the 4.8 and 4.9 kernel which make my system unresponsive:
-Here the desktop is non static. I can see xclock ticking. The mouse
-moves. But any keyboard interaction or mouse click is not possible anymore.
+> This adds support for decoding Atomic Ops added in the following ECN
+> https://pcisig.com/sites/default/files/specification_documents/ECN_Atomic_Ops_080417.pdf
 
-I checked that this behavior is not related to nvidia and nouveau kernel driver. By blacklisting them.
+In general, I would like to have Atomic Ops support in lspci,
+but your patch has a couple of issues.
 
+First of all, its coding style is inconsistent with the rest of the
+code (and also with itself).
 
------ Original Message -----
-From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: "Lukas Wunner" <lukas@wunner.de>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Thursday, December 29, 2016 5:02:30 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+>  #define  PCI_EXP_DEV2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable Supported */
+> +#define  PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN	0x0040	/*AtomicOp RequesterEnable */
+> +#define  PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK	0x0080	/*AtomicOp Egress Blocking */
 
-One thing that was always weird in my debian system is, 
-that even with working lock screen on the 4.7.0-1 version.
-The lock screen is not a black screen but instead seems to
-be a static screenshot of the desktop.
+Coding style: comments.
 
-I currently have no system to compare with but this might be 
-an abnormal behavior.
+> +static int
+> +device_has_memory_space_bar(struct device *d)
+> +{
+> +  struct pci_dev *p = d->dev;
+> +  int i,cnt = 0, found = 0;
 
------ Original Message -----
-From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: "Lukas Wunner" <lukas@wunner.de>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Thursday, December 29, 2016 10:58:44 AM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Coding style: spaces.
 
-Dear Lukas and Bjorn,
-I am using the nouveau driver.
-dmesg and lspci --vv is attached as a comment to the bug rebort
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c15
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c16
+> +  byte htype = get_conf_byte(d, PCI_HEADER_TYPE) & 0x7f;
+> +
+> +  switch (htype)
+> +    {
+> +    case PCI_HEADER_TYPE_NORMAL:
+> +      cnt=6;
+> +      break;
+> +    case PCI_HEADER_TYPE_BRIDGE:
+> +      cnt=2;
+> +      break;
+> +    case PCI_HEADER_TYPE_CARDBUS:
+> +      cnt = 1;
+> +      break;
+> +    default:
+> +      return 0;
+> +    }
+> +
+> +  for (i=0; i<cnt; i++)
+> +    {
+> +      pciaddr_t pos = p->base_addr[i];
+> +      pciaddr_t len = (p->known_fields & PCI_FILL_SIZES) ? p->size[i] : 0;
+> +      u32 flg = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4*i);
+> +      if (flg == 0xffffffff)
+> +        flg = 0;
+> +      if (!pos && !flg && !len)
+> +        continue;
+> +      if ((flg & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_MEMORY)
+> +        {
+> +          found = 1;
+> +          break;
+> +	 }
+> +    }
+> +  return found;
+> +}
 
-I could completely deactivate nvidia in the bios...
+I do not understand why this is so complicated. Just ask pci_fill_info()
+for PCI_FILL_BASES and use p->base_addr[]. No need to touch the config
+registers, no need to switch on header type.
 
-Best regards
-Kilian
+>  static void cap_express_dev2(struct device *d, int where, int type)
+>  {
+>    u32 l;
+> @@ -973,9 +1013,18 @@ static void cap_express_dev2(struct device *d, int where, int type)
+>  	FLAG(l, PCI_EXP_DEVCAP2_LTR),
+>  	cap_express_devcap2_obff(PCI_EXP_DEVCAP2_OBFF(l)));
+>    if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+> -    printf(" ARIFwd%c\n", FLAG(l, PCI_EXP_DEV2_ARI));
+> -  else
+> -    printf("\n");
+> +    printf(" ARIFwd%c", FLAG(l, PCI_EXP_DEV2_ARI));
+> +  printf("\n\t\t\t");
+> +  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_UPSTREAM) ||
+> +      (type == PCI_EXP_TYPE_DOWNSTREAM))
 
------ Original Message -----
-From: "Bjorn Helgaas" <helgaas@kernel.org>
-To: "Lukas Wunner" <lukas@wunner.de>
-Cc: "Kilian Singer" <kilian.singer@quantumtechnology.info>, linux-pci@vger.kernel.org, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Wednesday, December 28, 2016 5:18:16 PM
-Subject: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Coding style: superfluous parentheses.
 
-On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
-> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> > and all the debugging you've done.  Below is a revert of the troublesome
-> > commit.  Can you test it and verify that it also fixes the problem?
-> > 
-> > I assume Mika is looking at this and will have a better solution soon.
-> > But if not, I'll queue this up for v4.10.
-> 
-> @Kilian:  Are you using the proprietary nvidia driver?  If so,
-> does the issue go away if you blacklist that driver or use nouveau
-> instead?
-> 
-> 
-> With a bit of googling I found dmesg and lspci output for this model:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
-> 
-> The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
-> 0x60, 0x64.  I assume they're located behind the LPC bridge?
-> 
-> The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
-> registers with vga_tryget() but never releases that lock.  Intel
-> chipsets have a quirk wherein I/O ports are routed to the bus to
-> which the legacy PCI VGA registers are locked.  So once vga_tryget()
-> is called by the nvidia driver, access to the keyboard and mouse is
-> routed to bus 01 (on which the Nvidia card resides) and not to bus 00
-> (on which the LPC bridge resides).
+> +    printf(" AtomicOP Routing%c", FLAG(l, PCI_EXP_DEVCAP2_ATOMICOP_ROUTING));
+> +  if (type == PCI_EXP_TYPE_ROOT_PORT || device_has_memory_space_bar(d))
+> +    {
+> +      printf(" 32bit AtomicOP Completer%c", FLAG(l, PCI_EXP_DEVCAP2_32BIT_ATOMICOP_COMP));
+> +      printf(" 64bit AtomicOP Completer%c", FLAG(l, PCI_EXP_DEVCAP2_64BIT_ATOMICOP_COMP));
+> +      printf(" 128bit CAS Completer%c", FLAG(l, PCI_EXP_DEVCAP2_128BIT_CAS_COMP));
+> +    }
+> +  printf("\n");
 
-Interesting.  A spec reference would be a good addition to whatever
-fix is proposed.
+This does not look good. It might write an empty line (if no condition
+matches), it will write a space after a tab, and the output will be
+hard to comprehend.
 
-> My theory would be that if you lock the screen, the Nvidia card
-> runtime suspends, allowing the root port above it to suspend,
-> and then the I/O ports are no longer accessible.
-> 
-> We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
-> is adjusted by writing to I/O ports of a gmux controller situated below
-> the LPC bridge.  The nvidia driver locks the legacy VGA registers and
-> from that point reads from the I/O ports always return 0xff.  Commit
-> 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
-> sought to fix it but caused other breakage which remains unfixed so far:
-> https://bugzilla.kernel.org/show_bug.cgi?id=105051
-> https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
-> 
-> I've always wondered if the Intel chipsets would behave more sensibly
-> if the LPC bridge had BARs specifying the I/O regions used by devices
-> below it.
-> 
-> Reverting runtime suspend for PCIe ports is not a good solution as it's
-> needed for Thunderbolt runtime PM on Macs.
+What about output like this?
 
-The choices are:
+	AtomicOPs: Routing+ 32bit+ 64bit- 128bitCAS-
 
-  1) Fix the regression and preserve runtime PM for PCIe ports
-  2) Fix the regression by reverting runtime PM for PCIe ports
+>    if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+> -    printf(" ARIFwd%c\n", FLAG(w, PCI_EXP_DEV2_ARI));
+> -  else
+> -    printf("\n");
+> +    printf(" ARIFwd%c", FLAG(w, PCI_EXP_DEV2_ARI));
+> +  printf("\n\t\t\t");
+> +  if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_ENDPOINT)
+> +    printf(" AtomicOp Requester En%c", FLAG(w, PCI_EXP_DEV2_ATOMICOP_REQUESTER_EN));
+> +  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_UPSTREAM) ||
+> +      (type == PCI_EXP_TYPE_DOWNSTREAM))
+> +    printf(" AtomicOP Egress Blocking%c", FLAG(l, PCI_EXP_DEV2_ATOMICOP_EGRESS_BLOCK));
+> +  printf("\n");
 
-Obviously we hope for 1).  Preserving runtime PM without fixing the
-regression isn't even on the list.  I know this is Linux 101, so I
-apologize for restating the obvious.
+Same here.
 
-Bjorn
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+"C++: an octopus made by nailing extra legs onto a dog." -- Steve Taylor
