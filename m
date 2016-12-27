@@ -1,70 +1,129 @@
-Return-Path: <SRS0=+RsN=X5=nbd.name=nbd@kernel.org>
-Return-Path: <SRS0=+RsN=X5=nbd.name=nbd@kernel.org>
-Subject: Re: [PATCH v2] ath9k: do not return early to fix rcu unlocking
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
- kvalo@codeaurora.org, helgaas@kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, marc.zyngier@arm.com, Janusz.Dziedzic@tieto.com,
- ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
- rmanohar@qca.qualcomm.com, bharat.kumar.gogada@xilinx.com
-References: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
- <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
-Cc: "# v4 . 9" <stable@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <b68fee2a-901b-c2ce-f59e-5968f8846d0f@nbd.name>
-Date: Wed, 14 Dec 2016 21:45:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:43604 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753878AbcL0XEZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 18:04:25 -0500
+Subject: Re: [RFC PATCH 5/6] Documentation: pci: add the exynos5433-pcie binding
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kgene@kernel.org, javier@osg.samsung.com, kishon@ti.com,
+        will.deacon@arm.com, catalin.marinas@arm.com, cpgs@samsung.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <d723ec48-af3c-6012-4f76-e8e73ad9af58@samsung.com>
+Date: Wed, 28 Dec 2016 08:03:41 +0900
+MIME-version: 1.0
+In-reply-to: <20161227161916.nb6yf3n2kmkzkeg2@kozik-lap>
+Content-type: text/plain; charset=utf-8
+References: <20161226052029.10552-1-jh80.chung@samsung.com>
+ <CGME20161226052031epcas5p4f151c41189f7b3811979ca1e10aab1be@epcas5p4.samsung.com>
+ <20161226052029.10552-6-jh80.chung@samsung.com>
+ <20161227161916.nb6yf3n2kmkzkeg2@kozik-lap>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-12-13 18:08, Tobias Klausmann wrote:
-> Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
-> where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
-> returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
-> and suspicious RCU usage:
+On 12/28/2016 01:19 AM, Krzysztof Kozlowski wrote:
+> On Mon, Dec 26, 2016 at 02:20:28PM +0900, Jaehoon Chung wrote:
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>>  .../devicetree/bindings/pci/exynos5433-pcie.txt    | 36 ++++++++++++++++++++++
+>>  1 file changed, 36 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt b/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
+>> new file mode 100644
+>> index 0000000..932a847
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/exynos5433-pcie.txt
+>> @@ -0,0 +1,36 @@
+>> +* Samsung Exynos5433 PCIe interface
+>> +
+>> +This PCIe host controller is based on the Synopsis Designware PCIe IP
 > 
->  ===============================
->  [ INFO: suspicious RCU usage. ]
->  4.9.0-rc8 #11 Not tainted
->  -------------------------------
->  kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
+> Synopsys.
+
+Will fix.
+
 > 
->  other info that might help us debug this:
+>> +and thus inherits all the common properties defined in designware-pcie.txt.
+>> +
+>> +Required properties:
+>> +- compatible: "samsung,exynos5433-pcie"
+>> +- reg: base addresses and lengths of the pcie controller,
+>> +	the phy controller, additional register for the phy controller.
 > 
->  RCU used illegally from idle CPU!
->  rcu_scheduler_active = 1, debug_locks = 0
->  RCU used illegally from extended quiescent state!
->  1 lock held by swapper/7/0:
->  #0:
->   (
->  rcu_read_lock
->  ){......}
->  , at:
->  [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
+> You mentioned three regs but the example contains four of them. Is the
+> config comming from snps,dw-pcie?
+
+Oops..It's my mistake. Just needs to put three reg.
+Elbi : External local Bus interface register.
+Dbi : Data bus interface register.(Control register.)
+Config : for configuration space.
+
+"config" can be removed. Because it's not Exynos specific, synopsys's Required property.
+
 > 
->  stack backtrace:
->  CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
->  Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
->   ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
->   ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
->   ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
->  Call Trace:
->   <IRQ>
->   [<ffffffff8132b1e5>] dump_stack+0x68/0x93
->   [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
->   [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
->   [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
->   [<ffffffff81058631>] irq_exit+0x61/0xd0
->   [<ffffffff81018d25>] do_IRQ+0x65/0x110
->   [<ffffffff81672189>] common_interrupt+0x89/0x89
->   <EOI>
->   [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
->   [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
->   [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
->   [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
->   [<ffffffff810336f8>] start_secondary+0x148/0x170
+>> +- reg-names: Must be "elbi", "phy" and "dbi" for each regs
 > 
-> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-> Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
-> Cc: <stable@vger.kernel.org> # v4.9
-Acked-by: Felix Fietkau <nbd@nbd.name>
+> Again, three here, four in example.
+
+Will fix.
+
+> 
+>> +- interrupt-names: Must be "intr" for legacy interrupt pin.
+>> +
+>> +Other common properites refer to
+>> +	Documentation/devicetree/binding/pci/designware-pcie.txt
+>> +
+>> +Example:
+>> +
+>> +	pcie: pcie@15700000 {
+>> +		compatible ="samsung,exynos5433-pcie", "snps,dw-pcie";
+>                             ^
+> 			    space needed
+>> +		#address-cells = <3>;
+>> +		#size-cells = <2>;
+>> +		device_type = "pci";
+>> +		interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+>> +		interrupt-names = "intr";
+>> +		clocks = <&cmu_fsys CLK_PCIE>, <&cmu_fsys CLK_PCLK_PCIE_PHY>;
+>> +		clock-names = "pcie", "pcie_bus";
+>> +		num-lanes = <1>;
+>> +		pinctrl-names = "default";
+>> +		pinctrl-0 = <&pcie_bus>;
+>> +		reg = <0x156b0000 0x1000>, <0x15680000 0x1000>,
+>> +		    <0x15700000 0x1000>, <0x0c000000 0x1000>;
+> 
+> Indentation here looks wrong. You indented it with spaces after tabs...
+> but not to align with line before.
+
+Will fix.
+
+Best Regards,
+Jaehoon Chung
+
+> 
+> Beside that, fine with me:
+> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> 
+> Best regards,
+> Krzysztof
+> 
+> 
+>> +		reg-names = "elbi", "phy", "dbi", "config";
+>> +		ranges = <0x81000000 0 0	  0x0c001000 0 0x00010000
+>> +			  0x82000000 0 0x0c011000 0x0c011000 0 0x3feefff>;
+>> +		status = "disabled";
+>> +	};
+>> -- 
+>> 2.10.2
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
+
