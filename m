@@ -1,51 +1,76 @@
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCH v4 1/1] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
- controller
-To: Duc Dang <dhdang@apm.com>
-References: <20161201183350.GF30746@bhelgaas-glaptop.roam.corp.google.com>
- <f18738b7096fb06a5865214ddc299ce99630673b.1480644928.git.dhdang@apm.com>
- <6d593615-e97f-8738-42be-1f8f4906d2f4@redhat.com>
- <CADaLNDkyCrheZLNG3_9BVgvGBW8WrA-VPWOCezz3U-g+nt5W9w@mail.gmail.com>
- <175F32B0-C73F-4250-9E60-3CE7409F0B0C@redhat.com>
- <CADaLNDmWRn+UKzF8PH2LmYCSF+NhHaw26RTN+QoaByh1wS7jfQ@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann
- <arnd@arndb.de>, Mark Salter <msalter@redhat.com>,
-        linux-pci@vger.kernel.org,
-        linux-arm <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, patches <patches@apm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <c73545ee-07d9-ff40-ba7b-fb84f2382968@redhat.com>
-Date: Fri, 2 Dec 2016 14:59:33 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34696 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932952AbcL0XoW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Dec 2016 18:44:22 -0500
+Date: Tue, 27 Dec 2016 17:44:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Woodhouse <dwmw2@infradead.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        g@bhelgaas-glaptop.roam.corp.google.com
+Cc: rwright@hpe.com, iommu@lists.linux-foundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: possible dmar_init_reserved_ranges() error
+Message-ID: <20161227234417.GA24366@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CADaLNDmWRn+UKzF8PH2LmYCSF+NhHaw26RTN+QoaByh1wS7jfQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/02/2016 02:39 PM, Duc Dang wrote:
-> On Fri, Dec 2, 2016 at 12:11 AM, Jon Masters <jcm@redhat.com> wrote:
->> You're welcome.
->>
->> (Unrelated) Note that I added a console= and earlycon in my test (and got the baud rate wrong for the console but nevermind...was ssh'd in after the earlycon output I cared about anyway) because of some other cleanup work for the SPCR parsing that apparently is still not quite fixed for upstream, or rather, there is a need to match on the 32-bit access required for the UART and that isn't happening so it's not getting setup. Folks are tracking that one and fixing it though.
+On Mon, Dec 19, 2016 at 03:20:44PM -0600, Bjorn Helgaas wrote:
+> Hi guys,
 > 
-> I don't see this console issue on X-Gene1 (Mustang board). I tried
-> with X-Gene 2 as well. I used both console=ttyS0,115200 and
-> earlycon=uart8250,mmio32,0x1c020000. Are you setting baudrate to
-> 115200 or something else?
+> I have some questions about dmar_init_reserved_ranges().  On systems
+> where CPU physical address space is not identity-mapped to PCI bus
+> address space, e.g., where the PCI host bridge windows have _TRA
+> offsets, I'm not sure we're doing the right thing.
+> 
+> Assume we have a PCI host bridge with _TRA that maps CPU addresses
+> 0x80000000-0x9fffffff to PCI bus addresses 0x00000000-0x1fffffff, with
+> two PCI devices below it:
+> 
+>   PCI host bridge domain 0000 [bus 00-3f]
+>   PCI host bridge window [mem 0x80000000-0x9fffffff] (bus 0x00000000-0x1fffffff]
+>   00:00.0: BAR 0 [mem 0x80000000-0x8ffffffff] (0x00000000-0x0fffffff on bus)
+>   00:01.0: BAR 0 [mem 0x90000000-0x9ffffffff] (0x10000000-0x1fffffff on bus)
+> 
+> The IOMMU init code in dmar_init_reserved_ranges() reserves the PCI
+> MMIO space for all devices:
+> 
+>   pci_iommu_init()
+>     intel_iommu_init()
+>       dmar_init_reserved_ranges()
+>         reserve_iova(0x80000000-0x8ffffffff)
+>         reserve_iova(0x90000000-0x9ffffffff)
+> 
+> This looks odd because we're reserving CPU physical addresses, but
+> the IOVA space contains *PCI bus* addresses.  On most x86 systems they
+> would be the same, but not on all.
 
-It's an m400 issue in that their SPCR needs updating to convey the
-required 32-bit access width for the 8250 dw IP or similar. It's one
-of those things someone described the other day and it made sense but
-I haven't yet dug into the exact situation, other than that I know
-the access width in the m400 ACPI table isn't quite right.
+While we're looking at this, here's another question.  We do basically
+this:
 
-My understanding is that it's in hand. I'll catch up on exactly what's
-up, check with my own mustangs, and followup separately.
+  dmar_init_reserved_ranges()
+  {
+    ...
+    for_each_pci_dev(pdev) {
+      for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+        r = &pdev->resource[i];
+        reserve_iova(r)
 
-Jon.
+But I assume it's possible to have more than one IOTLB in a system,
+so you could have some PCI devices under one IOTLB and others under a
+different IOTLB.  So it seems like we should reserve only the IOVA
+space used by the devices under *this* IOTLB.
 
--- 
-Computer Architect | Sent from my Fedora powered laptop
+Also, we may hot-add a device under the IOTLB, and I don't see where
+we reserve the IOVA space it uses.
+
+I think the best thing to do would be to reserve the host bridge
+apertures related to each IOTLB.  That would resolve both questions.
+It looks like iova_reserve_pci_windows() does this in the
+iommu_dma_init_domain() path.
+
+Bjorn
