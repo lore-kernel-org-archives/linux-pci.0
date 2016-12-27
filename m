@@ -1,66 +1,132 @@
-Return-Path: <SRS0=IEsV=XR=huawei.com=guohanjun@kernel.org>
-Return-Path: <SRS0=IEsV=XR=huawei.com=guohanjun@kernel.org>
-Subject: Re: [PATCH v10 00/12] PCI: ARM64 ECAM quirks
-To: Dongdong Liu <liudongdong3@huawei.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <d3f1a4ca-99e6-f0a5-d20b-d2753058d93d@huawei.com>
- <8f4a67d4-549a-34e9-8ef7-ec99961d60e5@huawei.com>
- <20161201163105.GB19681@bhelgaas-glaptop.roam.corp.google.com>
- <42eec2b2-6ced-25a1-95d3-3b22e3b71bec@huawei.com>
-CC: <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "Christopher
- Covington" <cov@codeaurora.org>
-From: Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <58412DAF.1090001@huawei.com>
-Date: Fri, 2 Dec 2016 16:15:43 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35724 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932177AbcL0QcG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 11:32:06 -0500
+Date: Tue, 27 Dec 2016 18:32:00 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kgene@kernel.org, krzk@kernel.org, javier@osg.samsung.com,
+        kishon@ti.com, will.deacon@arm.com, catalin.marinas@arm.com,
+        cpgs@samsung.com
+Subject: Re: [RFC PATCH 6/6] ARM64: exynos: add the pcie node for TM2
+Message-ID: <20161227163200.6noed454fmtgozrv@kozik-lap>
+References: <20161226052029.10552-1-jh80.chung@samsung.com>
+ <CGME20161226052031epcas1p43a300fe9e59c2af410c48861cd8554d1@epcas1p4.samsung.com>
+ <20161226052029.10552-7-jh80.chung@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <42eec2b2-6ced-25a1-95d3-3b22e3b71bec@huawei.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20161226052029.10552-7-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/12/2 11:46, Dongdong Liu wrote:
-> Hi Bjorn
->
-> 在 2016/12/2 0:31, Bjorn Helgaas 写道:
->> On Thu, Dec 01, 2016 at 10:04:48PM +0800, Dongdong Liu wrote:
->>> ...
->>> Aftet fixing the compile errors. I tested on HiSilicon D03 board. It works ok.
->>> The dmesg is as below
->>
->> Thanks very much for testing this!  A few comments below.
->>
->>> root@(none)$ dmesg
->>> [    0.000000] Booting Linux on physical CPU 0x10000
->>> [    0.000000] Linux version 4.9.0-rc1-gaf05ef2-dirty (l00290354@linux-ioko) (gcc version 4.9.3 20150211 (prerelease) (20150316) ) #257 SMP PREEMPT Thu Dec 1 22:13:05 CST 2016
->>> [    0.000000] Boot CPU: AArch64 Processor [411fd071]
->>> [    0.000000] earlycon: hisilpcuart0 at MMIO 0x00000000a01b0000 (options '0,0x2f8')
->>> [    0.000000] bootconsole [hisilpcuart0] enabled
->>> [    0.000000] efi: Getting EFI parameters from FDT:
->>> [    0.000000] efi: EFI v2.60 by EDK II
->>> [    0.000000] efi:  SMBIOS=0x3f110000  SMBIOS 3.0=0x39ce0000  ACPI=0x39db0000  ACPI 2.0=0x39db0014  MEMATTR=0x3c945018
->>
->> On x86 we normally have info about the machine and BIOS, e.g.,
->>
->>   DMI: LENOVO 20FCS12V03/20FCS12V03, BIOS N1FET40W (1.14 ) 04/18/2016
->>
->> I think this comes from dmi_present(), and it looks like we should
->> call that via arm64_dmi_init().  Any idea why we don't see that info?
->> Is it just missing from the SMBIOS table?  I think it's useful to
->> have for debugging problems.
->
-> I need to ask my colleagues about this, then reply.
+On Mon, Dec 26, 2016 at 02:20:29PM +0900, Jaehoon Chung wrote:
+> Add the Exxynos5433 pcie node for TM2.
+> This pcie device is used for supporting WiFi.
+> 
+> And some gpios are already requested from pinctrl. so it doesn't need to
+> initialize.
+> GPJ2-0 is used for supplying to WiFi PCIe chip.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi |  7 +++++++
+>  arch/arm64/boot/dts/exynos/exynos5433-tm2.dts      | 11 +++++++++--
+>  arch/arm64/boot/dts/exynos/exynos5433.dtsi         | 23 ++++++++++++++++++++++
+>  3 files changed, 39 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
+> index ad71247..3e8b728 100644
+> --- a/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
+> +++ b/arch/arm64/boot/dts/exynos/exynos5433-pinctrl.dtsi
+> @@ -183,6 +183,13 @@
+>  		interrupt-controller;
+>  		#interrupt-cells = <2>;
+>  	};
+> +
+> +	pcie_wlanen: pcie-wlanen {
+> +		samsung,pins = "gpj2-0";
+> +		samsung,pin-function = <0>;
+> +		samsung,pin-pud = <3>;
+> +		samsung,pin-drv = <3>;
+> +	};
+>  };
+>  
+>  &pinctrl_finger {
+> diff --git a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
+> index f21bdc2..c84a2ad 100644
+> --- a/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
+> +++ b/arch/arm64/boot/dts/exynos/exynos5433-tm2.dts
+> @@ -737,6 +737,15 @@
+>  	bus-width = <4>;
+>  };
+>  
+> +&pcie {
+> +	assigned-clocks = <&cmu_fsys CLK_MOUT_SCLK_PCIE_100_USER>,
+> +			<&cmu_top CLK_MOUT_SCLK_PCIE_100>;
+> +	assigned-clock-parents = <&cmu_top CLK_SCLK_PCIE_100_FSYS>,
+> +			<&cmu_top CLK_MOUT_BUS_PLL_USER>;
+> +	assigned-clock-rates = <0>, <100000000>;
+> +	status = "okay";
+> +};
+> +
+>  &pinctrl_alive {
+>  	pinctrl-names = "default";
+>  	pinctrl-0 = <&initial_alive>;
+> @@ -836,7 +845,6 @@
+>  	pinctrl-0 = <&initial_ese>;
+>  
+>  	initial_ese: initial-state {
+> -		PIN(IN, gpj2-0, DOWN, LV1);
+>  		PIN(IN, gpj2-1, DOWN, LV1);
+>  		PIN(IN, gpj2-2, DOWN, LV1);
+>  	};
+> @@ -851,7 +859,6 @@
+>  		PIN(IN, gpr3-1, DOWN, LV1);
+>  		PIN(IN, gpr3-2, DOWN, LV1);
+>  		PIN(IN, gpr3-3, DOWN, LV1);
+> -		PIN(IN, gpr3-7, NONE, LV1);
+>  	};
+>  };
+>  
+> diff --git a/arch/arm64/boot/dts/exynos/exynos5433.dtsi b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
+> index 2a15f18..da287f4 100644
+> --- a/arch/arm64/boot/dts/exynos/exynos5433.dtsi
+> +++ b/arch/arm64/boot/dts/exynos/exynos5433.dtsi
+> @@ -1457,6 +1457,29 @@
+>  			samsung,fsys-sysreg = <&syscon_fsys>;
+>  			status = "okay";
+>  		};
+> +
+> +		pcie: pcie@15700000 {
+> +			compatible = "samsung,exynos5433-pcie", "snps,dw-pcie";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names = "intr";
+> +			clocks = <&cmu_fsys CLK_PCIE>,
+> +			       <&cmu_fsys CLK_PCLK_PCIE_PHY>;
 
-git grep -w "DMI:"
-drivers/firmware/dmi_scan.c:                      printk(KERN_DEBUG "DMI: %s\n", dmi_ids_string);
-drivers/firmware/dmi_scan.c:                      pr_debug("DMI: %s\n", dmi_ids_string);
+Here and in the 'reg' property - indentation looks weird. Tabs+spaces
+but not aligned. Either you use spaces to align... or just don't care
+and use tabs. I prefer consistency and below the 'ranges' property is
+aligned.
 
-It's a pr_debug information, seems we didn't enable the debug print?
+> +			clock-names = "pcie", "pcie_bus";
+> +			num-lanes = <1>;
+> +			pinctrl-names = "default";
+> +			phys = <&pcie_phy>;
+> +			phy-names = "pcie-phy";
+> +			pinctrl-0 = <&pcie_bus &pcie_wlanen>;
+> +			reg = <0x156b0000 0x1000>, <0x15700000 0x1000>,
+> +			    <0x0c000000 0x1000>;
+> +			reg-names = "elbi", "dbi", "config";
 
-Thanks
-Hanjun
+This does not match the bindings documentation.
+
+Best regards,
+Krzysztof
