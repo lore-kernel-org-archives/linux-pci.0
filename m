@@ -1,56 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:55287 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753761AbcLFQjI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Dec 2016 11:39:08 -0500
-Date: Tue, 6 Dec 2016 09:38:50 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Haggai Eran <haggaie@mellanox.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "Suravee.Suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-        "John.Bridgman@amd.com" <john.bridgman@amd.com>,
-        "Alexander.Deucher@amd.com" <alexander.deucher@amd.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "serguei.sagalovitch@amd.com" <serguei.sagalovitch@amd.com>,
-        "Paul.Blinzer@amd.com" <paul.blinzer@amd.com>,
-        "Felix.Kuehling@amd.com" <felix.kuehling@amd.com>,
-        "ben.sander@amd.com" <ben.sander@amd.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20161206163850.GC28066@obsidianresearch.com>
-References: <5f5b7989-84f5-737e-47c8-831f752d6280@deltatee.com>
- <c1ead8a0-6850-fc84-2793-b986f5c1f726@mellanox.com>
- <61a2fb07344aacd81111449d222de66e.squirrel@webmail.raithlin.com>
- <20161205171830.GB27784@obsidianresearch.com>
- <CAPcyv4hdMkXOxj9hUDpnftA7UTGDa498eBugdePp8EWr6S80gA@mail.gmail.com>
- <20161205180231.GA28133@obsidianresearch.com>
- <CAPcyv4iEXwvtDbZgnWzdKU6uN_sOGmXH1KtW_Nws6kUftJUigQ@mail.gmail.com>
- <a3a1c239-297d-c091-7758-54acdf00f74e@deltatee.com>
- <CAPcyv4iVHhOSxPrLMZ53Xw3CK+9cOWn9zEG8smMtqF_LAcKKpg@mail.gmail.com>
- <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ac07a73f2601f6ca35cecc83c553feb0.squirrel@webmail.raithlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ebdb57b1-9a24-f83e-ac26-887f7a2263d3@samsung.com>
+References: <CGME20161226052030epcas5p4ea673fc4ee5c0b2664e80f53d4758553@epcas5p4.samsung.com>
+ <20161226052029.10552-1-jh80.chung@samsung.com> <20161226052029.10552-2-jh80.chung@samsung.com>
+ <CAFp+6iH0q9TNvPgv3_Nexm-vE6TBB_eQHXCwniO-Yn=fq+WWMg@mail.gmail.com>
+ <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com> <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
+ <ebdb57b1-9a24-f83e-ac26-887f7a2263d3@samsung.com>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Date: Wed, 28 Dec 2016 15:42:15 +0530
+Message-ID: <CAFp+6iFSfC97g2NsW9NZtxgxxbXW5vwbtk=6kMUiQZcY4J0-1Q@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/6] phy: exynos-pcie: Add support for Exynos PCIe phy
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-samsung-soc@vger.kernel.org"
+        <linux-samsung-soc@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "robh+dt" <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kukjin Kim <kgene@kernel.org>, krzk@kernel.org,
+        javier@osg.samsung.com, kishon <kishon@ti.com>,
+        Will Deacon <will.deacon@arm.com>, catalin.marinas@arm.com,
+        CPGS <cpgs@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > I'm not opposed to mapping /dev/nvmeX.  However, the lookup is trivial
-> > to accomplish in sysfs through /sys/dev/char to find the sysfs path of the
-> > device-dax instance under the nvme device, or if you already have the nvme
-> > sysfs path the dax instance(s) will appear under the "dax" sub-directory.
-> 
-> Personally I think mapping the dax resource in the sysfs tree is a nice
-> way to do this and a bit more intuitive than mapping a /dev/nvmeX.
+On Wed, Dec 28, 2016 at 3:05 PM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+> Hi Vivek,
+>
+> On 12/28/2016 05:58 PM, Vivek Gautam wrote:
+>> Hi Jaehoon,
+>>
+>> On Wed, Dec 28, 2016 at 8:19 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+>>> Hi Vivek,
+>>>
+>>> On 12/27/2016 02:53 PM, Vivek Gautam wrote:
+>>>> Hi Jaehoon,
+>>>>
+>>>>
+>>>> On Mon, Dec 26, 2016 at 10:50 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+>>>>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
+>>>>> When Exynos that supported the pcie want to use the PCIe,
+>>>>> it needs to control the phy resgister.
+>>>>> But it should be more complex to control in their own PCIe device drivers.
+>>>>>
+>>>>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>>>>> ---
+>>>>>  drivers/phy/Kconfig           |   9 ++
+>>>>>  drivers/phy/Makefile          |   1 +
+>>>>>  drivers/phy/phy-exynos-pcie.c | 227 ++++++++++++++++++++++++++++++++++++++++++
+>>>>>  3 files changed, 237 insertions(+)
+>>>>>  create mode 100644 drivers/phy/phy-exynos-pcie.c
+>>>>>
+>>>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>>>> index fe00f91..94b0433 100644
+>>>>> --- a/drivers/phy/Kconfig
+>>>>> +++ b/drivers/phy/Kconfig
+>>>>> @@ -341,6 +341,15 @@ config PHY_EXYNOS5_USBDRD
+>>>>>           This driver provides PHY interface for USB 3.0 DRD controller
+>>>>>           present on Exynos5 SoC series.
+>>>>>
+>>>>> +config PHY_EXYNOS_PCIE
+>>>>> +       bool "Exynos PCIe PHY driver"
+>>>>
+>>>> Is there a reason for this not being 'tristate' ?
+>>>
+>>> Will change.
+>>
+>> I notice that PCI_EXYNOS5433 is bool as well.
+>> If the host has to be 'bool' then it makes sense to have phy
+>> also bool as well. But if PCI_EXYNOS5433 can be made
+>> tristate, then this also changes to tristate.
+>
+> Right. I understood what you said.
+>
+>>
+>>>
+>>>>
+>>>>> +       depends on ARCH_EXYNOS && OF
+>>>>> +       depends on PCI_EXYNOS5433
+>>>>> +       select GENERIC_PHY
+>>>>> +       help
+>>>>> +         Enable PCIe PHY support for Exynos SoC series.
+>>>>
+>>>> If this driver is for Exynos5433, then same should come in this help
+>>>> text as well.
+>>>
+>>> will support the other exynos series.
+>>> I'm working on refactoring exynos5440 with PHY generic Framework.
+>>> Then this drive is not for only Exnyos5433. how about?
+>>
+>> Ok, it's good then. My only concern is 'depends on PCI_EXYNOS5433'
+>> makes it look like it is for EXYNOS5433. I am fine if that changes as well.
+>
+> I will not put PCI_EXYNOS5433, just will use the PCI_EXYNOS.
+> Because it will be supported only one file as pci-exynos.c
 
-It is still not at all clear to me what userpsace is supposed to do
-with this on nvme.. How is the CMB usable from userspace?
+cool then.
 
-Jason
+[...]
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
