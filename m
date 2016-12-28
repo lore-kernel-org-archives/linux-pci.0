@@ -1,94 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 1 Dec 2016 11:52:12 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH V1 1/2] PCI: thunder: Enable ACPI PCI controller for
- ThunderX pass2.x silicon version
-Message-ID: <20161201175212.GC30746@bhelgaas-glaptop.roam.corp.google.com>
-References: <1479201298-25494-1-git-send-email-tn@semihalf.com>
- <1479201298-25494-2-git-send-email-tn@semihalf.com>
- <20161201002812.GB9409@bhelgaas-glaptop.roam.corp.google.com>
- <eba92ea8-bdab-9a3a-7b18-caaeac15db5d@semihalf.com>
- <20161201135549.GP2213@rric.localdomain>
- <20161201145450.GA10353@red-moon>
-MIME-Version: 1.0
-In-Reply-To: <20161201145450.GA10353@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, gabriele.paoloni@huawei.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, will.deacon@arm.com,
- Robert Richter <robert.richter@cavium.com>, andrea.gallo@linaro.org,
- Tomasz Nowicki <tn@semihalf.com>, linaro-acpi@lists.linaro.org,
- ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org, liudongdong3@huawei.com,
- msalter@redhat.com, arnd@arndb.de, jcm@redhat.com,
- Christopher Covington <cov@codeaurora.org>, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com,
- ard.biesheuvel@linaro.org, linux-kernel@vger.kernel.org, jeremy.linton@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:59040 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbcL1KfD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 05:35:03 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH 3/4] Documetation: binding: modify the exynos5440 pcie binding
+Date: Wed, 28 Dec 2016 19:34:53 +0900
+Message-id: <20161228103454.26467-4-jh80.chung@samsung.com>
+In-reply-to: <20161228103454.26467-1-jh80.chung@samsung.com>
+References: <20161228103454.26467-1-jh80.chung@samsung.com>
+ <CGME20161228103455epcas5p2b3ea563efc00c776e77477ab3c778bb1@epcas5p2.samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 02:54:50PM +0000, Lorenzo Pieralisi wrote:
-> On Thu, Dec 01, 2016 at 02:55:49PM +0100, Robert Richter wrote:
-> > Tomasz, Bjorn,
-> > 
-> > On 01.12.16 09:49:51, Tomasz Nowicki wrote:
-> > > I put the picture together here (on top of your pci/ecam branch):
-> > > [1] https://github.com/semihalf-nowicki-tomasz/linux/commits/pci-quirks-thunderx-v2
-> > 
-> > please note that acpi_* functions must be protected with acpi_disabled
-> > or something else to make sure an acpi enabled kernel does not break
-> > dt. See the crash below with above branch.
-> 
-> You could use struct device.of_node, or just move the MCFG check to ACPI
-> code that probes the root bus in arm64 before calling pci_ecam_create()
-> which will save you some ifdeffery too while at it.
+According to using PHY framework, modified the exynos5440-pcie binding.
+And use "config" property to follow the designware-pcie binding.
 
-Oh, I like that idea even better!  I took the acpi_disabled check back out
-of acpi_resource_consumer() and moved the call to
-pci_acpi_setup_ecam_mapping().  Thanks!
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+ .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 +++++++++++++---------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-> > [   12.493028] Unable to handle kernel NULL pointer dereference at virtual address 00000018
-> > [   12.501113] pgd = ffff0000090a0000
-> > [   12.504511] [00000018] *pgd=0000010fffef0003[   12.508602] , *pud=0000010fffef0003
-> > , *pmd=0000010fffee0003[   12.514093] , *pte=0000000000000000
-> > [   12.517575]
-> > [   12.519064] Internal error: Oops: 96000005 [#1] SMP
-> > [   12.523933] Modules linked in:
-> > [   12.526987] CPU: 73 PID: 1 Comm: swapper/0 Tainted: G        W       4.9.0-rc6.0.vanilla10-00019-g09abd2b6bbeb #135
-> > [   12.537409] Hardware name: Cavium ThunderX CRB/To be filled by O.E.M., BIOS 5.11 12/12/2012
-> > [   12.545748] task: ffff800fe85b8000 task.stack: ffff800ff4288000
-> > [   12.551674] PC is at acpi_ns_walk_namespace+0x68/0x1d4
-> > [   12.556803] LR is at acpi_get_devices+0x6c/0x94
-> > ...
-> > [   13.124920] [<ffff0000084dc5a0>] acpi_ns_walk_namespace+0x68/0x1d4
-> > [   13.131090] [<ffff0000084dcadc>] acpi_get_devices+0x6c/0x94
-> > [   13.136663] [<ffff0000084c0aec>] acpi_resource_consumer+0x34/0x44
-> > [   13.142752] [<ffff000008496bc0>] pci_ecam_create+0x80/0x228
-> > [   13.148314] [<ffff000008498e64>] pci_host_common_probe+0x294/0x348
-> > [   13.154486] [<ffff00000849bf3c>] thunder_ecam_probe+0x2c/0x38
-> > [   13.160226] [<ffff0000085880b8>] platform_drv_probe+0x60/0xc8
-> > [   13.165970] [<ffff000008585a04>] driver_probe_device+0x26c/0x420
-> > [   13.171966] [<ffff000008585cdc>] __driver_attach+0x124/0x128
-> > [   13.177615] [<ffff000008583238>] bus_for_each_dev+0x70/0xb0
-> > [   13.183177] [<ffff000008585060>] driver_attach+0x30/0x40
-> > [   13.188478] [<ffff000008584a98>] bus_add_driver+0x200/0x2b8
-> > [   13.194041] [<ffff000008586860>] driver_register+0x68/0x100
-> > [   13.199602] [<ffff000008587fdc>] __platform_driver_register+0x54/0x60
-> > [   13.206038] [<ffff000008c39b98>] thunder_ecam_driver_init+0x18/0x20
-> > [   13.212296] [<ffff000008082d94>] do_one_initcall+0x44/0x138
-> > [   13.217862] [<ffff000008c00d0c>] kernel_init_freeable+0x1ac/0x24c
-> > [   13.223950] [<ffff0000088605f0>] kernel_init+0x18/0x110
-> > [   13.229165] [<ffff000008082b30>] ret_from_fork+0x10/0x20
+diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+index 4f9d23d..51f6214 100644
+--- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+@@ -5,10 +5,15 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+ - compatible: "samsung,exynos5440-pcie"
+-- reg: base addresses and lengths of the pcie controller,
+-	the phy controller, additional register for the phy controller.
++- reg: base addresses and lengths of the pcie controller
+ - interrupts: A list of interrupt outputs for level interrupt,
+ 	pulse interrupt, special interrupt.
++- phys: From PHY binding. Phandle for the Generic PHY.
++	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
++- phy-names: Must be "pcie-phy".
++
++Other common properties refer to
++	Documentation/devicetree/binding/pci/designware-pcie.txt
+ 
+ Example:
+ 
+@@ -16,18 +21,18 @@ SoC specific DT Entry:
+ 
+ 	pcie@290000 {
+ 		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+-		reg = <0x290000 0x1000
+-			0x270000 0x1000
+-			0x271000 0x40>;
++		reg = <0x290000 0x1000>, <0x40000000 0x100>;
++		reg-names = "elbi", "config";
+ 		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+ 		clocks = <&clock 28>, <&clock 27>;
+ 		clock-names = "pcie", "pcie_bus";
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		device_type = "pci";
+-		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
+-			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
++		ranges = <0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+ 			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
++		phys = <&pcie_phy0>;
++		phy-names = "pcie-phy";
+ 		#interrupt-cells = <1>;
+ 		interrupt-map-mask = <0 0 0 0>;
+ 		interrupt-map = <0 0 0 0 &gic GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+@@ -36,17 +41,17 @@ SoC specific DT Entry:
+ 
+ 	pcie@2a0000 {
+ 		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+-		reg = <0x2a0000 0x1000
+-			0x272000 0x1000
+-			0x271040 0x40>;
++		reg = <0x2a0000 0x1000>, <0x60000000 0x1000>;
++		reg-names = "elbi", "config";
+ 		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+ 		clocks = <&clock 29>, <&clock 27>;
+ 		clock-names = "pcie", "pcie_bus";
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		device_type = "pci";
+-		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
+-			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
++		phys = <&pcie_phy1>;
++		phy-names = "pcie-phy";
++		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+ 			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
+ 		#interrupt-cells = <1>;
+ 		interrupt-map-mask = <0 0 0 0>;
+-- 
+2.10.2
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
