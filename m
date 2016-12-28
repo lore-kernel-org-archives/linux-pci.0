@@ -1,35 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:49050 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754612AbcLaPeD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 31 Dec 2016 10:34:03 -0500
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-        by jabberwock.ucw.cz (Postfix) with ESMTPS id BDC251C00B8
-        for <linux-pci@vger.kernel.org>; Sat, 31 Dec 2016 16:28:34 +0100 (CET)
-Date: Sat, 31 Dec 2016 16:28:34 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Satanand Burla <satananda.burla@caviumnetworks.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pciutils: Add decode for Atomic Ops in lspci
-Message-ID: <mj+md-20161231.152720.17786.albireo@ucw.cz>
-References: <1482882756-12151-1-git-send-email-satananda.burla@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482882756-12151-1-git-send-email-satananda.burla@caviumnetworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH 2/4] Documetation: samsung-phy: add the exynos-pcie-phy binding
+Date: Wed, 28 Dec 2016 19:34:52 +0900
+Message-id: <20161228103454.26467-3-jh80.chung@samsung.com>
+In-reply-to: <20161228103454.26467-1-jh80.chung@samsung.com>
+References: <20161228103454.26467-1-jh80.chung@samsung.com>
+ <CGME20161228103455epcas5p2acc54945d70ac45b2ce2cd4f6ad4b875@epcas5p2.samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
+This is for using generic PHY framework.
 
-> This adds support for decoding Atomic ops added in ECN
-> https://pcisig.com/sites/default/files/specification_documents/ECN_Atomic_Ops_080417.pdf
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+ .../devicetree/bindings/phy/samsung-phy.txt        | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-This is much better, however, it still prints extra spaces sometimes.
-Could you please fix it?
-
-Also, I woule like to have a test case for the new code -- a configuration
-space dump similar to those in tests/*. Do you have one?
-
-				Martin
+diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+index 9872ba8..1cbc15f 100644
+--- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
++++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+@@ -191,3 +191,26 @@ Example:
+ 		usbdrdphy0 = &usb3_phy0;
+ 		usbdrdphy1 = &usb3_phy1;
+ 	};
++
++Samsung Exynos SoC series PCIe PHY controller
++--------------------------------------------------
++Required properties:
++- compatible : Should be set to "samsung,exynos5440-pcie-phy"
++- #phy-cells : Must be zero
++- reg : a register used by phy driver.
++
++Required properies for child node:
++- reg : a block register used by phy driver.
++
++Example:
++	pcie_phy0: pcie-phy@270000 {
++		#phy-cells = <0>;
++		compatible = "samsung,exynos5440-pcie-phy";
++		reg = <0x270000 0x1000>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++		block@271000 {
++			reg = <0x271000 0x40>;
++		};
++	};
+-- 
+2.10.2
