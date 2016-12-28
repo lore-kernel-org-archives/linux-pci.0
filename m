@@ -1,173 +1,57 @@
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
-	<Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
- <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
- <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
- <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com> <5864FA60.2070603@ti.com>
-CC: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <nsekhar@ti.com>, Linus Torvalds
-	<torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <a6c80508-78ec-b081-3563-275c865275c5@synopsys.com>
-Date: Thu, 29 Dec 2016 12:08:36 +0000
+Return-Path: <SRS0=KP1q=YL=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=KP1q=YL=intel.com=ashok.raj@kernel.org>
+Date: Tue, 27 Dec 2016 19:21:39 -0800
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>, Joerg Roedel <joro@8bytes.org>,
+	g@bhelgaas-glaptop.roam.corp.google.com, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	rwright@hpe.com, ashok.raj@intel.com
+Subject: Re: possible dmar_init_reserved_ranges() error
+Message-ID: <20161228032139.GA254916@otc-nc-03>
+References: <20161219212044.GA21774@bhelgaas-glaptop.roam.corp.google.com>
+ <20161227234417.GA24366@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <5864FA60.2070603@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161227234417.GA24366@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 11:58 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
-> Hi,
-> 
-> On Thursday 29 December 2016 05:23 PM, Joao Pinto wrote:
->> Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>> Hi,
->>>
->>> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
->>>>
->>>> Hi,
->>>>
->>>> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
->>>>> Hi,
->>>>>
->>>>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
->>>>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
->>>>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->>>>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>>>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>>>>>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>>>>>>>
->>>>>>>>>>> There might be hiccups because of this renaming but feel this is
->>>>>>>>>>> necessary for long-term maintenance.
->>>>>>>>>>
->>>>>>>>>> if we do this rename it would be great to get it to Linus NOW after
->>>>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>>>>>>>
->>>>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>>>>>>>> also. Wouldn't be better to name it rc_controller?
->>>>>>>>
->>>>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->>>>>>>> neutral name that can cover both RC and Endpoint.
->>>>>
->>>>> right.
->>>>>>>>
->>>>>>>> I'm not a huge fan of "controller" because it feels a little bit long
->>>>>>>> and while I suppose it technically does include the concept of the PCI
->>>>>>>> interface of an endpoint, it still suggests more of the host side to
->>>>>>>> me.
->>>>>>>>
->>>>>>>> Doesn't USB have a similar situation?  I see there's a
->>>>>>>> drivers/usb/host/ (probably where we copied from in the first place).
->>>>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
->>>>>>>> share code between the master/slave sides?
->>>>>>>>
->>>>>>>
->>>>>>> The usb/host contains the implemnentations by the spec of the several
->>>>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
->>>>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
->>>>>
->>>>> right, each IP have a separate directory in USB. I thought of doing something
->>>>> similar for PCI but decided against it since that would involve identifying all
->>>>> the PCI IPs used and eventually result in more directories.
->>>>>>> For device purposes it uses the core/ and then some of the device functions
->>>>>>> are extended from the gadget/ package in which you can use mass_storage and
->>>>>>> other types of functions.
->>>>>
->>>>> That would be similar for PCI endpoint. All endpoint specific core
->>>>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
->>>>>>>
->>>>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
->>>>>>> mangled inside host. I suggest:
->>>>>>>
->>>>>>> drivers/pci
->>>>>>>  drivers/pci/core/
->>>>>>>  drivers/pci/core/hotplug
->>>>>>>  drivers/pci/core/pcie
->>>>>>>  drivers/pci/core/<all other files inside pci/ today>
->>>>>>>  drivers/pci/host
->>>>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
->>>>>>
->>>>>> Correction:
->>>>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
->>>>>> drivers
->>>>>>
->>>>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
->>>>>>
->>>>>> Correction:
->>>>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
->>>>>>
->>>>>>>  drivers/pci/endpoint -> common code
->>>>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->>>>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
->>>>>
->>>>> There are some parts of the dwc driver that is common to both root complex and
->>>>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
->>>>> piece in both root complex and endpoint.
->>>>
->>>> You are right, the config space is almost the same and some ops also common.
->>>> I would suggest:
->>>>
->>>> drivers/pci
->>>>   drivers/pci/core/
->>>>     drivers/pci/core/hotplug
->>>>     drivers/pci/core/pcie
->>>>     drivers/pci/core/<all other files inside pci/ today>
->>>>   drivers/pci/dwc
->>>>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
->>>>     drivers/pci/dwc/host/
->>>>     drivers/pci/dwc/endpoint/
->>>>
->>>> What do you think?
->>>
->>> I don't think we should have sub-directories within dwc (USB too doesn't have
->>> sub-directories). Where should the platform specific driver be kept? For
->>> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
->>> changes are so minimal that splitting the file won't make much sense.
->>>
->>> And such a change would also mean we create a separate directory for every
->>> other driver present right now in pci/host.
->>
->> I understand you idea. We can simplify it this way:
->>
->>  drivers/pci
->>    drivers/pci/core/
->>      drivers/pci/core/hotplug
->>      drivers/pci/core/pcie
->>      drivers/pci/core/<all other files inside pci/ today>
->>      drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
->> and EP
->>
->> BTW dwc states for DesigWare Controller.
->>
->> What do you think?
-> 
-> I'd like to avoid using different directory structures for different IPs. Lets
-> try to make it uniform.
+Hi Bjorn,
 
-I understand, but mixing them all up is not a good aproach in my opinion, since
-a SoCs using Synopsys IP will only use the common files for that IP. Today in
-the host/ folder you have a bunch of drivers that is not clear which are using
-Synopsys IP or not. Of course I mention Synopsys, because it is where I work,
-but the opinion would be the same for other IP vendor.
-
-I understand that you want to do a common Endpoint framework to be used by any
-IP vendor based, and maybe this partition makes it a bit harder, but in my
-personal opinion each IP vendor should have its own folder for clarity and
-organization of the code.
-
-You framework should be outside those IP vendor folders and be available for
-their drivers to use it, and so it should be completely vendor agnostic.
-
+On Tue, Dec 27, 2016 at 05:44:17PM -0600, Bjorn Helgaas wrote:
 > 
-> Thanks
-> Kishon
+>   dmar_init_reserved_ranges()
+>   {
+>     ...
+>     for_each_pci_dev(pdev) {
+>       for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>         r = &pdev->resource[i];
+>         reserve_iova(r)
 > 
+> But I assume it's possible to have more than one IOTLB in a system,
+
+You meant IOMMU?  
+
+> so you could have some PCI devices under one IOTLB and others under a
+> different IOTLB.  So it seems like we should reserve only the IOVA
+> space used by the devices under *this* IOTLB.
+
+Yes, it seems we are aggressive reserving all pci devices bars's when 
+potentially you need to only reserve ranges for the IOMMU under which 
+this pci device exist. We also need to make sure devices under the
+INCLUDE_ALL is handled correctly. 
+> 
+> Also, we may hot-add a device under the IOTLB, and I don't see where
+> we reserve the IOVA space it uses.
+> 
+> I think the best thing to do would be to reserve the host bridge
+> apertures related to each IOTLB.  That would resolve both questions.
+> It looks like iova_reserve_pci_windows() does this in the
+> iommu_dma_init_domain() path.
+
+This sounds reasonable, if we can reserve from the host bridge apertures 
+it should take care of hot-plug cases as well, and should simply how the
+reservation is made.
+
+Cheers,
+Ashok
