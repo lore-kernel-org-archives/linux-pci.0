@@ -1,71 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33266 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754522AbcL3P4Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Dec 2016 10:56:24 -0500
-Date: Fri, 30 Dec 2016 17:56:13 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        kgene@kernel.org, krzk@kernel.org, kishon@ti.com,
-        jingoohan1@gmail.com, vivek.gautam@codeaurora.org,
-        pankaj.dubey@samsung.com, alim.akhtar@samsung.com, cpgs@samsung.com
-Subject: Re: [PATCH 0/4] PCI: exynos: use the PHY generic framework
-Message-ID: <20161230155613.jpwzytnh4osz76c6@kozik-lap>
-References: <CGME20161228103455epcas1p1c762bc59add0011beff1d4ff697b5c8d@epcas1p1.samsung.com>
- <20161228103454.26467-1-jh80.chung@samsung.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37410 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbcL1I6W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 03:58:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161228103454.26467-1-jh80.chung@samsung.com>
+In-Reply-To: <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
+References: <CGME20161226052030epcas5p4ea673fc4ee5c0b2664e80f53d4758553@epcas5p4.samsung.com>
+ <20161226052029.10552-1-jh80.chung@samsung.com> <20161226052029.10552-2-jh80.chung@samsung.com>
+ <CAFp+6iH0q9TNvPgv3_Nexm-vE6TBB_eQHXCwniO-Yn=fq+WWMg@mail.gmail.com> <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Date: Wed, 28 Dec 2016 14:28:19 +0530
+Message-ID: <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/6] phy: exynos-pcie: Add support for Exynos PCIe phy
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-samsung-soc@vger.kernel.org"
+        <linux-samsung-soc@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "robh+dt" <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kukjin Kim <kgene@kernel.org>, krzk@kernel.org,
+        javier@osg.samsung.com, kishon <kishon@ti.com>,
+        Will Deacon <will.deacon@arm.com>, catalin.marinas@arm.com,
+        CPGS <cpgs@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 28, 2016 at 07:34:50PM +0900, Jaehoon Chung wrote:
-> This patch is for using PHY generic framework.
-> When Exynos5440 had upstreamed, there was no PHY subsytem.
-> Now the using PHY framework is mandantory.
-> In future, Exynos variant should be supported in pci-exynos.c
-> 
-> Theses pathces based on the below patches
+Hi Jaehoon,
+
+On Wed, Dec 28, 2016 at 8:19 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+> Hi Vivek,
 >
+> On 12/27/2016 02:53 PM, Vivek Gautam wrote:
+>> Hi Jaehoon,
+>>
+>>
+>> On Mon, Dec 26, 2016 at 10:50 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+>>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
+>>> When Exynos that supported the pcie want to use the PCIe,
+>>> it needs to control the phy resgister.
+>>> But it should be more complex to control in their own PCIe device drivers.
+>>>
+>>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>>> ---
+>>>  drivers/phy/Kconfig           |   9 ++
+>>>  drivers/phy/Makefile          |   1 +
+>>>  drivers/phy/phy-exynos-pcie.c | 227 ++++++++++++++++++++++++++++++++++++++++++
+>>>  3 files changed, 237 insertions(+)
+>>>  create mode 100644 drivers/phy/phy-exynos-pcie.c
+>>>
+>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>> index fe00f91..94b0433 100644
+>>> --- a/drivers/phy/Kconfig
+>>> +++ b/drivers/phy/Kconfig
+>>> @@ -341,6 +341,15 @@ config PHY_EXYNOS5_USBDRD
+>>>           This driver provides PHY interface for USB 3.0 DRD controller
+>>>           present on Exynos5 SoC series.
+>>>
+>>> +config PHY_EXYNOS_PCIE
+>>> +       bool "Exynos PCIe PHY driver"
+>>
+>> Is there a reason for this not being 'tristate' ?
+>
+> Will change.
 
-Aren't you breaking DTB ABI here? If yes, then I don't mind but please
-put it in the commit message.  Also order the patches in a way
-preserving bisectability.
+I notice that PCI_EXYNOS5433 is bool as well.
+If the host has to be 'bool' then it makes sense to have phy
+also bool as well. But if PCI_EXYNOS5433 can be made
+tristate, then this also changes to tristate.
 
-Best regards,
-Krzysztof
+>
+>>
+>>> +       depends on ARCH_EXYNOS && OF
+>>> +       depends on PCI_EXYNOS5433
+>>> +       select GENERIC_PHY
+>>> +       help
+>>> +         Enable PCIe PHY support for Exynos SoC series.
+>>
+>> If this driver is for Exynos5433, then same should come in this help
+>> text as well.
+>
+> will support the other exynos series.
+> I'm working on refactoring exynos5440 with PHY generic Framework.
+> Then this drive is not for only Exnyos5433. how about?
 
-> - Jaehoon's patches
-> http://patchwork.ozlabs.org/patch/706998/
-> http://patchwork.ozlabs.org/patch/706997/
-> http://patchwork.ozlabs.org/patch/706995/
-> http://patchwork.ozlabs.org/patch/706994/
-> 
-> - Srinivas's patch
-> http://patchwork.ozlabs.org/patch/703530/
-> 
-> - Pankaj's patch
-> http://patchwork.ozlabs.org/patch/708414/
-> 
-> Jaehoon Chung (4):
->   phy: exynos-pcie: Add support for Exynos PCIe phy
->   Documetation: samsung-phy: add the exynos-pcie-phy binding
->   Documetation: binding: modify the exynos5440 pcie binding
->   ARM: dts: exynos5440: support the phy-pcie node for pcie
-> 
->  .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 ++-
->  .../devicetree/bindings/phy/samsung-phy.txt        |  23 ++
->  arch/arm/boot/dts/exynos5440.dtsi                  |  44 +++-
->  drivers/pci/host/pci-exynos.c                      | 198 ++------------
->  drivers/phy/Kconfig                                |   9 +
->  drivers/phy/Makefile                               |   1 +
->  drivers/phy/phy-exynos-pcie.c                      | 289 +++++++++++++++++++++
->  7 files changed, 395 insertions(+), 198 deletions(-)
->  create mode 100644 drivers/phy/phy-exynos-pcie.c
-> 
-> -- 
-> 2.10.2
-> 
+Ok, it's good then. My only concern is 'depends on PCI_EXYNOS5433'
+makes it look like it is for EXYNOS5433. I am fine if that changes as well.
+
+[...]
+
+>>> +
+>>> +#define PCIE_EXYNOS5433_PMU_PHY_OFFSET         0x730
+>>> +#define PCIE_PHY_OFFSET(x)             ((x) * 0x4)
+>>> +
+>>> +/* Sysreg Fsys register offset and bit for Exynos5433 */
+>>> +#define PCIE_PHY_MAC_RESET             0x208
+>>> +#define PCIE_MAC_RESET_MASK            0xFF
+>>> +#define PCIE_MAC_RESET                 BIT(4)
+>>> +#define PCIE_L1SUB_CM_CON              0x1010
+>>> +#define PCIE_REFCLK_GATING_EN          BIT(0)
+>>> +#define PCIE_PHY_COMMON_RESET          0x1020
+>>> +#define PCIE_PHY_RESET                 BIT(0)
+>>> +#define PCIE_PHY_GLOBAL_RESET          0x1040
+>>> +#define PCIE_GLOBAL_RESET              BIT(0)
+>>> +#define PCIE_REFCLK                    BIT(1)
+>>> +#define PCIE_REFCLK_MASK               0x16
+>>> +#define PCIE_APP_REQ_EXIT_L1_MODE      BIT(5)
+>>> +
+>>> +enum exynos_pcie_phy_data_type {
+>>> +       PCIE_PHY_TYPE_EXYNOS5433,
+>>> +};
+>>> +
+>>> +struct exynos_pcie_phy_data {
+>>> +       enum exynos_pcie_phy_data_type  ctrl_type;
+>>
+>> Why do we need this controller type ?
+>> If there are changes in the IP between different version,
+>> then you can as well use different compatibles.
+>
+> Do you mean is the using "of_device_is_compatible()"?
+
+I meant that multiple compatible strings can be added based on the
+IP versions. And any IP specific data can be put in the .data field
+of  'of_device_id' structure.
+If there's more to differentiate between the IP versions at runtime,
+you can use of_device_is_compatible().
+
+[...]
+
+
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
