@@ -1,187 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:36627 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762236AbcLTL2y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2016 06:28:54 -0500
-Date: Tue, 20 Dec 2016 12:28:56 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Amir Levy <amir.jer.levy@intel.com>
-Subject: Re: [PATCH v3 6/7] thunderbolt: Power down controller when idle
-Message-ID: <20161220112856.GA14428@wunner.de>
-References: <cover.1481926599.git.lukas@wunner.de>
- <df0bb7cd6a3e11ec12d3e1a6c1f98351f4aea3ce.1481926599.git.lukas@wunner.de>
- <CAHp75VfzuTaBpZd+Hu2uHbhAPHzHQDdPOwOvb9ejP2j22OWoog@mail.gmail.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:36561 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbcL1DKx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2016 22:10:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHp75VfzuTaBpZd+Hu2uHbhAPHzHQDdPOwOvb9ejP2j22OWoog@mail.gmail.com>
+In-Reply-To: <a4200793-19dd-3727-505c-5840a8ec72bb@samsung.com>
+References: <CGME20161223105411epcas1p3727f726e757ec6c6d7bff04a9af40077@epcas1p3.samsung.com>
+ <1482490587-13611-1-git-send-email-pankaj.dubey@samsung.com>
+ <e1f37a59-b633-7b9d-cc79-dbbb00a24cda@samsung.com> <5860E6F7.2090703@samsung.com>
+ <79b89c49-a9de-3daa-9afa-b8f36304a226@samsung.com> <5861CE23.9060202@samsung.com>
+ <6de4bc5b-05fb-793f-d3ab-b1c6ee19cfeb@samsung.com> <58620B5A.1060900@samsung.com>
+ <a4200793-19dd-3727-505c-5840a8ec72bb@samsung.com>
+From: Pankaj Dubey <pankaj.dubey@samsung.com>
+Date: Wed, 28 Dec 2016 08:40:30 +0530
+Message-ID: <CAGcde9HTd7Gxc89ZaYW8z-pc91ps3kwHx3KsEpNRLcoHO9S-zw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: exynos: refactor exynos pcie driver
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-kernel@vger.kernel.org,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kukjin Kim <kgene@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, sanath@samsung.com,
+        Niyas Ahmed S T <niyas.ahmed@samsung.com>,
+        CPGS <cpgs@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 19, 2016 at 01:05:10AM +0200, Andy Shevchenko wrote:
-> On Sat, Dec 17, 2016 at 4:39 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > Document and implement Apple's ACPI-based (but nonstandard) pm mechanism
-> > for Thunderbolt.  Briefly, an ACPI method provided by Apple is used to
-> > cut power to the controller.  A GPE is enabled while the controller is
-> > powered down which sideband-signals a plug event, whereupon we reinstate
-> > power using the ACPI method.
-> >
-> > This saves 1.7 W on machines with a Light Ridge controller and is
-> > reported to save 4 W on Cactus Ridge 4C and Falcon Ridge 4C.  (I believe
-> > 4 W includes the bus power drawn by Apple's Gigabit Ethernet adapter.)
-> > It fixes (at least partially) a power regression introduced in 3.17 by
-> > commit 7bc5a2bad0b8 ("ACPI: Support _OSI("Darwin") correctly").
-> >
-> 
-> > +++ b/drivers/thunderbolt/power.c
-> > @@ -0,0 +1,347 @@
-> 
-> > +#include <linux/delay.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/pm_runtime.h>
-> > +
-> > +#include "power.h"
-> > +
-> 
-> > +#ifdef pr_fmt
-> > +#undef pr_fmt
-> > +#endif
-> > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
-> 
-> Perhaps just define pr_fmt before any other include?
-> We have such check where actually default pr_fmt is defined. No need
-> to duplicate.
+Hi Jaehoon,
 
-If I put the '#define pr_fmt(fmt)' line above all includes, I get:
+On 27 December 2016 at 15:48, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+> Dear Alim,
+>
+> On 12/27/2016 03:34 PM, Alim Akhtar wrote:
+>> Hi Jaehoon,
+>>
+> [snip]
+>>>
+>>> Ah. Right..And i'm doing the refactoring to reuse the current pci-exynos.c.
+>> There is a nice refactoring patch posted by Pankaj recently @
+>> https://lkml.org/lkml/2016/12/23/73
+>> I would suggest you to rebase your work on this top.
+>
+> Well, i don't think so. Pankaj's patch might be good way..but i can't agree about a few point.
+> If based on Pankaj's patch, it's more complex..
+>
+> why put the ops callback for getting clock and mem resource?
+>
 
-    include/linux/ratelimit.h: In function 'ratelimit_state_exit':
-    drivers/thunderbolt/power.c:93:49: error: implicit declaration of function 'dev_name'
+I think I replied reason behind this in reply to Jingoo. Well I will
+explain with some example here. Current exynos_pcie struct contains
+all mem, phy, gpio and clock resources in one place and this driver is
+supported only for Exynos5440. Until this it was fine. As Jingoo
+mentioned when he up streamed this driver, generic phy framework was
+not ready so he used phy_base along with some additional phy related
+sfr base in pcie driver itself.
 
-This is caused by 6b1d174b0c27 which was introduced this August.
+Moving ahead for adding support for PCIe module on Exynos7, Exynos5433
+or other existing Exynos (non-mainlined) and some of upcoming SoC
+seeing the differences in these resources (mem, clk, regmap handles,
+gpio etc.) we will endup adding following kind of code in probe to get
+these resources from DT
 
+if (of_machine_is_compatible(exynos7420)) {
+    /* get certain mem resources */
+    /* get certain clock resources */
+    /* get certain regmap handle resources if required */
+} else if (of_machine_is_compatble(exynos5433)) {
+    /* get certain but may be different mem resources */
+    /* get certain clock resources */
+    /* get certain regmap handle resources if required */
+} else if (of_machine_is_compatible(exynosMMMM)) {
+  //may be something else
+}
 
-If I try to solve this by including <linux/device.h> before the
-'#define pr_fmt(fmt)' line, I get:
+for giving real example, exynos7420 does not uses only two clocks
+"bus", "pcie_bus" there are other clocks required to be taken care in
+driver. It also need to take care of pmu regmap handle and sysreg
+regmap handle.
 
-    drivers/thunderbolt/power.c:95:0: warning: "pr_fmt" redefined
-     #define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
-     ^
-    In file included from /root/kernel/linux/include/linux/kernel.h:13:0,
-                 from /root/kernel/linux/include/linux/list.h:8,
-                 from /root/kernel/linux/include/linux/kobject.h:20,
-                 from /root/kernel/linux/include/linux/device.h:17,
-                 from /root/kernel/linux/drivers/thunderbolt/power.c:93:
-    include/linux/printk.h:260:0: note: this is the location of the previous definition
-     #define pr_fmt(fmt) fmt
-     ^
+So if we keep exynos_pcie as only struct then we will keep adding all
+these resources in only one struct making it more complex. Also
+resource initialization part will become complex. For the same reason
+I decided to separate these rather keeping them in single struct. This
+is very obvious design used in many drivers (samsung or other
+vendors). Just to give one more example see pcie-qcom.c where they
+also have different clocks and it is managed in same fashion.
 
+> If PHY generic framework is used, it's unnecessary. because it needs to get elbi and dbi resources.
 
-So it seems there's no alternative to the '#undef pr_fmt'.
+Surely elbi and dbi are fixed, but as we already have one example of
+exynos5440 which used block_base (additional SFR base other than phy
+base), I can see some of existing and upcoming SoC will need more SFR
+base than these two, it all depends on how h/w engineers design these
+modules and distribute SFR access.
 
+> clock resources("pcie" and "pcie_bus") are general things.
+>
 
-> > +       /* prevent interrupts during system sleep transition */
-> > +       if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
-> > +               pr_err("cannot disable wake GPE, resuming\n");
-> 
-> dev_err?
+With current Exynos SoCs which have PCIe hardware modules I can see
+this will not remain uniform across various SoCs, some of them require
+more clocks to be handled by PCIe driver.
 
-This is intentionally pr_err for cosmetic reasons. :-)
+> If Pankaj's patch is applied, also need to make the exynos5433_pcie_* callback functions?
+> It doesn't make sense.
+>
 
-With dev_err it would look like this in dmesg:
+Adding exynos5433_pcie_ops struct and hooks specific to the exynos5433
+is a small overhead compared to the flexibility it provides. This will
+make current driver flexibility with less
+of_machine_is_compatible(...) kind of conditional statement, less
+complex exynos_pcie struct.
+For the hooks of exynos_pcie_ops also if two different Exynos SoC
+shares same mem, clock and other resources the actual hooks will point
+to same functions so no overhead of implementing these for each SoC.
+Only separate implementation will be required if they differ in these
+resources. This approach also very common across various drivers
+nothing special here.
 
-    pcieport 0000:05:00.0: cannot disable wake GPE, resuming
+I hope I am clear in explaining the intention and pros and cons of
+both approaches.
 
-With pr_err it looks like this:
+> I want to know maintainer's opinion..we can just touch a little for supporting All Exynos SoCs.
+>
 
-    thunderbolt 0000:05:00.0: cannot disable wake GPE, resuming
+I also have same intention but design should be flexible to adopt
+future SoC at least some of them which we are seeing will be supported
+soon and we can see the differences.
 
-Thus, someone grepping for this error message will get a hint that
-they have to look in drivers/thunderbolt/ rather than drivers/pci/pcie/.
+Thanks,
+Pankaj Dubey
 
-The code of this PM callback is located in the thunderbolt driver,
-which binds to the NHI, 0000:07:00.0.  But the PM callback is
-assigned to the upstream bridge, which is the grandparent of the NHI,
-0000:05:00.0.  The pr_fmt is crafted such that the KBUILD_MODNAME
-("thunderbolt") is logged rather than "pcieport".  So I use pr_*
-in the PM callbacks assigned to the upstream bridge and dev_*
-in thunderbolt_power_init() / _fini() (which is executed in the
-context of the NHI).
-
-This is also much nicer for end users looking at dmesg.  E.g. when
-the chip is suspended, it looks like this:
-
-    thunderbolt 0000:07:00.0: suspending...
-    thunderbolt 0000:07:00.0: stopping RX ring 0
-    thunderbolt 0000:07:00.0: disabling interrupt at register 0x38204 bit 0 (0x1 -> 0x0)
-    thunderbolt 0000:07:00.0: stopping TX ring 0
-    thunderbolt 0000:07:00.0: disabling interrupt at register 0x38200 bit 0 (0x1 -> 0x0)
-    thunderbolt 0000:07:00.0: control channel stopped
-    thunderbolt 0000:07:00.0: suspend finished
-    thunderbolt 0000:05:00.0: powering down
-
-It would be confusing for end users if it would say here that
-the pcieport is powering down.
-
-
-> > +       /*
-> > +        * On gen 2 controllers, the wake GPE fires as long as the controller
-> > +        * is powered up. Poll until it's powered down before enabling the GPE.
-> > +        */
-> > +       for (i = 0; i < 300; i++) {
-> 
-> 300 is magic.
-[...]
-> Why 800? Perhaps comment on this.
-
-We mimic the behaviour of the macOS driver here which polls up to
-300 times with a 1 ms delay.  I've now extended the comment above
-in my working branch to explain this.
-
-
-> > +err:
-> 
-> err_resume: ?
-
-Ok.
-
-
-> > +err:
-> 
-> err_free: ?
-
-Ok.
-
-
-> > +void thunderbolt_power_fini(struct tb *tb)
-> > +{
-> > +       struct device *nhi_dev = &tb->nhi->pdev->dev;
-> > +       struct device *upstream_dev = nhi_dev->parent->parent;
-> > +       struct tb_power *power = tb->power;
-> > +
-> 
-> > +       if (!power)
-> > +               return;
-> 
-> Would be the case?
-
-That would be the case if thunderbolt_power_init() failed, then we
-have to skip removing the GPE handler and all that.  I've now added
-a comment to explain this.
-
-I've also discovered and fixed a bug in thunderbolt_power_init(),
-in the "cannot find upstream bridge" error path I have to remove
-the GPE handler.
-
-I'll wait a bit if there's further feedback and will post a
-rectified version probably next week, after the merge window
-has closed.
-
-Thanks!
-
-Lukas
+> Best Regards,
+> Jaehoon Chung
+>
+>>
+>>> Maybe..Today or Tomorrow..I will send the patches..At that time, could you also check them?
+>>> Any comments might be helpful to me! :)
+>>>
+>> Will wait for you patches :-)
+>>
+>>> Best Regards,
+>>> Jaehoon Chung
+>>>
+> [snip]
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-samsung-soc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
