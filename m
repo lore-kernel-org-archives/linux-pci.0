@@ -1,57 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 22 Dec 2016 12:45:53 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750966AbcL1QSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Dec 2016 11:18:21 -0500
+Date: Wed, 28 Dec 2016 10:18:16 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: John Crispin <john@phrozen.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH] pci: add kernel config option for disabling common PCI
- quirks
-Message-ID: <20161222184553.GA16590@bhelgaas-glaptop.roam.corp.google.com>
-References: <1482306784-29224-1-git-send-email-john@phrozen.org>
- <20161221122213.GA32563@infradead.org>
- <8630ec3a-9424-653c-7c7a-d88554011151@phrozen.org>
- <20161221142607.GA8594@infradead.org>
- <dba6a1d8-d1d6-581e-8a1b-7988ff2577e0@phrozen.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+ <20161228112954.GA17925@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dba6a1d8-d1d6-581e-8a1b-7988ff2577e0@phrozen.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20161228112954.GA17925@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 22, 2016 at 06:54:51AM +0100, John Crispin wrote:
-> On 21/12/2016 15:26, Christoph Hellwig wrote:
-> > On Wed, Dec 21, 2016 at 02:11:25PM +0100, John Crispin wrote:
-> >> I can turn it into an enable patch that is selected by default.
-> >>
-> >> The current patch disables all those quirks that are used for x86/PC
-> >> style machines and hence are not required in the embedded world.
+On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
+> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
+> > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
+> > and all the debugging you've done.  Below is a revert of the troublesome
+> > commit.  Can you test it and verify that it also fixes the problem?
 > > 
-> > Maybe we'll just need to reorganize the quirks so that most of them
-> > arch in arch code or the affected drivers?
+> > I assume Mika is looking at this and will have a better solution soon.
+> > But if not, I'll queue this up for v4.10.
 > 
-> to be honest i have no opinion on this. I am currently trying to reduce
-> the amount of patches that we have inside the LEDE tree. the patches
-> were written by other people and then dumped on us. obviously i am
-> interested to get this upstream with the least amount of effort. I am
-> quite aware though that some patches will need an overhaul to be
-> applicable for upstream. its not really my call if it is enough to make
-> this an enable patch and review the quirks enabled by it or if the code
-> needs to be moved.
+> @Kilian:  Are you using the proprietary nvidia driver?  If so,
+> does the issue go away if you blacklist that driver or use nouveau
+> instead?
+> 
+> 
+> With a bit of googling I found dmesg and lspci output for this model:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
+> 
+> The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
+> 0x60, 0x64.  I assume they're located behind the LPC bridge?
+> 
+> The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
+> registers with vga_tryget() but never releases that lock.  Intel
+> chipsets have a quirk wherein I/O ports are routed to the bus to
+> which the legacy PCI VGA registers are locked.  So once vga_tryget()
+> is called by the nvidia driver, access to the keyboard and mouse is
+> routed to bus 01 (on which the Nvidia card resides) and not to bus 00
+> (on which the LPC bridge resides).
 
-We already have CONFIG_PCI_QUIRKS, which enables everything in
-drivers/pci/quirks.c.  That file should contain quirks for devices
-that may appear on any architecture, e.g., things on plug-in cards.
+Interesting.  A spec reference would be a good addition to whatever
+fix is proposed.
 
-Quirks that are only applicable to one arch should be in the arch
-directory, e.g., in arch/x86/pci/fixup.c.
+> My theory would be that if you lock the screen, the Nvidia card
+> runtime suspends, allowing the root port above it to suspend,
+> and then the I/O ports are no longer accessible.
+> 
+> We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
+> is adjusted by writing to I/O ports of a gmux controller situated below
+> the LPC bridge.  The nvidia driver locks the legacy VGA registers and
+> from that point reads from the I/O ports always return 0xff.  Commit
+> 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
+> sought to fix it but caused other breakage which remains unfixed so far:
+> https://bugzilla.kernel.org/show_bug.cgi?id=105051
+> https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
+> 
+> I've always wondered if the Intel chipsets would behave more sensibly
+> if the LPC bridge had BARs specifying the I/O regions used by devices
+> below it.
+> 
+> Reverting runtime suspend for PCIe ports is not a good solution as it's
+> needed for Thunderbolt runtime PM on Macs.
 
-If drivers/pci/quirks.c contains arch-specific quirks, we should move
-those to the appropriate arch directory.
+The choices are:
 
-It looks like arch/x86/pci/fixup.c is currently compiled
-unconditionally (on x86 with PCI), but we should probably make it
-dependent on CONFIG_PCI_QUIRKS, since I think the infrastructure that
-*calls* those quirks is only present when CONFIG_PCI_QUIRKS=y.
+  1) Fix the regression and preserve runtime PM for PCIe ports
+  2) Fix the regression by reverting runtime PM for PCIe ports
+
+Obviously we hope for 1).  Preserving runtime PM without fixing the
+regression isn't even on the list.  I know this is Linux 101, so I
+apologize for restating the obvious.
 
 Bjorn
