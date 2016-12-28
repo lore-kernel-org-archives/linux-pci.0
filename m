@@ -1,91 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45589 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753518AbcLNSBi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2016 13:01:38 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBEHrtaT123593
-        for <linux-pci@vger.kernel.org>; Wed, 14 Dec 2016 13:01:37 -0500
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27b5w1dvk0-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 14 Dec 2016 13:01:36 -0500
-Received: from localhost
-        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Wed, 14 Dec 2016 16:01:34 -0200
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: tglx@linutronix.de, linux-kernel@vger.kernel.org
-Cc: gabriel@krisman.be, hch@lst.de, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, gpiccoli@linux.vnet.ibm.com,
-        stable@vger.kernel.org.#.v4.9+
-Subject: [PATCH] genirq/affinity: fix node generation from cpumask
-Date: Wed, 14 Dec 2016 16:01:12 -0200
-Message-Id: <1481738472-2671-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:57956 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbcL1JqV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 04:46:21 -0500
+Subject: Re: [RFC PATCH 1/6] phy: exynos-pcie: Add support for Exynos PCIe phy
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: linux-pci@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-samsung-soc@vger.kernel.org"
+        <linux-samsung-soc@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        robh+dt <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kukjin Kim <kgene@kernel.org>, krzk@kernel.org,
+        javier@osg.samsung.com, kishon <kishon@ti.com>,
+        Will Deacon <will.deacon@arm.com>, catalin.marinas@arm.com,
+        CPGS <cpgs@samsung.com>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <ebdb57b1-9a24-f83e-ac26-887f7a2263d3@samsung.com>
+Date: Wed, 28 Dec 2016 18:35:08 +0900
+MIME-version: 1.0
+In-reply-to: <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
+Content-type: text/plain; charset=utf-8
+References: <CGME20161226052030epcas5p4ea673fc4ee5c0b2664e80f53d4758553@epcas5p4.samsung.com>
+ <20161226052029.10552-1-jh80.chung@samsung.com>
+ <20161226052029.10552-2-jh80.chung@samsung.com>
+ <CAFp+6iH0q9TNvPgv3_Nexm-vE6TBB_eQHXCwniO-Yn=fq+WWMg@mail.gmail.com>
+ <21de9ca7-e586-e5c8-ecda-d30c18bb6e40@samsung.com>
+ <CAFp+6iEOvdaRdvmz45ZVpqPrdSmeKk9je0bHg9FtNg8hE8YUxg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading
-infrastructure") introduced a better IRQ spreading mechanism, taking
-account of the available NUMA nodes in the machine.
+Hi Vivek,
 
-Problem is that the algorithm of retrieving the nodemask iterates
-"linearly" based on the number of online nodes - some architectures
-present non-linear node distribution among the nodemask, like PowerPC.
-If this is the case, the algorithm lead to a wrong node count number
-and therefore to a bad/incomplete IRQ affinity distribution.
+On 12/28/2016 05:58 PM, Vivek Gautam wrote:
+> Hi Jaehoon,
+> 
+> On Wed, Dec 28, 2016 at 8:19 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+>> Hi Vivek,
+>>
+>> On 12/27/2016 02:53 PM, Vivek Gautam wrote:
+>>> Hi Jaehoon,
+>>>
+>>>
+>>> On Mon, Dec 26, 2016 at 10:50 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+>>>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
+>>>> When Exynos that supported the pcie want to use the PCIe,
+>>>> it needs to control the phy resgister.
+>>>> But it should be more complex to control in their own PCIe device drivers.
+>>>>
+>>>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>>>> ---
+>>>>  drivers/phy/Kconfig           |   9 ++
+>>>>  drivers/phy/Makefile          |   1 +
+>>>>  drivers/phy/phy-exynos-pcie.c | 227 ++++++++++++++++++++++++++++++++++++++++++
+>>>>  3 files changed, 237 insertions(+)
+>>>>  create mode 100644 drivers/phy/phy-exynos-pcie.c
+>>>>
+>>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>>> index fe00f91..94b0433 100644
+>>>> --- a/drivers/phy/Kconfig
+>>>> +++ b/drivers/phy/Kconfig
+>>>> @@ -341,6 +341,15 @@ config PHY_EXYNOS5_USBDRD
+>>>>           This driver provides PHY interface for USB 3.0 DRD controller
+>>>>           present on Exynos5 SoC series.
+>>>>
+>>>> +config PHY_EXYNOS_PCIE
+>>>> +       bool "Exynos PCIe PHY driver"
+>>>
+>>> Is there a reason for this not being 'tristate' ?
+>>
+>> Will change.
+> 
+> I notice that PCI_EXYNOS5433 is bool as well.
+> If the host has to be 'bool' then it makes sense to have phy
+> also bool as well. But if PCI_EXYNOS5433 can be made
+> tristate, then this also changes to tristate.
 
-For example, this problem were found in a machine with 128 CPUs and two
-nodes, namely nodes 0 and 8 (instead of 0 and 1, if it was linearly
-distributed). This led to a wrong affinity distribution which then led to
-a bad mq allocation for nvme driver.
+Right. I understood what you said.
 
-Finally, we take the opportunity to fix a comment regarding the affinity
-distribution when we have _more_ nodes than vectors.
+> 
+>>
+>>>
+>>>> +       depends on ARCH_EXYNOS && OF
+>>>> +       depends on PCI_EXYNOS5433
+>>>> +       select GENERIC_PHY
+>>>> +       help
+>>>> +         Enable PCIe PHY support for Exynos SoC series.
+>>>
+>>> If this driver is for Exynos5433, then same should come in this help
+>>> text as well.
+>>
+>> will support the other exynos series.
+>> I'm working on refactoring exynos5440 with PHY generic Framework.
+>> Then this drive is not for only Exnyos5433. how about?
+> 
+> Ok, it's good then. My only concern is 'depends on PCI_EXYNOS5433'
+> makes it look like it is for EXYNOS5433. I am fine if that changes as well.
 
-Fixes: 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading infrastructure")
-Reported-by: Gabriel Krisman Bertazi <gabriel@krisman.be>
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Cc: stable@vger.kernel.org # v4.9+
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
----
- kernel/irq/affinity.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I will not put PCI_EXYNOS5433, just will use the PCI_EXYNOS.
+Because it will be supported only one file as pci-exynos.c
 
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 9be9bda..464eaf0 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -37,15 +37,15 @@ static void irq_spread_init_one(struct cpumask *irqmsk, struct cpumask *nmsk,
- 
- static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
- {
--	int n, nodes;
-+	int n, nodes = 0;
- 
- 	/* Calculate the number of nodes in the supplied affinity mask */
--	for (n = 0, nodes = 0; n < num_online_nodes(); n++) {
-+	for_each_online_node(n)
- 		if (cpumask_intersects(mask, cpumask_of_node(n))) {
- 			node_set(n, *nodemsk);
- 			nodes++;
- 		}
--	}
-+
- 	return nodes;
- }
- 
-@@ -82,7 +82,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
- 	nodes = get_nodes_in_cpumask(cpu_online_mask, &nodemsk);
- 
- 	/*
--	 * If the number of nodes in the mask is less than or equal the
-+	 * If the number of nodes in the mask is greater than or equal the
- 	 * number of vectors we just spread the vectors across the nodes.
- 	 */
- 	if (affv <= nodes) {
--- 
-2.1.0
+> 
+> [...]
+> 
+>>>> +
+>>>> +#define PCIE_EXYNOS5433_PMU_PHY_OFFSET         0x730
+>>>> +#define PCIE_PHY_OFFSET(x)             ((x) * 0x4)
+>>>> +
+>>>> +/* Sysreg Fsys register offset and bit for Exynos5433 */
+>>>> +#define PCIE_PHY_MAC_RESET             0x208
+>>>> +#define PCIE_MAC_RESET_MASK            0xFF
+>>>> +#define PCIE_MAC_RESET                 BIT(4)
+>>>> +#define PCIE_L1SUB_CM_CON              0x1010
+>>>> +#define PCIE_REFCLK_GATING_EN          BIT(0)
+>>>> +#define PCIE_PHY_COMMON_RESET          0x1020
+>>>> +#define PCIE_PHY_RESET                 BIT(0)
+>>>> +#define PCIE_PHY_GLOBAL_RESET          0x1040
+>>>> +#define PCIE_GLOBAL_RESET              BIT(0)
+>>>> +#define PCIE_REFCLK                    BIT(1)
+>>>> +#define PCIE_REFCLK_MASK               0x16
+>>>> +#define PCIE_APP_REQ_EXIT_L1_MODE      BIT(5)
+>>>> +
+>>>> +enum exynos_pcie_phy_data_type {
+>>>> +       PCIE_PHY_TYPE_EXYNOS5433,
+>>>> +};
+>>>> +
+>>>> +struct exynos_pcie_phy_data {
+>>>> +       enum exynos_pcie_phy_data_type  ctrl_type;
+>>>
+>>> Why do we need this controller type ?
+>>> If there are changes in the IP between different version,
+>>> then you can as well use different compatibles.
+>>
+>> Do you mean is the using "of_device_is_compatible()"?
+> 
+> I meant that multiple compatible strings can be added based on the
+> IP versions. And any IP specific data can be put in the .data field
+> of  'of_device_id' structure.
+> If there's more to differentiate between the IP versions at runtime,
+> you can use of_device_is_compatible().
+> 
+> [...]
+> 
+> 
+> 
 
