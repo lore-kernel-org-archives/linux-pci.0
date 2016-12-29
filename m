@@ -1,149 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Rafael J. Wysocki'" <rafael@kernel.org>,
-        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
-Cc: "'Linux PCI'" <linux-pci@vger.kernel.org>,
-        "'Will Deacon'" <will.deacon@arm.com>,
-        "'Sinan Kaya'" <okaya@codeaurora.org>,
-        "'Tomasz Nowicki'" <tn@semihalf.com>,
-        "'Joerg Roedel'" <joro@8bytes.org>,
-        "'ACPI Devel Maling List'" <linux-acpi@vger.kernel.org>,
-        "'Mark Salter'" <msalter@redhat.com>,
-        "'Marc Zyngier'" <marc.zyngier@arm.com>,
-        "'Jon Masters'" <jcm@redhat.com>,
-        "'Eric Auger'" <eric.auger@redhat.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Prem Mallappa'" <prem.mallappa@broadcom.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
-        "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
-        "'open list:AMD IOMMU \(AMD-VI\)'" <iommu@lists.linux-foundation.org>,
-        "'Hanjun Guo'" <hanjun.guo@linaro.org>,
-        "'Suravee Suthikulpanit'" <Suravee.Suthikulpanit@amd.com>,
-        "'Dennis Chen'" <dennis.chen@arm.com>,
-        "'Robin Murphy'" <robin.murphy@arm.com>,
-        "'Nate Watterson'" <nwatters@codeaurora.org>
-References: <20161121100148.24769-1-lorenzo.pieralisi@arm.com> <20161121100148.24769-8-lorenzo.pieralisi@arm.com> <20161202153816.GA18290@red-moon> <CAJZ5v0jfwGBaHepToB9U3qQZ3KTB6XzoRDwEskV0B9fK7+OoDg@mail.gmail.com> <20161203103927.GA14953@red-moon> <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0j5aMMyNsYpnbGXbJdDrbHFN5u03mQi+W6WK97iCdB2HA@mail.gmail.com>
-Subject: RE: [PATCH v9 07/16] drivers: acpi: implement acpi_dma_configure
-Date: Mon, 5 Dec 2016 15:22:02 +0530
-Message-ID: <003001d24edd$40d7d030$c2877090$@codeaurora.org>
+Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] pci: rename *host* directory to *controller*
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1482912577-31356-1-git-send-email-kishon@ti.com>
+ <20161228092228.GA14025@infradead.org>
+ <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
+ <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
+ <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
+ <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com>
+CC: Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <nsekhar@ti.com>,
+        Linus Torvalds
+	<torvalds@linux-foundation.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5864A335.9000203@ti.com>
+Date: Thu, 29 Dec 2016 11:16:29 +0530
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi,
 
->
->On Sat, Dec 3, 2016 at 11:39 AM, Lorenzo Pieralisi
-><lorenzo.pieralisi@arm.com> wrote:
->> On Sat, Dec 03, 2016 at 03:11:09AM +0100, Rafael J. Wysocki wrote:
->>> On Fri, Dec 2, 2016 at 4:38 PM, Lorenzo Pieralisi
->>> <lorenzo.pieralisi@arm.com> wrote:
->>> > Rafael, Mark, Suravee,
->>> >
->>> > On Mon, Nov 21, 2016 at 10:01:39AM +0000, Lorenzo Pieralisi wrote:
->>> >> On DT based systems, the of_dma_configure() API implements DMA
->>> >> configuration for a given device. On ACPI systems an API equivalent to
->>> >> of_dma_configure() is missing which implies that it is currently not
->>> >> possible to set-up DMA operations for devices through the ACPI generic
->>> >> kernel layer.
->>> >>
->>> >> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
->>> >> calls that for now are just wrappers around arch_setup_dma_ops() and
->>> >> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
->>> >> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
->>> >>
->>> >> Since acpi_dma_configure() is used to configure DMA operations, the
->>> >> function initializes the dma/coherent_dma masks to sane default values
->>> >> if the current masks are uninitialized (also to keep the default values
->>> >> consistent with DT systems) to make sure the device has a complete
->>> >> default DMA set-up.
->>> >
->>> > I spotted a niggle that unfortunately was hard to spot (and should not
->>> > be a problem per se but better safe than sorry) and I am not comfortable
->>> > with it.
->>> >
->>> > Following commit d0562674838c ("ACPI / scan: Parse _CCA and setup
->>> > device coherency") in acpi_bind_one() we check if the acpi_device
->>> > associated with a device just added supports DMA, first it was
->>> > done with acpi_check_dma() and then commit 1831eff876bd ("device
->>> > property: ACPI: Make use of the new DMA Attribute APIs") changed
->>> > it to acpi_get_dma_attr().
->>> >
->>> > The subsequent check (attr != DEV_DMA_NOT_SUPPORTED) is always true
->>> > on _any_ acpi device we pass to acpi_bind_one() on x86, which was
->>> > fine because we used it to call arch_setup_dma_ops(), which is a nop
->>> > on x86. On ARM64 a _CCA method is required to define if a device
->>> > supports DMA so (attr != DEV_DMA_NOT_SUPPORTED) may well be false.
->>> >
->>> > Now, acpi_bind_one() is used to bind an acpi_device to its physical
->>> > node also for pseudo-devices like cpus and memory nodes. For those
->>> > objects, on x86, attr will always be != DEV_DMA_NOT_SUPPORTED.
->>> >
->>> > So far so good, because on x86 arch_setup_dma_ops() is empty code.
->>> >
->>> > With this patch, I use the (attr != DEV_DMA_NOT_SUPPORTED) check
->>> > to call acpi_dma_configure() which is basically a nop on x86 except
->>> > that it sets up the dma_mask/coherent_dma_mask to a sane default value
->>> > (after all we are setting up DMA for the device so it makes sense to
->>> > initialize the masks there if they were unset since we are configuring
->>> > DMA for the device in question) for the given device.
->>> >
->>> > Problem is, as per the explanation above, we are also setting the
->>> > default dma masks for pseudo-devices (eg CPUs) that were previously
->>> > untouched, it should not be a problem per-se but I am not comfortable
->>> > with that, honestly it does not make much sense.
->>> >
->>> > An easy "fix" would be to move the default dma masks initialization out
->>> > of acpi_dma_configure() (as it was in previous patch versions of this
->>> > series - I moved it to acpi_dma_configure() just a consolidation point
->>> > for initializing the masks instead of scattering them in every
->>> > acpi_dma_configure caller) I can send this as a fix-up patch to Joerg if
->>> > we think that's the right thing to do (or I can send it to Rafael later
->>> > when the code is in the merged depending on the timing) just let me
->>> > know please.
+On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
+> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
+>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
+>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
+>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
+>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
+>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
+>>>>>> here. I'll post the rest of EP series before the next merge window.
+>>>>>>
+>>>>>> There might be hiccups because of this renaming but feel this is
+>>>>>> necessary for long-term maintenance.
+>>>>>
+>>>>> if we do this rename it would be great to get it to Linus NOW after
+>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
+>>>>
+>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
+>>>> also. Wouldn't be better to name it rc_controller?
 >>>
->>> Why can't arch_setup_dma_ops() set those masks too?
->>
->> Because the dma masks set-up is done by the caller (see
->> of_dma_configure()) according to firmware configuration or
->> platform data knowledge. I wanted to replicate the of_dma_configure()
->> interface on ACPI for obvious reasons (on ARM systems), I stopped
->> short of adding ACPI code to mirror of_dma_get_range() equivalent
->> (through the _DMA object) but I am really really nervous about changing
->> the code path on x86 because in theory all is fine, in practice even
->> just setting the masks to sane values can have unexpected consequences,
->> I just can't know (that's why I wasn't doing it in the first iterations
->> of this series).
->>
->> Side note: DT with of_dma_configure() and ACPI with
->> acpi_create_platform_device() set the default dma mask for all
->> platform devices already _regardless_ of what they really are, though
->> arguably acpi_bind_one() touches ways more devices.
->>
->> I really think that removing the default dma masks settings from
->> acpi_dma_configure() is the safer thing to do for the time being (or
->> moving acpi_dma_configure() to acpi_create_platform_device(), where the
->> DMA masks are set-up by default by core ACPI. Mark, Suravee, what was
->> the rationale behind calling arch_setup_dma_ops() in acpi_bind_one() ?)
->
->Alternatively, you can add one more arch wrapper that will be a no-op
->on x86 and that will set up the default masks and call
->arch_setup_dma_ops() on ARM.  Then, you can invoke that from
->acpi_dma_configure().
->
->Or make the definition of acpi_dma_configure() itself depend on the
->architecture.
->
+>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
+>>> neutral name that can cover both RC and Endpoint.
 
-So is it better that either removing the masks from acpi_dma_configure (or)
-creating the wrapper as Rafael mentioned, than moving
-acpi_dma_configure itself , because with something like iommu probe
-deferral that is tried, acpi_dma_configure is getting invoked from a device's 
-really_probe, a different path again ?
+right.
+>>>
+>>> I'm not a huge fan of "controller" because it feels a little bit long
+>>> and while I suppose it technically does include the concept of the PCI
+>>> interface of an endpoint, it still suggests more of the host side to
+>>> me.
+>>>
+>>> Doesn't USB have a similar situation?  I see there's a
+>>> drivers/usb/host/ (probably where we copied from in the first place).
+>>> Is a USB gadget the USB analog of what you're doing?  How do they
+>>> share code between the master/slave sides?
+>>>
+>>
+>> The usb/host contains the implemnentations by the spec of the several
+>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
+>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
 
-Regards,
- Sricharan
+right, each IP have a separate directory in USB. I thought of doing something
+similar for PCI but decided against it since that would involve identifying all
+the PCI IPs used and eventually result in more directories.
+>> For device purposes it uses the core/ and then some of the device functions
+>> are extended from the gadget/ package in which you can use mass_storage and
+>> other types of functions.
+
+That would be similar for PCI endpoint. All endpoint specific core
+functionality will be added in drivers/pci/endpoint (see RFC [1]).
+>>
+>> In our case in PCI we have the core functions inside /drivers/pci and the host
+>> mangled inside host. I suggest:
+>>
+>> drivers/pci
+>>  drivers/pci/core/
+>>  drivers/pci/core/hotplug
+>>  drivers/pci/core/pcie
+>>  drivers/pci/core/<all other files inside pci/ today>
+>>  drivers/pci/host
+>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+> 
+> Correction:
+> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
+> drivers
+> 
+>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
+> 
+> Correction:
+> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
+> 
+>>  drivers/pci/endpoint -> common code
+>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
+>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
+
+There are some parts of the dwc driver that is common to both root complex and
+endpoint. Where should that be? I'm sure no one wants to duplicate the common
+piece in both root complex and endpoint.
+
+[1] -> https://lkml.org/lkml/2016/9/14/27
+
+Thanks
+Kishon
