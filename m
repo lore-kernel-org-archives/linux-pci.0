@@ -1,108 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 1 Dec 2016 20:18:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH v2] PCI: Add information about describing PCI in ACPI
-Message-ID: <20161202021848.GA26714@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161129212816.15663.28100.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161201223604.GC15867@bhelgaas-glaptop.roam.corp.google.com>
- <47776378.8X3TnsHd3Q@aspire.rjw.lan>
- <20161201232732.GB17948@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0gtG6++GqyOb_B=o-=R4YuFia8PH6W3NFiCZuay=pV7TA@mail.gmail.com>
+Return-Path: <SRS0=QeBQ=YM=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=QeBQ=YM=wunner.de=lukas@kernel.org>
+Date: Thu, 29 Dec 2016 18:50:28 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20161229175028.GA18510@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+ <20161228112954.GA17925@wunner.de>
+ <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
+ <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
+ <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gtG6++GqyOb_B=o-=R4YuFia8PH6W3NFiCZuay=pV7TA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Linux PCI <linux-pci@vger.kernel.org>, Duc Dang <dhdang@apm.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Lv Zheng <lv.zheng@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/mixed; boundary="cNdxnHkX5QqsyA0e"
+In-Reply-To: <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 02, 2016 at 01:28:50AM +0100, Rafael J. Wysocki wrote:
-> On Fri, Dec 2, 2016 at 12:27 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Dec 01, 2016 at 11:37:39PM +0100, Rafael J. Wysocki wrote:
-> >> On Thursday, December 01, 2016 04:36:04 PM Bjorn Helgaas wrote:
-> >> > On Tue, Nov 29, 2016 at 03:39:48PM -0600, Bjorn Helgaas wrote:
-> >> > > Here's another stab at this writeup.  I'd appreciate any comments!
-> >> > >
-> >> > > Changes from v1 to v2:
-> >> > >   - Consumer/Producer is defined for Extended Address Space descriptors;
-> >> > >     should be ignored for QWord/DWord/Word Address Space descriptors
-> >> > >   - New arches may use Extended Address Space descriptors in PNP0A03 for
-> >> > >     bridge registers, including ECAM (if the arch adds support for this)
-> >> > >   - Add more details about MCFG and _CBA (Lv's suggestion)
-> >> > >   - Incorporate Rafael's suggestions
-> >> > >
-> >> > > ---
-> >> > >
-> >> > > Bjorn Helgaas (1):
-> >> > >       PCI: Add information about describing PCI in ACPI
-> >> > >
-> >> > >
-> >> > >  Documentation/PCI/00-INDEX      |    2
-> >> > >  Documentation/PCI/acpi-info.txt |  180 +++++++++++++++++++++++++++++++++++++++
-> >> > >  2 files changed, 182 insertions(+)
-> >> > >  create mode 100644 Documentation/PCI/acpi-info.txt
-> >> >
-> >> > It's very late in the cycle, but I'm considering trying to squeeze
-> >> > this into v4.9 on the grounds that:
-> >> >
-> >> >   - It's only a documentation change and can't break anything, and
-> >> >
-> >> >   - Distributing it more widely may help the arm64 firmware ecosystem
-> >> >
-> >> > But I don't want to disseminate misleading or incorrect information,
-> >> > so if it needs clarification or wordsmithing, or even just maturation,
-> >> > I'll wait until v4.10.
-> >> >
-> >> > The Consumer/Producer stuff, in particular, doesn't seem 100% settled
-> >> > yet.  Your thoughts, and especially your improvements, are welcome!
-> >>
-> >> Well, what's the drawback if it doesn't go into 4.9?
-> >
-> > Only that it's not as easily accessible.  ARM64 ACPI firmware is brand
-> > new.  Neither the firmware nor the kernel developers, nor even the
-> > hardware designers, have the benefit of all the x86/ia64 history, so I
-> > wrote this to try to come to a common understanding of what Linux
-> > expects.
-> >
-> > The first generation of ARM64 hardware is already in the field, and it
-> > has teething problems in hardware, firmware, and kernel.  For example,
-> > the current MCFG quirk situation: the ECAM hardware doesn't work quite
-> > per spec, the ACPI firmware doesn't describe the address space
-> > completely, and we don't really have consensus on how the firmware
-> > should communicate register space to the kernel.
-> >
-> > We're hoping the second generation can fix some of these problems, and
-> > I think this is the time to try to influence that.
-> 
-> Well, I would be super-careful if I were you, then. :-)
-> 
-> I'm not sure if squeezing it into 4.9.0 buys you anything here.  If
-> you get it into 4.10-rc, you can request -stable to pick it up (at
-> least in principle) and then it will show up in 4.9.y at one point
-> which should suffice I suppose?
 
-You're right, there's no real hurry, and the rate of change is a good
-indication that we need to let things settle out for a while.
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Thu, Dec 29, 2016 at 05:20:22PM +0100, Kilian Singer wrote:
+> One thing that was always weird in my debian system is, 
+> that even with working lock screen on the 4.7.0-1 version.
+> The lock screen is not a black screen but instead seems to
+> be a static screenshot of the desktop.
+
+This sounds like an issue with the i915 driver.  When the static
+screenshot is shown, i915 may have turned on panel self-refresh
+(PSR).  There were numerous PSR issues.
+
+
+> I know it is a repetition of what I have written above but this behaviour
+> (comment 19) should be contrasted to the behaviour on the 4.8 and 4.9
+> kernel which make my system unresponsive:
+> Here the desktop is non static. I can see xclock ticking. The mouse
+> moves. But any keyboard interaction or mouse click is not possible anymore.
+
+It's very odd that this should be related to a root port suspending.
+If mouse movements are still visible, the I/O ports of the keyboard
+and mouse must still be accessible.
+
+Perhaps you could apply the attached small debug patch, this will
+log a message whenever a device runtime suspends/resumes, so it
+should log when the root port that's causing trouble goes to D3.
+Then we would at least know which one it is.
+
+My money is on the root port above the Nvidia card, you can also
+try to keep that one awake with
+echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
+
+Thanks,
+
+Lukas
+
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="runpm_debug.patch"
+
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index 4c7055009bd6..9eba9686e302 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -345,9 +345,10 @@ static int rpm_idle(struct device *dev, int rpmflags)
+ 
+ 	callback = RPM_GET_CALLBACK(dev, runtime_idle);
+ 
+-	if (callback)
++	if (callback) {
++		dev_info(dev, "rpm_idle\n");
+ 		retval = __rpm_callback(callback, dev);
+-
++	}
+ 	dev->power.idle_notification = false;
+ 	wake_up_all(&dev->power.wait_queue);
+ 
+@@ -516,6 +517,7 @@ static int rpm_suspend(struct device *dev, int rpmflags)
+ 	callback = RPM_GET_CALLBACK(dev, runtime_suspend);
+ 
+ 	dev_pm_enable_wake_irq(dev);
++	dev_info(dev, "rpm_suspend\n");
+ 	retval = rpm_callback(callback, dev);
+ 	if (retval)
+ 		goto fail;
+@@ -738,6 +740,7 @@ static int rpm_resume(struct device *dev, int rpmflags)
+ 	callback = RPM_GET_CALLBACK(dev, runtime_resume);
+ 
+ 	dev_pm_disable_wake_irq(dev);
++	dev_info(dev, "rpm_resume\n");
+ 	retval = rpm_callback(callback, dev);
+ 	if (retval) {
+ 		__update_runtime_status(dev, RPM_SUSPENDED);
+
+--cNdxnHkX5QqsyA0e--
