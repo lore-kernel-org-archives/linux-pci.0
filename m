@@ -1,31 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:40703 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755579AbcLNKre (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Dec 2016 05:47:34 -0500
-Date: Wed, 14 Dec 2016 11:47:31 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Hans Verkuil <hverkuil@xs4all.nl>
-Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
-        brking@us.ibm.com, haver@linux.vnet.ibm.com,
-        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
-Message-ID: <20161214104731.GA30382@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-7-git-send-email-hch@lst.de> <1c24ae65-067f-52fc-edfa-af2d0e222a19@xs4all.nl> <20161214102913.GA30236@lst.de> <c5453c65-1256-338f-0ff1-6499d11987af@xs4all.nl>
+Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=Y3FS=YM=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] pci: rename *host* directory to *controller*
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1482912577-31356-1-git-send-email-kishon@ti.com>
+ <20161228092228.GA14025@infradead.org>
+ <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
+ <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
+ <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
+ <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
+ <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com>
+CC: Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <nsekhar@ti.com>,
+        Linus Torvalds
+	<torvalds@linux-foundation.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5864F812.5050605@ti.com>
+Date: Thu, 29 Dec 2016 17:18:34 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c5453c65-1256-338f-0ff1-6499d11987af@xs4all.nl>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 14, 2016 at 11:37:17AM +0100, Hans Verkuil wrote:
-> Completely forgot this. Is it OK to queue it for 4.11? Or is it blocking
-> other follow-up work you want to do for 4.10?
+Hi,
 
-My plan was to see if Bjorn would take the patch to do the trivial removal
-of pci_enable_msix_exact and pci_enable_msix_range even as a late 4.10 patch
-given it's so harmless, but either way there is follow work pending ASAP
-so getting it in for 4.10 would be very helpful.
+On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
+> 
+> Hi,
+> 
+> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>> Hi,
+>>
+>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
+>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
+>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
+>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
+>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
+>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
+>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
+>>>>>>>> here. I'll post the rest of EP series before the next merge window.
+>>>>>>>>
+>>>>>>>> There might be hiccups because of this renaming but feel this is
+>>>>>>>> necessary for long-term maintenance.
+>>>>>>>
+>>>>>>> if we do this rename it would be great to get it to Linus NOW after
+>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
+>>>>>>
+>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
+>>>>>> also. Wouldn't be better to name it rc_controller?
+>>>>>
+>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
+>>>>> neutral name that can cover both RC and Endpoint.
+>>
+>> right.
+>>>>>
+>>>>> I'm not a huge fan of "controller" because it feels a little bit long
+>>>>> and while I suppose it technically does include the concept of the PCI
+>>>>> interface of an endpoint, it still suggests more of the host side to
+>>>>> me.
+>>>>>
+>>>>> Doesn't USB have a similar situation?  I see there's a
+>>>>> drivers/usb/host/ (probably where we copied from in the first place).
+>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
+>>>>> share code between the master/slave sides?
+>>>>>
+>>>>
+>>>> The usb/host contains the implemnentations by the spec of the several
+>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
+>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
+>>
+>> right, each IP have a separate directory in USB. I thought of doing something
+>> similar for PCI but decided against it since that would involve identifying all
+>> the PCI IPs used and eventually result in more directories.
+>>>> For device purposes it uses the core/ and then some of the device functions
+>>>> are extended from the gadget/ package in which you can use mass_storage and
+>>>> other types of functions.
+>>
+>> That would be similar for PCI endpoint. All endpoint specific core
+>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
+>>>>
+>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
+>>>> mangled inside host. I suggest:
+>>>>
+>>>> drivers/pci
+>>>>  drivers/pci/core/
+>>>>  drivers/pci/core/hotplug
+>>>>  drivers/pci/core/pcie
+>>>>  drivers/pci/core/<all other files inside pci/ today>
+>>>>  drivers/pci/host
+>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+>>>
+>>> Correction:
+>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
+>>> drivers
+>>>
+>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
+>>>
+>>> Correction:
+>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
+>>>
+>>>>  drivers/pci/endpoint -> common code
+>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
+>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
+>>
+>> There are some parts of the dwc driver that is common to both root complex and
+>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
+>> piece in both root complex and endpoint.
+> 
+> You are right, the config space is almost the same and some ops also common.
+> I would suggest:
+> 
+> drivers/pci
+>   drivers/pci/core/
+>     drivers/pci/core/hotplug
+>     drivers/pci/core/pcie
+>     drivers/pci/core/<all other files inside pci/ today>
+>   drivers/pci/dwc
+>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
+>     drivers/pci/dwc/host/
+>     drivers/pci/dwc/endpoint/
+> 
+> What do you think?
+
+I don't think we should have sub-directories within dwc (USB too doesn't have
+sub-directories). Where should the platform specific driver be kept? For
+example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
+changes are so minimal that splitting the file won't make much sense.
+
+And such a change would also mean we create a separate directory for every
+other driver present right now in pci/host.
+
+Thanks
+Kishon
