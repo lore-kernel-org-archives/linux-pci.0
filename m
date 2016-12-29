@@ -1,173 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51474 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753078AbcLAIbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Dec 2016 03:31:33 -0500
-Subject: [PATCH v10 11/12] PCI: Add MCFG quirks for Cavium ThunderX pass2.x
- host controller
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Thu, 01 Dec 2016 02:30:58 -0600
-Message-ID: <20161201083058.12247.42729.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161201075131.12247.2211.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
+Return-Path: <SRS0=+V2B=YM=synopsys.com=Joao.Pinto@kernel.org>
+Subject: Re: [PATCH] pci: rename *host* directory to *controller*
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+	<Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1482912577-31356-1-git-send-email-kishon@ti.com>
+ <20161228092228.GA14025@infradead.org>
+ <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
+ <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
+ <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
+ <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
+ <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
+CC: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <nsekhar@ti.com>, Linus Torvalds
+	<torvalds@linux-foundation.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com>
+Date: Thu, 29 Dec 2016 11:53:36 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5864F812.5050605@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tn@semihalf.com>
+Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+> Hi,
+> 
+> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
+>>
+>> Hi,
+>>
+>> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>>> Hi,
+>>>
+>>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
+>>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
+>>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
+>>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
+>>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
+>>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
+>>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
+>>>>>>>>> here. I'll post the rest of EP series before the next merge window.
+>>>>>>>>>
+>>>>>>>>> There might be hiccups because of this renaming but feel this is
+>>>>>>>>> necessary for long-term maintenance.
+>>>>>>>>
+>>>>>>>> if we do this rename it would be great to get it to Linus NOW after
+>>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
+>>>>>>>
+>>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
+>>>>>>> also. Wouldn't be better to name it rc_controller?
+>>>>>>
+>>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
+>>>>>> neutral name that can cover both RC and Endpoint.
+>>>
+>>> right.
+>>>>>>
+>>>>>> I'm not a huge fan of "controller" because it feels a little bit long
+>>>>>> and while I suppose it technically does include the concept of the PCI
+>>>>>> interface of an endpoint, it still suggests more of the host side to
+>>>>>> me.
+>>>>>>
+>>>>>> Doesn't USB have a similar situation?  I see there's a
+>>>>>> drivers/usb/host/ (probably where we copied from in the first place).
+>>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
+>>>>>> share code between the master/slave sides?
+>>>>>>
+>>>>>
+>>>>> The usb/host contains the implemnentations by the spec of the several
+>>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
+>>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
+>>>
+>>> right, each IP have a separate directory in USB. I thought of doing something
+>>> similar for PCI but decided against it since that would involve identifying all
+>>> the PCI IPs used and eventually result in more directories.
+>>>>> For device purposes it uses the core/ and then some of the device functions
+>>>>> are extended from the gadget/ package in which you can use mass_storage and
+>>>>> other types of functions.
+>>>
+>>> That would be similar for PCI endpoint. All endpoint specific core
+>>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
+>>>>>
+>>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
+>>>>> mangled inside host. I suggest:
+>>>>>
+>>>>> drivers/pci
+>>>>>  drivers/pci/core/
+>>>>>  drivers/pci/core/hotplug
+>>>>>  drivers/pci/core/pcie
+>>>>>  drivers/pci/core/<all other files inside pci/ today>
+>>>>>  drivers/pci/host
+>>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+>>>>
+>>>> Correction:
+>>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
+>>>> drivers
+>>>>
+>>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
+>>>>
+>>>> Correction:
+>>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
+>>>>
+>>>>>  drivers/pci/endpoint -> common code
+>>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
+>>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
+>>>
+>>> There are some parts of the dwc driver that is common to both root complex and
+>>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
+>>> piece in both root complex and endpoint.
+>>
+>> You are right, the config space is almost the same and some ops also common.
+>> I would suggest:
+>>
+>> drivers/pci
+>>   drivers/pci/core/
+>>     drivers/pci/core/hotplug
+>>     drivers/pci/core/pcie
+>>     drivers/pci/core/<all other files inside pci/ today>
+>>   drivers/pci/dwc
+>>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
+>>     drivers/pci/dwc/host/
+>>     drivers/pci/dwc/endpoint/
+>>
+>> What do you think?
+> 
+> I don't think we should have sub-directories within dwc (USB too doesn't have
+> sub-directories). Where should the platform specific driver be kept? For
+> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
+> changes are so minimal that splitting the file won't make much sense.
+> 
+> And such a change would also mean we create a separate directory for every
+> other driver present right now in pci/host.
 
-ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
-compliant with ECAM standard. It uses non-standard configuration space
-accessors (see thunder_pem_ecam_ops) and custom configuration space
-granulation (see bus_shift = 24). In order to access configuration space
-and probe PEM as ACPI-based PCI host controller we need to add MCFG quirk
-infrastructure. This involves:
-1. A new thunder_pem_acpi_init() init function to locate PEM-specific
-   register ranges using ACPI.
-2. Export PEM thunder_pem_ecam_ops structure so it is visible to MCFG quirk
-   code.
-3. New quirk entries for each PEM segment. Each contains platform IDs,
-   mentioned thunder_pem_ecam_ops and CFG resources.
+I understand you idea. We can simplify it this way:
 
-Quirk is considered for ThunderX silicon pass2.x only which is identified
-via MCFG revision 1.
+ drivers/pci
+   drivers/pci/core/
+     drivers/pci/core/hotplug
+     drivers/pci/core/pcie
+     drivers/pci/core/<all other files inside pci/ today>
+     drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
+and EP
 
-[bhelgaas: adapt to use acpi_get_rc_resources(), update Makefile/ifdefs so
-quirk doesn't depend on CONFIG_PCI_HOST_THUNDER_PEM]
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_mcfg.c            |   19 ++++++++++++++++++
- drivers/pci/host/Makefile          |    2 +-
- drivers/pci/host/pci-thunder-pem.c |   38 ++++++++++++++++++++++++++++++++++++
- include/linux/pci-ecam.h           |    1 +
- 4 files changed, 59 insertions(+), 1 deletion(-)
+BTW dwc states for DesigWare Controller.
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index c6a6949..a48b508 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -74,6 +74,25 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	HISI_QUAD_DOM("HIP07   ",  4, &hisi_pcie_ops),
- 	HISI_QUAD_DOM("HIP07   ",  8, &hisi_pcie_ops),
- 	HISI_QUAD_DOM("HIP07   ", 12, &hisi_pcie_ops),
-+
-+#define THUNDER_PEM_RES(addr, node) \
-+	DEFINE_RES_MEM(addr + (node << 44), 0x39 * SZ_16M)
-+#define THUNDER_PEM_QUIRK(rev, node) \
-+	{ "CAVIUM", "THUNDERX", rev, 4 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88001f000000UL, node) }, \
-+	{ "CAVIUM", "THUNDERX", rev, 5 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x884057000000UL, node) }, \
-+	{ "CAVIUM", "THUNDERX", rev, 6 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x88808f000000UL, node) }, \
-+	{ "CAVIUM", "THUNDERX", rev, 7 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89001f000000UL, node) }, \
-+	{ "CAVIUM", "THUNDERX", rev, 8 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) }, \
-+	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * node), MCFG_BUS_ANY,	    \
-+	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
-+	/* SoC pass2.x */
-+	THUNDER_PEM_QUIRK(1, 0UL),
-+	THUNDER_PEM_QUIRK(1, 1UL),
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 64845f0..97e6bfc 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -28,7 +28,7 @@ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_ARM64) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
--obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-+obj-$(CONFIG_ARM64) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index c3276ee..7b03939 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -18,9 +18,12 @@
- #include <linux/init.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
- 
-+#if defined(CONFIG_PCI_HOST_THUNDER_PEM) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
-+
- #define PEM_CFG_WR 0x28
- #define PEM_CFG_RD 0x30
- 
-@@ -313,6 +316,38 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
- 	return 0;
- }
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+
-+static int thunder_pem_acpi_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct acpi_device *adev = to_acpi_device(dev);
-+	struct acpi_pci_root *root = acpi_driver_data(adev);
-+	struct resource *res_pem;
-+
-+	ret = acpi_get_rc_resources("THRX0002", root->segment, res_pem);
-+	if (ret) {
-+		dev_err(dev, "can't get rc base address\n");
-+		return ret;
-+	}
-+
-+	return thunder_pem_init(dev, cfg, res_pem);
-+}
-+
-+struct pci_ecam_ops thunder_pem_ecam_ops = {
-+	.bus_shift	= 24,
-+	.init		= thunder_pem_acpi_init,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= thunder_pem_config_read,
-+		.write		= thunder_pem_config_write,
-+	}
-+};
-+
-+#endif
-+
-+#ifdef CONFIG_PCI_HOST_THUNDER_PEM
-+
- static int thunder_pem_platform_init(struct pci_config_window *cfg)
- {
- 	struct device *dev = cfg->parent;
-@@ -364,3 +399,6 @@ static struct platform_driver thunder_pem_driver = {
- 	.probe = thunder_pem_probe,
- };
- builtin_platform_driver(thunder_pem_driver);
-+
-+#endif
-+#endif
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index bdacbc8..e88d7db 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,6 +62,7 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
- #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
- extern struct pci_ecam_ops pci_32b_ops;		/* 32-bit accesses only */
- extern struct pci_ecam_ops hisi_pcie_ops;	/* HiSilicon */
-+extern struct pci_ecam_ops thunder_pem_ecam_ops; /* Cavium ThunderX 2.x */
- #endif
- 
- #ifdef CONFIG_PCI_HOST_GENERIC
+What do you think?
 
+Thanks
+
+> 
+> Thanks
+> Kishon
+> 
