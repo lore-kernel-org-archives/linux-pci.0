@@ -1,98 +1,33 @@
-Return-Path: <SRS0=feWU=XV=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=feWU=XV=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 6 Dec 2016 15:45:03 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v11 05/15] arm64: PCI: Manage controller-specific data on
- per-controller basis
-Message-ID: <20161206154503.GB4601@red-moon>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161205232557.3957.84754.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Fri, 30 Dec 2016 00:05:45 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <1290380736.500.1483052745802.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <2012792022.490.1483052556774.JavaMail.zimbra@quantumtechnology.info>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <2083249365.479.1483051950725.JavaMail.zimbra@quantumtechnology.info> <2012792022.490.1483052556774.JavaMail.zimbra@quantumtechnology.info>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161205232557.3957.84754.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 05:25:57PM -0600, Bjorn Helgaas wrote:
-> From: Tomasz Nowicki <tn@semihalf.com>
-> 
-> Currently we use one shared global acpi_pci_root_ops structure to keep
-> controller-specific ops. We pass its pointer to acpi_pci_root_create() and
-> associate it with a host bridge instance for good.  Such a design implies
-> serious drawback. Any potential manipulation on the single system-wide
-> acpi_pci_root_ops leads to kernel crash. The structure content is not
-> really changing even across multiple host bridges creation; thus it was not
-> an issue so far.
-> 
-> In preparation for adding ECAM quirks mechanism (where controller-specific
-> PCI ops may be different for each host bridge) allocate new
-> acpi_pci_root_ops and fill in with data for each bridge. Now it is safe to
-> have different controller-specific info. As a consequence free
-> acpi_pci_root_ops when host bridge is released.
-> 
-> No functional changes in this patch.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/arm64/kernel/pci.c |   17 ++++++++++-------
->  1 file changed, 10 insertions(+), 7 deletions(-)
+Sorry for repeating the last part, my webmailer seems to strip
+away some text in the overview pane and I thought it got cut away. 
+So I sent the "missing" text again...
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+----- Original Message -----
+From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+To: "Lukas Wunner" <lukas@wunner.de>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Friday, December 30, 2016 12:02:36 AM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 7909f59..1eb42ba 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -169,33 +169,36 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
->  
->  	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
->  	pci_ecam_free(ri->cfg);
-> +	kfree(ci->ops);
->  	kfree(ri);
->  }
->  
-> -static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> -	.release_info = pci_acpi_generic_release_info,
-> -};
-> -
->  /* Interface called from ACPI code to setup PCI host controller */
->  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
->  	int node = acpi_get_node(root->device->handle);
->  	struct acpi_pci_generic_root_info *ri;
->  	struct pci_bus *bus, *child;
-> +	struct acpi_pci_root_ops *root_ops;
->  
->  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->  	if (!ri)
->  		return NULL;
->  
-> +	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
-> +	if (!root_ops)
-> +		return NULL;
-> +
->  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
->  	if (!ri->cfg) {
->  		kfree(ri);
-> +		kfree(root_ops);
->  		return NULL;
->  	}
->  
-> -	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-> -	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
-> -				   ri->cfg);
-> +	root_ops->release_info = pci_acpi_generic_release_info;
-> +	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
-> +	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
->  	if (!bus)
->  		return NULL;
->  
-> 
+The patch failes on 2 insert points, but I applied it by hand.
+Should I use another repo or commit?
+
+I also patched the Makefile due to the some gcc issues:
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=841420
+I guess that does not matter.
