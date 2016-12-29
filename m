@@ -1,46 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54496 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751610AbdB0PPf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 10:15:35 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 10/20] PCI: spear13xx: update PCI config space remap function
-Date: Mon, 27 Feb 2017 15:14:21 +0000
-Message-Id: <20170227151436.18698-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+Date: Thu, 29 Dec 2016 22:18:41 +0100
+Message-ID: <2103911.qf9H68dkRp@wuerfel>
+In-Reply-To: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generate on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Thursday, December 29, 2016 11:45:03 PM CET Nikita Yushchenko wrote:
+> 
+>  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+>  {
+> +#ifdef CONFIG_PCI
+> +       if (dev_is_pci(hwdev)) {
+> +               struct pci_dev *pdev = to_pci_dev(hwdev);
+> +               struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
+> +
+> +               if (br->dev.dma_mask && (*br->dev.dma_mask) &&
+> +                               (mask & (*br->dev.dma_mask)) != mask)
+> +                       return 0;
+> +       }
+> +#endif
+>         if (swiotlb)
+>                 return swiotlb_dma_supported(hwdev, mask);
+>         return 1;
+> 
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/dwc/pcie-spear13xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I think it's wrong to make this a special case for PCI.
 
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index 348f9c5..ea676a1 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -271,7 +271,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
--	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
- 		ret = PTR_ERR(pci->dbi_base);
--- 
-2.10.0
+Instead, we should follow the dma-ranges properties during dma_set_mask()
+to ensure we don't set a mask that any of the parents up to the root
+cannot support.
+
+	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
