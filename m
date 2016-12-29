@@ -1,59 +1,85 @@
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=xjg9=XR=redhat.com=jcm@kernel.org>
-Subject: Re: [Linaro-acpi] ACPI namespace details for ARM64
-To: Sinan Kaya <okaya@codeaurora.org>, Al Stone <ahs3@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-References: <20161109220506.GN14322@bhelgaas-glaptop.roam.corp.google.com>
- <a0829be4-6324-758b-2fe6-a274f715a3a9@linaro.org>
- <98c9564d-17f9-f549-6dd4-5c6abc1ba1a3@codeaurora.org>
-Cc: linux-arm-kernel@lists.infradead.org, Al Stone <al.stone@linaro.org>,
-        Robert Richter <rrichter@cavium.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Arnd Bergmann
- <arnd@arndb.de>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linaro-acpi@lists.linaro.org,
-        "Rafael J. Wysocki"
- <rafael.j.wysocki@intel.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Christopher Covington <cov@codeaurora.org>,
-        Tomasz Nowicki <tn@semihalf.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <4b5371a5-007e-ad78-054c-9a075ed3ba71@redhat.com>
-Date: Fri, 2 Dec 2016 00:13:45 -0500
-MIME-Version: 1.0
-In-Reply-To: <98c9564d-17f9-f549-6dd4-5c6abc1ba1a3@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:36739 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750891AbcL2UpQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Dec 2016 15:45:16 -0500
+Received: by mail-lf0-f43.google.com with SMTP id t196so227448894lff.3
+        for <linux-pci@vger.kernel.org>; Thu, 29 Dec 2016 12:45:15 -0800 (PST)
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        linux-arm-kernel@lists.infradead.org,
+        Simon Horman <horms@verge.net.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Cc: artemi.ivanov@cogentembedded.com, linux-kernel@vger.kernel.org,
+        Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit DMA mask
+Date: Thu, 29 Dec 2016 23:45:03 +0300
+Message-Id: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/2016 09:24 AM, Sinan Kaya wrote:
-> On 11/10/2016 6:18 PM, Al Stone wrote:
->> On 11/09/2016 03:05 PM, Bjorn Helgaas wrote:
->>> Hi all,
->>>
->>> We've been working through the details of getting ACPI to work on
->>> arm64, and there have been lots of questions about what this means for
->>> PCI.  I've outlined this for several people individually, but I'm
->>> going to send this separately, apart from a specific patch series, to
->>> make sure we're all on the same page.  Please correct my errors and
->>> misunderstandings.
->>>
->>> Bjorn
->>>
->>> [snip....]
->>
->> A big +1 to all of this.  This also looks like something that should
->> be added to either PCI, ACPI or arm64 documentation (or even all three).
->> What do you think?
-> 
-> 
-> I agree. In order to have compliant systems, we have to make PNP0C02 required
-> in the PCIe appendix of the SBSA specification.
+It is possible that PCI device supports 64-bit DMA addressing, and thus
+it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
+bridge has limitations on inbound transactions addressing. Example of
+such setup is NVME SSD device connected to RCAR PCIe controller.
 
-We're ramping up for a "Constitutional Convention" on the SBBR between a
-few of the vendors and we'll make sure this is covered.
+Previously there was attempt to handle this via bus notifier: after
+driver is attached to PCI device, bridge driver gets notifier callback,
+and resets dma_mask from there. However, this is racy: PCI device driver
+could already allocate buffers and/or start i/o in probe routine.
+In NVME case, i/o is started in workqueue context, and this race gives
+"sometimes works, sometimes not" effect.
 
-Jon.
+Proper solution should make driver's dma_set_mask() call to fail if host
+bridge can't support mask being set.
 
+This patch makes __swiotlb_dma_supported() to check mask being set for
+PCI device against dma_mask of struct device corresponding to PCI host
+bridge (one with name "pciXXXX:YY"), if that dma_mask is set.
+
+This is the least destructive approach: currently dma_mask of that device
+object is not used anyhow, thus all existing setups will work as before,
+and modification is required only in actually affected components -
+driver of particular PCI host bridge, and dma_map_ops of particular
+platform.
+
+Signed-off-by: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+---
+ arch/arm64/mm/dma-mapping.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+index 290a84f..49645277 100644
+--- a/arch/arm64/mm/dma-mapping.c
++++ b/arch/arm64/mm/dma-mapping.c
+@@ -28,6 +28,7 @@
+ #include <linux/dma-contiguous.h>
+ #include <linux/vmalloc.h>
+ #include <linux/swiotlb.h>
++#include <linux/pci.h>
+ 
+ #include <asm/cacheflush.h>
+ 
+@@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
+ 
+ static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+ {
++#ifdef CONFIG_PCI
++	if (dev_is_pci(hwdev)) {
++		struct pci_dev *pdev = to_pci_dev(hwdev);
++		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
++
++		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
++				(mask & (*br->dev.dma_mask)) != mask)
++			return 0;
++	}
++#endif
+ 	if (swiotlb)
+ 		return swiotlb_dma_supported(hwdev, mask);
+ 	return 1;
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+2.1.4
+
