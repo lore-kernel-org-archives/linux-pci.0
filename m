@@ -1,133 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:57889 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752293AbcLIHzr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2016 02:55:47 -0500
-Subject: Re: [PATCH] pci-error-recover: doc cleanup
-To: <linasvepstas@gmail.com>
-References: <1481184974-12505-1-git-send-email-caoj.fnst@cn.fujitsu.com>
- <20161208070539.0f00ce71@lwn.net> <58496AA4.5030602@cn.fujitsu.com>
- <CAHrUA35PMscQrohN_wPgip2tM-+OiHmQT1_uhPc75=GeHvkpaw@mail.gmail.com>
- <584A513B.9080409@cn.fujitsu.com>
- <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
-CC: Jonathan Corbet <corbet@lwn.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-From: Cao jin <caoj.fnst@cn.fujitsu.com>
-Message-ID: <584A6470.60502@cn.fujitsu.com>
-Date: Fri, 9 Dec 2016 15:59:44 +0800
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Thu, 29 Dec 2016 23:52:30 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <2083249365.479.1483051950725.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20161229175028.GA18510@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-In-Reply-To: <CAHrUA36r3o3ziEdMz-8=w5XTymsMQZYRXXrCt=H+1F3M4+6RnQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----=_Part_477_1459093846.1483051950720"
 List-ID: <linux-pci.vger.kernel.org>
 
+------=_Part_477_1459093846.1483051950720
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Just to be sure I am currently using this 
+repository:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+using
+commit 2d706e790f0508dff4fb72eca9b4892b79757feb
+Merge: 8f18e4d03ed8 8759fec4af22
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Dec 27 17:51:36 2016 -0800
+
+The provided patch fails I can locate the positions by hand though.
+
+Shall I use another repository or commit?
+
+Best regards
+
+PS:
+In order to compile on debian I use the makefile patch to disable PIE:
+http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.8-rc2/0002-UBUNTU-SAUCE-no-up-disable-pie-when-gcc-has-it-enabl.patch
+
+But I guess that this does not matter.
 
 
-On 12/09/2016 02:44 PM, Linas Vepstas wrote:
-> On Fri, Dec 9, 2016 at 2:37 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
->>
->>
->> On 12/09/2016 02:24 PM, Linas Vepstas wrote:
->>> I suppose I'm confused, but I recall that link resets are non-fatal.
->>> Fatal errors typically require that the the pci adapter be completely
->>> reset, any adapter firmware to be reloaded from scratch, the device
->>> driver has to kill all device state and start from scratch. Its huge.
->>> If the fatal error is on pci device that is under a block device
->>> holding a file system, then (usually) there is no way to recover,
->>> because the block layer (and file system) cannot deal with a block
->>> device that disappeared and then reappeared some few seconds later.
->>> (maybe some future zfs or lvm or btrfs might be able to deal with
->>> this, but not today)
->>>
->>> By contrast, link resets are far more gentle: the device driver might
->>> have to discard some half-full FIFO's, or cancel some in-flight
->>> commands, but can otherwise gracefully recover without telling the
->>> higher layers that there were any problems.
->>>
->>> --linas
->>>
->>
->> I am little confused too, even not sure if we are talking the same
->> *fatal error*, I am talking the fatal error defined in PCI Express spec,
->> chapter 6.2.2.2.1:
->>
->> Fatal errors are uncorrectable error conditions which render the
->> particular Link and related hardware unreliable. For Fatal errors, a
->> reset of the components on the Link may be required to return to
->> reliable operation. Platform handling of Fatal errors, and any efforts
->> to limit the effects of these errors, is platform implementation specific.
->>
->> Link reset means set *secondary bus reset* bit in pci bridge config
->> space, can reset the link and device simultaneously, is the strongest
->> kind of reset as I know.
-> 
-> OK, well, its been far too many years, and I don't have the PCI spec
-> at my fingertips.
-> Isn't there a link reset that can be performed, without forcing a device reset?
-> 
+----- Original Message -----
+From: "Lukas Wunner" <lukas@wunner.de>
+To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Thursday, December 29, 2016 6:50:28 PM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-At least I don't find the exact words saying that.
+On Thu, Dec 29, 2016 at 05:20:22PM +0100, Kilian Singer wrote:
+> One thing that was always weird in my debian system is, 
+> that even with working lock screen on the 4.7.0-1 version.
+> The lock screen is not a black screen but instead seems to
+> be a static screenshot of the desktop.
 
--- 
-Sincerely,
-Cao jin
-
-> The intent was that some PCI link errors are due to vibration,
-> ground-bounce, humidity, etc. and that these errors can be detected
-> and do not corrupt the device state or the device driver state.  Since
-> they are not associated with data corruption (or rather, the
-> corruption is local to the link), these can be recovered by reseting
-> just the link, without resetting the whole adapter. They may require
-> reseting some device-driver state, but not all of it.
-> 
-> However, this was all decided before the PCI-E spec was written, so
-> maybe the newer PCI-E specs now say something different.
-> 
-> --linas
-> 
->>
->>> On Thu, Dec 8, 2016 at 10:13 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
->>>>
->>>>
->>>> On 12/08/2016 10:05 PM, Jonathan Corbet wrote:
->>>>> On Thu, 8 Dec 2016 16:16:14 +0800
->>>>> Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
->>>>>
->>>>>>  The platform resets the link, and then calls the link_reset() callback
->>>>>>  on all affected device drivers.  This is a PCI-Express specific state
->>>>>> -and is done whenever a non-fatal error has been detected that can be
->>>>>> +and is done whenever a fatal error has been detected that can be
->>>>>>  "solved" by resetting the link. This call informs the driver of the
->>>>>
->>>>> As far as I can tell, the original text was correct here; why do you
->>>>> think this change needs to be made?
->>>>>
->>>>
->>>> See do_recovery() in aer core, reset_link() is called only seeing fatal
->>>> error.
->>>>
->>>> --
->>>> Sincerely,
->>>> Cao jin
->>>>
->>>>
->>>
->>>
->>>
->>
->> --
->> Sincerely,
->> Cao jin
->>
->>
-> 
-> 
-> .
-> 
+This sounds like an issue with the i915 driver.  When the static
+screenshot is shown, i915 may have turned on panel self-refresh
+(PSR).  There were numerous PSR issues.
 
 
+> I know it is a repetition of what I have written above but this behaviour
+> (comment 19) should be contrasted to the behaviour on the 4.8 and 4.9
+> kernel which make my system unresponsive:
+> Here the desktop is non static. I can see xclock ticking. The mouse
+> moves. But any keyboard interaction or mouse click is not possible anymore.
 
+It's very odd that this should be related to a root port suspending.
+If mouse movements are still visible, the I/O ports of the keyboard
+and mouse must still be accessible.
 
+Perhaps you could apply the attached small debug patch, this will
+log a message whenever a device runtime suspends/resumes, so it
+should log when the root port that's causing trouble goes to D3.
+Then we would at least know which one it is.
+
+My money is on the root port above the Nvidia card, you can also
+try to keep that one awake with
+echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
+
+Thanks,
+
+Lukas
+------=_Part_477_1459093846.1483051950720
+Content-Type: text/x-patch; name=runpm_debug.patch
+Content-Disposition: attachment; filename=runpm_debug.patch
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmFzZS9wb3dlci9ydW50aW1lLmMgYi9kcml2ZXJzL2Jhc2Uv
+cG93ZXIvcnVudGltZS5jDQppbmRleCA0YzcwNTUwMDliZDYuLjllYmE5Njg2ZTMwMiAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvYmFzZS9wb3dlci9ydW50aW1lLmMNCisrKyBiL2RyaXZlcnMvYmFzZS9w
+b3dlci9ydW50aW1lLmMNCkBAIC0zNDUsOSArMzQ1LDEwIEBAIHN0YXRpYyBpbnQgcnBtX2lkbGUo
+c3RydWN0IGRldmljZSAqZGV2LCBpbnQgcnBtZmxhZ3MpDQogDQogCWNhbGxiYWNrID0gUlBNX0dF
+VF9DQUxMQkFDSyhkZXYsIHJ1bnRpbWVfaWRsZSk7DQogDQotCWlmIChjYWxsYmFjaykNCisJaWYg
+KGNhbGxiYWNrKSB7DQorCQlkZXZfaW5mbyhkZXYsICJycG1faWRsZVxuIik7DQogCQlyZXR2YWwg
+PSBfX3JwbV9jYWxsYmFjayhjYWxsYmFjaywgZGV2KTsNCi0NCisJfQ0KIAlkZXYtPnBvd2VyLmlk
+bGVfbm90aWZpY2F0aW9uID0gZmFsc2U7DQogCXdha2VfdXBfYWxsKCZkZXYtPnBvd2VyLndhaXRf
+cXVldWUpOw0KIA0KQEAgLTUxNiw2ICs1MTcsNyBAQCBzdGF0aWMgaW50IHJwbV9zdXNwZW5kKHN0
+cnVjdCBkZXZpY2UgKmRldiwgaW50IHJwbWZsYWdzKQ0KIAljYWxsYmFjayA9IFJQTV9HRVRfQ0FM
+TEJBQ0soZGV2LCBydW50aW1lX3N1c3BlbmQpOw0KIA0KIAlkZXZfcG1fZW5hYmxlX3dha2VfaXJx
+KGRldik7DQorCWRldl9pbmZvKGRldiwgInJwbV9zdXNwZW5kXG4iKTsNCiAJcmV0dmFsID0gcnBt
+X2NhbGxiYWNrKGNhbGxiYWNrLCBkZXYpOw0KIAlpZiAocmV0dmFsKQ0KIAkJZ290byBmYWlsOw0K
+QEAgLTczOCw2ICs3NDAsNyBAQCBzdGF0aWMgaW50IHJwbV9yZXN1bWUoc3RydWN0IGRldmljZSAq
+ZGV2LCBpbnQgcnBtZmxhZ3MpDQogCWNhbGxiYWNrID0gUlBNX0dFVF9DQUxMQkFDSyhkZXYsIHJ1
+bnRpbWVfcmVzdW1lKTsNCiANCiAJZGV2X3BtX2Rpc2FibGVfd2FrZV9pcnEoZGV2KTsNCisJZGV2
+X2luZm8oZGV2LCAicnBtX3Jlc3VtZVxuIik7DQogCXJldHZhbCA9IHJwbV9jYWxsYmFjayhjYWxs
+YmFjaywgZGV2KTsNCiAJaWYgKHJldHZhbCkgew0KIAkJX191cGRhdGVfcnVudGltZV9zdGF0dXMo
+ZGV2LCBSUE1fU1VTUEVOREVEKTsNCg==
+------=_Part_477_1459093846.1483051950720--
