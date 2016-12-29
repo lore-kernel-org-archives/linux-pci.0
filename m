@@ -1,98 +1,66 @@
-Return-Path: <SRS0=0FGq=YL=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=0FGq=YL=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1482912577-31356-1-git-send-email-kishon@ti.com>
- <20161228092228.GA14025@infradead.org>
- <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
- <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
- <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
-CC: Christoph Hellwig <hch@infradead.org>, Kishon Vijay Abraham I
-	<kishon@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<nsekhar@ti.com>, Linus Torvalds <torvalds@linux-foundation.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com>
-Date: Wed, 28 Dec 2016 17:20:27 +0000
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=E3+c=YM=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Fri, 30 Dec 2016 00:20:34 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20161229175028.GA18510@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-In-Reply-To: <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
-> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
->> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
->>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
->>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->>>>> As discussed during our LPC discussions, I'm posting the rename patch
->>>>> here. I'll post the rest of EP series before the next merge window.
->>>>>
->>>>> There might be hiccups because of this renaming but feel this is
->>>>> necessary for long-term maintenance.
->>>>
->>>> if we do this rename it would be great to get it to Linus NOW after
->>>> -rc1 as that minimizes the impact on the 4.11 merge window.
->>>
->>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
->>> also. Wouldn't be better to name it rc_controller?
->>
->> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
->> neutral name that can cover both RC and Endpoint.
->>
->> I'm not a huge fan of "controller" because it feels a little bit long
->> and while I suppose it technically does include the concept of the PCI
->> interface of an endpoint, it still suggests more of the host side to
->> me.
->>
->> Doesn't USB have a similar situation?  I see there's a
->> drivers/usb/host/ (probably where we copied from in the first place).
->> Is a USB gadget the USB analog of what you're doing?  How do they
->> share code between the master/slave sides?
->>
-> 
-> The usb/host contains the implemnentations by the spec of the several
-> *hci (USB Host) and then you can have for example the USB 3.0 Designware
-> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
-> For device purposes it uses the core/ and then some of the device functions
-> are extended from the gadget/ package in which you can use mass_storage and
-> other types of functions.
-> 
-> In our case in PCI we have the core functions inside /drivers/pci and the host
-> mangled inside host. I suggest:
-> 
-> drivers/pci
->  drivers/pci/core/
->  drivers/pci/core/hotplug
->  drivers/pci/core/pcie
->  drivers/pci/core/<all other files inside pci/ today>
->  drivers/pci/host
->  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+The echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
 
-Correction:
-drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
-drivers
+did not help.
 
->  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
+Also I noticed on each boot directly after initramfs I get
+mmc0: Unknown contrller version. You may experience problems.
 
-Correction:
-drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
+On all versions of the kernel.
 
->  drivers/pci/endpoint -> common code
->  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
->  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
-> 
 
-Thanks
+----- Original Message -----
+From: "Lukas Wunner" <lukas@wunner.de>
+To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Thursday, December 29, 2016 6:50:28 PM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-> Joao
-> 
->> There's a drivers/ntb/hw/.  I don't know if "hw" is the *best* name,
->> but it's short and it at least conveys the idea that this code is
->> hardware-specific, not generic.
->>
->>>>>  drivers/pci/{host => controller}/Kconfig           |    0
->>>>>  drivers/pci/{host => controller}/Makefile          |    0
->>>>>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
->>>>>  drivers/pci/{host => controller}/pci-dra7xx.c      |    0
->>>>> ...
-> 
+On Thu, Dec 29, 2016 at 05:20:22PM +0100, Kilian Singer wrote:
+> One thing that was always weird in my debian system is, 
+> that even with working lock screen on the 4.7.0-1 version.
+> The lock screen is not a black screen but instead seems to
+> be a static screenshot of the desktop.
+
+This sounds like an issue with the i915 driver.  When the static
+screenshot is shown, i915 may have turned on panel self-refresh
+(PSR).  There were numerous PSR issues.
+
+
+> I know it is a repetition of what I have written above but this behaviour
+> (comment 19) should be contrasted to the behaviour on the 4.8 and 4.9
+> kernel which make my system unresponsive:
+> Here the desktop is non static. I can see xclock ticking. The mouse
+> moves. But any keyboard interaction or mouse click is not possible anymore.
+
+It's very odd that this should be related to a root port suspending.
+If mouse movements are still visible, the I/O ports of the keyboard
+and mouse must still be accessible.
+
+Perhaps you could apply the attached small debug patch, this will
+log a message whenever a device runtime suspends/resumes, so it
+should log when the root port that's causing trouble goes to D3.
+Then we would at least know which one it is.
+
+My money is on the root port above the Nvidia card, you can also
+try to keep that one awake with
+echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
+
+Thanks,
+
+Lukas
