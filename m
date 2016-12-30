@@ -1,146 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46286 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752215AbcLFUqA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Dec 2016 15:46:00 -0500
-Date: Tue, 6 Dec 2016 14:45:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Duc Dang <dhdang@apm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Christopher Covington <cov@codeaurora.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v11 13/15] PCI: Add MCFG quirks for Cavium ThunderX
- pass2.x host controller
-Message-ID: <20161206204556.GB19700@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161205232117.3957.50546.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20161205232657.3957.97517.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <02243cf0-a24a-f6c3-2467-d484263eab3e@semihalf.com>
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Fri, 30 Dec 2016 01:19:14 +0100
+Message-ID: <15778800.7CbgT5Og6y@aspire.rjw.lan>
+In-Reply-To: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228112954.GA17925@wunner.de> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <02243cf0-a24a-f6c3-2467-d484263eab3e@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 06, 2016 at 02:07:45PM +0100, Tomasz Nowicki wrote:
-> Hi Bjorn,
+On Wednesday, December 28, 2016 10:18:16 AM Bjorn Helgaas wrote:
+> On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
+> > On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
+> > > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
+> > > and all the debugging you've done.  Below is a revert of the troublesome
+> > > commit.  Can you test it and verify that it also fixes the problem?
+> > > 
+> > > I assume Mika is looking at this and will have a better solution soon.
+> > > But if not, I'll queue this up for v4.10.
+> > 
+> > @Kilian:  Are you using the proprietary nvidia driver?  If so,
+> > does the issue go away if you blacklist that driver or use nouveau
+> > instead?
+> > 
+> > 
+> > With a bit of googling I found dmesg and lspci output for this model:
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
+> > 
+> > The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
+> > 0x60, 0x64.  I assume they're located behind the LPC bridge?
+> > 
+> > The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
+> > registers with vga_tryget() but never releases that lock.  Intel
+> > chipsets have a quirk wherein I/O ports are routed to the bus to
+> > which the legacy PCI VGA registers are locked.  So once vga_tryget()
+> > is called by the nvidia driver, access to the keyboard and mouse is
+> > routed to bus 01 (on which the Nvidia card resides) and not to bus 00
+> > (on which the LPC bridge resides).
 > 
-> On 06.12.2016 00:26, Bjorn Helgaas wrote:
-> >diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> >index d7e7c0a..1239a8e 100644
-> >--- a/drivers/pci/host/Kconfig
-> >+++ b/drivers/pci/host/Kconfig
-> >@@ -240,7 +240,8 @@ config PCIE_QCOM
-> >
-> > config PCI_HOST_THUNDER_PEM
-> > 	bool "Cavium Thunder PCIe controller to off-chip devices"
-> >-	depends on OF && ARM64
-> >+	depends on ARM64
-> >+	depends on OF || (ACPI && PCI_QUIRKS)
-> > 	select PCI_HOST_COMMON
-> > 	help
-> > 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
-> >diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> >index 64845f0..97e6bfc 100644
-> >--- a/drivers/pci/host/Makefile
-> >+++ b/drivers/pci/host/Makefile
-> >@@ -28,7 +28,7 @@ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-> > obj-$(CONFIG_ARM64) += pcie-hisi.o
-> > obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-> > obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
-> >-obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-> >+obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+> Interesting.  A spec reference would be a good addition to whatever
+> fix is proposed.
 > 
-> Since we build pci-thunder-pem.o for ARM64 and ...
+> > My theory would be that if you lock the screen, the Nvidia card
+> > runtime suspends, allowing the root port above it to suspend,
+> > and then the I/O ports are no longer accessible.
+> > 
+> > We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
+> > is adjusted by writing to I/O ports of a gmux controller situated below
+> > the LPC bridge.  The nvidia driver locks the legacy VGA registers and
+> > from that point reads from the I/O ports always return 0xff.  Commit
+> > 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
+> > sought to fix it but caused other breakage which remains unfixed so far:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=105051
+> > https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
+> > 
+> > I've always wondered if the Intel chipsets would behave more sensibly
+> > if the LPC bridge had BARs specifying the I/O regions used by devices
+> > below it.
+> > 
+> > Reverting runtime suspend for PCIe ports is not a good solution as it's
+> > needed for Thunderbolt runtime PM on Macs.
 > 
-> > obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
-> > obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> > obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-> >diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> >index c3276ee..af722eb 100644
-> >--- a/drivers/pci/host/pci-thunder-pem.c
-> >+++ b/drivers/pci/host/pci-thunder-pem.c
-> >@@ -18,8 +18,12 @@
-> > #include <linux/init.h>
-> > #include <linux/of_address.h>
-> > #include <linux/of_pci.h>
-> >+#include <linux/pci-acpi.h>
-> > #include <linux/pci-ecam.h>
-> > #include <linux/platform_device.h>
-> >+#include "../pci.h"
-> >+
-> >+#if defined(CONFIG_PCI_HOST_THUNDER_PEM) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
+> The choices are:
 > 
-> have this ^^^ ifdef IMO we can drop Kconfig changes in
-> drivers/pci/host/Kconfig. The same for PCI_HOST_THUNDER_ECAM in
-> patch[14/15].
+>   1) Fix the regression and preserve runtime PM for PCIe ports
+>   2) Fix the regression by reverting runtime PM for PCIe ports
+> 
+> Obviously we hope for 1).  Preserving runtime PM without fixing the
+> regression isn't even on the list.  I know this is Linux 101, so I
+> apologize for restating the obvious.
 
-I think you're right that we *could* drop the Kconfig changes.  I
-didn't actually drop them because I think it might be slightly
-confusing that with the previous Kconfig:
+There is a couple of obvious things we can do other than reverting, though.
 
-  config PCI_HOST_THUNDER_PEM
-        bool "Cavium Thunder PCIe controller to off-chip devices"
-        depends on OF && ARM64
+Like for example changing the cutoff date we have in there to cover the Kilian's
+system.
 
-we still build pci-thunder-pem.o, even when CONFIG_OF isn't defined.
-
-There's no question that this whole thing is confusing no matter what
-we do.  That reminds me that I meant to add some comments in the
-Makefile.  What do you think about the following:
-
-
-commit 5d06f9125ec00215fa59b789491fdd51186a4ee1
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Dec 6 14:27:59 2016 -0600
-
-    PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy
-    
-    Add Makefile comments to explain the Kconfig and build strategy for ARM64
-    drivers that work around not-quite-ECAM issues.  No functional change
-    intended.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 6cc84b4..bfe3179 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -15,7 +15,6 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
- obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
- obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
--obj-$(CONFIG_ARM64) += pci-xgene.o
- obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
- obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
- obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
-@@ -25,11 +24,23 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
--obj-$(CONFIG_ARM64) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
--obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
--obj-$(CONFIG_ARM64) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
- obj-$(CONFIG_VMD) += vmd.o
-+
-+# The following drivers are for devices that use the generic ACPI
-+# pci_root.c driver but don't support standard ECAM config access.
-+# They contain MCFG quirks to replace the generic ECAM accessors with
-+# device-specific ones that are shared with the DT driver.
-+
-+# The ACPI driver is generic and should not require driver-specific
-+# config options to be enabled, so we always build these drivers on
-+# ARM64 and use internal ifdefs to only build the pieces we need
-+# depending on whether ACPI, the DT driver, or both are enabled.
-+
-+obj-$(CONFIG_ARM64) += pcie-hisi.o
-+obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
-+obj-$(CONFIG_ARM64) += pci-thunder-pem.o
-+obj-$(CONFIG_ARM64) += pci-xgene.o
+Thanks,
+Rafael
