@@ -1,542 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:38985 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbcL1Kmb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2016 05:42:31 -0500
+Return-Path: <SRS0=/jEU=YN=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=/jEU=YN=ti.com=kishon@kernel.org>
 Subject: Re: [PATCH] pci: rename *host* directory to *controller*
-To: Christoph Hellwig <hch@infradead.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
 References: <1482912577-31356-1-git-send-email-kishon@ti.com>
  <20161228092228.GA14025@infradead.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>, Linus Torvalds <torvalds@linux-foundation.org>
+ <fa775e80-68cc-0d76-855d-c7e64f8bf1fc@synopsys.com>
+ <20161228164118.GB19653@bhelgaas-glaptop.roam.corp.google.com>
+ <1ee66ce2-c321-2341-c964-c8b32218ca7e@synopsys.com>
+ <426f0cb8-b9d4-7c0d-5eea-0ae0d4b01668@synopsys.com> <5864A335.9000203@ti.com>
+ <f2a37587-2e0a-03b3-49d5-3031d453c18c@synopsys.com> <5864F812.5050605@ti.com>
+ <1d5f9c4b-b619-36fc-082c-962c34cc3194@synopsys.com> <5864FA60.2070603@ti.com>
+ <a6c80508-78ec-b081-3563-275c865275c5@synopsys.com> <5864FF71.4080100@ti.com>
+ <74bba407-9d8f-b274-89b8-8e52a620aff9@synopsys.com>
+CC: Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <nsekhar@ti.com>,
+        Linus Torvalds
+	<torvalds@linux-foundation.org>,
+        "jingoohan1@gmail.com"
+	<jingoohan1@gmail.com>
 From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <586396B9.9060102@ti.com>
-Date: Wed, 28 Dec 2016 16:10:57 +0530
+Message-ID: <5865FD7B.8070609@ti.com>
+Date: Fri, 30 Dec 2016 11:53:55 +0530
 MIME-Version: 1.0
-In-Reply-To: <20161228092228.GA14025@infradead.org>
+In-Reply-To: <74bba407-9d8f-b274-89b8-8e52a620aff9@synopsys.com>
 Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
+On Thursday 29 December 2016 06:49 PM, Joao Pinto wrote:
+> 
+> Hi,
+> 
+> Às 12:20 PM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>> Hi,
+>>
+>> On Thursday 29 December 2016 05:38 PM, Joao Pinto wrote:
+>>> Às 11:58 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>>>> Hi,
+>>>>
+>>>> On Thursday 29 December 2016 05:23 PM, Joao Pinto wrote:
+>>>>> Às 11:48 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On Thursday 29 December 2016 04:08 PM, Joao Pinto wrote:
+>>>>>>>
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> Às 5:46 AM de 12/29/2016, Kishon Vijay Abraham I escreveu:
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> On Wednesday 28 December 2016 10:50 PM, Joao Pinto wrote:
+>>>>>>>>> Às 5:17 PM de 12/28/2016, Joao Pinto escreveu:
+>>>>>>>>>> Às 4:41 PM de 12/28/2016, Bjorn Helgaas escreveu:
+>>>>>>>>>>> On Wed, Dec 28, 2016 at 01:57:13PM +0000, Joao Pinto wrote:
+>>>>>>>>>>>> Às 9:22 AM de 12/28/2016, Christoph Hellwig escreveu:
+>>>>>>>>>>>>> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
+>>>>>>>>>>>>>> As discussed during our LPC discussions, I'm posting the rename patch
+>>>>>>>>>>>>>> here. I'll post the rest of EP series before the next merge window.
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>> There might be hiccups because of this renaming but feel this is
+>>>>>>>>>>>>>> necessary for long-term maintenance.
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> if we do this rename it would be great to get it to Linus NOW after
+>>>>>>>>>>>>> -rc1 as that minimizes the impact on the 4.11 merge window.
+>>>>>>>>>>>>
+>>>>>>>>>>>> Rename it to controller is a bit vague I thing since we have the PCI Endpoint IP
+>>>>>>>>>>>> also. Wouldn't be better to name it rc_controller?
+>>>>>>>>>>>
+>>>>>>>>>>> I think Kishon's whole goal is to add PCI Endpoint IP, so he wants a
+>>>>>>>>>>> neutral name that can cover both RC and Endpoint.
+>>>>>>>>
+>>>>>>>> right.
+>>>>>>>>>>>
+>>>>>>>>>>> I'm not a huge fan of "controller" because it feels a little bit long
+>>>>>>>>>>> and while I suppose it technically does include the concept of the PCI
+>>>>>>>>>>> interface of an endpoint, it still suggests more of the host side to
+>>>>>>>>>>> me.
+>>>>>>>>>>>
+>>>>>>>>>>> Doesn't USB have a similar situation?  I see there's a
+>>>>>>>>>>> drivers/usb/host/ (probably where we copied from in the first place).
+>>>>>>>>>>> Is a USB gadget the USB analog of what you're doing?  How do they
+>>>>>>>>>>> share code between the master/slave sides?
+>>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> The usb/host contains the implemnentations by the spec of the several
+>>>>>>>>>> *hci (USB Host) and then you can have for example the USB 3.0 Designware
+>>>>>>>>>> Host specific ops in dwc3 and for USB 2.0 in dwc2/.
+>>>>>>>>
+>>>>>>>> right, each IP have a separate directory in USB. I thought of doing something
+>>>>>>>> similar for PCI but decided against it since that would involve identifying all
+>>>>>>>> the PCI IPs used and eventually result in more directories.
+>>>>>>>>>> For device purposes it uses the core/ and then some of the device functions
+>>>>>>>>>> are extended from the gadget/ package in which you can use mass_storage and
+>>>>>>>>>> other types of functions.
+>>>>>>>>
+>>>>>>>> That would be similar for PCI endpoint. All endpoint specific core
+>>>>>>>> functionality will be added in drivers/pci/endpoint (see RFC [1]).
+>>>>>>>>>>
+>>>>>>>>>> In our case in PCI we have the core functions inside /drivers/pci and the host
+>>>>>>>>>> mangled inside host. I suggest:
+>>>>>>>>>>
+>>>>>>>>>> drivers/pci
+>>>>>>>>>>  drivers/pci/core/
+>>>>>>>>>>  drivers/pci/core/hotplug
+>>>>>>>>>>  drivers/pci/core/pcie
+>>>>>>>>>>  drivers/pci/core/<all other files inside pci/ today>
+>>>>>>>>>>  drivers/pci/host
+>>>>>>>>>>  drivers/pci/dwc -> here would be pcie-designware and the specific vendor drivers
+>>>>>>>>>
+>>>>>>>>> Correction:
+>>>>>>>>> drivers/pci/host/dwc -> here would be pcie-designware and the specific vendor
+>>>>>>>>> drivers
+>>>>>>>>>
+>>>>>>>>>>  drivers/pci/<vendorN> -> here would be the drivers for vendorN controller
+>>>>>>>>>
+>>>>>>>>> Correction:
+>>>>>>>>> drivers/pci/host/<vendorN> -> here would be the drivers for vendorN controller
+>>>>>>>>>
+>>>>>>>>>>  drivers/pci/endpoint -> common code
+>>>>>>>>>>  drivers/pci/endpoint/dwc -> implementation of Synopsys specific endpoint ops
+>>>>>>>>>>  drivers/pci/<vendorN> -> implementation of other vendors specific endpoint ops
+>>>>>>>>
+>>>>>>>> There are some parts of the dwc driver that is common to both root complex and
+>>>>>>>> endpoint. Where should that be? I'm sure no one wants to duplicate the common
+>>>>>>>> piece in both root complex and endpoint.
+>>>>>>>
+>>>>>>> You are right, the config space is almost the same and some ops also common.
+>>>>>>> I would suggest:
+>>>>>>>
+>>>>>>> drivers/pci
+>>>>>>>   drivers/pci/core/
+>>>>>>>     drivers/pci/core/hotplug
+>>>>>>>     drivers/pci/core/pcie
+>>>>>>>     drivers/pci/core/<all other files inside pci/ today>
+>>>>>>>   drivers/pci/dwc
+>>>>>>>     drivers/pci/dwc/common.c -> common ops and registers between RC and endpoint
+>>>>>>>     drivers/pci/dwc/host/
+>>>>>>>     drivers/pci/dwc/endpoint/
+>>>>>>>
+>>>>>>> What do you think?
+>>>>>>
+>>>>>> I don't think we should have sub-directories within dwc (USB too doesn't have
+>>>>>> sub-directories). Where should the platform specific driver be kept? For
+>>>>>> example pci-dra7xx.c (which use dwc) has both rc and ep specific parts but the
+>>>>>> changes are so minimal that splitting the file won't make much sense.
+>>>>>>
+>>>>>> And such a change would also mean we create a separate directory for every
+>>>>>> other driver present right now in pci/host.
+>>>>>
+>>>>> I understand you idea. We can simplify it this way:
+>>>>>
+>>>>>  drivers/pci
+>>>>>    drivers/pci/core/
+>>>>>      drivers/pci/core/hotplug
+>>>>>      drivers/pci/core/pcie
+>>>>>      drivers/pci/core/<all other files inside pci/ today>
+>>>>>      drivers/pci/dwc -> Common files (RC and EP), specific vendor drivers for EP
+>>>>> and EP
+>>>>>
+>>>>> BTW dwc states for DesigWare Controller.
+>>>>>
+>>>>> What do you think?
+>>>>
+>>>> I'd like to avoid using different directory structures for different IPs. Lets
+>>>> try to make it uniform.
+>>>
+>>> I understand, but mixing them all up is not a good aproach in my opinion, since
+>>> a SoCs using Synopsys IP will only use the common files for that IP. Today in
+>>> the host/ folder you have a bunch of drivers that is not clear which are using
+>>> Synopsys IP or not. Of course I mention Synopsys, because it is where I work,
+>>> but the opinion would be the same for other IP vendor.
+>>
+>> right, but it has been that way always. My point is why should we disturb it
+>> for the sake of adding endpoint support.
+>>>
+>>> I understand that you want to do a common Endpoint framework to be used by any
+>>> IP vendor based, and maybe this partition makes it a bit harder, but in my
+>>> personal opinion each IP vendor should have its own folder for clarity and
+>>> organization of the code.
+>>>
+>>> You framework should be outside those IP vendor folders and be available for
+>>> their drivers to use it, and so it should be completely vendor agnostic.
+>>
+>> right, that's how it was designed (please see drivers/pci/endpoint/ directories
+>> in RFC [1] which has the endpoint framework).
+>>
+>> [1] -> https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2016_9_14_27&d=DgID-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=Usq-eV6vJQ4rVg_Jj-JzgYyH26VfwLaqXDrE_54JCmg&s=wSindfuj1wjD3QeOSzLJNPmgMyqcZNtNX0X-D5yCpqw&e= 
+> 
+> I have checked your patch and seems very useful for certain that I am going to
+> use to add support a DWC reference Endpoint driver.
+> Synopsys Endpoint has a DMA engine available that can be used or not by the IP
+> client. To configure and use it the IP as a set of registers that like other IP
+> must be configured and managed. Other IP vendors won't have this feature for
+> sure. So I am saying is, although it gets simpler to have a host/ and a
+> endpoint/ folder with everything inside, I still feel that we should isolate IP
+> vendor stuff in isolated ecosystems creating host/dwc and endpoint/dwc where
+> Synopsys clients can put their drivers and use the common functions. Current
+> host/ is just a place where every Root Complex driver is deployed. I know it
+> works of course, but if you are improving structure why not organize it better?
 
-On Wednesday 28 December 2016 02:52 PM, Christoph Hellwig wrote:
-> On Wed, Dec 28, 2016 at 01:39:37PM +0530, Kishon Vijay Abraham I wrote:
->> Hi Bjorn,
->>
->> As discussed during our LPC discussions, I'm posting the rename patch
->> here. I'll post the rest of EP series before the next merge window.
->>
->> There might be hiccups because of this renaming but feel this is
->> necessary for long-term maintenance.
-> 
-> if we do this rename it would be great to get it to Linus NOW after
-> -rc1 as that minimizes the impact on the 4.11 merge window.
+I'm not inclined to have host/dwc or endpoint/dwc as that would mean the driver
+code is spread across multiple directories.
+I would be rather okay to have separate directory for dwc (and have both RC/EP
+controller drivers there).
+But let's get the opinion of others. Bjorn? Jingoo?
 
-+1
-> 
->>
->> Thanks
->> Kishon
->>
->>  MAINTAINERS                                        |   52 ++++++++++----------
->>  drivers/pci/Kconfig                                |    2 +-
->>  drivers/pci/Makefile                               |    2 +-
->>  drivers/pci/{host => controller}/Kconfig           |    0
->>  drivers/pci/{host => controller}/Makefile          |    0
->>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
->>  drivers/pci/{host => controller}/pci-dra7xx.c      |    0
->>  drivers/pci/{host => controller}/pci-exynos.c      |    0
->>  drivers/pci/{host => controller}/pci-host-common.c |    0
->>  .../pci/{host => controller}/pci-host-generic.c    |    0
->>  drivers/pci/{host => controller}/pci-hyperv.c      |    0
->>  drivers/pci/{host => controller}/pci-imx6.c        |    0
->>  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
->>  drivers/pci/{host => controller}/pci-keystone.c    |    0
->>  drivers/pci/{host => controller}/pci-keystone.h    |    0
->>  drivers/pci/{host => controller}/pci-layerscape.c  |    0
->>  drivers/pci/{host => controller}/pci-mvebu.c       |    0
->>  drivers/pci/{host => controller}/pci-rcar-gen2.c   |    0
->>  drivers/pci/{host => controller}/pci-tegra.c       |    0
->>  .../pci/{host => controller}/pci-thunder-ecam.c    |    0
->>  drivers/pci/{host => controller}/pci-thunder-pem.c |    0
->>  drivers/pci/{host => controller}/pci-versatile.c   |    0
->>  drivers/pci/{host => controller}/pci-xgene-msi.c   |    0
->>  drivers/pci/{host => controller}/pci-xgene.c       |    0
->>  drivers/pci/{host => controller}/pcie-altera-msi.c |    0
->>  drivers/pci/{host => controller}/pcie-altera.c     |    0
->>  drivers/pci/{host => controller}/pcie-armada8k.c   |    0
->>  drivers/pci/{host => controller}/pcie-artpec6.c    |    0
->>  .../{host => controller}/pcie-designware-plat.c    |    0
->>  drivers/pci/{host => controller}/pcie-designware.c |    0
->>  drivers/pci/{host => controller}/pcie-designware.h |    0
->>  drivers/pci/{host => controller}/pcie-hisi.c       |    0
->>  drivers/pci/{host => controller}/pcie-iproc-bcma.c |    0
->>  drivers/pci/{host => controller}/pcie-iproc-msi.c  |    0
->>  .../pci/{host => controller}/pcie-iproc-platform.c |    0
->>  drivers/pci/{host => controller}/pcie-iproc.c      |    0
->>  drivers/pci/{host => controller}/pcie-iproc.h      |    0
->>  drivers/pci/{host => controller}/pcie-qcom.c       |    0
->>  drivers/pci/{host => controller}/pcie-rcar.c       |    0
->>  drivers/pci/{host => controller}/pcie-rockchip.c   |    0
->>  drivers/pci/{host => controller}/pcie-spear13xx.c  |    0
->>  drivers/pci/{host => controller}/pcie-xilinx-nwl.c |    0
->>  drivers/pci/{host => controller}/pcie-xilinx.c     |    0
->>  drivers/pci/{host => controller}/vmd.c             |    0
->>  44 files changed, 28 insertions(+), 28 deletions(-)
->>  rename drivers/pci/{host => controller}/Kconfig (100%)
->>  rename drivers/pci/{host => controller}/Makefile (100%)
->>  rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
->>  rename drivers/pci/{host => controller}/pci-dra7xx.c (100%)
->>  rename drivers/pci/{host => controller}/pci-exynos.c (100%)
->>  rename drivers/pci/{host => controller}/pci-host-common.c (100%)
->>  rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
->>  rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
->>  rename drivers/pci/{host => controller}/pci-imx6.c (100%)
->>  rename drivers/pci/{host => controller}/pci-keystone-dw.c (100%)
->>  rename drivers/pci/{host => controller}/pci-keystone.c (100%)
->>  rename drivers/pci/{host => controller}/pci-keystone.h (100%)
->>  rename drivers/pci/{host => controller}/pci-layerscape.c (100%)
->>  rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
->>  rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
->>  rename drivers/pci/{host => controller}/pci-tegra.c (100%)
->>  rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
->>  rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
->>  rename drivers/pci/{host => controller}/pci-versatile.c (100%)
->>  rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
->>  rename drivers/pci/{host => controller}/pci-xgene.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-altera.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-armada8k.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-artpec6.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-designware-plat.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-designware.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-designware.h (100%)
->>  rename drivers/pci/{host => controller}/pcie-hisi.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
->>  rename drivers/pci/{host => controller}/pcie-qcom.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-rockchip.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-spear13xx.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
->>  rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
->>  rename drivers/pci/{host => controller}/vmd.c (100%)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index cfff2c9..2ac7a4b 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -5969,7 +5969,7 @@ F:	arch/x86/kernel/cpu/mshyperv.c
->>  F:	drivers/hid/hid-hyperv.c
->>  F:	drivers/hv/
->>  F:	drivers/input/serio/hyperv-keyboard.c
->> -F:	drivers/pci/host/pci-hyperv.c
->> +F:	drivers/pci/controller/pci-hyperv.c
->>  F:	drivers/net/hyperv/
->>  F:	drivers/scsi/storvsc_drv.c
->>  F:	drivers/uio/uio_hv_generic.c
->> @@ -9413,7 +9413,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
->>  L:	linux-pci@vger.kernel.org
->>  S:	Supported
->>  F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
->> -F:	drivers/pci/host/pcie-altera.c
->> +F:	drivers/pci/controller/pcie-altera.c
->>  
->>  PCI DRIVER FOR ARM VERSATILE PLATFORM
->>  M:	Rob Herring <robh@kernel.org>
->> @@ -9421,7 +9421,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/versatile.txt
->> -F:	drivers/pci/host/pci-versatile.c
->> +F:	drivers/pci/controller/pci-versatile.c
->>  
->>  PCI DRIVER FOR ARMADA 8K
->>  M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> @@ -9429,7 +9429,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/pci-armada8k.txt
->> -F:	drivers/pci/host/pcie-armada8k.c
->> +F:	drivers/pci/controller/pcie-armada8k.c
->>  
->>  PCI DRIVER FOR APPLIEDMICRO XGENE
->>  M:	Tanmay Inamdar <tinamdar@apm.com>
->> @@ -9437,7 +9437,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
->> -F:	drivers/pci/host/pci-xgene.c
->> +F:	drivers/pci/controller/pci-xgene.c
->>  
->>  PCI DRIVER FOR FREESCALE LAYERSCAPE
->>  M:	Minghuan Lian <minghuan.Lian@freescale.com>
->> @@ -9447,7 +9447,7 @@ L:	linuxppc-dev@lists.ozlabs.org
->>  L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org
->>  S:	Maintained
->> -F:	drivers/pci/host/*layerscape*
->> +F:	drivers/pci/controller/*layerscape*
->>  
->>  PCI DRIVER FOR IMX6
->>  M:	Richard Zhu <hongxing.zhu@nxp.com>
->> @@ -9456,14 +9456,14 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> -F:	drivers/pci/host/*imx6*
->> +F:	drivers/pci/controller/*imx6*
->>  
->>  PCI DRIVER FOR TI KEYSTONE
->>  M:	Murali Karicheri <m-karicheri2@ti.com>
->>  L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Maintained
->> -F:	drivers/pci/host/*keystone*
->> +F:	drivers/pci/controller/*keystone*
->>  
->>  PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
->>  M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> @@ -9471,7 +9471,7 @@ M:	Jason Cooper <jason@lakedaemon.net>
->>  L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Maintained
->> -F:	drivers/pci/host/*mvebu*
->> +F:	drivers/pci/controller/*mvebu*
->>  
->>  PCI DRIVER FOR AARDVARK (Marvell Armada 3700)
->>  M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> @@ -9479,7 +9479,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/aardvark-pci.txt
->> -F:	drivers/pci/host/pci-aardvark.c
->> +F:	drivers/pci/controller/pci-aardvark.c
->>  
->>  PCI DRIVER FOR NVIDIA TEGRA
->>  M:	Thierry Reding <thierry.reding@gmail.com>
->> @@ -9487,7 +9487,7 @@ L:	linux-tegra@vger.kernel.org
->>  L:	linux-pci@vger.kernel.org
->>  S:	Supported
->>  F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->> -F:	drivers/pci/host/pci-tegra.c
->> +F:	drivers/pci/controller/pci-tegra.c
->>  
->>  PCI DRIVER FOR TI DRA7XX
->>  M:	Kishon Vijay Abraham I <kishon@ti.com>
->> @@ -9495,14 +9495,14 @@ L:	linux-omap@vger.kernel.org
->>  L:	linux-pci@vger.kernel.org
->>  S:	Supported
->>  F:	Documentation/devicetree/bindings/pci/ti-pci.txt
->> -F:	drivers/pci/host/pci-dra7xx.c
->> +F:	drivers/pci/controller/pci-dra7xx.c
->>  
->>  PCI DRIVER FOR RENESAS R-CAR
->>  M:	Simon Horman <horms@verge.net.au>
->>  L:	linux-pci@vger.kernel.org
->>  L:	linux-renesas-soc@vger.kernel.org
->>  S:	Maintained
->> -F:	drivers/pci/host/*rcar*
->> +F:	drivers/pci/controller/*rcar*
->>  
->>  PCI DRIVER FOR SAMSUNG EXYNOS
->>  M:	Jingoo Han <jingoohan1@gmail.com>
->> @@ -9510,7 +9510,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
->>  S:	Maintained
->> -F:	drivers/pci/host/pci-exynos.c
->> +F:	drivers/pci/controller/pci-exynos.c
->>  
->>  PCI DRIVER FOR SYNOPSIS DESIGNWARE
->>  M:	Jingoo Han <jingoohan1@gmail.com>
->> @@ -9518,7 +9518,7 @@ M:	Joao Pinto <Joao.Pinto@synopsys.com>
->>  L:	linux-pci@vger.kernel.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
->> -F:	drivers/pci/host/*designware*
->> +F:	drivers/pci/controller/*designware*
->>  
->>  PCI DRIVER FOR GENERIC OF HOSTS
->>  M:	Will Deacon <will.deacon@arm.com>
->> @@ -9526,20 +9526,20 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> -F:	drivers/pci/host/pci-host-common.c
->> -F:	drivers/pci/host/pci-host-generic.c
->> +F:	drivers/pci/controller/pci-host-common.c
->> +F:	drivers/pci/controller/pci-host-generic.c
->>  
->>  PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
->>  M:	Keith Busch <keith.busch@intel.com>
->>  L:	linux-pci@vger.kernel.org
->>  S:	Supported
->> -F:	drivers/pci/host/vmd.c
->> +F:	drivers/pci/controller/vmd.c
->>  
->>  PCIE DRIVER FOR ST SPEAR13XX
->>  M:	Pratyush Anand <pratyush.anand@gmail.com>
->>  L:	linux-pci@vger.kernel.org
->>  S:	Maintained
->> -F:	drivers/pci/host/*spear*
->> +F:	drivers/pci/controller/*spear*
->>  
->>  PCI MSI DRIVER FOR ALTERA MSI IP
->>  M:	Ley Foon Tan <lftan@altera.com>
->> @@ -9547,7 +9547,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
->>  L:	linux-pci@vger.kernel.org
->>  S:	Supported
->>  F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
->> -F:	drivers/pci/host/pcie-altera-msi.c
->> +F:	drivers/pci/controller/pcie-altera-msi.c
->>  
->>  PCI MSI DRIVER FOR APPLIEDMICRO XGENE
->>  M:	Duc Dang <dhdang@apm.com>
->> @@ -9555,7 +9555,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
->> -F:	drivers/pci/host/pci-xgene-msi.c
->> +F:	drivers/pci/controller/pci-xgene-msi.c
->>  
->>  PCIE DRIVER FOR AXIS ARTPEC
->>  M:	Niklas Cassel <niklas.cassel@axis.com>
->> @@ -9564,7 +9564,7 @@ L:	linux-arm-kernel@axis.com
->>  L:	linux-pci@vger.kernel.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/axis,artpec*
->> -F:	drivers/pci/host/*artpec*
->> +F:	drivers/pci/controller/*artpec*
->>  
->>  PCIE DRIVER FOR HISILICON
->>  M:	Zhou Wang <wangzhou1@hisilicon.com>
->> @@ -9572,7 +9572,7 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>  L:	linux-pci@vger.kernel.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->> -F:	drivers/pci/host/pcie-hisi.c
->> +F:	drivers/pci/controller/pcie-hisi.c
->>  
->>  PCIE DRIVER FOR ROCKCHIP
->>  M:	Shawn Lin <shawn.lin@rock-chips.com>
->> @@ -9581,14 +9581,14 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-rockchip@lists.infradead.org
->>  S:	Maintained
->>  F:	Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> -F:	drivers/pci/host/pcie-rockchip.c
->> +F:	drivers/pci/controller/pcie-rockchip.c
->>  
->>  PCIE DRIVER FOR QUALCOMM MSM
->>  M:     Stanimir Varbanov <svarbanov@mm-sol.com>
->>  L:     linux-pci@vger.kernel.org
->>  L:     linux-arm-msm@vger.kernel.org
->>  S:     Maintained
->> -F:     drivers/pci/host/*qcom*
->> +F:     drivers/pci/controller/*qcom*
->>  
->>  PCIE DRIVER FOR CAVIUM THUNDERX
->>  M:	David Daney <david.daney@cavium.com>
->> @@ -9596,7 +9596,7 @@ L:	linux-pci@vger.kernel.org
->>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->>  S:	Supported
->>  F:	Documentation/devicetree/bindings/pci/pci-thunder-*
->> -F:	drivers/pci/host/pci-thunder-*
->> +F:	drivers/pci/controller/pci-thunder-*
->>  
->>  PCMCIA SUBSYSTEM
->>  P:	Linux PCMCIA Team
->> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->> index 6555eb7..fa56abd 100644
->> --- a/drivers/pci/Kconfig
->> +++ b/drivers/pci/Kconfig
->> @@ -132,4 +132,4 @@ config PCI_HYPERV
->>            PCI devices from a PCI backend to support PCI driver domains.
->>  
->>  source "drivers/pci/hotplug/Kconfig"
->> -source "drivers/pci/host/Kconfig"
->> +source "drivers/pci/controller/Kconfig"
->> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->> index 8db5079..94bf91d 100644
->> --- a/drivers/pci/Makefile
->> +++ b/drivers/pci/Makefile
->> @@ -67,4 +67,4 @@ obj-$(CONFIG_OF) += of.o
->>  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
->>  
->>  # PCI host controller drivers
->> -obj-y += host/
->> +obj-y += controller/
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/controller/Kconfig
->> similarity index 100%
->> rename from drivers/pci/host/Kconfig
->> rename to drivers/pci/controller/Kconfig
->> diff --git a/drivers/pci/host/Makefile b/drivers/pci/controller/Makefile
->> similarity index 100%
->> rename from drivers/pci/host/Makefile
->> rename to drivers/pci/controller/Makefile
->> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-aardvark.c
->> rename to drivers/pci/controller/pci-aardvark.c
->> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-dra7xx.c
->> rename to drivers/pci/controller/pci-dra7xx.c
->> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/controller/pci-exynos.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-exynos.c
->> rename to drivers/pci/controller/pci-exynos.c
->> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-host-common.c
->> rename to drivers/pci/controller/pci-host-common.c
->> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-host-generic.c
->> rename to drivers/pci/controller/pci-host-generic.c
->> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-hyperv.c
->> rename to drivers/pci/controller/pci-hyperv.c
->> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/controller/pci-imx6.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-imx6.c
->> rename to drivers/pci/controller/pci-imx6.c
->> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/controller/pci-keystone-dw.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-keystone-dw.c
->> rename to drivers/pci/controller/pci-keystone-dw.c
->> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/controller/pci-keystone.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-keystone.c
->> rename to drivers/pci/controller/pci-keystone.c
->> diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/controller/pci-keystone.h
->> similarity index 100%
->> rename from drivers/pci/host/pci-keystone.h
->> rename to drivers/pci/controller/pci-keystone.h
->> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/controller/pci-layerscape.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-layerscape.c
->> rename to drivers/pci/controller/pci-layerscape.c
->> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-mvebu.c
->> rename to drivers/pci/controller/pci-mvebu.c
->> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-rcar-gen2.c
->> rename to drivers/pci/controller/pci-rcar-gen2.c
->> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-tegra.c
->> rename to drivers/pci/controller/pci-tegra.c
->> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/controller/pci-thunder-ecam.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-thunder-ecam.c
->> rename to drivers/pci/controller/pci-thunder-ecam.c
->> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/controller/pci-thunder-pem.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-thunder-pem.c
->> rename to drivers/pci/controller/pci-thunder-pem.c
->> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/controller/pci-versatile.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-versatile.c
->> rename to drivers/pci/controller/pci-versatile.c
->> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-xgene-msi.c
->> rename to drivers/pci/controller/pci-xgene-msi.c
->> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
->> similarity index 100%
->> rename from drivers/pci/host/pci-xgene.c
->> rename to drivers/pci/controller/pci-xgene.c
->> diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-altera-msi.c
->> rename to drivers/pci/controller/pcie-altera-msi.c
->> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-altera.c
->> rename to drivers/pci/controller/pcie-altera.c
->> diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/controller/pcie-armada8k.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-armada8k.c
->> rename to drivers/pci/controller/pcie-armada8k.c
->> diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/controller/pcie-artpec6.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-artpec6.c
->> rename to drivers/pci/controller/pcie-artpec6.c
->> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/controller/pcie-designware-plat.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-designware-plat.c
->> rename to drivers/pci/controller/pcie-designware-plat.c
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/controller/pcie-designware.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-designware.c
->> rename to drivers/pci/controller/pcie-designware.c
->> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/controller/pcie-designware.h
->> similarity index 100%
->> rename from drivers/pci/host/pcie-designware.h
->> rename to drivers/pci/controller/pcie-designware.h
->> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/controller/pcie-hisi.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-hisi.c
->> rename to drivers/pci/controller/pcie-hisi.c
->> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-iproc-bcma.c
->> rename to drivers/pci/controller/pcie-iproc-bcma.c
->> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-iproc-msi.c
->> rename to drivers/pci/controller/pcie-iproc-msi.c
->> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-iproc-platform.c
->> rename to drivers/pci/controller/pcie-iproc-platform.c
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-iproc.c
->> rename to drivers/pci/controller/pcie-iproc.c
->> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
->> similarity index 100%
->> rename from drivers/pci/host/pcie-iproc.h
->> rename to drivers/pci/controller/pcie-iproc.h
->> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/controller/pcie-qcom.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-qcom.c
->> rename to drivers/pci/controller/pcie-qcom.c
->> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-rcar.c
->> rename to drivers/pci/controller/pcie-rcar.c
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-rockchip.c
->> rename to drivers/pci/controller/pcie-rockchip.c
->> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/controller/pcie-spear13xx.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-spear13xx.c
->> rename to drivers/pci/controller/pcie-spear13xx.c
->> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-xilinx-nwl.c
->> rename to drivers/pci/controller/pcie-xilinx-nwl.c
->> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
->> similarity index 100%
->> rename from drivers/pci/host/pcie-xilinx.c
->> rename to drivers/pci/controller/pcie-xilinx.c
->> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/controller/vmd.c
->> similarity index 100%
->> rename from drivers/pci/host/vmd.c
->> rename to drivers/pci/controller/vmd.c
->> -- 
->> 1.7.9.5
->>
-> ---end quoted text---
-> 
+Thanks
+Kishon
