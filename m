@@ -1,47 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:44098 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933735AbcLTINn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Dec 2016 03:13:43 -0500
-Date: Tue, 20 Dec 2016 10:09:16 +0200
-From: Mika Westerberg <mika.westerberg@intel.com>
-To: Mario.Limonciello@dell.com
-Cc: luto@kernel.org, amir.jer.levy@intel.com,
-        gregkh@linuxfoundation.org, andreas.noever@gmail.com,
-        bhelgaas@google.com, corbet@lwn.net, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        linux-doc@vger.kernel.org, thunderbolt-linux@intel.com,
-        tomas.winkler@intel.com, xiong.y.zhang@intel.com
-Subject: Re: [PATCH v8 3/8] thunderbolt: Communication with the ICM (firmware)
-Message-ID: <20161220080916.GV1460@lahna.fi.intel.com>
-References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
- <1475073870-2126-4-git-send-email-amir.jer.levy@intel.com>
- <fe0f0a6f-488b-bbc0-8987-a9c47d9ed9b9@kernel.org>
- <20161219122407.GQ1460@lahna.fi.intel.com>
- <05d9c1db67af410981bbb9672071a237@ausx13mpc120.AMER.DELL.COM>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v2 3/3] PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
+Date: Fri, 30 Dec 2016 15:26:14 +0530
+Message-ID: <1483091774-8332-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1483091774-8332-1-git-send-email-kishon@ti.com>
+References: <1483091774-8332-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <05d9c1db67af410981bbb9672071a237@ausx13mpc120.AMER.DELL.COM>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 19, 2016 at 05:21:39PM +0000, Mario.Limonciello@dell.com wrote:
-> Dell - Internal Use - Confidential  
-> 
-> > 
-> > There is small problem, though. On non-Apple systems the host controller only
-> > appears when something is connected to thunderbolt ports. So the char device
-> > would not be there all the time. However, I think we can still notify the
-> > userspace by sending an extra uevent when we detect there is a PCIe device or
-> > inter-domain connection plugged in.
-> > 
-> 
-> Why couldn't you just create it the first time a device is plugged into a Thunderbolt
-> port and leave it until the module is cleaned up?  If the host controller goes to sleep
-> an event could be sent to the daemon to let it know it disappeared and not to expect
-> data on the char device for now, but leave the node around. 
+dra7xx driver had a bug in that if CONFIG_PCI_MSI config is enabled,
+it doesn't support legacy interrupt. Fix it here so that both MSI and
+legacy interrupts can be enabled simultaneously and one of them will
+be used based on the connected device.
 
-We don't do that for USB memory sticks (or any other removable media)
-either - once you disconnect the device the nodes are also removed. I
-suppose same goes with USB network adapters, which is closest to
-thunderbolt networking I can think of.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/pci-dra7xx.c |   31 +++++++++++++------------------
+ 1 file changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
+index 587b18c..5ee14b7 100644
+--- a/drivers/pci/controller/pci-dra7xx.c
++++ b/drivers/pci/controller/pci-dra7xx.c
+@@ -72,6 +72,7 @@ struct dra7xx_pcie {
+ 	int			phy_count;	/* DT phy-names count */
+ 	struct phy		**phy;
+ 	int			link_gen;
++	struct irq_domain	*irq_domain;
+ };
+ 
+ #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+@@ -143,13 +144,8 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+ 			   ~LEG_EP_INTERRUPTS & ~MSI);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dra7xx_pcie_writel(dra7xx,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+-	else
+-		dra7xx_pcie_writel(dra7xx,
+-				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+-				   LEG_EP_INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++			   MSI | LEG_EP_INTERRUPTS);
+ }
+ 
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+@@ -164,8 +160,7 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	dra7xx_pcie_establish_link(dra7xx);
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
++	dw_pcie_msi_init(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx);
+ }
+ 
+@@ -190,6 +185,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+ {
+ 	struct device *dev = pp->dev;
++	struct dra7xx_pcie *dra7xx_pcie = to_dra7xx_pcie(pp);
+ 	struct device_node *node = dev->of_node;
+ 	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+ 
+@@ -198,9 +194,9 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+ 		return -ENODEV;
+ 	}
+ 
+-	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+-					       &intx_domain_ops, pp);
+-	if (!pp->irq_domain) {
++	dra7xx_pcie->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
++							&intx_domain_ops, pp);
++	if (!dra7xx_pcie->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+ 		return -ENODEV;
+ 	}
+@@ -224,7 +220,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	case INTB:
+ 	case INTC:
+ 	case INTD:
+-		generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
++		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
++						    ffs(reg)));
+ 		break;
+ 	}
+ 
+@@ -310,11 +307,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
+ 	}
+ 
+-	if (!IS_ENABLED(CONFIG_PCI_MSI)) {
+-		ret = dra7xx_pcie_init_irq_domain(pp);
+-		if (ret < 0)
+-			return ret;
+-	}
++	ret = dra7xx_pcie_init_irq_domain(pp);
++	if (ret < 0)
++		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+ 	pp->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-- 
+1.7.9.5
