@@ -1,32 +1,37 @@
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Fri, 30 Dec 2016 01:41:36 +0100
-Message-ID: <17449344.N3OXt5xEF0@aspire.rjw.lan>
-In-Reply-To: <7e01be8a-d334-3c58-8919-d79697d9064f@quantumtechnology.info>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <2589829.sCArIQeDWm@aspire.rjw.lan> <7e01be8a-d334-3c58-8919-d79697d9064f@quantumtechnology.info>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v2 0/3] PCI: designware/dra7xx: misc fixes and cleanups
+Date: Fri, 30 Dec 2016 15:26:11 +0530
+Message-ID: <1483091774-8332-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 30, 2016 01:39:46 AM Kilian Singer wrote:
-> I did for all but
-> 
-> 0000:01:00:0
-> 
-> there bash on the mate desktop did not show a new prompt.
-> 
-> I opened a second terminal and for the same one it also did not show a
-> prompt.
-> 
-> But after clicking on lock screen I had same issue.
+This series contains
+        *) a patch to cleanup dra7xx probe
+        *) a patch to force DRA7xx controller to work in GEN1 mode
+        *) a patch to fix dra7xx driver so that even if CONFIG_PCI_MSI
+           is enabled, dra7xx driver can service legacy interrupts
+           (provided the device support only legacy interrupts).
 
-Something fishy is going on here.
+Changes from v1:
+*) rebased to 4.10-rc1 (and [1])
+*) use existing dt property "max-link-speed" instead of creating a new
+   TI specific dt property.
 
-What kernel did you test it with?
+[1] -> https://lkml.org/lkml/2016/12/28/34
 
-Thanks,
-Rafael
+Kishon Vijay Abraham I (3):
+  PCI: dra7xx: simplify the probe code
+  PCI: dra7xx: Add support to force RC to work in GEN1 mode
+  PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
+
+ drivers/pci/controller/pci-dra7xx.c |   81 ++++++++++++++++++++---------------
+ 1 file changed, 47 insertions(+), 34 deletions(-)
+
+-- 
+1.7.9.5
