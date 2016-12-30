@@ -1,20 +1,48 @@
-Return-Path: <SRS0=Lvks=YL=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=Lvks=YL=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 28 Dec 2016 11:17:26 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=tWbE=YN=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Fri, 30 Dec 2016 14:37:17 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Message-ID: <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <1942778.Cx2ycTbRkQ@aspire.rjw.lan>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <2678604.V2vzbbOmVS@aspire.rjw.lan> <3319410.EGZrQ2GPBB@aspire.rjw.lan> <1942778.Cx2ycTbRkQ@aspire.rjw.lan>
 Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20161228091726.GZ1460@lahna.fi.intel.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> I assume Mika is looking at this and will have a better solution soon.
+Yes,
+the pci_port_pm=off
+fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
+Tested on 4.9
 
-I'll take a look at the issue next week. I'm currently on vacation.
+----- Original Message -----
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+Cc: "Lukas Wunner" <lukas@wunner.de>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>
+Sent: Friday, December 30, 2016 2:52:59 AM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+
+On Friday, December 30, 2016 02:50:45 AM Rafael J. Wysocki wrote:
+> On Friday, December 30, 2016 02:40:45 AM Rafael J. Wysocki wrote:
+> > On Friday, December 30, 2016 01:45:53 AM Kilian Singer wrote:
+> > > The touchpad and builtin keyboard of laptop fail.
+> > > But also connected usb keyboard and usb mouse fail.
+> > > 
+> > > In both cases mouse pointer is still moveable.
+> > 
+> > It may just be too late to turn the ports "on" once they have been suspended at
+> > least once on your system.
+> > 
+> > Please check if the appended patch makes any difference.
+> 
+> Actually, please first check if booting with pci_port_pm=off in the kernel
+> command line makes any difference.
+
+The command line option should be pcie_port_pm=off ("e" was missing), sorry.
+
+Thanks,
+Rafael
