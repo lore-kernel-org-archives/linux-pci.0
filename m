@@ -1,56 +1,86 @@
-Return-Path: <SRS0=saDG=X4=nbd.name=nbd@kernel.org>
-Return-Path: <SRS0=saDG=X4=nbd.name=nbd@kernel.org>
-Subject: Re: [PATCH] ath9k: unlock rcu read when returning early
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
- kvalo@codeaurora.org, helgaas@kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, marc.zyngier@arm.com, Janusz.Dziedzic@tieto.com,
- rmanohar@qti.qualcomm.com, ath9k-devel@qca.qualcomm.com,
- linux-wireless@vger.kernel.org, rmanohar@qca.qualcomm.com,
- bharat.kumar.gogada@xilinx.com
-References: <1cFMHb-00BdWd-Ks>
- <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
- <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
- <7b4b7748-06d6-92d4-228c-e7ebf00f8699@mni.thm.de>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <25aebea3-f954-6bef-f17f-162c9c8b6559@nbd.name>
-Date: Tue, 13 Dec 2016 14:52:49 +0100
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, kilian.singer@quantumtechnology.info, linux-pci@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Fri, 30 Dec 2016 15:48:55 +0100
+Message-ID: <1632481.oxtR6eTD5i@aspire.rjw.lan>
+In-Reply-To: <15778800.7CbgT5Og6y@aspire.rjw.lan>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <15778800.7CbgT5Og6y@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <7b4b7748-06d6-92d4-228c-e7ebf00f8699@mni.thm.de>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-12-13 14:41, Tobias Klausmann wrote:
-> On 13.12.2016 11:41, Felix Fietkau wrote:
->> On 2016-12-12 19:50, Tobias Klausmann wrote:
->>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
->>> index 52bfbb988611..857d5ae09a1d 100644
->>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->>> @@ -2787,6 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
->>>   		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
->>>   		if (list_empty(fifo_list)) {
->>>   			ath_txq_unlock(sc, txq);
->>> +			rcu_read_unlock();
->> Technically this is fine as well, but I'd prefer a fix where you replace
->> the 'return' with 'break', thus avoiding the duplication of
->> rcu_read_unlock()
+On Friday, December 30, 2016 01:19:14 AM Rafael J. Wysocki wrote:
+> On Wednesday, December 28, 2016 10:18:16 AM Bjorn Helgaas wrote:
+> > On Wed, Dec 28, 2016 at 12:29:54PM +0100, Lukas Wunner wrote:
+> > > On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
+> > > > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
+> > > > and all the debugging you've done.  Below is a revert of the troublesome
+> > > > commit.  Can you test it and verify that it also fixes the problem?
+> > > > 
+> > > > I assume Mika is looking at this and will have a better solution soon.
+> > > > But if not, I'll queue this up for v4.10.
+> > > 
+> > > @Kilian:  Are you using the proprietary nvidia driver?  If so,
+> > > does the issue go away if you blacklist that driver or use nouveau
+> > > instead?
+> > > 
+> > > 
+> > > With a bit of googling I found dmesg and lspci output for this model:
+> > > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437386
+> > > 
+> > > The keyboard and mouse seem to be PS/2 devices, accessed via I/O ports
+> > > 0x60, 0x64.  I assume they're located behind the LPC bridge?
+> > > 
+> > > The proprietary nvidia driver has a bug, it locks the legacy PCI VGA
+> > > registers with vga_tryget() but never releases that lock.  Intel
+> > > chipsets have a quirk wherein I/O ports are routed to the bus to
+> > > which the legacy PCI VGA registers are locked.  So once vga_tryget()
+> > > is called by the nvidia driver, access to the keyboard and mouse is
+> > > routed to bus 01 (on which the Nvidia card resides) and not to bus 00
+> > > (on which the LPC bridge resides).
+> > 
+> > Interesting.  A spec reference would be a good addition to whatever
+> > fix is proposed.
+> > 
+> > > My theory would be that if you lock the screen, the Nvidia card
+> > > runtime suspends, allowing the root port above it to suspend,
+> > > and then the I/O ports are no longer accessible.
+> > > 
+> > > We have a similar issue on dual GPU MacBook Pros:  Backlight brightness
+> > > is adjusted by writing to I/O ports of a gmux controller situated below
+> > > the LPC bridge.  The nvidia driver locks the legacy VGA registers and
+> > > from that point reads from the I/O ports always return 0xff.  Commit
+> > > 4eebd5a4e726 ("apple-gmux: lock iGP IO to protect from vgaarb changes")
+> > > sought to fix it but caused other breakage which remains unfixed so far:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=105051
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=88861#c11
+> > > 
+> > > I've always wondered if the Intel chipsets would behave more sensibly
+> > > if the LPC bridge had BARs specifying the I/O regions used by devices
+> > > below it.
+> > > 
+> > > Reverting runtime suspend for PCIe ports is not a good solution as it's
+> > > needed for Thunderbolt runtime PM on Macs.
+> > 
+> > The choices are:
+> > 
+> >   1) Fix the regression and preserve runtime PM for PCIe ports
+> >   2) Fix the regression by reverting runtime PM for PCIe ports
+> > 
+> > Obviously we hope for 1).  Preserving runtime PM without fixing the
+> > regression isn't even on the list.  I know this is Linux 101, so I
+> > apologize for restating the obvious.
 > 
-> Actually if you want to avoid it, maybe skipping over the rest is better 
-> (as originally intended):
+> There is a couple of obvious things we can do other than reverting, though.
 > 
-> ...
-> 
-> ath_txq_unlock(sc, txq);
-> 
-> 
-> goto unlock;
-> }
-> ...
-> 
-> unlock:
-> rcu_read_unlock();
-There are already other places that skip to the rcu_read_unlock() part
-by using 'break'. I don't see how adding an unnecessary goto makes
-things any better.
+> Like for example changing the cutoff date we have in there to cover the Kilian's
+> system.
 
-- Felix
+And I hope you realize that this revert isn't even sufficient to fix the Kilian's
+machine entirely (system suspend/resume issues will remain after it).
+
+Thanks,
+Rafael
