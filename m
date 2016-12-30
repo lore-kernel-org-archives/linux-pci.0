@@ -1,44 +1,32 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41171 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756132AbcLUNL3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Dec 2016 08:11:29 -0500
-Subject: Re: [PATCH] pci: add kernel config option for disabling common PCI
- quirks
-To: Christoph Hellwig <hch@infradead.org>
-References: <1482306784-29224-1-git-send-email-john@phrozen.org>
- <20161221122213.GA32563@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-From: John Crispin <john@phrozen.org>
-Message-ID: <8630ec3a-9424-653c-7c7a-d88554011151@phrozen.org>
-Date: Wed, 21 Dec 2016 14:11:25 +0100
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=K4fR=YN=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Fri, 30 Dec 2016 01:41:36 +0100
+Message-ID: <17449344.N3OXt5xEF0@aspire.rjw.lan>
+In-Reply-To: <7e01be8a-d334-3c58-8919-d79697d9064f@quantumtechnology.info>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <2589829.sCArIQeDWm@aspire.rjw.lan> <7e01be8a-d334-3c58-8919-d79697d9064f@quantumtechnology.info>
 MIME-Version: 1.0
-In-Reply-To: <20161221122213.GA32563@infradead.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 21/12/2016 13:22, Christoph Hellwig wrote:
-> On Wed, Dec 21, 2016 at 08:53:04AM +0100, John Crispin wrote:
->> This patch has been lingering inside the OpenWrt for some years. I am not
->> sure if this is the best way to remove the quirks from the build. Let me
->> know if you prefer a different way of solving this.
+On Friday, December 30, 2016 01:39:46 AM Kilian Singer wrote:
+> I did for all but
 > 
-> As a start negative options (_DISABLE_) are very confusing, I would
-> recommend to turn this into a postive option with a default y.
+> 0000:01:00:0
 > 
-> On what grounds did you decide which quirks to keep and which to
-> remove?
+> there bash on the mate desktop did not show a new prompt.
 > 
+> I opened a second terminal and for the same one it also did not show a
+> prompt.
+> 
+> But after clicking on lock screen I had same issue.
 
-Hi Christoph,
+Something fishy is going on here.
 
-I can turn it into an enable patch that is selected by default.
+What kernel did you test it with?
 
-The current patch disables all those quirks that are used for x86/PC
-style machines and hence are not required in the embedded world.
-
-	John
+Thanks,
+Rafael
