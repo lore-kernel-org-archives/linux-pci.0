@@ -1,72 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:35661 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751201AbcLBJd0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2016 04:33:26 -0500
-Date: Fri, 2 Dec 2016 10:33:19 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH pci/next] PCI: rcar: Add gen3 fallback compatibility
- string for pcie-rcar
-Message-ID: <20161202093316.GA7341@verge.net.au>
-References: <1480609693-25746-1-git-send-email-horms+renesas@verge.net.au>
- <CAMuHMdWwuQZq7FzDUtCj5gsdQra5PrSyoUk7-ycBN9pN-RYcrA@mail.gmail.com>
+Return-Path: <SRS0=l610=YN=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=l610=YN=wunner.de=lukas@kernel.org>
+Date: Fri, 30 Dec 2016 01:07:31 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20161230000731.GB18700@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+ <20161228112954.GA17925@wunner.de>
+ <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
+ <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
+ <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
+ <20161229175028.GA18510@wunner.de>
+ <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdWwuQZq7FzDUtCj5gsdQra5PrSyoUk7-ycBN9pN-RYcrA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 02, 2016 at 10:19:21AM +0100, Geert Uytterhoeven wrote:
-> Hi Simon,
+On Fri, Dec 30, 2016 at 12:20:34AM +0100, Kilian Singer wrote:
+> The echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
 > 
-> On Thu, Dec 1, 2016 at 5:28 PM, Simon Horman <horms+renesas@verge.net.au> wrote:
-> > Add fallback compatibility string for the  R-Car Gen 3 family.  This is in
-> > keeping with the both the existing fallback compatibility string for the
-> > R-Car Gen 2 family and the fallback scheme being adopted wherever
-> > appropriate for drivers for Renesas SoCs.
-> >
-> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > ---
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
-> >  drivers/pci/host/pcie-rcar.c                       | 2 ++
-> >  2 files changed, 3 insertions(+)
-> >
-> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > index 6cf99690eef9..eee518db90b9 100644
-> > --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > @@ -7,6 +7,7 @@ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> >             "renesas,pcie-r8a7793" for the R8A7793 SoC;
-> >             "renesas,pcie-r8a7795" for the R8A7795 SoC;
-> >             "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> > +           "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
-> >
-> >             When compatible with the generic version, nodes must list the
-> >             SoC-specific version corresponding to the platform first
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index 62700d1896f4..962aa3942107 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -1077,6 +1077,8 @@ static const struct of_device_id rcar_pcie_of_match[] = {
-> >           .data = rcar_pcie_hw_init_gen2 },
-> >         { .compatible = "renesas,pcie-r8a7791",
-> >           .data = rcar_pcie_hw_init_gen2 },
-> > +       { .compatible = "renesas,pcie-rcar-gen3",
-> > +         .data = rcar_pcie_hw_init_hw_init },
+> did not help.
 > 
-> The family-specific handling should be inserted after the SoC-specific
-> handling.
-> Currently it doesn't matter, as both are handled exactly the same, but
-> it may avoid future mistakes.
+> Also I noticed on each boot directly after initramfs I get
+> mmc0: Unknown contrller version. You may experience problems.
 > 
-> BTW, can you please fix that for the existing entry for Gen2, too?
+> On all versions of the kernel.
 
-Sure, will do.
+Hm, that rings a bell.  The MMC controller is located below
+root port 0000:00:1c.0, which has vendor/device ID 8086:8c10.
+
+We're having trouble with the exact same root port on 2015
+MacBook Pros where it mysteriously prevents them from powering off:
+https://bugzilla.kernel.org/show_bug.cgi?id=103211
+http://www.spinics.net/lists/linux-pci/msg53460.html
+
+Does this help:
+echo on > /sys/bus/pci/devices/0000:00:1c.0/power/control
+
+Thanks,
+
+Lukas
