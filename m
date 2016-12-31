@@ -1,50 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 19 Dec 2016 12:02:02 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>, linux-doc@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Subject: Re: [RFC 1/1] MicroSemi Switchtec management interface driver
-Message-ID: <20161219170201.GA1043@localhost.localdomain>
-References: <1481994562-9283-1-git-send-email-logang@deltatee.com>
- <1481994562-9283-2-git-send-email-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:58162 "EHLO
+        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754540AbcLaQBL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 31 Dec 2016 11:01:11 -0500
+Date: Sat, 31 Dec 2016 17:01:07 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Harry Mallon <hjmallon@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: lspci memory behind bridge reporting
+Message-ID: <mj+md-20161231.155855.4261.nikam@ucw.cz>
+References: <CDB45911-510C-459D-BCDC-17955FCC400D@gmail.com>
+ <20161221201635.GA31167@bhelgaas-glaptop.roam.corp.google.com>
+ <F9DB0FE1-0518-4799-98A9-DA9053A86AEC@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481994562-9283-2-git-send-email-logang@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <F9DB0FE1-0518-4799-98A9-DA9053A86AEC@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 17, 2016 at 10:09:22AM -0700, Logan Gunthorpe wrote:
-> Microsemi's "Switchtec" line of PCI switch devices is already
-> supported by the kernel with standard PCI switch drivers. However, the
-> Switchtec device advertises a special management endpoint which
-> enables some additional functionality. This includes:
-> 
->  * Packet and Byte Counters
->  * Firmware Upgrades
->  * Event and Error logs
->  * Querying port link status
->  * Custom user firmware commands
-> 
-> This patch introduces the switchtec kernel module which provides
-> pci driver that exposes a char device. The char device provides
-> userspace access to this interface through read, write and (optionally)
-> poll calls. Currently no ioctls have been implemented but a couple
-> may be added in a later revision.
-> 
-> A short text file is provided which documents the switchtec driver
-> and outlines the semantics of using the char device.
+Hi!
 
-Some of this would be simplified if you use the managed device API's:
-devm_request_irq, pcim_enable_device, pcim_iomap, etc...
+> I attach a patch with behaviour similar to what you describe. It is based on
+> the current master branch of pciutils (hash
+> 4a190235224ff6dfe44adbb07ac929afea612acd).
+
+I like the idea, but not much the ifdeffery in your implementation.
+I wrote something similar in a little bit more systematic way, please
+see commit 41d883cb97f94e844e96b4631a99c3da557cf162.
+
+> I have not altered anything in the tests folder yet as I am not sure about how to run them.
+
+The tests are not automated yet. Just add a configuration space
+dump together with the expected output.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Power corrupts; Powerpoint corrupts absolutely.  -- Vint Cerf
