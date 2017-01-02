@@ -1,80 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:35907 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932838AbdABVpB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jan 2017 16:45:01 -0500
-Received: by mail-yw0-f194.google.com with SMTP id r204so36680737ywb.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 13:45:01 -0800 (PST)
+Return-Path: <SRS0=9PoU=YQ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=9PoU=YQ=wunner.de=lukas@kernel.org>
+Date: Mon, 2 Jan 2017 12:40:40 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170102114040.GA20127@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+ <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
+ <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
+ <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
+ <20161229175028.GA18510@wunner.de>
+ <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
+ <20161230000731.GB18700@wunner.de>
+ <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1701021626410.28032-100000@netrider.rowland.org>
-References: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
- <Pine.LNX.4.44L0.1701021626410.28032-100000@netrider.rowland.org>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Mon, 2 Jan 2017 14:45:00 -0700
-Message-ID: <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com>
-Subject: Re: Thunderbolt adapter fails to instantiate USB and device
- enumeration if already connected at boot time
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="IJpNTDwzlM2Ie8A6"
+In-Reply-To: <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 2, 2017 at 2:28 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Mon, 2 Jan 2017, Chris Murphy wrote:
->
->> crossposting linux-usb@ and linux-pci@
->>
->> I filed a bug https://bugzilla.kernel.org/show_bug.cgi?id=191681 but
->> was told I need to post to the list first. I'm not actually sure this
->> is a USB bug, as filed in the bug report, because I think this
->> USB-C/Thunderbolt port is really a PCIe port that needs to become a
->> USB port only once the adapter is connected.
->>
->> Anyway, the gist of the problem is that if the USB-C to USB 3 adapter
->> is connected at boot time, the kernel doesn't instantiate a USB port
->> at all. So if for example I have a USB flash drive connected to the
->> adapter with a Linux live OS on it, the firmware sees the stick, finds
->> the bootloader, the bootloader finds and loads the kernel and
->> initramfs - so clearly up to this point it's working properly. But
->> then I end up at a dracut shell because there's not root fs to be
->> found. And there's no rootfs because there's no USB bus at all as far
->> as the kernel is concerned.
->>
->> If the adapter is not connected at boot time, is connected later on,
->> it all works as I'd expect it to work. I can plug it in, unplug it,
->> plug it back in, and it always works fine. So weirdly it's just a "if
->> connected at boot time" something is becoming deeply confused.
->>
->> I've tested 4.10-rc1 from kernel.org; but it's been a problem since
->> kernel 4.7.7 at least. The bug report has lspci, dmidecode, and two
->> dmesg outputs from boots with the adapter connected at boot time, and
->> not at boot time (but connected later). That bug report is 4.10-rc1
->> based with CONFIG_PCIEASPM_DEBUG=y
->> CONFIG_PCI_DEBUG=y but I'm not really seeing much additional
->> information that helps figure out what the source of the problem is.
->
-> Considering that the failed boot log contains no USB messages at all,
-> and no messages referring to PCI bus 0000:37 (the bus associated with
-> the adapter), this certainly looks like a PCI problem.
 
-I see these lines in the problem case, which don't occur in the working case.
+--IJpNTDwzlM2Ie8A6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-[    0.561046] pci_bus 0000:37: busn_res: [bus 37-ff] end is updated to 37
-[    0.561047] pci_bus 0000:37: busn_res: can not insert [bus 37]
-under domain [bus 00-ff] (conflicts with (null) [bus 00-fe])
+On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
+> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
+> if that helps but needs some time again to compile.
+> The debug messages from the first rpm_... to the crash are:
+[...]
+> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
+> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
+> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
+> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
+> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
+> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
+> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
+> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
+> [   26.207691] pcieport 0000:00:01.0: rpm_idle
+> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
+> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
+> SYSTEM IS NOW NOT RESPONSIVE
 
-[    0.579446] pci 0000:37:00.0: can't claim BAR 0 [mem
-0xb0000000-0xb000ffff]: address conflict with PCI Bus 0000:00 [mem
-0x40000000-0xdfffffff window]
+So two seconds before the system became unresponsive, the root port above
+the discrete GPU suspended, suggesting that's the culprit.  Could you test
+either of the attached patches to confirm this theory?  They disable
+runtime PM on this specific root port but allow it on all the others.
 
-[    0.602277] pci 0000:37:00.0: can't derive routing for PCI INT A
-[    0.602280] pci 0000:37:00.0: PCI INT A: not connected
-[    0.612304] pci 0000:37:00.0: xHCI HW not ready after 5 sec (HC
-bug?) status = 0xffffffff
+You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
+Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
+Method).  That's what we did up until v4.7.
 
+However on newer laptops Windows no longer cuts power to the discrete GPU
+by invoking the _DSM, but rather by suspending the root port above the
+GPU.  (More specifically by turning off Power Resources required for D3
+of the root port, those are specified in a _PR3 object.)  We started
+supporting this with v4.8.
 
+If the above theory is correct, we need to involve Optimus experts
+because this is not an issue then with powering down root ports in
+general, but rather specific to this Optimus use case.
 
+Thanks,
 
--- 
-Chris Murphy
+Lukas
+
+--IJpNTDwzlM2Ie8A6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="disable_pm_v4.9.patch"
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..c9dd1e0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2242,6 +2242,10 @@ static bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (pci_bridge_d3_force)
+ 			return true;
+ 
++		if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
++		    bridge->device == 0x0c01)
++			return false;
++
+ 		/*
+ 		 * It should be safe to put PCIe ports from 2015 or newer
+ 		 * to D3.
+
+--IJpNTDwzlM2Ie8A6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="disable_pm_v4.10-rc1.patch"
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a881c0d..2e4b32bd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2240,6 +2240,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (pci_bridge_d3_disable)
+ 			return false;
+ 
++		if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
++		    bridge->device == 0x0c01)
++			return false;
++
+ 		/*
+ 		 * Hotplug ports handled by firmware in System Management Mode
+ 		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
+
+--IJpNTDwzlM2Ie8A6--
