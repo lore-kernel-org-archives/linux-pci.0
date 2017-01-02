@@ -1,75 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 13 Jan 2017 09:15:37 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 36/37] ARM: DRA7: clockdomain: Change the CLKTRCTRL of
- CM_PCIE_CLKSTCTRL to SW_WKUP
-Message-ID: <20170113171537.GZ2630@atomide.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-37-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 2 Jan 2017 15:53:39 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Kilian Singer <kilian.singer@quantumtechnology.info>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170102135339.GD3353@lahna.fi.intel.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
+ <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
+ <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
+ <20161229175028.GA18510@wunner.de>
+ <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
+ <20161230000731.GB18700@wunner.de>
+ <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
+ <20170102114040.GA20127@wunner.de>
+ <20170102121019.GA3353@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1484216786-17292-37-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170102121019.GA3353@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-* Kishon Vijay Abraham I <kishon@ti.com> [170112 02:35]:
-> The PCIe programming sequence in TRM suggests CLKSTCTRL of PCIe should
-> be set to SW_WKUP. There are no issues when CLKSTCTRL is set to HW_AUTO
-> in RC mode. However in EP mode, the host system is not able to access the
-> MEMSPACE and setting the CLKSTCTRL to SW_WKUP fixes it.
-
-I guess ideally in the long run we would set this dynamically based on
-the selected mode, right?
-
-Regards,
-
-Tony
-
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  arch/arm/mach-omap2/clockdomains7xx_data.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Mon, Jan 02, 2017 at 02:10:19PM +0200, Mika Westerberg wrote:
+> I've checked the acpidump of this machine and it does not seem to be a
+> traditional Optimus machine. At least this one is missing the magic _DSM
+> which is used to gather capabilities of the graphics device.
 > 
-> diff --git a/arch/arm/mach-omap2/clockdomains7xx_data.c b/arch/arm/mach-omap2/clockdomains7xx_data.c
-> index 6c67965..67ebff8 100644
-> --- a/arch/arm/mach-omap2/clockdomains7xx_data.c
-> +++ b/arch/arm/mach-omap2/clockdomains7xx_data.c
-> @@ -524,7 +524,7 @@
->  	.dep_bit	  = DRA7XX_PCIE_STATDEP_SHIFT,
->  	.wkdep_srcs	  = pcie_wkup_sleep_deps,
->  	.sleepdep_srcs	  = pcie_wkup_sleep_deps,
-> -	.flags		  = CLKDM_CAN_HWSUP_SWSUP,
-> +	.flags		  = CLKDM_CAN_SWSUP,
->  };
->  
->  static struct clockdomain atl_7xx_clkdm = {
-> -- 
-> 1.7.9.5
+> However, it does have _PR3 and it is attached to the device
+> (_SB.PCI0.PEG) itself, not the root port.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> One thing you could try in addition to Lucas' patches is just to prevent
+> D3cold from the device by doing this:
 > 
+>   # echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Following messages look like the device fails to resume properly from D3cold:
+
+Dec 30 08:45:06 klaptop kernel: [   27.775949] nouveau 0000:01:00.0: rpm_resume
+Dec 30 08:45:06 klaptop kernel: [   27.776316] nouveau 0000:01:00.0: Refused to change power state, currently in D3
+Dec 30 08:45:06 klaptop kernel: [   27.836049] nouveau 0000:01:00.0: Refused to change power state, currently in D3
+Dec 30 08:45:06 klaptop kernel: [   27.836053] nouveau 0000:01:00.0: Refused to change power state, currently in D3
+
+This happens if we read back 0xffffffff from PM register.
+
+Dec 30 08:45:06 klaptop kernel: [   27.836055] nouveau 0000:01:00.0: DRM: resuming kernel object tree...
+Dec 30 08:45:06 klaptop kernel: [   27.836127] nouveau 0000:01:00.0: pci: failed to adjust cap speed
+Dec 30 08:45:06 klaptop kernel: [   27.836131] nouveau 0000:01:00.0: pci: failed to adjust lnkctl speed
+
+Preventing D3cold should at least show some difference on resume path.
