@@ -1,91 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 3 Jan 2017 12:00:21 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        jorn Helgaas <bhelgaas@google.com>, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH] ACPI/PCI: Fix bus range comparation in
- pci_mcfg_lookup
-Message-ID: <20170103120021.GC7145@red-moon>
-References: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f171.google.com ([209.85.161.171]:35486 "EHLO
+        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933522AbdABShU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jan 2017 13:37:20 -0500
+Received: by mail-yw0-f171.google.com with SMTP id v81so170765456ywb.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 10:37:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
-Sender: linux-acpi-owner@vger.kernel.org
+From: Chris Murphy <lists@colorremedies.com>
+Date: Mon, 2 Jan 2017 11:37:19 -0700
+Message-ID: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
+Subject: Thunderbolt adapter fails to instantiate USB and device enumeration
+ if already connected at boot time
+To: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 22, 2016 at 05:07:43PM +0800, Zhou Wang wrote:
-> Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
-> host bridge should be in the coverage of bus range of related PCIe segment.
-> 
-> This patch will support this kind of scenario:
-> 
-> MCFG:
-> 	bus range: 0x00~0xff.
-> 	segment: 0.
-> DSDT:
-> 	host bridge 1:
-> 		bus range: 0x00~0x1f.
-> 		segment: 0.
-> 	host bridge 2:
-> 		bus range: 0x20~0x4f.
-> 		segment: 0.
+crossposting linux-usb@ and linux-pci@
 
-"The configuration data provided by an MCFG region (ie PCI segment and
-bus range) may span multiple host bridges.
+I filed a bug https://bugzilla.kernel.org/show_bug.cgi?id=191681 but
+was told I need to post to the list first. I'm not actually sure this
+is a USB bug, as filed in the bug report, because I think this
+USB-C/Thunderbolt port is really a PCIe port that needs to become a
+USB port only once the adapter is connected.
 
-Current code in pci_mcfg_lookup() carries out an exact match of host
-bridge bus range start value against the MCFG region(s) bus range start
-value which would cause configurations like the following:
+Anyway, the gist of the problem is that if the USB-C to USB 3 adapter
+is connected at boot time, the kernel doesn't instantiate a USB port
+at all. So if for example I have a USB flash drive connected to the
+adapter with a Linux live OS on it, the firmware sees the stick, finds
+the bootloader, the bootloader finds and loads the kernel and
+initramfs - so clearly up to this point it's working properly. But
+then I end up at a dracut shell because there's not root fs to be
+found. And there's no rootfs because there's no USB bus at all as far
+as the kernel is concerned.
 
-MCFG region:
-	bus range: 0x00~0xff.
-	segment: 0.
+If the adapter is not connected at boot time, is connected later on,
+it all works as I'd expect it to work. I can plug it in, unplug it,
+plug it back in, and it always works fine. So weirdly it's just a "if
+connected at boot time" something is becoming deeply confused.
 
-PCI host bridges configuration (segment numbers and bus ranges):
-	host bridge 1:
-		bus range: 0x00~0x1f.
-		segment: 0.
-	host bridge 2:
-		bus range: 0x20~0x4f.
-		segment: 0.
+I've tested 4.10-rc1 from kernel.org; but it's been a problem since
+kernel 4.7.7 at least. The bug report has lspci, dmidecode, and two
+dmesg outputs from boots with the adapter connected at boot time, and
+not at boot time (but connected later). That bug report is 4.10-rc1
+based with CONFIG_PCIEASPM_DEBUG=y
+CONFIG_PCI_DEBUG=y but I'm not really seeing much additional
+information that helps figure out what the source of the problem is.
 
-to fail, in that the bus range start value for host bridge 2 does
-not match the bus range start value of the respective MCFG region.
 
-Relax the bus range check in pci_mcfg_lookup() to cater for
-PCI configurations with multiple host bridges sharing the same
-MCFG region."
+Thanks,
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/acpi/pci_mcfg.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index b5b376e..46a3e32 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->  	struct mcfg_entry *e;
->  
->  	/*
-> -	 * We expect exact match, unless MCFG entry end bus covers more than
-> -	 * specified by caller.
-> +	 * We expect the range in bus_res in the coverage of MCFG bus range.
->  	 */
->  	list_for_each_entry(e, &pci_mcfg_list, list) {
-> -		if (e->segment == seg && e->bus_start == bus_res->start &&
-> +		if (e->segment == seg && e->bus_start <= bus_res->start &&
->  		    e->bus_end >= bus_res->end)
->  			return e->addr;
->  	}
-> -- 
-> 1.9.1
-> 
+-- 
+Chris Murphy
