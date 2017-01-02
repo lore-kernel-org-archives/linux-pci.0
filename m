@@ -1,61 +1,36 @@
-Return-Path: <SRS0=d9Qt=Y7=redhat.com=lyude@kernel.org>
-Return-Path: <SRS0=d9Qt=Y7=redhat.com=lyude@kernel.org>
-Message-ID: <1484676366.3866.1.camel@redhat.com>
+Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 2 Jan 2017 16:48:52 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Kilian Singer <kilian.singer@quantumtechnology.info>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-From: Lyude Paul <lyude@redhat.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner
-	 <lukas@wunner.de>
-Cc: Hans de Goede <hdegoede@redhat.com>, David Airlie <airlied@redhat.com>,
-        Peter Jones <pjones@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Kilian
- Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci
- <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>
-Date: Tue, 17 Jan 2017 13:06:06 -0500
-In-Reply-To: <20170117155551.GL2023@lahna.fi.intel.com>
-References: <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
-	 <20170105150646.GB21446@wunner.de>
-	 <20170105181322.wnvdytpgddcdk3ry@redhat.com>
-	 <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
-	 <1483974686.28993.3.camel@redhat.com>
-	 <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
-	 <1484167244.25614.1.camel@redhat.com> <1484183615.25614.3.camel@redhat.com>
-	 <1484186688.25614.4.camel@redhat.com> <20170112021235.GA24156@wunner.de>
-	 <20170117155551.GL2023@lahna.fi.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Message-ID: <20170102144852.GE3353@lahna.fi.intel.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
+ <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
+ <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
+ <20161229175028.GA18510@wunner.de>
+ <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
+ <20161230000731.GB18700@wunner.de>
+ <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
+ <20170102114040.GA20127@wunner.de>
+ <20170102121019.GA3353@lahna.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170102121019.GA3353@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Did you not get the e-mails I CC'd you in? I did originally send you
-guys the patches, but I ended up finding out that Daniel Vetter had
-already submitted a fix for this:
-
-https://patchwork.freedesktop.org/patch/132478/
-
-On Tue, 2017-01-17 at 17:55 +0200, Mika Westerberg wrote:
-> On Thu, Jan 12, 2017 at 03:12:35AM +0100, Lukas Wunner wrote:
-> > On Wed, Jan 11, 2017 at 09:04:48PM -0500, Lyude Paul wrote:
-> > > Finally got koji to work :). People having the runtime resume
-> > > problem,
-> > > can you give this kernel RPM a try and tell me if the issue still
-> > > persists?
-> > > 
-> > > https://koji.fedoraproject.org/koji/taskinfo?taskID=17250338
-> > 
-> > Kilian uses Debian but has a git repo with Linus' tree.  Could you
-> > post
-> > the relevant patch(es) based on either the tip of Linus' master
-> > branch
-> > or one of his tags (such as v4.9, v4.10-rc3)?  This would also
-> > allow us
-> > to review/comment on the patches.
+On Mon, Jan 02, 2017 at 02:10:19PM +0200, Mika Westerberg wrote:
+> I've checked the acpidump of this machine and it does not seem to be a
+> traditional Optimus machine. At least this one is missing the magic _DSM
+> which is used to gather capabilities of the graphics device.
 > 
-> Hi Lyude,
-> 
-> Just a reminder. Can you post the patch(es) here so that people can
-> try
-> them out and comment?
+> However, it does have _PR3 and it is attached to the device
+> (_SB.PCI0.PEG) itself, not the root port.
+
+Nah, actually PEG is the root port. So it certainly looks like
+a traditional Optimus machine.
