@@ -1,193 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 24 Jan 2017 12:37:12 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Hanjun Guo <hanjun.guo@linaro.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-Message-ID: <20170124123711.GA11996@red-moon>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Tue, 3 Jan 2017 18:10:17 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <833636486.15.1483463417701.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20170102121019.GA3353@lahna.fi.intel.com>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info> <20161230000731.GB18700@wunner.de> <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info> <20170102114040.GA20127@wunner.de> <20170102121019.GA3353@lahna.fi.intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-[+hanjun, tomasz, sinan]
+This makes the bash where executed locked but system stays responsive.
+Lockscreen still leads to system becoming unresponsive.
 
-It is quite a key patchset, I would be glad if they can test on their
-respective platforms with IORT.
+----- Original Message -----
+From: "Mika Westerberg" <mika.westerberg@linux.intel.com>
+To: "Lukas Wunner" <lukas@wunner.de>
+Cc: "Kilian Singer" <kilian.singer@quantumtechnology.info>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Monday, January 2, 2017 1:10:19 PM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-On Mon, Jan 23, 2017 at 09:48:10PM +0530, Sricharan R wrote:
-> This is an equivalent to the DT's handling of the iommu master's probe
-> with deferred probing when the corrsponding iommu is not probed yet.
-> The lack of a registered IOMMU can be caused by the lack of a driver for
-> the IOMMU, the IOMMU device probe not having been performed yet, having
-> been deferred, or having failed.
+On Mon, Jan 02, 2017 at 12:40:40PM +0100, Lukas Wunner wrote:
+> On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
+> > I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
+> > if that helps but needs some time again to compile.
+> > The debug messages from the first rpm_... to the crash are:
+> [...]
+> > [   24.831417] nouveau 0000:01:00.0: rpm_suspend
+> > [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
+> > [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
+> > [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
+> > [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
+> > [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
+> > [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
+> > [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
+> > [   26.207691] pcieport 0000:00:01.0: rpm_idle
+> > [   26.207693] pcieport 0000:00:01.0: rpm_suspend
+> > [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
+> > SYSTEM IS NOW NOT RESPONSIVE
 > 
-> The first case occurs when the firmware describes the bus master and
-> IOMMU topology correctly but no device driver exists for the IOMMU yet
-> or the device driver has not been compiled in. Return NULL, the caller
-> will configure the device without an IOMMU.
+> So two seconds before the system became unresponsive, the root port above
+> the discrete GPU suspended, suggesting that's the culprit.  Could you test
+> either of the attached patches to confirm this theory?  They disable
+> runtime PM on this specific root port but allow it on all the others.
 > 
-> The second and third cases are handled by deferring the probe of the bus
-> master device which will eventually get reprobed after the IOMMU.
+> You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
+> Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
+> Method).  That's what we did up until v4.7.
 > 
-> The last case is currently handled by deferring the probe of the bus
-> master device as well. A mechanism to either configure the bus master
-> device without an IOMMU or to fail the bus master device probe depending
-> on whether the IOMMU is optional or mandatory would be a good
-> enhancement.
+> However on newer laptops Windows no longer cuts power to the discrete GPU
+> by invoking the _DSM, but rather by suspending the root port above the
+> GPU.  (More specifically by turning off Power Resources required for D3
+> of the root port, those are specified in a _PR3 object.)  We started
+> supporting this with v4.8.
 > 
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> ---
->  drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
->  drivers/acpi/scan.c        |  7 +++++--
->  drivers/base/dma-mapping.c |  2 +-
->  include/acpi/acpi_bus.h    |  2 +-
->  include/linux/acpi.h       |  7 +++++--
->  5 files changed, 36 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index bf0ed09..d01bae8 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->  			return NULL;
->  
->  		ops = iommu_get_instance(iort_fwnode);
-> +		/*
-> +		 * If the ops look-up fails, this means that either
-> +		 * the SMMU drivers have not been probed yet or that
-> +		 * the SMMU drivers are not built in the kernel;
-> +		 * Depending on whether the SMMU drivers are built-in
-> +		 * in the kernel or not, defer the IOMMU configuration
-> +		 * or just abort it.
-> +		 */
->  		if (!ops)
-> -			return NULL;
-> +			return iort_iommu_driver_enabled(node->type) ?
-> +			       ERR_PTR(-EPROBE_DEFER) : NULL;
->  
->  		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
->  	}
-> @@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
->  
->  		while (parent) {
->  			ops = iort_iommu_xlate(dev, parent, streamid);
-> +			if (IS_ERR_OR_NULL(ops))
-> +				return ops;
->  
->  			parent = iort_node_get_id(node, &streamid,
->  						  IORT_IOMMU_TYPE, i++);
->  		}
->  	}
->  
-> +	/*
-> +	 * If we have reason to believe the IOMMU driver missed the initial
-> +	 * add_device callback for dev, replay it to get things in order.
-> +	 */
-> +	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
-> +	    dev->bus && !dev->iommu_group) {
-> +		int err = ops->add_device(dev);
-> +
-> +		if (err)
-> +			ops = ERR_PTR(err);
-> +	}
+> If the above theory is correct, we need to involve Optimus experts
+> because this is not an issue then with powering down root ports in
+> general, but rather specific to this Optimus use case.
 
-I think there is nothing ACPI specific in this add_device() replay
-path, so there is room for further DT/ACPI consolidation here.
+[Back from vacation now]
 
-Without any further ado:
+I've checked the acpidump of this machine and it does not seem to be a
+traditional Optimus machine. At least this one is missing the magic _DSM
+which is used to gather capabilities of the graphics device.
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+However, it does have _PR3 and it is attached to the device
+(_SB.PCI0.PEG) itself, not the root port.
 
-> +
->  	return ops;
->  }
->  
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 1926918..823b005 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1373,20 +1373,23 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->   * @dev: The pointer to the device
->   * @attr: device dma attributes
->   */
-> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->  {
->  	const struct iommu_ops *iommu;
->  
->  	iort_set_dma_mask(dev);
->  
->  	iommu = iort_iommu_configure(dev);
-> -
-> +	if (IS_ERR(iommu))
-> +		return PTR_ERR(iommu);
->  	/*
->  	 * Assume dma valid range starts at 0 and covers the whole
->  	 * coherent_dma_mask.
->  	 */
->  	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
->  			   attr == DEV_DMA_COHERENT);
-> +
-> +	return 0;
->  }
->  EXPORT_SYMBOL_GPL(acpi_dma_configure);
->  
-> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-> index 82bd45c..755a2b5 100644
-> --- a/drivers/base/dma-mapping.c
-> +++ b/drivers/base/dma-mapping.c
-> @@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
->  	} else if (has_acpi_companion(dma_dev)) {
->  		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
->  		if (attr != DEV_DMA_NOT_SUPPORTED)
-> -			acpi_dma_configure(dev, attr);
-> +			ret = acpi_dma_configure(dev, attr);
->  	}
->  
->  	if (bridge)
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 4242c31..9aa762fe 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -573,7 +573,7 @@ struct acpi_pci_root {
->  
->  bool acpi_dma_supported(struct acpi_device *adev);
->  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
->  void acpi_dma_deconfigure(struct device *dev);
->  
->  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 5b36974..8b958b6 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -764,8 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  	return DEV_DMA_NOT_SUPPORTED;
->  }
->  
-> -static inline void acpi_dma_configure(struct device *dev,
-> -				      enum dev_dma_attr attr) { }
-> +static inline int acpi_dma_configure(struct device *dev,
-> +				     enum dev_dma_attr attr)
-> +{
-> +	return 0;
-> +}
->  
->  static inline void acpi_dma_deconfigure(struct device *dev) { }
->  
-> -- 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-> 
+One thing you could try in addition to Lucas' patches is just to prevent
+D3cold from the device by doing this:
+
+  # echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed
