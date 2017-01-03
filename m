@@ -1,290 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45646 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750969AbdAMRN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jan 2017 12:13:28 -0500
-Date: Fri, 13 Jan 2017 11:13:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab@s-opensource.com>,
-        netdev@vger.kernel.org, linux-media@vger.kernel.org,
-        Tom Lendacky <thomas.lendacky@amd.com>
-Subject: Re: kill off pci_enable_msi_{exact,range}
-Message-ID: <20170113171321.GA22776@bhelgaas-glaptop.roam.corp.google.com>
-References: <1483994260-19797-1-git-send-email-hch@lst.de>
- <20170112212900.GE8312@bhelgaas-glaptop.roam.corp.google.com>
- <20170113075503.GA26014@lst.de>
- <20170113080553.GA26280@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170113080553.GA26280@lst.de>
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:35436 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934536AbdACGek (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 01:34:40 -0500
+Received: by mail-pg0-f44.google.com with SMTP id i5so146617018pgh.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 22:34:39 -0800 (PST)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Andreas Ziegler <andreas.ziegler@fau.de>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        David Daney <david.daney@cavium.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        Ram Amrani <Ram.Amrani@cavium.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Wang Sheng-Hui <shhuiw@foxmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>,
+        Brian Norris <briannorris@google.com>
+Subject: [PATCH 5/6] PCI/ASPM: Actually configure the L1 substate settings to the device
+Date: Mon,  2 Jan 2017 22:34:14 -0800
+Message-Id: <1483425255-101923-6-git-send-email-rajatja@google.com>
+In-Reply-To: <1483425255-101923-1-git-send-email-rajatja@google.com>
+References: <1483425255-101923-1-git-send-email-rajatja@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 13, 2017 at 09:05:53AM +0100, Christoph Hellwig wrote:
-> On Fri, Jan 13, 2017 at 08:55:03AM +0100, Christoph Hellwig wrote:
-> > On Thu, Jan 12, 2017 at 03:29:00PM -0600, Bjorn Helgaas wrote:
-> > > Applied all three (with Tom's ack on the amd-xgbe patch) to pci/msi for
-> > > v4.11, thanks!
-> > 
-> > Tom had just send me an event better version of the xgbe patch.  Tom,
-> > maybe you can resend that relative to the PCI tree [1], so that we don't
-> > lose it for next merge window?
-> 
-> Actually - Bjorn, your msi branch contains an empty commit from this
-> thread:
-> 
-> 	https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=7a8191de43faa9869b421a1b06075d8126ce7c0b
+Add code to actually configure the L1 substate settigns on the
+upstream and downstream device, while taking care of the rules
+dictated by the PCIe spec.
 
-Yep, I botched that.  Thought I'd fixed it, but guess I got distracted.
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ drivers/pci/pcie/aspm.c | 106 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 104 insertions(+), 2 deletions(-)
 
-> Maybe we should rebase it after all to avoid that?  In that case please
-> pick up the xgbe patch from Tom below:
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a70afdf..6735f38 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -588,6 +588,92 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	}
+ }
+ 
++static inline void pci_clear_and_set_dword(struct pci_dev *pdev, int pos,
++					   u32 clear, u32 set)
++{
++	u32 val;
++
++	pci_read_config_dword(pdev, pos, &val);
++	val &= ~clear;
++	val |= set;
++	pci_write_config_dword(pdev, pos, val);
++}
++
++/* Configure the ASPM L1 substates */
++static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state)
++{
++	u32 val, enable_req;
++	struct pci_dev *child = link->downstream, *parent = link->pdev;
++	u32 up_cap_ptr = link->l1ss.up_cap_ptr;
++	u32 dw_cap_ptr = link->l1ss.dw_cap_ptr;
++
++	enable_req = (link->aspm_enabled ^ state) & state;
++
++	/*
++	 * Here are the rules specified in the PCIe spec for enabling L1SS:
++	 * - When enabling L1.x, enable bit at parent first, then at child
++	 * - When disabling L1.x, disable bit at child first, then at parent
++	 * - When enabling ASPM L1.x, need to disable L1
++	 *   (at child followed by parent).
++	 * - The ASPM/PCIPM L1.2 must be disabled while programming timin
++	 *   parameters
++	 *
++	 * To keep it simple, disable all L1SS bits first, and later enable
++	 * what is needed.
++	 */
++
++	/* Disable all L1 substates */
++	pci_clear_and_set_dword(child, dw_cap_ptr + PCI_L1SS_CTL1,
++				PCI_L1SS_CTL1_L1SS_MASK, 0);
++	pci_clear_and_set_dword(parent, up_cap_ptr + PCI_L1SS_CTL1,
++				PCI_L1SS_CTL1_L1SS_MASK, 0);
++	/*
++	 * If needed, disable L1, and it gets enabled later
++	 * in pcie_config_aspm_link().
++	 */
++	if (enable_req & (ASPM_STATE_L1_1 | ASPM_STATE_L1_2)) {
++		pcie_capability_clear_and_set_word(child, PCI_EXP_LNKCTL,
++						   PCI_EXP_LNKCTL_ASPM_L1, 0);
++		pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
++						   PCI_EXP_LNKCTL_ASPM_L1, 0);
++	}
++
++	if (enable_req & ASPM_STATE_L1_2_MASK) {
++
++		/* Program T_pwr_on in both ports */
++		pci_write_config_dword(parent, up_cap_ptr + PCI_L1SS_CTL2,
++				       link->l1ss.ctl2);
++		pci_write_config_dword(child, dw_cap_ptr + PCI_L1SS_CTL2,
++				       link->l1ss.ctl2);
++
++		/* Program T_cmn_mode in parent */
++		pci_clear_and_set_dword(parent, up_cap_ptr + PCI_L1SS_CTL1,
++					0xFF00, link->l1ss.ctl1);
++
++		/* Program LTR L1.2 threshold in both ports */
++		pci_clear_and_set_dword(parent,	dw_cap_ptr + PCI_L1SS_CTL1,
++					0xE3FF0000, link->l1ss.ctl1);
++		pci_clear_and_set_dword(child, dw_cap_ptr + PCI_L1SS_CTL1,
++					0xE3FF0000, link->l1ss.ctl1);
++	}
++
++	val = 0;
++	if (state & ASPM_STATE_L1_1)
++		val |= PCI_L1SS_CTL1_ASPM_L1_1;
++	if (state & ASPM_STATE_L1_2)
++		val |= PCI_L1SS_CTL1_ASPM_L1_2;
++	if (state & ASPM_STATE_L1_1_PCIPM)
++		val |= PCI_L1SS_CTL1_PCIPM_L1_1;
++	if (state & ASPM_STATE_L1_2_PCIPM)
++		val |= PCI_L1SS_CTL1_PCIPM_L1_2;
++
++	/* Enable what we need to enable */
++	pci_clear_and_set_dword(parent, up_cap_ptr + PCI_L1SS_CTL1,
++				PCI_L1SS_CAP_L1_PM_SS, val);
++	pci_clear_and_set_dword(child, dw_cap_ptr + PCI_L1SS_CTL1,
++				PCI_L1SS_CAP_L1_PM_SS, val);
++}
++
+ static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
+ {
+ 	pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
+@@ -597,11 +683,23 @@ static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
+ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ {
+ 	u32 upstream = 0, dwstream = 0;
+-	struct pci_dev *child, *parent = link->pdev;
++	struct pci_dev *child = link->downstream, *parent = link->pdev;
+ 	struct pci_bus *linkbus = parent->subordinate;
+ 
+-	/* Nothing to do if the link is already in the requested state */
++	/* Enable only the states that were not explicitly disabled */
+ 	state &= (link->aspm_capable & ~link->aspm_disable);
++
++	/* Can't enable any substates if L1 is not enabled */
++	if (!(state & ASPM_STATE_L1))
++		state &= ~ASPM_STATE_L1SS;
++
++	/* Spec says both ports must be in D0 before enabling PCI PM substates*/
++	if (parent->current_state != PCI_D0 || child->current_state != PCI_D0) {
++		state &= ~ASPM_STATE_L1_SS_PCIPM;
++		state |= (link->aspm_enabled & ASPM_STATE_L1_SS_PCIPM);
++	}
++
++	/* Nothing to do if the link is already in the requested state */
+ 	if (link->aspm_enabled == state)
+ 		return;
+ 	/* Convert ASPM state to upstream/downstream ASPM register state */
+@@ -613,6 +711,10 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 		upstream |= PCI_EXP_LNKCTL_ASPM_L1;
+ 		dwstream |= PCI_EXP_LNKCTL_ASPM_L1;
+ 	}
++
++	if (link->aspm_capable & ASPM_STATE_L1SS)
++		pcie_config_aspm_l1ss(link, state);
++
+ 	/*
+ 	 * Spec 2.0 suggests all functions should be configured the
+ 	 * same setting for ASPM. Enabling ASPM L1 should be done in
+-- 
+2.8.0.rc3.226.g39d4020
 
-I dropped the empty commit and replaced the xgbe patch with the one below.
-Can you take a look at [1] and make sure it's what you expected?
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/msi
-
-Thanks!
-
-> ---
-> From: Tom Lendacky <thomas.lendacky@amd.com>
-> Subject: [PATCH] amd-xgbe: Update PCI support to use new IRQ functions
-> 
-> Some of the PCI MSI/MSI-X functions have been deprecated and it is
-> recommended to use the new pci_alloc_irq_vectors() function. Convert
-> the code over to use the new function. Also, modify the way in which
-> the IRQs are requested - try for multiple MSI-X/MSI first, then a
-> single MSI/legacy interrupt.
-> 
-> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/net/ethernet/amd/xgbe/xgbe-pci.c |  128 +++++++++---------------------
->  drivers/net/ethernet/amd/xgbe/xgbe.h     |    8 +-
->  2 files changed, 41 insertions(+), 95 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-> index e76b7f6..e436902 100644
-> --- a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-> +++ b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-> @@ -122,104 +122,40 @@
->  #include "xgbe.h"
->  #include "xgbe-common.h"
->  
-> -static int xgbe_config_msi(struct xgbe_prv_data *pdata)
-> +static int xgbe_config_multi_msi(struct xgbe_prv_data *pdata)
->  {
-> -	unsigned int msi_count;
-> +	unsigned int vector_count;
->  	unsigned int i, j;
->  	int ret;
->  
-> -	msi_count = XGBE_MSIX_BASE_COUNT;
-> -	msi_count += max(pdata->rx_ring_count,
-> -			 pdata->tx_ring_count);
-> -	msi_count = roundup_pow_of_two(msi_count);
-> +	vector_count = XGBE_MSI_BASE_COUNT;
-> +	vector_count += max(pdata->rx_ring_count,
-> +			    pdata->tx_ring_count);
->  
-> -	ret = pci_enable_msi_exact(pdata->pcidev, msi_count);
-> +	ret = pci_alloc_irq_vectors(pdata->pcidev, XGBE_MSI_MIN_COUNT,
-> +				    vector_count, PCI_IRQ_MSI | PCI_IRQ_MSIX);
->  	if (ret < 0) {
-> -		dev_info(pdata->dev, "MSI request for %u interrupts failed\n",
-> -			 msi_count);
-> -
-> -		ret = pci_enable_msi(pdata->pcidev);
-> -		if (ret < 0) {
-> -			dev_info(pdata->dev, "MSI enablement failed\n");
-> -			return ret;
-> -		}
-> -
-> -		msi_count = 1;
-> -	}
-> -
-> -	pdata->irq_count = msi_count;
-> -
-> -	pdata->dev_irq = pdata->pcidev->irq;
-> -
-> -	if (msi_count > 1) {
-> -		pdata->ecc_irq = pdata->pcidev->irq + 1;
-> -		pdata->i2c_irq = pdata->pcidev->irq + 2;
-> -		pdata->an_irq = pdata->pcidev->irq + 3;
-> -
-> -		for (i = XGBE_MSIX_BASE_COUNT, j = 0;
-> -		     (i < msi_count) && (j < XGBE_MAX_DMA_CHANNELS);
-> -		     i++, j++)
-> -			pdata->channel_irq[j] = pdata->pcidev->irq + i;
-> -		pdata->channel_irq_count = j;
-> -
-> -		pdata->per_channel_irq = 1;
-> -		pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
-> -	} else {
-> -		pdata->ecc_irq = pdata->pcidev->irq;
-> -		pdata->i2c_irq = pdata->pcidev->irq;
-> -		pdata->an_irq = pdata->pcidev->irq;
-> -	}
-> -
-> -	if (netif_msg_probe(pdata))
-> -		dev_dbg(pdata->dev, "MSI interrupts enabled\n");
-> -
-> -	return 0;
-> -}
-> -
-> -static int xgbe_config_msix(struct xgbe_prv_data *pdata)
-> -{
-> -	unsigned int msix_count;
-> -	unsigned int i, j;
-> -	int ret;
-> -
-> -	msix_count = XGBE_MSIX_BASE_COUNT;
-> -	msix_count += max(pdata->rx_ring_count,
-> -			  pdata->tx_ring_count);
-> -
-> -	pdata->msix_entries = devm_kcalloc(pdata->dev, msix_count,
-> -					   sizeof(struct msix_entry),
-> -					   GFP_KERNEL);
-> -	if (!pdata->msix_entries)
-> -		return -ENOMEM;
-> -
-> -	for (i = 0; i < msix_count; i++)
-> -		pdata->msix_entries[i].entry = i;
-> -
-> -	ret = pci_enable_msix_range(pdata->pcidev, pdata->msix_entries,
-> -				    XGBE_MSIX_MIN_COUNT, msix_count);
-> -	if (ret < 0) {
-> -		dev_info(pdata->dev, "MSI-X enablement failed\n");
-> -		devm_kfree(pdata->dev, pdata->msix_entries);
-> -		pdata->msix_entries = NULL;
-> +		dev_info(pdata->dev, "multi MSI/MSI-X enablement failed\n");
->  		return ret;
->  	}
->  
->  	pdata->irq_count = ret;
->  
-> -	pdata->dev_irq = pdata->msix_entries[0].vector;
-> -	pdata->ecc_irq = pdata->msix_entries[1].vector;
-> -	pdata->i2c_irq = pdata->msix_entries[2].vector;
-> -	pdata->an_irq = pdata->msix_entries[3].vector;
-> +	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
-> +	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
-> +	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
-> +	pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
->  
-> -	for (i = XGBE_MSIX_BASE_COUNT, j = 0; i < ret; i++, j++)
-> -		pdata->channel_irq[j] = pdata->msix_entries[i].vector;
-> +	for (i = XGBE_MSI_BASE_COUNT, j = 0; i < ret; i++, j++)
-> +		pdata->channel_irq[j] = pci_irq_vector(pdata->pcidev, i);
->  	pdata->channel_irq_count = j;
->  
->  	pdata->per_channel_irq = 1;
->  	pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
->  
->  	if (netif_msg_probe(pdata))
-> -		dev_dbg(pdata->dev, "MSI-X interrupts enabled\n");
-> +		dev_dbg(pdata->dev, "multi %s interrupts enabled\n",
-> +			pdata->pcidev->msix_enabled ? "MSI-X" : "MSI");
->  
->  	return 0;
->  }
-> @@ -228,21 +164,28 @@ static int xgbe_config_irqs(struct xgbe_prv_data *pdata)
->  {
->  	int ret;
->  
-> -	ret = xgbe_config_msix(pdata);
-> +	ret = xgbe_config_multi_msi(pdata);
->  	if (!ret)
->  		goto out;
->  
-> -	ret = xgbe_config_msi(pdata);
-> -	if (!ret)
-> -		goto out;
-> +	ret = pci_alloc_irq_vectors(pdata->pcidev, 1, 1,
-> +				    PCI_IRQ_LEGACY | PCI_IRQ_MSI);
-> +	if (ret < 0) {
-> +		dev_info(pdata->dev, "single IRQ enablement failed\n");
-> +		return ret;
-> +	}
->  
->  	pdata->irq_count = 1;
-> -	pdata->irq_shared = 1;
-> +	pdata->channel_irq_count = 1;
-> +
-> +	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
-> +	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 0);
-> +	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 0);
-> +	pdata->an_irq = pci_irq_vector(pdata->pcidev, 0);
->  
-> -	pdata->dev_irq = pdata->pcidev->irq;
-> -	pdata->ecc_irq = pdata->pcidev->irq;
-> -	pdata->i2c_irq = pdata->pcidev->irq;
-> -	pdata->an_irq = pdata->pcidev->irq;
-> +	if (netif_msg_probe(pdata))
-> +		dev_dbg(pdata->dev, "single %s interrupt enabled\n",
-> +			pdata->pcidev->msi_enabled ?  "MSI" : "legacy");
->  
->  out:
->  	if (netif_msg_probe(pdata)) {
-> @@ -412,12 +355,15 @@ static int xgbe_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	/* Configure the netdev resource */
->  	ret = xgbe_config_netdev(pdata);
->  	if (ret)
-> -		goto err_pci_enable;
-> +		goto err_irq_vectors;
->  
->  	netdev_notice(pdata->netdev, "net device enabled\n");
->  
->  	return 0;
->  
-> +err_irq_vectors:
-> +	pci_free_irq_vectors(pdata->pcidev);
-> +
->  err_pci_enable:
->  	xgbe_free_pdata(pdata);
->  
-> @@ -433,6 +379,8 @@ static void xgbe_pci_remove(struct pci_dev *pdev)
->  
->  	xgbe_deconfig_netdev(pdata);
->  
-> +	pci_free_irq_vectors(pdata->pcidev);
-> +
->  	xgbe_free_pdata(pdata);
->  }
->  
-> diff --git a/drivers/net/ethernet/amd/xgbe/xgbe.h b/drivers/net/ethernet/amd/xgbe/xgbe.h
-> index f52a9bd..99f1c87 100644
-> --- a/drivers/net/ethernet/amd/xgbe/xgbe.h
-> +++ b/drivers/net/ethernet/amd/xgbe/xgbe.h
-> @@ -211,9 +211,9 @@
->  #define XGBE_MAC_PROP_OFFSET	0x1d000
->  #define XGBE_I2C_CTRL_OFFSET	0x1e000
->  
-> -/* PCI MSIx support */
-> -#define XGBE_MSIX_BASE_COUNT	4
-> -#define XGBE_MSIX_MIN_COUNT	(XGBE_MSIX_BASE_COUNT + 1)
-> +/* PCI MSI/MSIx support */
-> +#define XGBE_MSI_BASE_COUNT	4
-> +#define XGBE_MSI_MIN_COUNT	(XGBE_MSI_BASE_COUNT + 1)
->  
->  /* PCI clock frequencies */
->  #define XGBE_V2_DMA_CLOCK_FREQ	500000000	/* 500 MHz */
-> @@ -980,14 +980,12 @@ struct xgbe_prv_data {
->  	unsigned int desc_ded_count;
->  	unsigned int desc_sec_count;
->  
-> -	struct msix_entry *msix_entries;
->  	int dev_irq;
->  	int ecc_irq;
->  	int i2c_irq;
->  	int channel_irq[XGBE_MAX_DMA_CHANNELS];
->  
->  	unsigned int per_channel_irq;
-> -	unsigned int irq_shared;
->  	unsigned int irq_count;
->  	unsigned int channel_irq_count;
->  	unsigned int channel_irq_mode;
-> 
