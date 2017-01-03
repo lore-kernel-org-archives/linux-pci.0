@@ -1,98 +1,185 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Jan 2017 11:46:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
+Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Wed, 04 Jan 2017 00:13:18 +0100
+Message-ID: <16155135.jUckSz7QPL@aspire.rjw.lan>
+In-Reply-To: <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <3913750.OA6IItgEjC@aspire.rjw.lan> <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170117152548.GB27312@n2100.armlinux.org.uk>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
- Andrew Lunn <andrew@lunn.ch>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 03:25:49PM +0000, Russell King - ARM Linux wrote:
-> On Tue, Jan 17, 2017 at 09:14:44AM -0600, Bjorn Helgaas wrote:
-> > On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-K=F6nig wrote:
-> > > Hello,
-> > > =
+On Tuesday, January 03, 2017 04:25:09 PM Bjorn Helgaas wrote:
+> On Tue, Jan 03, 2017 at 10:38:24PM +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
+> > > On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
+> > > > On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
+> > > > > [cc += Dave Airlie:
+> > > > > 
+> > > > > Dave, we're about to lose support for newer Optimus laptops which use
+> > > > > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+> > > > > a commit on his for-linus branch to remove runtime PM for PCIe ports.
+> > > > > This fixes a regression on Kilian Singer's laptop on which locking the
+> > > > > screen breaks USB and PS/2 input devices:  Mouse movements are still
+> > > > > visible, but button or key presses no longer have any effect.  The GPU
+> > > > > is powered down upon locking the screen and the current theory is that
+> > > > > this causes the issues.]
+> > > > 
+> > > > (+cc Alex: this might affect amdgpu/radeon too.]
+> > > > 
+> > > > Bjorn, please reconsider the rpm patch. Reverting support would
+> > > > introduce other regressions (see issues below) and make future
+> > > > Thunderbolt work harder (according to Lukas). If Kilian's laptop has
+> > > > issues, what about a "temporary" quirk?
+> > > 
+> > > As I mentioned at the beginning, the outcome I'm hoping for is a patch
+> > > that fixes Kilian's laptop while preserving the runtime PM support.
+> > > 
+> > > As I also mentioned at the beginning, preserving the runtime PM
+> > > support at the expense of breaking Kilian's laptop is not one of the
+> > > options.
+> > 
+> > But the revert doesn't really help.
+> > 
+> > It doesn't fix system suspend/resume on that laptop, which also breaks when
+> > PCIe ports PM is enabled on it.
+> > 
+> > If you really want to use a sledgehammer approach here (which I don't recommend,
+> > but that's your call), you can change the initial value of pci_bridge_d3_disable to
+> > "true" (and update the pcie_ports_pm= command line to take "on" in case
+> > someone wants to enable the feature).  That at least will take care of the
+> > regression entirely and not just partly.
+> 
+> What the heck is the problem here?  I'm not trying to be difficult,
+> but I didn't write this code and I'm not really interested in figuring
+> out how to fix it, so my only real option is to solicit fixes and, if
+> none appear, revert changes that break things.
+> 
+> As I've said more than once, I hope and expect that there is a better
+> solution than reverting the patch.  But *I* am not going to write it.
+> As soon as somebody proposes a better patch, I'll use it instead of
+> the revert.
+> 
+> If you want to fix the regression by changing the
+> pci_bridge_d3_disable value, all you have to do is post a patch doing
+> that.
 
-> > > on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
-> > > ath10k driver fails to bind to the matching hardware if CONFIG_PCIEAS=
-PM
-> > > is enabled:
-> > > =
+OK, please find appended.
 
-> > > # dmesg | grep ath
-> > > [    7.207770] ath10k_pci 0000:02:00.0: Refused to change power state=
-, currently in D3
-> > > [    7.237955] ath10k_pci 0000:02:00.0: failed to wake up device : -1=
-10
-> > > [    7.238146] ath10k_pci: probe of 0000:02:00.0 failed with error -1=
-10
-> > > =
+> I really don't understand why people are so wrapped around the axle
+> about this.  This is just the way Linux works -- we try really hard
+> not to cause regressions on platforms that used to work.
 
-> > > if however PCIEASPM is off, the driver probes correctly and the ath10k
-> > > adapter works fine.
-> > > =
+I haven't seen anyone in this thread questioning that.
 
-> > > I wonder if someone has an idea what needs to be done to fix this
-> > > problem. (OK, I could disable PCIEASPM, but I'd like to have a soluti=
-on
-> > > for a distribution kernel where I think PCIEASPM=3Dy is sensible in
-> > > general.)
-> > =
+IMO the point people are trying to make is that reverting stuff may not really be
+the way to go.
 
-> > Can somebody confirm that this system (Marvell Armada 385-based Turris
-> > Omnia) does actually support ASPM in hardware?
-> =
+> I *SAID* in the very first posting of the revert that I assume Mika will have a
+> better solution soon.
 
-> What sort of "hardware" are you referring to?
-> =
+In which case I wouldn't have queued up a revert had I been you.
 
-> From my reading of the specs, ASPM doesn't require any external hardware.
-> It's all done inside the PCIe root hub and PCIe device.
+> When a better patch appears, I'll take that and drop the revert.
+> What's the problem with that?
 
-Right.  My question is just whether we know that the Marvell PCIe root
-hub hardware works correctly with respect to ASPM.  The PCI core isn't
-doing anything special for Marvell, so problems here are likely to be
-either in the Marvell hardware or in the pci-mvebu.c driver.
+There are people for whom the commit in question fixed serious issues and the
+revert would just take that away from them without any option to make their
+systems work.
 
-> The PCIe spec specifically prohibits cutting power supplies and clocks to
-> PCIe devices during L0s and L1, with the exception that the PCIe clock may
-> be stopped in L1 if CLKREQ# is deasserted.  CLKREQ# handling generally
-> requires GPIO usage, and as there's no support for that, there's no suppo=
-rt
-> for stopping the PCIe clock in L1.  We do the correct thing there,
-> preventing the PCI_EXP_LNKCTL_CLKREQ_EN bit being set.
-> =
+Thanks,
+Rafael
 
-> That all said, it would probably be a good idea to throw some printk()
-> debugging into mvebu_sw_pci_bridge_write() and mvebu_sw_pci_bridge_read()
-> so we can see what's going on at that level, and maybe also some debug
-> in mvebu_pcie_hw_wr_conf() and mvebu_pcie_hw_rd_conf() so we can see
-> what's happening at the PCIe device too.
 
-Uwe has already done that; the dmesg logs including this
-instrumentation are at
-https://bugzilla.kernel.org/show_bug.cgi?id=3D192441
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: [PATCH] PCI / PM: Disable power management of PCIe ports by default
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Due to regressions introduced by enabling power management of
+PCIe ports by default, disable it for the time being, but still
+allow it to be enabled via a kernel command line option.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=190861
+Tentatively-signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+This particular patch hasn't been tested, but the result of it should be the
+same as passing pcie_port_pm=off in the kernel command line, which has
+been tested in the BZ entry above.
+
+---
+ Documentation/admin-guide/kernel-parameters.txt |    3 --
+ drivers/pci/pci.c                               |   26 +++++-------------------
+ 2 files changed, 7 insertions(+), 22 deletions(-)
+
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -108,17 +108,14 @@ unsigned int pcibios_max_latency = 255;
+ /* If set, the PCIe ARI capability will not be used. */
+ static bool pcie_ari_disabled;
+ 
+-/* Disable bridge_d3 for all PCIe ports */
+-static bool pci_bridge_d3_disable;
+-/* Force bridge_d3 for all PCIe ports */
+-static bool pci_bridge_d3_force;
++/* Enable bridge_d3 for all PCIe ports */
++static bool pci_bridge_d3_enable;
+ 
+ static int __init pcie_port_pm_setup(char *str)
+ {
+-	if (!strcmp(str, "off"))
+-		pci_bridge_d3_disable = true;
+-	else if (!strcmp(str, "force"))
+-		pci_bridge_d3_force = true;
++	if (!strcmp(str, "on"))
++		pci_bridge_d3_enable = true;
++
+ 	return 1;
+ }
+ __setup("pcie_port_pm=", pcie_port_pm_setup);
+@@ -2237,7 +2234,7 @@ bool pci_bridge_d3_possible(struct pci_d
+ 	case PCI_EXP_TYPE_ROOT_PORT:
+ 	case PCI_EXP_TYPE_UPSTREAM:
+ 	case PCI_EXP_TYPE_DOWNSTREAM:
+-		if (pci_bridge_d3_disable)
++		if (!pci_bridge_d3_enable)
+ 			return false;
+ 
+ 		/*
+@@ -2247,17 +2244,6 @@ bool pci_bridge_d3_possible(struct pci_d
+ 		if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
+ 			return false;
+ 
+-		if (pci_bridge_d3_force)
+-			return true;
+-
+-		/*
+-		 * It should be safe to put PCIe ports from 2015 or newer
+-		 * to D3.
+-		 */
+-		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+-		    year >= 2015) {
+-			return true;
+-		}
+ 		break;
+ 	}
+ 
+Index: linux-pm/Documentation/admin-guide/kernel-parameters.txt
+===================================================================
+--- linux-pm.orig/Documentation/admin-guide/kernel-parameters.txt
++++ linux-pm/Documentation/admin-guide/kernel-parameters.txt
+@@ -2984,8 +2984,7 @@
+ 			ports driver.
+ 
+ 	pcie_port_pm=	[PCIE] PCIe port power management handling:
+-		off	Disable power management of all PCIe ports
+-		force	Forcibly enable power management of all PCIe ports
++		on	Enable power management of PCIe ports
+ 
+ 	pcie_pme=	[PCIE,PM] Native PCIe PME signaling options:
+ 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
