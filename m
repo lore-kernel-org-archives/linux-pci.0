@@ -1,101 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 1/2] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- bhelgaas@google.com, paul.gortmaker@windriver.com, robh@kernel.org,
- colin.king@canonical.com, linux-pci@vger.kernel.org
-References: <1485334353-26815-1-git-send-email-bharatku@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <a5ec5158-a8ac-26a9-37f2-91307a2320ba@arm.com>
-Date: Wed, 25 Jan 2017 09:23:17 +0000
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170103163130.GC9763@al>
+ <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+Message-ID: <3ce9e85d-381c-1c5d-b01d-65b8cf64e1ae@quantumtechnology.info>
+Date: Tue, 3 Jan 2017 22:52:48 +0100
 MIME-Version: 1.0
-In-Reply-To: <1485334353-26815-1-git-send-email-bharatku@xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
- Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <3913750.OA6IItgEjC@aspire.rjw.lan>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-The subject line is not very descriptive. How about "Enforce level
-triggering for legacy interrupts"?
+I have not checked if suspend/resume broken.
+Which patch should I check suspend resume for.
+When I wrote about firefox and lockscreen issue resolved
+I forgot to check about the suspend/resume.
 
-On 25/01/17 08:52, Bharat Kumar Gogada wrote:
-> - Few wifi end points which only support legacy interrupts,
-> performs hardware reset functionalities after disabling interrupts
-> by invoking disable_irq and then re-enable using enable_irq, they
-> enable hardware interrupts first and then virtual irq line later.
-> - The legacy irq line goes low only after DEASSERT_INTx is
-> received.As the legacy irq line is high immediately after hardware
-> interrupts are enabled but virq of EP is still in disabled state
-> and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-> irq chip is used, interrutps are not masked and system is
 
-                    interrupts
-
-> hanging with CPU stall.
-> - Adding irq chip functions instead of dummy irq chip for legacy
-> interrupts.
-> - Legacy interrupts are level sensitive, so using handle_level_irq
-> is more appropriate as it is masks interrupts until End point handles
-> interrupts and unmasks interrutps after End point handler is executed.
-
-                         interrupts
-
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> ---
->  drivers/pci/host/pcie-xilinx-nwl.c | 36 +++++++++++++++++++++++++++++++++++-
->  1 file changed, 35 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-> index 43eaa4a..6ac3e1d 100644
-> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> @@ -395,10 +395,44 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
->  	chained_irq_exit(chip, desc);
->  }
->  
-> +static void nwl_mask_leg_irq(struct irq_data *data)
-> +{
-> +	struct irq_desc *desc = irq_to_desc(data->irq);
-> +	struct nwl_pcie *pcie;
-> +	u32 mask;
-> +	u32 val;
-> +
-> +	pcie = irq_desc_get_chip_data(desc);
-> +	mask = 1 << (data->hwirq - 1);
-> +	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
-> +	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
-
-Oh please! Think of the following:
-
-	cpu0	cpu1
-	read
-		read
-		write
-	write
-
-How can you make this reliable if you don't have any form of mutual
-exclusion that spans both mask and unmask, and ensures the atomicity of
-the RMW sequence?
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 03-Jan-17 22:38, Rafael J. Wysocki wrote:
+> On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
+>> On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
+>>> On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
+>>>> [cc += Dave Airlie:
+>>>>
+>>>> Dave, we're about to lose support for newer Optimus laptops which use
+>>>> _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+>>>> a commit on his for-linus branch to remove runtime PM for PCIe ports.
+>>>> This fixes a regression on Kilian Singer's laptop on which locking the
+>>>> screen breaks USB and PS/2 input devices:  Mouse movements are still
+>>>> visible, but button or key presses no longer have any effect.  The GPU
+>>>> is powered down upon locking the screen and the current theory is that
+>>>> this causes the issues.]
+>>> (+cc Alex: this might affect amdgpu/radeon too.]
+>>>
+>>> Bjorn, please reconsider the rpm patch. Reverting support would
+>>> introduce other regressions (see issues below) and make future
+>>> Thunderbolt work harder (according to Lukas). If Kilian's laptop has
+>>> issues, what about a "temporary" quirk?
+>> As I mentioned at the beginning, the outcome I'm hoping for is a patch
+>> that fixes Kilian's laptop while preserving the runtime PM support.
+>>
+>> As I also mentioned at the beginning, preserving the runtime PM
+>> support at the expense of breaking Kilian's laptop is not one of the
+>> options.
+> But the revert doesn't really help.
+>
+> It doesn't fix system suspend/resume on that laptop, which also breaks when
+> PCIe ports PM is enabled on it.
+>
+> If you really want to use a sledgehammer approach here (which I don't recommend,
+> but that's your call), you can change the initial value of pci_bridge_d3_disable to
+> "true" (and update the pcie_ports_pm= command line to take "on" in case
+> someone wants to enable the feature).  That at least will take care of the
+> regression entirely and not just partly.
+>
+> Thanks,
+> Rafael
+>
