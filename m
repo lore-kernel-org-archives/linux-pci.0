@@ -1,205 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-To: Tomasz Nowicki <tn@semihalf.com>,
-        Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
-        joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
- <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
-Date: Wed, 25 Jan 2017 17:35:53 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:36379 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757765AbdACKWX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 05:22:23 -0500
+Date: Tue, 3 Jan 2017 11:23:00 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: Thunderbolt adapter fails to instantiate USB and device
+ enumeration if already connected at boot time
+Message-ID: <20170103102300.GA20751@wunner.de>
+References: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
+ <Pine.LNX.4.44L0.1701021626410.28032-100000@netrider.rowland.org>
+ <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
-
-On 25/01/17 17:17, Tomasz Nowicki wrote:
-> Hi Sricharan,
+On Mon, Jan 02, 2017 at 02:45:00PM -0700, Chris Murphy wrote:
+> On Mon, Jan 2, 2017 at 2:28 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > Considering that the failed boot log contains no USB messages at all,
+> > and no messages referring to PCI bus 0000:37 (the bus associated with
+> > the adapter), this certainly looks like a PCI problem.
 > 
-> On 23.01.2017 17:18, Sricharan R wrote:
->> From: Robin Murphy <robin.murphy@arm.com>
->>
->> In preparation for some upcoming cleverness, rework the control flow in
->> of_iommu_configure() to minimise duplication and improve the propogation
->> of errors. It's also as good a time as any to switch over from the
->> now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
->> IOMMU instance interface directly.
->>
->> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
->> ---
->>  drivers/iommu/of_iommu.c | 83
->> +++++++++++++++++++++++++++++++-----------------
->>  1 file changed, 53 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index 0f57ddc..ee49081 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const
->> char *prefix, int index,
->>  }
->>  EXPORT_SYMBOL_GPL(of_get_dma_window);
->>
->> +static const struct iommu_ops
->> +*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
->> +{
->> +    const struct iommu_ops *ops;
->> +    struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
->> +    int err;
->> +
->> +    ops = iommu_get_instance(fwnode);
->> +    if (!ops || !ops->of_xlate)
->> +        return NULL;
->> +
->> +    err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
->> +    if (err)
->> +        return ERR_PTR(err);
->> +
->> +    err = ops->of_xlate(dev, iommu_spec);
->> +    if (err)
->> +        return ERR_PTR(err);
->> +
->> +    return ops;
->> +}
->> +
->>  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
->>  {
->>      struct of_phandle_args *iommu_spec = data;
->> @@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev,
->> u16 alias, void *data)
->>  }
->>
->>  static const struct iommu_ops
->> -*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node
->> *bridge_np)
->> +*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
->>  {
->>      const struct iommu_ops *ops;
->>      struct of_phandle_args iommu_spec;
->> +    int err;
->>
->>      /*
->>       * Start by tracing the RID alias down the PCI topology as
->> @@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev,
->> u16 alias, void *data)
->>       * bus into the system beyond, and which IOMMU it ends up at.
->>       */
->>      iommu_spec.np = NULL;
->> -    if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->> -               "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
->> -        return NULL;
->> +    err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->> +                 "iommu-map-mask", &iommu_spec.np,
->> +                 iommu_spec.args);
->> +    if (err)
->> +        return ERR_PTR(err);
->>
->> -    ops = of_iommu_get_ops(iommu_spec.np);
->> -    if (!ops || !ops->of_xlate ||
->> -        iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
->> -        ops->of_xlate(&pdev->dev, &iommu_spec))
->> -        ops = NULL;
->> +    ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
->>
->>      of_node_put(iommu_spec.np);
->>      return ops;
->>  }
->>
->> -const struct iommu_ops *of_iommu_configure(struct device *dev,
->> -                       struct device_node *master_np)
->> +static const struct iommu_ops
->> +*of_platform_iommu_init(struct device *dev, struct device_node *np)
->>  {
->>      struct of_phandle_args iommu_spec;
->> -    struct device_node *np;
->>      const struct iommu_ops *ops = NULL;
->>      int idx = 0;
->>
->> -    if (dev_is_pci(dev))
->> -        return of_pci_iommu_configure(to_pci_dev(dev), master_np);
->> -
->>      /*
->>       * We don't currently walk up the tree looking for a parent IOMMU.
->>       * See the `Notes:' section of
->>       * Documentation/devicetree/bindings/iommu/iommu.txt
->>       */
->> -    while (!of_parse_phandle_with_args(master_np, "iommus",
->> -                       "#iommu-cells", idx,
->> -                       &iommu_spec)) {
->> -        np = iommu_spec.np;
->> -        ops = of_iommu_get_ops(np);
->> -
->> -        if (!ops || !ops->of_xlate ||
->> -            iommu_fwspec_init(dev, &np->fwnode, ops) ||
->> -            ops->of_xlate(dev, &iommu_spec))
->> -            goto err_put_node;
->> -
->> -        of_node_put(np);
->> +    while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
->> +                       idx, &iommu_spec)) {
->> +        ops = of_iommu_xlate(dev, &iommu_spec);
->> +        of_node_put(iommu_spec.np);
->>          idx++;
->> +        if (IS_ERR_OR_NULL(ops))
->> +            break;
->>      }
->>
->>      return ops;
->> +}
->> +
->> +const struct iommu_ops *of_iommu_configure(struct device *dev,
->> +                       struct device_node *master_np)
->> +{
->> +    const struct iommu_ops *ops;
->> +
->> +    if (!master_np)
->> +        return NULL;
->> +
->> +    if (dev_is_pci(dev))
->> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+> I see these lines in the problem case, which don't occur in the working case.
 > 
-> I gave the whole patch set a try on ThunderX. really_probe() is failing
-> on dma_configure()->of_pci_iommu_init() for each PCI device.
+> [    0.561046] pci_bus 0000:37: busn_res: [bus 37-ff] end is updated to 37
+> [    0.561047] pci_bus 0000:37: busn_res: can not insert [bus 37]
+> under domain [bus 00-ff] (conflicts with (null) [bus 00-fe])
 
-When you say "failing", do you mean cleanly, or with a crash? I've
-managed to hit __of_match_node() dereferencing NULL from
-of_iommu_xlate() in a horribly complicated chain of events, which I'm
-trying to figure out now, and I wonder if the two might be related.
+In the "failure dmesg" (with the adapter plugged in on boot), bus 37 is
+considered a root bus:
 
-> of_pci_iommu_init() tries to setup firmware stuff via "iommu-map" but
-> ThunderX is using legacy "mmu-masters" binding. We need to take care of
-> that case too.
+[    0.560662] PCI: Discovered peer bus 37
+[    0.560667] PCI: root bus 37: using default resources
+[    0.560668] PCI: Probing PCI hardware (bus 37)
+[    0.560695] ACPI: \: failed to evaluate _DSM (0x1001)
+[    0.560698] PCI host bridge to bus 0000:37
 
-That is by design. The "mmu-masters" binding is ARM-SMMU-specific and
-will continue to provide the same level of DMA ops support it always has
-(for which there really are practical implementation reasons, it's not
-just an arbitrary "encourage people to move to the generic bindings"
-decision).
+Whereas in the "normal behaviour" dmesg (with the adapter plugged in
+after booting Linux), bus 37 is below downstream port 0000:02:02.0
+(this belongs to the PCIe switch of the Thunderbolt controller):
 
-Robin.
+[   59.247680] pci 0000:02:02.0: scanning [bus 37-37] behind bridge, pass 0
+[   59.247915] pci_bus 0000:37: scanning bus
+[   59.247963] pci 0000:37:00.0: [8086:15b6] type 00 class 0x0c0330
+[   59.248014] pci 0000:37:00.0: reg 0x10: [mem 0xc7f00000-0xc7f0ffff]
+[   59.248360] pci 0000:37:00.0: supports D1 D2
+[   59.248366] pci 0000:37:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+[   59.248379] pci 0000:37:00.0: PME# disabled
+[   59.248951] pci_bus 0000:37: fixups for bus
+[   59.248959] pci 0000:02:02.0: PCI bridge to [bus 37]
+[   59.249117] pci 0000:02:02.0:   bridge window [mem 0xc7f00000-0xc7ffffff]
+[   59.249135] pci_bus 0000:37: bus scan returning with max=37
 
->> +    else
->> +        ops = of_platform_iommu_init(dev, master_np);
->>
->> -err_put_node:
->> -    of_node_put(np);
->> -    return NULL;
->> +    return IS_ERR(ops) ? NULL : ops;
->>  }
->>
->>  static int __init of_iommu_init(void)
->>
-> 
-> Thanks,
-> Tomasz
+Could be an error in the ACPI tables, could be a misconfiguration in
+the EEPROM of the Thunderbolt controller.
 
+Thanks,
+
+Lukas
