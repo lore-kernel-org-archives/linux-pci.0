@@ -1,224 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 28 Jan 2017 15:17:28 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54100 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760389AbdACSMZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Jan 2017 13:12:25 -0500
+Date: Tue, 3 Jan 2017 12:12:21 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
- enabled
-Message-ID: <20170128211728.GJ20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161212183020.GA30274@obsidianresearch.com>
- <20170111183055.GD14532@bhelgaas-glaptop.roam.corp.google.com>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170102121019.GA3353@lahna.fi.intel.com>
+ <20170102144852.GE3353@lahna.fi.intel.com>
+ <1731082.izJCnRoq0n@aspire.rjw.lan>
+ <20170103095158.GH3353@lahna.fi.intel.com>
+ <20170103151547.GB9763@al>
+ <20170103161123.GA20915@wunner.de>
+ <20170103163130.GC9763@al>
 MIME-Version: 1.0
-In-Reply-To: <20170111183055.GD14532@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Gregory CLEMENT <gregory.clement@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170103163130.GC9763@al>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 12:30:55PM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 12, 2016 at 11:30:20AM -0700, Jason Gunthorpe wrote:
-> > The PCI core will write to the bridge window config multiple times
-> > while they are enabled. This can lead to mbus failures like:
+On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
+> On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
+> > [cc += Dave Airlie:
 > > 
-> >  mvebu_mbus: cannot add window '4:e8', conflicts with another window
-> >  mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
-> > 
-> > For me this is happening during a hotplug cycle. The PCI core is
-> > not changing the values, just writing them twice while active.
-> > 
-> > The patch addresses the general case of any change to an active window,
-> > but not atomically. The code is slightly refactored so io and mem
-> > can share more of the window logic.
+> > Dave, we're about to lose support for newer Optimus laptops which use
+> > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+> > a commit on his for-linus branch to remove runtime PM for PCIe ports.
+> > This fixes a regression on Kilian Singer's laptop on which locking the
+> > screen breaks USB and PS/2 input devices:  Mouse movements are still
+> > visible, but button or key presses no longer have any effect.  The GPU
+> > is powered down upon locking the screen and the current theory is that
+> > this causes the issues.]
 > 
-> Looks good to me, but I'm waiting for an ack from Thomas or Jason (listed
-> as maintainers and already cc'd).
-
-Ping, Thomas, Jason C?
-
-> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > ---
-> >  drivers/pci/host/pci-mvebu.c | 101 +++++++++++++++++++++++++------------------
-> >  1 file changed, 60 insertions(+), 41 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> > index 307f81d6b479af..af724731b22f53 100644
-> > --- a/drivers/pci/host/pci-mvebu.c
-> > +++ b/drivers/pci/host/pci-mvebu.c
-> > @@ -133,6 +133,12 @@ struct mvebu_pcie {
-> >  	int nports;
-> >  };
-> >  
-> > +struct mvebu_pcie_window {
-> > +	phys_addr_t base;
-> > +	phys_addr_t remap;
-> > +	size_t size;
-> > +};
-> > +
-> >  /* Structure representing one PCIe interface */
-> >  struct mvebu_pcie_port {
-> >  	char *name;
-> > @@ -150,10 +156,8 @@ struct mvebu_pcie_port {
-> >  	struct mvebu_sw_pci_bridge bridge;
-> >  	struct device_node *dn;
-> >  	struct mvebu_pcie *pcie;
-> > -	phys_addr_t memwin_base;
-> > -	size_t memwin_size;
-> > -	phys_addr_t iowin_base;
-> > -	size_t iowin_size;
-> > +	struct mvebu_pcie_window memwin;
-> > +	struct mvebu_pcie_window iowin;
-> >  	u32 saved_pcie_stat;
-> >  };
-> >  
-> > @@ -379,23 +383,45 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
-> >  	}
-> >  }
-> >  
-> > +static void mvebu_pcie_set_window(struct mvebu_pcie_port *port,
-> > +				  unsigned int target, unsigned int attribute,
-> > +				  const struct mvebu_pcie_window *desired,
-> > +				  struct mvebu_pcie_window *cur)
-> > +{
-> > +	if (desired->base == cur->base && desired->remap == cur->remap &&
-> > +	    desired->size == cur->size)
-> > +		return;
-> > +
-> > +	if (cur->size != 0) {
-> > +		mvebu_pcie_del_windows(port, cur->base, cur->size);
-> > +		cur->size = 0;
-> > +		cur->base = 0;
-> > +
-> > +		/*
-> > +		 * If something tries to change the window while it is enabled
-> > +		 * the change will not be done atomically. That would be
-> > +		 * difficult to do in the general case.
-> > +		 */
-> > +	}
-> > +
-> > +	if (desired->size == 0)
-> > +		return;
-> > +
-> > +	mvebu_pcie_add_windows(port, target, attribute, desired->base,
-> > +			       desired->size, desired->remap);
-> > +	*cur = *desired;
-> > +}
-> > +
-> >  static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
-> >  {
-> > -	phys_addr_t iobase;
-> > +	struct mvebu_pcie_window desired = {};
-> >  
-> >  	/* Are the new iobase/iolimit values invalid? */
-> >  	if (port->bridge.iolimit < port->bridge.iobase ||
-> >  	    port->bridge.iolimitupper < port->bridge.iobaseupper ||
-> >  	    !(port->bridge.command & PCI_COMMAND_IO)) {
-> > -
-> > -		/* If a window was configured, remove it */
-> > -		if (port->iowin_base) {
-> > -			mvebu_pcie_del_windows(port, port->iowin_base,
-> > -					       port->iowin_size);
-> > -			port->iowin_base = 0;
-> > -			port->iowin_size = 0;
-> > -		}
-> > -
-> > +		mvebu_pcie_set_window(port, port->io_target, port->io_attr,
-> > +				      &desired, &port->iowin);
-> >  		return;
-> >  	}
-> >  
-> > @@ -412,32 +438,27 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
-> >  	 * specifications. iobase is the bus address, port->iowin_base
-> >  	 * is the CPU address.
-> >  	 */
-> > -	iobase = ((port->bridge.iobase & 0xF0) << 8) |
-> > -		(port->bridge.iobaseupper << 16);
-> > -	port->iowin_base = port->pcie->io.start + iobase;
-> > -	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
-> > -			    (port->bridge.iolimitupper << 16)) -
-> > -			    iobase) + 1;
-> > -
-> > -	mvebu_pcie_add_windows(port, port->io_target, port->io_attr,
-> > -			       port->iowin_base, port->iowin_size,
-> > -			       iobase);
-> > +	desired.remap = ((port->bridge.iobase & 0xF0) << 8) |
-> > +			(port->bridge.iobaseupper << 16);
-> > +	desired.base = port->pcie->io.start + desired.remap;
-> > +	desired.size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
-> > +			 (port->bridge.iolimitupper << 16)) -
-> > +			desired.remap) +
-> > +		       1;
-> > +
-> > +	mvebu_pcie_set_window(port, port->io_target, port->io_attr, &desired,
-> > +			      &port->iowin);
-> >  }
-> >  
-> >  static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
-> >  {
-> > +	struct mvebu_pcie_window desired = {.remap = MVEBU_MBUS_NO_REMAP};
-> > +
-> >  	/* Are the new membase/memlimit values invalid? */
-> >  	if (port->bridge.memlimit < port->bridge.membase ||
-> >  	    !(port->bridge.command & PCI_COMMAND_MEMORY)) {
-> > -
-> > -		/* If a window was configured, remove it */
-> > -		if (port->memwin_base) {
-> > -			mvebu_pcie_del_windows(port, port->memwin_base,
-> > -					       port->memwin_size);
-> > -			port->memwin_base = 0;
-> > -			port->memwin_size = 0;
-> > -		}
-> > -
-> > +		mvebu_pcie_set_window(port, port->mem_target, port->mem_attr,
-> > +				      &desired, &port->memwin);
-> >  		return;
-> >  	}
-> >  
-> > @@ -447,14 +468,12 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
-> >  	 * window to setup, according to the PCI-to-PCI bridge
-> >  	 * specifications.
-> >  	 */
-> > -	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
-> > -	port->memwin_size  =
-> > -		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
-> > -		port->memwin_base + 1;
-> > -
-> > -	mvebu_pcie_add_windows(port, port->mem_target, port->mem_attr,
-> > -			       port->memwin_base, port->memwin_size,
-> > -			       MVEBU_MBUS_NO_REMAP);
-> > +	desired.base = ((port->bridge.membase & 0xFFF0) << 16);
-> > +	desired.size = (((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
-> > +		       desired.base + 1;
-> > +
-> > +	mvebu_pcie_set_window(port, port->mem_target, port->mem_attr, &desired,
-> > +			      &port->memwin);
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 2.7.4
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> (+cc Alex: this might affect amdgpu/radeon too.]
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Bjorn, please reconsider the rpm patch. Reverting support would
+> introduce other regressions (see issues below) and make future
+> Thunderbolt work harder (according to Lukas). If Kilian's laptop has
+> issues, what about a "temporary" quirk?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+As I mentioned at the beginning, the outcome I'm hoping for is a patch
+that fixes Kilian's laptop while preserving the runtime PM support.
+
+As I also mentioned at the beginning, preserving the runtime PM
+support at the expense of breaking Kilian's laptop is not one of the
+options.
