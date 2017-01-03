@@ -1,90 +1,125 @@
-Return-Path: <SRS0=Xdb0=YS=gmail.com=hjmallon@kernel.org>
-Return-Path: <SRS0=Xdb0=YS=gmail.com=hjmallon@kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Subject: Re: Diagnosing BAR allocation problems with complex bridge structure
-From: Harry Mallon <hjmallon@gmail.com>
-In-Reply-To: <20170103180718.GA25398@bhelgaas-glaptop.roam.corp.google.com>
-Date: Wed, 4 Jan 2017 16:22:39 +0000
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-Id: <B6DCCEA6-184A-476A-B19B-2A1287B91545@gmail.com>
-References: <B56F52C5-7298-4E9D-8AE2-8497527C5D39@gmail.com>
- <20170103180718.GA25398@bhelgaas-glaptop.roam.corp.google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>, Will Deacon
+ <will.deacon@arm.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170103184444.GP6986@arm.com>
+ <ead2ff8d-fbd3-3109-51e2-41937e9c944d@cogentembedded.com>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <9382563b-44ab-47a8-14d0-1fdaf49f8c5d@ti.com>
+Date: Tue, 3 Jan 2017 14:13:52 -0600
+MIME-Version: 1.0
+In-Reply-To: <ead2ff8d-fbd3-3109-51e2-41937e9c944d@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, Catalin Marinas <catalin.marinas@arm.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
-> On 3 Jan 2017, at 18:07, Bjorn Helgaas <helgaas@kernel.org> wrote:
->=20
-> Hi Harry,
->=20
-> On Tue, Jan 03, 2017 at 03:35:13PM +0000, Harry Mallon wrote:
->> Hi,
->>=20
->> In this email I am asking for advice on how to diagnose problems in =
-assigning memory for PCI-E devices and bridges. I can reproduce my issue =
-on the current mainline kernel but I am not currently planning to target =
-any fixes for the mainline kernel (unless they prove to be useful =
-outside of this machine). I am planning to target the CentOS 3.10.0 =
-based kernel. I understand that I am not owed any help/patches etc from =
-anyone here, especially not as I am using a non mainline kernel.
->>=20
->> I am working on a machine with an odd PCI structure, it has 4 =
-different PLX bridges and requires hotplug to work on at least 2 of =
-these. We were previously using a kernel based on 3.3 and had to add a =
-few (hacky, machine specific) patches to that to make it work correctly. =
-We also use "pci=3Drealloc,pcie_bus_safe" in the kernel cmdline. I am =
-currently using that kernel as a reference to compare to my development =
-version.
->>=20
->> On my current setup some devices don't work, using "lspci -vvv" I can =
-see that they are not all receiving the memory allocations that they =
-need. They report like one of the two following (it changes depending on =
-another PCI-E card being in or out):
->>=20
->> 05:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] =
-(rev a1) (prog-if 00 [VGA controller])
->>        Subsystem: NVIDIA Corporation Device 119a
->>        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- =
-ParErr- Stepping- SERR- FastB2B- DisINTx-
->>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast =
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>        Interrupt: pin A routed to IRQ 11
->>        Region 0: Memory at <ignored> (32-bit, non-prefetchable) =
-[disabled]
->>        Region 1: Memory at e0000000 (64-bit, prefetchable) [disabled] =
-[size=3D256M]
->>        Region 3: Memory at f0000000 (64-bit, prefetchable) [disabled] =
-[size=3D32M]
->>        Region 5: I/O ports at 4000 [disabled] [size=3D128]
->>        Expansion ROM at <ignored> [disabled]
->>=20
->> 05:00.0 VGA compatible controller: NVIDIA Corporation GK110B [GeForce =
-GTX TITAN Black] (rev ff) (prog-if ff)
->> 	!!! Unknown header type 7f
->>=20
->> What tools and techniques can anyone recommend for diagnosing this =
-type of problem? Is there a way to export all the bridge memory ranges =
-in a way that can be visualised (maybe the newer kernel cannot allocate =
-enough aligned space)? Is there a way to enable extra PCI debug in the =
-kernel? Is there a way to make the kernel panic and=20
->> report when it fails to assign memory on boot instead of continuing =
-with non-functional hardware?
->=20
-> A complete dmesg log from a current kernel and complete "lspci -vv"
-> output is the best place to start.  The goal is that all your devices
-> should work without requiring any machine-specific patches or
-> command-line parameters.  Our resource allocation code is not really
-> very robust, so unusual topologies don't always work out of the box.
->=20
-> You can open a bug report at https://bugzilla.kernel.org in the
-> drivers/PCI area, attach the dmesg and lspci output, and respond with
-> the URL here.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D191921
+On 01/03/2017 01:01 PM, Nikita Yushchenko wrote:
+>>> It is possible that PCI device supports 64-bit DMA addressing, and thus
+>>> it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
+>>> bridge has limitations on inbound transactions addressing. Example of
+>>> such setup is NVME SSD device connected to RCAR PCIe controller.
+>>>
+>>> Previously there was attempt to handle this via bus notifier: after
+>>> driver is attached to PCI device, bridge driver gets notifier callback,
+>>> and resets dma_mask from there. However, this is racy: PCI device driver
+>>> could already allocate buffers and/or start i/o in probe routine.
+>>> In NVME case, i/o is started in workqueue context, and this race gives
+>>> "sometimes works, sometimes not" effect.
+>>>
+>>> Proper solution should make driver's dma_set_mask() call to fail if host
+>>> bridge can't support mask being set.
+>>>
+>>> This patch makes __swiotlb_dma_supported() to check mask being set for
+>>> PCI device against dma_mask of struct device corresponding to PCI host
+>>> bridge (one with name "pciXXXX:YY"), if that dma_mask is set.
+>>>
+>>> This is the least destructive approach: currently dma_mask of that device
+>>> object is not used anyhow, thus all existing setups will work as before,
+>>> and modification is required only in actually affected components -
+>>> driver of particular PCI host bridge, and dma_map_ops of particular
+>>> platform.
+>>>
+>>> Signed-off-by: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+>>> ---
+>>>  arch/arm64/mm/dma-mapping.c | 11 +++++++++++
+>>>  1 file changed, 11 insertions(+)
+>>>
+>>> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+>>> index 290a84f..49645277 100644
+>>> --- a/arch/arm64/mm/dma-mapping.c
+>>> +++ b/arch/arm64/mm/dma-mapping.c
+>>> @@ -28,6 +28,7 @@
+>>>  #include <linux/dma-contiguous.h>
+>>>  #include <linux/vmalloc.h>
+>>>  #include <linux/swiotlb.h>
+>>> +#include <linux/pci.h>
+>>>  
+>>>  #include <asm/cacheflush.h>
+>>>  
+>>> @@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
+>>>  
+>>>  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+>>>  {
+>>> +#ifdef CONFIG_PCI
+>>> +	if (dev_is_pci(hwdev)) {
+>>> +		struct pci_dev *pdev = to_pci_dev(hwdev);
+>>> +		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
+>>> +
+>>> +		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
+>>> +				(mask & (*br->dev.dma_mask)) != mask)
+>>> +			return 0;
+>>> +	}
+>>> +#endif
+>>
+>> Hmm, but this makes it look like the problem is both arm64 and swiotlb
+>> specific, when in reality it's not. Perhaps another hack you could try
+>> would be to register a PCI bus notifier in the host bridge looking for
+>> BUS_NOTIFY_BIND_DRIVER, then you could proxy the DMA ops for each child
+>> device before the driver has probed, but adding a dma_set_mask callback
+>> to limit the mask to what you need?
+> 
+> This is what Renesas BSP tries to do and it does not work.
+> 
+> BUS_NOTIFY_BIND_DRIVER arrives after driver's probe routine exits, but
+> i/o can be started before that.
 
-I have attached messages log (zipped, wouldn't let me do the whole =
-thing) and lspci.
+Hm. This is strange statement:
+ really_probe
+ |->driver_sysfs_add
+    |-> blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+ 					     BUS_NOTIFY_BIND_DRIVER, dev);
+...
+ |- ret = drv->probe(dev);
+...
+ |- driver_bound(dev);
+    |- blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+					     BUS_NOTIFY_BOUND_DRIVER, dev);
 
->=20
-> Bjorn
+Am I missing smth?
+
+-- 
+regards,
+-grygorii
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
