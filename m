@@ -1,196 +1,176 @@
-Return-Path: <SRS0=B9Eb=ZJ=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=B9Eb=ZJ=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI/ASPM: reconfigure ASPM following hotplug
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1485471092-16906-1-git-send-email-okaya@codeaurora.org>
- <20170127170755.GB17251@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <307c5f0f-122d-fc56-8cbf-363a727af75c@codeaurora.org>
-Date: Fri, 27 Jan 2017 14:30:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170127170755.GB17251@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:33511 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934531AbdACGej (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 01:34:39 -0500
+Received: by mail-pf0-f178.google.com with SMTP id d2so75695164pfd.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 22:34:33 -0800 (PST)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Andreas Ziegler <andreas.ziegler@fau.de>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        David Daney <david.daney@cavium.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        Ram Amrani <Ram.Amrani@cavium.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Wang Sheng-Hui <shhuiw@foxmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>,
+        Brian Norris <briannorris@google.com>
+Subject: [PATCH 2/6] PCI/ASPM: Introduce L1 substates and a Kconfig for it
+Date: Mon,  2 Jan 2017 22:34:11 -0800
+Message-Id: <1483425255-101923-3-git-send-email-rajatja@google.com>
+In-Reply-To: <1483425255-101923-1-git-send-email-rajatja@google.com>
+References: <1483425255-101923-1-git-send-email-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-Thanks for the review. Other feedback below.
+Introduce the L1 sub states. (For details about L1 substates,
+please refer to:
+https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf)
 
-On 1/27/2017 12:07 PM, Bjorn Helgaas wrote:
-> Hi Sinan,
-> 
-> On Thu, Jan 26, 2017 at 05:51:32PM -0500, Sinan Kaya wrote:
->> When the operating system is booted with the default ASPM policy,
->> the current code is determining the ASPM policy by querying the
->> enable/disable states from ASPM registers.
->>
->> In the case of hotplug removal, the ASPM registers get cleared by
->> calling the exit function.
-> 
-> I assume you mean pcie_aspm_exit_link_state().  It'd be easier if you
-> were specific about that.
+This patch adds macros for the 4 new L1 substates, and adds
+a new ASPM "POWER_SUPERSAVE" policy that can be used to enable
+L1 substates on a system if desired. The new policy is in a sense,
+a super set of the existing POWERSAVE policy. The 4 policies are now:
 
-Sure, I can do that. 
+DEFAULT: Reads and uses whatever ASPM states BIOS enabled
+PERFORMANCE: Everything except L0 disabled.
+POWERSAVE: L0s and L1 enabled (but not L1 substates)
+POWER_SUPERSAVE: L0s + L1 + L1 substates also enabled.
 
-> 
-> But I don't know whether this is relevant anyway.  In a surprise
-> removal we won't call pcie_aspm_exit_link_state(), will we?
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ drivers/pci/pcie/Kconfig |  8 ++++++++
+ drivers/pci/pcie/aspm.c  | 39 +++++++++++++++++++++++++++++----------
+ 2 files changed, 37 insertions(+), 10 deletions(-)
 
-Let me check. I have tested surprise removal before but
-I'm not sure about the ASPM following insertion to a surprise removal. 
-
-According to the specification, a hotplug capable OS needs to handle
-surprise removal and uninstall drivers. I have seen this happen before.
-I expect to end up in pcie_aspm_exit_link_state again. See the data
-link layer interrupt registered in the HPE. It is waiting for link
-down and up events regardless of attention button or not.
-
-I'm about to confirm....
-
-pciehp 0000:00:00.0:pcie004:_slot(1):_Link_Down_event
-e1000e 0000:01:00.0: Disabling ASPM  L1
-e1000e 0000:01:00.0: Refused to change power state, currently in D3
-pci 0000:01:00.0: pcie_aspm_exit_link_state:649
-pcieport 0000:00:00.0: AER: Device recovery successful
-
-yes, exit gets called.
-
-
-> 
->> An insertion following remove reads incorrect policy as disabled
->> even though ASPM was enabled during boot.
->>
->> Adding a flag to the struct pci_dev and saving the power up policy
->> in the bridge to be reused during hotplug insertion. Bridge's enable
->> counter is used as a switch to determine when to use saved value.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/pci/pcie/aspm.c | 13 ++++++++++---
->>  include/linux/pci.h     |  1 +
->>  2 files changed, 11 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
->> index 17ac1dc..32b8a86 100644
->> --- a/drivers/pci/pcie/aspm.c
->> +++ b/drivers/pci/pcie/aspm.c
->> @@ -338,7 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
->>  	}
->>  }
->>  
->> -static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->> +static
->> +void pcie_aspm_cap_init(struct pci_dev *pdev, struct pcie_link_state *link,
->> +			int blacklist)
->>  {
->>  	struct pci_dev *child, *parent = link->pdev;
->>  	struct pci_bus *linkbus = parent->subordinate;
->> @@ -398,7 +400,12 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->>  	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
->>  
->>  	/* Save default state */
->> -	link->aspm_default = link->aspm_enabled;
->> +	if (!atomic_read(&pdev->enable_cnt)) {
->> +		link->aspm_default = link->aspm_enabled;
->> +		pdev->aspm_default = link->aspm_default;
->> +	} else {
->> +		link->aspm_default = pdev->aspm_default;
->> +	}
-> 
-> This connection with enable_cnt is too obtuse.  There's no obvious
-> connection between enabling the device and computing the default ASPM
-> state.
-
-I was looking for a way to figure out if this is the first time boot
-or insertion. I'm open to suggestions on what a good flag is.
-
-> 
-> We're working on the bridge (the upstream end of a link).  If I
-> understand correctly, the case of interest here is where the bridge
-> stays put and an endpoint below the bridge is removed and re-added.
-
-Correct, the bridge remains in the PCI bus, it is just the endpoint
-is getting removed and inserted back. However bridge's ASPM registers
-also got cleared while disabling ASPM on the endpoint.
-
-
-> Why can't we figure out the policy the same way as when we first
-> enumerated the bridge?
-
-The difference on first time enumeration and new enumeration is on the
-first time, ASPM is setup by the firmware before OS boot. 
-
-In the new enumeration following hotplug insertion, ASPM is disabled
-and there is no firmware to set it up.
-
-> 
-> In POLICY_PERFORMANCE and POLICY_POWERSAVE, I assume the original BIOS
-> configuration doesn't matter.  Maybe the point here is to remember the
-> original BIOS configuration for POLICY_DEFAULT?  If so, the patch
-> should mention POLICY_DEFAULT somehow to help the reader connect the
-> dots.
-
-Right, we want to know the policy set up by BIOS only when POLICY_DEFAULT
-is specified. 
-
-POLICY_POWERSAVE option does set things up regardless of what the BIOS says. 
-Similarly, POLICY_PERFORMANCE is going to disable ASPM for obvious reasons.
-
-I can add a few words to the commit message. 
-
-> 
->>  	/* Setup initial capable state. Will be updated later */
->>  	link->aspm_capable = link->aspm_support;
->> @@ -599,7 +606,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->>  	 * upstream links also because capable state of them can be
->>  	 * update through pcie_aspm_cap_init().
->>  	 */
->> -	pcie_aspm_cap_init(link, blacklist);
->> +	pcie_aspm_cap_init(pdev, link, blacklist);
-> 
-> I think "link" is always "pdev->link_state", so we should be able to
-> pass only "pdev" here, and pcie_aspm_cap_init() could use
-> pdev->link_state internally.
-
-I can do that.
-
-> 
->>  	/* Setup initial Clock PM state */
->>  	pcie_clkpm_cap_init(link, blacklist);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index e2d1a12..d0ecde6 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -316,6 +316,7 @@ struct pci_dev {
->>  	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
->>  						      controlled exclusively by
->>  						      user sysfs */
->> +	unsigned int	aspm_default;	/* aspm policy set by BIOS */
-> 
-> We already have an #ifdef CONFIG_PCIEASPM above, and this should go
-> under that.  "aspm" in English text is an acronym and should be
-> capitalized, just like "BIOS".
-
-OK
-
-> 
->>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->>  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->>  
->> -- 
->> 1.9.1
->>
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-
-
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 7ce7763..ac53edb 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -71,6 +71,14 @@ config PCIEASPM_POWERSAVE
+ 	  Enable PCI Express ASPM L0s and L1 where possible, even if the
+ 	  BIOS did not.
+ 
++config PCIEASPM_POWER_SUPERSAVE
++	bool "Power Supersave"
++	depends on PCIEASPM
++	help
++	  Same as PCIEASPM_POWERSAVE, except it also enables L1 substates where
++	  possible. This would result in higher power savings while staying in L1
++	  where the components support it.
++
+ config PCIEASPM_PERFORMANCE
+ 	bool "Performance"
+ 	depends on PCIEASPM
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 17ac1dc..402c229 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -30,8 +30,17 @@
+ #define ASPM_STATE_L0S_UP	(1)	/* Upstream direction L0s state */
+ #define ASPM_STATE_L0S_DW	(2)	/* Downstream direction L0s state */
+ #define ASPM_STATE_L1		(4)	/* L1 state */
++#define ASPM_STATE_L1_1		(8)	/* ASPM L1.1 state */
++#define ASPM_STATE_L1_2		(0x10)	/* ASPM L1.2 state */
++#define ASPM_STATE_L1_1_PCIPM	(0x20)	/* PCI PM L1.1 state */
++#define ASPM_STATE_L1_2_PCIPM	(0x40)	/* PCI PM L1.2 state */
++#define ASPM_STATE_L1_SS_PCIPM	(ASPM_STATE_L1_1_PCIPM | ASPM_STATE_L1_2_PCIPM)
++#define ASPM_STATE_L1_2_MASK	(ASPM_STATE_L1_2 | ASPM_STATE_L1_2_PCIPM)
++#define ASPM_STATE_L1SS		(ASPM_STATE_L1_1 | ASPM_STATE_L1_1_PCIPM |\
++				 ASPM_STATE_L1_2_MASK)
+ #define ASPM_STATE_L0S		(ASPM_STATE_L0S_UP | ASPM_STATE_L0S_DW)
+-#define ASPM_STATE_ALL		(ASPM_STATE_L0S | ASPM_STATE_L1)
++#define ASPM_STATE_ALL		(ASPM_STATE_L0S | ASPM_STATE_L1 |	\
++				 ASPM_STATE_L1SS)
+ 
+ struct aspm_latency {
+ 	u32 l0s;			/* L0s latency (nsec) */
+@@ -47,11 +56,11 @@ struct pcie_link_state {
+ 	struct list_head link;		/* node in parent's children list */
+ 
+ 	/* ASPM state */
+-	u32 aspm_support:3;		/* Supported ASPM state */
+-	u32 aspm_enabled:3;		/* Enabled ASPM state */
+-	u32 aspm_capable:3;		/* Capable ASPM state with latency */
+-	u32 aspm_default:3;		/* Default ASPM state by BIOS */
+-	u32 aspm_disable:3;		/* Disabled ASPM state */
++	u32 aspm_support:7;		/* Supported ASPM state */
++	u32 aspm_enabled:7;		/* Enabled ASPM state */
++	u32 aspm_capable:7;		/* Capable ASPM state with latency */
++	u32 aspm_default:7;		/* Default ASPM state by BIOS */
++	u32 aspm_disable:7;		/* Disabled ASPM state */
+ 
+ 	/* Clock PM state */
+ 	u32 clkpm_capable:1;		/* Clock PM capable? */
+@@ -76,11 +85,14 @@ static LIST_HEAD(link_list);
+ #define POLICY_DEFAULT 0	/* BIOS default setting */
+ #define POLICY_PERFORMANCE 1	/* high performance */
+ #define POLICY_POWERSAVE 2	/* high power saving */
++#define POLICY_POWER_SUPERSAVE 3 /* Possibly Even higher power saving */
+ 
+ #ifdef CONFIG_PCIEASPM_PERFORMANCE
+ static int aspm_policy = POLICY_PERFORMANCE;
+ #elif defined CONFIG_PCIEASPM_POWERSAVE
+ static int aspm_policy = POLICY_POWERSAVE;
++#elif defined CONFIG_PCIEASPM_POWER_SUPERSAVE
++static int aspm_policy = POLICY_POWER_SUPERSAVE;
+ #else
+ static int aspm_policy;
+ #endif
+@@ -88,7 +100,8 @@ static int aspm_policy;
+ static const char *policy_str[] = {
+ 	[POLICY_DEFAULT] = "default",
+ 	[POLICY_PERFORMANCE] = "performance",
+-	[POLICY_POWERSAVE] = "powersave"
++	[POLICY_POWERSAVE] = "powersave",
++	[POLICY_POWER_SUPERSAVE] = "powersupersave"
+ };
+ 
+ #define LINK_RETRAIN_TIMEOUT HZ
+@@ -101,6 +114,9 @@ static int policy_to_aspm_state(struct pcie_link_state *link)
+ 		return 0;
+ 	case POLICY_POWERSAVE:
+ 		/* Enable ASPM L0s/L1 */
++		return (ASPM_STATE_L0S | ASPM_STATE_L1);
++	case POLICY_POWER_SUPERSAVE:
++		/* Enable Everything */
+ 		return ASPM_STATE_ALL;
+ 	case POLICY_DEFAULT:
+ 		return link->aspm_default;
+@@ -115,7 +131,8 @@ static int policy_to_clkpm_state(struct pcie_link_state *link)
+ 		/* Disable ASPM and Clock PM */
+ 		return 0;
+ 	case POLICY_POWERSAVE:
+-		/* Disable Clock PM */
++	case POLICY_POWER_SUPERSAVE:
++		/* Enable Clock PM */
+ 		return 1;
+ 	case POLICY_DEFAULT:
+ 		return link->clkpm_default;
+@@ -612,7 +629,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	 * the BIOS's expectation, we'll do so once pci_enable_device() is
+ 	 * called.
+ 	 */
+-	if (aspm_policy != POLICY_POWERSAVE) {
++	if (aspm_policy != POLICY_POWERSAVE &&
++	    aspm_policy != POLICY_POWER_SUPERSAVE) {
+ 		pcie_config_aspm_path(link);
+ 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	}
+@@ -712,7 +730,8 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ 	if (aspm_disabled || !link)
+ 		return;
+ 
+-	if (aspm_policy != POLICY_POWERSAVE)
++	if (aspm_policy != POLICY_POWERSAVE &&
++	    aspm_policy != POLICY_POWER_SUPERSAVE)
+ 		return;
+ 
+ 	down_read(&pci_bus_sem);
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.8.0.rc3.226.g39d4020
+
