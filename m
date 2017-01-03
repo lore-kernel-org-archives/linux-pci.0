@@ -1,78 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] PCI/ASPM: Allow drivers to disable ASPM even without OS
- ASPM control
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Mathias Koehrer <mathias.koehrer@etas.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>,
-        Julia Cartwright <julia@ni.com>,
-        Joe Lawrence <joe.lawrence@stratus.com>,
-        linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@coreos.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Myron Stowe <myron.stowe@redhat.com>
-Date: Tue, 24 Jan 2017 14:23:01 -0600
-Message-ID: <20170124202301.20248.7452.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Will Deacon <will.deacon@arm.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170103184444.GP6986@arm.com>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <1ea67064-a180-b829-09d9-44805796697d@cogentembedded.com>
+Date: Tue, 3 Jan 2017 22:00:50 +0300
 MIME-Version: 1.0
+In-Reply-To: <20170103184444.GP6986@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, Catalin Marinas <catalin.marinas@arm.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI FADT has a "PCIe ASPM Controls" bit (ACPI 5.0, sec 5.2.9.3), which
-means "If set, indicates to OSPM that it must not enable ASPM control on
-this platform."  We have historically interpreted that to mean that the OS
-should not touch ASPM configuration at all: we leave it as the firmware
-configured it.
-
-However, a driver may know that its device has issues with ASPM and should
-not have it enabled.  The platform firmware, which cannot be expected to
-know this, may have enabled ASPM.  The driver should be able to use
-pci_disable_link_state() to disable ASPM for its device, even if the
-firmware set the ACPI_FADT_NO_ASPM bit.
-
-Remove the check that prevents pci_disable_link_state() from disabling ASPM
-for a device.
-
-In cases where we previously emitted a message like this and did nothing:
-
-  e1000e 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
-
-we'll instead actually disable ASPM on the device.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=189951
-Reported-by: Mathias Koehrer <mathias.koehrer@etas.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Matthew Garrett <mjg59@coreos.com>
-CC: stable@vger.kernel.org
----
- drivers/pci/pcie/aspm.c |   16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 17ac1dce3286..9253ae48d777 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -736,18 +736,10 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
- 	if (!parent || !parent->link_state)
- 		return;
- 
--	/*
--	 * A driver requested that ASPM be disabled on this device, but
--	 * if we don't have permission to manage ASPM (e.g., on ACPI
--	 * systems we have to observe the FADT ACPI_FADT_NO_ASPM bit and
--	 * the _OSC method), we can't honor that request.  Windows has
--	 * a similar mechanism using "PciASPMOptOut", which is also
--	 * ignored in this situation.
--	 */
--	if (aspm_disabled) {
--		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
--		return;
--	}
-+	dev_info(&pdev->dev, "disabling %sASPM%s%s\n",
-+		 (state & PCIE_LINK_STATE_CLKPM) ? "Clock PM " : "",
-+		 (state & PCIE_LINK_STATE_L0S) ? " L0s" : "",
-+		 (state & PCIE_LINK_STATE_L1) ? " L1" : "");
- 
- 	if (sem)
- 		down_read(&pci_bus_sem);
+CgowMy4wMS4yMDE3IDIxOjQ0LCBXaWxsIERlYWNvbiDQv9C40YjQtdGCOgo+IE9uIFRodSwgRGVj
+IDI5LCAyMDE2IGF0IDExOjQ1OjAzUE0gKzAzMDAsIE5pa2l0YSBZdXNoY2hlbmtvIHdyb3RlOgo+
+PiBJdCBpcyBwb3NzaWJsZSB0aGF0IFBDSSBkZXZpY2Ugc3VwcG9ydHMgNjQtYml0IERNQSBhZGRy
+ZXNzaW5nLCBhbmQgdGh1cwo+PiBpdCdzIGRyaXZlciBzZXRzIGRldmljZSdzIGRtYV9tYXNrIHRv
+IERNQV9CSVRfTUFTSyg2NCksIGhvd2V2ZXIgUENJIGhvc3QKPj4gYnJpZGdlIGhhcyBsaW1pdGF0
+aW9ucyBvbiBpbmJvdW5kIHRyYW5zYWN0aW9ucyBhZGRyZXNzaW5nLiBFeGFtcGxlIG9mCj4+IHN1
+Y2ggc2V0dXAgaXMgTlZNRSBTU0QgZGV2aWNlIGNvbm5lY3RlZCB0byBSQ0FSIFBDSWUgY29udHJv
+bGxlci4KPj4KPj4gUHJldmlvdXNseSB0aGVyZSB3YXMgYXR0ZW1wdCB0byBoYW5kbGUgdGhpcyB2
+aWEgYnVzIG5vdGlmaWVyOiBhZnRlcgo+PiBkcml2ZXIgaXMgYXR0YWNoZWQgdG8gUENJIGRldmlj
+ZSwgYnJpZGdlIGRyaXZlciBnZXRzIG5vdGlmaWVyIGNhbGxiYWNrLAo+PiBhbmQgcmVzZXRzIGRt
+YV9tYXNrIGZyb20gdGhlcmUuIEhvd2V2ZXIsIHRoaXMgaXMgcmFjeTogUENJIGRldmljZSBkcml2
+ZXIKPj4gY291bGQgYWxyZWFkeSBhbGxvY2F0ZSBidWZmZXJzIGFuZC9vciBzdGFydCBpL28gaW4g
+cHJvYmUgcm91dGluZS4KPj4gSW4gTlZNRSBjYXNlLCBpL28gaXMgc3RhcnRlZCBpbiB3b3JrcXVl
+dWUgY29udGV4dCwgYW5kIHRoaXMgcmFjZSBnaXZlcwo+PiAic29tZXRpbWVzIHdvcmtzLCBzb21l
+dGltZXMgbm90IiBlZmZlY3QuCj4+Cj4+IFByb3BlciBzb2x1dGlvbiBzaG91bGQgbWFrZSBkcml2
+ZXIncyBkbWFfc2V0X21hc2soKSBjYWxsIHRvIGZhaWwgaWYgaG9zdAo+PiBicmlkZ2UgY2FuJ3Qg
+c3VwcG9ydCBtYXNrIGJlaW5nIHNldC4KPj4KPj4gVGhpcyBwYXRjaCBtYWtlcyBfX3N3aW90bGJf
+ZG1hX3N1cHBvcnRlZCgpIHRvIGNoZWNrIG1hc2sgYmVpbmcgc2V0IGZvcgo+PiBQQ0kgZGV2aWNl
+IGFnYWluc3QgZG1hX21hc2sgb2Ygc3RydWN0IGRldmljZSBjb3JyZXNwb25kaW5nIHRvIFBDSSBo
+b3N0Cj4+IGJyaWRnZSAob25lIHdpdGggbmFtZSAicGNpWFhYWDpZWSIpLCBpZiB0aGF0IGRtYV9t
+YXNrIGlzIHNldC4KPj4KPj4gVGhpcyBpcyB0aGUgbGVhc3QgZGVzdHJ1Y3RpdmUgYXBwcm9hY2g6
+IGN1cnJlbnRseSBkbWFfbWFzayBvZiB0aGF0IGRldmljZQo+PiBvYmplY3QgaXMgbm90IHVzZWQg
+YW55aG93LCB0aHVzIGFsbCBleGlzdGluZyBzZXR1cHMgd2lsbCB3b3JrIGFzIGJlZm9yZSwKPj4g
+YW5kIG1vZGlmaWNhdGlvbiBpcyByZXF1aXJlZCBvbmx5IGluIGFjdHVhbGx5IGFmZmVjdGVkIGNv
+bXBvbmVudHMgLQo+PiBkcml2ZXIgb2YgcGFydGljdWxhciBQQ0kgaG9zdCBicmlkZ2UsIGFuZCBk
+bWFfbWFwX29wcyBvZiBwYXJ0aWN1bGFyCj4+IHBsYXRmb3JtLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5
+OiBOaWtpdGEgWXVzaGNoZW5rbyA8bmlraXRhLnlvdXNoQGNvZ2VudGVtYmVkZGVkLmNvbT4KPj4g
+LS0tCj4+ICBhcmNoL2FybTY0L21tL2RtYS1tYXBwaW5nLmMgfCAxMSArKysrKysrKysrKwo+PiAg
+MSBmaWxlIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKykKPj4KPj4gZGlmZiAtLWdpdCBhL2FyY2gv
+YXJtNjQvbW0vZG1hLW1hcHBpbmcuYyBiL2FyY2gvYXJtNjQvbW0vZG1hLW1hcHBpbmcuYwo+PiBp
+bmRleCAyOTBhODRmLi40OTY0NTI3NyAxMDA2NDQKPj4gLS0tIGEvYXJjaC9hcm02NC9tbS9kbWEt
+bWFwcGluZy5jCj4+ICsrKyBiL2FyY2gvYXJtNjQvbW0vZG1hLW1hcHBpbmcuYwo+PiBAQCAtMjgs
+NiArMjgsNyBAQAo+PiAgI2luY2x1ZGUgPGxpbnV4L2RtYS1jb250aWd1b3VzLmg+Cj4+ICAjaW5j
+bHVkZSA8bGludXgvdm1hbGxvYy5oPgo+PiAgI2luY2x1ZGUgPGxpbnV4L3N3aW90bGIuaD4KPj4g
+KyNpbmNsdWRlIDxsaW51eC9wY2kuaD4KPj4gIAo+PiAgI2luY2x1ZGUgPGFzbS9jYWNoZWZsdXNo
+Lmg+Cj4+ICAKPj4gQEAgLTM0Nyw2ICszNDgsMTYgQEAgc3RhdGljIGludCBfX3N3aW90bGJfZ2V0
+X3NndGFibGUoc3RydWN0IGRldmljZSAqZGV2LCBzdHJ1Y3Qgc2dfdGFibGUgKnNndCwKPj4gIAo+
+PiAgc3RhdGljIGludCBfX3N3aW90bGJfZG1hX3N1cHBvcnRlZChzdHJ1Y3QgZGV2aWNlICpod2Rl
+diwgdTY0IG1hc2spCj4+ICB7Cj4+ICsjaWZkZWYgQ09ORklHX1BDSQo+PiArCWlmIChkZXZfaXNf
+cGNpKGh3ZGV2KSkgewo+PiArCQlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoaHdk
+ZXYpOwo+PiArCQlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpiciA9IHBjaV9maW5kX2hvc3RfYnJp
+ZGdlKHBkZXYtPmJ1cyk7Cj4+ICsKPj4gKwkJaWYgKGJyLT5kZXYuZG1hX21hc2sgJiYgKCpici0+
+ZGV2LmRtYV9tYXNrKSAmJgo+PiArCQkJCShtYXNrICYgKCpici0+ZGV2LmRtYV9tYXNrKSkgIT0g
+bWFzaykKPj4gKwkJCXJldHVybiAwOwo+PiArCX0KPj4gKyNlbmRpZgo+IAo+IEhtbSwgYnV0IHRo
+aXMgbWFrZXMgaXQgbG9vayBsaWtlIHRoZSBwcm9ibGVtIGlzIGJvdGggYXJtNjQgYW5kIHN3aW90
+bGIKPiBzcGVjaWZpYywgd2hlbiBpbiByZWFsaXR5IGl0J3Mgbm90LiBQZXJoYXBzIGFub3RoZXIg
+aGFjayB5b3UgY291bGQgdHJ5Cj4gd291bGQgYmUgdG8gcmVnaXN0ZXIgYSBQQ0kgYnVzIG5vdGlm
+aWVyIGluIHRoZSBob3N0IGJyaWRnZSBsb29raW5nIGZvcgo+IEJVU19OT1RJRllfQklORF9EUklW
+RVIsIHRoZW4geW91IGNvdWxkIHByb3h5IHRoZSBETUEgb3BzIGZvciBlYWNoIGNoaWxkCj4gZGV2
+aWNlIGJlZm9yZSB0aGUgZHJpdmVyIGhhcyBwcm9iZWQsIGJ1dCBhZGRpbmcgYSBkbWFfc2V0X21h
+c2sgY2FsbGJhY2sKPiB0byBsaW1pdCB0aGUgbWFzayB0byB3aGF0IHlvdSBuZWVkPwoKVGhpcyBp
+cyB3aGF0IFJlbmVzYXMgQlNQIHRyaWVzIHRvIGRvIGFuZCBpdCBkb2VzIG5vdCB3b3JrLgoKQlVT
+X05PVElGWV9CSU5EX0RSSVZFUiBhcnJpdmVzIGFmdGVyIGRyaXZlcidzIHByb2JlIHJvdXRpbmUg
+ZXhpdHMsIGJ1dAppL28gY2FuIGJlIHN0YXJ0ZWQgYmVmb3JlIHRoYXQuCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxp
+bmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3Rz
+LmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
