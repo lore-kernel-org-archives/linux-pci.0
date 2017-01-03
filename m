@@ -1,22 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-To: Sricharan <sricharan@codeaurora.org>, 'Tomasz Nowicki' <tn@semihalf.com>,
- will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
- <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
- <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
- <009901d278c7$34fee230$9efca690$@codeaurora.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
-Date: Fri, 27 Jan 2017 18:19:51 +0000
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+ Will Deacon <will.deacon@arm.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170103184444.GP6986@arm.com>
+ <ead2ff8d-fbd3-3109-51e2-41937e9c944d@cogentembedded.com>
+ <9382563b-44ab-47a8-14d0-1fdaf49f8c5d@ti.com>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <bd587495-0c88-005f-c1b6-9ce05e20fcbc@cogentembedded.com>
+Date: Tue, 3 Jan 2017 23:23:06 +0300
 MIME-Version: 1.0
-In-Reply-To: <009901d278c7$34fee230$9efca690$@codeaurora.org>
+In-Reply-To: <9382563b-44ab-47a8-14d0-1fdaf49f8c5d@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -24,55 +20,83 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, Catalin Marinas <catalin.marinas@arm.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/01/17 18:00, Sricharan wrote:
-> Hi Robin,
-> 
-> [..]
-> 
->>>> +const struct iommu_ops *of_iommu_configure(struct device *dev,
->>>> +                       struct device_node *master_np)
->>>> +{
->>>> +    const struct iommu_ops *ops;
+>>>> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+>>>> index 290a84f..49645277 100644
+>>>> --- a/arch/arm64/mm/dma-mapping.c
+>>>> +++ b/arch/arm64/mm/dma-mapping.c
+>>>> @@ -28,6 +28,7 @@
+>>>>  #include <linux/dma-contiguous.h>
+>>>>  #include <linux/vmalloc.h>
+>>>>  #include <linux/swiotlb.h>
+>>>> +#include <linux/pci.h>
+>>>>  
+>>>>  #include <asm/cacheflush.h>
+>>>>  
+>>>> @@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
+>>>>  
+>>>>  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+>>>>  {
+>>>> +#ifdef CONFIG_PCI
+>>>> +	if (dev_is_pci(hwdev)) {
+>>>> +		struct pci_dev *pdev = to_pci_dev(hwdev);
+>>>> +		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
 >>>> +
->>>> +    if (!master_np)
->>>> +        return NULL;
->>>> +
->>>> +    if (dev_is_pci(dev))
->>>> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+>>>> +		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
+>>>> +				(mask & (*br->dev.dma_mask)) != mask)
+>>>> +			return 0;
+>>>> +	}
+>>>> +#endif
 >>>
->>> I gave the whole patch set a try on ThunderX. really_probe() is failing
->>> on dma_configure()->of_pci_iommu_init() for each PCI device.
+>>> Hmm, but this makes it look like the problem is both arm64 and swiotlb
+>>> specific, when in reality it's not. Perhaps another hack you could try
+>>> would be to register a PCI bus notifier in the host bridge looking for
+>>> BUS_NOTIFY_BIND_DRIVER, then you could proxy the DMA ops for each child
+>>> device before the driver has probed, but adding a dma_set_mask callback
+>>> to limit the mask to what you need?
 >>
->> When you say "failing", do you mean cleanly, or with a crash? I've
->> managed to hit __of_match_node() dereferencing NULL from
->> of_iommu_xlate() in a horribly complicated chain of events, which I'm
->> trying to figure out now, and I wonder if the two might be related.
+>> This is what Renesas BSP tries to do and it does not work.
+>>
+>> BUS_NOTIFY_BIND_DRIVER arrives after driver's probe routine exits, but
+>> i/o can be started before that.
 > 
-> Sorry that there is crash still. __of_match_node seems to checking
-> for NULL arguments , feels like some invalid pointer was passed in.
-> Is there any particular sequence to try for this ?
+> Hm. This is strange statement:
+>  really_probe
+>  |->driver_sysfs_add
+>     |-> blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+>  					     BUS_NOTIFY_BIND_DRIVER, dev);
+> ...
+>  |- ret = drv->probe(dev);
+> ...
+>  |- driver_bound(dev);
+>     |- blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+> 					     BUS_NOTIFY_BOUND_DRIVER, dev);
+> 
+> Am I missing smth?
 
-Ah, I did figure it out - it wasn't actually a NULL dereference, but an
-unmapped address. Turns out __iommu_of_table is in initdata, so any
-driver probing after init, connected to an unprobed IOMMU (in this case
-disabled in DT), trips over trying to match the now-freed table. I'm
-working on the fix - technically the bug's in my patch (#2) anyway ;)
+I misinterpreted your message, sorry.
 
-Robin.
+BSP attaches to BUS_NOTIFY_BOUND_DRIVER, not to BUS_NOTIFY_BIND_DRIVER,
+and simply overwrites device's dma_mask there.  You are suggesting
+something completely different.
 
-> 
-> Regards,
->  Sricharan
-> 
-> 
-> 
-> 
+I'll check if your approach is practical.
 
+
+Currently powerpc architecture has one more approach implemented, they
+use pci_controller structure provided by host bridge driver, and that
+has a set_dma_mask() hook. Maybe extending this beyond powerpc could be
+a good idea. However, that will require changing quite a few host bridge
+drivers, without any gain for most of those...
 
 _______________________________________________
 linux-arm-kernel mailing list
