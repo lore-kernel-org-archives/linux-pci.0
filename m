@@ -1,182 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35242 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750705AbdAWQTP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2017 11:19:15 -0500
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 07/11] iommu: of: Handle IOMMU lookup failure with deferred probing or error
-Date: Mon, 23 Jan 2017 21:48:09 +0530
-Message-Id: <1485188293-20263-8-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Tue, 3 Jan 2017 18:08:38 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <952083402.13.1483463318493.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20170102114040.GA20127@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info> <20161230000731.GB18700@wunner.de> <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info> <20170102114040.GA20127@wunner.de>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Sorry I should mention the patch.
+I tried the 4.9.0 kernel and the patch:
+disable_pm_v4.9.patch
 
-Failures to look up an IOMMU when parsing the DT iommus property need to
-be handled separately from the .of_xlate() failures to support deferred
-probing.
+ fixes both the screen lock and firefox issue.
 
-The lack of a registered IOMMU can be caused by the lack of a driver for
-the IOMMU, the IOMMU device probe not having been performed yet, having
-been deferred, or having failed.
+----- Original Message -----
+From: "Lukas Wunner" <lukas@wunner.de>
+To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Monday, January 2, 2017 12:40:40 PM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-The first case occurs when the device tree describes the bus master and
-IOMMU topology correctly but no device driver exists for the IOMMU yet
-or the device driver has not been compiled in. Return NULL, the caller
-will configure the device without an IOMMU.
+On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
+> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
+> if that helps but needs some time again to compile.
+> The debug messages from the first rpm_... to the crash are:
+[...]
+> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
+> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
+> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
+> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
+> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
+> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
+> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
+> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
+> [   26.207691] pcieport 0000:00:01.0: rpm_idle
+> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
+> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
+> SYSTEM IS NOW NOT RESPONSIVE
 
-The second and third cases are handled by deferring the probe of the bus
-master device which will eventually get reprobed after the IOMMU.
+So two seconds before the system became unresponsive, the root port above
+the discrete GPU suspended, suggesting that's the culprit.  Could you test
+either of the attached patches to confirm this theory?  They disable
+runtime PM on this specific root port but allow it on all the others.
 
-The last case is currently handled by deferring the probe of the bus
-master device as well. A mechanism to either configure the bus master
-device without an IOMMU or to fail the bus master device probe depending
-on whether the IOMMU is optional or mandatory would be a good
-enhancement.
+You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
+Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
+Method).  That's what we did up until v4.7.
 
-Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/base/dma-mapping.c | 5 +++--
- drivers/iommu/of_iommu.c   | 5 +++--
- drivers/of/device.c        | 9 +++++++--
- include/linux/of_device.h  | 9 ++++++---
- 4 files changed, 19 insertions(+), 9 deletions(-)
+However on newer laptops Windows no longer cuts power to the discrete GPU
+by invoking the _DSM, but rather by suspending the root port above the
+GPU.  (More specifically by turning off Power Resources required for D3
+of the root port, those are specified in a _PR3 object.)  We started
+supporting this with v4.8.
 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 449b948..82bd45c 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -353,6 +353,7 @@ int dma_configure(struct device *dev)
- {
- 	struct device *bridge = NULL, *dma_dev = dev;
- 	enum dev_dma_attr attr;
-+	int ret = 0;
- 
- 	if (dev_is_pci(dev)) {
- 		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-@@ -363,7 +364,7 @@ int dma_configure(struct device *dev)
- 	}
- 
- 	if (dma_dev->of_node) {
--		of_dma_configure(dev, dma_dev->of_node);
-+		ret = of_dma_configure(dev, dma_dev->of_node);
- 	} else if (has_acpi_companion(dma_dev)) {
- 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
- 		if (attr != DEV_DMA_NOT_SUPPORTED)
-@@ -373,7 +374,7 @@ int dma_configure(struct device *dev)
- 	if (bridge)
- 		pci_put_host_bridge_device(bridge);
- 
--	return 0;
-+	return ret;
- }
- 
- void dma_deconfigure(struct device *dev)
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 349bd1d..9529d6c 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -23,6 +23,7 @@
- #include <linux/of.h>
- #include <linux/of_iommu.h>
- #include <linux/of_pci.h>
-+#include <linux/pci.h>
- #include <linux/slab.h>
- 
- static const struct of_device_id __iommu_of_table_sentinel
-@@ -223,7 +224,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 			ops = ERR_PTR(err);
- 	}
- 
--	return IS_ERR(ops) ? NULL : ops;
-+	return ops;
- }
- 
- static int __init of_iommu_init(void)
-@@ -234,7 +235,7 @@ static int __init of_iommu_init(void)
- 	for_each_matching_node_and_match(np, matches, &match) {
- 		const of_iommu_init_fn init_fn = match->data;
- 
--		if (init_fn(np))
-+		if (init_fn && init_fn(np))
- 			pr_err("Failed to initialise IOMMU %s\n",
- 				of_node_full_name(np));
- 	}
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 1c843e2..d58595c 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -82,7 +82,7 @@ int of_device_add(struct platform_device *ofdev)
-  * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
-  * to fix up DMA configuration.
-  */
--void of_dma_configure(struct device *dev, struct device_node *np)
-+int of_dma_configure(struct device *dev, struct device_node *np)
- {
- 	u64 dma_addr, paddr, size;
- 	int ret;
-@@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
- 	if (ret < 0) {
- 		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask + 1;
-+		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
- 	} else {
- 		offset = PFN_DOWN(paddr - dma_addr);
- 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-@@ -129,10 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 		coherent ? " " : " not ");
- 
- 	iommu = of_iommu_configure(dev, np);
-+	if (IS_ERR(iommu))
-+		return PTR_ERR(iommu);
-+
- 	dev_dbg(dev, "device is%sbehind an iommu\n",
- 		iommu ? " " : " not ");
- 
- 	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(of_dma_configure);
- 
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index d20a31a..6dca65c 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -55,7 +55,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
- }
- 
--void of_dma_configure(struct device *dev, struct device_node *np);
-+int of_dma_configure(struct device *dev, struct device_node *np);
- void of_dma_deconfigure(struct device *dev);
- #else /* CONFIG_OF */
- 
-@@ -99,8 +99,11 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
--static inline void of_dma_configure(struct device *dev, struct device_node *np)
--{}
-+
-+static inline int of_dma_configure(struct device *dev, struct device_node *np)
-+{
-+	return 0;
-+}
- static inline void of_dma_deconfigure(struct device *dev)
- {}
- #endif /* CONFIG_OF */
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+If the above theory is correct, we need to involve Optimus experts
+because this is not an issue then with powering down root ports in
+general, but rather specific to this Optimus use case.
 
+Thanks,
+
+Lukas
