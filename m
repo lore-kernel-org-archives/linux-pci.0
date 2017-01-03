@@ -1,75 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750730AbdALXRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jan 2017 18:17:30 -0500
-Date: Thu, 12 Jan 2017 17:17:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matthew Garrett <mjg59@coreos.com>
-Cc: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Julia Cartwright <julia@ni.com>,
-        Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH] Force to clear ASPM bits if CONFIG_PCIEASPM_PERFORMANCE
- is set
-Message-ID: <20170112231726.GH8312@bhelgaas-glaptop.roam.corp.google.com>
-References: <95e1fc6e84cf42e094d4a8478c37b18e@FE-MBX1012.de.bosch.com>
- <20161208222025.GB6693@bhelgaas-glaptop.roam.corp.google.com>
- <70624f4bf1514e48ae29e84998a81a80@FE-MBX1012.de.bosch.com>
- <20170112205458.GC8312@bhelgaas-glaptop.roam.corp.google.com>
- <CAPeXnHvbGMC-MuQbVTV+CCjqEbbp6WC4PaWmijEVWv=Nnbm8Zg@mail.gmail.com>
+Return-Path: <SRS0=9ysh=YR=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=9ysh=YR=wunner.de=lukas@kernel.org>
+Date: Tue, 3 Jan 2017 17:11:23 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170103161123.GA20915@wunner.de>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170102121019.GA3353@lahna.fi.intel.com>
+ <20170102144852.GE3353@lahna.fi.intel.com>
+ <1731082.izJCnRoq0n@aspire.rjw.lan>
+ <20170103095158.GH3353@lahna.fi.intel.com>
+ <20170103151547.GB9763@al>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPeXnHvbGMC-MuQbVTV+CCjqEbbp6WC4PaWmijEVWv=Nnbm8Zg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170103151547.GB9763@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Emmanuel because of https://bugzilla.kernel.org/show_bug.cgi?id=57331]
+[cc += Dave Airlie:
 
-On Thu, Jan 12, 2017 at 01:48:15PM -0800, Matthew Garrett wrote:
-> On Thu, Jan 12, 2017 at 12:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > Thanks for that.  In addition to yours, we have the following report,
-> > which was also bisected to 387d37577fdd:
-> >
-> >   https://bugzilla.kernel.org/show_bug.cgi?id=102311 ASPM: ASMEDA asm1062 not working
-> >
-> > The changelog for 387d37577fdd doesn't mention any actual bugs that it
-> > fixes.  Should we consider reverting it?  Can you shed any light on
-> > this, Matthew?
-> 
-> Without this commit we disable ASPM on devices that expect to have it
-> enabled and increase idle power consumption by approximately 200% on
-> some laptops. Windows drivers may explicitly change the ASPM state on
-> devices or PCIe bridges, and if so we should be mimicing that
-> behaviour as well.
+Dave, we're about to lose support for newer Optimus laptops which use
+_PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+a commit on his for-linus branch to remove runtime PM for PCIe ports.
+This fixes a regression on Kilian Singer's laptop on which locking the
+screen breaks USB and PS/2 input devices:  Mouse movements are still
+visible, but button or key presses no longer have any effect.  The GPU
+is powered down upon locking the screen and the current theory is that
+this causes the issues.]
 
-Thanks, I should have asked for that information in the 387d37577fdd
-changelog, but it's good to have it now.
+On Tue, Jan 03, 2017 at 04:15:47PM +0100, Peter Wu wrote:
+> The acpidump from the bug does not show known issues, it *looks* fine.
+> There have been other issues related to resuming power on newer Nvidia
+> hardware (https://bugs.freedesktop.org/show_bug.cgi?id=94725,
+> https://bugzilla.kernel.org/show_bug.cgi?id=156341) but there is not
+> much progress here.  (The last time I traced the PCIe register accesses
+> (via kprobes) and tried to disable some of those, it still did not help
+> with preventing the power issue.)
 
-On a system with ACPI_FADT_NO_ASPM set (as in both
-https://bugzilla.kernel.org/show_bug.cgi?id=189951 and
-https://bugzilla.kernel.org/show_bug.cgi?id=102311):
+It seems that the _DSM method works on Kilian's laptop.  Would it be
+viable to default to _DSM if it's available, and only use _PR3 if not?
 
-  - We set aspm_disabled = 1 (since 5fde244d39b8).
+Thanks,
 
-  - Before 387d37577fdd, we called pcie_clear_aspm(), which disabled
-    all ASPM link states, even if aspm_disabled == 1.
-
-  - After 387d37577fdd, we leave ASPM link states as BIOS configured
-    them.  This explains why the NIC performance issue is related to
-    this commit.
-
-A driver can explicitly change the ASPM state with
-pci_disable_link_state().  But that doesn't do anything when
-ACPI_FADT_NO_ASPM (and thus aspm_disabled) is set.
-
-Are you suggesting that we should remove the aspm_disabled check and
-make pci_disable_link_state() work regardless of ACPI_FADT_NO_ASPM?
-It's only called by drivers that presumably know about their device
-issues, and one would think it would be relatively safe to *disable*
-ASPM states (or at least safer than *enabling* them).
-
-Bjorn
+Lukas
