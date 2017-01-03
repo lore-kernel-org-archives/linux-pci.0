@@ -1,135 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@linaro.org>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-Date: Mon, 09 Jan 2017 15:05:38 +0100
-Message-ID: <6374144.HVL0QxNJiT@wuerfel>
-In-Reply-To: <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <2723285.JORgusvJv4@wuerfel>
- <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+Return-Path: <SRS0=e5yU=YR=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=e5yU=YR=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 3 Jan 2017 11:51:58 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170103095158.GH3353@lahna.fi.intel.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170102121019.GA3353@lahna.fi.intel.com>
+ <20170102144852.GE3353@lahna.fi.intel.com>
+ <1731082.izJCnRoq0n@aspire.rjw.lan>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1731082.izJCnRoq0n@aspire.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 6, 2017 4:47:59 PM CET Nikita Yushchenko wrote:
-> >>> Just a guess, but if the inbound translation windows in the host
-> >>> bridge are wider than 32-bit, the reason for setting up a single
-> >>> 32-bit window is probably because that is what the parent bus supports.
-> 
-> I've re-checked rcar-pcie hardware documentation.
-> 
-> It indeed mentions that AXI bus it sits on is 32-bit.
-> 
-> 
-> >> Well anyway applying patch similar to your's will fix pcie-rcar + nvme
-> >> case - thus I don't object :)   But it can break other cases ...
-> >>
-> >> But why do you hook at set_dma_mask() and overwrite mask inside, instead
-> >> of hooking at dma_supported() and rejecting unsupported mask?
-> >>
-> >> I think later is better, because it lets drivers to handle unsupported
-> >> high-dma case, like documented in DMA-API_HOWTO.
+On Mon, Jan 02, 2017 at 10:31:07PM +0100, Rafael J. Wysocki wrote:
+> On Monday, January 02, 2017 04:48:52 PM Mika Westerberg wrote:
+> > On Mon, Jan 02, 2017 at 02:10:19PM +0200, Mika Westerberg wrote:
+> > > I've checked the acpidump of this machine and it does not seem to be a
+> > > traditional Optimus machine. At least this one is missing the magic _DSM
+> > > which is used to gather capabilities of the graphics device.
+> > > 
+> > > However, it does have _PR3 and it is attached to the device
+> > > (_SB.PCI0.PEG) itself, not the root port.
 > > 
-> > I think the behavior I put in there is required for swiotlb to make
-> > sense, otherwise you would rely on the driver to handle dma_set_mask()
-> > failure gracefully with its own bounce buffers (as network and
-> > scsi drivers do but others don't).
-> > 
-> > Having swiotlb or iommu enabled should result in dma_set_mask() always
-> > succeeding unless the mask is too small to cover the swiotlb
-> > bounce buffer area or the iommu virtual address space. This behavior
-> > is particularly important in case the bus address space is narrower
-> > than 32-bit, as we have to guarantee that the fallback to 32-bit
-> > DMA always succeeds. There are also a lot of drivers that try to
-> > set a 64-bit mask but don't implement bounce buffers for streaming
-> > mappings if that fails, and swiotlb is what we use to make those
-> > drivers work.
-> > 
-> > And yes, the API is a horrible mess.
+> > Nah, actually PEG is the root port. So it certainly looks like
+> > a traditional Optimus machine.
 > 
-> With my patch applied and thus 32bit dma_mask set for NVMe device, I do
-> see high addresses passed to dma_map_*() routines and handled by
-> swiotlb. Thus your statement that behavior "succeed 64bit dma_set_mask()
-> operation but silently replace mask behind the scene" is required for
-> swiotlb to be used, does not match reality.
+> So can we quirk that thing somehow and see if that helps (for debugging
+> purposes at least)?
 
-See my point about drivers that don't implement bounce buffering.
-Apparently NVMe is one of them, unlike the SATA/SCSI/MMC storage
-drivers that do their own thing.
+I was kind of hoping disabling D3cold would do that (prevent it from
+turning off power resources). But we can also just force it to use _DSM
+instead and see if it makes a difference.
 
-The problem again is the inconsistency of the API.
+I guess the reason why keyboard and mouse become unresponsive is because
+the driver tries to resume the device and hogs the CPU. At least it
+looks like so from the dmesg in comment 27 (of the bugzilla bug) where
+NMI watchdog is triggered.
 
-> It can be interpreted as a breakage elsewhere, but it's hard to point
-> particular "root cause". The entire infrastructure to allocate and use
-> DMA memory is messy.
+Since this might be related to nouveau, adding Peter Wu to the loop.
+Peter the bug in question is https://bugzilla.kernel.org/show_bug.cgi?id=190861.
 
-Absolutely.
+Kilian, can you try the following hack as well?
 
-What I think happened here in chronological order is:
-
-- In the old days, 64-bit architectures tended to use an IOMMU 
-  all the time to work around 32-bit limitations on DMA masters
-- Some architectures had no IOMMU that fully solved this and the
-  dma-mapping API required drivers to set the right mask and check
-  the return code. If this failed, the driver needed to use its
-  own bounce buffers as network and scsi do. See also the
-  grossly misnamed "PCI_DMA_BUS_IS_PHYS" macro.
-- As we never had support for bounce buffers in all drivers, and
-  early 64-bit Intel machines had no IOMMU, the swiotlb code was
-  introduced as a workaround, so we can use the IOMMU case without
-  driver specific bounce buffers everywhere
-- As most of the important 64-bit architectures (x86, arm64, powerpc)
-  now always have either IOMMU or swiotlb enabled, drivers like
-  NVMe started relying on it, and no longer handle a dma_set_mask
-  failure properly.
-
-We may need to audit how drivers typically handle dma_set_mask()
-failure. The NVMe driver in its current state will probably cause
-silent data corruption when used on a 64-bit architecture that has
-a 32-bit bus but neither swiotlb nor iommu enabled at runtime.
-
-I would argue that the driver should be fixed to either refuse
-working in that configuration to avoid data corruption, or that
-it should implement bounce buffering like SCSI does. If we make it
-simply not work, then your suggestion of making dma_set_mask()
-fail will break your system in a different way.
-
-> Still current code does not work, thus fix is needed.
-> 
-> Perhaps need to introduce some generic API to "allocate memory best
-> suited for DMA to particular device", and fix allocation points (in
-> drivers, filesystems, etc) to use it. Such an API could try to allocate
-> area that can be DMAed by hardware, and fallback to other memory that
-> can be used via swiotlb or other bounce buffer implementation.
-
-The DMA mapping API is meant to do this, but we can definitely improve
-it or clarify some of the rules.
+diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+index 193573d191e5..50482d5c8072 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -282,7 +282,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
+ 			 (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
+ 			 (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
  
-> But for now, have to stay with dma masks. Will follow-up with a patch
-> based on your but with coherent mask handling added.
-
-Ok.
-
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-		*has_pr3 = nouveau_pr3_present(pdev);
++//		*has_pr3 = nouveau_pr3_present(pdev);
+ 	}
+ }
+ 
