@@ -1,149 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:46095 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751078AbdAPKeF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 05:34:05 -0500
-Date: Mon, 16 Jan 2017 11:34:01 +0100
-From: Lukasz Majewski <lukma@denx.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-Message-ID: <20170116113401.1364b079@jawa>
-In-Reply-To: <587C9CE6.8040001@ti.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
-        <587C6A40.8070608@ti.com>
-        <20170116074927.086418f4@jawa>
-        <587C8088.80905@ti.com>
-        <20170116103136.21c899ac@jawa>
-        <587C9CE6.8040001@ti.com>
+Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Tue, 03 Jan 2017 22:38:24 +0100
+Message-ID: <3913750.OA6IItgEjC@aspire.rjw.lan>
+In-Reply-To: <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170103163130.GC9763@al> <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear All,
-
-> + Joao, Jingoo
+On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
+> On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
+> > On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
+> > > [cc += Dave Airlie:
+> > > 
+> > > Dave, we're about to lose support for newer Optimus laptops which use
+> > > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+> > > a commit on his for-linus branch to remove runtime PM for PCIe ports.
+> > > This fixes a regression on Kilian Singer's laptop on which locking the
+> > > screen breaks USB and PS/2 input devices:  Mouse movements are still
+> > > visible, but button or key presses no longer have any effect.  The GPU
+> > > is powered down upon locking the screen and the current theory is that
+> > > this causes the issues.]
+> > 
+> > (+cc Alex: this might affect amdgpu/radeon too.]
+> > 
+> > Bjorn, please reconsider the rpm patch. Reverting support would
+> > introduce other regressions (see issues below) and make future
+> > Thunderbolt work harder (according to Lukas). If Kilian's laptop has
+> > issues, what about a "temporary" quirk?
 > 
-> Hi,
+> As I mentioned at the beginning, the outcome I'm hoping for is a patch
+> that fixes Kilian's laptop while preserving the runtime PM support.
 > 
-> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
-> > Hi Kishon,
-> > 
-> >> Hi Łukasz,
-> >>
-> >> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
-> >>> Hi Kishon,
-> >>>
-> >>>> Hi,
-> >>>>
-> >>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
-> >>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
-> >>>>> run with forced GEN1 speed on PCIe bus.
-> >>>>>
-> >>>>> This patch changes the speed explicitly on dra7 based devices
-> >>>>> when proper device tree attribute is defined for the PCIe
-> >>>>> controller.
-> >>>>>
-> >>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
-> >>>>
-> >>>> Bjorn has already queued a patch to do the same thing
-> >>>> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
-> >>>
-> >>> It seems like Bjorn only modifies CAP registers.
-> >>
-> >> The patch also modifies the LNKCTL2 register.
-> >>>
-> >>> He also needs to change register with 0x080C offset to actually
-> >>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
-> >>
-> >> This bit is used to initiate speed change (after the link is
-> >> initialized in GEN1). Resetting the bit (like what you have done
-> >> here) prevents speed change.
-> > 
-> > This is strange, but e2e advised me to do things as I did in the
-> > patch to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
-> > 
-> > Link:
-> > [1] https://e2e.ti.com/support/arm/sitara_arm/f/791/t/566421
-> > 
-> > Both patches modify 0x5180 007C register to set GEN1 capability
-> > (PCI_EXP_LNKCAP_SLS_2_5GB)
-> > 
-> > The problem is with second register (in your patch):
-> > 
-> > From SPRUHZ6G TRM:
-> > 
-> > PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
-> > - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
-> >   description in TRM
-> > 
-> > It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
-> > default /reset value.
-> 
-> The default value is 0x2 (or else none of the cards would have
-> enumerated in GEN2)
+> As I also mentioned at the beginning, preserving the runtime PM
+> support at the expense of breaking Kilian's laptop is not one of the
+> options.
 
-SPRUHZ6G – October 2014 – Revised June 2016 - page 6313. Maybe TRM is
-not up to date?
+But the revert doesn't really help.
 
-> > 
-> > 
-> > Could you clarify which way to _force_ PCIe GEN1 operation is
-> > correct? Mine shows differences in lspci output (as posted in [1]).
-> 
-> You'll see the difference even with the patch in Bjorn's tree ;-)
+It doesn't fix system suspend/resume on that laptop, which also breaks when
+PCIe ports PM is enabled on it.
 
-:-) 
+If you really want to use a sledgehammer approach here (which I don't recommend,
+but that's your call), you can change the initial value of pci_bridge_d3_disable to
+"true" (and update the pcie_ports_pm= command line to take "on" in case
+someone wants to enable the feature).  That at least will take care of the
+regression entirely and not just partly.
 
-The details of my test cases and output are in the post [1].
-
-> 
-> I think these are 2 different approaches to keep the link at GEN1.
-> Joao or Jingoo, do you have any suggestion here?
-
-Please read through thread [1]
-
-[1] https://e2e.ti.com/support/arm/sitara_arm/f/791/t/566421
-
-> 
-> > 
-> >>
-> >> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
-> >> the IP register.
-> > 
-> > From the original patch description:
-> > 
-> > "Add support to force Root Complex to work in GEN1 mode if so
-> > desired, but don't force GEN1 mode on any board just yet."
-> > 
-> > Are there any (floating around) patches allowing forcing GEN1
-> > operation on any board (I would like to reuse/port them to my
-> > current solution)?
-> 
-> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt
-> with the patch in Bjorn's tree.
-
-Ah.... ok.
-> 
-> Thanks
-> Kishon
-
-
-
-
-Best regards,
-
-Lukasz Majewski
-
---
-
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Thanks,
+Rafael
