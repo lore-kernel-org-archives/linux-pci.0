@@ -1,90 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51628 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753716AbdA3PYB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jan 2017 10:24:01 -0500
-Subject: [PATCH] PCI/ASPM: Handle PCI-to-PCIe bridges as roots of PCIe
- hierarchies
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Jao Ching Chen <jcchen@pericom.com>, lists@ssl-mail.com,
-        linux-kernel@vger.kernel.org, Blake Moore <blake.moore@men.de>,
-        Takashi Iwai <tiwai@suse.com>
-Date: Mon, 30 Jan 2017 09:23:24 -0600
-Message-ID: <20170130152324.32437.37400.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Date: Tue, 3 Jan 2017 17:59:18 +0100 (CET)
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <1204573191.9.1483462758094.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20170102114040.GA20127@wunner.de>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info> <20161230000731.GB18700@wunner.de> <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info> <20170102114040.GA20127@wunner.de>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-In a struct pcie_link_state, link->root points to the pcie_link_state of
-the root of the PCIe hierarchy.  For the topmost link, this points to
-itself (link->root = link).  For others, we copy the pointer from the
-parent (link->root = link->parent->root).
+I tried the 4.9.0 kernel and the patch fixes both the screen lock and firefox issue.
 
-Previously we recognized that Root Ports originated PCIe hierarchies, but
-we treated PCI/PCI-X to PCIe Bridges as being in the middle of the
-hierarchy, and when we tried to copy the pointer from link->parent->root,
-there was no parent, and we dereferenced a NULL pointer:
 
-  BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
-  IP: [<ffffffff9e424350>] pcie_aspm_init_link_state+0x170/0x820
+----- Original Message -----
+From: "Lukas Wunner" <lukas@wunner.de>
+To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Sent: Monday, January 2, 2017 12:40:40 PM
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 
-Recognize that PCI/PCI-X to PCIe Bridges originate PCIe hierarchies just
-like Root Ports do, so link->root for these devices should also point to
-itself.
+On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
+> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
+> if that helps but needs some time again to compile.
+> The debug messages from the first rpm_... to the crash are:
+[...]
+> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
+> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
+> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
+> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
+> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
+> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
+> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
+> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
+> [   26.207691] pcieport 0000:00:01.0: rpm_idle
+> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
+> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
+> SYSTEM IS NOW NOT RESPONSIVE
 
-Fixes: 51ebfc92b72b ("PCI: Enumerate switches below PCI-to-PCIe bridges")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=193411
-Link: https://bugzilla.opensuse.org/show_bug.cgi?id=1022181
-Tested-by: lists@ssl-mail.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: stable@vger.kernel.org	# v4.2+
----
- drivers/pci/pcie/aspm.c |   19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+So two seconds before the system became unresponsive, the root port above
+the discrete GPU suspended, suggesting that's the culprit.  Could you test
+either of the attached patches to confirm this theory?  They disable
+runtime PM on this specific root port but allow it on all the others.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 17ac1dce3286..3dd8bcbb3011 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -532,25 +532,32 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	link = kzalloc(sizeof(*link), GFP_KERNEL);
- 	if (!link)
- 		return NULL;
-+
- 	INIT_LIST_HEAD(&link->sibling);
- 	INIT_LIST_HEAD(&link->children);
- 	INIT_LIST_HEAD(&link->link);
- 	link->pdev = pdev;
--	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) {
-+
-+	/*
-+	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
-+	 * hierarchies.
-+	 */
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
-+	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE) {
-+		link->root = link;
-+	} else {
- 		struct pcie_link_state *parent;
-+
- 		parent = pdev->bus->parent->self->link_state;
- 		if (!parent) {
- 			kfree(link);
- 			return NULL;
- 		}
-+
- 		link->parent = parent;
-+		link->root = link->parent->root;
- 		list_add(&link->link, &parent->children);
- 	}
--	/* Setup a pointer to the root port link */
--	if (!link->parent)
--		link->root = link;
--	else
--		link->root = link->parent->root;
- 
- 	list_add(&link->sibling, &link_list);
- 	pdev->link_state = link;
+You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
+Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
+Method).  That's what we did up until v4.7.
 
+However on newer laptops Windows no longer cuts power to the discrete GPU
+by invoking the _DSM, but rather by suspending the root port above the
+GPU.  (More specifically by turning off Power Resources required for D3
+of the root port, those are specified in a _PR3 object.)  We started
+supporting this with v4.8.
+
+If the above theory is correct, we need to involve Optimus experts
+because this is not an issue then with powering down root ports in
+general, but rather specific to this Optimus use case.
+
+Thanks,
+
+Lukas
