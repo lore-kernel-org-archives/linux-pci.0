@@ -1,82 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:42378 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbdAPGbq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 01:31:46 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V3 3/5] PCI: exynos: Remove the unnecessary variables
-Date: Mon, 16 Jan 2017 15:31:36 +0900
-Message-id: <20170116063138.25805-4-jh80.chung@samsung.com>
-In-reply-to: <20170116063138.25805-1-jh80.chung@samsung.com>
-References: <20170116063138.25805-1-jh80.chung@samsung.com>
- <CGME20170116063141epcas5p329a9496aabe28a9961176539c47065dc@epcas5p3.samsung.com>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:36585 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758988AbdACPt5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 10:49:57 -0500
+Received: by mail-yw0-f196.google.com with SMTP id r204so38841332ywb.3
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jan 2017 07:49:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1483435737.20054.6.camel@suse.com>
+References: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
+ <Pine.LNX.4.44L0.1701021626410.28032-100000@netrider.rowland.org>
+ <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com> <1483435737.20054.6.camel@suse.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Tue, 3 Jan 2017 08:19:38 -0700
+Message-ID: <CAJCQCtQo3DiaBG2LjSJtcMPpCyEH9hDP5-kmURcoEVRLrz0zRQ@mail.gmail.com>
+Subject: Re: Thunderbolt adapter fails to instantiate USB and device
+ enumeration if already connected at boot time
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Chris Murphy <lists@colorremedies.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the unnecessary variables(elbi/phy/block_base).
-It needs one resource structure for assigning each resource.
-So it replaces with one 'res' variable.
+On Tue, Jan 3, 2017 at 2:28 AM, Oliver Neukum <oneukum@suse.com> wrote:
+> On Mon, 2017-01-02 at 14:45 -0700, Chris Murphy wrote:
+>> I see these lines in the problem case, which don't occur in the
+>> working case.
+>>
+>> [    0.561046] pci_bus 0000:37: busn_res: [bus 37-ff] end is updated
+>> to 37
+>> [    0.561047] pci_bus 0000:37: busn_res: can not insert [bus 37]
+>> under domain [bus 00-ff] (conflicts with (null) [bus 00-fe])
+>>
+>> [    0.579446] pci 0000:37:00.0: can't claim BAR 0 [mem
+>> 0xb0000000-0xb000ffff]: address conflict with PCI Bus 0000:00 [mem
+>> 0x40000000-0xdfffffff window]
+>>
+>> [    0.602277] pci 0000:37:00.0: can't derive routing for PCI INT A
+>> [    0.602280] pci 0000:37:00.0: PCI INT A: not connected
+>> [    0.612304] pci 0000:37:00.0: xHCI HW not ready after 5 sec (HC
+>> bug?) status = 0xffffffff
+>
+> Have you tried "pci=realloc"?
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
----
-Changelog on V3:
-- None
-Changelog on V2:
-- None
- drivers/pci/host/pci-exynos.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+No effect. Attached that dmesg to the bug report anyway though.
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 166881a..6255294 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -507,9 +507,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 	struct exynos_pcie *ep;
- 	struct pcie_port *pp;
- 	struct device_node *np = dev->of_node;
--	struct resource *elbi_base;
--	struct resource *phy_base;
--	struct resource *block_base;
-+	struct resource *res;
- 	int ret;
- 
- 	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
-@@ -540,22 +538,22 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto fail_clk;
- 
--	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	ep->elbi_base = devm_ioremap_resource(dev, elbi_base);
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	ep->elbi_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(ep->elbi_base)) {
- 		ret = PTR_ERR(ep->elbi_base);
- 		goto fail_bus_clk;
- 	}
- 
--	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	ep->phy_base = devm_ioremap_resource(dev, phy_base);
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	ep->phy_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(ep->phy_base)) {
- 		ret = PTR_ERR(ep->phy_base);
- 		goto fail_bus_clk;
- 	}
- 
--	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
--	ep->block_base = devm_ioremap_resource(dev, block_base);
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-+	ep->block_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(ep->block_base)) {
- 		ret = PTR_ERR(ep->block_base);
- 		goto fail_bus_clk;
 -- 
-2.10.2
-
+Chris Murphy
