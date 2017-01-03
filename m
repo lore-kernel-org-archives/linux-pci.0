@@ -1,125 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49072 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752008AbdA1XYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Jan 2017 18:24:31 -0500
-Date: Sat, 28 Jan 2017 17:14:42 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Tomeu Vizoso <tomeu.vizoso@collabora.com>
-Subject: Re: [PATCH v5 5/8] PM: Make requirements of dev_pm_domain_set() more
- precise
-Message-ID: <20170128231442.GP20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1484486499.git.lukas@wunner.de>
- <7b958f265f7acc4ebe07286cb3a19fdb7ac94962.1484486499.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7b958f265f7acc4ebe07286cb3a19fdb7ac94962.1484486499.git.lukas@wunner.de>
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:33179 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934517AbdACGe3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 01:34:29 -0500
+Received: by mail-pg0-f46.google.com with SMTP id g1so172295615pgn.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 22:34:28 -0800 (PST)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Andreas Ziegler <andreas.ziegler@fau.de>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        David Daney <david.daney@cavium.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        Ram Amrani <Ram.Amrani@cavium.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Wang Sheng-Hui <shhuiw@foxmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>,
+        Brian Norris <briannorris@google.com>
+Subject: [PATCH 0/6] PCI/ASPM: Add PCIe L1 PM substate support
+Date: Mon,  2 Jan 2017 22:34:09 -0800
+Message-Id: <1483425255-101923-1-git-send-email-rajatja@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
-> Since commit 989561de9b51 ("PM / Domains: add setter for dev.pm_domain")
-> a PM domain may only be assigned to unbound devices.
-> 
-> The motivation was not made explicit in the changelog other than "in the
-> general case that can cause problems and also [...] we can simplify code
-> quite a bit if we can always assume that".  Rafael J. Wysocki elaborated
-> in a mailing list conversation that "setting a PM domain generally
-> changes the set of PM callbacks for the device and it may not be safe to
-> call it after the driver has been bound".
-> 
-> The concern seems to be that if a device is put to sleep and its PM
-> callbacks are changed, the device may end up in an undefined state or
-> not resume at all.  The real underlying requirement is thus to ensure
-> that the device is awake and execution of its PM callbacks is prevented
-> while the PM domain is assigned.  Unbound devices happen to fulfill this
-> requirement, but bound devices can be made to satisfy it as well:
-> The caller can prevent execution of PM ops with lock_system_sleep() and
-> by holding a runtime PM reference to the device.
-> 
-> Accordingly, adjust dev_pm_domain_set() to WARN only if the device is in
-> the midst of a system sleep transition, or runtime PM is enabled and the
-> device is either not active or may become inactive imminently (because
-> it has no active children or its refcount is zero).
-> 
-> The change is required to support runtime PM for Thunderbolt on the Mac,
-> which poses the unique issue that a child device (the NHI) needs to
-> assign a PM domain to its grandparent (the upstream bridge).  Because
-> the grandparent's driver is built-in and the child's driver is a module,
-> the grandparent is usually already bound when the child probes,
-> resulting in a WARN splat when calling dev_pm_domain_set().  However the
-> PM core guarantees both that the grandparent is active and that system
-> sleep is not commenced until the child has finished probing.  So in this
-> case it is safe to call dev_pm_domain_set() from the child's ->probe
-> hook and the WARN splat is entirely gratuitous.
+This patchset adds the PCIe L1 PM substate support to the kernel.
+The feature is described at:
+https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
 
-Wow.  That's a pretty complicated set of conditions on the caller.
-But I can't think of anything constructive to suggest.
+Its all logically one patch (and may be some of them should be
+squashed later) , but I've broken down into smaller patches for
+ease of review. 
 
-> Note that commit e79aee49bcf9 ("PM: Avoid false-positive warnings in
-> dev_pm_domain_set()") modified the WARN to not apply if a PM domain is
-> removed.  This is unsafe as it allows removal of the PM domain while
-> the device is asleep.  The present commit rectifies this.
-> 
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Cc: Tomeu Vizoso <tomeu.vizoso@collabora.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/base/power/common.c | 15 +++++++++++----
->  1 file changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
-> index f6a9ad52cbbf..d02c1e08a7ed 100644
-> --- a/drivers/base/power/common.c
-> +++ b/drivers/base/power/common.c
-> @@ -13,6 +13,7 @@
->  #include <linux/pm_clock.h>
->  #include <linux/acpi.h>
->  #include <linux/pm_domain.h>
-> +#include <linux/pm_runtime.h>
->  
->  #include "power.h"
->  
-> @@ -136,8 +137,10 @@ EXPORT_SYMBOL_GPL(dev_pm_domain_detach);
->   * @dev: Device whose PM domain is to be set.
->   * @pd: PM domain to be set, or NULL.
->   *
-> - * Sets the PM domain the device belongs to. The PM domain of a device needs
-> - * to be set before its probe finishes (it's bound to a driver).
-> + * Sets the PM domain the device belongs to.  The PM domain of a device needs
-> + * to be set while the device is awake.  This is guaranteed during ->probe.
-> + * Otherwise the caller is responsible for ensuring wakefulness, e.g. by
-> + * holding a runtime PM reference as well as invoking lock_system_sleep().
->   *
->   * This function must be called with the device lock held.
->   */
-> @@ -146,8 +149,12 @@ void dev_pm_domain_set(struct device *dev, struct dev_pm_domain *pd)
->  	if (dev->pm_domain == pd)
->  		return;
->  
-> -	WARN(pd && device_is_bound(dev),
-> -	     "PM domains can only be changed for unbound devices\n");
-> +	WARN(dev->power.is_prepared || dev->power.is_suspended ||
-> +	     (pm_runtime_enabled(dev) &&
-> +	      (dev->power.runtime_status != RPM_ACTIVE ||
-> +	       (pm_children_suspended(dev) &&
-> +		!atomic_read(&dev->power.usage_count)))),
-> +	     "PM domains can only be changed for awake devices\n");
->  	dev->pm_domain = pd;
->  	device_pm_check_callbacks(dev);
->  }
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is currently rebased on top of Bjorn's master branch.
+
+Rajat Jain (6):
+  PCI: Add L1 substate capability structure register definitions
+  PCI/ASPM: Introduce L1 substates and a Kconfig for it
+  PCI/ASPM: Read and setup L1 substate capabilities
+  PCI/ASPM: Calculate and save the L1.2 timing parameters
+  PCI/ASPM: Actually configure the L1 substate settings to the device
+  PCI/ASPM: Add comment about L1 substate latency
+
+ drivers/pci/pcie/Kconfig      |   8 ++
+ drivers/pci/pcie/aspm.c       | 291 ++++++++++++++++++++++++++++++++++++++++--
+ include/uapi/linux/pci_regs.h |  16 +++
+ 3 files changed, 302 insertions(+), 13 deletions(-)
+
+-- 
+2.8.0.rc3.226.g39d4020
+
