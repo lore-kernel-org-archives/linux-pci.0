@@ -1,87 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39938 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755343AbdAKHMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 02:12:50 -0500
-Date: Wed, 11 Jan 2017 09:12:52 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        linux-pci@vger.kernel.org, dennis.dalessandro@intel.com,
-        ira.weiny@intel.com
-Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
- device
-Message-ID: <20170111071252.GV7218@mtr-leonro.local>
-References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Will Deacon <will.deacon@arm.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170103184444.GP6986@arm.com>
+Message-ID: <ead2ff8d-fbd3-3109-51e2-41937e9c944d@cogentembedded.com>
+Date: Tue, 3 Jan 2017 22:01:46 +0300
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wxIXENaY2CYUgF8u"
-In-Reply-To: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170103184444.GP6986@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, Catalin Marinas <catalin.marinas@arm.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+>> It is possible that PCI device supports 64-bit DMA addressing, and thus
+>> it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
+>> bridge has limitations on inbound transactions addressing. Example of
+>> such setup is NVME SSD device connected to RCAR PCIe controller.
+>>
+>> Previously there was attempt to handle this via bus notifier: after
+>> driver is attached to PCI device, bridge driver gets notifier callback,
+>> and resets dma_mask from there. However, this is racy: PCI device driver
+>> could already allocate buffers and/or start i/o in probe routine.
+>> In NVME case, i/o is started in workqueue context, and this race gives
+>> "sometimes works, sometimes not" effect.
+>>
+>> Proper solution should make driver's dma_set_mask() call to fail if host
+>> bridge can't support mask being set.
+>>
+>> This patch makes __swiotlb_dma_supported() to check mask being set for
+>> PCI device against dma_mask of struct device corresponding to PCI host
+>> bridge (one with name "pciXXXX:YY"), if that dma_mask is set.
+>>
+>> This is the least destructive approach: currently dma_mask of that device
+>> object is not used anyhow, thus all existing setups will work as before,
+>> and modification is required only in actually affected components -
+>> driver of particular PCI host bridge, and dma_map_ops of particular
+>> platform.
+>>
+>> Signed-off-by: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+>> ---
+>>  arch/arm64/mm/dma-mapping.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+>> index 290a84f..49645277 100644
+>> --- a/arch/arm64/mm/dma-mapping.c
+>> +++ b/arch/arm64/mm/dma-mapping.c
+>> @@ -28,6 +28,7 @@
+>>  #include <linux/dma-contiguous.h>
+>>  #include <linux/vmalloc.h>
+>>  #include <linux/swiotlb.h>
+>> +#include <linux/pci.h>
+>>  
+>>  #include <asm/cacheflush.h>
+>>  
+>> @@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
+>>  
+>>  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+>>  {
+>> +#ifdef CONFIG_PCI
+>> +	if (dev_is_pci(hwdev)) {
+>> +		struct pci_dev *pdev = to_pci_dev(hwdev);
+>> +		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
+>> +
+>> +		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
+>> +				(mask & (*br->dev.dma_mask)) != mask)
+>> +			return 0;
+>> +	}
+>> +#endif
+> 
+> Hmm, but this makes it look like the problem is both arm64 and swiotlb
+> specific, when in reality it's not. Perhaps another hack you could try
+> would be to register a PCI bus notifier in the host bridge looking for
+> BUS_NOTIFY_BIND_DRIVER, then you could proxy the DMA ops for each child
+> device before the driver has probed, but adding a dma_set_mask callback
+> to limit the mask to what you need?
 
---wxIXENaY2CYUgF8u
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This is what Renesas BSP tries to do and it does not work.
 
-On Tue, Jan 10, 2017 at 03:57:52PM -0800, Tadeusz Struk wrote:
-> Some hardware have multiple HFIs within the same ASIC. In some devices the
-> numbers labeled on the faceplate of the device don't match the PCI bus
-> order, and the result is that the devices (ports) are probed in the opposite
-> order of their port numbers. The result is IB device unit numbers are in
-> reverse order from the faceplate numbering. This leads to confusion, and
-> errors.
+BUS_NOTIFY_BIND_DRIVER arrives after driver's probe routine exits, but
+i/o can be started before that.
 
-Can't you recognize such device at the initialization phase?
-This is definitely specific HW implementation bug/issue/limitation.
-
-> We can fix this by enforcing the correct port order at module load time.
-> To reorder the ports to match the numbering labels on the back of the
-> device we need to delay registering devices with the ib_core until we
-> receive a probe for the affected devices, reorder them and start
-> initialization in the correct order later. We use a timer with 1 second
-> timeout. On hfi1 probes devices are ordered and stored in a list.
-> Each hfi1 probe updates the timer. When the timer timeouts all devices are
-> initialized and registered with ib_core in the right order.
-> When there will more than one second time gap between hfi1 probes,
-> the timer will be update in each call so there is no danger that a device
-> will be "missed".
->
-> A new module param called port_reorder is introduced to cover users, who
-> already prewired their clusters in the 'invalid' order. The default
-> behavior does not change and results in devices ordered in the PCI bus
-> order. Port_reorder=1 is used to apply special reordering to these devices.
-
-I always had an impression that module parameters are rarely beneficial
-in upstream kernel for driver modules and adding them for new driver
-code should be explicitly prohibited in CodingStyle guide.
-
-You are adding new module parameter which will be with us forever to fix
-special HW bug/implementation in some legacy installations. It will be
-insane to add such thing to upstream kernel, errata and out-of-tree
-implementations are best places for such things.
-
-Thanks
-
---wxIXENaY2CYUgF8u
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlh12vMACgkQ5GN7iDZy
-WKfakA//e66PTutXEHUMznuovRZCXZUp/wklPWHguGB9XbrBV7t8Z9xM2jVlo/yn
-6o2loiGZmMMAN8zxrcTghJcfIs7fCkpsXbOF1DPdxEjFnj8O68D86psVrDc3JhdJ
-rLQ3QW5CfxeCE6UK69QhAG8kz5fN8HYBUDKhc2qhyn8xLpcBtDOvZLBVEiFpqlQp
-ykGIlcm3ovHd1FU/SV2IyOh74LDOn3u1l9vFZk9T96uvLjvYIfQrdT1B8GwZ+gy1
-xQOvCzFtwQMJvlx3FrH9GygmTwsufEJLMEWFIq8gaRu7O0ZKUhjVnfGp8c6yD9/E
-OIlegZvcxyO/k3KUFHhjnX1ETsGfpeaajTEnnVxQxrSDBcaql9FSTP3Y008rwp5A
-ON1VJpZdcrGY/RDK6lIs+zIu0wxE+TGye2wzeXRuYTAzzr/uTcqSkOhT6/MoPRaD
-4eniS///igPEqdImrunTRPew8qwJNwA7O3+ZQpBsNLntase3ZUXItj/dFxLVHpfr
-dqV75zt/9FDWDiWIAhRR4JfyGUtDmkCF6znpOxJbSzbRvl03YZDyJuTdr0X2PIxi
-ra0ac5y1D9RlLetRyc+2yUZtAd6pZwrey+SbGx+nCD0l3V6kkv82A2FLecQwRV4j
-Ddthc3gDvZBhW1xQ8kfa6kWmxJG2aulY2Poh0Wl3E4frFmVtg/E=
-=blXo
------END PGP SIGNATURE-----
-
---wxIXENaY2CYUgF8u--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
