@@ -1,65 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752669AbdAKUzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 15:55:53 -0500
-Date: Wed, 11 Jan 2017 14:55:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rahul Krishnan <mrahul.krishnan@gmail.com>
-Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-        bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] pci: hotplug: This patch removes unnecessary return
- statement using spatch tool
-Message-ID: <20170111205514.GI14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161224093800.GA24893@rahul>
+Received: from mx-out-2.rwth-aachen.de ([134.130.5.187]:34356 "EHLO
+        mx-out-2.rwth-aachen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933567AbdACIJv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 03:09:51 -0500
+Received: from messenger-mbx.win.comsys.rwth-aachen.de (messenger-mbx.win.comsys.rwth-aachen.de [137.226.13.43])
+        by lists.comsys.rwth-aachen.de (Postfix) with ESMTPS id 210EE3FF2E
+        for <linux-pci@vger.kernel.org>; Tue,  3 Jan 2017 09:09:50 +0100 (CET)
+To: <linux-pci@vger.kernel.org>
+From: =?UTF-8?B?SmFuIFLDvHRo?= <rueth@comsys.rwth-aachen.de>
+Subject: [PATCH] pci/aspm: Fix null pointer dereference during re-enumeration
+ of PCI bus in pcie_aspm_init_link_state even though ASPM is off
+Message-ID: <8dd91424-b38c-4875-9752-9cc42a6f5701@comsys.rwth-aachen.de>
+Date: Tue, 3 Jan 2017 09:09:49 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161224093800.GA24893@rahul>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 24, 2016 at 03:08:00PM +0530, Rahul Krishnan wrote:
-> 
-> This patch removes unnecessary return statement using spatch tool
-> 
-> Signed-off-by: Rahul Krishnan <mrahul.krishnan@gmail.com>
+This patch fixes a null pointer dereference during PCI bus enumeration
+when ASPM is off. On an IBM x3850 8664 this bug causes the kernel to
+halt, this behavior did not appear in 3.10, so this is a regression.
 
-Applied to pci/hotplug for v4.11 with Tyrel's Reviewed-by, thanks!
+pcie_aspm_sanity_check should only be called if ASPM is on.
 
-Are there other similar instances elsewhere in drivers/pci?  If so,
-can you fix them all at once?
+Signed-off-by: Jan Rueth <rueth@comsys.rwth-aachen.de>
+---
+ drivers/pci/pcie/aspm.c | +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> ---
->  drivers/pci/hotplug/rpadlpar_core.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index dc67f39..78ce2c7 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -455,7 +455,6 @@ static inline int is_dlpar_capable(void)
->  
->  int __init rpadlpar_io_init(void)
->  {
-> -	int rc = 0;
->  
->  	if (!is_dlpar_capable()) {
->  		printk(KERN_WARNING "%s: partition not DLPAR capable\n",
-> @@ -463,8 +462,7 @@ int __init rpadlpar_io_init(void)
->  		return -EPERM;
->  	}
->  
-> -	rc = dlpar_sysfs_init();
-> -	return rc;
-> +	return dlpar_sysfs_init();
->  }
->  
->  void rpadlpar_io_exit(void)
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index f981129..e758b56 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -552,11 +552,12 @@ static struct pcie_link_state
+*alloc_pcie_link_state(struct pci_dev *pdev)
+ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ {
+        struct pcie_link_state *link;
+-       int blacklist = !!pcie_aspm_sanity_check(pdev);
+-
++       int blacklist;
+        if (!aspm_support_enabled)
+                return;
+
++       blacklist = !!pcie_aspm_sanity_check(pdev);
++
+        if (pdev->link_state)
+                return;
