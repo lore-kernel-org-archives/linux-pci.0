@@ -1,73 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 31/37] misc: Add host side pci driver for pci test
- function device
-To: Christoph Hellwig <hch@infradead.org>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-32-git-send-email-kishon@ti.com>
- <20170124160224.GA23528@infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58883A65.8020306@ti.com>
-Date: Wed, 25 Jan 2017 11:10:53 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35414 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759111AbdACT6P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 14:58:15 -0500
+Date: Tue, 3 Jan 2017 13:51:44 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+Subject: Re: [PATCH 3/4] Documetation: binding: modify the exynos5440 pcie
+ binding
+Message-ID: <20170103195144.7fwtlvhzxhq3r25z@rob-hp-laptop>
+References: <20161228103454.26467-1-jh80.chung@samsung.com>
+ <CGME20161228103455epcas5p2b3ea563efc00c776e77477ab3c778bb1@epcas5p2.samsung.com>
+ <20161228103454.26467-4-jh80.chung@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20170124160224.GA23528@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161228103454.26467-4-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Wed, Dec 28, 2016 at 07:34:53PM +0900, Jaehoon Chung wrote:
+> According to using PHY framework, modified the exynos5440-pcie binding.
+> And use "config" property to follow the designware-pcie binding.
 
-On Tuesday 24 January 2017 09:32 PM, Christoph Hellwig wrote:
-> On Thu, Jan 12, 2017 at 03:56:20PM +0530, Kishon Vijay Abraham I wrote:
->> Add PCI endpoint test driver that can verify base address
->> register, legacy interrupt/MSI interrupt and read/write/copy
->> buffers between host and device. The corresponding pci-epf-test
->> function driver should be used on the EP side.
+You are breaking compatibility here. Please state that and why it is 
+okay to do so.
+
 > 
-> Just curious:  what would you think of a text based (e.g. debugfs)
-> interface to avoid the need for a userspace tool here?
-
-I felt having a userspace tool gives the flexibility to add more tests
-(iterations, sizes etc..) while the driver can just focus on performing simple
-tests. Say we'd like to perform infinite read/write tests, it's better if the
-userspace tool invokes read/write tests repeatedly instead of that being
-implemented in the driver.
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 +++++++++++++---------
+>  1 file changed, 17 insertions(+), 12 deletions(-)
 > 
->> +static const struct pci_device_id pci_endpoint_test_tbl[] = {
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_ANY_ID) },
->> +	{ }
->> +};
->> +MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> index 4f9d23d..51f6214 100644
+> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> @@ -5,10 +5,15 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+>  - compatible: "samsung,exynos5440-pcie"
+> -- reg: base addresses and lengths of the pcie controller,
+> -	the phy controller, additional register for the phy controller.
+> +- reg: base addresses and lengths of the pcie controller
+>  - interrupts: A list of interrupt outputs for level interrupt,
+>  	pulse interrupt, special interrupt.
+> +- phys: From PHY binding. Phandle for the Generic PHY.
+> +	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
+> +- phy-names: Must be "pcie-phy".
+
+-names is pointless for a single element.
+
+> +
+> +Other common properties refer to
+> +	Documentation/devicetree/binding/pci/designware-pcie.txt
+>  
+>  Example:
+>  
+> @@ -16,18 +21,18 @@ SoC specific DT Entry:
+>  
+>  	pcie@290000 {
+>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+> -		reg = <0x290000 0x1000
+> -			0x270000 0x1000
+> -			0x271000 0x40>;
+> +		reg = <0x290000 0x1000>, <0x40000000 0x100>;
+
+256 bytes of config space?
+
+> +		reg-names = "elbi", "config";
+>  		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+>  		clocks = <&clock 28>, <&clock 27>;
+>  		clock-names = "pcie", "pcie_bus";
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		device_type = "pci";
+> -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
+> -			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+> +		ranges = <0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+>  			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
+> +		phys = <&pcie_phy0>;
+> +		phy-names = "pcie-phy";
+>  		#interrupt-cells = <1>;
+>  		interrupt-map-mask = <0 0 0 0>;
+>  		interrupt-map = <0 0 0 0 &gic GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+> @@ -36,17 +41,17 @@ SoC specific DT Entry:
+>  
+>  	pcie@2a0000 {
+>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+> -		reg = <0x2a0000 0x1000
+> -			0x272000 0x1000
+> -			0x271040 0x40>;
+> +		reg = <0x2a0000 0x1000>, <0x60000000 0x1000>;
+> +		reg-names = "elbi", "config";
+>  		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+>  		clocks = <&clock 29>, <&clock 27>;
+>  		clock-names = "pcie", "pcie_bus";
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		device_type = "pci";
+> -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
+> -			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+> +		phys = <&pcie_phy1>;
+> +		phy-names = "pcie-phy";
+> +		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+>  			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
+>  		#interrupt-cells = <1>;
+>  		interrupt-map-mask = <0 0 0 0>;
+> -- 
+> 2.10.2
 > 
-> Also this looks really odd, and dangerous.  Probing for any
-> TI device will bind to all kinds of legit devices.  It would
-> be good if you could squeeze out a single id for this device
-
-There is actually an id for the device, but I think we'll need an id for every
-function right?
-
-Having said that the id for the device is better than PCI_ANY_ID. Will fix it
-in my next revision.
-
-Thanks
-Kishon
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
