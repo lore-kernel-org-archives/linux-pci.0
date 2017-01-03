@@ -1,113 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org,
-	cov@codeaurora.org
-Subject: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Tue, 31 Jan 2017 14:45:27 -0500
-Message-Id: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <3ce9e85d-381c-1c5d-b01d-65b8cf64e1ae@quantumtechnology.info>
+ <2944797.fnVvnXZV6t@aspire.rjw.lan>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
+ Lukas Wunner <lukas@wunner.de>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+Message-ID: <aeb7069c-6fbc-2a1c-4f5a-513c9fbce220@quantumtechnology.info>
+Date: Tue, 3 Jan 2017 23:25:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2944797.fnVvnXZV6t@aspire.rjw.lan>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-When the operating system is booted with the default ASPM policy
-(POLICY_DEFAULT), the current code is determining the ASPM policy
-set up by the BIOS by querying the enable/disable states from ASPM
-registers.
+Yes that is true:
 
-In the case of hotplug removal, the ASPM registers get cleared by
-calling the pcie_aspm_exit_link_state() function.
-
-An insertion following hotplug removal reads incorrect policy as
-ASPM disabled even though ASPM was enabled during boot.
-
-Adding a flag to the struct pci_dev and saving the power up policy
-in the bridge to be reused during hotplug insertion. Bridge's enable
-counter is used as a switch to determine when to use saved value.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pcie/aspm.c | 21 +++++++++++++++++----
- include/linux/pci.h     |  1 +
- 2 files changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 17ac1dc..5cfcc6d 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -338,8 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- 	}
- }
- 
--static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
-+static void pcie_aspm_cap_init(struct pci_dev *pdev, int blacklist)
- {
-+	struct pcie_link_state *link = pdev->link_state;
- 	struct pci_dev *child, *parent = link->pdev;
- 	struct pci_bus *linkbus = parent->subordinate;
- 	struct aspm_register_info upreg, dwreg;
-@@ -397,8 +398,20 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	link->latency_up.l1 = calc_l1_latency(upreg.latency_encoding_l1);
- 	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
- 
--	/* Save default state */
--	link->aspm_default = link->aspm_enabled;
-+	/*
-+	 * Save default state from FW when enabling ASPM for the first time
-+	 * during boot by looking at the calculated link->aspm_enabled bits
-+	 * above and enable_cnt will be zero.
-+	 *
-+	 * If this path is getting called for the second/third time
-+	 * (enable_cnt will be non-zero). Assume that the current state of the
-+	 * ASPM registers may not necessarily match what FW asked us to do as
-+	 * in the case of hotplug insertion/removal.
-+	 */
-+	if (!atomic_read(&pdev->enable_cnt))
-+		pdev->aspm_default = link->aspm_default = link->aspm_enabled;
-+	else
-+		link->aspm_default = pdev->aspm_default;
- 
- 	/* Setup initial capable state. Will be updated later */
- 	link->aspm_capable = link->aspm_support;
-@@ -599,7 +612,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	 * upstream links also because capable state of them can be
- 	 * update through pcie_aspm_cap_init().
- 	 */
--	pcie_aspm_cap_init(link, blacklist);
-+	pcie_aspm_cap_init(pdev, blacklist);
- 
- 	/* Setup initial Clock PM state */
- 	pcie_clkpm_cap_init(link, blacklist);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..521f88c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -321,6 +321,7 @@ struct pci_dev {
- 
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
-+	unsigned int	aspm_default;		/* ASPM policy set by BIOS */
- #endif
- 
- 	pci_channel_state_t error_state;	/* current connectivity state */
--- 
-1.9.1
+"Shutdown and suspend/resume work on 4.7.0-1 but fail on 4.8. and 4.9."
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I just did not check if the proposed patches fix the suspend/resume.
+
+On 03-Jan-17 23:07, Rafael J. Wysocki wrote:
+> On Tuesday, January 03, 2017 10:52:48 PM Kilian Singer wrote:
+>> I have not checked if suspend/resume broken.
+>> Which patch should I check suspend resume for.
+>> When I wrote about firefox and lockscreen issue resolved
+>> I forgot to check about the suspend/resume.
+> Well, here:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=190861#c26
+>
+> you said:
+>
+> "Shutdown and suspend/resume work on 4.7.0-1 but fail on 4.8. and 4.9."
+>
+> and here:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=190861#c29
+>
+> you said:
+>
+> "the pci_port_pm=off
+> fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
+> Tested on 4.9"
+>
+> which to me means that suspend/resume is also broken for you
+> due to the PCIe ports PM support enabled (the command line option
+> should be pcie_port_pm=off, BTW, but I'm assuming that this is what you
+> actually used).
+>
+> Now, it may be broken due to the runtime PM breakage triggering after system
+> resume (which may be verified by checking if the revert actually fixes system
+> suspend-resume too on your machine), but even then I wouldn't revert that
+> particular commit.
+>
+> Thanks,
+> Rafael
+>
