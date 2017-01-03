@@ -1,100 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39186 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:35930 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750804AbdAXLHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Jan 2017 06:07:14 -0500
-Subject: Re: [PATCH 1/4] PCI: Xilinx NWL: Fix, do not check for legacy status
- in while loop
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
- <ec10b089-acc5-7764-6346-9dc1869d05c7@arm.com>
- <8520D5D51A55D047800579B094147198263CCF96@XAP-PVEXMBX02.xlnx.xilinx.com>
-Cc: "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <0def9067-5c35-f7fe-8e15-bab70d479d1e@arm.com>
-Date: Tue, 24 Jan 2017 11:07:09 +0000
+        id S1753228AbdACSoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Jan 2017 13:44:46 -0500
+Date: Tue, 3 Jan 2017 18:44:44 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        linux-arm-kernel@lists.infradead.org,
+        Simon Horman <horms@verge.net.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        artemi.ivanov@cogentembedded.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+Message-ID: <20170103184444.GP6986@arm.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198263CCF96@XAP-PVEXMBX02.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/01/17 10:15, Bharat Kumar Gogada wrote:
->> On 21/01/17 11:11, Bharat Kumar Gogada wrote:
->>> - The legacy status register value for particular INTx becomes low
->>> only after DEASSERT_INTx is received.
->>> - Few End Points take time for sending DEASSERT_INTx, checking legacy
->>> status register in while loop causes invoking of EP handler
->>> continuosly until DEASSERT_INTx is received.
->>>
->>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
->>> ---
->>>  drivers/pci/host/pcie-xilinx-nwl.c |    5 +++--
->>>  1 files changed, 3 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
->>> b/drivers/pci/host/pcie-xilinx-nwl.c
->>> index 43eaa4a..c8b5a33 100644
->>> --- a/drivers/pci/host/pcie-xilinx-nwl.c
->>> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
->>> @@ -342,9 +342,10 @@ static void nwl_pcie_leg_handler(struct irq_desc
->>> *desc)
->>>
->>>  	chained_irq_enter(chip, desc);
->>>  	pcie = irq_desc_get_handler_data(desc);
->>> +	status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
->>> +				  MSGF_LEG_SR_MASKALL;
->>>
->>> -	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
->>> -				MSGF_LEG_SR_MASKALL) != 0) {
->>> +	if (status != 0) {
->>>  		for_each_set_bit(bit, &status, INTX_NUM) {
->>>  			virq = irq_find_mapping(pcie->legacy_irq_domain,
->>>  						bit + 1);
->>>
->>
->> But even if you only handle the interrupt once, it is still asserted, right? You exit
->> the low-level exception handler, only to take the interrupt immediately again. So
->> what is the gain here?
->>
-> Whenever masking of INTx happens (like as in my next patch[PATCH 2/4]), the irq line goes low,
-> but  status bit will be set until DEASSERT_INTx comes.
-> In this scenario if it is always in while loop, even though line went low it will not be seen 
-> until DEASSERT_INTx, unnecessarily invoking EP driver. so instead of while loop  
-> using if condition so that this change in line is noticed.
+On Thu, Dec 29, 2016 at 11:45:03PM +0300, Nikita Yushchenko wrote:
+> It is possible that PCI device supports 64-bit DMA addressing, and thus
+> it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
+> bridge has limitations on inbound transactions addressing. Example of
+> such setup is NVME SSD device connected to RCAR PCIe controller.
+> 
+> Previously there was attempt to handle this via bus notifier: after
+> driver is attached to PCI device, bridge driver gets notifier callback,
+> and resets dma_mask from there. However, this is racy: PCI device driver
+> could already allocate buffers and/or start i/o in probe routine.
+> In NVME case, i/o is started in workqueue context, and this race gives
+> "sometimes works, sometimes not" effect.
+> 
+> Proper solution should make driver's dma_set_mask() call to fail if host
+> bridge can't support mask being set.
+> 
+> This patch makes __swiotlb_dma_supported() to check mask being set for
+> PCI device against dma_mask of struct device corresponding to PCI host
+> bridge (one with name "pciXXXX:YY"), if that dma_mask is set.
+> 
+> This is the least destructive approach: currently dma_mask of that device
+> object is not used anyhow, thus all existing setups will work as before,
+> and modification is required only in actually affected components -
+> driver of particular PCI host bridge, and dma_map_ops of particular
+> platform.
+> 
+> Signed-off-by: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+> ---
+>  arch/arm64/mm/dma-mapping.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+> index 290a84f..49645277 100644
+> --- a/arch/arm64/mm/dma-mapping.c
+> +++ b/arch/arm64/mm/dma-mapping.c
+> @@ -28,6 +28,7 @@
+>  #include <linux/dma-contiguous.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/swiotlb.h>
+> +#include <linux/pci.h>
+>  
+>  #include <asm/cacheflush.h>
+>  
+> @@ -347,6 +348,16 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
+>  
+>  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
+>  {
+> +#ifdef CONFIG_PCI
+> +	if (dev_is_pci(hwdev)) {
+> +		struct pci_dev *pdev = to_pci_dev(hwdev);
+> +		struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
+> +
+> +		if (br->dev.dma_mask && (*br->dev.dma_mask) &&
+> +				(mask & (*br->dev.dma_mask)) != mask)
+> +			return 0;
+> +	}
+> +#endif
 
-But what guarantees that you will observe this DEASSERT if you return to
-the interrupted context early? From what I understand, your interrupt
-flow is the following:
+Hmm, but this makes it look like the problem is both arm64 and swiotlb
+specific, when in reality it's not. Perhaps another hack you could try
+would be to register a PCI bus notifier in the host bridge looking for
+BUS_NOTIFY_BIND_DRIVER, then you could proxy the DMA ops for each child
+device before the driver has probed, but adding a dma_set_mask callback
+to limit the mask to what you need?
 
+I agree that it would be better if dma_set_mask handled all of this
+transparently, but it's all based on the underlying ops rather than the
+bus type.
 
-	read status
-	mask
-	handler
-	unmask
-
-If the EP takes time to send a deassert after the handler has poked it
-and the interrupt is still active, then the only thing that this patch
-buys you is that by returning to the interrupted context, you waste a
-lot of cycles, giving the device a chance to send its deassert. But
-that's just luck. Plug this on a fast CPU, and the same issue will
-resurface.
-
-It could also just hide a driver bug where the write acknowledging the
-interrupt has been posted, but has not taken effect yet.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Will
