@@ -1,67 +1,90 @@
-Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
-Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
-Subject: Re: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        "zhichang.yuan"
-	<yuanzhichang@hisilicon.com>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
- <20170131000914.GA11331@bhelgaas-glaptop.roam.corp.google.com>
-CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
-        <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
-        <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <fec21b66-4ba7-3855-af53-a0e2856754a4@huawei.com>
-Date: Tue, 31 Jan 2017 13:34:24 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966612AbdACWZO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Jan 2017 17:25:14 -0500
+Date: Tue, 3 Jan 2017 16:25:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170103163130.GC9763@al>
+ <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170131000914.GA11331@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3913750.OA6IItgEjC@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/01/2017 00:09, Bjorn Helgaas wrote:
-> On Tue, Jan 24, 2017 at 03:05:21PM +0800, zhichang.yuan wrote:
->> Low-pin-count interface is integrated into some SoCs. The accesses to those
->> peripherals under LPC make use of I/O ports rather than the memory mapped I/O.
->>
->> To drive these devices, this patch introduces a method named indirect-IO.
->
-> It's slightly confusing to call this "indirect I/O" and then use
-> "extio" for the filename and function prefix.  It'd be nice to use
-> related names.
+On Tue, Jan 03, 2017 at 10:38:24PM +0100, Rafael J. Wysocki wrote:
+> On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
+> > On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
+> > > On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
+> > > > [cc += Dave Airlie:
+> > > > 
+> > > > Dave, we're about to lose support for newer Optimus laptops which use
+> > > > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
+> > > > a commit on his for-linus branch to remove runtime PM for PCIe ports.
+> > > > This fixes a regression on Kilian Singer's laptop on which locking the
+> > > > screen breaks USB and PS/2 input devices:  Mouse movements are still
+> > > > visible, but button or key presses no longer have any effect.  The GPU
+> > > > is powered down upon locking the screen and the current theory is that
+> > > > this causes the issues.]
+> > > 
+> > > (+cc Alex: this might affect amdgpu/radeon too.]
+> > > 
+> > > Bjorn, please reconsider the rpm patch. Reverting support would
+> > > introduce other regressions (see issues below) and make future
+> > > Thunderbolt work harder (according to Lukas). If Kilian's laptop has
+> > > issues, what about a "temporary" quirk?
+> > 
+> > As I mentioned at the beginning, the outcome I'm hoping for is a patch
+> > that fixes Kilian's laptop while preserving the runtime PM support.
+> > 
+> > As I also mentioned at the beginning, preserving the runtime PM
+> > support at the expense of breaking Kilian's laptop is not one of the
+> > options.
+> 
+> But the revert doesn't really help.
+> 
+> It doesn't fix system suspend/resume on that laptop, which also breaks when
+> PCIe ports PM is enabled on it.
+> 
+> If you really want to use a sledgehammer approach here (which I don't recommend,
+> but that's your call), you can change the initial value of pci_bridge_d3_disable to
+> "true" (and update the pcie_ports_pm= command line to take "on" in case
+> someone wants to enable the feature).  That at least will take care of the
+> regression entirely and not just partly.
 
-We will consider something more consistent.
+What the heck is the problem here?  I'm not trying to be difficult,
+but I didn't write this code and I'm not really interested in figuring
+out how to fix it, so my only real option is to solicit fixes and, if
+none appear, revert changes that break things.
 
->
->> +struct extio_node {
->> +	unsigned long bus_start;	/* bus start address */
->> +	unsigned long io_start;	/* io port token corresponding to bus_start */
->> +	size_t range_size;	/* size of the extio node operating range */
->> +	struct fwnode_handle *fwnode;
->> +	struct list_head list;
->> +	struct extio_ops *ops;	/* ops operating on this node */
->> +	void *devpara;	/* private parameter of the host device */
->> +};
->
-> I wish we didn't have both struct io_range and struct extio_node.  It
-> seems like they're both sort of trying to do the same thing.  Maybe
-> this is the same as what Alex is saying.
->
+As I've said more than once, I hope and expect that there is a better
+solution than reverting the patch.  But *I* am not going to write it.
+As soon as somebody proposes a better patch, I'll use it instead of
+the revert.
 
-I think so. I have just replied to Alex regarding this.
+If you want to fix the regression by changing the
+pci_bridge_d3_disable value, all you have to do is post a patch doing
+that.
 
-> Bjorn
->
+I really don't understand why people are so wrapped around the axle
+about this.  This is just the way Linux works -- we try really hard
+not to cause regressions on platforms that used to work.  I *SAID* in
+the very first posting of the revert that I assume Mika will have a
+better solution soon.
 
-Thanks,
-John
+When a better patch appears, I'll take that and drop the revert.
+What's the problem with that?
 
-> .
->
+Bjorn
