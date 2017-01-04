@@ -1,103 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
-In-Reply-To: <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
-References: <20170105190113.GA12587@obsidianresearch.com>
-    <20170105195424.GB2166@redhat.com>
-    <20170105200719.GB31047@obsidianresearch.com>
-    <20170105201935.GC2166@redhat.com>
-    <20170105224215.GA3855@obsidianresearch.com>
-    <20170105232352.GB6426@redhat.com>
-    <20170106003034.GB4670@obsidianresearch.com>
-    <20170106015831.GA2226@gmail.com>
-    <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
-    <20170106173722.GB3804@redhat.com>
-    <20170106182625.GB5724@obsidianresearch.com>
-    <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
-Date: Wed, 11 Jan 2017 22:54:39 -0600
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-From: "Stephen Bates" <sbates@raithlin.com>
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: "Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
-        "Jerome Glisse" <jglisse@redhat.com>, david1.zhou@amd.com,
-        qiang.yu@amd.com,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "Kuehling, Felix" <felix.kuehling@amd.com>,
-        "Serguei Sagalovitch" <serguei.sagalovitch@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <christian.koenig@amd.com>, hch@infradead.org,
-        "Deucher, Alexander" <alexander.deucher@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Jerome Glisse" <j.glisse@gmail.com>,
-        "Blinzer, Paul" <paul.blinzer@amd.com>,
-        "'Linux-media@vger.kernel.org'" <linux-media@vger.kernel.org>
+Return-Path: <SRS0=pvF4=YS=redhat.com=airlied@kernel.org>
+Return-Path: <SRS0=pvF4=YS=redhat.com=airlied@kernel.org>
+Date: Wed, 4 Jan 2017 18:21:14 -0500 (EST)
+From: David Airlie <airlied@redhat.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>
+Message-ID: <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+In-Reply-To: <59349185.1aqio7kYFn@aspire.rjw.lan>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al> <59349185.1aqio7kYFn@aspire.rjw.lan>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, January 6, 2017 4:10 pm, Logan Gunthorpe wrote:
->
->
-> On 06/01/17 11:26 AM, Jason Gunthorpe wrote:
->
->
->> Make a generic API for all of this and you'd have my vote..
->>
->>
->> IMHO, you must support basic pinning semantics - that is necessary to
->> support generic short lived DMA (eg filesystem, etc). That hardware can
->> clearly do that if it can support ODP.
->
-> I agree completely.
->
->
-> What we want is for RDMA, O_DIRECT, etc to just work with special VMAs
-> (ie. at least those backed with ZONE_DEVICE memory). Then
-> GPU/NVME/DAX/whatever drivers can just hand these VMAs to userspace
-> (using whatever interface is most appropriate) and userspace can do what
-> it pleases with them. This makes _so_ much sense and actually largely
-> already works today (as demonstrated by iopmem).
 
-+1 for iopmem ;-)
+> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
+> > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
+> > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+> > > > I don't *want* to apply the revert.  It's on my for-linus branch as a
+> > > > worst-case scenario change if we can't figure out a better fix.
+> > > > 
+> > > > The patch below is preferable, but I'd rather not take even it,
+> > > > because it takes away functionality and forces people to use a boot
+> > > > parameter to restore it.  I expect that somebody will figure out how
+> > > > to fix the regression Kilian found and also keep the new functionality
+> > > > (without requiring boot parameters) before v4.10.
+> > > 
+> > > The issue is constrained to hybrid graphics laptops with Nvidia discrete
+> > > GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+> > > PCI core.
+> > 
+> > The problem is not necessarily in the nouveau driver, the same problem
+> > occurs when you enable RPM without loading nouveau. The issue is limited
+> > though to some newer hybrid graphics laptops with Nvidia GPUs. While a
+> > quirk can be added to nouveau, I think that a (temporary) quirk in core
+> > would also be reasonable (since it also occurs without nouveau).
+> > 
+> > > (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+> > > when and how to call an ACPI method versus using PR3.)
+> > > 
+> > > (Neither are laptops using the Nvidia proprietary driver as it doesn't
+> > > runtime suspend the card.  But battery life will be terrible then.)
+> > > 
+> > > We're at rc2 so the time frame for coming up with a fix is probably
+> > > 4 weeks.  Peter and others have tried for months to reverse-engineer
+> > > how to handle runtime PM on newer Nvidia cards.  It seems likely that
+> > > we'll not find the ultimate solution to the problem within 4 weeks.
+> > 
+> > Yep, a quick proper fix seems unlikely.
+> > [ Help/ideas are welcome, I suspect that these failures to restore power
+> > on laptops designed for Win8+ all have the same cause, related to some
+> > unknown interaction between ACPI and PCI. Some links:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
+> > 
+> > > The way it is now, i.e. defaulting to PR3 when available, regresses
+> > > certain laptops such as Kilian's.  If on the other hand we default to
+> > > DSM when available, we'll regress certain other laptops, as Peter has
+> > > pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+> > > approach either, ideally we'd want to use PR3 as Windows does.
+> > > 
+> > > As said, the only short-term solution I see is to add an "optimus"
+> > > module_param to nouveau to allow users to select which method to use.
+> > > So in Kilian's case an additional command line parameter would be
+> > > necessary to fix the issue.
+> > > 
+> > > Does anyone see a better solution or can we agree on this one?  If so
+> > > I can come up with a patch.  This could go in via Dave Airlie's tree.
+> > 
+> > As pcie_port_pm=off already reverts to DSM, I do not think that an
+> > additional (temporary) nouveau module parameter is going to help. I
+> > instead propose a (hopefully temporary) quirk in pci core that disables
+> > D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
+> > pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
+> > to test possible solutions in the future.
+> 
+> I would rather add a quirk to the ACPI core to prevent the power resources in
+> question from being enumerated.  Or even to prevent ACPI PM from being
+> used for the port in question.
 
-I feel like we are going around and around on this topic. I would like to
-see something that is upstream that enables P2P even if it is only the
-minimum viable useful functionality to begin. I think aiming for the moon
-(which is what HMM and things like it are) are simply going to take more
-time if they ever get there.
+I do have a W541 in a cupboard in the office somewhere, but I won't be close to
+it for a couple of weeks. The W541 was the first place I tested the pm patches
+so I'm kinda wondering whether it's all W541's or just some specific model/bios
+combo.
 
-There is a use case for in-kernel P2P PCIe transfers between two NVMe
-devices and between an NVMe device and an RDMA NIC (using NVMe CMBs or
-BARs on the NIC). I am even seeing users who now want to move data P2P
-between FPGAs and NVMe SSDs and the upstream kernel should be able to
-support these users or they will look elsewhere.
+However I'm pretty much unavailable to do anything much until late Jan on this.
 
-The iopmem patchset addressed all the use cases above and while it is not
-an in kernel API it could have been modified to be one reasonably easily.
-As Logan states the driver can then choose to pass the VMAs to user-space
-in a manner that makes sense.
-
-Earlier in the thread someone mentioned LSF/MM. There is already a
-proposal to discuss this topic so if you are interested please respond to
-the email letting the committee know this topic is of interest to you [1].
-
-Also earlier in the thread someone discussed the issues around the IOMMU.
-Given the known issues around P2P transfers in certain CPU root complexes
-[2] it might just be a case of only allowing P2P when a PCIe switch
-connects the two EPs. Another option is just to use CONFIG_EXPERT and make
-sure people are aware of the pitfalls if they invoke the P2P option.
-
-Finally, as Jason noted, we could all just wait until
-CAPI/OpenCAPI/CCIX/GenZ comes along. However given that these interfaces
-are the remit of the CPU vendors I think it behooves us to solve this
-problem before then. Also some of the above mentioned protocols are not
-even switchable and may not be amenable to a P2P topology...
-
-Stephen
-
-[1] http://marc.info/?l=linux-mm&m=148156541804940&w=2
-[2] https://community.mellanox.com/docs/DOC-1119
+Dave.
