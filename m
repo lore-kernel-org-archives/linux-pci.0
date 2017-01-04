@@ -1,202 +1,90 @@
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Date: Sun, 8 Jan 2017 14:47:51 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	"Chen, Yu C" <yu.c.chen@intel.com>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v4 1/8] PCI: Recognize Thunderbolt devices
-Message-ID: <20170108134751.GA23120@wunner.de>
-References: <cover.1483806825.git.lukas@wunner.de>
- <dbb277a11a08c515fe518447ad496dfbffc3e1d8.1483806825.git.lukas@wunner.de>
- <5B8DA87D05A7694D9FA63FD143655C1B54376D27@hasmsx108.ger.corp.intel.com>
-MIME-Version: 1.0
+Return-Path: <SRS0=Xdb0=YS=gmail.com=hjmallon@kernel.org>
+Return-Path: <SRS0=Xdb0=YS=gmail.com=hjmallon@kernel.org>
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B54376D27@hasmsx108.ger.corp.intel.com>
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Subject: Re: Diagnosing BAR allocation problems with complex bridge structure
+From: Harry Mallon <hjmallon@gmail.com>
+In-Reply-To: <20170103180718.GA25398@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 4 Jan 2017 16:22:39 +0000
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Message-Id: <B6DCCEA6-184A-476A-B19B-2A1287B91545@gmail.com>
+References: <B56F52C5-7298-4E9D-8AE2-8497527C5D39@gmail.com>
+ <20170103180718.GA25398@bhelgaas-glaptop.roam.corp.google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 08, 2017 at 10:23:03AM +0000, Winkler, Tomas wrote:
-> > We're about to allow runtime PM on Thunderbolt ports in
-> > pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
-> > hotplug ports in pci_dev_check_d3cold().  In both cases we need to uniquely
-> > identify if a PCI device belongs to a Thunderbolt controller.
-> > 
-> > We also have the need to detect presence of a Thunderbolt controller in
-> > drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros cannot
-> > switch external DP/HDMI ports between GPUs if they have Thunderbolt.
-> > 
-> > Furthermore, in multiple places in the DRM subsystem we need to detect
-> > whether a GPU is on-board or attached with Thunderbolt.  As an example,
-> > Thunderbolt-attached GPUs shall not be registered with vga_switcheroo.
-> > 
-> > Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234 on
-> > devices belonging to a Thunderbolt controller which allows us to recognize
-> > them.
-> > 
-> > Detect presence of this VSEC on device probe and cache it in a newly added
-> > is_thunderbolt bit in struct pci_dev which can then be queried by
-> > pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and others.
-> > 
-> > Cc: Andreas Noever <andreas.noever@gmail.com>
-> > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > Cc: Amir Levy <amir.jer.levy@intel.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > ---
-> >  drivers/pci/pci.h   |  2 ++
-> >  drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h |  1 +
-> >  3 files changed, 37 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index cb17db2..45c2b81
-> > 100644
-> > --- a/drivers/pci/pci.h
-> > +++ b/drivers/pci/pci.h
-> > @@ -3,6 +3,8 @@
-> > 
-> >  #define PCI_FIND_CAP_TTL	48
-> > 
-> > +#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-> 
-> Shouldn't bet this defined in pci_ids.h ?
 
-That file is solely intended for IDs used in multiple places, as
-explained in the comment at its top.  This particular ID is only used
-in the PCI core, hence it's in the PCI core's private drivers/pci/pci.h.
+> On 3 Jan 2017, at 18:07, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>=20
+> Hi Harry,
+>=20
+> On Tue, Jan 03, 2017 at 03:35:13PM +0000, Harry Mallon wrote:
+>> Hi,
+>>=20
+>> In this email I am asking for advice on how to diagnose problems in =
+assigning memory for PCI-E devices and bridges. I can reproduce my issue =
+on the current mainline kernel but I am not currently planning to target =
+any fixes for the mainline kernel (unless they prove to be useful =
+outside of this machine). I am planning to target the CentOS 3.10.0 =
+based kernel. I understand that I am not owed any help/patches etc from =
+anyone here, especially not as I am using a non mainline kernel.
+>>=20
+>> I am working on a machine with an odd PCI structure, it has 4 =
+different PLX bridges and requires hotplug to work on at least 2 of =
+these. We were previously using a kernel based on 3.3 and had to add a =
+few (hacky, machine specific) patches to that to make it work correctly. =
+We also use "pci=3Drealloc,pcie_bus_safe" in the kernel cmdline. I am =
+currently using that kernel as a reference to compare to my development =
+version.
+>>=20
+>> On my current setup some devices don't work, using "lspci -vvv" I can =
+see that they are not all receiving the memory allocations that they =
+need. They report like one of the two following (it changes depending on =
+another PCI-E card being in or out):
+>>=20
+>> 05:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] =
+(rev a1) (prog-if 00 [VGA controller])
+>>        Subsystem: NVIDIA Corporation Device 119a
+>>        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- =
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+>>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast =
+>TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>        Interrupt: pin A routed to IRQ 11
+>>        Region 0: Memory at <ignored> (32-bit, non-prefetchable) =
+[disabled]
+>>        Region 1: Memory at e0000000 (64-bit, prefetchable) [disabled] =
+[size=3D256M]
+>>        Region 3: Memory at f0000000 (64-bit, prefetchable) [disabled] =
+[size=3D32M]
+>>        Region 5: I/O ports at 4000 [disabled] [size=3D128]
+>>        Expansion ROM at <ignored> [disabled]
+>>=20
+>> 05:00.0 VGA compatible controller: NVIDIA Corporation GK110B [GeForce =
+GTX TITAN Black] (rev ff) (prog-if ff)
+>> 	!!! Unknown header type 7f
+>>=20
+>> What tools and techniques can anyone recommend for diagnosing this =
+type of problem? Is there a way to export all the bridge memory ranges =
+in a way that can be visualised (maybe the newer kernel cannot allocate =
+enough aligned space)? Is there a way to enable extra PCI debug in the =
+kernel? Is there a way to make the kernel panic and=20
+>> report when it fails to assign memory on boot instead of continuing =
+with non-functional hardware?
+>=20
+> A complete dmesg log from a current kernel and complete "lspci -vv"
+> output is the best place to start.  The goal is that all your devices
+> should work without requiring any machine-specific patches or
+> command-line parameters.  Our resource allocation code is not really
+> very robust, so unusual topologies don't always work out of the box.
+>=20
+> You can open a bug report at https://bugzilla.kernel.org in the
+> drivers/PCI area, attach the dmesg and lspci output, and respond with
+> the URL here.
 
-However the line is formatted such that it can just be moved to the
-global include/linux/pci_ids.h should it be needed someplace else in
-the future.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D191921
 
+I have attached messages log (zipped, wouldn't let me do the whole =
+thing) and lspci.
 
-> >  extern const unsigned char pcie_link_speed[];
-> > 
-> >  bool pcie_cap_has_lnkctl(const struct pci_dev *dev); diff --git
-> > a/drivers/pci/probe.c b/drivers/pci/probe.c index e164b5c..891a8fa 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev
-> > *pdev)
-> >  		pdev->is_hotplug_bridge = 1;
-> >  }
-> > 
-> > +static void set_pcie_vendor_specific(struct pci_dev *dev) {
-> 
-> 
-> Why don't u implement this  in quirk.c ?
-
-The is_thunderbolt bit signifies whether a given PCI device is part
-of a Thunderbolt daisy chain.  (As explained in the comment in
-include/linux/pci.h, see below.)  So it is set on all the PCI devices
-that comprise a Thunderbolt controller, but also on all endpoint devices
-that are attached via Thunderbolt.
-
-Consequently this function needs to be executed for all PCI devices,
-not just for a subset that could be identified by a vendor, device or
-class ID.
-
-In the DRM drivers nouveau, radeon and amdgpu I need to prevent calls
-to vga_switcheroo_register_client() and vga_switcheroo_init_domain_pm_ops()
-if the device in question is attached via Thunderbolt.  That's because
-external GPUs can't drive the panel of a laptop or be powered down like an
-on-board Optimus/PowerXpress GPU.  We've got a bug there right now that
-manifests itself once someone attaches an eGPU to a dual GPU laptop.
-With this patch I'll be able to just skip registration with vga_switcheroo
-if is_thunderbolt is set on a GPU's pci_dev, thereby fixing the bug.
-
-
-BTW do you have information on the contents/meaning of the VSEC that you
-would be able/allowed to share?  What I've seen so far is that its length
-is 0x1c bytes on older controllers (e.g. Light Ridge, Port Ridge) and its
-contents are always the same, regardless if the controller is used in
-host mode or endpoint mode:
-
-500: 0b 00 01 00 34 12 c1 01|50 09 00 00 39 00 00 00
-510: 00 00 00 00 00 00 00 00 00 00 00 00
-
-However on Alpine Ridge the size of the VSEC has increased significantly
-to 0xd8 bytes, even though the version stayed at 1 as before:
-
-500: 0b 00 01 60 34 12 81 0d 50 09 b0 0c b9 06 18 08
-510: 00 38 00 01 00 00 00 00 00 00 00 00 32 02 10 00
-520: ef d3 00 40 00 00 00 00 f0 f0 30 c1 00 02 30 00
-530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-590: 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00
-5a0: 00 00 00 00 00 00 00 00 00 00 00 00 38 24 01 00
-5b0: 08 40 00 1c 00 00 01 18 04 03 00 f0 06 00 00 00
-5c0: 00 00 08 40 06 00 00 01 90 00 08 1b 00 08 80 08
-5d0: 80 7f 08 00 00 00 00 00
-
-Thanks,
-
-Lukas
-
-> 
-> > +	int vsec = 0;
-> > +	u32 header;
-> > +
-> > +	while ((vsec = pci_find_next_ext_capability(dev, vsec,
-> > +						    PCI_EXT_CAP_ID_VNDR))) {
-> > +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
-> > &header);
-> > +
-> > +		/* Is the device part of a Thunderbolt controller? */
-> > +		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
-> > +		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT)
-> > +			dev->is_thunderbolt = 1;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Is the device attached with Thunderbolt?  Walk upwards and check
-> > for
-> > +	 * each encountered bridge if it's part of a Thunderbolt controller.
-> > +	 * Reaching the host bridge means dev is soldered to the mainboard.
-> > +	 */
-> > +	if (!dev->is_thunderbolt) {
-> > +		struct pci_dev *parent = dev;
-> > +
-> > +		while ((parent = pci_upstream_bridge(parent)))
-> > +			if (parent->is_thunderbolt) {
-> > +				dev->is_thunderbolt = 1;
-> > +				break;
-> > +			}
-> > +	}
-> > +}
-> > +
-> >  /**
-> >   * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
-> >   * @dev: PCI device
-> > @@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
-> >  	/* need to have dev->class ready */
-> >  	dev->cfg_size = pci_cfg_space_size(dev);
-> > 
-> > +	/* need to have dev->cfg_size ready */
-> > +	set_pcie_vendor_specific(dev);
-> > +
-> >  	/* "Unknown power state" */
-> >  	dev->current_state = PCI_UNKNOWN;
-> > 
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h index e2d1a12..3c775e8
-> > 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -358,6 +358,7 @@ struct pci_dev {
-> >  	unsigned int	is_virtfn:1;
-> >  	unsigned int	reset_fn:1;
-> >  	unsigned int    is_hotplug_bridge:1;
-> > +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
-> >  	unsigned int    __aer_firmware_first_valid:1;
-> >  	unsigned int	__aer_firmware_first:1;
-> >  	unsigned int	broken_intx_masking:1;
-> > --
-> > 2.11.0
+>=20
+> Bjorn
