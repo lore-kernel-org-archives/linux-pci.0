@@ -1,113 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50180 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750985AbdALPLd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jan 2017 10:11:33 -0500
-Date: Thu, 12 Jan 2017 10:11:29 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        david1.zhou@amd.com, qiang.yu@amd.com,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "Kuehling, Felix" <felix.kuehling@amd.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <christian.koenig@amd.com>, hch@infradead.org,
-        "Deucher, Alexander" <alexander.deucher@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        Jerome Glisse <j.glisse@gmail.com>,
-        "Blinzer, Paul" <paul.blinzer@amd.com>,
-        "'Linux-media@vger.kernel.org'" <linux-media@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20170112151129.GA10942@redhat.com>
-References: <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
- <20170106015831.GA2226@gmail.com>
- <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
- <20170106173722.GB3804@redhat.com>
- <20170106182625.GB5724@obsidianresearch.com>
- <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
- <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
+Return-Path: <SRS0=sczT=YS=amd.com=Alexander.Deucher@kernel.org>
+Return-Path: <SRS0=sczT=YS=amd.com=Alexander.Deucher@kernel.org>
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Lukas Wunner' <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer
+	<kilian.singer@quantumtechnology.info>, linux-pci
+	<linux-pci@vger.kernel.org>, Dave Airlie <airlied@redhat.com>
+Subject: RE: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Wed, 4 Jan 2017 15:50:11 +0000
+Message-ID: <BN6PR12MB165253E34D9780F132ED3DBBF7610@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+ <16155135.jUckSz7QPL@aspire.rjw.lan>
+ <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+In-Reply-To: <20170104081639.GA21076@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 10:54:39PM -0600, Stephen Bates wrote:
-> On Fri, January 6, 2017 4:10 pm, Logan Gunthorpe wrote:
+> -----Original Message-----
+> From: Lukas Wunner [mailto:lukas@wunner.de]
+> Sent: Wednesday, January 04, 2017 3:17 AM
+> To: Bjorn Helgaas
+> Cc: Rafael J. Wysocki; Peter Wu; Mika Westerberg; Kilian Singer; linux-pc=
+i;
+> Deucher, Alexander; Dave Airlie
+> Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+>=20
+> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+> > I don't *want* to apply the revert.  It's on my for-linus branch as a
+> > worst-case scenario change if we can't figure out a better fix.
 > >
-> >
-> > On 06/01/17 11:26 AM, Jason Gunthorpe wrote:
-> >
-> >
-> >> Make a generic API for all of this and you'd have my vote..
-> >>
-> >>
-> >> IMHO, you must support basic pinning semantics - that is necessary to
-> >> support generic short lived DMA (eg filesystem, etc). That hardware can
-> >> clearly do that if it can support ODP.
-> >
-> > I agree completely.
-> >
-> >
-> > What we want is for RDMA, O_DIRECT, etc to just work with special VMAs
-> > (ie. at least those backed with ZONE_DEVICE memory). Then
-> > GPU/NVME/DAX/whatever drivers can just hand these VMAs to userspace
-> > (using whatever interface is most appropriate) and userspace can do what
-> > it pleases with them. This makes _so_ much sense and actually largely
-> > already works today (as demonstrated by iopmem).
-> 
-> +1 for iopmem ;-)
-> 
-> I feel like we are going around and around on this topic. I would like to
-> see something that is upstream that enables P2P even if it is only the
-> minimum viable useful functionality to begin. I think aiming for the moon
-> (which is what HMM and things like it are) are simply going to take more
-> time if they ever get there.
-> 
-> There is a use case for in-kernel P2P PCIe transfers between two NVMe
-> devices and between an NVMe device and an RDMA NIC (using NVMe CMBs or
-> BARs on the NIC). I am even seeing users who now want to move data P2P
-> between FPGAs and NVMe SSDs and the upstream kernel should be able to
-> support these users or they will look elsewhere.
-> 
-> The iopmem patchset addressed all the use cases above and while it is not
-> an in kernel API it could have been modified to be one reasonably easily.
-> As Logan states the driver can then choose to pass the VMAs to user-space
-> in a manner that makes sense.
-> 
-> Earlier in the thread someone mentioned LSF/MM. There is already a
-> proposal to discuss this topic so if you are interested please respond to
-> the email letting the committee know this topic is of interest to you [1].
-> 
-> Also earlier in the thread someone discussed the issues around the IOMMU.
-> Given the known issues around P2P transfers in certain CPU root complexes
-> [2] it might just be a case of only allowing P2P when a PCIe switch
-> connects the two EPs. Another option is just to use CONFIG_EXPERT and make
-> sure people are aware of the pitfalls if they invoke the P2P option.
+> > The patch below is preferable, but I'd rather not take even it,
+> > because it takes away functionality and forces people to use a boot
+> > parameter to restore it.  I expect that somebody will figure out how
+> > to fix the regression Kilian found and also keep the new functionality
+> > (without requiring boot parameters) before v4.10.
+>=20
+> The issue is constrained to hybrid graphics laptops with Nvidia discrete
+> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+> PCI core.
+>=20
+> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+> when and how to call an ACPI method versus using PR3.)
+>=20
+> (Neither are laptops using the Nvidia proprietary driver as it doesn't
+> runtime suspend the card.  But battery life will be terrible then.)
+>=20
+> We're at rc2 so the time frame for coming up with a fix is probably
+> 4 weeks.  Peter and others have tried for months to reverse-engineer
+> how to handle runtime PM on newer Nvidia cards.  It seems likely that
+> we'll not find the ultimate solution to the problem within 4 weeks.
+>=20
+> The way it is now, i.e. defaulting to PR3 when available, regresses
+> certain laptops such as Kilian's.  If on the other hand we default to
+> DSM when available, we'll regress certain other laptops, as Peter has
+> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+> approach either, ideally we'd want to use PR3 as Windows does.
+>=20
+> As said, the only short-term solution I see is to add an "optimus"
+> module_param to nouveau to allow users to select which method to use.
+> So in Kilian's case an additional command line parameter would be
+> necessary to fix the issue.
+>=20
+> Does anyone see a better solution or can we agree on this one?  If so
+> I can come up with a patch.  This could go in via Dave Airlie's tree.
 
+I think an option may be useful for testing, but I think the best solution =
+is probably a quirk for Kilian's system unless there are a lot of users hav=
+ing similar problems to Killian.  PR3 standardizes dGPU power control so th=
+ings should get better across the board.
 
-iopmem is not applicable to GPU what i propose is to split the issue in 2
-so that everyone can reuse the part that needs to be common namely the DMA
-API part where you have to create IOMMU mapping for one device to point
-to the other device memory.
-
-We can have a DMA API that is agnostic to how the device memory is manage
-(so does not matter if device memory have struct page or not). This what
-i have been arguing in this thread. To make progress on this issue we need
-to stop conflicting different use case.
-
-So i say let solve the IOMMU issue first and let everyone use it in their
-own way with their device. I do not think we can share much more than
-that.
-
-Cheers,
-Jérôme
+Alex
