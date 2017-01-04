@@ -1,103 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <paul.gortmaker@windriver.com>, <robh@kernel.org>,
- <colin.king@canonical.com>, <linux-pci@vger.kernel.org>,
- <marc.zyngier@arm.com>
-Subject: [PATCH 2/4] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
-Date: Sat, 21 Jan 2017 16:41:10 +0530
-Message-ID: <1484997072-19276-2-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35724 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965593AbdADPSy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 10:18:54 -0500
+Date: Wed, 4 Jan 2017 09:18:52 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+Subject: Re: [PATCH V2 3/5] Documetation: binding: modify the exynos5440 pcie
+ binding
+Message-ID: <20170104151852.knssejrhs3j562tu@rob-hp-laptop>
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1040f1e074748fabe58af52eb0b833713@epcas1p1.samsung.com>
+ <20170104123435.30740-4-jh80.chung@samsung.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
- Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170104123435.30740-4-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- Few wifi end points which only support legacy interrupts,
-performs hardware reset functionalities after disabling interrupts
-by invoking disable_irq and then re-enable using enable_irq, they
-enable hardware interrupts first and then virtual irq line later.
-- The legacy irq line goes low only after DEASSERT_INTx is
-received.As the legacy irq line is high immediately after hardware
-interrupts are enabled but virq of EP is still in disabled state
-and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-irq chip is used, interrutps are not masked and system is
-hanging with CPU stall.
-- Adding irq chip functions instead of dummy irq chip for legacy
-interrupts.
+On Wed, Jan 04, 2017 at 09:34:33PM +0900, Jaehoon Chung wrote:
+> According to using PHY framework, updates the exynos5440-pcie binding.
+> For maintaining backward compatibility, leaves the current dt-binding.
+> (It should be deprecated.)
+> 
+> Recommends to use the Phy Framework and "config" property to follow
+> the designware-pcie binding.
+> If you use the old way, can see "mssing *config* reg space" message.
+> Because the getting configuration space address from range is old way.
+> 
+> NOTE: When use the "config" property, first name of 'reg-names' must be
+> set to "elbi". Otherwise driver can't maintain the backward capability.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+> Changelog on V2:
+> - Describes more commit message
+> - Fixes the typos
+> - Adds the new example for using PHY framework
+> - Deprecated the old dt-binding description
+> - Removes 'phy-names'
+> 
+>  .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 ++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c |   36 +++++++++++++++++++++++++++++++++++-
- 1 files changed, 35 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index c8b5a33..e1809f9 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -396,10 +396,44 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
-+static void nwl_mask_leg_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct nwl_pcie *pcie;
-+	unsigned int mask = 0;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << (data->hwirq - 1);
-+	nwl_bridge_writel(pcie, ((u32)MSGF_LEG_SR_MASKALL & (~mask)),
-+			  MSGF_LEG_MASK);
-+
-+}
-+
-+static void nwl_unmask_leg_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct nwl_pcie *pcie;
-+	unsigned int mask = 0;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << (data->hwirq - 1);
-+	nwl_bridge_writel(pcie, ((u32)MSGF_LEG_SR_MASKALL | mask),
-+			  MSGF_LEG_MASK);
-+
-+}
-+
-+static struct irq_chip nwl_leg_irq_chip = {
-+	.name = "nwl_pcie:legacy",
-+	.irq_enable = nwl_unmask_leg_irq,
-+	.irq_disable = nwl_mask_leg_irq,
-+	.irq_mask = nwl_mask_leg_irq,
-+	.irq_unmask = nwl_unmask_leg_irq,
-+};
-+
- static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
- 			  irq_hw_number_t hwirq)
- {
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
- 
- 	return 0;
--- 
-1.7.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Rob Herring <robh@kernel.org>
