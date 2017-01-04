@@ -1,76 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:8549 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750861AbdAaRCG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 12:02:06 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Keith Busch <keith.busch@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        zhangjukuo <zhangjukuo@huawei.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: RE: Question: PCIe DPC not allowing for link retraining and bus
- re-scan
-Date: Tue, 31 Jan 2017 16:59:31 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9FA346@lhreml507-mbx>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
- <20170130161453.GC11699@localhost.localdomain>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
- <20170131155336.GA24601@localhost.localdomain>
-In-Reply-To: <20170131155336.GA24601@localhost.localdomain>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mailout1.samsung.com ([203.254.224.24]:52481 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934333AbdADIea (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 03:34:30 -0500
+Subject: Re: [PATCH 3/4] Documetation: binding: modify the exynos5440 pcie
+ binding
+To: Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <1c7c1319-70cd-e6d5-87d1-c329a8166497@samsung.com>
+Date: Wed, 04 Jan 2017 17:23:24 +0900
+MIME-version: 1.0
+In-reply-to: <20170103195144.7fwtlvhzxhq3r25z@rob-hp-laptop>
+Content-type: text/plain; charset=windows-1252
+References: <20161228103454.26467-1-jh80.chung@samsung.com>
+ <CGME20161228103455epcas5p2b3ea563efc00c776e77477ab3c778bb1@epcas5p2.samsung.com>
+ <20161228103454.26467-4-jh80.chung@samsung.com>
+ <20170103195144.7fwtlvhzxhq3r25z@rob-hp-laptop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith
+On 01/04/2017 04:51 AM, Rob Herring wrote:
+> On Wed, Dec 28, 2016 at 07:34:53PM +0900, Jaehoon Chung wrote:
+>> According to using PHY framework, modified the exynos5440-pcie binding.
+>> And use "config" property to follow the designware-pcie binding.
+> 
+> You are breaking compatibility here. Please state that and why it is 
+> okay to do so.
 
-> -----Original Message-----
-> From: Keith Busch [mailto:keith.busch@intel.com]
-> Sent: 31 January 2017 15:54
-> To: Gabriele Paoloni
-> Cc: linux-pci@vger.kernel.org; Linuxarm; liudongdong (C); zhangjukuo;
-> Wangzhou (B)
-> Subject: Re: Question: PCIe DPC not allowing for link retraining and
-> bus re-scan
-> 
-> On Tue, Jan 31, 2017 at 09:35:58AM +0000, Gabriele Paoloni wrote:
-> > I don't mind writing the patches but currently I also do not have a
-> > platform to test on.
-> >
-> > Do you know if there is any Intel Server/Desktop with full support of
-> > DPC on the RP including "Software Triggering of DPC" (maybe some
-> > machines that are out on the market but you do not have there with
-> you)?
-> 
-> Currently available Intel offerings do not have eDPC capable root
-> ports.
-> I use switches from Microsemi and PLX with these capabilities on their
-> downstream ports so I'm limited to non-root port testing at the moment.
-> 
-> > As an alternative I am thinking that maybe I can find a switch with
-> > full DPC support including "Software Triggering of DPC". In this case
-> > we test anything except the RP Busy bit...
-> >
-> > The idea is to have a sort of DPC SW Injection module to test DPC.
-> 
-> I think you can s/w inject from userspace with setpci:
-> 
->   # setpci -s <B:D.f> ECAP_DPC+6.w=40:40
-> 
-> The port has to have a software trigger capability. I can get such a
-> switch, but don't have one immediately available.
-> 
-> Anyway, I'll write a couple patches and post them when I can get
-> validation. Thank you for pointing out the current gaps.
+I will update it..And i'm modifying the patches about maintaining the backward compatibility.
+So i will leave the current dt-binding. Just will add the dt-binding example for using phy framework.
+How about?
 
-Many thanks for this, I'll try to get such switch too so maybe
-I can help with development and/or validation. 
-If you know of specific switches that support for sure such SW
-trigger feature please let me know and I'll try to buy them.
+And will add the "DEPRECATED" for some properties. Also will display the kernel message.
 
-I'll ping you as soon as I am able to get something to test this.
+> 
+>>
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>>  .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 +++++++++++++---------
+>>  1 file changed, 17 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+>> index 4f9d23d..51f6214 100644
+>> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+>> @@ -5,10 +5,15 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+>>  
+>>  Required properties:
+>>  - compatible: "samsung,exynos5440-pcie"
+>> -- reg: base addresses and lengths of the pcie controller,
+>> -	the phy controller, additional register for the phy controller.
+>> +- reg: base addresses and lengths of the pcie controller
+>>  - interrupts: A list of interrupt outputs for level interrupt,
+>>  	pulse interrupt, special interrupt.
+>> +- phys: From PHY binding. Phandle for the Generic PHY.
+>> +	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> +- phy-names: Must be "pcie-phy".
+> 
+> -names is pointless for a single element.
 
-Cheers
-Gab
+Will remove.
+
+> 
+>> +
+>> +Other common properties refer to
+>> +	Documentation/devicetree/binding/pci/designware-pcie.txt
+>>  
+>>  Example:
+>>  
+>> @@ -16,18 +21,18 @@ SoC specific DT Entry:
+>>  
+>>  	pcie@290000 {
+>>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+>> -		reg = <0x290000 0x1000
+>> -			0x270000 0x1000
+>> -			0x271000 0x40>;
+>> +		reg = <0x290000 0x1000>, <0x40000000 0x100>;
+> 
+> 256 bytes of config space?
+
+Typo. Will fix.
+
+> 
+>> +		reg-names = "elbi", "config";
+>>  		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+>>  		clocks = <&clock 28>, <&clock 27>;
+>>  		clock-names = "pcie", "pcie_bus";
+>>  		#address-cells = <3>;
+>>  		#size-cells = <2>;
+>>  		device_type = "pci";
+>> -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
+>> -			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+>> +		ranges = <0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+>>  			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
+>> +		phys = <&pcie_phy0>;
+>> +		phy-names = "pcie-phy";
+>>  		#interrupt-cells = <1>;
+>>  		interrupt-map-mask = <0 0 0 0>;
+>>  		interrupt-map = <0 0 0 0 &gic GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+>> @@ -36,17 +41,17 @@ SoC specific DT Entry:
+>>  
+>>  	pcie@2a0000 {
+>>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
+>> -		reg = <0x2a0000 0x1000
+>> -			0x272000 0x1000
+>> -			0x271040 0x40>;
+>> +		reg = <0x2a0000 0x1000>, <0x60000000 0x1000>;
+>> +		reg-names = "elbi", "config";
+>>  		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+>>  		clocks = <&clock 29>, <&clock 27>;
+>>  		clock-names = "pcie", "pcie_bus";
+>>  		#address-cells = <3>;
+>>  		#size-cells = <2>;
+>>  		device_type = "pci";
+>> -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
+>> -			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+>> +		phys = <&pcie_phy1>;
+>> +		phy-names = "pcie-phy";
+>> +		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+>>  			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
+>>  		#interrupt-cells = <1>;
+>>  		interrupt-map-mask = <0 0 0 0>;
+>> -- 
+>> 2.10.2
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
+
