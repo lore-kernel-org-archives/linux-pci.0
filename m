@@ -1,83 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44232 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751232AbdAaUUH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 15:20:07 -0500
-Subject: [PATCH 1 1/4] PCI: hisi: Use of_device_get_match_data() to simplify
- probe
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Scott Branden <sbranden@broadcom.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-renesas-soc@vger.kernel.org,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shailendra Verma <shailendra.v@samsung.com>
-Date: Tue, 31 Jan 2017 14:19:59 -0600
-Message-ID: <20170131201958.27605.54898.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=S3u2=YS=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=S3u2=YS=linux.intel.com=mika.westerberg@kernel.org>
+Date: Wed, 4 Jan 2017 14:29:39 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Peter Wu <peter@lekensteyn.nl>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170104122939.GQ3353@lahna.fi.intel.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+ <16155135.jUckSz7QPL@aspire.rjw.lan>
+ <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <83901bcb-1315-fbca-e1e3-960bfefbd9c0@quantumtechnology.info>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <83901bcb-1315-fbca-e1e3-960bfefbd9c0@quantumtechnology.info>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Shailendra Verma <shailendra.v@samsung.com>
+On Wed, Jan 04, 2017 at 11:33:16AM +0100, Kilian Singer wrote:
+> Dear all,
+> 
+> the weird thing is also that when calling:
+> 
+> echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed
+> or
+> echo on > /sys/bus/pci/devices/0000:01:00.0/power/control
+> 
+> on a command line then the command line crashes. The system stays responsive but still
+> becomes unresponsive when I lock the screen.
 
-The only way to call hisi_pcie_probe() is to match an entry in
-hisi_pcie_of_match[], so match cannot be NULL.
+Most probably because the device has already been runtime suspended.
+Setting them from command line may be too late.
 
-Use of_device_get_match_data() to retrieve the soc_ops pointer.  No
-functional change intended.
+> Maybe a similar thing are happening in the kernel. Maybe one could use the above fact
+> and a timeout to test for the problem and then take measures to deactivate the pm.
+> 
+> I hope this gives you some more clues.
 
-[bhelgaas: use of_device_get_match_data(), changelog]
-Based-on-suggestion-from: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Shailendra Verma <shailendra.v@samsung.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-hisi.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index a301a7187b30..33c201afdbf1 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -139,7 +139,7 @@ struct hisi_pcie {
- 	struct pcie_port pp;		/* pp.dbi_base is DT rc_dbi */
- 	struct regmap *subctrl;
- 	u32 port_id;
--	struct pcie_soc_ops *soc_ops;
-+	const struct pcie_soc_ops *soc_ops;
- };
- 
- /* HipXX PCIe host only supports 32-bit config access */
-@@ -259,7 +259,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct hisi_pcie *hisi_pcie;
- 	struct pcie_port *pp;
--	const struct of_device_id *match;
- 	struct resource *reg;
- 	struct device_driver *driver;
- 	int ret;
-@@ -272,11 +271,10 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	pp->dev = dev;
- 	driver = dev->driver;
- 
--	match = of_match_device(driver->of_match_table, dev);
--	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
-+	hisi_pcie->soc_ops = of_device_get_match_data(dev);
- 
- 	hisi_pcie->subctrl =
--	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
-+	    syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
- 	if (IS_ERR(hisi_pcie->subctrl)) {
- 		dev_err(dev, "cannot get subctrl base\n");
- 		return PTR_ERR(hisi_pcie->subctrl);
-
+You could try to run 'lspci -vv' once the machine is unresponsive (if
+you can do anything anymore). That should show whether the device and
+the root port are still in D3.
