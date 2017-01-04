@@ -1,166 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:39026 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750845AbdAPGtd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 01:49:33 -0500
-Date: Mon, 16 Jan 2017 07:49:27 +0100
-From: Lukasz Majewski <lukma@denx.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-Message-ID: <20170116074927.086418f4@jawa>
-In-Reply-To: <587C6A40.8070608@ti.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
-        <587C6A40.8070608@ti.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:64765 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754252AbdADOqz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 09:46:55 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+        Will Deacon <will.deacon@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        artemi.ivanov@cogentembedded.com
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit DMA mask
+Date: Wed, 04 Jan 2017 15:46:17 +0100
+Message-ID: <3158203.Yc9Qgx82xo@wuerfel>
+In-Reply-To: <412396ac-4535-08a3-e4c7-dd8d0078a518@cogentembedded.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com> <2104402.puPT8SttTe@wuerfel> <412396ac-4535-08a3-e4c7-dd8d0078a518@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
-
-> Hi,
+On Wednesday, January 4, 2017 5:30:19 PM CET Nikita Yushchenko wrote:
+> >> For OF platforms, this is called via of_dma_configure(), that checks
+> >> dma-ranges of node that is *parent* for host bridge. Host bridge
+> >> currently does not control this at all.
+> > 
+> > We need to think about this a bit. Is it actually the PCI host
+> > bridge that limits the ranges here, or the bus that it is connected
+> > to. In the latter case, the caller needs to be adapted to handle
+> > both.
 > 
-> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
-> > Some devices (due to e.g. bad PCIe signal integrity) require to run
-> > with forced GEN1 speed on PCIe bus.
-> > 
-> > This patch changes the speed explicitly on dra7 based devices when
-> > proper device tree attribute is defined for the PCIe controller.
-> > 
-> > Signed-off-by: Lukasz Majewski <lukma@denx.de>
+> In r-car case, I'm not sure what is the source of limitation at physical
+> level.
 > 
-> Bjorn has already queued a patch to do the same thing
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
-
-It seems like Bjorn only modifies CAP registers.
-
-He also needs to change register with 0x080C offset to actually
-( PCIECTRL_PL_WIDTH_SPEED_CTL )
-
-Best regards,
-Łukasz
-
+> pcie-rcar driver configures ranges for PCIe inbound transactions based
+> on dma-ranges property in it's device tree node. In the current device
+> tree for this platform, that only contains one range and it is in lower
+> memory.
 > 
-> Thanks
-> Kishon
+> NVMe driver tries i/o to kmalloc()ed area. That returns 0x5xxxxxxxx
+> addresses here. As a quick experiment, I tried to add second range to
+> pcie-rcar's dma-ranges to cover 0x5xxxxxxxx area - but that did not make
+> DMA to high addresses working.
 > 
-> > ---
+> My current understanding is that host bridge hardware module can't
+> handle inbound transactions to PCI addresses above 4G - and this
+> limitations comes from host bridge itself.
+> 
+> I've read somewhere in the lists that pcie-rcar hardware is "32-bit" -
+> but I don't remember where, and don't know lowlevel details. Maybe
+> somebody from linux-renesas can elaborate?
+
+Just a guess, but if the inbound translation windows in the host
+bridge are wider than 32-bit, the reason for setting up a single
+32-bit window is probably because that is what the parent bus supports.
+
+> >> In current device trees no dma-ranges is defined for nodes that are
+> >> parents to pci host bridges. This will make of_dma_configure() to fall
+> >> back to 32-bit size for all devices on all current platforms.  Thus
+> >> applying this patch will immediately break 64-bit dma masks on all
+> >> hardware that supports it.
 > > 
-> > Patch applies on newest origin/master
-> > SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
+> > No, it won't break it, it will just fall back to swiotlb for all the
+> > ones that are lacking the dma-ranges property. I think this is correct
+> > behavior.
+> 
+> I'd say - for all ones that have parents without dma-ranges property.
+> 
+> As of 4.10-rc2, I see only two definitions of wide parent dma-ranges
+> under arch/arm64/boot/dts/ - in amd/amd-seattle-soc.dtsi and
+> apm/apm-storm.dtsi
+> 
+> Are these the only arm64 platforms that can to DMA to high addresses?
+> I'm not arm64 expert but I'd be surprised if that's the case.
+
+It's likely that a few others also do high DMA, but a lot of arm64
+chips are actually derived from earlier 32-bit chips and don't
+even support any RAM above 4GB, as well as having a lot of 32-bit
+DMA masters.
+
+> >> Also related: dma-ranges property used by several pci host bridges is
+> >> *not* compatible with "legacy" dma-ranges parsed by of_get_dma_range() -
+> >> former uses additional flags word at beginning.
 > > 
-> > Tested at AM5728
-> > 
-> > ---
-> >  Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
-> >  drivers/pci/host/pci-dra7xx.c                    | 23
-> > +++++++++++++++++++++++
-> > drivers/pci/host/pcie-designware.h               |  1 + 3 files
-> > changed, 25 insertions(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt
-> > b/Documentation/devicetree/bindings/pci/ti-pci.txt index
-> > 60e2516..9f97409 100644 ---
-> > a/Documentation/devicetree/bindings/pci/ti-pci.txt +++
-> > b/Documentation/devicetree/bindings/pci/ti-pci.txt @@ -25,6 +25,7
-> > @@ PCIe Designware Controller 
-> >  Optional Property:
-> >   - gpios : Should be added if a gpio line is required to drive
-> > PERST# line
-> > + - to,pcie-is-gen1: Indicates that forced gen1 port operation is
-> > needed. 
-> >  Example:
-> >  axi {
-> > diff --git a/drivers/pci/host/pci-dra7xx.c
-> > b/drivers/pci/host/pci-dra7xx.c index 9595fad..eec5fae 100644
-> > --- a/drivers/pci/host/pci-dra7xx.c
-> > +++
-> > b/drivers/pci/host/pci-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xxdra7xx.c
-> > @@ -63,6 +63,13 @@ #define
-> > LINK_UP						BIT(16)
-> > #define
-> > DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
-> > +#define         PCIECTRL_EP_DBICS_LNK_CAP
-> > 0x007C +#define
-> > MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
-> > +#define         MAX_LINK_SPEEDS_GEN1
-> > BIT(0) + +#define
-> > PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
-> > +#define         CFG_DIRECTED_SPEED_CHANGE
-> > BIT(17) + struct dra7xx_pcie { struct pcie_port	pp;
-> >  	void __iomem		*base;		/* DT
-> > ti_conf */ @@ -270,6 +277,7 @@ static int __init
-> > dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx, struct pcie_port
-> > *pp = &dra7xx->pp; struct device *dev = pp->dev;
-> >  	struct resource *res;
-> > +	u32 val;
-> >  
-> >  	pp->irq = platform_get_irq(pdev, 1);
-> >  	if (pp->irq < 0) {
-> > @@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct
-> > dra7xx_pcie *dra7xx, if (!pp->dbi_base)
-> >  		return -ENOMEM;
-> >  
-> > +	if (pp->is_gen1) {
-> > +		dev_info(dev, "GEN1 forced\n");
-> > +
-> > +		val = readl(pp->dbi_base +
-> > PCIECTRL_EP_DBICS_LNK_CAP);
-> > +		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK,
-> > MAX_LINK_SPEEDS_GEN1);
-> > +		writel(val, pp->dbi_base +
-> > PCIECTRL_EP_DBICS_LNK_CAP); +
-> > +		val = readl(pp->dbi_base +
-> > PCIECTRL_PL_WIDTH_SPEED_CTL);
-> > +		val &= ~CFG_DIRECTED_SPEED_CHANGE;
-> > +		writel(val, pp->dbi_base +
-> > PCIECTRL_PL_WIDTH_SPEED_CTL);
-> > +	}
-> > +
-> >  	ret = dw_pcie_host_init(pp);
-> >  	if (ret) {
-> >  		dev_err(dev, "failed to initialize host\n");
-> > @@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct
-> > platform_device *pdev) goto err_gpio;
-> >  	}
-> >  
-> > +	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
-> > +		pp->is_gen1 = true;
-> > +
-> >  	reg = dra7xx_pcie_readl(dra7xx,
-> > PCIECTRL_DRA7XX_CONF_DEVICE_CMD); reg &= ~LTSSM_EN;
-> >  	dra7xx_pcie_writel(dra7xx,
-> > PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg); diff --git
-> > a/drivers/pci/host/pcie-designware.h
-> > b/drivers/pci/host/pcie-designware.h index a567ea2..2fb0b18 100644
-> > --- a/drivers/pci/host/pcie-designware.h +++
-> > b/drivers/pci/host/pcie-designware.h @@ -50,6 +50,7 @@ struct
-> > pcie_port { struct irq_domain	*irq_domain;
-> >  	unsigned long		msi_data;
-> >  	u8			iatu_unroll_enabled;
-> > +	u8                      is_gen1;
-> >  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-> >  };
-> >  
-> > 
+> > Can you elaborate? Do we have PCI host bridges that use wrongly formatted
+> > dma-ranges properties?
+> 
+> of_dma_get_range() expects <dma_addr cpu_addr size> format.
+> 
+> pcie-rcar.c, pci-rcar-gen2.c, pci-xgene.c and pcie-iproc.c from
+> drivers/pci/host/ all parse dma-ranges using of_pci_range_parser that
+> uses <flags pci-addr cpu-addr size> format - i.e. something different
+> from what of_dma_get_range() uses.
 
+The "dma_addr" here is expressed in terms of #address-cells of the
+bus it is in, and that is "3" in case of PCI, where the first 32-bit
+word is a bit pattern containing various things, and the other two
+cells are a 64-bit address. I think this is correct, but we may
+need to add some special handling for parsing PCI host bridges
+in of_dma_get_range, to ensure we actually look at translations for
+the memory space.
 
-
-
-Best regards,
-
-Lukasz Majewski
-
---
-
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+	Arnd
