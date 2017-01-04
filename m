@@ -1,163 +1,365 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32866 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752626AbdAZTIV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Jan 2017 14:08:21 -0500
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:36322 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966638AbdADMf3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 07:35:29 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
 To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, alex.williamson@redhat.com,
-        darcari@redhat.com, mstowe@redhat.com, bhelgaas@google.com,
-        lukas@wunner.de, keith.busch@intel.com,
-        mika.westerberg@linux.intel.com
-Subject: [PATCH] pci: Only disable MSI/X and enable INTx if shutdown function has been called
-Date: Thu, 26 Jan 2017 14:07:47 -0500
-Message-Id: <1485457667-791-1-git-send-email-prarit@redhat.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V2 2/5] phy: phy-exynos-pcie: Add support for Exynos PCIe phy
+Date: Wed, 04 Jan 2017 21:34:32 +0900
+Message-id: <20170104123435.30740-3-jh80.chung@samsung.com>
+In-reply-to: <20170104123435.30740-1-jh80.chung@samsung.com>
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1a729583c3c2307d8539a186f1050ea98@epcas1p1.samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, I read your comment on the earlier patch and decided to answer it
-with this explanation.  I hope this explains the behavior, why the code
-was introduced, what the problem is, and why it no longer is an issue for
-kdump.
+This patch supports to use Generic Phy framework for Exynos PCIe phy.
+When Exynos that supported the pcie want to use the PCIe,
+it needs to control the phy resgister.
+But it should be more complex to control in their own PCIe device drivers.
 
-The following unhandled IRQ warning is seen during shutdown:
+Currently, there is an exynos5440 case to support the pcie.
+So this driver is based on Exynos5440 PCIe.
+In future, will support the Other exynos SoCs likes exynos5433, exynos7.
 
-    irq 16: nobody cared (try booting with the "irqpoll" option)
-    CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.2-1.el7_UNSUPPORTED.x86_64 #1
-    Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.90 06/
-     0000000000000000 ffff88041f803e70 ffffffff81333bd5 ffff88041cb78200
-     ffff88041cb7829c ffff88041f803e98 ffffffff810d9465 ffff88041cb78200
-     0000000000000000 0000000000000028 ffff88041f803ed0 ffffffff810d97bf
-    Call Trace:
-     <IRQ>  [<ffffffff81333bd5>] dump_stack+0x63/0x8e
-     [<ffffffff810d9465>] __report_bad_irq+0x35/0xd0
-     [<ffffffff810d97bf>] note_interrupt+0x20f/0x260
-     [<ffffffff810d6b35>] handle_irq_event_percpu+0x45/0x60
-     [<ffffffff810d6b7c>] handle_irq_event+0x2c/0x50
-     [<ffffffff810da31a>] handle_fasteoi_irq+0x8a/0x150
-     [<ffffffff8102edfb>] handle_irq+0xab/0x130
-     [<ffffffff81082391>] ? _local_bh_enable+0x21/0x50
-     [<ffffffff817064ad>] do_IRQ+0x4d/0xd0
-     [<ffffffff81704502>] common_interrupt+0x82/0x82
-     <EOI>  [<ffffffff815d0181>] ? cpuidle_enter_state+0xc1/0x280
-     [<ffffffff815d0174>] ? cpuidle_enter_state+0xb4/0x280
-     [<ffffffff815d0377>] cpuidle_enter+0x17/0x20
-     [<ffffffff810bf660>] cpu_startup_entry+0x220/0x3a0
-     [<ffffffff816f6da7>] rest_init+0x77/0x80
-     [<ffffffff81d8e147>] start_kernel+0x495/0x4a2
-     [<ffffffff81d8daa0>] ? set_init_arg+0x55/0x55
-     [<ffffffff81d8d120>] ? early_idt_handler_array+0x120/0x120
-     [<ffffffff81d8d5d6>] x86_64_start_reservations+0x2a/0x2c
-     [<ffffffff81d8d715>] x86_64_start_kernel+0x13d/0x14c
-
-When a system boots the Linux PCI devices are initialized by BIOS in
-legacy interrupt mode.  In the Linux PCI model, as part of the driver
-initialization of a device, the driver decides the type of interrupt handler to
-register.  If the device supports MSI/X then an MSI/X handler will be
-registered for all MSI/X interrupts through a call to pci_enable_msix_range()
-which will also put the PCI device into MSI/X mode; if the device doesn't
-support MSI/X then the legacy handler will be registered for the legacy
-interrupt and the device will remain in legacy mode.  A good example of a
-driver doing this is e1000e_set_interrupt_capability().
-
-The stack trace occurs on a system that has a MSI/X capable device with a MSI/X
-capable driver, but the driver does not have a pci shutdown function.  The PCI
-subsystem (not the driver!!) calls pci_device_shutdown() which disables MSI/X
-on the device during system shutdown by calling pci_msi_shutdown() and
-pci_msix_shutdown() asynchronously of the driver.  Disabling MSI/X will result
-in the active device being switched into legacy mode with a driver that is
-configured for MSI/X.  If the PCI device generates an interrupt during
-shutdown, the resulting legacy interrupt will not be handled by any driver and
-will be reported as being unhandled.
-
-[Aside: This does not mean that there is a problem with the driver.  If the
-driver had a proper shutdown function and this happened, then yes, there's a
-problem with the driver because the shutdown should have stopped HW interrupts
-being generated.  However, that isn't the case here because there isn't a
-shutdown function for this device.  (There is no requirement for a shutdown
-function.)  We want some drivers to remain active, for example the serial
-driver and on those devices the problem really lies with the PCI shutdown
-disabling MSI/X and switching to legacy mode when the HW and driver haven't
-stopped.]
-
-The pci_device_shutdown() MSI disable code was introduced in commit
-d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2").
-This commit was for a kdump failure with the mptscsih storage driver on 2.6.18.
-The change should have been made directly to that driver's shutdown function,
-not for every PCI driver [1].  Additionally, pci_device_shutdown() is no
-longer called during the panic path so this code does not reset devices
-for kdump.
-
-I have tested this patch in kdump with both nr_cpus=1 and nr_cpus=4 on various
-systems.  In cases where bugs have been reported on shutdown
-(https://bugzilla.kernel.org/show_bug.cgi?id=187351#c1) test kernels have
-resolved the unhandled IRQ stack trace.  In order to test for driver
-regressions (ie, "whack-a-mole" bugs) I have tested this patch on ~200 systems
-with different cpu counts (many drivers that support MSI/X initialize IRQs for
-each cpu) and various network and storage devices and drivers, without any
-issues. [2]
-
-This patch also has a positive effect with the PCI-based serial devices.
-On many systems during reboot/shutdown the the serial driver stops
-outputting messages.  I have tracked this to PCI serial devices that are
-as described above asynchronously switched from MSI/X to legacy.  After
-applying this patch serial console messages are output for the entire
-reboot/shutdown.
-
-[1] I cannot reproduce the mptscsih failure on a recent kernel on older or
-newer hardware.  Again, I think the patch has no effect on kdump because
-pci_device_shutdown() is not called during the panic path.
-
-[2] I have also tested a kernel that completely removes pci_msix_shutdown() and
-pci_msi_shutdown() without any issues.
-
-P.
----------8<---------
-
-On some systems an unhandled IRQ stack trace is output during shutdown.
-
-This occurs because pci_device_shutdown() disables MSI/X on all devices
-during shutdown by calling pci_msi_shutdown() and pci_msix_shutdown()
-asynchronously of the devices' drivers.  If a driver does not have a
-shutdown method and is configured for MSI/X interrupts, disabling MSI/X
-will result in the device being configured for legacy interrupts with a
-driver that is configured for MSI/X.  If the hardware generates an
-interrupt during shutdown, the interrupt will be a legacy interrupt and
-will be reported as being unhandled by any driver.
-
-Do not disable MSI/X interrupts during shutdown.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: alex.williamson@redhat.com
-Cc: darcari@redhat.com
-Cc: mstowe@redhat.com
-Cc: bhelgaas@google.com
-Cc: lukas@wunner.de
-Cc: keith.busch@intel.com
-Cc: mika.westerberg@linux.intel.com
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 ---
- drivers/pci/pci-driver.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Changelog on V2:
+- Not include the codes relevant to pci-exynos.
+- Remove the getting child node.
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 1ccce1cd6aca..87c35db5a564 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -461,10 +461,11 @@ static void pci_device_shutdown(struct device *dev)
+ drivers/phy/Kconfig           |   9 ++
+ drivers/phy/Makefile          |   1 +
+ drivers/phy/phy-exynos-pcie.c | 280 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 290 insertions(+)
+ create mode 100644 drivers/phy/phy-exynos-pcie.c
+
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index e8eb7f2..2dddef4 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -331,6 +331,15 @@ config PHY_EXYNOS5_USBDRD
+ 	  This driver provides PHY interface for USB 3.0 DRD controller
+ 	  present on Exynos5 SoC series.
  
- 	pm_runtime_resume(dev);
- 
--	if (drv && drv->shutdown)
-+	if (drv && drv->shutdown) {
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
-+		pci_msi_shutdown(pci_dev);
-+		pci_msix_shutdown(pci_dev);
++config PHY_EXYNOS_PCIE
++	bool "Exynos PCIe PHY driver"
++	depends on ARCH_EXYNOS && OF
++	depends on PCI_EXYNOS
++	select GENERIC_PHY
++	help
++	  Enable PCIe PHY support for Exynos SoC series.
++	  This driver provides PHY interface for Exynos PCIe controller.
++
+ config PHY_PISTACHIO_USB
+ 	tristate "IMG Pistachio USB2.0 PHY driver"
+ 	depends on MACH_PISTACHIO
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index 65eb2f4..081aeb4 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -37,6 +37,7 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
+ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
+ phy-exynos-usb2-$(CONFIG_PHY_S5PV210_USB2)	+= phy-s5pv210-usb2.o
+ obj-$(CONFIG_PHY_EXYNOS5_USBDRD)	+= phy-exynos5-usbdrd.o
++obj-$(CONFIG_PHY_EXYNOS_PCIE)	+= phy-exynos-pcie.o
+ obj-$(CONFIG_PHY_QCOM_APQ8064_SATA)	+= phy-qcom-apq8064-sata.o
+ obj-$(CONFIG_PHY_ROCKCHIP_USB) += phy-rockchip-usb.o
+ obj-$(CONFIG_PHY_ROCKCHIP_INNO_USB2)	+= phy-rockchip-inno-usb2.o
+diff --git a/drivers/phy/phy-exynos-pcie.c b/drivers/phy/phy-exynos-pcie.c
+new file mode 100644
+index 0000000..b57f49b
+--- /dev/null
++++ b/drivers/phy/phy-exynos-pcie.c
+@@ -0,0 +1,280 @@
++/*
++ * Samsung EXYNOS SoC series PCIe PHY driver
++ *
++ * Phy provider for PCIe controller on Exynos SoC series
++ *
++ * Copyright (C) 2016 Samsung Electronics Co., Ltd.
++ * Jaehoon Chung <jh80.chung@samsung.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_platform.h>
++#include <linux/platform_device.h>
++#include <linux/phy/phy.h>
++#include <linux/regmap.h>
++
++/* PCIe Purple registers */
++#define PCIE_PHY_GLOBAL_RESET		0x000
++#define PCIE_PHY_COMMON_RESET		0x004
++#define PCIE_PHY_CMN_REG		0x008
++#define PCIE_PHY_MAC_RESET		0x00c
++#define PCIE_PHY_PLL_LOCKED		0x010
++#define PCIE_PHY_TRSVREG_RESET		0x020
++#define PCIE_PHY_TRSV_RESET		0x024
++
++/* PCIe PHY registers */
++#define PCIE_PHY_IMPEDANCE		0x004
++#define PCIE_PHY_PLL_DIV_0		0x008
++#define PCIE_PHY_PLL_BIAS		0x00c
++#define PCIE_PHY_DCC_FEEDBACK		0x014
++#define PCIE_PHY_PLL_DIV_1		0x05c
++#define PCIE_PHY_COMMON_POWER		0x064
++#define PCIE_PHY_COMMON_PD_CMN		BIT(3)
++#define PCIE_PHY_TRSV0_EMP_LVL		0x084
++#define PCIE_PHY_TRSV0_DRV_LVL		0x088
++#define PCIE_PHY_TRSV0_RXCDR		0x0ac
++#define PCIE_PHY_TRSV0_POWER		0x0c4
++#define PCIE_PHY_TRSV0_PD_TSV		BIT(7)
++#define PCIE_PHY_TRSV0_LVCC		0x0dc
++#define PCIE_PHY_TRSV1_EMP_LVL		0x144
++#define PCIE_PHY_TRSV1_RXCDR		0x16c
++#define PCIE_PHY_TRSV1_POWER		0x184
++#define PCIE_PHY_TRSV1_PD_TSV		BIT(7)
++#define PCIE_PHY_TRSV1_LVCC		0x19c
++#define PCIE_PHY_TRSV2_EMP_LVL		0x204
++#define PCIE_PHY_TRSV2_RXCDR		0x22c
++#define PCIE_PHY_TRSV2_POWER		0x244
++#define PCIE_PHY_TRSV2_PD_TSV		BIT(7)
++#define PCIE_PHY_TRSV2_LVCC		0x25c
++#define PCIE_PHY_TRSV3_EMP_LVL		0x2c4
++#define PCIE_PHY_TRSV3_RXCDR		0x2ec
++#define PCIE_PHY_TRSV3_POWER		0x304
++#define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
++#define PCIE_PHY_TRSV3_LVCC		0x31c
++
++struct exynos_pcie_phy_data {
++	struct phy_ops	*ops;
++};
++
++/* For Exynos pcie phy */
++struct exynos_pcie_phy {
++	const struct exynos_pcie_phy_data *drv_data;
++	void __iomem *phy_base;
++	void __iomem *blk_base; /* For exynos5440 */
++};
++
++static void exynos_pcie_phy_writel(void __iomem *base, u32 val, u32 offset)
++{
++	writel(val, base + offset);
++}
++
++static u32 exynos_pcie_phy_readl(void __iomem *base, u32 offset)
++{
++	return readl(base + offset);
++}
++
++/* For Exynos5440 specific functions */
++static int exynos5440_pcie_phy_init(struct phy *phy)
++{
++	struct exynos_pcie_phy *ep = phy_get_drvdata(phy);
++
++	/* DCC feedback control off */
++	exynos_pcie_phy_writel(ep->phy_base, 0x29, PCIE_PHY_DCC_FEEDBACK);
++
++	/* set TX/RX impedance */
++	exynos_pcie_phy_writel(ep->phy_base, 0xd5, PCIE_PHY_IMPEDANCE);
++
++	/* set 50Mhz PHY clock */
++	exynos_pcie_phy_writel(ep->phy_base, 0x14, PCIE_PHY_PLL_DIV_0);
++	exynos_pcie_phy_writel(ep->phy_base, 0x12, PCIE_PHY_PLL_DIV_1);
++
++	/* set TX Differential output for lane 0 */
++	exynos_pcie_phy_writel(ep->phy_base, 0x7f, PCIE_PHY_TRSV0_DRV_LVL);
++
++	/* set TX Pre-emphasis Level Control for lane 0 to minimum */
++	exynos_pcie_phy_writel(ep->phy_base, 0x0, PCIE_PHY_TRSV0_EMP_LVL);
++
++	/* set RX clock and data recovery bandwidth */
++	exynos_pcie_phy_writel(ep->phy_base, 0xe7, PCIE_PHY_PLL_BIAS);
++	exynos_pcie_phy_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV0_RXCDR);
++	exynos_pcie_phy_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV1_RXCDR);
++	exynos_pcie_phy_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV2_RXCDR);
++	exynos_pcie_phy_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV3_RXCDR);
++
++	/* change TX Pre-emphasis Level Control for lanes */
++	exynos_pcie_phy_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV0_EMP_LVL);
++	exynos_pcie_phy_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV1_EMP_LVL);
++	exynos_pcie_phy_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV2_EMP_LVL);
++	exynos_pcie_phy_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV3_EMP_LVL);
++
++	/* set LVCC */
++	exynos_pcie_phy_writel(ep->phy_base, 0x20, PCIE_PHY_TRSV0_LVCC);
++	exynos_pcie_phy_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV1_LVCC);
++	exynos_pcie_phy_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV2_LVCC);
++	exynos_pcie_phy_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV3_LVCC);
++
++	/* pulse for common reset */
++	exynos_pcie_phy_writel(ep->blk_base, 1, PCIE_PHY_COMMON_RESET);
++	udelay(500);
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_COMMON_RESET);
++
++	return 0;
++}
++
++static int exynos5440_pcie_phy_power_on(struct phy *phy)
++{
++	struct exynos_pcie_phy *ep = phy_get_drvdata(phy);
++	u32 val;
++
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_COMMON_RESET);
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_CMN_REG);
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_TRSVREG_RESET);
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_TRSV_RESET);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_COMMON_POWER);
++	val &= ~PCIE_PHY_COMMON_PD_CMN;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_COMMON_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV0_POWER);
++	val &= ~PCIE_PHY_TRSV0_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV0_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV1_POWER);
++	val &= ~PCIE_PHY_TRSV1_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV1_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV2_POWER);
++	val &= ~PCIE_PHY_TRSV2_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV2_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV3_POWER);
++	val &= ~PCIE_PHY_TRSV3_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV3_POWER);
++
++	return 0;
++}
++
++static int exynos5440_pcie_phy_power_off(struct phy *phy)
++{
++	struct exynos_pcie_phy *ep = phy_get_drvdata(phy);
++	u32 val;
++
++	while (exynos_pcie_phy_readl(ep->phy_base,
++				PCIE_PHY_PLL_LOCKED) == 0) {
++		val = exynos_pcie_phy_readl(ep->blk_base,
++				PCIE_PHY_PLL_LOCKED);
++		dev_info(&phy->dev, "PLL Locked: 0x%x\n", val);
 +	}
- 
- 	/*
- 	 * If this is a kexec reboot, turn off Bus Master bit on the
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_COMMON_POWER);
++	val |= PCIE_PHY_COMMON_PD_CMN;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_COMMON_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV0_POWER);
++	val |= PCIE_PHY_TRSV0_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV0_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV1_POWER);
++	val |= PCIE_PHY_TRSV1_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV1_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV2_POWER);
++	val |= PCIE_PHY_TRSV2_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV2_POWER);
++
++	val = exynos_pcie_phy_readl(ep->phy_base, PCIE_PHY_TRSV3_POWER);
++	val |= PCIE_PHY_TRSV3_PD_TSV;
++	exynos_pcie_phy_writel(ep->phy_base, val, PCIE_PHY_TRSV3_POWER);
++
++	return 0;
++}
++
++static int exynos5440_pcie_phy_reset(struct phy *phy)
++{
++	struct exynos_pcie_phy *ep = phy_get_drvdata(phy);
++
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_MAC_RESET);
++	exynos_pcie_phy_writel(ep->blk_base, 1, PCIE_PHY_GLOBAL_RESET);
++	exynos_pcie_phy_writel(ep->blk_base, 0, PCIE_PHY_GLOBAL_RESET);
++
++	return 0;
++}
++
++static struct phy_ops exynos5440_phy_ops = {
++	.init	= exynos5440_pcie_phy_init,
++	.power_on = exynos5440_pcie_phy_power_on,
++	.power_off = exynos5440_pcie_phy_power_off,
++	.reset	= exynos5440_pcie_phy_reset,
++};
++
++static const struct exynos_pcie_phy_data exynos5440_pcie_phy_data = {
++	.ops		= &exynos5440_phy_ops,
++};
++
++static const struct of_device_id exynos_pcie_phy_match[] = {
++	{
++		.compatible = "samsung,exynos5440-pcie-phy",
++		.data = &exynos5440_pcie_phy_data,
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, exynos_pcie_phy_match);
++
++static int exynos_pcie_phy_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct exynos_pcie_phy *exynos_phy;
++	struct phy *generic_phy;
++	struct phy_provider *phy_provider;
++	struct resource *res;
++	const struct exynos_pcie_phy_data *drv_data;
++
++	drv_data = of_device_get_match_data(dev);
++	if (!drv_data)
++		return -ENODEV;
++
++	exynos_phy = devm_kzalloc(dev, sizeof(*exynos_phy), GFP_KERNEL);
++	if (!exynos_phy)
++		return -ENOMEM;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	exynos_phy->phy_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(exynos_phy->phy_base))
++		return PTR_ERR(exynos_phy->phy_base);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	exynos_phy->blk_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(exynos_phy->phy_base))
++		return PTR_ERR(exynos_phy->phy_base);
++
++	exynos_phy->drv_data = drv_data;
++
++	generic_phy = devm_phy_create(dev, dev->of_node, drv_data->ops);
++	if (IS_ERR(generic_phy)) {
++		dev_err(dev, "failed to create PHY\n");
++		return PTR_ERR(generic_phy);
++	}
++
++	phy_set_drvdata(generic_phy, exynos_phy);
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++
++	return PTR_ERR_OR_ZERO(phy_provider);
++}
++
++static struct platform_driver exynos_pcie_phy_driver = {
++	.probe	= exynos_pcie_phy_probe,
++	.driver = {
++		.of_match_table	= exynos_pcie_phy_match,
++		.name		= "exynos_pcie_phy",
++	}
++};
++module_platform_driver(exynos_pcie_phy_driver);
 -- 
-1.7.9.3
+2.10.2
 
