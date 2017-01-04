@@ -1,56 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI: add a new directory for designware core
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1483707168-1436-1-git-send-email-kishon@ti.com>
- <4757539.Mx4pNLiAHf@wuerfel>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <586F97B8.8040300@ti.com>
-Date: Fri, 6 Jan 2017 18:42:24 +0530
+Return-Path: <SRS0=IKS2=YS=gmail.com=valmikibow@kernel.org>
+Return-Path: <SRS0=IKS2=YS=gmail.com=valmikibow@kernel.org>
+Subject: Re: Need clarity on PCIe MSI interrupt in device tree
+To: Marc Zyngier <marc.zyngier@arm.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <2fea5a0c-7410-97fd-91d1-ae6a06ab1a52@gmail.com>
+ <fb1ae45f-1682-c523-ed02-48ca1b890791@arm.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, mark.rutland@arm.com
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <9f95d60a-6684-3205-eeb0-df86cfe430e4@gmail.com>
+Date: Wed, 4 Jan 2017 22:58:59 +0530
 MIME-Version: 1.0
-In-Reply-To: <4757539.Mx4pNLiAHf@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <fb1ae45f-1682-c523-ed02-48ca1b890791@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+Thans Marc
 
-On Friday 06 January 2017 06:31 PM, Arnd Bergmann wrote:
-> On Friday, January 6, 2017 6:22:48 PM CET Kishon Vijay Abraham I wrote:
->> Group all the PCI drivers that use designware core in dwc directory.
->> dwc IP is capable of operating in both host mode and device mode and
->> keeping it inside the *host* directory is misleading.
-> 
-> I have no objections to the patch, it makes a lot of sense, but I think
-> the reasoning above is a bit questionable, as a lot of the other
-> host drivers (at least tegra, mvebu and xgene, probably more) equally support
-> endpoint mode and remain in the same directory.
-> 
-> Any suggestion to what we should do with them?
-
-I'm not sure of the exact IP's used by these SoCs. Now that we decided to group
-the drivers by IPs used, the best would be identify the IPs used in these SoCs
-and create a separate directory for each of the IPs. If the vendors own IP is
-used, then create a directory with the name of the vendor?. I'm sure such a
-change would increase the number of directories but I'm not sure what else to
-do here.
-
-Thanks
-Kishon
+On 1/4/2017 1:59 PM, Marc Zyngier wrote:
+> On 04/01/17 03:17, valmiki wrote:
+>> Hi,
+>>
+>> I have confusion on MSI interrupt flags in PCIe documetation.
+>>
+>> MSI interrupts are edge triggered, but i see some controllers use
+>> Ex:tegra <0 99 0x4>, here interrupt flags show 0x4 which means level
+>> sensitive as per include/dt-bindings/interrupt-controller/irq.h.
+>>
+>> May i know why is it like this, why MSI depicted as level sensitive in
+>> device tree.
+>
+> They are not. MSIs are *not* present in the device tree at all.
+>
+> What you have here is the cascade interrupt from an MSI controller to
+> another interrupt controller (probably a GICv2), and that particular
+> interrupt is level triggered. Which is perfectly fine if that's the
+> signalling method between the two controllers.
+>
+> This doesn't in any way reflect how MSIs are signalled.
+>
+> Thanks,
+>
+> 	M.
+>
