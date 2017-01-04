@@ -1,90 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932446AbdA3QX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jan 2017 11:23:58 -0500
-Date: Mon, 30 Jan 2017 10:23:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Apply _HPX settings only to relevant devices
-Message-ID: <20170130162337.GS20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170112203204.17379.9783.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=VJo1=YS=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=VJo1=YS=arm.com=marc.zyngier@kernel.org>
+Subject: Re: Need clarity on MSI handling in RC driver
+To: valmiki <valmikibow@gmail.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <2fea5a0c-7410-97fd-91d1-ae6a06ab1a52@gmail.com>
+ <307e8512-7e14-39a2-c225-6db44e443aea@gmail.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, mark.rutland@arm.com
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <060e94a4-00a2-bdb7-caf3-72785b333c83@arm.com>
+Date: Wed, 4 Jan 2017 17:46:19 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170112203204.17379.9783.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <307e8512-7e14-39a2-c225-6db44e443aea@gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 02:32:04PM -0600, Bjorn Helgaas wrote:
-> Previously we didn't check the type of device before trying to apply Type 1
-> (PCI-X) or Type 2 (PCIe) Setting Records from _HPX.
+On 04/01/17 17:39, valmiki wrote:
+> Hi All,
 > 
-> We don't support PCI-X Setting Records, so this was harmless, but the
-> warning was useless.
+> I have a doubt, the MSI domains are handled differently in different RC 
+> drivers.
 > 
-> We do support PCIe Setting Records, and we didn't check whether a device
-> was PCIe before applying settings.  I don't think anything bad happened on
-> non-PCIe devices because pcie_capability_clear_and_set_word(),
-> pcie_cap_has_lnkctl(), etc., would fail before doing any harm.  But it's
-> ugly to depend on those internals.
+> Some drivers use irq_domain_add_linear alone, and some use 
+> pci_msi_create_irq_domain also to handle MSI.
 > 
-> Check the device type before attempting to apply Type 1 and Type 2 Setting
-> Records (Type 0 records are applicable to PCI, PCI-X, and PCIe devices).
+> In most of the 32-bit architectures only irq_domain_add_linear is used 
+> and in 64 bit drivers both pci_msi_create_irq_domain and 
+> irq_domain_add_linear are used.
 > 
-> A side benefit is that this prevents useless "not supported" warnings when
-> a BIOS supplies a Type 1 (PCI-X) Setting Record and we try to apply it to
-> every single device:
-> 
->   pci 0000:00:00.0: PCI-X settings not supported
-> 
-> After this patch, we'll get the warning only when a BIOS supplies a Type 1
-> record and we have a PCI-X device to which it should be applied.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=187731
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> So is this because of architecture difference between ARM and ARM64 ?
 
-Applied to pci/enumeration for v4.11.
+Neither. This is purely a software construct. Newer drivers use the
+generic MSI infrastructure (which also allows things like non-PCI MSI),
+while older drivers use some ad-hoc infrastructure which is more or less
+specific to PCI.
 
-> ---
->  drivers/pci/probe.c |   15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e164b5c9f0f0..aca5b2466adb 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1554,8 +1554,16 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
->  
->  static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
->  {
-> -	if (hpp)
-> -		dev_warn(&dev->dev, "PCI-X settings not supported\n");
-> +	int pos;
-> +
-> +	if (!hpp)
-> +		return;
-> +
-> +	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
-> +	if (!pos)
-> +		return;
-> +
-> +	dev_warn(&dev->dev, "PCI-X settings not supported\n");
->  }
->  
->  static bool pcie_root_rcb_set(struct pci_dev *dev)
-> @@ -1581,6 +1589,9 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  	if (!hpp)
->  		return;
->  
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
->  	if (hpp->revision > 1) {
->  		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
->  			 hpp->revision);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The former is the way to go, and the latter is being phased out.
+
+I'll let Mark draw some shiny ASCII art.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
