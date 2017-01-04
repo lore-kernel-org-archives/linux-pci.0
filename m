@@ -1,136 +1,162 @@
-Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
-Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
-Subject: Re: [PATCH V6 2/5] PCI: Adapt pci_register_io_range() for indirect-IO
- and PCI I/O translation
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        "zhichang.yuan"
-	<yuanzhichang@hisilicon.com>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
- <20170131001030.GB20550@bhelgaas-glaptop.roam.corp.google.com>
-CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
-        <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
-        <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <f8a6c3ce-ba8e-c00e-8e6f-7c799fb4dd44@huawei.com>
-Date: Tue, 31 Jan 2017 13:39:09 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 4 Jan 2017 13:15:31 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Emil Tantilov <emil.s.tantilov@intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
+ sysfs
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
+ <20170104004831.17866.11537.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20170131001030.GB20550@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170104004831.17866.11537.stgit@localhost6.localdomain6>
+Message-Id: <20170104021531.GA567@gwshan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/01/2017 00:10, Bjorn Helgaas wrote:
-> On Tue, Jan 24, 2017 at 03:05:22PM +0800, zhichang.yuan wrote:
->> After indirect-IO is introduced, system must can assigned indirect-IO devices
->> with logical I/O ranges which are different from those for PCI I/O devices.
->> Otherwise, I/O accessors can't identify whether the I/O port is for memory
->> mapped I/O or indirect-IO.
+On Tue, Jan 03, 2017 at 04:48:31PM -0800, Emil Tantilov wrote:
+>Enabling/disabling SRIOV via sysfs by echo-ing multiple values
+>simultaneously:
 >
-> Maybe:
+>echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
+>echo 63 > /sys/class/net/ethX/device/sriov_numvfs
 >
->   We must assign logical I/O port space for indirect I/O such that the
->   I/O accessors can tell whether a logical I/O port refers to memory-
->   mapped I/O space or indirect I/O space.
+>sleep 5
 >
+>echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
+>echo 0 > /sys/class/net/ethX/device/sriov_numvfs
+>
+>Results in the following bug:
+>
+>kernel BUG at drivers/pci/iov.c:495!
+>invalid opcode: 0000 [#1] SMP
+>CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
+>RIP: 0010:[<ffffffff813b1647>]
+>	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>
+>Call Trace:
+> [<ffffffff81391726>] pci_release_dev+0x26/0x70
+> [<ffffffff8155be6e>] device_release+0x3e/0xb0
+> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
+> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
+> [<ffffffff8155bc27>] put_device+0x17/0x20
+> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
+> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
+> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
+> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
+> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
+> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
+> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
+> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
+> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
+> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
+>...
+>RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>
+>Use the existing mutex lock to protect each enable/disable operation.
+>
+>CC: Alexander Duyck <alexander.h.duyck@intel.com>
+>Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
 
-It's better
+Emil, It's going to change semantics of pci_enable_sriov() and pci_disable_sriov().
+They can be invoked when writing to the sysfs entry, or loading PF's driver. With
+the change applied, the lock (pf->sriov->lock) isn't acquired and released in the
+PF's driver loading path.
 
->> As current helper, pci_register_io_range(), is used for PCI I/O ranges
->> registration and translation, indirect-IO devices should also apply these
->> helpers to manage the I/O ranges. It will be easy to ensure the assigned
->> logical I/O ranges unique.
->> But for indirect-IO devices, there is no cpu address. The current
->> pci_register_io_range() can not work for this case.
->>
->> This patch makes some changes on the pci_register_io_range() to support the
->> I/O range registration with device's fwnode also. After this, the indirect-IO
->> devices can register the device-local I/O range to system logical I/O and
->> easily perform the translation between device-local I/O range and sytem
->> logical I/O range.
->
->> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->> +int __weak pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
->> +				 resource_size_t size, unsigned long *port)
->
-> Why is this __weak?  It looks like it's been __weak since its
-> introduction by 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
-> pci_pio_to_address()"), but I don't see any other implementations of
-> it.
->
-> Can you add a patch that does nothing but make this non-weak?
->
+I think the reasonable way would be adding a flag in "struct sriov", to indicate
+someone is accessing the IOV capability through sysfs file. With this, the code
+returns with "-EBUSY" immediately for contenders. With it, nothing is going to
+be changed in PF's driver loading path.
 
-OK
+Also, there are some minor comments as below and I guess most of them won't be
+applied if you take my suggestion eventually. However, I'm trying to make the
+comments complete.
 
->> +#else
->> +	/*
->> +	 * powerpc and microblaze have their own registration,
->> +	 * just look up the value here
+>---
+> drivers/pci/pci-sysfs.c |   24 +++++++++++++++++-------
+> 1 file changed, 17 insertions(+), 7 deletions(-)
 >
-> Can you include a pointer to the powerpc and microblaze registration
-> code here?  It's conceivable that somebody could generalize this
-> enough to support powerpc and microblaze as well.
->
+>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>index 0666287..5b54cf5 100644
+>--- a/drivers/pci/pci-sysfs.c
+>+++ b/drivers/pci/pci-sysfs.c
+>@@ -472,7 +472,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> 				  const char *buf, size_t count)
+> {
+> 	struct pci_dev *pdev = to_pci_dev(dev);
+>+	struct pci_sriov *iov = pdev->sriov;
+> 	int ret;
+>+
 
-It should be no problem
+Unnecessary change.
 
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -34,6 +34,9 @@
->>
->>  #include <linux/pci_ids.h>
->>
->> +/* the macro below flags an invalid cpu address
->> + * and is used by IO special hosts              */
+> 	u16 num_vfs;
 >
-> s/cpu/CPU/
+> 	ret = kstrtou16(buf, 0, &num_vfs);
+>@@ -482,38 +484,46 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+> 		return -ERANGE;
 >
+>+	mutex_lock(&iov->dev->sriov->lock);
+>+
+> 	if (num_vfs == pdev->sriov->num_VFs)
+>-		return count;		/* no change */
+>+		goto exit;
+>
+> 	/* is PF driver loaded w/callback */
+> 	if (!pdev->driver || !pdev->driver->sriov_configure) {
+> 		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
+>-		return -ENOSYS;
+>+		ret = -EINVAL;
+>+		goto exit;
 
-OK
+Why we need change the error code here?
 
-> Use conventional multi-line comment style:
+> 	}
 >
-> /*
->  * IO_RANGE_IOEXT flags an invalid CPU address ...
->  */
+> 	if (num_vfs == 0) {
+> 		/* disable VFs */
+> 		ret = pdev->driver->sriov_configure(pdev, 0);
+>-		if (ret < 0)
+>-			return ret;
+>-		return count;
+>+		goto exit;
+> 	}
 >
->> +#define IO_RANGE_IOEXT (resource_size_t)(-1ull)
+> 	/* enable VFs */
+> 	if (pdev->sriov->num_VFs) {
+> 		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
+> 			 pdev->sriov->num_VFs, num_vfs);
+>-		return -EBUSY;
+>+		ret = -EBUSY;
+>+		goto exit;
+> 	}
 >
-> And put this close to related things, e.g., pci_register_io_range(),
-> instead of just dropping it in at the top of the file.
+> 	ret = pdev->driver->sriov_configure(pdev, num_vfs);
+> 	if (ret < 0)
+>-		return ret;
+>+		goto exit;
+>
+> 	if (ret != num_vfs)
+> 		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
+> 			 num_vfs, ret);
+>
+>+exit:
+>+	mutex_unlock(&iov->dev->sriov->lock);
+>+
+>+	if (ret < 0)
+>+		return ret;
+>+
+> 	return count;
 
-OK
+The code might be clearer if @ret is returned here. In that case, We need
+set it properly in error paths.
 
+> }
 >
->>  /*
->>   * The PCI interface treats multi-function devices as independent
->>   * devices.  The slot/function address of each device is encoded
->> @@ -1197,8 +1200,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
->>  						  resource_size_t),
->>  			void *alignf_data);
->>
->> -
->> -int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->> +int pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
->> +			  resource_size_t size, unsigned long *port);
->>  unsigned long pci_address_to_pio(phys_addr_t addr);
->>  phys_addr_t pci_pio_to_address(unsigned long pio);
->>  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
->> --
->> 1.9.1
->>
 
 Thanks,
-John
-
->
-> .
->
+Gavin
