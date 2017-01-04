@@ -1,269 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:36667 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750826AbdAQLtM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2017 06:49:12 -0500
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-To: Lukasz Majewski <lukma@denx.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
- <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
- <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
- <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
- <20170116224437.67b5a0c5@jawa>
- <4b18d08a-c2cc-3c32-35ed-8f4a759ef235@synopsys.com>
- <0bc72557-5110-39bd-89b4-f28307bad71d@synopsys.com>
- <20170117123845.5addb519@jawa>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Finger, Robert" <r-finger@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <d3f76697-14f7-04e8-9cd6-c53626b79b83@synopsys.com>
-Date: Tue, 17 Jan 2017 11:48:25 +0000
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34951 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753508AbdADT4S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 14:56:18 -0500
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jaehoon Chung'" <jh80.chung@samsung.com>,
+        <linux-pci@vger.kernel.org>
+Cc: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-samsung-soc@vger.kernel.org>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>, <kgene@kernel.org>,
+        <krzk@kernel.org>, <kishon@ti.com>, <vivek.gautam@codeaurora.org>,
+        <pankaj.dubey@samsung.com>, <alim.akhtar@samsung.com>,
+        <cpgs@samsung.com>
+References: <20170104123435.30740-1-jh80.chung@samsung.com> <CGME20170104123436epcas1p1651443c5fe13f67006864aed2f70fa9d@epcas1p1.samsung.com> <20170104123435.30740-5-jh80.chung@samsung.com>
+In-Reply-To: <20170104123435.30740-5-jh80.chung@samsung.com>
+Subject: Re: [PATCH V2 4/5] PCI: exynos: support the using PHY generic framework
+Date: Wed, 4 Jan 2017 14:56:15 -0500
+Message-ID: <000201d266c4$9bed0270$d3c70750$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170117123845.5addb519@jawa>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wednesday, January 4, 2017 7:35 AM, Jaehoon Chung wrote:
+> 
+> This patch is for using PHY generic framework.
+> To maintain backward compatibility, check whether phy is supported or
+> not with 'using_phy'.
+> 
+> And if someone use the old dt-file, display the "deprecated" message.
+> But it's still working fine with it.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 
-Hello,
+It looks good!
 
-Às 11:38 AM de 1/17/2017, Lukasz Majewski escreveu:
-> Hi Joao,
-> 
-> Thank you for your reply.
-> 
->> Às 10:43 AM de 1/17/2017, Joao Pinto escreveu:
->>>
->>> Hi Lukasz,
->>>
->>> Às 9:44 PM de 1/16/2017, Lukasz Majewski escreveu:
->>>> Hi Joao,
->>>>
->>>>>
->>>>> Hi,
->>>>>
->>>>> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
->>>>>> + Joao, Jingoo
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
->>>>>>> Hi Kishon,
->>>>>>>
->>>>>>>> Hi Łukasz,
->>>>>>>>
->>>>>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
->>>>>>>>> Hi Kishon,
->>>>>>>>>
->>>>>>>>>> Hi,
->>>>>>>>>>
->>>>>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
->>>>>>>>>>> Some devices (due to e.g. bad PCIe signal integrity)
->>>>>>>>>>> require to run with forced GEN1 speed on PCIe bus.
->>>>>>>>>>>
->>>>>>>>>>> This patch changes the speed explicitly on dra7 based
->>>>>>>>>>> devices when proper device tree attribute is defined for
->>>>>>>>>>> the PCIe controller.
->>>>>>>>>>>
->>>>>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
->>>>>>>>>>
->>>>>>>>>> Bjorn has already queued a patch to do the same thing
->>>>>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
->>>>>>>>>
->>>>>>>>> It seems like Bjorn only modifies CAP registers.
->>>>>>>>
->>>>>>>> The patch also modifies the LNKCTL2 register.
->>>>>>>>>
->>>>>>>>> He also needs to change register with 0x080C offset to
->>>>>>>>> actually ( PCIECTRL_PL_WIDTH_SPEED_CTL )
->>>>>>>>
->>>>>>>> This bit is used to initiate speed change (after the link is
->>>>>>>> initialized in GEN1). Resetting the bit (like what you have
->>>>>>>> done here) prevents speed change.
->>>>>>>
->>>>>>> This is strange, but e2e advised me to do things as I did in the
->>>>>>> patch to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
->>>>>>>
->>>>>>> Link:
->>>>>>> [1]
->>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
->>>>>>>
->>>>>>> Both patches modify 0x5180 007C register to set GEN1 capability
->>>>>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
->>>>>>>
->>>>>>> The problem is with second register (in your patch):
->>>>>>>
->>>>>>> From SPRUHZ6G TRM:
->>>>>>>
->>>>>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
->>>>>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
->>>>>>>   description in TRM
->>>>>>>
->>>>>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same
->>>>>>> as default /reset value.
->>>>>>
->>>>>> The default value is 0x2 (or else none of the cards would have
->>>>>> enumerated in GEN2)
->>>>>>>
->>>>>>>
->>>>>>> Could you clarify which way to _force_ PCIe GEN1 operation is
->>>>>>> correct? Mine shows differences in lspci output (as posted in
->>>>>>> [1]).
->>>>>>
->>>>>> You'll see the difference even with the patch in Bjorn's tree ;-)
->>>>>>
->>>>>> I think these are 2 different approaches to keep the link at
->>>>>> GEN1. Joao or Jingoo, do you have any suggestion here?
->>>>>
->>>>> I studied the Databook,
->>>>
->>>> Could you reveal which databook do you have in mind? Is that the
->>>> TRM for AM5728?
->>>
->>> I checked the Designware PCIe Databook, since it is based on this
->>> IP.
->>>
->>>>
->>>>> and both approaches seem to be right,
->>>>> dependently of the Core configuration and setup.
->>>>>
->>>>> The standard manual speed change sequence is:
->>>>> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
->>>>
->>>> Do you mean TRGT_LINK_SPEED @ 0x5180 00A0 ?
->>>
->>> Correct.
->>>
->>>>
->>>>> b) Clear "Directed Speed Change"
->>>>
->>>> CFG_DIRECTED_SPEED_CHANGE @ 0x5180 080C 
->>>
->>> Correct.
->>>
->>>>
->>>>> c) Set "Directed Speed Change"
->>>>>
->>>>> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is
->>>>> the default value), it will execute LTSSM to initiate speed
->>>>> change to Gen2 or Gen3, after link is started in Gen1, and then
->>>>> the bit is automatically cleared.
->>>>
->>>> Ok, so with default settings (after reset) we do have Gen1 speed
->>>> link and when we enable LTSSM (with LTSSM_EN bit setting) we
->>>> negotiate to Gen2/Gen3.
->>>
->>> Yes, that's the expected behavior. I submited this direct question
->>> to R&D and will have your doubt answered soon.
->>
->> According to R&D if you set "Target Link Speed" to Gen1 before
->> setting LTSSM_EN bit, the controller should stay in GEN1.
-> 
-> I assume that this is the "recommended" and most robust possible
-> approach?
-> 
-> And the patch already submitted to ML is 100% correct (so I don't need
-> to clear PCIECTRL_PL_WIDTH_SPEED_CTL) ?
-> 
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-Yes, according to R&D the approach available in Bjorn' tree should be ok, since
-it sets GEN1 before enabling LTSSM. Of course this is from a standard designware
-PCie RC ocre perspective.
+Best regards,
+Jingoo Han
 
-Joao
 
-> Our problem has been described here:
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_p_567936_2081573-232081573&d=DwIFaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=0i9CSBYPpoLydd2AtYg7xapHfGpCvlyir1etY0ZbIwY&s=6f24idB3Pa7aqJEpfsuMpGxkyFUwWwyOFwQtnDztWLA&e= 
+> ---
+> Changelog on V2:
+> - This patch is split from previous PATCH[1/4]
+> - Maintain the backward compatibility
+> - Adds 'using_phy' for cheching whether phy framework is used or not
+> - Adds 'DEPRECATED' message for old dt-binding way
 > 
-> Best regards,
-> Łukasz Majewski
+>  drivers/pci/host/pci-exynos.c | 61 +++++++++++++++++++++++++++++++++++---
+> -----
+>  1 file changed, 50 insertions(+), 11 deletions(-)
 > 
->>
->>>
->>>>
->>>>>
->>>>> Lukasz is reseting this bit, in order to avoid the LTSSM to be
->>>>> executed, which is correct. 
->>>>
->>>> So with CFG_DIRECTED_SPEED_CHANGE = 0, when I start LTSSM (with
->>>> LTSSM_EN) the state machine returns immediately and leaves link in
->>>> the Gen1?
->>>>
->>>> The pci-dra7 driver always sets LTSSM_EN bit to start link
->>>> negotiation.
->>>>
->>>>> There is another way to prevent this
->>>>> automatic speed change, which is to set GEN1 speed before link up
->>>>> which might be difficult in some setups, so Kishon's also right.
->>>>>
->>>>> In my opinion Lukasz approach would be the one that might be more
->>>>> universal and more "secure".
->>>>
->>>> The robustness is the key here since there are some devices, which
->>>> on particular HW must only work with Gen1 speed. When we start
->>>> LTSSM state machine and hence start negotiation to Gen2, not
->>>> always the result of LTSSM is correct and device is properly
->>>> recognized.
->>>>
->>>>>
->>>>> Joao
->>>>>
->>>>>
->>>>>>
->>>>>>>
->>>>>>>>
->>>>>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of
->>>>>>>> hacking the IP register.
->>>>>>>
->>>>>>> From the original patch description:
->>>>>>>
->>>>>>> "Add support to force Root Complex to work in GEN1 mode if so
->>>>>>> desired, but don't force GEN1 mode on any board just yet."
->>>>>>>
->>>>>>> Are there any (floating around) patches allowing forcing GEN1
->>>>>>> operation on any board (I would like to reuse/port them to my
->>>>>>> current solution)?
->>>>>>
->>>>>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in
->>>>>> dt with the patch in Bjorn's tree.
->>>>>>
->>>>>> Thanks
->>>>>> Kishon
->>>>>>
->>>>>
->>>>
->>>> Best regards,
->>>>
->>>> Lukasz Majewski
->>>>
->>>> --
->>>>
->>>> DENX Software Engineering GmbH,      Managing Director: Wolfgang
->>>> Denk HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell,
->>>> Germany Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email:
->>>> wd@denx.de
->>>>
->>>
->>
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index feed0fd..34f2eed 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/of_gpio.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/phy/phy.h>
+>  #include <linux/resource.h>
+>  #include <linux/signal.h>
+>  #include <linux/types.h>
+> @@ -110,6 +111,10 @@ struct exynos_pcie {
+>  	struct exynos_pcie_clk_res	*clk_res;
+>  	const struct exynos_pcie_ops	*ops;
+>  	int				reset_gpio;
+> +
+> +	/* For Generic PHY Framework */
+> +	bool				using_phy;
+> +	struct phy			*phy;
+>  };
 > 
+>  struct exynos_pcie_ops {
+> @@ -135,6 +140,10 @@ static int exynos5440_pcie_get_mem_resources(struct
+> platform_device *pdev,
+>  	if (IS_ERR(ep->mem_res->elbi_base))
+>  		return PTR_ERR(ep->mem_res->elbi_base);
 > 
+> +	/* If using the PHY framework, doesn't need to get other resource
+> */
+> +	if (ep->using_phy)
+> +		return 0;
+> +
+>  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>  	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
+>  	if (IS_ERR(ep->mem_res->phy_base))
+> @@ -396,17 +405,28 @@ static int exynos_pcie_establish_link(struct
+> exynos_pcie *exynos_pcie)
+>  	}
 > 
+>  	exynos_pcie_assert_core_reset(exynos_pcie);
+> -	exynos_pcie_assert_phy_reset(exynos_pcie);
+> -	exynos_pcie_deassert_phy_reset(exynos_pcie);
+> -	exynos_pcie_power_on_phy(exynos_pcie);
+> -	exynos_pcie_init_phy(exynos_pcie);
+> -
+> -	/* pulse for common reset */
+> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
+> -				PCIE_PHY_COMMON_RESET);
+> -	udelay(500);
+> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
+> -				PCIE_PHY_COMMON_RESET);
+> +
+> +	if (exynos_pcie->using_phy) {
+> +		phy_reset(exynos_pcie->phy);
+> +
+> +		exynos_pcie_writel(exynos_pcie->mem_res->elbi_base, 1,
+> +				PCIE_PWR_RESET);
+> +
+> +		phy_power_on(exynos_pcie->phy);
+> +		phy_init(exynos_pcie->phy);
+> +	} else {
+> +		exynos_pcie_assert_phy_reset(exynos_pcie);
+> +		exynos_pcie_deassert_phy_reset(exynos_pcie);
+> +		exynos_pcie_power_on_phy(exynos_pcie);
+> +		exynos_pcie_init_phy(exynos_pcie);
+> +
+> +		/* pulse for common reset */
+> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
+> +					PCIE_PHY_COMMON_RESET);
+> +		udelay(500);
+> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
+> +					PCIE_PHY_COMMON_RESET);
+> +	}
 > 
-> Best regards,
+>  	exynos_pcie_deassert_core_reset(exynos_pcie);
+>  	dw_pcie_setup_rc(pp);
+> @@ -420,6 +440,11 @@ static int exynos_pcie_establish_link(struct
+> exynos_pcie *exynos_pcie)
+>  	if (!dw_pcie_wait_for_link(pp))
+>  		return 0;
 > 
-> Lukasz Majewski
+> +	if (exynos_pcie->using_phy) {
+> +		phy_power_off(exynos_pcie->phy);
+> +		return -ETIMEDOUT;
+> +	}
+> +
+>  	while (exynos_pcie_readl(exynos_pcie->mem_res->phy_base,
+>  				PCIE_PHY_PLL_LOCKED) == 0) {
+>  		val = exynos_pcie_readl(exynos_pcie->mem_res->block_base,
+> @@ -633,6 +658,17 @@ static int __init exynos_pcie_probe(struct
+> platform_device *pdev)
 > 
+>  	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> 
+> +	/* Assume that controller doesn't use the PHY framework */
+> +	exynos_pcie->using_phy = false;
+> +
+> +	exynos_pcie->phy = devm_of_phy_get(dev, np, NULL);
+> +	if (IS_ERR(exynos_pcie->phy)) {
+> +		if (PTR_ERR(exynos_pcie->phy) == -EPROBE_DEFER)
+> +			return PTR_ERR(exynos_pcie->phy);
+> +		dev_warn(dev, "Use the 'phy' property. Current DT of pci-
+> exynos was deprecated!!\n");
+> +	} else
+> +		exynos_pcie->using_phy = true;
+> +
+>  	if (exynos_pcie->ops && exynos_pcie->ops->get_mem_resources) {
+>  		ret = exynos_pcie->ops->get_mem_resources(pdev, exynos_pcie);
+>  		if (ret)
+> @@ -657,6 +693,9 @@ static int __init exynos_pcie_probe(struct
+> platform_device *pdev)
+>  	return 0;
+> 
+>  fail_probe:
+> +	if (exynos_pcie->using_phy)
+> +		phy_exit(exynos_pcie->phy);
+> +
+>  	if (exynos_pcie->ops && exynos_pcie->ops->deinit_clk_resources)
+>  		exynos_pcie->ops->deinit_clk_resources(exynos_pcie);
+>  	return ret;
 > --
-> 
-> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-> 
+> 2.10.2
+
 
