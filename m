@@ -1,51 +1,144 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Jan 2017 17:02:24 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@axis.com, linux-arm-msm@vger.kernel.org,
-        nsekhar@ti.com
-Subject: Re: [PATCH 31/37] misc: Add host side pci driver for pci test
- function device
-Message-ID: <20170124160224.GA23528@infradead.org>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-32-git-send-email-kishon@ti.com>
+Subject: [PATCH 1/2] PCI: introduce locked pci_add/remove_virtfn
+From: Emil Tantilov <emil.s.tantilov@intel.com>
+To: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org
+Cc: alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 03 Jan 2017 16:48:26 -0800
+Message-ID: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1484216786-17292-32-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 03:56:20PM +0530, Kishon Vijay Abraham I wrote:
-> Add PCI endpoint test driver that can verify base address
-> register, legacy interrupt/MSI interrupt and read/write/copy
-> buffers between host and device. The corresponding pci-epf-test
-> function driver should be used on the EP side.
+This is to allow moving the mutex lock outside of
+pci_iov_add/rem_virtfn() for enabling/disabling SRIOV, while
+still making it possible to call the _locked version like it is
+the case for PPC's eeh_driver.
 
-Just curious:  what would you think of a text based (e.g. debugfs)
-interface to avoid the need for a userspace tool here?
+CC: Alexander Duyck <alexander.h.duyck@intel.com>
+Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+---
+ arch/powerpc/kernel/eeh_driver.c |    4 ++--
+ drivers/pci/iov.c                |   31 ++++++++++++++++++++++++-------
+ include/linux/pci.h              |    4 ++--
+ 3 files changed, 28 insertions(+), 11 deletions(-)
 
-> +static const struct pci_device_id pci_endpoint_test_tbl[] = {
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_ANY_ID) },
-> +	{ }
-> +};
-> +MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
-
-Also this looks really odd, and dangerous.  Probing for any
-TI device will bind to all kinds of legit devices.  It would
-be good if you could squeeze out a single id for this device
-out of the TI group responsible for allocating it.  Otherwise
-we might try some other venues, e.g. Red Hat through Qumranet
-has PCI IDs available for virtio, which might have some left
-for other Linux uses.
-
-In general I fear the PCI ID allocation will become a worse
-and worse issue once your framework goes in and we'll grow
-more PCI device models in the kernel.
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index d88573b..81aaea7 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -441,7 +441,7 @@ static void *eeh_add_virt_device(void *data, void *userdata)
+ 	}
+ 
+ #ifdef CONFIG_PPC_POWERNV
+-	pci_iov_add_virtfn(edev->physfn, pdn->vf_index, 0);
++	pci_iov_add_virtfn_locked(edev->physfn, pdn->vf_index, 0);
+ #endif
+ 	return NULL;
+ }
+@@ -499,7 +499,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ #ifdef CONFIG_PPC_POWERNV
+ 		struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+ 
+-		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index, 0);
++		pci_iov_remove_virtfn_locked(edev->physfn, pdn->vf_index, 0);
+ 		edev->pdev = NULL;
+ 
+ 		/*
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4722782..fea322db 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -113,7 +113,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
+ 
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
++static int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	struct pci_bus *bus;
+ 
+-	mutex_lock(&iov->dev->sriov->lock);
+ 	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+@@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 		__pci_reset_function(virtfn);
+ 
+ 	pci_device_add(virtfn, virtfn->bus);
+-	mutex_unlock(&iov->dev->sriov->lock);
+ 
+ 	pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+@@ -191,11 +189,22 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 	return rc;
+ }
+ 
+-void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
++int pci_iov_add_virtfn_locked(struct pci_dev *dev, int id, int reset)
++{
++	struct pci_sriov *iov = dev->sriov;
++	int rc;
++
++	mutex_lock(&iov->dev->sriov->lock);
++	rc = pci_iov_add_virtfn(dev, id, reset);
++	mutex_unlock(&iov->dev->sriov->lock);
++
++	return rc;
++}
++
++static void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+-	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+ 					     pci_iov_virtfn_bus(dev, id),
+@@ -218,16 +227,24 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+ 	if (virtfn->dev.kobj.sd)
+ 		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+ 
+-	mutex_lock(&iov->dev->sriov->lock);
+ 	pci_stop_and_remove_bus_device(virtfn);
+ 	virtfn_remove_bus(dev->bus, virtfn->bus);
+-	mutex_unlock(&iov->dev->sriov->lock);
+ 
+ 	/* balance pci_get_domain_bus_and_slot() */
+ 	pci_dev_put(virtfn);
+ 	pci_dev_put(dev);
+ }
+ 
++void pci_iov_remove_virtfn_locked(struct pci_dev *dev, int id, int reset)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	mutex_lock(&iov->dev->sriov->lock);
++	pci_iov_remove_virtfn(dev, id, reset);
++	mutex_unlock(&iov->dev->sriov->lock);
++}
++
++
+ int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	return 0;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e2d1a12..4351ceb7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1872,8 +1872,8 @@ static inline void pci_mmcfg_late_init(void) { }
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
+-void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
++int pci_iov_add_virtfn_locked(struct pci_dev *dev, int id, int reset);
++void pci_iov_remove_virtfn_locked(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
