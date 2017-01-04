@@ -1,45 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38028 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750874AbdARW4K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 17:56:10 -0500
-Date: Wed, 18 Jan 2017 16:53:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: How to improve PCI bug tracking?
-Message-ID: <20170118225332.GA22960@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mailout3.samsung.com ([203.254.224.33]:60651 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751659AbdADIT2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 03:19:28 -0500
+Subject: Re: [PATCH 2/4] Documetation: samsung-phy: add the exynos-pcie-phy
+ binding
+To: Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <a3b613a7-70e4-a14a-d5b8-f1cff325aefd@samsung.com>
+Date: Wed, 04 Jan 2017 17:18:56 +0900
+MIME-version: 1.0
+In-reply-to: <20170103180507.b7otjrfo4ye3yx42@rob-hp-laptop>
+Content-type: text/plain; charset=windows-1252
+References: <20161228103454.26467-1-jh80.chung@samsung.com>
+ <CGME20161228103455epcas5p2acc54945d70ac45b2ce2cd4f6ad4b875@epcas5p2.samsung.com>
+ <20161228103454.26467-3-jh80.chung@samsung.com>
+ <20170103180507.b7otjrfo4ye3yx42@rob-hp-laptop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I want to improve PCI bug tracking.  It feels like our bugs don't get
-the attention they need, and I'm soliciting ideas for how to improve
-this.
+On 01/04/2017 03:05 AM, Rob Herring wrote:
+> On Wed, Dec 28, 2016 at 07:34:52PM +0900, Jaehoon Chung wrote:
+>> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
+>> This is for using generic PHY framework.
+>>
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>>  .../devicetree/bindings/phy/samsung-phy.txt        | 23 ++++++++++++++++++++++
+>>  1 file changed, 23 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> index 9872ba8..1cbc15f 100644
+>> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> @@ -191,3 +191,26 @@ Example:
+>>  		usbdrdphy0 = &usb3_phy0;
+>>  		usbdrdphy1 = &usb3_phy1;
+>>  	};
+>> +
+>> +Samsung Exynos SoC series PCIe PHY controller
+>> +--------------------------------------------------
+>> +Required properties:
+>> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
+>> +- #phy-cells : Must be zero
+>> +- reg : a register used by phy driver.
+>> +
+>> +Required properies for child node:
+>> +- reg : a block register used by phy driver.
+> 
+> There's no need for this. Either just make the length 0x1040 or add a 
+> 2nd address to the parent reg prop.
 
-Current situation:
+Will use the 2nd address to the parent reg prop.
+Because there are two pcie-phy for Exynos5440.
+one block register is started from 0x271000, the other is started from 0x271040.
 
-  - People often report bugs via email to linux-pci.  I think this
-    is good because everybody can see it.
+Best Regards,
+Jaehoon Chung
 
-  - Even after an email report, I often request a bugzilla because
-    (1) it helps keep things from being forgotten, (2) it's a
-    convenient place to store bulky data, and (3) I like to have a
-    bugzilla URL to include in the changelog of a patch that fixes the
-    bug.
+> 
+>> +
+>> +Example:
+>> +	pcie_phy0: pcie-phy@270000 {
+>> +		#phy-cells = <0>;
+>> +		compatible = "samsung,exynos5440-pcie-phy";
+>> +		reg = <0x270000 0x1000>;
+>> +		#address-cells = <1>;
+>> +		#size-cells = <1>;
+>> +		ranges;
+>> +		block@271000 {
+>> +			reg = <0x271000 0x40>;
+>> +		};
+>> +	};
+>> -- 
+>> 2.10.2
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
 
-  - Sometimes people open a bugzilla directly.  I get email about
-    these (along with one or two other people), but this is sort of a
-    problem because linux-pci never sees it, sometimes I miss it, and
-    things tend to languish.
-
-  - Discussion on a bugzilla is only seen by people listed in the
-    bugzilla, not on linux-pci.
-
-I'm contemplating changing this so the bugzilla mail would also go to
-linux-pci.
-
-Any objections or alternate suggestions?
-
-Bjorn
