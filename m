@@ -1,117 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:42720
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754290AbdAFQ4p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Jan 2017 11:56:45 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jerome Glisse <j.glisse@gmail.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
- <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
- <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
- <20170106015831.GA2226@gmail.com>
-CC: Jerome Glisse <jglisse@redhat.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, <hch@infradead.org>,
-        <david1.zhou@amd.com>, <qiang.yu@amd.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
-Date: Fri, 6 Jan 2017 11:56:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170106015831.GA2226@gmail.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from mailout4.samsung.com ([203.254.224.34]:52827 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966247AbdADMf3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 07:35:29 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V2 3/5] Documetation: binding: modify the exynos5440 pcie
+ binding
+Date: Wed, 04 Jan 2017 21:34:33 +0900
+Message-id: <20170104123435.30740-4-jh80.chung@samsung.com>
+In-reply-to: <20170104123435.30740-1-jh80.chung@samsung.com>
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1040f1e074748fabe58af52eb0b833713@epcas1p1.samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-01-05 08:58 PM, Jerome Glisse wrote:
-> On Thu, Jan 05, 2017 at 05:30:34PM -0700, Jason Gunthorpe wrote:
->> On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
->>
->>>> I still don't understand what you driving at - you've said in both
->>>> cases a user VMA exists.
->>> In the former case no, there is no VMA directly but if you want one than
->>> a device can provide one. But such VMA is useless as CPU access is not
->>> expected.
->> I disagree it is useless, the VMA is going to be necessary to support
->> upcoming things like CAPI, you need it to support O_DIRECT from the
->> filesystem, DPDK, etc. This is why I am opposed to any model that is
->> not VMA based for setting up RDMA - that is shorted sighted and does
->> not seem to reflect where the industry is going.
->>
->> So focus on having VMA backed by actual physical memory that covers
->> your GPU objects and ask how do we wire up the '__user *' to the DMA
->> API in the best way so the DMA API still has enough information to
->> setup IOMMUs and whatnot.
-> I am talking about 2 different thing. Existing hardware and API where you
-> _do not_ have a vma and you do not need one. This is just existing stuff.
-I do not understand why you assume that existing API doesn't  need one.
-I would say that a lot of __existing__ user level API and their support 
-in kernel
-(especially outside of graphics domain) assumes that we have vma and
-deal with __user * pointers.
-> Some close driver provide a functionality on top of this design. Question
-> is do we want to do the same ? If yes and you insist on having a vma we
-> could provide one but this is does not apply and is useless for where we
-> are going with new hardware.
->
-> With new hardware you just use malloc or mmap to allocate memory and then
-> you use it directly with the device. Device driver can migrate any part of
-> the process address space to device memory. In this scheme you have your
-> usual VMAs but there is nothing special about them.
-Assuming that the whole device memory is CPU accessible and it looks
-like the direction where we are going:
-- You forgot about use case when we want or need to allocate memory
-directly on device (why we need to migrate anything if not needed?).
-- We may want to use CPU to access such memory on device to avoid
-any unnecessary migration back.
-- We may have more device memory than the system one.
-E.g. if you have 12 GPUs w/64GB each it will already give us ~0.7 TB
-not mentioning NVDIMM cards which could also be used as memory
-storage for other device access.
-- We also may want/need to share GPU memory between different
-processes.
-> Now when you try to do get_user_page() on any page that is inside the
-> device it will fails because we do not allow any device memory to be pin.
-> There is various reasons for that and they are not going away in any hw
-> in the planing (so for next few years).
->
-> Still we do want to support peer to peer mapping. Plan is to only do so
-> with ODP capable hardware. Still we need to solve the IOMMU issue and
-> it needs special handling inside the RDMA device. The way it works is
-> that RDMA ask for a GPU page, GPU check if it has place inside its PCI
-> bar to map this page for the device, this can fail. If it succeed then
-> you need the IOMMU to let the RDMA device access the GPU PCI bar.
->
-> So here we have 2 orthogonal problem. First one is how to make 2 drivers
-> talks to each other to setup mapping to allow peer to peer But I would assume  and second is
-> about IOMMU.
->
-I think that there is the third problem:  A lot of existing user level API
-(MPI, IB Verbs, file i/o, etc.) deal with pointers to the buffers.
-Potentially it would be ideally to support use cases when those buffers are
-located in device memory avoiding any unnecessary migration / 
-double-buffering.
-Currently a lot of infrastructure in kernel assumes that this is the user
-pointer and call "get_user_pages"  to get s/g.   What is your opinion
-how it should be changed to deal with cases when "buffer" is in
-device memory?
+According to using PHY framework, updates the exynos5440-pcie binding.
+For maintaining backward compatibility, leaves the current dt-binding.
+(It should be deprecated.)
 
+Recommends to use the Phy Framework and "config" property to follow
+the designware-pcie binding.
+If you use the old way, can see "mssing *config* reg space" message.
+Because the getting configuration space address from range is old way.
 
+NOTE: When use the "config" property, first name of 'reg-names' must be
+set to "elbi". Otherwise driver can't maintain the backward capability.
+
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+Changelog on V2:
+- Describes more commit message
+- Fixes the typos
+- Adds the new example for using PHY framework
+- Deprecated the old dt-binding description
+- Removes 'phy-names'
+
+ .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 ++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+index 4f9d23d..1d0af0e 100644
+--- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+@@ -7,8 +7,19 @@ Required properties:
+ - compatible: "samsung,exynos5440-pcie"
+ - reg: base addresses and lengths of the pcie controller,
+ 	the phy controller, additional register for the phy controller.
++	(Registers for the phy controller are DEPRECATED.
++	 Use the PHY framework.)
++- reg-names : First name should be set to "elbi".
++	And use the "config" instead of getting the confgiruation address space
++	from "ranges".
++	NOTE: When use the "config" property, reg-names must be set.
+ - interrupts: A list of interrupt outputs for level interrupt,
+ 	pulse interrupt, special interrupt.
++- phys: From PHY binding. Phandle for the Generic PHY.
++	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
++
++Other common properties refer to
++	Documentation/devicetree/binding/pci/designware-pcie.txt
+ 
+ Example:
+ 
+@@ -54,6 +65,24 @@ SoC specific DT Entry:
+ 		num-lanes = <4>;
+ 	};
+ 
++With using PHY framework:
++	pcie_phy0: pcie-phy@270000 {
++		...
++		reg = <0x270000 0x1000>, <0x271000 0x40>;
++		regn-names = "phy", "block";
++		...
++	};
++
++	pcie@290000 {
++		...
++		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
++		reg-names = "elbi", "config";
++		phys = <&pcie_phy0>;
++		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
++			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
++		...
++	};
++
+ Board specific DT Entry:
+ 
+ 	pcie@290000 {
+-- 
+2.10.2
 
