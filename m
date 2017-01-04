@@ -1,122 +1,132 @@
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Message-Id: <dbb277a11a08c515fe518447ad496dfbffc3e1d8.1483806825.git.lukas@wunner.de>
-In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
-References: <cover.1483806825.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 8 Jan 2017 09:41:45 +0100
-Subject: [PATCH v4 1/8] PCI: Recognize Thunderbolt devices
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Chen Yu <yu.c.chen@intel.com>, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33402 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbdADUP4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 15:15:56 -0500
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Kishon Vijay Abraham I'" <kishon@ti.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>
+Cc: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <nsekhar@ti.com>
+References: <1483532367-9698-1-git-send-email-kishon@ti.com>
+In-Reply-To: <1483532367-9698-1-git-send-email-kishon@ti.com>
+Subject: Re: [PATCH v3] PCI: add a new directory for designware core
+Date: Wed, 4 Jan 2017 15:15:54 -0500
+Message-ID: <000401d266c7$5a643f50$0f2cbdf0$@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're about to allow runtime PM on Thunderbolt ports in
-pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
-hotplug ports in pci_dev_check_d3cold().  In both cases we need to
-uniquely identify if a PCI device belongs to a Thunderbolt controller.
+On Wednesday, January 4, 2017 7:19 AM, Kishon Vijay Abraham I wrote:
+> 
+> Group all the PCI drivers that use designware core in dwc directory.
+> dwc IP is capable of operating in both host mode and device mode and
+> keeping it inside the *host* directory is misleading.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-We also have the need to detect presence of a Thunderbolt controller in
-drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros cannot
-switch external DP/HDMI ports between GPUs if they have Thunderbolt.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-Furthermore, in multiple places in the DRM subsystem we need to detect
-whether a GPU is on-board or attached with Thunderbolt.  As an example,
-Thunderbolt-attached GPUs shall not be registered with vga_switcheroo.
+However, I have two suggestion as below.
 
-Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234
-on devices belonging to a Thunderbolt controller which allows us to
-recognize them.
+1. Please add dwc pci related people as possible.
+    They should be noticed. So, they will prepare this changes when they
+will receive
+    future vanilla kernel.
+2. Please use optimization option when you make patch.
+    The current patch is too huge.
+    This option will use 'rename' instead of 'create'/'delete'.
+    I am not sure, but maybe -M option will be used.
+    git format-patch -M
 
-Detect presence of this VSEC on device probe and cache it in a newly
-added is_thunderbolt bit in struct pci_dev which can then be queried by
-pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and others.
+Best regards,
+Jingoo Han
 
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.h   |  2 ++
- drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 3 files changed, 37 insertions(+)
+> ---
+> Changes from v2:
+> *) update MAINTAINERS file
+> 
+> Changes from v1:
+> *) instead of renaming *host* directory to *controller* directory,
+>    move all the dwc drivers to dwc/ directory.
+> Next Steps:
+> Split pcie-designware.c to core, host-only and endpoint-only files.
+> 
+>  MAINTAINERS                             |   22 +-
+>  drivers/pci/Kconfig                     |    1 +
+>  drivers/pci/Makefile                    |    3 +
+>  drivers/pci/dwc/Kconfig                 |  108 ++++
+>  drivers/pci/dwc/Makefile                |   23 +
+>  drivers/pci/dwc/pci-dra7xx.c            |  525 ++++++++++++++++++
+>  drivers/pci/dwc/pci-exynos.c            |  629 +++++++++++++++++++++
+>  drivers/pci/dwc/pci-imx6.c              |  757 ++++++++++++++++++++++++++
+>  drivers/pci/dwc/pci-keystone-dw.c       |  560 +++++++++++++++++++
+>  drivers/pci/dwc/pci-keystone.c          |  444 +++++++++++++++
+>  drivers/pci/dwc/pci-layerscape.c        |  284 ++++++++++
+>  drivers/pci/dwc/pcie-armada8k.c         |  254 +++++++++
+>  drivers/pci/dwc/pcie-artpec6.c          |  283 ++++++++++
+>  drivers/pci/dwc/pcie-designware-plat.c  |  126 +++++
+>  drivers/pci/dwc/pcie-designware.c       |  902
+> +++++++++++++++++++++++++++++++
+>  drivers/pci/dwc/pcie-designware.h       |   86 +++
+>  drivers/pci/dwc/pcie-hisi.c             |  326 +++++++++++
+>  drivers/pci/dwc/pcie-qcom.c             |  753 ++++++++++++++++++++++++++
+>  drivers/pci/dwc/pcie-spear13xx.c        |  299 ++++++++++
+>  drivers/pci/host/Kconfig                |  113 ----
+>  drivers/pci/host/Makefile               |   12 -
+>  drivers/pci/host/pci-dra7xx.c           |  525 ------------------
+>  drivers/pci/host/pci-exynos.c           |  629 ---------------------
+>  drivers/pci/host/pci-imx6.c             |  757 --------------------------
+>  drivers/pci/host/pci-keystone-dw.c      |  560 -------------------
+>  drivers/pci/host/pci-keystone.c         |  444 ---------------
+>  drivers/pci/host/pci-layerscape.c       |  284 ----------
+>  drivers/pci/host/pcie-armada8k.c        |  254 ---------
+>  drivers/pci/host/pcie-artpec6.c         |  283 ----------
+>  drivers/pci/host/pcie-designware-plat.c |  126 -----
+>  drivers/pci/host/pcie-designware.c      |  902
+---------------------------
+> ----
+>  drivers/pci/host/pcie-designware.h      |   86 ---
+>  drivers/pci/host/pcie-hisi.c            |  326 -----------
+>  drivers/pci/host/pcie-qcom.c            |  753 --------------------------
+>  drivers/pci/host/pcie-spear13xx.c       |  299 ----------
+>  35 files changed, 6374 insertions(+), 6364 deletions(-)
+>  create mode 100644 drivers/pci/dwc/Kconfig
+>  create mode 100644 drivers/pci/dwc/Makefile
+>  create mode 100644 drivers/pci/dwc/pci-dra7xx.c
+>  create mode 100644 drivers/pci/dwc/pci-exynos.c
+>  create mode 100644 drivers/pci/dwc/pci-imx6.c
+>  create mode 100644 drivers/pci/dwc/pci-keystone-dw.c
+>  create mode 100644 drivers/pci/dwc/pci-keystone.c
+>  create mode 100644 drivers/pci/dwc/pci-layerscape.c
+>  create mode 100644 drivers/pci/dwc/pcie-armada8k.c
+>  create mode 100644 drivers/pci/dwc/pcie-artpec6.c
+>  create mode 100644 drivers/pci/dwc/pcie-designware-plat.c
+>  create mode 100644 drivers/pci/dwc/pcie-designware.c
+>  create mode 100644 drivers/pci/dwc/pcie-designware.h
+>  create mode 100644 drivers/pci/dwc/pcie-hisi.c
+>  create mode 100644 drivers/pci/dwc/pcie-qcom.c
+>  create mode 100644 drivers/pci/dwc/pcie-spear13xx.c
+>  delete mode 100644 drivers/pci/host/pci-dra7xx.c
+>  delete mode 100644 drivers/pci/host/pci-exynos.c
+>  delete mode 100644 drivers/pci/host/pci-imx6.c
+>  delete mode 100644 drivers/pci/host/pci-keystone-dw.c
+>  delete mode 100644 drivers/pci/host/pci-keystone.c
+>  delete mode 100644 drivers/pci/host/pci-layerscape.c
+>  delete mode 100644 drivers/pci/host/pcie-armada8k.c
+>  delete mode 100644 drivers/pci/host/pcie-artpec6.c
+>  delete mode 100644 drivers/pci/host/pcie-designware-plat.c
+>  delete mode 100644 drivers/pci/host/pcie-designware.c
+>  delete mode 100644 drivers/pci/host/pcie-designware.h
+>  delete mode 100644 drivers/pci/host/pcie-hisi.c
+>  delete mode 100644 drivers/pci/host/pcie-qcom.c
+>  delete mode 100644 drivers/pci/host/pcie-spear13xx.c
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index cb17db2..45c2b81 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -3,6 +3,8 @@
- 
- #define PCI_FIND_CAP_TTL	48
- 
-+#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-+
- extern const unsigned char pcie_link_speed[];
- 
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e164b5c..891a8fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 		pdev->is_hotplug_bridge = 1;
- }
- 
-+static void set_pcie_vendor_specific(struct pci_dev *dev)
-+{
-+	int vsec = 0;
-+	u32 header;
-+
-+	while ((vsec = pci_find_next_ext_capability(dev, vsec,
-+						    PCI_EXT_CAP_ID_VNDR))) {
-+		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-+
-+		/* Is the device part of a Thunderbolt controller? */
-+		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
-+		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT)
-+			dev->is_thunderbolt = 1;
-+	}
-+
-+	/*
-+	 * Is the device attached with Thunderbolt?  Walk upwards and check for
-+	 * each encountered bridge if it's part of a Thunderbolt controller.
-+	 * Reaching the host bridge means dev is soldered to the mainboard.
-+	 */
-+	if (!dev->is_thunderbolt) {
-+		struct pci_dev *parent = dev;
-+
-+		while ((parent = pci_upstream_bridge(parent)))
-+			if (parent->is_thunderbolt) {
-+				dev->is_thunderbolt = 1;
-+				break;
-+			}
-+	}
-+}
-+
- /**
-  * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
-  * @dev: PCI device
-@@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	/* need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
- 
-+	/* need to have dev->cfg_size ready */
-+	set_pcie_vendor_specific(dev);
-+
- 	/* "Unknown power state" */
- 	dev->current_state = PCI_UNKNOWN;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..3c775e8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -358,6 +358,7 @@ struct pci_dev {
- 	unsigned int	is_virtfn:1;
- 	unsigned int	reset_fn:1;
- 	unsigned int    is_hotplug_bridge:1;
-+	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
--- 
-2.11.0
+
+
+
+
+
