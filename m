@@ -1,15 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 12 Jan 2017 09:03:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170112150310.GA5746@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
- <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2104402.puPT8SttTe@wuerfel>
+ <412396ac-4535-08a3-e4c7-dd8d0078a518@cogentembedded.com>
+ <3158203.Yc9Qgx82xo@wuerfel>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <9d5e32d3-000c-2f95-7ea8-c64d53ab6b56@cogentembedded.com>
+Date: Wed, 4 Jan 2017 18:29:39 +0300
 MIME-Version: 1.0
-In-Reply-To: <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
+In-Reply-To: <3158203.Yc9Qgx82xo@wuerfel>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,74 +19,58 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- linux-pci@vger.kernel.org, Russell King <rmk+kernel@arm.linux.org.uk>,
- linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
-Content-Type: text/plain; charset="iso-8859-1"
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 02:18:46PM +0100, Uwe Kleine-K=F6nig wrote:
-> On 01/11/2017 11:02 PM, Bjorn Helgaas wrote:
-> > Hi Uwe,
-> > =
+>>>> For OF platforms, this is called via of_dma_configure(), that checks
+>>>> dma-ranges of node that is *parent* for host bridge. Host bridge
+>>>> currently does not control this at all.
+>>>
+>>> We need to think about this a bit. Is it actually the PCI host
+>>> bridge that limits the ranges here, or the bus that it is connected
+>>> to. In the latter case, the caller needs to be adapted to handle
+>>> both.
+>>
+>> In r-car case, I'm not sure what is the source of limitation at physical
+>> level.
+>>
+>> pcie-rcar driver configures ranges for PCIe inbound transactions based
+>> on dma-ranges property in it's device tree node. In the current device
+>> tree for this platform, that only contains one range and it is in lower
+>> memory.
+>>
+>> NVMe driver tries i/o to kmalloc()ed area. That returns 0x5xxxxxxxx
+>> addresses here. As a quick experiment, I tried to add second range to
+>> pcie-rcar's dma-ranges to cover 0x5xxxxxxxx area - but that did not make
+>> DMA to high addresses working.
+>>
+>> My current understanding is that host bridge hardware module can't
+>> handle inbound transactions to PCI addresses above 4G - and this
+>> limitations comes from host bridge itself.
+>>
+>> I've read somewhere in the lists that pcie-rcar hardware is "32-bit" -
+>> but I don't remember where, and don't know lowlevel details. Maybe
+>> somebody from linux-renesas can elaborate?
+> 
+> Just a guess, but if the inbound translation windows in the host
+> bridge are wider than 32-bit, the reason for setting up a single
+> 32-bit window is probably because that is what the parent bus supports.
 
-> > On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-K=F6nig wrote:
-> >> Hello,
-> >>
-> >> on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
-> >> ath10k driver fails to bind to the matching hardware if CONFIG_PCIEASPM
-> >> is enabled:
-> >>
-> >> [...]
-> > We have several open issues related to ASPM:
-> > =
+Well anyway applying patch similar to your's will fix pcie-rcar + nvme
+case - thus I don't object :)   But it can break other cases ...
 
-> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D102311 ASPM: ASMEDA asm=
-1062 not working
-> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D187731 Null pointer der=
-eference in ASPM
-> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D189951 Enabling ASPM ca=
-uses NIC performance issue
-> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D60111 NULL pointer dere=
-f in ASPM alloc_pcie_link_state()
-> > =
+But why do you hook at set_dma_mask() and overwrite mask inside, instead
+of hooking at dma_supported() and rejecting unsupported mask?
 
-> > I don't recognize yours as being one of these.  Can you open a new
-> > issue and attach the complete dmesg log and "lspci -vv" output?
-> =
-
-> Done: https://bugzilla.kernel.org/show_bug.cgi?id=3D192441
-
-Thanks!  Can you attach a dmesg with CONFIG_PCIEASPM turned off, too?
-
-There are several interesting things going on with that ath10k device,
-and not all of them seem ASPM-related:
-
-  pci_bus 0000:00: root bus resource [mem 0xe0000000-0xe7ffffff]
-  pci 0000:02:00.0: reg 0x10: [mem 0xe8000000-0xe81fffff 64bit]
-  pci 0000:02:00.0: reg 0x30: [mem 0xe8200000-0xe820ffff pref]
-  pci 0000:02:00.0: of_irq_parse_pci() failed with rc=3D134
-  pci 0000:02:00.0: BAR 0: assigned [mem 0xe0000000-0xe01fffff 64bit]
-  pci 0000:02:00.0: BAR 0: error updating (0xe0000004 !=3D 0xffffffff)
-  pci 0000:02:00.0: BAR 0: error updating (high 0x000000 !=3D 0xffffffff)
-
-1) We found BAR 0 (reg 0x10) with 0xe8000000, so firmware probably
-   programmed it, and it probably works there.
-
-2) The host bridge window doesn't include that BAR 0 space.
-   Unfortunately I don't think we print the initial 00:02.0 bridge
-   window leading to bus 02; we only print the new window we assign to
-   it.
-
-3) No idea what the of_irq_parse_pci() issue is.
-
-4) No idea why the BAR 0 update failed.  Maybe a Marvell config
-   accessor problem?
-
-I don't see any connection between these and ASPM, so I'm curious why
-things work with CONFIG_PCIEASPM turned off.
+I think later is better, because it lets drivers to handle unsupported
+high-dma case, like documented in DMA-API_HOWTO.
 
 _______________________________________________
 linux-arm-kernel mailing list
