@@ -1,104 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35189 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752994AbdARShp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 13:37:45 -0500
-Date: Wed, 18 Jan 2017 13:47:11 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: "Raj, Ashok" <ashok.raj@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
-Message-ID: <20170118184711.GC27274@localhost.localdomain>
-References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
- <20170117191539.GA155748@otc-nc-03>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <5224989.KFLmAz9Gqk@wuerfel>
+ <4bbc3494-bf95-9765-ccaf-cc3b3e1cd297@cogentembedded.com>
+ <2104402.puPT8SttTe@wuerfel>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <412396ac-4535-08a3-e4c7-dd8d0078a518@cogentembedded.com>
+Date: Wed, 4 Jan 2017 17:30:19 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170117191539.GA155748@otc-nc-03>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2104402.puPT8SttTe@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+>> For OF platforms, this is called via of_dma_configure(), that checks
+>> dma-ranges of node that is *parent* for host bridge. Host bridge
+>> currently does not control this at all.
+> 
+> We need to think about this a bit. Is it actually the PCI host
+> bridge that limits the ranges here, or the bus that it is connected
+> to. In the latter case, the caller needs to be adapted to handle
+> both.
 
-This fix looks good to me as well now. Any other concerns before staging
-this one for inclusion?
+In r-car case, I'm not sure what is the source of limitation at physical
+level.
 
-Thanks,
-Keith
+pcie-rcar driver configures ranges for PCIe inbound transactions based
+on dma-ranges property in it's device tree node. In the current device
+tree for this platform, that only contains one range and it is in lower
+memory.
 
-On Tue, Jan 17, 2017 at 11:15:40AM -0800, Raj, Ashok wrote:
-> Hi Bjorn
+NVMe driver tries i/o to kmalloc()ed area. That returns 0x5xxxxxxxx
+addresses here. As a quick experiment, I tried to add second range to
+pcie-rcar's dma-ranges to cover 0x5xxxxxxxx area - but that did not make
+DMA to high addresses working.
+
+My current understanding is that host bridge hardware module can't
+handle inbound transactions to PCI addresses above 4G - and this
+limitations comes from host bridge itself.
+
+I've read somewhere in the lists that pcie-rcar hardware is "32-bit" -
+but I don't remember where, and don't know lowlevel details. Maybe
+somebody from linux-renesas can elaborate?
+
+
+>> In current device trees no dma-ranges is defined for nodes that are
+>> parents to pci host bridges. This will make of_dma_configure() to fall
+>> back to 32-bit size for all devices on all current platforms.  Thus
+>> applying this patch will immediately break 64-bit dma masks on all
+>> hardware that supports it.
 > 
-> Sorry to bug you, didn't hear from you after i added the lock for consistency
-> to address the feedback.
+> No, it won't break it, it will just fall back to swiotlb for all the
+> ones that are lacking the dma-ranges property. I think this is correct
+> behavior.
+
+I'd say - for all ones that have parents without dma-ranges property.
+
+As of 4.10-rc2, I see only two definitions of wide parent dma-ranges
+under arch/arm64/boot/dts/ - in amd/amd-seattle-soc.dtsi and
+apm/apm-storm.dtsi
+
+Are these the only arm64 platforms that can to DMA to high addresses?
+I'm not arm64 expert but I'd be surprised if that's the case.
+
+
+>> Also related: dma-ranges property used by several pci host bridges is
+>> *not* compatible with "legacy" dma-ranges parsed by of_get_dma_range() -
+>> former uses additional flags word at beginning.
 > 
-> Let me know if there is anymore changes you like to see.
-> 
-> Cheers,
-> Ashok
-> 
-> On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
-> > Changes from v1:
-> > 	Address comments from Bjorn:
-> > 		Added p_slot->lock mutex around changes to p_slot->state
-> > 		Updated commit message to call out mutex names
-> > 
-> > A surprise link down may retrain very quickly, causing the same slot to
-> > generate a link up event before handling the link down completes.
-> > 
-> > Since the link is active, the power off work queued from the first link
-> > down will cause a second down event when the power is disabled. The second
-> > down event should be ignored because the slot is already powering off;
-> > however, the "link up" event sets the slot state to POWERON before the
-> > event to handle this is enqueued, making the second down event believe
-> > it needs to do something. This creates a constant link up and down
-> > event cycle.
-> > 
-> > This patch fixes that by setting the p_slot->state only when the work to
-> > handle the power event is executing, protected by the p_slot->hotplug_lock.
-> > 
-> > To: Bjorn Helgass <bhelgaas@google.com>
-> > Cc: linux-kernel@vger.kernel.org
-> > Cc: Keith Busch <keith.busch@intel.com>
-> > 
-> > Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> > Reviewed-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> >  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> > index ec0b4c1..4cf4772 100644
-> > --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> > @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
-> >  	switch (info->req) {
-> >  	case DISABLE_REQ:
-> >  		mutex_lock(&p_slot->hotplug_lock);
-> > +		mutex_lock(&p_slot->lock);
-> > +		p_slot->state = POWEROFF_STATE;
-> > +		mutex_unlock(&p_slot->lock);
-> >  		pciehp_disable_slot(p_slot);
-> >  		mutex_unlock(&p_slot->hotplug_lock);
-> >  		mutex_lock(&p_slot->lock);
-> > @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
-> >  		break;
-> >  	case ENABLE_REQ:
-> >  		mutex_lock(&p_slot->hotplug_lock);
-> > +		mutex_lock(&p_slot->lock);
-> > +		p_slot->state = POWERON_STATE;
-> > +		mutex_unlock(&p_slot->lock);
-> >  		ret = pciehp_enable_slot(p_slot);
-> >  		mutex_unlock(&p_slot->hotplug_lock);
-> >  		if (ret)
-> > @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
-> >  {
-> >  	struct power_work_info *info;
-> >  
-> > -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
-> > -
-> >  	info = kmalloc(sizeof(*info), GFP_KERNEL);
-> >  	if (!info) {
-> >  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
-> > -- 
-> > 2.7.4
+> Can you elaborate? Do we have PCI host bridges that use wrongly formatted
+> dma-ranges properties?
+
+of_dma_get_range() expects <dma_addr cpu_addr size> format.
+
+pcie-rcar.c, pci-rcar-gen2.c, pci-xgene.c and pcie-iproc.c from
+drivers/pci/host/ all parse dma-ranges using of_pci_range_parser that
+uses <flags pci-addr cpu-addr size> format - i.e. something different
+from what of_dma_get_range() uses.
+
+
+Nikita
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
