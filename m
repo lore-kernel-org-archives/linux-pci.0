@@ -1,70 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Jan 2017 14:34:18 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
- enabled
-Message-ID: <20170130143418.GB25924@io.lakedaemon.net>
-References: <20161212183020.GA30274@obsidianresearch.com>
- <20170111183055.GD14532@bhelgaas-glaptop.roam.corp.google.com>
- <20170128211728.GJ20550@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=+gJW=YS=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=+gJW=YS=quantumtechnology.info=kilian.singer@kernel.org>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+ <16155135.jUckSz7QPL@aspire.rjw.lan>
+ <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+Message-ID: <83901bcb-1315-fbca-e1e3-960bfefbd9c0@quantumtechnology.info>
+Date: Wed, 4 Jan 2017 11:33:16 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170128211728.GJ20550@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Gregory CLEMENT <gregory.clement@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170104081639.GA21076@wunner.de>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Dear all,
 
-On Sat, Jan 28, 2017 at 03:17:28PM -0600, Bjorn Helgaas wrote:
-> On Wed, Jan 11, 2017 at 12:30:55PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Dec 12, 2016 at 11:30:20AM -0700, Jason Gunthorpe wrote:
-> > > The PCI core will write to the bridge window config multiple times
-> > > while they are enabled. This can lead to mbus failures like:
-> > > 
-> > >  mvebu_mbus: cannot add window '4:e8', conflicts with another window
-> > >  mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
-> > > 
-> > > For me this is happening during a hotplug cycle. The PCI core is
-> > > not changing the values, just writing them twice while active.
-> > > 
-> > > The patch addresses the general case of any change to an active window,
-> > > but not atomically. The code is slightly refactored so io and mem
-> > > can share more of the window logic.
-> > 
-> > Looks good to me, but I'm waiting for an ack from Thomas or Jason (listed
-> > as maintainers and already cc'd).
-> 
-> Ping, Thomas, Jason C?
-> 
-> > > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > > ---
-> > >  drivers/pci/host/pci-mvebu.c | 101 +++++++++++++++++++++++++------------------
-> > >  1 file changed, 60 insertions(+), 41 deletions(-)
+the weird thing is also that when calling:
 
-Sorry, been on travel and I think Thomas is on holiday.
+echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed
+or
+echo on > /sys/bus/pci/devices/0000:01:00.0/power/control
 
-Acked-by: Jason Cooper <jason@lakedaemon.net>
+on a command line then the command line crashes. The system stays responsive but still
+becomes unresponsive when I lock the screen.
 
-thx,
+Maybe a similar thing are happening in the kernel. Maybe one could use the above fact
+and a timeout to test for the problem and then take measures to deactivate the pm.
 
-Jason.
+I hope this gives you some more clues.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Best regards
+Kilian
+
+PS: let me know which patches I should test. I am currently terribly busy with work. So if you would select the most urgent patches I would be delighted.
+
+
+
+On 04-Jan-17 09:16, Lukas Wunner wrote:
+> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+>> I don't *want* to apply the revert.  It's on my for-linus branch as a
+>> worst-case scenario change if we can't figure out a better fix.
+>>
+>> The patch below is preferable, but I'd rather not take even it,
+>> because it takes away functionality and forces people to use a boot
+>> parameter to restore it.  I expect that somebody will figure out how
+>> to fix the regression Kilian found and also keep the new functionality
+>> (without requiring boot parameters) before v4.10.
+> The issue is constrained to hybrid graphics laptops with Nvidia discrete
+> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+> PCI core.
+>
+> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+> when and how to call an ACPI method versus using PR3.)
+>
+> (Neither are laptops using the Nvidia proprietary driver as it doesn't
+> runtime suspend the card.  But battery life will be terrible then.)
+>
+> We're at rc2 so the time frame for coming up with a fix is probably
+> 4 weeks.  Peter and others have tried for months to reverse-engineer
+> how to handle runtime PM on newer Nvidia cards.  It seems likely that
+> we'll not find the ultimate solution to the problem within 4 weeks.
+>
+> The way it is now, i.e. defaulting to PR3 when available, regresses
+> certain laptops such as Kilian's.  If on the other hand we default to
+> DSM when available, we'll regress certain other laptops, as Peter has
+> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+> approach either, ideally we'd want to use PR3 as Windows does.
+>
+> As said, the only short-term solution I see is to add an "optimus"
+> module_param to nouveau to allow users to select which method to use.
+> So in Kilian's case an additional command line parameter would be
+> necessary to fix the issue.
+>
+> Does anyone see a better solution or can we agree on this one?  If so
+> I can come up with a patch.  This could go in via Dave Airlie's tree.
+>
+> Thanks,
+>
+> Lukas
