@@ -1,150 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 09/37] PCI: dwc: designware: Parse *num-lanes* property in
- dw_pcie_setup_rc
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-10-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com>
-Date: Fri, 13 Jan 2017 17:13:12 +0000
+Return-Path: <SRS0=B/Xn=YT=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=B/Xn=YT=wunner.de=lukas@kernel.org>
+Date: Thu, 5 Jan 2017 15:42:20 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170105144220.GA21446@wunner.de>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+ <16155135.jUckSz7QPL@aspire.rjw.lan>
+ <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <20170104210954.GA11946@al>
 MIME-Version: 1.0
-In-Reply-To: <1484216786-17292-10-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170104210954.GA11946@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Wed, Jan 04, 2017 at 10:09:54PM +0100, Peter Wu wrote:
+> [ Help/ideas are welcome, I suspect that these failures to restore power
+> on laptops designed for Win8+ all have the same cause, related to some
+> unknown interaction between ACPI and PCI. Some links:
+> https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
 
-=C0s 10:25 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
-> *num-lanes* dt property is parsed in dw_pcie_host_init. However
-> *num-lanes* property is applicable to both root complex mode and
-> endpoint mode. As a first step, move the parsing of this property
-> outside dw_pcie_host_init. This is in preparation for splitting
-> pcie-designware.c to pcie-designware.c and pcie-designware-host.c
-> =
+Looking at Kilian's acpidump again I notice that the methods to power
+the GPU on or off (GPON / GPOF) are called from two places:
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pcie-designware.c |   18 +++++++++++-------
->  drivers/pci/dwc/pcie-designware.h |    1 -
->  2 files changed, 11 insertions(+), 8 deletions(-)
-> =
+- From the _PS0 and _PS3 methods of the GPU and
+- from the _PR3 power resource of the root port above the GPU.
 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-des=
-ignware.c
-> index 00a0fdc..89cdb6b 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -551,10 +551,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  =
+In the former case they're called for pre Windows 2013 or if VDAD is true.
+In the latter case they're called unconditionally but GPOF becomes a no-op
+in the pre Windows 2013 case.
 
-> -	ret =3D of_property_read_u32(np, "num-lanes", &pci->lanes);
-> -	if (ret)
-> -		pci->lanes =3D 0;
-> -
->  	ret =3D of_property_read_u32(np, "num-viewport", &pci->num_viewport);
->  	if (ret)
->  		pci->num_viewport =3D 2;
-> @@ -751,18 +747,26 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32=
- devfn,
->  =
+This means that GPOF would be executed *twice* on Windows 2013+ if VDAD
+is true.  I could imagine this to cause issues.
 
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
-> +	int ret;
-> +	u32 lanes;
->  	u32 val;
->  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-> +	struct device *dev =3D pci->dev;
-> +	struct device_node *np =3D dev->of_node;
->  =
+VDAD is at 0x7CE7D018 + 0xEE2 + 6. It's not set in the DSDT.
 
->  	/* get iATU unroll support */
->  	pci->iatu_unroll_enabled =3D dw_pcie_iatu_unroll_enabled(pci);
->  	dev_dbg(pci->dev, "iATU unroll: %s\n",
->  		pci->iatu_unroll_enabled ? "enabled" : "disabled");
->  =
+@Kilian, what do you get if you execute this as root:
 
-> +	ret =3D of_property_read_u32(np, "num-lanes", &lanes);
-> +	if (ret)
-> +		lanes =3D 0;
-
-You moved from host_init to root complex setup function, which in my opinio=
-n did
-not improve (in this scope).
-
-I suggest that instead of making so much intermediary patches, which is nic=
-e to
-understand your development sequence, but hard to review. Wouldn't be bette=
-r to
-condense some of the patches? We would have a cloear vision of the final pr=
-oduct :)
-
-Joao
-
-> +
->  	/* set the number of lanes */
->  	val =3D dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
->  	val &=3D ~PORT_LINK_MODE_MASK;
-> -	switch (pci->lanes) {
-> +	switch (lanes) {
->  	case 1:
->  		val |=3D PORT_LINK_MODE_1_LANES;
->  		break;
-> @@ -776,7 +780,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  		val |=3D PORT_LINK_MODE_8_LANES;
->  		break;
->  	default:
-> -		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->lanes);
-> +		dev_err(pci->dev, "num-lanes %u: invalid value\n", lanes);
->  		return;
->  	}
->  	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
-> @@ -784,7 +788,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	/* set link width speed control register */
->  	val =3D dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
->  	val &=3D ~PORT_LOGIC_LINK_WIDTH_MASK;
-> -	switch (pci->lanes) {
-> +	switch (lanes) {
->  	case 1:
->  		val |=3D PORT_LOGIC_LINK_WIDTH_1_LANES;
->  		break;
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-des=
-ignware.h
-> index d4b3d43..491fbe3 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -148,7 +148,6 @@ struct dw_pcie_ops {
->  struct dw_pcie {
->  	struct device		*dev;
->  	void __iomem		*dbi_base;
-> -	u32			lanes;
->  	u32			num_viewport;
->  	u8			iatu_unroll_enabled;
->  	struct pcie_port	pp;
-> =
+dd iflag=skip_bytes,count_bytes skip=$((0x7CE7D018 + 0xEE2 + 6)) count=1 \
+  if=/dev/mem 2>/dev/null | hexdump
 
 
+Another oddity I've noticed is that when calling the Optimus DSM with
+the capabilities function number (0x1A, NOUVEAU_DSM_OPTIMUS_CAPS) and
+a special argument, it's possible to influence the behaviour of GPOF
+(the method to power the GPU off):  GPOF is a no-op unless it's running
+on Windows 2013+ or OMPR has value 0x03.  Initially OMPR has value 0x02,
+but by setting bits 18 and 19 in the argument given to the capabilities
+function, it can be set to 0x3.  After GPOF has finished, OMPR reverts
+back to 0x02.  This means that pre Windows 2013, GPOF only has any effect
+if the DSM capabilities function is called with an appropriate argument.
+The same functionality can be seen in the Clevo P651RA ssdt3/7.  What
+confuses me is that the bits are at position 18 and 19, but in
+nouveau_switcheroo_optimus_dsm() we're setting bits 0 and 1 as well as
+bits 24 and 25?  This may be a dumb question, I'm not familiar with
+Optimus, only Macs.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+Thanks,
+
+Lukas
