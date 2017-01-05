@@ -1,99 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:38060 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760395AbdAJK0g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2017 05:26:36 -0500
-Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
- keystone PCIe h/w
-To: Murali Karicheri <m-karicheri2@ti.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
- <5873BD56.4040100@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <d973a128-f038-2cb9-f6d3-d50b9970999c@synopsys.com>
-Date: Tue, 10 Jan 2017 10:26:30 +0000
+Return-Path: <SRS0=Ht00=YT=redhat.com=airlied@kernel.org>
+Return-Path: <SRS0=Ht00=YT=redhat.com=airlied@kernel.org>
+Date: Thu, 5 Jan 2017 14:36:35 -0500 (EST)
+From: David Airlie <airlied@redhat.com>
+To: Peter Jones <pjones@redhat.com>
+Cc: Lukas Wunner <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>, Lyude <cpaul@redhat.com>
+Message-ID: <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al> <59349185.1aqio7kYFn@aspire.rjw.lan> <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com> <20170105150646.GB21446@wunner.de> <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 MIME-Version: 1.0
-In-Reply-To: <5873BD56.4040100@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-Às 4:41 PM de 1/9/2017, Murali Karicheri escreveu:
-> On 01/04/2017 02:32 PM, Murali Karicheri wrote:
->> Recent fixes for iATU unroll support introduced a bug that causes
->> asynchronous external abort in Keystone PCIe h/w which doesn't have
->> ATU port and the corresponding register. So the check should be moved
->> below where dw_pcie_prog_outbound_atu() is called to avoid that
->> being called on keystine PCIe h/w.
->>
->> Here is the backtrace
->>
->> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
->> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
->> [    0.785548] pgd = c0003000
->> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
->> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
->> [    0.799197] Modules linked in:
->> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
->> [    0.810130] Hardware name: Keystone
->> [    0.813717] task: eb878000 task.stack: eb866000
->> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
->> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
->>
->> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  - Applies to pci/master
->>  - Bug was introduced in v4.9
->>  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
->>
->>  drivers/pci/host/pcie-designware.c | 10 +++++-----
->>  1 file changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index bed1999..af8f6e9 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>  {
->>  	u32 val;
->>  
->> -	/* get iATU unroll support */
->> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
->> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
->> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
->> -
->>  	/* set the number of lanes */
->>  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->>  	val &= ~PORT_LINK_MODE_MASK;
->> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>  	 * we should not program the ATU here.
->>  	 */
->>  	if (!pp->ops->rd_other_conf) {
->> +		/* get iATU unroll support */
->> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
->> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
->> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
->> +
->>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->>  					  pp->mem_bus_addr, pp->mem_size);
->>
-> Bjorn,
+(cc'ing Lyude, who has the hw also I think).
+
+----- Original Message -----
+> From: "Peter Jones" <pjones@redhat.com>
+> To: "Lukas Wunner" <lukas@wunner.de>
+> Cc: "David Airlie" <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
+> "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Kilian Singer"
+> <kilian.singer@quantumtechnology.info>, "linux-pci" <linux-pci@vger.kernel.org>, "Alex Deucher"
+> <alexander.deucher@amd.com>, "Hans de Goede" <hdegoede@redhat.com>
+> Sent: Friday, 6 January, 2017 4:13:23 AM
+> Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
 > 
-> A Gentle ping to merge this important fix to v4.10-rc kernel for Keystone PCI as
-> it is broken since v4.9.
+> On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner wrote:
+> > On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
+> > > > On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
+> > > > > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
+> > > > > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+> > > > > > > I don't *want* to apply the revert.  It's on my for-linus branch
+> > > > > > > as a
+> > > > > > > worst-case scenario change if we can't figure out a better fix.
+> > > > > > > 
+> > > > > > > The patch below is preferable, but I'd rather not take even it,
+> > > > > > > because it takes away functionality and forces people to use a
+> > > > > > > boot
+> > > > > > > parameter to restore it.  I expect that somebody will figure out
+> > > > > > > how
+> > > > > > > to fix the regression Kilian found and also keep the new
+> > > > > > > functionality
+> > > > > > > (without requiring boot parameters) before v4.10.
+> > > > > > 
+> > > > > > The issue is constrained to hybrid graphics laptops with Nvidia
+> > > > > > discrete
+> > > > > > GPU using nouveau.  Hence it needs to be fixed in nouveau, not in
+> > > > > > the
+> > > > > > PCI core.
+> > > > > 
+> > > > > The problem is not necessarily in the nouveau driver, the same
+> > > > > problem
+> > > > > occurs when you enable RPM without loading nouveau. The issue is
+> > > > > limited
+> > > > > though to some newer hybrid graphics laptops with Nvidia GPUs. While
+> > > > > a
+> > > > > quirk can be added to nouveau, I think that a (temporary) quirk in
+> > > > > core
+> > > > > would also be reasonable (since it also occurs without nouveau).
+> > > > > 
+> > > > > > (AFAIUI, laptops with AMD discrete GPU are not affected as it is
+> > > > > > known
+> > > > > > when and how to call an ACPI method versus using PR3.)
+> > > > > > 
+> > > > > > (Neither are laptops using the Nvidia proprietary driver as it
+> > > > > > doesn't
+> > > > > > runtime suspend the card.  But battery life will be terrible then.)
+> > > > > > 
+> > > > > > We're at rc2 so the time frame for coming up with a fix is probably
+> > > > > > 4 weeks.  Peter and others have tried for months to
+> > > > > > reverse-engineer
+> > > > > > how to handle runtime PM on newer Nvidia cards.  It seems likely
+> > > > > > that
+> > > > > > we'll not find the ultimate solution to the problem within 4 weeks.
+> > > > > 
+> > > > > Yep, a quick proper fix seems unlikely.
+> > > > > [ Help/ideas are welcome, I suspect that these failures to restore
+> > > > > power
+> > > > > on laptops designed for Win8+ all have the same cause, related to
+> > > > > some
+> > > > > unknown interaction between ACPI and PCI. Some links:
+> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
+> > > > > 
+> > > > > > The way it is now, i.e. defaulting to PR3 when available, regresses
+> > > > > > certain laptops such as Kilian's.  If on the other hand we default
+> > > > > > to
+> > > > > > DSM when available, we'll regress certain other laptops, as Peter
+> > > > > > has
+> > > > > > pointed out.  Whitelisting or blacklisting laptops doesn't seem a
+> > > > > > good
+> > > > > > approach either, ideally we'd want to use PR3 as Windows does.
+> > > > > > 
+> > > > > > As said, the only short-term solution I see is to add an "optimus"
+> > > > > > module_param to nouveau to allow users to select which method to
+> > > > > > use.
+> > > > > > So in Kilian's case an additional command line parameter would be
+> > > > > > necessary to fix the issue.
+> > > > > > 
+> > > > > > Does anyone see a better solution or can we agree on this one?  If
+> > > > > > so
+> > > > > > I can come up with a patch.  This could go in via Dave Airlie's
+> > > > > > tree.
+> > > > > 
+> > > > > As pcie_port_pm=off already reverts to DSM, I do not think that an
+> > > > > additional (temporary) nouveau module parameter is going to help. I
+> > > > > instead propose a (hopefully temporary) quirk in pci core that
+> > > > > disables
+> > > > > D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
+> > > > > pcie_port_pm=off). Then the option pcie_port_pm=force can still be
+> > > > > used
+> > > > > to test possible solutions in the future.
+> > > > 
+> > > > I would rather add a quirk to the ACPI core to prevent the power
+> > > > resources in
+> > > > question from being enumerated.  Or even to prevent ACPI PM from being
+> > > > used for the port in question.
+> > > 
+> > > I do have a W541 in a cupboard in the office somewhere, but I won't be
+> > > close to
+> > > it for a couple of weeks. The W541 was the first place I tested the pm
+> > > patches
+> > > so I'm kinda wondering whether it's all W541's or just some specific
+> > > model/bios
+> > > combo.
 > 
-
-In my understanding your proposal will have no impact in platform using ATU, so
-for me is fine.
-
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-> Thanks
+> They seem to all ship with the 1.10 firmware, and 2.80 is current (there
+> are a bunch of intermediate 2.xx versions).  Somewhere along the line
+> they introduced some bugs in the UEFI stuff, so it wouldn't be
+> surprising if there's bugs introduced elsewhere as well.
 > 
-
+> > > However I'm pretty much unavailable to do anything much until late Jan on
+> > > this.
+> > 
+> > Is there anyone else at Red Hat who might be able to look into this?
+> > 
+> > ISTR that Hans de Goede is working on improving laptop support in Fedora,
+> > and Peter Jones recently got a patch merged for the W541 with the exact
+> > same firmware Kilian is using to work around a botched EFI memory map.
+> > Adding them to cc: in the hope that they may be able to help.
+> > 
+> > @Peter, have you noticed issues with the discrete Nvidia GPU on your W541
+> > related to runtime suspend and system sleep?
+> 
+> I was using a borrowed one (I can certainly find it again, but I'm not
+> working on graphics/pm really), but yeah - shutdown and lspci both broke
+> sometime after pci_pm_runtime_resume().  Here's the traceback from
+> SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
+> 
+> Dave, if you know who in Westford should have a look at this, I can see
+> about getting them hardware.  I am more or less surrounded by that team.
+> 
+> --
+>         Peter
+> 
