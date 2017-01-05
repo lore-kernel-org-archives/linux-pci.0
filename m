@@ -1,65 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34480 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdAWQS5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2017 11:18:57 -0500
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 05/11] ACPI/IORT: Add function to check SMMUs drivers presence
-Date: Mon, 23 Jan 2017 21:48:07 +0530
-Message-Id: <1485188293-20263-6-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48908 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966543AbdAETy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Jan 2017 14:54:28 -0500
+Date: Thu, 5 Jan 2017 14:54:24 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170105195424.GB2166@redhat.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170105190113.GA12587@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Thu, Jan 05, 2017 at 12:01:13PM -0700, Jason Gunthorpe wrote:
+> On Thu, Jan 05, 2017 at 01:39:29PM -0500, Jerome Glisse wrote:
+> 
+> >   1) peer-to-peer because of userspace specific API like NVidia GPU
+> >     direct (AMD is pushing its own similar API i just can't remember
+> >     marketing name). This does not happen through a vma, this happens
+> >     through specific device driver call going through device specific
+> >     ioctl on both side (GPU and RDMA). So both kernel driver are aware
+> >     of each others.
+> 
+> Today you can only do user-initiated RDMA operations in conjection
+> with a VMA.
+> 
+> We'd need a really big and strong reason to create an entirely new
+> non-VMA based memory handle scheme for RDMA.
+> 
+> So my inclination is to just completely push back on this idea. You
+> need a VMA to do RMA.
+> 
+> GPUs need to create VMAs for the memory they want to RDMA from, even
+> if the VMA handle just causes SIGBUS for any CPU access.
 
-The IOMMU probe deferral implementation requires a mechanism to detect
-if drivers for SMMU components are built-in in the kernel to detect
-whether IOMMU configuration for a given device should be deferred (ie
-SMMU drivers present but still not probed) or not (drivers not present).
+Mellanox and NVidia support peer to peer with what they market a
+GPUDirect. It only works without IOMMU. It is probably not upstream :
 
-Add a simple function to IORT to detect if SMMU drivers for SMMU
-components managed by IORT are built-in in the kernel.
+https://www.mail-archive.com/linux-rdma@vger.kernel.org/msg21402.html
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+I thought it was but it seems it require an out of tree driver to work.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index e0d2e6e..bf0ed09 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
- 	return ret;
- }
- 
-+static inline bool iort_iommu_driver_enabled(u8 type)
-+{
-+	switch (type) {
-+	case ACPI_IORT_NODE_SMMU_V3:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
-+	case ACPI_IORT_NODE_SMMU:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU);
-+	default:
-+		pr_warn("IORT node type %u does not describe an SMMU\n", type);
-+		return false;
-+	}
-+}
-+
- static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 					struct acpi_iort_node *node,
- 					u32 streamid)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Wether there is a vma or not isn't important to the issue anyway. If
+you want to enforce VMA rule for RDMA it is an RDMA specific discussion
+in which i don't want to be involve, it is not my turf :)
 
+What matter is the back channel API between peer-to-peer device. Like
+the above patchset points out for GPU we need to be able to invalidate
+a mapping at any point in time. Pining is not something we want to
+live with.
+
+So the VMA consideration does not change what i was saying there is
+2 cases:
+  1) device vma (might be restricted to specific userspace API)
+  2) regular vma (!VM_MIXED and no special pte entry)
+
+For 1) you need back channel it can be per device driver or we can agree
+to some common API that can add to vm_operations_struct.
+
+For 2) expectation is that you will have valid struct page but you still
+need special handling at the dma API level.
+
+In 1) the peer-to-peer mapping is track at vma level and mediated there.
+For 2) it is per page and it is mediated at that level.
+
+In both case on you have setup mapping you need to handle the IOMMU and
+the PCI bridge restriction that might apply and i believe that the DMA
+API is the place where we want to solve that second side of the problem.
+
+Cheers,
+Jérôme
