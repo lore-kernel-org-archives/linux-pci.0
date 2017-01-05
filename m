@@ -1,55 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f171.google.com ([209.85.161.171]:35486 "EHLO
-        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933522AbdABShU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jan 2017 13:37:20 -0500
-Received: by mail-yw0-f171.google.com with SMTP id v81so170765456ywb.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jan 2017 10:37:20 -0800 (PST)
+Return-Path: <SRS0=1CtO=YT=redhat.com=pjones@kernel.org>
+Return-Path: <SRS0=1CtO=YT=redhat.com=pjones@kernel.org>
+Date: Thu, 5 Jan 2017 13:13:23 -0500
+From: Peter Jones <pjones@redhat.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: David Airlie <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <20170104210954.GA11946@al>
+ <59349185.1aqio7kYFn@aspire.rjw.lan>
+ <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+ <20170105150646.GB21446@wunner.de>
 MIME-Version: 1.0
-From: Chris Murphy <lists@colorremedies.com>
-Date: Mon, 2 Jan 2017 11:37:19 -0700
-Message-ID: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
-Subject: Thunderbolt adapter fails to instantiate USB and device enumeration
- if already connected at boot time
-To: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170105150646.GB21446@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-crossposting linux-usb@ and linux-pci@
+On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner wrote:
+> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
+> > > On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
+> > > > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
+> > > > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+> > > > > > I don't *want* to apply the revert.  It's on my for-linus branch as a
+> > > > > > worst-case scenario change if we can't figure out a better fix.
+> > > > > > 
+> > > > > > The patch below is preferable, but I'd rather not take even it,
+> > > > > > because it takes away functionality and forces people to use a boot
+> > > > > > parameter to restore it.  I expect that somebody will figure out how
+> > > > > > to fix the regression Kilian found and also keep the new functionality
+> > > > > > (without requiring boot parameters) before v4.10.
+> > > > > 
+> > > > > The issue is constrained to hybrid graphics laptops with Nvidia discrete
+> > > > > GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+> > > > > PCI core.
+> > > > 
+> > > > The problem is not necessarily in the nouveau driver, the same problem
+> > > > occurs when you enable RPM without loading nouveau. The issue is limited
+> > > > though to some newer hybrid graphics laptops with Nvidia GPUs. While a
+> > > > quirk can be added to nouveau, I think that a (temporary) quirk in core
+> > > > would also be reasonable (since it also occurs without nouveau).
+> > > > 
+> > > > > (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+> > > > > when and how to call an ACPI method versus using PR3.)
+> > > > > 
+> > > > > (Neither are laptops using the Nvidia proprietary driver as it doesn't
+> > > > > runtime suspend the card.  But battery life will be terrible then.)
+> > > > > 
+> > > > > We're at rc2 so the time frame for coming up with a fix is probably
+> > > > > 4 weeks.  Peter and others have tried for months to reverse-engineer
+> > > > > how to handle runtime PM on newer Nvidia cards.  It seems likely that
+> > > > > we'll not find the ultimate solution to the problem within 4 weeks.
+> > > > 
+> > > > Yep, a quick proper fix seems unlikely.
+> > > > [ Help/ideas are welcome, I suspect that these failures to restore power
+> > > > on laptops designed for Win8+ all have the same cause, related to some
+> > > > unknown interaction between ACPI and PCI. Some links:
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
+> > > > 
+> > > > > The way it is now, i.e. defaulting to PR3 when available, regresses
+> > > > > certain laptops such as Kilian's.  If on the other hand we default to
+> > > > > DSM when available, we'll regress certain other laptops, as Peter has
+> > > > > pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+> > > > > approach either, ideally we'd want to use PR3 as Windows does.
+> > > > > 
+> > > > > As said, the only short-term solution I see is to add an "optimus"
+> > > > > module_param to nouveau to allow users to select which method to use.
+> > > > > So in Kilian's case an additional command line parameter would be
+> > > > > necessary to fix the issue.
+> > > > > 
+> > > > > Does anyone see a better solution or can we agree on this one?  If so
+> > > > > I can come up with a patch.  This could go in via Dave Airlie's tree.
+> > > > 
+> > > > As pcie_port_pm=off already reverts to DSM, I do not think that an
+> > > > additional (temporary) nouveau module parameter is going to help. I
+> > > > instead propose a (hopefully temporary) quirk in pci core that disables
+> > > > D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
+> > > > pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
+> > > > to test possible solutions in the future.
+> > > 
+> > > I would rather add a quirk to the ACPI core to prevent the power resources in
+> > > question from being enumerated.  Or even to prevent ACPI PM from being
+> > > used for the port in question.
+> > 
+> > I do have a W541 in a cupboard in the office somewhere, but I won't be close to
+> > it for a couple of weeks. The W541 was the first place I tested the pm patches
+> > so I'm kinda wondering whether it's all W541's or just some specific model/bios
+> > combo.
 
-I filed a bug https://bugzilla.kernel.org/show_bug.cgi?id=191681 but
-was told I need to post to the list first. I'm not actually sure this
-is a USB bug, as filed in the bug report, because I think this
-USB-C/Thunderbolt port is really a PCIe port that needs to become a
-USB port only once the adapter is connected.
+They seem to all ship with the 1.10 firmware, and 2.80 is current (there
+are a bunch of intermediate 2.xx versions).  Somewhere along the line
+they introduced some bugs in the UEFI stuff, so it wouldn't be
+surprising if there's bugs introduced elsewhere as well.
 
-Anyway, the gist of the problem is that if the USB-C to USB 3 adapter
-is connected at boot time, the kernel doesn't instantiate a USB port
-at all. So if for example I have a USB flash drive connected to the
-adapter with a Linux live OS on it, the firmware sees the stick, finds
-the bootloader, the bootloader finds and loads the kernel and
-initramfs - so clearly up to this point it's working properly. But
-then I end up at a dracut shell because there's not root fs to be
-found. And there's no rootfs because there's no USB bus at all as far
-as the kernel is concerned.
+> > However I'm pretty much unavailable to do anything much until late Jan on this.
+> 
+> Is there anyone else at Red Hat who might be able to look into this?
+> 
+> ISTR that Hans de Goede is working on improving laptop support in Fedora,
+> and Peter Jones recently got a patch merged for the W541 with the exact
+> same firmware Kilian is using to work around a botched EFI memory map.
+> Adding them to cc: in the hope that they may be able to help.
+> 
+> @Peter, have you noticed issues with the discrete Nvidia GPU on your W541
+> related to runtime suspend and system sleep?
 
-If the adapter is not connected at boot time, is connected later on,
-it all works as I'd expect it to work. I can plug it in, unplug it,
-plug it back in, and it always works fine. So weirdly it's just a "if
-connected at boot time" something is becoming deeply confused.
+I was using a borrowed one (I can certainly find it again, but I'm not
+working on graphics/pm really), but yeah - shutdown and lspci both broke
+sometime after pci_pm_runtime_resume().  Here's the traceback from
+SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
 
-I've tested 4.10-rc1 from kernel.org; but it's been a problem since
-kernel 4.7.7 at least. The bug report has lspci, dmidecode, and two
-dmesg outputs from boots with the adapter connected at boot time, and
-not at boot time (but connected later). That bug report is 4.10-rc1
-based with CONFIG_PCIEASPM_DEBUG=y
-CONFIG_PCI_DEBUG=y but I'm not really seeing much additional
-information that helps figure out what the source of the problem is.
-
-
-Thanks,
-
+Dave, if you know who in Westford should have a look at this, I can see
+about getting them hardware.  I am more or less surrounded by that team.
 
 -- 
-Chris Murphy
+        Peter
