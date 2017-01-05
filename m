@@ -1,116 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25301 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968092AbdAIO7L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 09:59:11 -0500
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Dan Streetman <dan.streetman@canonical.com>
-References: <20170105192856.25559-1-dan.streetman@canonical.com>
- <20170107010651.GV16608@char.us.oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <42d912c2-596e-29f6-8385-dc82a891895c@oracle.com>
-Date: Mon, 9 Jan 2017 09:59:14 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 5 Jan 2017 15:19:36 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170105201935.GC2166@redhat.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <20170107010651.GV16608@char.us.oracle.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170105200719.GB31047@obsidianresearch.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/06/2017 08:06 PM, Konrad Rzeszutek Wilk wrote:
-> On Thu, Jan 05, 2017 at 02:28:56PM -0500, Dan Streetman wrote:
->> Do not read a pci device's msi message data to see if a pirq was
->> previously configured for the device's msi/msix, as the old pirq was
->> unmapped and may now be in use by another pci device.  The previous
->> pirq should never be re-used; instead a new pirq should always be
->> allocated from the hypervisor.
-> Won't this cause a starvation problem? That is we will run out of PIRQs
-> as we are not reusing them?
+On Thu, Jan 05, 2017 at 01:07:19PM -0700, Jason Gunthorpe wrote:
+> On Thu, Jan 05, 2017 at 02:54:24PM -0500, Jerome Glisse wrote:
+> 
+> > Mellanox and NVidia support peer to peer with what they market a
+> > GPUDirect. It only works without IOMMU. It is probably not upstream :
+> > 
+> > https://www.mail-archive.com/linux-rdma@vger.kernel.org/msg21402.html
+> > 
+> > I thought it was but it seems it require an out of tree driver to work.
+> 
+> Right, it is out of tree and not under consideration for mainline.
+> 
+> > Wether there is a vma or not isn't important to the issue anyway. If
+> > you want to enforce VMA rule for RDMA it is an RDMA specific discussion
+> > in which i don't want to be involve, it is not my turf :)
+> 
+> Always having a VMA changes the discussion - the question is how to
+> create a VMA that reprensents IO device memory, and how do DMA
+> consumers extract the correct information from that VMA to pass to the
+> kernel DMA API so it can setup peer-peer DMA.
 
-Don't we free the pirq when we unmap it?
+Well my point is that it can't be. In HMM case inside a single VMA you
+can have one page inside GPU memory at address A but next page inside
+regular memory at A+4k. So handling this at the VMA level does not make
+sense. So in this case you would get the device from the struct page
+and you would query through common API to determine if you can do peer
+to peer. If not it would trigger migration back to regular memory.
+If yes then you still have to solve the IOMMU issue and hence the DMA
+API changes that were propose.
 
--boris
+In the GPUDirect case the idea is that you have a specific device vma
+that you map for peer to peer. Here thing can be at vma level and not at
+a page level. Expectation here is that the GPU userspace expose a special
+API to allow RDMA to directly happen on GPU object allocated through
+GPU specific API (ie it is not regular memory and it is not accessible
+by CPU).
 
->> The xen_hvm_setup_msi_irqs() function currently checks the pci device's
->> msi descriptor message data for each msi/msix vector it sets up, and if
->> it finds the vector was previously configured with a pirq, and that pirq
->> is mapped to an irq, it re-uses the pirq instead of requesting a new pirq
->> from the hypervisor.  However, that pirq was unmapped when the pci device
->> disabled its msi/msix, and it cannot be re-used; it may have been given
->> to a different pci device.
-> Hm, but this implies that we do keep track of it.
->
->
-> while (true)
-> do
->  rmmod nvme
->  modprobe nvme
-> done
->
-> Things go boom without this patch. But with this patch does this
-> still work? As in we don't run out of PIRQs?
->
-> Thanks.
->> This exact situation is happening in a Xen guest where multiple NVMe
->> controllers (pci devices) are present.  The NVMe driver configures each
->> pci device's msi/msix twice; first to configure a single vector (to
->> talk to the controller for its configuration info), and then it disables
->> that msi/msix and re-configures with all the msi/msix it needs.  When
->> multiple NVMe controllers are present, this happens concurrently on all
->> of them, and in the time between controller A calling pci_disable_msix()
->> and then calling pci_enable_msix_range(), controller B enables its msix
->> and gets controller A's pirq allocated from the hypervisor.  Then when
->> controller A re-configures its msix, its first vector tries to re-use
->> the same pirq that it had before; but that pirq was allocated to
->> controller B, and thus the Xen event channel for controller A's re-used
->> pirq fails to map its irq to that pirq; the hypervisor already has the
->> pirq mapped elsewhere.
->>
->> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
->> ---
->>  arch/x86/pci/xen.c | 23 +++++++----------------
->>  1 file changed, 7 insertions(+), 16 deletions(-)
->>
->> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
->> index bedfab9..a00a6c0 100644
->> --- a/arch/x86/pci/xen.c
->> +++ b/arch/x86/pci/xen.c
->> @@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  		return 1;
->>  
->>  	for_each_pci_msi_entry(msidesc, dev) {
->> -		__pci_read_msi_msg(msidesc, &msg);
->> -		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
->> -			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
->> -		if (msg.data != XEN_PIRQ_MSI_DATA ||
->> -		    xen_irq_from_pirq(pirq) < 0) {
->> -			pirq = xen_allocate_pirq_msi(dev, msidesc);
->> -			if (pirq < 0) {
->> -				irq = -ENODEV;
->> -				goto error;
->> -			}
->> -			xen_msi_compose_msg(dev, pirq, &msg);
->> -			__pci_write_msi_msg(msidesc, &msg);
->> -			dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
->> -		} else {
->> -			dev_dbg(&dev->dev,
->> -				"xen: msi already bound to pirq=%d\n", pirq);
->> +		pirq = xen_allocate_pirq_msi(dev, msidesc);
->> +		if (pirq < 0) {
->> +			irq = -ENODEV;
->> +			goto error;
->>  		}
->> +		xen_msi_compose_msg(dev, pirq, &msg);
->> +		__pci_write_msi_msg(msidesc, &msg);
->> +		dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
->>  		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
->>  					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
->>  					       (type == PCI_CAP_ID_MSIX) ?
->> -- 
->> 2.9.3
->>
 
+Both case are disjoint. Both case need to solve the IOMMU issue which
+seems to be best solve at the DMA API level.
+
+
+> > What matter is the back channel API between peer-to-peer device. Like
+> > the above patchset points out for GPU we need to be able to invalidate
+> > a mapping at any point in time. Pining is not something we want to
+> > live with.
+> 
+> We have MMU notifiers to handle this today in RDMA. Async RDMA MR
+> Invalidate like you see in the above out of tree patches is totally
+> crazy and shouldn't be in mainline. Use ODP capable RDMA hardware.
+
+Well there is still a large base of hardware that do not have such
+feature and some people would like to be able to keep using those.
+I believe allowing direct access to GPU object that are otherwise
+hidden from regular kernel memory management is still meaningfull.
+
+Cheers,
+Jérôme
