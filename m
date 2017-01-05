@@ -1,42 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:34370 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751641AbdAKJD7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 04:03:59 -0500
-Date: Wed, 11 Jan 2017 10:03:57 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Tom Lendacky <thomas.lendacky@amd.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab@s-opensource.com>,
-        netdev@vger.kernel.org, linux-media@vger.kernel.org
-Subject: Re: [PATCH 2/3] xgbe: switch to pci_irq_alloc_vectors
-Message-ID: <20170111090357.GB7350@lst.de>
-References: <1483994260-19797-1-git-send-email-hch@lst.de> <1483994260-19797-3-git-send-email-hch@lst.de> <11ed330c-84e9-79e9-7945-ca17a497359c@amd.com>
+Return-Path: <SRS0=HwEz=YT=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=HwEz=YT=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Thu, 05 Jan 2017 15:23:26 +0100
+Message-ID: <6977375.R7lptGkx4O@aspire.rjw.lan>
+In-Reply-To: <20170105142029.GF3353@lahna.fi.intel.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170105104940.GA3353@lahna.fi.intel.com> <20170105142029.GF3353@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11ed330c-84e9-79e9-7945-ca17a497359c@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 10, 2017 at 12:40:10PM -0600, Tom Lendacky wrote:
-> On 1/9/2017 2:37 PM, Christoph Hellwig wrote:
-> > The newly added xgbe drivers uses the deprecated pci_enable_msi_exact
-> > and pci_enable_msix_range interfaces.  Switch it to use
-> > pci_irq_alloc_vectors instead.
+On Thursday, January 05, 2017 04:20:29 PM Mika Westerberg wrote:
+> On Thu, Jan 05, 2017 at 12:49:40PM +0200, Mika Westerberg wrote:
+> > On Wed, Jan 04, 2017 at 10:58:10PM +0100, Rafael J. Wysocki wrote:
+> > > I would rather add a quirk to the ACPI core to prevent the power resources in
+> > > question from being enumerated.  Or even to prevent ACPI PM from being
+> > > used for the port in question.
+> > 
+> > If we are going to add a quirk, I agree that it should be put to the
+> > ACPI core.
+> > 
+> > However, Windows seems to be able to use _PR3 just fine. So there is
+> > something that we are missing or do not implement properly which causes
+> > all the troubles. IMHO we should try to find out what that difference is
+> > and fix that if possible.
 > 
-> I was just working on switching over to this API with some additional
-> changes / simplification.  I'm ok with using this patch so that you get
-> the API removal accomplished.  Going through the PCI tree just means
-> it will probably be easier for me to hold off on the additional changes
-> I wanted to make until later.
+> Here is one idea. The _OSC method is used as a handshake between OS and
+> the BIOS to enable/disable certain features. One of those features is
+> _PR3 support (ACPI specification 6.1 p.328):
+> 
+>   This bit is set if OSPM supports reading _PR3and using power
+>   resources to switch power. Note this handshake translates to an
+>   operating model that the platform and OSPM supports both the power
+>   model containing both D3hot and D3.
 
-Hi Tom,
+Ah, good catch!
 
-if you have a better patch I'd be more than happy to use that one instead,
-this one was intended as a stupid search and replace.  The important
-part for me is to get the two conversions and the interface removal
-in together.
+I forgot about this one and we definitely should do this handshake.
 
-E.g. I've alreayd wondered why the driver requires the exact vector
-number for MSI and a variable one for MSI-X, and there certainly is
-all kinds of opportunity for cosmetic cleanup.
+> Some of our development platforms has BIOS option "RTD3 enable" which
+> is used to enable/disable this flag (among other things). The BIOS
+> should return acked caps when _OSC returns but we never check those in
+> Linux.
+> 
+> Kilian, can you try the below patch and send back dmesg when the system
+> has been booted? It should show if the BIOS acks _PR3 or not.
+> 
+> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> index 95855cb9d6fb..463eb2d69271 100644
+> --- a/drivers/acpi/bus.c
+> +++ b/drivers/acpi/bus.c
+> @@ -345,8 +345,15 @@ static void acpi_bus_osc_support(void)
+>  		capbuf[OSC_SUPPORT_DWORD] |= OSC_SB_APEI_SUPPORT;
+>  	if (ACPI_FAILURE(acpi_get_handle(NULL, "\\_SB", &handle)))
+>  		return;
+> +
+> +	acpi_handle_info(handle, "Supported caps: 0x%08x\n", capbuf[1]);
+> +
+>  	if (ACPI_SUCCESS(acpi_run_osc(handle, &context))) {
+>  		u32 *capbuf_ret = context.ret.pointer;
+> +
+> +		acpi_handle_info(handle, "Acked caps: 0x%08x (_PR3: %s)\n", capbuf_ret[1],
+> +				 capbuf_ret[1] & OSC_SB_PR3_SUPPORT ? "on" : "off");
+> +
+>  		if (context.ret.length > OSC_SUPPORT_DWORD) {
+>  			osc_sb_apei_support_acked =
+>  				capbuf_ret[OSC_SUPPORT_DWORD] & OSC_SB_APEI_SUPPORT;
+> --
+
+Thanks,
+Rafael
