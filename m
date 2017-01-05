@@ -1,130 +1,111 @@
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Tue, 3 Jan 2017 18:37:35 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Message-ID: <1845011148.21.1483465055644.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20170103151547.GB9763@al>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170102121019.GA3353@lahna.fi.intel.com> <20170102144852.GE3353@lahna.fi.intel.com> <1731082.izJCnRoq0n@aspire.rjw.lan> <20170103095158.GH3353@lahna.fi.intel.com> <20170103151547.GB9763@al>
+Return-Path: <SRS0=B/Xn=YT=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=B/Xn=YT=wunner.de=lukas@kernel.org>
+Date: Thu, 5 Jan 2017 16:06:46 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: David Airlie <airlied@redhat.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Peter Jones <pjones@redhat.com>
 Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170105150646.GB21446@wunner.de>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <20170104210954.GA11946@al>
+ <59349185.1aqio7kYFn@aspire.rjw.lan>
+ <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Iapplied the patch to noveau_acpi.c with the additional
-pci_d3cold_disable(pdev);
-right after 
-//		*has_pr3 = nouveau_pr3_present(pdev);
-and both firefox and screen lock issue are resolved.
-
-
-
------ Original Message -----
-From: "Peter Wu" <peter@lekensteyn.nl>
-To: "Mika Westerberg" <mika.westerberg@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, "Lukas Wunner" <lukas@wunner.de>, "Kilian Singer" <kilian.singer@quantumtechnology.info>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>
-Sent: Tuesday, January 3, 2017 4:15:47 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-
-(replying to earlier comments in the thread:)
-
-Changing (lowering?) the cut-off date would not help as the laptop has
-DMI year 2016. (For the long-term, it would probably be desirable to
-lower the date or otherwise add detection of _PR3, see
-https://bugs.freedesktop.org/show_bug.cgi?id=98505#c23).
-
-Reverting the patch is not a good idea either, it would reintroduce the
-memory corruption that have plagued some Lenovo models
-(https://bugs.freedesktop.org/show_bug.cgi?id=78530).
-
-On Tue, Jan 03, 2017 at 11:51:58AM +0200, Mika Westerberg wrote:
-> On Mon, Jan 02, 2017 at 10:31:07PM +0100, Rafael J. Wysocki wrote:
-> > On Monday, January 02, 2017 04:48:52 PM Mika Westerberg wrote:
-> > > On Mon, Jan 02, 2017 at 02:10:19PM +0200, Mika Westerberg wrote:
-> > > > I've checked the acpidump of this machine and it does not seem to be a
-> > > > traditional Optimus machine. At least this one is missing the magic _DSM
-> > > > which is used to gather capabilities of the graphics device.
+On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
+> > On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
+> > > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
+> > > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+> > > > > I don't *want* to apply the revert.  It's on my for-linus branch as a
+> > > > > worst-case scenario change if we can't figure out a better fix.
+> > > > > 
+> > > > > The patch below is preferable, but I'd rather not take even it,
+> > > > > because it takes away functionality and forces people to use a boot
+> > > > > parameter to restore it.  I expect that somebody will figure out how
+> > > > > to fix the regression Kilian found and also keep the new functionality
+> > > > > (without requiring boot parameters) before v4.10.
 > > > > 
-> > > > However, it does have _PR3 and it is attached to the device
-> > > > (_SB.PCI0.PEG) itself, not the root port.
+> > > > The issue is constrained to hybrid graphics laptops with Nvidia discrete
+> > > > GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+> > > > PCI core.
 > > > 
-> > > Nah, actually PEG is the root port. So it certainly looks like
-> > > a traditional Optimus machine.
+> > > The problem is not necessarily in the nouveau driver, the same problem
+> > > occurs when you enable RPM without loading nouveau. The issue is limited
+> > > though to some newer hybrid graphics laptops with Nvidia GPUs. While a
+> > > quirk can be added to nouveau, I think that a (temporary) quirk in core
+> > > would also be reasonable (since it also occurs without nouveau).
+> > > 
+> > > > (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+> > > > when and how to call an ACPI method versus using PR3.)
+> > > > 
+> > > > (Neither are laptops using the Nvidia proprietary driver as it doesn't
+> > > > runtime suspend the card.  But battery life will be terrible then.)
+> > > > 
+> > > > We're at rc2 so the time frame for coming up with a fix is probably
+> > > > 4 weeks.  Peter and others have tried for months to reverse-engineer
+> > > > how to handle runtime PM on newer Nvidia cards.  It seems likely that
+> > > > we'll not find the ultimate solution to the problem within 4 weeks.
+> > > 
+> > > Yep, a quick proper fix seems unlikely.
+> > > [ Help/ideas are welcome, I suspect that these failures to restore power
+> > > on laptops designed for Win8+ all have the same cause, related to some
+> > > unknown interaction between ACPI and PCI. Some links:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
+> > > 
+> > > > The way it is now, i.e. defaulting to PR3 when available, regresses
+> > > > certain laptops such as Kilian's.  If on the other hand we default to
+> > > > DSM when available, we'll regress certain other laptops, as Peter has
+> > > > pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+> > > > approach either, ideally we'd want to use PR3 as Windows does.
+> > > > 
+> > > > As said, the only short-term solution I see is to add an "optimus"
+> > > > module_param to nouveau to allow users to select which method to use.
+> > > > So in Kilian's case an additional command line parameter would be
+> > > > necessary to fix the issue.
+> > > > 
+> > > > Does anyone see a better solution or can we agree on this one?  If so
+> > > > I can come up with a patch.  This could go in via Dave Airlie's tree.
+> > > 
+> > > As pcie_port_pm=off already reverts to DSM, I do not think that an
+> > > additional (temporary) nouveau module parameter is going to help. I
+> > > instead propose a (hopefully temporary) quirk in pci core that disables
+> > > D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
+> > > pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
+> > > to test possible solutions in the future.
 > > 
-> > So can we quirk that thing somehow and see if that helps (for debugging
-> > purposes at least)?
+> > I would rather add a quirk to the ACPI core to prevent the power resources in
+> > question from being enumerated.  Or even to prevent ACPI PM from being
+> > used for the port in question.
 > 
-> I was kind of hoping disabling D3cold would do that (prevent it from
-> turning off power resources). But we can also just force it to use _DSM
-> instead and see if it makes a difference.
-
-Disabling d3cold that way might be too late due to the short RPM suspend
-delay. You would need a udev rule to activate this ASAP. E.g., create
-/etc/udev/rules.d/42-nvidia-rpm.rules with:
-
-    SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", ATTR{power/d3cold_allowed}="0"
-
-This disables D3cold on the child device (which should also prevent the
-parent PCIe port from using D3cold).
-
-Alternatively, can you try to boot with nouveau.runpm=0 and see if it
-makes any difference? When runpm is disabled, then the PCIe port and
-Nvidia device should not be suspended and therefore prevent the issue
-from being triggered.
-
-> I guess the reason why keyboard and mouse become unresponsive is because
-> the driver tries to resume the device and hogs the CPU. At least it
-> looks like so from the dmesg in comment 27 (of the bugzilla bug) where
-> NMI watchdog is triggered.
+> I do have a W541 in a cupboard in the office somewhere, but I won't be close to
+> it for a couple of weeks. The W541 was the first place I tested the pm patches
+> so I'm kinda wondering whether it's all W541's or just some specific model/bios
+> combo.
 > 
-> Since this might be related to nouveau, adding Peter Wu to the loop.
-> Peter the bug in question is https://bugzilla.kernel.org/show_bug.cgi?id=190861.
+> However I'm pretty much unavailable to do anything much until late Jan on this.
 
-Kilian, in the bug you had the issue with Firefox. The trace suggests
-that runtime resume was triggered, so you should have this problem too
-when using lspci. Can you try:
+Is there anyone else at Red Hat who might be able to look into this?
 
- 1. Switch to a text console (e.g. Ctrl-Alt-F2).
- 2. sleep 5; lspci
+ISTR that Hans de Goede is working on improving laptop support in Fedora,
+and Peter Jones recently got a patch merged for the W541 with the exact
+same firmware Kilian is using to work around a botched EFI memory map.
+Adding them to cc: in the hope that they may be able to help.
 
-If that command does not return immediately, you likely have triggered
-the same issue.
+@Peter, have you noticed issues with the discrete Nvidia GPU on your W541
+related to runtime suspend and system sleep?
 
-The acpidump from the bug does not show known issues, it *looks* fine.
-There have been other issues related to resuming power on newer Nvidia
-hardware (https://bugs.freedesktop.org/show_bug.cgi?id=94725,
-https://bugzilla.kernel.org/show_bug.cgi?id=156341) but there is not
-much progress here.  (The last time I traced the PCIe register accesses
-(via kprobes) and tried to disable some of those, it still did not help
-with preventing the power issue.)
+Thanks,
 
-> Kilian, can you try the following hack as well?
-> 
-> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> index 193573d191e5..50482d5c8072 100644
-> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> @@ -282,7 +282,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
->  			 (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
->  			 (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
->  
-> -		*has_pr3 = nouveau_pr3_present(pdev);
-> +//		*has_pr3 = nouveau_pr3_present(pdev);
->  	}
->  }
->  
-
-This would not disable D3cold support and as a result both PR3 and DSM
-would be active. Try the above with this line added to force DSM:
-
-    pci_d3cold_disable(pdev);
-
-(This should have the same effect as setting d3cold_allowed=0.)
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+Lukas
