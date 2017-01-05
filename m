@@ -1,54 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35921 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1763438AbdAETBV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Jan 2017 14:01:21 -0500
-Date: Thu, 5 Jan 2017 12:01:13 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jerome Glisse <j.glisse@gmail.com>
-Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
-        david1.zhou@amd.com, qiang.yu@amd.com
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20170105190113.GA12587@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
+Return-Path: <SRS0=oWCb=YT=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=oWCb=YT=arm.com=marc.zyngier@kernel.org>
+Subject: Re: Need information on handling legacy interrupts
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198263B5640@XAP-PVEXMBX02.xlnx.xilinx.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <53d55835-3e6a-7846-6af0-ccec502f5776@arm.com>
+Date: Thu, 5 Jan 2017 15:01:27 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170105183927.GA5324@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198263B5640@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 01:39:29PM -0500, Jerome Glisse wrote:
+On 05/01/17 14:40, Bharat Kumar Gogada wrote:
+> Hi,
+> 
+> In pcie-xilinx-nwl.c, the bridge has legacy status read only register where the status bit is set when
+> Assert_INTx is received and cleared only when Deassert_INTx is received.
+> The above scenario is causing issue if an EP takes more time to send Deassert_Intx (we are mainly seeing issue
+> with wifi cards, when we do wifi scan and not with other cards, where we tested Ethernet/nvme).
+> Here is code in driver:
+> 
+> chained_irq_enter(chip, desc);
+>         pcie = irq_desc_get_handler_data(desc);
+> 
+>         while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+>                                 MSGF_LEG_SR_MASKALL) != 0) {
+>                 for_each_set_bit(bit, &status, INTX_NUM) {
+>                         virq = irq_find_mapping(pcie->legacy_irq_domain,
+>                                                 bit + 1);
+>                         if (virq)
+>                                 generic_handle_irq(virq);
+>                 }
+>         }
+> chained_irq_exit(chip, desc);
+> 
+> So the RP driver will continuously loop in the while as there is delay in EP Deassert_Intx, this is leading to CPU stall.
+> so we tried changing from "while" to "if", to avoid looping in while,  but since legacy IRQ line is
+> high (level sensitive GIC again sees as new interrupt)  the RP handler is called continuously again not
+> giving cpu share to execute other tasks leading to CPU stall.
+> 
+> In case of pcie-xilinx.c where the the bridge is different, when IDR register is cleared at the end of interrupt handler, the
+> irq line between RP and GIC goes low. In this scenario the same wifi cards works fine.
 
->   1) peer-to-peer because of userspace specific API like NVidia GPU
->     direct (AMD is pushing its own similar API i just can't remember
->     marketing name). This does not happen through a vma, this happens
->     through specific device driver call going through device specific
->     ioctl on both side (GPU and RDMA). So both kernel driver are aware
->     of each others.
+But isn't that a bug of its own? If you allow the cascade interrupt to
+clear even if the EP is still asserting its interrupt, you may miss
+other EP interrupts if it ORs multiple interrupt reasons to a single
+INTx line.
 
-Today you can only do user-initiated RDMA operations in conjection
-with a VMA.
+> 
+> In other drivers (altera, keystone) I see that they have a register where they acknowledge the bridge after
+> they receive legacy interrupt, but not sure whether it makes irq line low.
+> 
+> So which is the better way to handle legacy interrupts, whether to wait for deassert or whether to
+> acknowledge bridge after receiving interrupt irrespective of Deassert and make irq line low?
 
-We'd need a really big and strong reason to create an entirely new
-non-VMA based memory handle scheme for RDMA.
+I don't think there is any foolproof solution. The EP is slow
+de-asserting the interrupt, and there isn't much we can to about it.
 
-So my inclination is to just completely push back on this idea. You
-need a VMA to do RMA.
+> This email and any attachments are intended for the sole use of the
+> named recipient(s) and contain(s) confidential information that may
+> be proprietary, privileged or copyrighted under applicable law. If
+> you are not the intended recipient, do not read, copy, or forward
+> this email message or any attachments. Delete this email message and
+> any attachments immediately.
 
-GPUs need to create VMAs for the memory they want to RDMA from, even
-if the VMA handle just causes SIGBUS for any CPU access.
+Please fix this footer. By the letter of this, I'm already violating all
+kinds of law...
 
-Jason
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
