@@ -1,91 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:12376 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751053AbdAIQmA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 11:42:00 -0500
-Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
- keystone PCIe h/w
-To: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <5873BD56.4040100@ti.com>
-Date: Mon, 9 Jan 2017 11:41:58 -0500
+Return-Path: <SRS0=GKof=YT=xilinx.com=bharatku@kernel.org>
+Return-Path: <SRS0=GKof=YT=xilinx.com=bharatku@kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>
+Subject: Need information on handling legacy interrupts
+Date: Thu, 5 Jan 2017 14:40:12 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263B5640@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/04/2017 02:32 PM, Murali Karicheri wrote:
-> Recent fixes for iATU unroll support introduced a bug that causes
-> asynchronous external abort in Keystone PCIe h/w which doesn't have
-> ATU port and the corresponding register. So the check should be moved
-> below where dw_pcie_prog_outbound_atu() is called to avoid that
-> being called on keystine PCIe h/w.
-> 
-> Here is the backtrace
-> 
-> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
-> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
-> [    0.785548] pgd = c0003000
-> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
-> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
-> [    0.799197] Modules linked in:
-> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
-> [    0.810130] Hardware name: Keystone
-> [    0.813717] task: eb878000 task.stack: eb866000
-> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
-> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
-> 
-> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  - Applies to pci/master
->  - Bug was introduced in v4.9
->  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
-> 
->  drivers/pci/host/pcie-designware.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index bed1999..af8f6e9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
->  
-> -	/* get iATU unroll support */
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
-> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> -
->  	/* set the number of lanes */
->  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->  	val &= ~PORT_LINK_MODE_MASK;
-> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	 * we should not program the ATU here.
->  	 */
->  	if (!pp->ops->rd_other_conf) {
-> +		/* get iATU unroll support */
-> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
-> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> +
->  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->  					  pp->mem_bus_addr, pp->mem_size);
-> 
-Bjorn,
+Hi,
 
-A Gentle ping to merge this important fix to v4.10-rc kernel for Keystone PCI as
-it is broken since v4.9.
+In pcie-xilinx-nwl.c, the bridge has legacy status read only register where=
+ the status bit is set when
+Assert_INTx is received and cleared only when Deassert_INTx is received.
+The above scenario is causing issue if an EP takes more time to send Deasse=
+rt_Intx (we are mainly seeing issue
+with wifi cards, when we do wifi scan and not with other cards, where we te=
+sted Ethernet/nvme).
+Here is code in driver:
 
-Thanks
+chained_irq_enter(chip, desc);
+        pcie =3D irq_desc_get_handler_data(desc);
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+        while ((status =3D nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+                                MSGF_LEG_SR_MASKALL) !=3D 0) {
+                for_each_set_bit(bit, &status, INTX_NUM) {
+                        virq =3D irq_find_mapping(pcie->legacy_irq_domain,
+                                                bit + 1);
+                        if (virq)
+                                generic_handle_irq(virq);
+                }
+        }
+chained_irq_exit(chip, desc);
+
+So the RP driver will continuously loop in the while as there is delay in E=
+P Deassert_Intx, this is leading to CPU stall.
+so we tried changing from "while" to "if", to avoid looping in while,  but =
+since legacy IRQ line is
+high (level sensitive GIC again sees as new interrupt)  the RP handler is c=
+alled continuously again not
+giving cpu share to execute other tasks leading to CPU stall.
+
+In case of pcie-xilinx.c where the the bridge is different, when IDR regist=
+er is cleared at the end of interrupt handler, the
+irq line between RP and GIC goes low. In this scenario the same wifi cards =
+works fine.
+
+In other drivers (altera, keystone) I see that they have a register where t=
+hey acknowledge the bridge after
+they receive legacy interrupt, but not sure whether it makes irq line low.
+
+So which is the better way to handle legacy interrupts, whether to wait for=
+ deassert or whether to
+acknowledge bridge after receiving interrupt irrespective of Deassert and m=
+ake irq line low?
+
+Thanks & Regards,
+Bharat
+
+
+
+This email and any attachments are intended for the sole use of the named r=
+ecipient(s) and contain(s) confidential information that may be proprietary=
+, privileged or copyrighted under applicable law. If you are not the intend=
+ed recipient, do not read, copy, or forward this email message or any attac=
+hments. Delete this email message and any attachments immediately.
