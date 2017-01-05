@@ -1,78 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52130 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750929AbdAQTKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jan 2017 14:10:24 -0500
-Date: Tue, 17 Jan 2017 13:10:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lyude Paul <lyude@redhat.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        David Airlie <airlied@redhat.com>,
-        Peter Jones <pjones@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170117191016.GC11063@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170105181322.wnvdytpgddcdk3ry@redhat.com>
- <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
- <1483974686.28993.3.camel@redhat.com>
- <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
- <1484167244.25614.1.camel@redhat.com>
- <1484183615.25614.3.camel@redhat.com>
- <1484186688.25614.4.camel@redhat.com>
- <20170112021235.GA24156@wunner.de>
- <20170117155551.GL2023@lahna.fi.intel.com>
- <1484676366.3866.1.camel@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1484676366.3866.1.camel@redhat.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:48207 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032408AbdAEGEu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2017 01:04:50 -0500
+Subject: Re: [PATCH V2 1/5] Documetation: samsung-phy: add the exynos-pcie-phy
+ binding
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, cpgs@samsung.com
+From: "pankaj.dubey" <pankaj.dubey@samsung.com>
+Message-id: <d6a81e81-3ac2-5d83-15f3-9de07fb2d421@samsung.com>
+Date: Thu, 05 Jan 2017 11:36:32 +0530
+MIME-version: 1.0
+In-reply-to: <4110cfa2-bbe8-337e-5f2c-13d82cd23713@samsung.com>
+Content-type: text/plain; charset=windows-1252
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1d3d840e4ade396a60ce690b09d486990@epcas1p1.samsung.com>
+ <20170104123435.30740-2-jh80.chung@samsung.com>
+ <4110cfa2-bbe8-337e-5f2c-13d82cd23713@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Daniel]
+Hi,
 
-On Tue, Jan 17, 2017 at 01:06:06PM -0500, Lyude Paul wrote:
-> Did you not get the e-mails I CC'd you in? I did originally send you
-> guys the patches, but I ended up finding out that Daniel Vetter had
-> already submitted a fix for this:
+On Thursday 05 January 2017 09:46 AM, Alim Akhtar wrote:
+> Hi Jaehoon,
 > 
-> https://patchwork.freedesktop.org/patch/132478/
+> On 01/04/2017 06:04 PM, Jaehoon Chung wrote:
+>> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
+>> This is for using generic PHY framework.
+>>
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>> Changelog on V2:
+>> - Remove the child node.
+>> - Add 2nd address to the parent reg prop.
+>>
+>>  Documentation/devicetree/bindings/phy/samsung-phy.txt | 17
+>> +++++++++++++++++
+>>  1 file changed, 17 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> index 9872ba8..ab80bfe 100644
+>> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+>> @@ -191,3 +191,20 @@ Example:
+>>          usbdrdphy0 = &usb3_phy0;
+>>          usbdrdphy1 = &usb3_phy1;
+>>      };
+>> +
+>> +Samsung Exynos SoC series PCIe PHY controller
+>> +--------------------------------------------------
+>> +Required properties:
+>> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
+>> +- #phy-cells : Must be zero
+>> +- reg : a register used by phy driver.
+>> +    - First is for phy register, second is for block register.
+>> +- reg-names : Must be set to "phy" and "block".
+>> +
+> In general PHY uses a "reference clock" to work, if that is true for
+> 5440 also, will you consider adding an (may be) optional clock
+> properties as well?
+> 
 
-Is this related to https://bugzilla.kernel.org/show_bug.cgi?id=190861 ?
+Yes, right, second clock, referred as "bus_clk" in pcie node should
+actually refer to "phy" clock. From Exynos5433 DT patch also you are
+mapping it to CLK_PCLK_PCIE_PHY which is a phy clk. This is same in
+Exynos7 as well. So better we have clocks property defined in pcie-phy
+binding. What do you say?
 
-If so, we need to connect the dots a little bit by mentioning it in the
-changelog, CC'ing this thread on linux-pci, and figuring out how to connect
-the fix with the regression, i.e., stable backports, etc.
+>From Exynos5440 UM, PCIe-Phy needs 250 MHz, clock and second clock used
+as "bus_clk" is providing 250 MHz, so this can be moved in phy driver.
 
-I haven't followed the entire thread, so I apologize if the patch you
-mention is unrelated to this bugzilla.
 
-> On Tue, 2017-01-17 at 17:55 +0200, Mika Westerberg wrote:
-> > On Thu, Jan 12, 2017 at 03:12:35AM +0100, Lukas Wunner wrote:
-> > > On Wed, Jan 11, 2017 at 09:04:48PM -0500, Lyude Paul wrote:
-> > > > Finally got koji to work :). People having the runtime resume
-> > > > problem,
-> > > > can you give this kernel RPM a try and tell me if the issue still
-> > > > persists?
-> > > > 
-> > > > https://koji.fedoraproject.org/koji/taskinfo?taskID=17250338
-> > > 
-> > > Kilian uses Debian but has a git repo with Linus' tree.  Could you
-> > > post
-> > > the relevant patch(es) based on either the tip of Linus' master
-> > > branch
-> > > or one of his tags (such as v4.9, v4.10-rc3)?  This would also
-> > > allow us
-> > > to review/comment on the patches.
-> > 
-> > Hi Lyude,
-> > 
-> > Just a reminder. Can you post the patch(es) here so that people can
-> > try
-> > them out and comment?
+Thanks,
+Pankaj Dubey
