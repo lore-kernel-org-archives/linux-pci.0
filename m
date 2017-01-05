@@ -1,53 +1,90 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 28 Jan 2017 15:06:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V7 09/11] arm64: dma-mapping: Remove the notifier trick
- to handle early setting of dma_ops
-Message-ID: <20170128210611.GF20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-10-git-send-email-sricharan@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:56621 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S939055AbdAEWpB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Jan 2017 17:45:01 -0500
+Date: Thu, 5 Jan 2017 15:42:15 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170105224215.GA3855@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1485188293-20263-10-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org, joro@8bytes.org,
- will.deacon@arm.com, linux-acpi@vger.kernel.org,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- bhelgaas@google.com, robin.murphy@arm.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170105201935.GC2166@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2017 at 09:48:11PM +0530, Sricharan R wrote:
-> With arch_setup_dma_ops now being called late during device's probe after
-> the device's iommu is probed, the notifier trick required to handle the
-> early setup of dma_ops before the iommu group gets created is not
-> required. So removing the notifier's here.
+On Thu, Jan 05, 2017 at 03:19:36PM -0500, Jerome Glisse wrote:
 
-s/notifier's/notifiers/
+> > Always having a VMA changes the discussion - the question is how to
+> > create a VMA that reprensents IO device memory, and how do DMA
+> > consumers extract the correct information from that VMA to pass to the
+> > kernel DMA API so it can setup peer-peer DMA.
+> 
+> Well my point is that it can't be. In HMM case inside a single VMA
+> you
+[..]
 
-Personally I'd capitalize "IOMMU" in the English text above, too.
+> In the GPUDirect case the idea is that you have a specific device vma
+> that you map for peer to peer.
 
-> Acked-by: Will Deacon <will.deacon@arm.com>
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> [rm: clean up even more]
-> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-> ---
->  arch/arm64/mm/dma-mapping.c | 132 ++++----------------------------------------
->  1 file changed, 12 insertions(+), 120 deletions(-)
+[..]
 
-Nice :)
+I still don't understand what you driving at - you've said in both
+cases a user VMA exists.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>From my perspective in RDMA, all I want is a core kernel flow to
+convert a '__user *' into a scatter list of DMA addresses, that works no
+matter what is backing that VMA, be it HMM, a 'hidden' GPU object, or
+struct page memory.
+
+A '__user *' pointer is the only way to setup a RDMA MR, and I see no
+reason to have another API at this time.
+
+The details of how to translate to a scatter list are a MM subject,
+and the MM folks need to get 
+
+I just don't care if that routine works at a page level, or a whole
+VMA level, or some combination of both, that is up to the MM team to
+figure out :)
+
+> a page level. Expectation here is that the GPU userspace expose a special
+> API to allow RDMA to directly happen on GPU object allocated through
+> GPU specific API (ie it is not regular memory and it is not accessible
+> by CPU).
+
+So, how do you identify these GPU objects? How do you expect RDMA
+convert them to scatter lists? How will ODP work?
+
+> > We have MMU notifiers to handle this today in RDMA. Async RDMA MR
+> > Invalidate like you see in the above out of tree patches is totally
+> > crazy and shouldn't be in mainline. Use ODP capable RDMA hardware.
+> 
+> Well there is still a large base of hardware that do not have such
+> feature and some people would like to be able to keep using those.
+
+Hopefully someone will figure out how to do that without the crazy
+async MR invalidation.
+
+Jason
