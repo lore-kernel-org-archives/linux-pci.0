@@ -1,46 +1,61 @@
-Return-Path: <SRS0=xM39=YZ=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=xM39=YZ=quantumtechnology.info=kilian.singer@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: Peter Jones <pjones@redhat.com>, Hans de Goede <hdegoede@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
- <bd9af400-6b8e-d852-8cf0-b437dffc507c@redhat.com>
- <ad5be7b2-a931-5db3-fafb-7784d9c5c1ea@quantumtechnology.info>
- <ad6e8189-eef6-4f18-7d22-f0fc9a665ec6@redhat.com>
- <20170111162453.zavhr2m3olufckio@redhat.com>
-Cc: Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-Message-ID: <b70d41f6-71ac-f3b5-dda4-2486f6610953@quantumtechnology.info>
-Date: Wed, 11 Jan 2017 20:20:53 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170111162453.zavhr2m3olufckio@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:48965 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967700AbdAECWd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 21:22:33 -0500
+Subject: Re: [PATCH V2 2/5] phy: phy-exynos-pcie: Add support for Exynos PCIe
+ phy
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kgene@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <666cecb2-0b38-51ba-be5c-086a709c6e48@samsung.com>
+Date: Thu, 05 Jan 2017 11:22:17 +0900
+MIME-version: 1.0
+In-reply-to: <20170104175257.yte3ntw6nyvh47xt@kozik-lap>
+Content-type: text/plain; charset=utf-8
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1a729583c3c2307d8539a186f1050ea98@epcas1p1.samsung.com>
+ <20170104123435.30740-3-jh80.chung@samsung.com>
+ <20170104175257.yte3ntw6nyvh47xt@kozik-lap>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I updated ti 2.29 but issue is not resolved.
-
-
-On 11-Jan-17 17:24, Peter Jones wrote:
-> On Wed, Jan 11, 2017 at 02:26:09PM +0100, Hans de Goede wrote:
->> Hi,
+On 01/05/2017 02:52 AM, Krzysztof Kozlowski wrote:
+> On Wed, Jan 04, 2017 at 09:34:32PM +0900, Jaehoon Chung wrote:
+>> This patch supports to use Generic Phy framework for Exynos PCIe phy.
+>> When Exynos that supported the pcie want to use the PCIe,
+>> it needs to control the phy resgister.
+>> But it should be more complex to control in their own PCIe device drivers.
 >>
->> On 11-01-17 14:24, Kilian Singer wrote:
->>> Dear all,
->>>
->>> sounds interesting I could try to update to 2.29.
->>>
->>> Shall I do so?
->> According to the BIOS changelog 2.29 has some
->> fixes for bugs introduces in 2.28, so trying
->> 2.29 is probably a good idea.
-> I'd also be interested in seeing dmesg from that with efi=debug on the
-> kernel command line, if you don't mind.
->
+>> Currently, there is an exynos5440 case to support the pcie.
+>> So this driver is based on Exynos5440 PCIe.
+>> In future, will support the Other exynos SoCs likes exynos5433, exynos7.
+> 
+> I have troubles understanding this. Please, work on the commit message.
+> 
+> For the code itself:
+> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> ... but commit message is really important to understand why/what was
+> done.
+
+Will update the commit-msg. Thanks for comments.
+
+Best Regards,
+Jaehoon Chung
+
+> 
+> Best regards,
+> Krzysztof
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
