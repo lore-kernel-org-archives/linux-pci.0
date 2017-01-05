@@ -1,197 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64819 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753975AbdAFA6P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Jan 2017 19:58:15 -0500
-From: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
- sysfs
-Date: Fri, 6 Jan 2017 00:55:08 +0000
-Message-ID: <87618083B2453E4A8714035B62D679925074474B@FMSMSX105.amr.corp.intel.com>
-References: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
- <20170104004831.17866.11537.stgit@localhost6.localdomain6>
- <20170104021531.GA567@gwshan>
- <87618083B2453E4A8714035B62D67992507430EB@FMSMSX105.amr.corp.intel.com>
- <20170104231139.GA3726@gwshan>
-In-Reply-To: <20170104231139.GA3726@gwshan>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mailout4.samsung.com ([203.254.224.34]:47179 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934316AbdAECb6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 21:31:58 -0500
+Subject: Re: [PATCH V2 4/5] PCI: exynos: support the using PHY generic framework
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kgene@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        alim.akhtar@samsung.com, cpgs@samsung.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <6cb5851e-d9c9-cdaa-22a0-2f3153b02a99@samsung.com>
+Date: Thu, 05 Jan 2017 11:21:44 +0900
+MIME-version: 1.0
+In-reply-to: <20170104175004.bfob5p3esfn2bfai@kozik-lap>
+Content-type: text/plain; charset=utf-8
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1651443c5fe13f67006864aed2f70fa9d@epcas1p1.samsung.com>
+ <20170104123435.30740-5-jh80.chung@samsung.com>
+ <20170104175004.bfob5p3esfn2bfai@kozik-lap>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Gavin Shan [mailto:gwshan@linux.vnet.ibm.com]
->Sent: Wednesday, January 04, 2017 3:12 PM
->To: Tantilov, Emil S <emil.s.tantilov@intel.com>
->Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>; linux-pci@vger.kernel.org;
->intel-wired-lan@lists.osuosl.org; Duyck, Alexander H
-><alexander.h.duyck@intel.com>; netdev@vger.kernel.org; linux-
->kernel@vger.kernel.org
->Subject: Re: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
->sysfs
->
->On Wed, Jan 04, 2017 at 04:00:20PM +0000, Tantilov, Emil S wrote:
->>>On Tue, Jan 03, 2017 at 04:48:31PM -0800, Emil Tantilov wrote:
->>>>Enabling/disabling SRIOV via sysfs by echo-ing multiple values
->>>>simultaneously:
->>>>
->>>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
->>>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs
->>>>
->>>>sleep 5
->>>>
->>>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
->>>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs
->>>>
->>>>Results in the following bug:
->>>>
->>>>kernel BUG at drivers/pci/iov.c:495!
->>>>invalid opcode: 0000 [#1] SMP
->>>>CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
->>>>RIP: 0010:[<ffffffff813b1647>]
->>>>	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>>>
->>>>Call Trace:
->>>> [<ffffffff81391726>] pci_release_dev+0x26/0x70
->>>> [<ffffffff8155be6e>] device_release+0x3e/0xb0
->>>> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
->>>> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
->>>> [<ffffffff8155bc27>] put_device+0x17/0x20
->>>> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
->>>> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
->>>> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
->>>> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
->>>> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
->>>> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
->>>> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
->>>> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
->>>> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
->>>> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
->>>>...
->>>>RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>>>
->>>>Use the existing mutex lock to protect each enable/disable operation.
->>>>
->>>>CC: Alexander Duyck <alexander.h.duyck@intel.com>
->>>>Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
->>>
->>>Emil, It's going to change semantics of pci_enable_sriov() and
->pci_disable_sriov().
->>>They can be invoked when writing to the sysfs entry, or loading PF's
->>>driver. With the change applied, the lock (pf->sriov->lock) isn't acquired and released
->>>in the PF's driver loading path.
+On 01/05/2017 02:50 AM, Krzysztof Kozlowski wrote:
+> On Wed, Jan 04, 2017 at 09:34:34PM +0900, Jaehoon Chung wrote:
+>> This patch is for using PHY generic framework.
+>> To maintain backward compatibility, check whether phy is supported or
+>> not with 'using_phy'.
 >>
->>The enablement of SRIOV on driver load is done via deprecated module parameter.
->>Perhaps we can just remove it, although there are probably still people that use it
->>and may not be happy if we get rid of it.
->>
->
->Yeah, some drivers are still using the interface. So we cannot affect it
->until it can be droped.
->
->>>I think the reasonable way would be adding a flag in "struct sriov", to
->>>indicate someone is accessing the IOV capability through sysfs file. With this, the
->>>code returns with "-EBUSY" immediately for contenders. With it, nothing is going
->>>to be changed in PF's driver loading path.
->>
->>Flag is what I initially had in mind, but did not want to add extra locking if we
->>can make use of the existing.
->>
->
->The problem is sriov->lock wasn't introduced to protect the whole IOV capability.
->Instead, it protects the allocation of virtual bus (if needed). In your patch,
->it will be used to protect the whole IOV capability, ensure accessing the
->IOV capability exclusively. So the usage of this lock is changed.
->
->     code extracted from pci.h:
->
->     struct pci_sriov {
->            :
->            struct mutex lock;      /* lock for VF bus */
->            :
->     }
->
->The lock was introduced by commit d1b054da8 ("PCI: initialize and release
->SR-IOV capability"). If I'm correct enough, I don't think this lock is needed when
->pci_enable_sriov() or pci_disable_sriov() are called in driver because of
->module
->parameters. I don't see the usage case calling pci_disable_sriov() while
->previous pci_enable_sriov() isn't finished yet. Also, it's not needed in EEH
->subsystem.
->So I think the lock can be dropped, then it can be used to protect sysfs path.
+>> And if someone use the old dt-file, display the "deprecated" message.
+>> But it's still working fine with it.
+> 
+> This needs improvements. How about:
+> "Switch the pci-exynos driver to generic PHY framework. At the same time
+> backward compatibility is preserved: warning will be printed for old
+> DTB.
 
-That's pretty much what this patch does, except I kept the locking for EEH since 
-it is the only driver that calls pci_iov_add/remove_virtfn() directly.
+Thanks for comments. Will describe the commit-msg in more detail.
 
-I'll write it up and run some tests, although I have no way to test EEH.
- 
->>>Also, there are some minor comments as below and I guess most of them won't
->>>be applied if you take my suggestion eventually. However, I'm trying to make
->>>the comments complete.
->>
->>Thanks a lot for reviewing!
->>
->>>
->>>>---
->>>> drivers/pci/pci-sysfs.c |   24 +++++++++++++++++-------
->>>> 1 file changed, 17 insertions(+), 7 deletions(-)
->>>>
->>>>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>>>index 0666287..5b54cf5 100644
->>>>--- a/drivers/pci/pci-sysfs.c
->>>>+++ b/drivers/pci/pci-sysfs.c
->>>>@@ -472,7 +472,9 @@ static ssize_t sriov_numvfs_store(struct device
->*dev,
->>>> 				  const char *buf, size_t count)
->>>> {
->>>> 	struct pci_dev *pdev = to_pci_dev(dev);
->>>>+	struct pci_sriov *iov = pdev->sriov;
->>>> 	int ret;
->>>>+
->>>
->>>Unnecessary change.
->>>
->>>> 	u16 num_vfs;
->>>>
->>>> 	ret = kstrtou16(buf, 0, &num_vfs);
->>>>@@ -482,38 +484,46 @@ static ssize_t sriov_numvfs_store(struct device
->>>*dev,
->>>> 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->>>> 		return -ERANGE;
->>>>
->>>>+	mutex_lock(&iov->dev->sriov->lock);
->>>>+
->>>> 	if (num_vfs == pdev->sriov->num_VFs)
->>>>-		return count;		/* no change */
->>>>+		goto exit;
->>>>
->>>> 	/* is PF driver loaded w/callback */
->>>> 	if (!pdev->driver || !pdev->driver->sriov_configure) {
->>>> 		dev_info(&pdev->dev, "Driver doesn't support SRIOV
->>>configuration via sysfs\n");
->>>>-		return -ENOSYS;
->>>>+		ret = -EINVAL;
->>>>+		goto exit;
->>>
->>>Why we need change the error code here?
->>
->>checkpatch was complaining about the use of the ENOSYS error code being specific
->>and even though it was not my patch introducing it I had to change it to shut it up.
->>
->
->Right, it's reserved for attempt to call nonexisting syscall, but I think
->ENOENT might be more indicative than EINVAL in this specific case?
+Best Regards,
+Jaehoon Chung
 
-ENOENT is for a missing file, but if we got this far in the code then there must've been 
-a sysfs file. This is pretty straightforward "not supported" error, which is why I picked
-EINVAL.
-
-Thanks,
-Emil 
+> 
+> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> 
+> Best regards,
+> Krzysztof
+> 
+>>
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>> Changelog on V2:
+>> - This patch is split from previous PATCH[1/4]
+>> - Maintain the backward compatibility
+>> - Adds 'using_phy' for cheching whether phy framework is used or not
+>> - Adds 'DEPRECATED' message for old dt-binding way
+>>
+>>  drivers/pci/host/pci-exynos.c | 61 +++++++++++++++++++++++++++++++++++--------
+>>  1 file changed, 50 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+>> index feed0fd..34f2eed 100644
+>> --- a/drivers/pci/host/pci-exynos.c
+>> +++ b/drivers/pci/host/pci-exynos.c
+>> @@ -21,6 +21,7 @@
+>>  #include <linux/of_gpio.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>> +#include <linux/phy/phy.h>
+>>  #include <linux/resource.h>
+>>  #include <linux/signal.h>
+>>  #include <linux/types.h>
+>> @@ -110,6 +111,10 @@ struct exynos_pcie {
+>>  	struct exynos_pcie_clk_res	*clk_res;
+>>  	const struct exynos_pcie_ops	*ops;
+>>  	int				reset_gpio;
+>> +
+>> +	/* For Generic PHY Framework */
+>> +	bool				using_phy;
+>> +	struct phy			*phy;
+>>  };
+>>  
+>>  struct exynos_pcie_ops {
+>> @@ -135,6 +140,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
+>>  	if (IS_ERR(ep->mem_res->elbi_base))
+>>  		return PTR_ERR(ep->mem_res->elbi_base);
+>>  
+>> +	/* If using the PHY framework, doesn't need to get other resource */
+>> +	if (ep->using_phy)
+>> +		return 0;
+>> +
+>>  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>>  	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
+>>  	if (IS_ERR(ep->mem_res->phy_base))
+>> @@ -396,17 +405,28 @@ static int exynos_pcie_establish_link(struct exynos_pcie *exynos_pcie)
+>>  	}
+>>  
+>>  	exynos_pcie_assert_core_reset(exynos_pcie);
+>> -	exynos_pcie_assert_phy_reset(exynos_pcie);
+>> -	exynos_pcie_deassert_phy_reset(exynos_pcie);
+>> -	exynos_pcie_power_on_phy(exynos_pcie);
+>> -	exynos_pcie_init_phy(exynos_pcie);
+>> -
+>> -	/* pulse for common reset */
+>> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
+>> -				PCIE_PHY_COMMON_RESET);
+>> -	udelay(500);
+>> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
+>> -				PCIE_PHY_COMMON_RESET);
+>> +
+>> +	if (exynos_pcie->using_phy) {
+>> +		phy_reset(exynos_pcie->phy);
+>> +
+>> +		exynos_pcie_writel(exynos_pcie->mem_res->elbi_base, 1,
+>> +				PCIE_PWR_RESET);
+>> +
+>> +		phy_power_on(exynos_pcie->phy);
+>> +		phy_init(exynos_pcie->phy);
+>> +	} else {
+>> +		exynos_pcie_assert_phy_reset(exynos_pcie);
+>> +		exynos_pcie_deassert_phy_reset(exynos_pcie);
+>> +		exynos_pcie_power_on_phy(exynos_pcie);
+>> +		exynos_pcie_init_phy(exynos_pcie);
+>> +
+>> +		/* pulse for common reset */
+>> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
+>> +					PCIE_PHY_COMMON_RESET);
+>> +		udelay(500);
+>> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
+>> +					PCIE_PHY_COMMON_RESET);
+>> +	}
+>>  
+>>  	exynos_pcie_deassert_core_reset(exynos_pcie);
+>>  	dw_pcie_setup_rc(pp);
+>> @@ -420,6 +440,11 @@ static int exynos_pcie_establish_link(struct exynos_pcie *exynos_pcie)
+>>  	if (!dw_pcie_wait_for_link(pp))
+>>  		return 0;
+>>  
+>> +	if (exynos_pcie->using_phy) {
+>> +		phy_power_off(exynos_pcie->phy);
+>> +		return -ETIMEDOUT;
+>> +	}
+>> +
+>>  	while (exynos_pcie_readl(exynos_pcie->mem_res->phy_base,
+>>  				PCIE_PHY_PLL_LOCKED) == 0) {
+>>  		val = exynos_pcie_readl(exynos_pcie->mem_res->block_base,
+>> @@ -633,6 +658,17 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+>>  
+>>  	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+>>  
+>> +	/* Assume that controller doesn't use the PHY framework */
+>> +	exynos_pcie->using_phy = false;
+>> +
+>> +	exynos_pcie->phy = devm_of_phy_get(dev, np, NULL);
+>> +	if (IS_ERR(exynos_pcie->phy)) {
+>> +		if (PTR_ERR(exynos_pcie->phy) == -EPROBE_DEFER)
+>> +			return PTR_ERR(exynos_pcie->phy);
+>> +		dev_warn(dev, "Use the 'phy' property. Current DT of pci-exynos was deprecated!!\n");
+>> +	} else
+>> +		exynos_pcie->using_phy = true;
+>> +
+>>  	if (exynos_pcie->ops && exynos_pcie->ops->get_mem_resources) {
+>>  		ret = exynos_pcie->ops->get_mem_resources(pdev, exynos_pcie);
+>>  		if (ret)
+>> @@ -657,6 +693,9 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+>>  	return 0;
+>>  
+>>  fail_probe:
+>> +	if (exynos_pcie->using_phy)
+>> +		phy_exit(exynos_pcie->phy);
+>> +
+>>  	if (exynos_pcie->ops && exynos_pcie->ops->deinit_clk_resources)
+>>  		exynos_pcie->ops->deinit_clk_resources(exynos_pcie);
+>>  	return ret;
+>> -- 
+>> 2.10.2
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
