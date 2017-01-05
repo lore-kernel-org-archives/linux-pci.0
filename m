@@ -1,66 +1,89 @@
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Tue, 3 Jan 2017 17:59:18 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <1204573191.9.1483462758094.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20170102114040.GA20127@wunner.de>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info> <20161230000731.GB18700@wunner.de> <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info> <20170102114040.GA20127@wunner.de>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:45225 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763561AbdAET3x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2017 14:29:53 -0500
+From: Dan Streetman <dan.streetman@canonical.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] xen: do not re-use pirq number cached in pci device msi msg data
+Date: Thu,  5 Jan 2017 14:28:56 -0500
+Message-Id: <20170105192856.25559-1-dan.streetman@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I tried the 4.9.0 kernel and the patch fixes both the screen lock and firefox issue.
+Do not read a pci device's msi message data to see if a pirq was
+previously configured for the device's msi/msix, as the old pirq was
+unmapped and may now be in use by another pci device.  The previous
+pirq should never be re-used; instead a new pirq should always be
+allocated from the hypervisor.
 
+The xen_hvm_setup_msi_irqs() function currently checks the pci device's
+msi descriptor message data for each msi/msix vector it sets up, and if
+it finds the vector was previously configured with a pirq, and that pirq
+is mapped to an irq, it re-uses the pirq instead of requesting a new pirq
+from the hypervisor.  However, that pirq was unmapped when the pci device
+disabled its msi/msix, and it cannot be re-used; it may have been given
+to a different pci device.
 
------ Original Message -----
-From: "Lukas Wunner" <lukas@wunner.de>
-To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Monday, January 2, 2017 12:40:40 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+This exact situation is happening in a Xen guest where multiple NVMe
+controllers (pci devices) are present.  The NVMe driver configures each
+pci device's msi/msix twice; first to configure a single vector (to
+talk to the controller for its configuration info), and then it disables
+that msi/msix and re-configures with all the msi/msix it needs.  When
+multiple NVMe controllers are present, this happens concurrently on all
+of them, and in the time between controller A calling pci_disable_msix()
+and then calling pci_enable_msix_range(), controller B enables its msix
+and gets controller A's pirq allocated from the hypervisor.  Then when
+controller A re-configures its msix, its first vector tries to re-use
+the same pirq that it had before; but that pirq was allocated to
+controller B, and thus the Xen event channel for controller A's re-used
+pirq fails to map its irq to that pirq; the hypervisor already has the
+pirq mapped elsewhere.
 
-On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
-> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
-> if that helps but needs some time again to compile.
-> The debug messages from the first rpm_... to the crash are:
-[...]
-> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
-> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
-> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
-> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
-> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
-> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
-> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
-> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
-> [   26.207691] pcieport 0000:00:01.0: rpm_idle
-> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
-> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
-> SYSTEM IS NOW NOT RESPONSIVE
+Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+---
+ arch/x86/pci/xen.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
 
-So two seconds before the system became unresponsive, the root port above
-the discrete GPU suspended, suggesting that's the culprit.  Could you test
-either of the attached patches to confirm this theory?  They disable
-runtime PM on this specific root port but allow it on all the others.
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index bedfab9..a00a6c0 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	for_each_pci_msi_entry(msidesc, dev) {
+-		__pci_read_msi_msg(msidesc, &msg);
+-		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+-			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+-		if (msg.data != XEN_PIRQ_MSI_DATA ||
+-		    xen_irq_from_pirq(pirq) < 0) {
+-			pirq = xen_allocate_pirq_msi(dev, msidesc);
+-			if (pirq < 0) {
+-				irq = -ENODEV;
+-				goto error;
+-			}
+-			xen_msi_compose_msg(dev, pirq, &msg);
+-			__pci_write_msi_msg(msidesc, &msg);
+-			dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+-		} else {
+-			dev_dbg(&dev->dev,
+-				"xen: msi already bound to pirq=%d\n", pirq);
++		pirq = xen_allocate_pirq_msi(dev, msidesc);
++		if (pirq < 0) {
++			irq = -ENODEV;
++			goto error;
+ 		}
++		xen_msi_compose_msg(dev, pirq, &msg);
++		__pci_write_msi_msg(msidesc, &msg);
++		dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+ 		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
+ 					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
+ 					       (type == PCI_CAP_ID_MSIX) ?
+-- 
+2.9.3
 
-You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
-Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
-Method).  That's what we did up until v4.7.
-
-However on newer laptops Windows no longer cuts power to the discrete GPU
-by invoking the _DSM, but rather by suspending the root port above the
-GPU.  (More specifically by turning off Power Resources required for D3
-of the root port, those are specified in a _PR3 object.)  We started
-supporting this with v4.8.
-
-If the above theory is correct, we need to involve Optimus experts
-because this is not an issue then with powering down root ports in
-general, but rather specific to this Optimus use case.
-
-Thanks,
-
-Lukas
