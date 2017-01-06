@@ -1,448 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:56796 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751341AbdALK3p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:29:45 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 27/37] PCI: dwc: dra7xx: Add EP mode support
-Date: Thu, 12 Jan 2017 15:56:16 +0530
-Message-ID: <1484216786-17292-28-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Received: from mga05.intel.com ([192.55.52.43]:58002 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751203AbdAFX2w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Jan 2017 18:28:52 -0500
+From: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
+To: Greg <gvrose8192@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: RE: [Intel-wired-lan] [PATCH v2] PCI: lock each enable/disable
+ num_vfs operation in sysfs
+Date: Fri, 6 Jan 2017 23:28:51 +0000
+Message-ID: <87618083B2453E4A8714035B62D6799250744DCD@FMSMSX105.amr.corp.intel.com>
+References: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
+ <1483744662.3868.1.camel@gmail.com>
+In-Reply-To: <1483744662.3868.1.camel@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller integrated in dra7xx SoCs is capable of operating
-in endpoint mode. Add endpoint mode support to dra7xx driver.
+>-----Original Message-----
+>From: Intel-wired-lan [mailto:intel-wired-lan-bounces@lists.osuosl.org] On
+>Behalf Of Greg
+>Sent: Friday, January 06, 2017 3:18 PM
+>To: Tantilov, Emil S <emil.s.tantilov@intel.com>
+>Cc: linux-pci@vger.kernel.org; intel-wired-lan@lists.osuosl.org; linux-
+>kernel@vger.kernel.org; netdev@vger.kernel.org
+>Subject: Re: [Intel-wired-lan] [PATCH v2] PCI: lock each enable/disable
+>num_vfs operation in sysfs
+>
+>On Fri, 2017-01-06 at 13:59 -0800, Emil Tantilov wrote:
+>> Enabling/disabling SRIOV via sysfs by echo-ing multiple values
+>> simultaneously:
+>>
+>> echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
+>> echo 63 > /sys/class/net/ethX/device/sriov_numvfs
+>>
+>> sleep 5
+>>
+>> echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
+>> echo 0 > /sys/class/net/ethX/device/sriov_numvfs
+>>
+>> Results in the following bug:
+>>
+>> kernel BUG at drivers/pci/iov.c:495!
+>> invalid opcode: 0000 [#1] SMP
+>> CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
+>> RIP: 0010:[<ffffffff813b1647>]
+>> 	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>>
+>> Call Trace:
+>>  [<ffffffff81391726>] pci_release_dev+0x26/0x70
+>>  [<ffffffff8155be6e>] device_release+0x3e/0xb0
+>>  [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
+>>  [<ffffffff81365d9d>] kobject_put+0x2d/0x60
+>>  [<ffffffff8155bc27>] put_device+0x17/0x20
+>>  [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
+>>  [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
+>>  [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
+>>  [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
+>>  [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
+>>  [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
+>>  [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
+>>  [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
+>>  [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
+>>  [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
+>> ...
+>> RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>>
+>> Use the existing mutex lock to protect each enable/disable operation.
+>>
+>> -v2: move the existing lock from protecting the config of the IOV bus
+>> to protecting the writes to sriov_numvfs in sysfs without maintaining
+>> a "locked" version of pci_iov_add/remove_virtfn().
+>> As suggested by Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>
+>> CC: Alexander Duyck <alexander.h.duyck@intel.com>
+>> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+>> ---
+>>  drivers/pci/iov.c       |    7 -------
+>>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++-------
+>>  drivers/pci/pci.h       |    2 +-
+>>  3 files changed, 17 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 4722782..2479ae8 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id,
+>int reset)
+>>  	struct pci_sriov *iov = dev->sriov;
+>>  	struct pci_bus *bus;
+>>
+>> -	mutex_lock(&iov->dev->sriov->lock);
+>>  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+>>  	if (!bus)
+>>  		goto failed;
+>> @@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id,
+>int reset)
+>>  		__pci_reset_function(virtfn);
+>>
+>>  	pci_device_add(virtfn, virtfn->bus);
+>> -	mutex_unlock(&iov->dev->sriov->lock);
+>>
+>>  	pci_bus_add_device(virtfn);
+>>  	sprintf(buf, "virtfn%u", id);
+>> @@ -181,12 +179,10 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id,
+>int reset)
+>>  	sysfs_remove_link(&dev->dev.kobj, buf);
+>>  failed1:
+>>  	pci_dev_put(dev);
+>> -	mutex_lock(&iov->dev->sriov->lock);
+>>  	pci_stop_and_remove_bus_device(virtfn);
+>>  failed0:
+>>  	virtfn_remove_bus(dev->bus, bus);
+>>  failed:
+>> -	mutex_unlock(&iov->dev->sriov->lock);
+>>
+>>  	return rc;
+>>  }
+>> @@ -195,7 +191,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int
+>id, int reset)
+>>  {
+>>  	char buf[VIRTFN_ID_LEN];
+>>  	struct pci_dev *virtfn;
+>> -	struct pci_sriov *iov = dev->sriov;
+>>
+>>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>>  					     pci_iov_virtfn_bus(dev, id),
+>> @@ -218,10 +213,8 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int
+>id, int reset)
+>>  	if (virtfn->dev.kobj.sd)
+>>  		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+>>
+>> -	mutex_lock(&iov->dev->sriov->lock);
+>>  	pci_stop_and_remove_bus_device(virtfn);
+>>  	virtfn_remove_bus(dev->bus, virtfn->bus);
+>> -	mutex_unlock(&iov->dev->sriov->lock);
+>>
+>>  	/* balance pci_get_domain_bus_and_slot() */
+>>  	pci_dev_put(virtfn);
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 0666287..25d010d 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -472,6 +472,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>>  				  const char *buf, size_t count)
+>>  {
+>>  	struct pci_dev *pdev = to_pci_dev(dev);
+>> +	struct pci_sriov *iov = pdev->sriov;
+>>  	int ret;
+>>  	u16 num_vfs;
+>>
+>> @@ -482,38 +483,46 @@ static ssize_t sriov_numvfs_store(struct device
+>*dev,
+>>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>>  		return -ERANGE;
+>>
+>> +	mutex_lock(&iov->dev->sriov->lock);
+>> +
+>>  	if (num_vfs == pdev->sriov->num_VFs)
+>> -		return count;		/* no change */
+>> +		goto exit;
+>>
+>>  	/* is PF driver loaded w/callback */
+>>  	if (!pdev->driver || !pdev->driver->sriov_configure) {
+>>  		dev_info(&pdev->dev, "Driver doesn't support SRIOV
+>configuration via sysfs\n");
+>> -		return -ENOSYS;
+>> +		ret = -ENOENT;
+>> +		goto exit;
+>
+>Hi Emil,
+>
+>Generally the patch looks fine to me - but I am wondering why the change
+>from -ENOSYS TO -ENOENT?
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/Kconfig           |   31 +++++-
- drivers/pci/dwc/Makefile          |    4 +-
- drivers/pci/dwc/pci-dra7xx.c      |  197 ++++++++++++++++++++++++++++++++++---
- drivers/pci/dwc/pcie-designware.h |    7 ++
- 4 files changed, 221 insertions(+), 18 deletions(-)
+Because checkpatch was complaining that ENOSYS should only be used for 
+"invalid syscall nr".
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 4cb1ba0..7932be6 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -16,14 +16,37 @@ config PCIE_DW_EP
- 
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
--	depends on PCI
-+	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
- 	depends on OF && HAS_IOMEM && TI_PIPE3
-+	help
-+	 Enables support for the PCIe controller in the DRA7xx SoC. There
-+	 are two instances of PCIe controller in DRA7xx. This controller can
-+	 work either as EP or RC. In order to enable host specific features
-+	 PCI_DRA7XX_HOST must be selected and in order to enable device
-+	 specific features PCI_DRA7XX_EP must be selected. This uses
-+	 the Designware core.
-+
-+if PCI_DRA7XX
-+
-+config PCI_DRA7XX_HOST
-+	bool "PCI DRA7xx Host Mode"
-+	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
-+	default y
- 	help
--	 Enables support for the PCIe controller in the DRA7xx SoC.  There
--	 are two instances of PCIe controller in DRA7xx.  This controller can
--	 act both as EP and RC.  This reuses the Designware core.
-+	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	 host mode.
-+
-+config PCI_DRA7XX_EP
-+	bool "PCI DRA7xx Endpoint Mode"
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	help
-+	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	 endpoint mode.
-+
-+endif
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index b38425d..f31a859 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -2,7 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
- obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
--obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-+ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
-+        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-+endif
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index eb3a9c6..333aa56 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -10,12 +10,14 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-@@ -57,6 +59,11 @@
- #define	MSI						BIT(4)
- #define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
- 
-+#define	PCIECTRL_TI_CONF_DEVICE_TYPE			0x0100
-+#define	DEVICE_TYPE_EP					0x0
-+#define	DEVICE_TYPE_LEG_EP				0x1
-+#define	DEVICE_TYPE_RC					0x4
-+
- #define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
- #define	LTSSM_EN					0x1
- 
-@@ -66,6 +73,13 @@
- 
- #define EXP_CAP_ID_OFFSET				0x70
- 
-+#define	PCIECTRL_TI_CONF_INTX_ASSERT			0x0124
-+#define	PCIECTRL_TI_CONF_INTX_DEASSERT			0x0128
-+
-+#define	PCIECTRL_TI_CONF_MSI_XMT			0x012c
-+#define MSI_REQ_GRANT					BIT(0)
-+#define MSI_VECTOR_SHIFT				7
-+
- struct dra7xx_pcie {
- 	struct dw_pcie		*pci;
- 	void __iomem		*base;		/* DT ti_conf */
-@@ -73,6 +87,11 @@ struct dra7xx_pcie {
- 	struct phy		**phy;
- 	int			link_gen;
- 	struct irq_domain	*irq_domain;
-+	enum dw_pcie_device_mode mode;
-+};
-+
-+struct dra7xx_pcie_of_data {
-+	enum dw_pcie_device_mode mode;
- };
- 
- #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
-@@ -101,9 +120,19 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- 	return !!(reg & LINK_UP);
- }
- 
--static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
-+static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
- {
--	struct dw_pcie *pci = dra7xx->pci;
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+	u32 reg;
-+
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg &= ~LTSSM_EN;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+}
-+
-+static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 	struct device *dev = pci->dev;
- 	u32 reg;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-@@ -137,7 +166,7 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	reg |= LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
--	return dw_pcie_wait_for_link(pci);
-+	return 0;
- }
- 
- static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
-@@ -171,7 +200,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
--	dra7xx_pcie_establish_link(dra7xx);
-+	dra7xx_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	dw_pcie_msi_init(pp);
- 	dra7xx_pcie_enable_interrupts(dra7xx);
- }
-@@ -249,6 +279,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	struct dw_pcie *pci = dra7xx->pci;
- 	struct device *dev = pci->dev;
-+	struct dw_pcie_ep *ep = &pci->ep;
- 	u32 reg;
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
-@@ -285,8 +316,11 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	if (reg & LINK_REQ_RST)
- 		dev_dbg(dev, "Link Request Reset\n");
- 
--	if (reg & LINK_UP_EVT)
-+	if (reg & LINK_UP_EVT) {
-+		if (dra7xx->mode == DW_PCIE_EP_TYPE)
-+			dw_pcie_ep_linkup(ep);
- 		dev_dbg(dev, "Link-up state change\n");
-+	}
- 
- 	if (reg & CFG_BME_EVT)
- 		dev_dbg(dev, "CFG 'Bus Master Enable' change\n");
-@@ -299,6 +333,94 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
-+static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+
-+	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+}
-+
-+static void dra7xx_pcie_raise_legacy_irq(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_ASSERT, 0x1);
-+	mdelay(1);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_DEASSERT, 0x1);
-+}
-+
-+static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
-+				      u8 interrupt_num)
-+{
-+	u32 reg;
-+
-+	reg = (interrupt_num - 1) << MSI_VECTOR_SHIFT;
-+	reg |= MSI_REQ_GRANT;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_MSI_XMT, reg);
-+}
-+
-+static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep,
-+				 enum pci_epc_irq_type type, u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		dra7xx_pcie_raise_legacy_irq(dra7xx);
-+		break;
-+	case PCI_EPC_IRQ_MSI:
-+		dra7xx_pcie_raise_msi_irq(dra7xx, interrupt_num);
-+		break;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_init = dra7xx_pcie_ep_init,
-+	.raise_irq = dra7xx_pcie_raise_irq,
-+};
-+
-+static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
-+				     struct platform_device *pdev)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+	struct dw_pcie *pci = dra7xx->pci;
-+
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-+	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!pci->dbi_base)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-+	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!pci->dbi_base2)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-+	if (!res)
-+		return -EINVAL;
-+
-+	ep->phys_base = res->start;
-+	ep->addr_size = resource_size(res);
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize endpoint\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 				       struct platform_device *pdev)
- {
-@@ -345,6 +467,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
-+	.start_link = dra7xx_pcie_establish_link,
-+	.stop_link = dra7xx_pcie_stop_link,
- 	.link_up = dra7xx_pcie_link_up,
- };
- 
-@@ -387,6 +511,26 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
- 	return ret;
- }
- 
-+static const struct dra7xx_pcie_of_data dra7xx_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct of_device_id of_dra7xx_pcie_match[] = {
-+	{
-+		.compatible = "ti,dra7-pcie",
-+		.data = &dra7xx_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "ti,dra7-pcie-ep",
-+		.data = &dra7xx_pcie_ep_of_data,
-+	},
-+	{},
-+};
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -403,6 +547,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	struct device_node *np = dev->of_node;
- 	char name[10];
- 	struct gpio_desc *reset;
-+	const struct of_device_id *match;
-+	const struct dra7xx_pcie_of_data *data;
-+	enum dw_pcie_device_mode mode;
-+
-+	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct dra7xx_pcie_of_data *)match->data;
-+	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
- 	if (!dra7xx)
-@@ -485,9 +639,25 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
- 		dra7xx->link_gen = 2;
- 
--	ret = dra7xx_add_pcie_port(dra7xx, pdev);
--	if (ret < 0)
--		goto err_gpio;
-+	switch (mode) {
-+	case DW_PCIE_RC_TYPE:
-+		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
-+				   DEVICE_TYPE_RC);
-+		ret = dra7xx_add_pcie_port(dra7xx, pdev);
-+		if (ret < 0)
-+			goto err_gpio;
-+		break;
-+	case DW_PCIE_EP_TYPE:
-+		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
-+				   DEVICE_TYPE_EP);
-+		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
-+		if (ret < 0)
-+			goto err_gpio;
-+		break;
-+	default:
-+		dev_err(dev, "INVALID device type %d\n", mode);
-+	}
-+	dra7xx->mode = mode;
- 
- 	return 0;
- 
-@@ -509,6 +679,9 @@ static int dra7xx_pcie_suspend(struct device *dev)
- 	void __iomem *base = pci->dbi_base;
- 	u32 val;
- 
-+	if (dra7xx->mode != DW_PCIE_RC_TYPE)
-+		return 0;
-+
- 	/* clear MSE */
- 	val = dw_pcie_read_dbi(pci, base, PCI_COMMAND, 0x4);
- 	val &= ~PCI_COMMAND_MEMORY;
-@@ -524,6 +697,9 @@ static int dra7xx_pcie_resume(struct device *dev)
- 	void __iomem *base = pci->dbi_base;
- 	u32 val;
- 
-+	if (dra7xx->mode != DW_PCIE_RC_TYPE)
-+		return 0;
-+
- 	/* set MSE */
- 	val = dw_pcie_read_dbi(pci, base, PCI_COMMAND, 0x4);
- 	val |= PCI_COMMAND_MEMORY;
-@@ -562,11 +738,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
- 				      dra7xx_pcie_resume_noirq)
- };
- 
--static const struct of_device_id of_dra7xx_pcie_match[] = {
--	{ .compatible = "ti,dra7-pcie", },
--	{},
--};
--
- static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 7476234..5679aa3 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -117,6 +117,13 @@ enum dw_pcie_region_type {
- 	DW_PCIE_REGION_OUTBOUND,
- };
- 
-+enum dw_pcie_device_mode {
-+	DW_PCIE_UNKNOWN_TYPE,
-+	DW_PCIE_EP_TYPE,
-+	DW_PCIE_LEG_EP_TYPE,
-+	DW_PCIE_RC_TYPE,
-+};
-+
- struct dw_pcie_host_ops {
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
--- 
-1.7.9.5
+If you look at the discussion of the previous version of the patch you can
+see the details there. Basically Gavin preferred ENOENT and I don't really 
+care so much (I kind of ran into this by accident as this patch does not need
+to change the error code).
 
+Thanks,
+Emil
