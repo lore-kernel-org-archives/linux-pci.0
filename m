@@ -1,44 +1,93 @@
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Tue, 3 Jan 2017 18:12:30 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Message-ID: <2130550818.16.1483463550559.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20170102122228.GB3353@lahna.fi.intel.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <1942778.Cx2ycTbRkQ@aspire.rjw.lan> <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info> <1750562.pIYQQN1RjA@aspire.rjw.lan> <20170102122228.GB3353@lahna.fi.intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:58354 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937697AbdAFS0e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Jan 2017 13:26:34 -0500
+Date: Fri, 6 Jan 2017 11:26:25 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170106182625.GB5724@obsidianresearch.com>
+References: <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
+ <20170106003034.GB4670@obsidianresearch.com>
+ <20170106015831.GA2226@gmail.com>
+ <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
+ <20170106173722.GB3804@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170106173722.GB3804@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just attached the output to the bug report as attachment.
+On Fri, Jan 06, 2017 at 12:37:22PM -0500, Jerome Glisse wrote:
+> On Fri, Jan 06, 2017 at 11:56:30AM -0500, Serguei Sagalovitch wrote:
+> > On 2017-01-05 08:58 PM, Jerome Glisse wrote:
+> > > On Thu, Jan 05, 2017 at 05:30:34PM -0700, Jason Gunthorpe wrote:
+> > > > On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
+> > > > 
+> > > > > > I still don't understand what you driving at - you've said in both
+> > > > > > cases a user VMA exists.
+> > > > > In the former case no, there is no VMA directly but if you want one than
+> > > > > a device can provide one. But such VMA is useless as CPU access is not
+> > > > > expected.
+> > > > I disagree it is useless, the VMA is going to be necessary to support
+> > > > upcoming things like CAPI, you need it to support O_DIRECT from the
+> > > > filesystem, DPDK, etc. This is why I am opposed to any model that is
+> > > > not VMA based for setting up RDMA - that is shorted sighted and does
+> > > > not seem to reflect where the industry is going.
+> > > > 
+> > > > So focus on having VMA backed by actual physical memory that covers
+> > > > your GPU objects and ask how do we wire up the '__user *' to the DMA
+> > > > API in the best way so the DMA API still has enough information to
+> > > > setup IOMMUs and whatnot.
+> > > I am talking about 2 different thing. Existing hardware and API where you
+> > > _do not_ have a vma and you do not need one. This is just
+> > > > existing stuff.
 
------ Original Message -----
-From: "Mika Westerberg" <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Kilian Singer" <kilian.singer@quantumtechnology.info>, "Lukas Wunner" <lukas@wunner.de>, "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>
-Sent: Monday, January 2, 2017 1:22:28 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+> > I do not understand why you assume that existing API doesn't  need one.
+> > I would say that a lot of __existing__ user level API and their support in
+> > kernel (especially outside of graphics domain) assumes that we have vma and
+> > deal with __user * pointers.
 
-On Fri, Dec 30, 2016 at 03:47:31PM +0100, Rafael J. Wysocki wrote:
-> On Friday, December 30, 2016 02:37:17 PM Kilian Singer wrote:
-> > Yes,
-> > the pci_port_pm=off
-> > fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
-> > Tested on 4.9
-> 
-> OK, thanks!
-> 
-> Please use that as a manual workaround for the time being.
-> 
-> I looked at the acpidump attached to the BZ entry, but nothing jumped up at me
-> immediately.  I'll let Mika take care of this going forward when he's back.
++1
 
-Thanks Rafael and Lucas for the help. I'm now back from my vacation so I
-can start investigating this as well.
+> Well i am thinking to GPUDirect here. Some of GPUDirect use case do not have
+> vma (struct vm_area_struct) associated with them they directly apply to GPU
+> object that aren't expose to CPU. Yes some use case have vma for share buffer.
 
-Kilian, can you attach full output of 'sudo lspci -vv' to the bug? The
-one in the comments is pretty hard to read.
+Lets stop talkind about GPU direct. Today we can't even make VMA
+pointing at a PCI bar work properly in the kernel - lets start there
+please. People can argue over other options once that is done.
+
+> For HMM plan is to restrict to ODP and either to replace ODP with HMM or change
+> ODP to not use get_user_pages_remote() but directly fetch informations from
+> CPU page table. Everything else stay as it is. I posted patchset to replace
+> ODP with HMM in the past.
+
+Make a generic API for all of this and you'd have my vote..
+
+IMHO, you must support basic pinning semantics - that is necessary to
+support generic short lived DMA (eg filesystem, etc). That hardware
+can clearly do that if it can support ODP.
+
+Jason
