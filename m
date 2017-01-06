@@ -1,73 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34852 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753329AbdACSFJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2017 13:05:09 -0500
-Date: Tue, 3 Jan 2017 12:05:07 -0600
-From: Rob Herring <robh@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
-        alim.akhtar@samsung.com, cpgs@samsung.com
-Subject: Re: [PATCH 2/4] Documetation: samsung-phy: add the exynos-pcie-phy
- binding
-Message-ID: <20170103180507.b7otjrfo4ye3yx42@rob-hp-laptop>
-References: <20161228103454.26467-1-jh80.chung@samsung.com>
- <CGME20161228103455epcas5p2acc54945d70ac45b2ce2cd4f6ad4b875@epcas5p2.samsung.com>
- <20161228103454.26467-3-jh80.chung@samsung.com>
+Return-Path: <SRS0=3zRK=YU=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=3zRK=YU=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Date: Fri, 06 Jan 2017 02:21:11 +0100
+Message-ID: <2634193.tHuT6mNBBA@aspire.rjw.lan>
+In-Reply-To: <20170105144220.GA21446@wunner.de>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170104210954.GA11946@al> <20170105144220.GA21446@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161228103454.26467-3-jh80.chung@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 28, 2016 at 07:34:52PM +0900, Jaehoon Chung wrote:
-> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
-> This is for using generic PHY framework.
+On Thursday, January 05, 2017 03:42:20 PM Lukas Wunner wrote:
+> On Wed, Jan 04, 2017 at 10:09:54PM +0100, Peter Wu wrote:
+> > [ Help/ideas are welcome, I suspect that these failures to restore power
+> > on laptops designed for Win8+ all have the same cause, related to some
+> > unknown interaction between ACPI and PCI. Some links:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
 > 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  .../devicetree/bindings/phy/samsung-phy.txt        | 23 ++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
+> Looking at Kilian's acpidump again I notice that the methods to power
+> the GPU on or off (GPON / GPOF) are called from two places:
 > 
-> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> index 9872ba8..1cbc15f 100644
-> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> @@ -191,3 +191,26 @@ Example:
->  		usbdrdphy0 = &usb3_phy0;
->  		usbdrdphy1 = &usb3_phy1;
->  	};
-> +
-> +Samsung Exynos SoC series PCIe PHY controller
-> +--------------------------------------------------
-> +Required properties:
-> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
-> +- #phy-cells : Must be zero
-> +- reg : a register used by phy driver.
-> +
-> +Required properies for child node:
-> +- reg : a block register used by phy driver.
+> - From the _PS0 and _PS3 methods of the GPU and
+> - from the _PR3 power resource of the root port above the GPU.
+> 
+> In the former case they're called for pre Windows 2013 or if VDAD is true.
+> In the latter case they're called unconditionally but GPOF becomes a no-op
+> in the pre Windows 2013 case.
+> 
+> This means that GPOF would be executed *twice* on Windows 2013+ if VDAD
+> is true.  I could imagine this to cause issues.
 
-There's no need for this. Either just make the length 0x1040 or add a 
-2nd address to the parent reg prop.
+Right.  Exactly my observation (http://marc.info/?l=linux-pci&m=148362622326066&w=2).
 
-> +
-> +Example:
-> +	pcie_phy0: pcie-phy@270000 {
-> +		#phy-cells = <0>;
-> +		compatible = "samsung,exynos5440-pcie-phy";
-> +		reg = <0x270000 0x1000>;
-> +		#address-cells = <1>;
-> +		#size-cells = <1>;
-> +		ranges;
-> +		block@271000 {
-> +			reg = <0x271000 0x40>;
-> +		};
-> +	};
-> -- 
-> 2.10.2
-> 
+So on (newer) Windows something is done in order to make it work in addition to
+the _PR3 _OSC handshake.
+
+So, I'd like to try to follow the Mika's suggestion to use the response we get
+from the _OSC handshake for \_SB and if that says "no _PR3", ignore power
+resources for PCIe ports at least.
+
+Thanks,
+Rafael
