@@ -1,156 +1,212 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 00/11] IOMMU probe deferral support
-Date: Mon, 23 Jan 2017 21:48:02 +0530
-Message-Id: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49970 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753211AbdAFBty (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2017 20:49:54 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v061mdmt094354
+        for <linux-pci@vger.kernel.org>; Thu, 5 Jan 2017 20:49:29 -0500
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27skxwcgrj-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jan 2017 20:49:29 -0500
+Received: from localhost
+        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Fri, 6 Jan 2017 11:49:26 +1000
+Date: Fri, 6 Jan 2017 12:49:23 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
+ sysfs
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
+ <20170104004831.17866.11537.stgit@localhost6.localdomain6>
+ <20170104021531.GA567@gwshan>
+ <87618083B2453E4A8714035B62D67992507430EB@FMSMSX105.amr.corp.intel.com>
+ <20170104231139.GA3726@gwshan>
+ <87618083B2453E4A8714035B62D679925074474B@FMSMSX105.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87618083B2453E4A8714035B62D679925074474B@FMSMSX105.amr.corp.intel.com>
+Message-Id: <20170106014922.GA15658@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series calls the dma ops configuration for the devices
-at a generic place so that it works for all busses.
-The dma_configure_ops for a device is now called during
-the device_attach callback just before the probe of the
-bus/driver is called. Similarly dma_deconfigure is called during
-device/driver_detach path.
+On Fri, Jan 06, 2017 at 12:55:08AM +0000, Tantilov, Emil S wrote:
+>>On Wed, Jan 04, 2017 at 04:00:20PM +0000, Tantilov, Emil S wrote:
+>>>>On Tue, Jan 03, 2017 at 04:48:31PM -0800, Emil Tantilov wrote:
+>>>>>Enabling/disabling SRIOV via sysfs by echo-ing multiple values
+>>>>>simultaneously:
+>>>>>
+>>>>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
+>>>>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs
+>>>>>
+>>>>>sleep 5
+>>>>>
+>>>>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
+>>>>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs
+>>>>>
+>>>>>Results in the following bug:
+>>>>>
+>>>>>kernel BUG at drivers/pci/iov.c:495!
+>>>>>invalid opcode: 0000 [#1] SMP
+>>>>>CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
+>>>>>RIP: 0010:[<ffffffff813b1647>]
+>>>>>	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>>>>>
+>>>>>Call Trace:
+>>>>> [<ffffffff81391726>] pci_release_dev+0x26/0x70
+>>>>> [<ffffffff8155be6e>] device_release+0x3e/0xb0
+>>>>> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
+>>>>> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
+>>>>> [<ffffffff8155bc27>] put_device+0x17/0x20
+>>>>> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
+>>>>> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
+>>>>> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
+>>>>> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
+>>>>> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
+>>>>> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
+>>>>> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
+>>>>> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
+>>>>> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
+>>>>> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
+>>>>>...
+>>>>>RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+>>>>>
+>>>>>Use the existing mutex lock to protect each enable/disable operation.
+>>>>>
+>>>>>CC: Alexander Duyck <alexander.h.duyck@intel.com>
+>>>>>Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+>>>>
+>>>>Emil, It's going to change semantics of pci_enable_sriov() and
+>>pci_disable_sriov().
+>>>>They can be invoked when writing to the sysfs entry, or loading PF's
+>>>>driver. With the change applied, the lock (pf->sriov->lock) isn't acquired and released
+>>>>in the PF's driver loading path.
+>>>
+>>>The enablement of SRIOV on driver load is done via deprecated module parameter.
+>>>Perhaps we can just remove it, although there are probably still people that use it
+>>>and may not be happy if we get rid of it.
+>>>
+>>
+>>Yeah, some drivers are still using the interface. So we cannot affect it
+>>until it can be droped.
+>>
+>>>>I think the reasonable way would be adding a flag in "struct sriov", to
+>>>>indicate someone is accessing the IOV capability through sysfs file. With this, the
+>>>>code returns with "-EBUSY" immediately for contenders. With it, nothing is going
+>>>>to be changed in PF's driver loading path.
+>>>
+>>>Flag is what I initially had in mind, but did not want to add extra locking if we
+>>>can make use of the existing.
+>>>
+>>
+>>The problem is sriov->lock wasn't introduced to protect the whole IOV capability.
+>>Instead, it protects the allocation of virtual bus (if needed). In your patch,
+>>it will be used to protect the whole IOV capability, ensure accessing the
+>>IOV capability exclusively. So the usage of this lock is changed.
+>>
+>>     code extracted from pci.h:
+>>
+>>     struct pci_sriov {
+>>            :
+>>            struct mutex lock;      /* lock for VF bus */
+>>            :
+>>     }
+>>
+>>The lock was introduced by commit d1b054da8 ("PCI: initialize and release
+>>SR-IOV capability"). If I'm correct enough, I don't think this lock is needed when
+>>pci_enable_sriov() or pci_disable_sriov() are called in driver because of
+>>module
+>>parameters. I don't see the usage case calling pci_disable_sriov() while
+>>previous pci_enable_sriov() isn't finished yet. Also, it's not needed in EEH
+>>subsystem.
+>>So I think the lock can be dropped, then it can be used to protect sysfs path.
+>
+>That's pretty much what this patch does, except I kept the locking for EEH since 
+>it is the only driver that calls pci_iov_add/remove_virtfn() directly.
+>
+>I'll write it up and run some tests, although I have no way to test EEH.
+> 
 
-pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
-       |                         |
-pci_bus_add_device     (device_add/driver_register)
-       |                         |
-device_attach           device_initial_probe
-       |                         |
-__device_attach_driver    __device_attach_driver
-       |
-driver_probe_device
-       |
-really_probe
-       |
-dma_configure
+Yes, Your patch is close to what I suggested. I'm pretty sure EEH needn't
+this lock. I'll fix it up if EEH is broken because of it.
 
-Similarly on the device/driver_unregister path __device_release_driver is
-called which inturn calls dma_deconfigure.
+>>>>Also, there are some minor comments as below and I guess most of them won't
+>>>>be applied if you take my suggestion eventually. However, I'm trying to make
+>>>>the comments complete.
+>>>
+>>>Thanks a lot for reviewing!
+>>>
+>>>>
+>>>>>---
+>>>>> drivers/pci/pci-sysfs.c |   24 +++++++++++++++++-------
+>>>>> 1 file changed, 17 insertions(+), 7 deletions(-)
+>>>>>
+>>>>>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>>>>index 0666287..5b54cf5 100644
+>>>>>--- a/drivers/pci/pci-sysfs.c
+>>>>>+++ b/drivers/pci/pci-sysfs.c
+>>>>>@@ -472,7 +472,9 @@ static ssize_t sriov_numvfs_store(struct device
+>>*dev,
+>>>>> 				  const char *buf, size_t count)
+>>>>> {
+>>>>> 	struct pci_dev *pdev = to_pci_dev(dev);
+>>>>>+	struct pci_sriov *iov = pdev->sriov;
+>>>>> 	int ret;
+>>>>>+
+>>>>
+>>>>Unnecessary change.
+>>>>
+>>>>> 	u16 num_vfs;
+>>>>>
+>>>>> 	ret = kstrtou16(buf, 0, &num_vfs);
+>>>>>@@ -482,38 +484,46 @@ static ssize_t sriov_numvfs_store(struct device
+>>>>*dev,
+>>>>> 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>>>>> 		return -ERANGE;
+>>>>>
+>>>>>+	mutex_lock(&iov->dev->sriov->lock);
+>>>>>+
+>>>>> 	if (num_vfs == pdev->sriov->num_VFs)
+>>>>>-		return count;		/* no change */
+>>>>>+		goto exit;
+>>>>>
+>>>>> 	/* is PF driver loaded w/callback */
+>>>>> 	if (!pdev->driver || !pdev->driver->sriov_configure) {
+>>>>> 		dev_info(&pdev->dev, "Driver doesn't support SRIOV
+>>>>configuration via sysfs\n");
+>>>>>-		return -ENOSYS;
+>>>>>+		ret = -EINVAL;
+>>>>>+		goto exit;
+>>>>
+>>>>Why we need change the error code here?
+>>>
+>>>checkpatch was complaining about the use of the ENOSYS error code being specific
+>>>and even though it was not my patch introducing it I had to change it to shut it up.
+>>>
+>>
+>>Right, it's reserved for attempt to call nonexisting syscall, but I think
+>>ENOENT might be more indicative than EINVAL in this specific case?
+>
+>ENOENT is for a missing file, but if we got this far in the code then there must've been 
+>a sysfs file. This is pretty straightforward "not supported" error, which is why I picked
+>EINVAL.
+>
 
-Took the reworked patches [2] from Robin's branch and
-rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+EINVAL means "invalid arguments" in my mind. The understanding matches with what's
+said in https://linux.die.net/man/3/errno  I also treated ENOENT as missed callbacks.
+However, it's not a big deal. Just pick the errno you like. What I concerned is user
+might has some script to map the errno and exact failure. Precise and unique errno
+from error path isn't bad.
 
-* Tested with platform and pci devices for probe deferral
-  and reprobe on arm64 based platform.
-* Need help for testing with ACPI.
-
-Previous post of this series [6]. 
-
- [V7]
-     * Updated the subject and commit log for patch #6 as per
-       comments from Lorenzo. No functional changes.
-
- [V6]
-     * Fixed a bug in dma_configure function pointed out by
-       Robin.
-     * Reordered the patches as per comments from Robin and
-       Lorenzo.
-     * Added Tags.
-
- [V5]
-     * Reworked the pci configuration code hanging outside and
-       pushed it to dma_configure as in PATCH#5,6,7.
-       Also added a couple of patches that Lorenzo provided for
-       correcting the Probe deferring mechanism in case of
-       ACPI devices from here [5].
-
- [V4]
-     * Took the reworked patches [2] from Robin's branch and
-       rebased on top of Lorenzo's ACPI IORT ARM support series [3].
-
-     * Added the patches for moving the dma ops configuration of
-       acpi based devices to probe time as well.
- [V3]
-     * Removed the patch to split dma_masks/dma_ops configuration
-       separately based on review comments that both masks and ops are
-       required only during the device probe time.
-
-     * Reworked the series based on Generic DT bindings series.
-
-     * Added call to iommu's remove_device in the cleanup path for arm and
-       arm64.
-
-     * Removed the notifier trick in arm64 to handle early device
-       registration.
-
-     * Added reset of dma_ops in cleanup path for arm based on comments.
-
-     * Fixed the pci_iommu_configure path and tested with PCI device as
-       well.
- 
-     * Fixed a bug to return the correct iommu_ops from patch 7 [4] in
-       last post.
-
-     * Fixed few other cosmetic comments.
-  
- [V2]
-     * Updated the Initial post to call dma_configure/deconfigure from
-       generic code
- 
-     * Added iommu add_device callback from of_iommu_configure path
-
- [V1]
-     * Initial post from Laurent Pinchart [1]
-
-[1] http://lists.linuxfoundation.org/pipermail/iommu/2015-May/013016.html
-[2] http://www.linux-arm.org/git?p=linux-rm.git;a=shortlog;h=refs/heads/iommu/defer
-[3] https://lkml.org/lkml/2016/11/21/141
-[4] https://www.mail-archive.com/iommu@lists.linux-foundation.org/msg13940.html
-[5] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git iommu/probe-deferral
-[6] https://www.spinics.net/lists/arm-kernel/msg556546.html
-
-Laurent Pinchart (3):
-  of: dma: Move range size workaround to of_dma_get_range()
-  of: dma: Make of_dma_deconfigure() public
-  iommu: of: Handle IOMMU lookup failure with deferred probing or error
-
-Lorenzo Pieralisi (2):
-  ACPI/IORT: Add function to check SMMUs drivers presence
-  ACPI/IORT: Remove linker section for IORT entries probing
-
-Robin Murphy (3):
-  iommu/of: Refactor of_iommu_configure() for error handling
-  iommu/of: Prepare for deferred IOMMU configuration
-  iommu/arm-smmu: Clean up early-probing workarounds
-
-Sricharan R (3):
-  of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices
-  drivers: acpi: Handle IOMMU lookup failure with deferred probing or
-    error
-  arm64: dma-mapping: Remove the notifier trick to handle early setting
-    of dma_ops
-
- arch/arm64/mm/dma-mapping.c       | 132 ++++----------------------------------
- drivers/acpi/arm64/iort.c         |  40 +++++++++++-
- drivers/acpi/glue.c               |   5 --
- drivers/acpi/scan.c               |   7 +-
- drivers/base/dd.c                 |   9 +++
- drivers/base/dma-mapping.c        |  41 ++++++++++++
- drivers/iommu/arm-smmu-v3.c       |  46 +------------
- drivers/iommu/arm-smmu.c          |  58 +++--------------
- drivers/iommu/of_iommu.c          | 114 +++++++++++++++++++++++---------
- drivers/of/address.c              |  20 +++++-
- drivers/of/device.c               |  36 ++++++-----
- drivers/of/platform.c             |  10 +--
- drivers/pci/probe.c               |  28 --------
- include/acpi/acpi_bus.h           |   2 +-
- include/asm-generic/vmlinux.lds.h |   1 -
- include/linux/acpi.h              |   7 +-
- include/linux/acpi_iort.h         |   3 -
- include/linux/dma-mapping.h       |   3 +
- include/linux/of_device.h         |  10 ++-
- 19 files changed, 252 insertions(+), 320 deletions(-)
-
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Thanks,
+Gavin
 
