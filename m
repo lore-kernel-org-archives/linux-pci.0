@@ -1,229 +1,139 @@
-Return-Path: <SRS0=P80y=YZ=intel.com=tomas.winkler@kernel.org>
-Return-Path: <SRS0=P80y=YZ=intel.com=tomas.winkler@kernel.org>
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andreas Noever
-	<andreas.noever@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-pm@vger.kernel.org"
-	<linux-pm@vger.kernel.org>, "Chen, Yu C" <yu.c.chen@intel.com>, "Levy, Amir
- (Jer)" <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH v4 1/8] PCI: Recognize Thunderbolt devices
-Date: Wed, 11 Jan 2017 10:01:14 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B5437A15E@hasmsx108.ger.corp.intel.com>
-References: <cover.1483806825.git.lukas@wunner.de>
- <dbb277a11a08c515fe518447ad496dfbffc3e1d8.1483806825.git.lukas@wunner.de>
- <5B8DA87D05A7694D9FA63FD143655C1B54376D27@hasmsx108.ger.corp.intel.com>
- <20170108134751.GA23120@wunner.de>
-In-Reply-To: <20170108134751.GA23120@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0085.outbound.protection.outlook.com ([104.47.33.85]:22407
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1032907AbdAFTMh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Jan 2017 14:12:37 -0500
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+        Jerome Glisse <jglisse@redhat.com>
+CC: "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        Jerome Glisse <j.glisse@gmail.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "Zhou, David(ChunMing)" <David1.Zhou@amd.com>,
+        "Yu, Qiang" <Qiang.Yu@amd.com>
+Subject: RE: Enabling peer to peer device transactions for PCIe devices
+Date: Fri, 6 Jan 2017 19:12:32 +0000
+Message-ID: <BN6PR12MB1652CC50C4FB1CC17E14BD7DF7630@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
+ <20170106003034.GB4670@obsidianresearch.com>
+ <20170106015831.GA2226@gmail.com>
+ <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
+ <20170106173722.GB3804@redhat.com>
+ <20170106182625.GB5724@obsidianresearch.com>
+In-Reply-To: <20170106182625.GB5724@obsidianresearch.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> -----Original Message-----
+> From: Jason Gunthorpe [mailto:jgunthorpe@obsidianresearch.com]
+> Sent: Friday, January 06, 2017 1:26 PM
+> To: Jerome Glisse
+> Cc: Sagalovitch, Serguei; Jerome Glisse; Deucher, Alexander; 'linux-
+> kernel@vger.kernel.org'; 'linux-rdma@vger.kernel.org'; 'linux-
+> nvdimm@lists.01.org'; 'Linux-media@vger.kernel.org'; 'dri-
+> devel@lists.freedesktop.org'; 'linux-pci@vger.kernel.org'; Kuehling, Feli=
+x;
+> Blinzer, Paul; Koenig, Christian; Suthikulpanit, Suravee; Sander, Ben;
+> hch@infradead.org; Zhou, David(ChunMing); Yu, Qiang
+> Subject: Re: Enabling peer to peer device transactions for PCIe devices
 >=20
-> On Sun, Jan 08, 2017 at 10:23:03AM +0000, Winkler, Tomas wrote:
-> > > We're about to allow runtime PM on Thunderbolt ports in
-> > > pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
-> > > hotplug ports in pci_dev_check_d3cold().  In both cases we need to
-> > > uniquely identify if a PCI device belongs to a Thunderbolt controller=
-.
-> > >
-> > > We also have the need to detect presence of a Thunderbolt controller
-> > > in drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros
-> > > cannot switch external DP/HDMI ports between GPUs if they have
-> Thunderbolt.
-> > >
-> > > Furthermore, in multiple places in the DRM subsystem we need to
-> > > detect whether a GPU is on-board or attached with Thunderbolt.  As
-> > > an example, Thunderbolt-attached GPUs shall not be registered with
-> vga_switcheroo.
-> > >
-> > > Intel uses a Vendor-Specific Extended Capability (VSEC) with ID
-> > > 0x1234 on devices belonging to a Thunderbolt controller which allows
-> > > us to recognize them.
-> > >
-> > > Detect presence of this VSEC on device probe and cache it in a newly
-> > > added is_thunderbolt bit in struct pci_dev which can then be queried
-> > > by pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and
-> others.
-> > >
-> > > Cc: Andreas Noever <andreas.noever@gmail.com>
-> > > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > > Cc: Amir Levy <amir.jer.levy@intel.com>
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > ---
-> > >  drivers/pci/pci.h   |  2 ++
-> > >  drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
-> > >  include/linux/pci.h |  1 +
-> > >  3 files changed, 37 insertions(+)
-> > >
-> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index
-> > > cb17db2..45c2b81
-> > > 100644
-> > > --- a/drivers/pci/pci.h
-> > > +++ b/drivers/pci/pci.h
-> > > @@ -3,6 +3,8 @@
-> > >
-> > >  #define PCI_FIND_CAP_TTL	48
-> > >
-> > > +#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-> >
-> > Shouldn't bet this defined in pci_ids.h ?
+> On Fri, Jan 06, 2017 at 12:37:22PM -0500, Jerome Glisse wrote:
+> > On Fri, Jan 06, 2017 at 11:56:30AM -0500, Serguei Sagalovitch wrote:
+> > > On 2017-01-05 08:58 PM, Jerome Glisse wrote:
+> > > > On Thu, Jan 05, 2017 at 05:30:34PM -0700, Jason Gunthorpe wrote:
+> > > > > On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
+> > > > >
+> > > > > > > I still don't understand what you driving at - you've said in=
+ both
+> > > > > > > cases a user VMA exists.
+> > > > > > In the former case no, there is no VMA directly but if you want=
+ one
+> than
+> > > > > > a device can provide one. But such VMA is useless as CPU access=
+ is
+> not
+> > > > > > expected.
+> > > > > I disagree it is useless, the VMA is going to be necessary to sup=
+port
+> > > > > upcoming things like CAPI, you need it to support O_DIRECT from t=
+he
+> > > > > filesystem, DPDK, etc. This is why I am opposed to any model that=
+ is
+> > > > > not VMA based for setting up RDMA - that is shorted sighted and
+> does
+> > > > > not seem to reflect where the industry is going.
+> > > > >
+> > > > > So focus on having VMA backed by actual physical memory that
+> covers
+> > > > > your GPU objects and ask how do we wire up the '__user *' to the
+> DMA
+> > > > > API in the best way so the DMA API still has enough information t=
+o
+> > > > > setup IOMMUs and whatnot.
+> > > > I am talking about 2 different thing. Existing hardware and API whe=
+re
+> you
+> > > > _do not_ have a vma and you do not need one. This is just
+> > > > > existing stuff.
 >=20
-> That file is solely intended for IDs used in multiple places, as explaine=
-d in the
-> comment at its top.  This particular ID is only used in the PCI core, hen=
-ce it's in
-> the PCI core's private drivers/pci/pci.h.
+> > > I do not understand why you assume that existing API doesn't  need on=
+e.
+> > > I would say that a lot of __existing__ user level API and their suppo=
+rt in
+> > > kernel (especially outside of graphics domain) assumes that we have v=
+ma
+> and
+> > > deal with __user * pointers.
 >=20
-> However the line is formatted such that it can just be moved to the globa=
-l
-> include/linux/pci_ids.h should it be needed someplace else in the future.
+> +1
 >=20
+> > Well i am thinking to GPUDirect here. Some of GPUDirect use case do not
+> have
+> > vma (struct vm_area_struct) associated with them they directly apply to
+> GPU
+> > object that aren't expose to CPU. Yes some use case have vma for share
+> buffer.
 >=20
-> > >  extern const unsigned char pcie_link_speed[];
-> > >
-> > >  bool pcie_cap_has_lnkctl(const struct pci_dev *dev); diff --git
-> > > a/drivers/pci/probe.c b/drivers/pci/probe.c index e164b5c..891a8fa
-> > > 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev
-> > > *pdev)
-> > >  		pdev->is_hotplug_bridge =3D 1;
-> > >  }
-> > >
-> > > +static void set_pcie_vendor_specific(struct pci_dev *dev) {
-> >
-> >
-> > Why don't u implement this  in quirk.c ?
+> Lets stop talkind about GPU direct. Today we can't even make VMA
+> pointing at a PCI bar work properly in the kernel - lets start there
+> please. People can argue over other options once that is done.
 >=20
-> The is_thunderbolt bit signifies whether a given PCI device is part of a
-> Thunderbolt daisy chain.  (As explained in the comment in include/linux/p=
-ci.h,
-> see below.)  So it is set on all the PCI devices that comprise a Thunderb=
-olt
-> controller, but also on all endpoint devices that are attached via Thunde=
-rbolt.
+> > For HMM plan is to restrict to ODP and either to replace ODP with HMM o=
+r
+> change
+> > ODP to not use get_user_pages_remote() but directly fetch informations
+> from
+> > CPU page table. Everything else stay as it is. I posted patchset to rep=
+lace
+> > ODP with HMM in the past.
 >=20
-> Consequently this function needs to be executed for all PCI devices, not =
-just
-> for a subset that could be identified by a vendor, device or class ID.
+> Make a generic API for all of this and you'd have my vote..
+>=20
+> IMHO, you must support basic pinning semantics - that is necessary to
+> support generic short lived DMA (eg filesystem, etc). That hardware
+> can clearly do that if it can support ODP.
 
-Ok, god it.=20
+We would definitely like to have support for hardware that can't handle pag=
+e faults gracefully.
 
->=20
-> In the DRM drivers nouveau, radeon and amdgpu I need to prevent calls to
-> vga_switcheroo_register_client() and vga_switcheroo_init_domain_pm_ops()
-> if the device in question is attached via Thunderbolt.  That's because ex=
-ternal
-> GPUs can't drive the panel of a laptop or be powered down like an on-boar=
-d
-> Optimus/PowerXpress GPU.  We've got a bug there right now that manifests
-> itself once someone attaches an eGPU to a dual GPU laptop.
-> With this patch I'll be able to just skip registration with vga_switchero=
-o if
-> is_thunderbolt is set on a GPU's pci_dev, thereby fixing the bug.
->=20
->=20
-> BTW do you have information on the contents/meaning of the VSEC that you
-> would be able/allowed to share?  What I've seen so far is that its length=
- is 0x1c
-> bytes on older controllers (e.g. Light Ridge, Port Ridge) and its content=
-s are
-> always the same, regardless if the controller is used in host mode or end=
-point
-> mode:
+Alex
 
-Sorry, currently nothing I can share.
-=20
-> 500: 0b 00 01 00 34 12 c1 01|50 09 00 00 39 00 00 00
-> 510: 00 00 00 00 00 00 00 00 00 00 00 00
->=20
-> However on Alpine Ridge the size of the VSEC has increased significantly =
-to
-> 0xd8 bytes, even though the version stayed at 1 as before:
->=20
-> 500: 0b 00 01 60 34 12 81 0d 50 09 b0 0c b9 06 18 08
-> 510: 00 38 00 01 00 00 00 00 00 00 00 00 32 02 10 00
-> 520: ef d3 00 40 00 00 00 00 f0 f0 30 c1 00 02 30 00
-> 530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 590: 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00
-> 5a0: 00 00 00 00 00 00 00 00 00 00 00 00 38 24 01 00
-> 5b0: 08 40 00 1c 00 00 01 18 04 03 00 f0 06 00 00 00
-> 5c0: 00 00 08 40 06 00 00 01 90 00 08 1b 00 08 80 08
-> 5d0: 80 7f 08 00 00 00 00 00
->=20
-> Thanks,
->=20
-> Lukas
->=20
-> >
-> > > +	int vsec =3D 0;
-> > > +	u32 header;
-> > > +
-> > > +	while ((vsec =3D pci_find_next_ext_capability(dev, vsec,
-> > > +						    PCI_EXT_CAP_ID_VNDR))) {
-> > > +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
-> > > &header);
-> > > +
-> > > +		/* Is the device part of a Thunderbolt controller? */
-> > > +		if (dev->vendor =3D=3D PCI_VENDOR_ID_INTEL &&
-> > > +		    PCI_VNDR_HEADER_ID(header) =3D=3D PCI_VSEC_ID_INTEL_TBT)
-> > > +			dev->is_thunderbolt =3D 1;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Is the device attached with Thunderbolt?  Walk upwards and
-> > > +check
-> > > for
-> > > +	 * each encountered bridge if it's part of a Thunderbolt controller=
-.
-> > > +	 * Reaching the host bridge means dev is soldered to the mainboard.
-> > > +	 */
-> > > +	if (!dev->is_thunderbolt) {
-> > > +		struct pci_dev *parent =3D dev;
-> > > +
-> > > +		while ((parent =3D pci_upstream_bridge(parent)))
-> > > +			if (parent->is_thunderbolt) {
-> > > +				dev->is_thunderbolt =3D 1;
-> > > +				break;
-> > > +			}
-> > > +	}
-> > > +}
-> > > +
-> > >  /**
-> > >   * pci_ext_cfg_is_aliased - is ext config space just an alias of std=
- config?
-> > >   * @dev: PCI device
-> > > @@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
-> > >  	/* need to have dev->class ready */
-> > >  	dev->cfg_size =3D pci_cfg_space_size(dev);
-> > >
-> > > +	/* need to have dev->cfg_size ready */
-> > > +	set_pcie_vendor_specific(dev);
-> > > +
-> > >  	/* "Unknown power state" */
-> > >  	dev->current_state =3D PCI_UNKNOWN;
-> > >
-> > > diff --git a/include/linux/pci.h b/include/linux/pci.h index
-> > > e2d1a12..3c775e8
-> > > 100644
-> > > --- a/include/linux/pci.h
-> > > +++ b/include/linux/pci.h
-> > > @@ -358,6 +358,7 @@ struct pci_dev {
-> > >  	unsigned int	is_virtfn:1;
-> > >  	unsigned int	reset_fn:1;
-> > >  	unsigned int    is_hotplug_bridge:1;
-> > > +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain
-> */
-> > >  	unsigned int    __aer_firmware_first_valid:1;
-> > >  	unsigned int	__aer_firmware_first:1;
-> > >  	unsigned int	broken_intx_masking:1;
-> > > --
-> > > 2.11.0
