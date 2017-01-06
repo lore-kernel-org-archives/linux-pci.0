@@ -1,79 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:36167 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751412AbdALCR1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 21:17:27 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V2 4/4] PCI: exynos: remove the duplicated codes
-Date: Thu, 12 Jan 2017 11:17:19 +0900
-Message-id: <20170112021719.24986-4-jh80.chung@samsung.com>
-In-reply-to: <20170112021719.24986-1-jh80.chung@samsung.com>
-References: <20170112021719.24986-1-jh80.chung@samsung.com>
- <CGME20170112021722epcas5p483ea584341324ad650a1d7fbe9a76793@epcas5p4.samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+Date: Fri, 06 Jan 2017 12:10:33 +0100
+Message-ID: <2723285.JORgusvJv4@wuerfel>
+In-Reply-To: <9d5e32d3-000c-2f95-7ea8-c64d53ab6b56@cogentembedded.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <3158203.Yc9Qgx82xo@wuerfel>
+ <9d5e32d3-000c-2f95-7ea8-c64d53ab6b56@cogentembedded.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removed the duplicated codes.
-It can use the more simply than now.
+On Wednesday, January 4, 2017 6:29:39 PM CET Nikita Yushchenko wrote:
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
----
-Changelog on V2:
-- None
+> > Just a guess, but if the inbound translation windows in the host
+> > bridge are wider than 32-bit, the reason for setting up a single
+> > 32-bit window is probably because that is what the parent bus supports.
+> 
+> Well anyway applying patch similar to your's will fix pcie-rcar + nvme
+> case - thus I don't object :)   But it can break other cases ...
+> 
+> But why do you hook at set_dma_mask() and overwrite mask inside, instead
+> of hooking at dma_supported() and rejecting unsupported mask?
+> 
+> I think later is better, because it lets drivers to handle unsupported
+> high-dma case, like documented in DMA-API_HOWTO.
 
- drivers/pci/host/pci-exynos.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+I think the behavior I put in there is required for swiotlb to make
+sense, otherwise you would rely on the driver to handle dma_set_mask()
+failure gracefully with its own bounce buffers (as network and
+scsi drivers do but others don't).
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 6cbc1cc..a558fa1 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -116,30 +116,24 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
- 
--	if (on) {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
--	} else {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
--	}
-+	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
- }
- 
- static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
- 
--	if (on) {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
--	} else {
--		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
--	}
-+	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
- }
- 
- static void exynos_pcie_assert_core_reset(struct exynos_pcie *ep)
--- 
-2.10.2
+Having swiotlb or iommu enabled should result in dma_set_mask() always
+succeeding unless the mask is too small to cover the swiotlb
+bounce buffer area or the iommu virtual address space. This behavior
+is particularly important in case the bus address space is narrower
+than 32-bit, as we have to guarantee that the fallback to 32-bit
+DMA always succeeds. There are also a lot of drivers that try to
+set a 64-bit mask but don't implement bounce buffers for streaming
+mappings if that fails, and swiotlb is what we use to make those
+drivers work.
 
+And yes, the API is a horrible mess.
+
+	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
