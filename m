@@ -1,85 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Long Li <longli@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Long Li <longli@microsoft.com>
-Subject: RE: [Resend PATCH 2/2 v3] pci-hyperv: lock pci bus on device eject
-Date: Fri, 27 Jan 2017 18:42:48 +0000
-Message-ID: <DM5PR03MB2490101D99B60845B8269A3DA0760@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <1485236759-27699-1-git-send-email-longli@exchange.microsoft.com>
-In-Reply-To: <1485236759-27699-1-git-send-email-longli@exchange.microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
+Date: Fri, 06 Jan 2017 12:43:32 +0100
+Message-ID: <4069640.PHLdmY3C6P@wuerfel>
+In-Reply-To: <CACVXFVNS9n9_ty8y3CyqfRaLitqDKdk1mMOrQHM-enOgJtUBeQ@mail.gmail.com>
+References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
+ <CACVXFVNS9n9_ty8y3CyqfRaLitqDKdk1mMOrQHM-enOgJtUBeQ@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>, gabriele.paoloni@huawei.com,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ linuxarm@huawei.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Ming Lei <tom.leiming@gmail.com>, xuwei5@hisilicon.com,
+ linux-serial@vger.kernel.org,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, minyard@acm.org,
+ Liviu Dudau <liviu.dudau@arm.com>, john.garry@huawei.com,
+ Olof Johansson <olof@lixom.net>, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, kantyzc@163.com,
+ zhichang.yuan02@gmail.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, zourongrong@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, December 22, 2016 4:15:57 PM CET Ming Lei wrote:
+> ERROR: "inb" [drivers/watchdog/wdt_pci.ko] undefined!
+> ERROR: "outb" [drivers/watchdog/wdt_pci.ko] undefined!
+> ERROR: "outb" [drivers/watchdog/pcwd_pci.ko] undefined!
+> ERROR: "inb" [drivers/watchdog/pcwd_pci.ko] undefined!
+> ERROR: "outw" [drivers/video/vgastate.ko] undefined!
+> ERROR: "outb" [drivers/video/vgastate.ko] undefined!
+> ERROR: "inb" [drivers/video/vgastate.ko] undefined!
+> ERROR: "outw" [drivers/video/fbdev/vt8623fb.ko] undefined!
+> ERROR: "inb" [drivers/video/fbdev/vt8623fb.ko] undefined!
+> ERROR: "outb" [drivers/video/fbdev/vt8623fb.ko] undefined!
+> ERROR: "outw" [drivers/video/fbdev/tridentfb.ko] undefined!
+> ERROR: "inb" [drivers/video/fbdev/tridentfb.ko] undefined!
+> ERROR: "outb" [drivers/video/fbdev/tridentfb.ko] undefined!
+> ERROR: "inb" [drivers/video/fbdev/tdfxfb.ko] undefined!
+> 
+
+In case you haven't figured it out by now, the new code is simply
+missing a few "EXPORT_SYMBOL" lines.
+
+	Arnd
 
 
-> -----Original Message-----
-> From: Long Li [mailto:longli@exchange.microsoft.com]
-> Sent: Monday, January 23, 2017 9:46 PM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>
-> Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Long Li <longli@microsoft.com>
-> Subject: [Resend PATCH 2/2 v3] pci-hyperv: lock pci bus on device eject
->=20
-> [This sender failed our fraud detection checks and may not be who they
-> appear to be. Learn about spoofing at http://aka.ms/LearnAboutSpoofing]
->=20
-> From: Long Li <longli@microsoft.com>
->=20
-> A PCI_EJECT message can arrive at the same time we are calling
-> pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS
-> message or in create_root_hv_pci_bus(), in this case we could potentailly
-> modify the bus from multiple places. Properly lock the bus access.
->=20
-> Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race
-> condition in create_root_hv_pci_bus().
->=20
-> Signed-off-by: Long Li <longli@microsoft.com>
-> Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-
-> ---
->  drivers/pci/host/pci-hyperv.c | 4 ++++
->  1 file changed, 4 insertions(+)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 4a37598..33c75c9 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1198,9 +1198,11 @@ static int create_root_hv_pci_bus(struct
-> hv_pcibus_device *hbus)
->         hbus->pci_bus->msi =3D &hbus->msi_chip;
->         hbus->pci_bus->msi->dev =3D &hbus->hdev->device;
->=20
-> +       pci_lock_rescan_remove();
->         pci_scan_child_bus(hbus->pci_bus);
->         pci_bus_assign_resources(hbus->pci_bus);
->         pci_bus_add_devices(hbus->pci_bus);
-> +       pci_unlock_rescan_remove();
->         hbus->state =3D hv_pcibus_installed;
->         return 0;
->  }
-> @@ -1590,8 +1592,10 @@ static void hv_eject_device_work(struct
-> work_struct *work)
->         pdev =3D pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain,
-> 0,
->                                            wslot);
->         if (pdev) {
-> +               pci_lock_rescan_remove();
->                 pci_stop_and_remove_bus_device(pdev);
->                 pci_dev_put(pdev);
-> +               pci_unlock_rescan_remove();
->         }
->=20
->         memset(&ctxt, 0, sizeof(ctxt));
-> --
-> 1.8.5.6
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
