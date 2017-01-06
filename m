@@ -1,58 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <paul.gortmaker@windriver.com>, <robh@kernel.org>,
- <colin.king@canonical.com>, <linux-pci@vger.kernel.org>,
- <marc.zyngier@arm.com>
-Subject: [PATCH 4/4] PCI: Xilinx NWL: Fix,
- proc interrupts for legacy virtual irq shown as edge
-Date: Sat, 21 Jan 2017 16:41:12 +0530
-Message-ID: <1484997072-19276-4-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:32940 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934968AbdAFPIr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 10:08:47 -0500
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
- Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170105190113.GA12587@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com> <20170105190113.GA12587@obsidianresearch.com>
+From: Henrique Almeida <hdante.lnls@gmail.com>
+Date: Fri, 6 Jan 2017 12:08:22 -0300
+Message-ID: <CAP_Z8cn=O5-6A=udgOj6Rd_9_phR1K+aJ0ELXG7pZ5QEyhS3TQ@mail.gmail.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- Legacy interrupts are level triggered, virtual irq line of End
-Point shows as edge.
-- Setting irq flags of virtual irq line of EP to level triggered
-at the time of mapping.
+ Hello, I've been watching this thread not as a kernel developer, but
+as an user interested in doing peer-to-peer access between network
+card and GPU. I believe that merging raw direct access with vma
+overcomplicates things for our use case. We'll have a very large
+camera streaming data at high throughput (up to 100 Gbps) to the GPU,
+which will operate in soft real time mode and write back the results
+to a RDMA enabled network storage. The CPU will only arrange the
+connection between GPU and network card. Having things like paging or
+memory overcommit is possible, but they are not required and they
+might consistently decrease the quality of the data acquisition.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 50f9c0d..b7aa6f8 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -435,6 +435,7 @@ static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_level_irq);
- 	irq_set_chip_data(irq, domain->host_data);
-+	irq_set_status_flags(irq, IRQ_LEVEL);
- 
- 	return 0;
- }
--- 
-1.7.1
+ I see my use case something likely to exist for others and a strong
+reason to split the implementation in two.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2017-01-05 16:01 GMT-03:00 Jason Gunthorpe <jgunthorpe@obsidianresearch.com>:
+> On Thu, Jan 05, 2017 at 01:39:29PM -0500, Jerome Glisse wrote:
+>
+>>   1) peer-to-peer because of userspace specific API like NVidia GPU
+>>     direct (AMD is pushing its own similar API i just can't remember
+>>     marketing name). This does not happen through a vma, this happens
+>>     through specific device driver call going through device specific
+>>     ioctl on both side (GPU and RDMA). So both kernel driver are aware
+>>     of each others.
+>
+> Today you can only do user-initiated RDMA operations in conjection
+> with a VMA.
+>
+> We'd need a really big and strong reason to create an entirely new
+> non-VMA based memory handle scheme for RDMA.
+>
+> So my inclination is to just completely push back on this idea. You
+> need a VMA to do RMA.
+>
+> GPUs need to create VMAs for the memory they want to RDMA from, even
+> if the VMA handle just causes SIGBUS for any CPU access.
+>
+> Jason
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
