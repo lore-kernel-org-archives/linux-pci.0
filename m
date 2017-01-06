@@ -1,100 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 02/11] iommu/of: Prepare for deferred IOMMU configuration
-Date: Mon, 23 Jan 2017 21:48:04 +0530
-Message-Id: <1485188293-20263-3-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:62976
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S969765AbdAFAlf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Jan 2017 19:41:35 -0500
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Jerome Glisse <jglisse@redhat.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
+ <20170106003034.GB4670@obsidianresearch.com>
+CC: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, <hch@infradead.org>,
+        <david1.zhou@amd.com>, <qiang.yu@amd.com>
+From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Message-ID: <26f86650-5302-0df2-9b51-dd967f3e5a7b@amd.com>
+Date: Thu, 5 Jan 2017 19:41:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170106003034.GB4670@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On 2017-01-05 07:30 PM, Jason Gunthorpe wrote:
+> ........ but I am opposed to
+> the idea we need two API paths that the *driver* has to figure out.
+> That is fundamentally not what I want as a driver developer.
+>
+> Give me a common API to convert '__user *' to a scatter list and pin
+> the pages.
+Completely agreed. IMHO there is no sense to duplicate the same logic
+everywhere as well as  trying to find places where it is missing.
 
-IOMMU configuration represents unchanging properties of the hardware,
-and as such should only need happen once in a device's lifetime, but
-the necessary interaction with the IOMMU device and driver complicates
-exactly when that point should be.
-
-Since the only reasonable tool available for handling the inter-device
-dependency is probe deferral, we need to prepare of_iommu_configure()
-to run later than it is currently called (i.e. at driver probe rather
-than device creation), to handle being retried, and to tell whether a
-not-yet present IOMMU should be waited for or skipped (by virtue of
-having declared a built-in driver or not).
-
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/of_iommu.c | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index ee49081..349bd1d 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -104,12 +104,20 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- 	int err;
- 
- 	ops = iommu_get_instance(fwnode);
--	if (!ops || !ops->of_xlate)
-+	if ((ops && !ops->of_xlate) ||
-+	    (!ops && !of_match_node(&__iommu_of_table, iommu_spec->np)))
- 		return NULL;
- 
- 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
- 	if (err)
- 		return ERR_PTR(err);
-+	/*
-+	 * The otherwise-empty fwspec handily serves to indicate the specific
-+	 * IOMMU device we're waiting for, which will be useful if we ever get
-+	 * a proper probe-ordering dependency mechanism in future.
-+	 */
-+	if (!ops)
-+		return ERR_PTR(-EPROBE_DEFER);
- 
- 	err = ops->of_xlate(dev, iommu_spec);
- 	if (err)
-@@ -186,14 +194,34 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 					   struct device_node *master_np)
- {
- 	const struct iommu_ops *ops;
-+	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
- 
- 	if (!master_np)
- 		return NULL;
- 
-+	if (fwspec) {
-+		if (fwspec->ops)
-+			return fwspec->ops;
-+
-+		/* In the deferred case, start again from scratch */
-+		iommu_fwspec_free(dev);
-+	}
-+
- 	if (dev_is_pci(dev))
- 		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
- 	else
- 		ops = of_platform_iommu_init(dev, master_np);
-+	/*
-+	 * If we have reason to believe the IOMMU driver missed the initial
-+	 * add_device callback for dev, replay it to get things in order.
-+	 */
-+	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
-+	    dev->bus && !dev->iommu_group) {
-+		int err = ops->add_device(dev);
-+
-+		if (err)
-+			ops = ERR_PTR(err);
-+	}
- 
- 	return IS_ERR(ops) ? NULL : ops;
- }
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Sincerely yours,
+Serguei Sagalovitch
 
