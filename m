@@ -1,87 +1,219 @@
-Return-Path: <SRS0=+gJW=YS=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=+gJW=YS=quantumtechnology.info=kilian.singer@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <3913750.OA6IItgEjC@aspire.rjw.lan>
- <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
- <16155135.jUckSz7QPL@aspire.rjw.lan>
- <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-Message-ID: <83901bcb-1315-fbca-e1e3-960bfefbd9c0@quantumtechnology.info>
-Date: Wed, 4 Jan 2017 11:33:16 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170104081639.GA21076@wunner.de>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33768 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756330AbdAFXRp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 18:17:45 -0500
+Message-ID: <1483744662.3868.1.camel@gmail.com>
+Subject: Re: [PATCH v2] PCI: lock each enable/disable num_vfs operation in
+ sysfs
+From: Greg <gvrose8192@gmail.com>
+To: Emil Tantilov <emil.s.tantilov@intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Fri, 06 Jan 2017 15:17:42 -0800
+In-Reply-To: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
+References: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear all,
+On Fri, 2017-01-06 at 13:59 -0800, Emil Tantilov wrote:
+> Enabling/disabling SRIOV via sysfs by echo-ing multiple values
+> simultaneously:
+> 
+> echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
+> echo 63 > /sys/class/net/ethX/device/sriov_numvfs
+> 
+> sleep 5
+> 
+> echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
+> echo 0 > /sys/class/net/ethX/device/sriov_numvfs
+> 
+> Results in the following bug:
+> 
+> kernel BUG at drivers/pci/iov.c:495!
+> invalid opcode: 0000 [#1] SMP
+> CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
+> RIP: 0010:[<ffffffff813b1647>]
+> 	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+> 
+> Call Trace:
+>  [<ffffffff81391726>] pci_release_dev+0x26/0x70
+>  [<ffffffff8155be6e>] device_release+0x3e/0xb0
+>  [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
+>  [<ffffffff81365d9d>] kobject_put+0x2d/0x60
+>  [<ffffffff8155bc27>] put_device+0x17/0x20
+>  [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
+>  [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
+>  [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
+>  [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
+>  [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
+>  [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
+>  [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
+>  [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
+>  [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
+>  [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
+> ...
+> RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+> 
+> Use the existing mutex lock to protect each enable/disable operation.
+> 
+> -v2: move the existing lock from protecting the config of the IOV bus
+> to protecting the writes to sriov_numvfs in sysfs without maintaining
+> a "locked" version of pci_iov_add/remove_virtfn().
+> As suggested by Gavin Shan <gwshan@linux.vnet.ibm.com>
+> 
+> CC: Alexander Duyck <alexander.h.duyck@intel.com>
+> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+> ---
+>  drivers/pci/iov.c       |    7 -------
+>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++-------
+>  drivers/pci/pci.h       |    2 +-
+>  3 files changed, 17 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 4722782..2479ae8 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  	struct pci_sriov *iov = dev->sriov;
+>  	struct pci_bus *bus;
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+>  	if (!bus)
+>  		goto failed;
+> @@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  		__pci_reset_function(virtfn);
+>  
+>  	pci_device_add(virtfn, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	pci_bus_add_device(virtfn);
+>  	sprintf(buf, "virtfn%u", id);
+> @@ -181,12 +179,10 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  	sysfs_remove_link(&dev->dev.kobj, buf);
+>  failed1:
+>  	pci_dev_put(dev);
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+>  failed0:
+>  	virtfn_remove_bus(dev->bus, bus);
+>  failed:
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	return rc;
+>  }
+> @@ -195,7 +191,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+>  {
+>  	char buf[VIRTFN_ID_LEN];
+>  	struct pci_dev *virtfn;
+> -	struct pci_sriov *iov = dev->sriov;
+>  
+>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>  					     pci_iov_virtfn_bus(dev, id),
+> @@ -218,10 +213,8 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+>  	if (virtfn->dev.kobj.sd)
+>  		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+>  	virtfn_remove_bus(dev->bus, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	/* balance pci_get_domain_bus_and_slot() */
+>  	pci_dev_put(virtfn);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 0666287..25d010d 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -472,6 +472,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  				  const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_sriov *iov = pdev->sriov;
+>  	int ret;
+>  	u16 num_vfs;
+>  
+> @@ -482,38 +483,46 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>  		return -ERANGE;
+>  
+> +	mutex_lock(&iov->dev->sriov->lock);
+> +
+>  	if (num_vfs == pdev->sriov->num_VFs)
+> -		return count;		/* no change */
+> +		goto exit;
+>  
+>  	/* is PF driver loaded w/callback */
+>  	if (!pdev->driver || !pdev->driver->sriov_configure) {
+>  		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
+> -		return -ENOSYS;
+> +		ret = -ENOENT;
+> +		goto exit;
 
-the weird thing is also that when calling:
+Hi Emil,
 
-echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed
-or
-echo on > /sys/bus/pci/devices/0000:01:00.0/power/control
+Generally the patch looks fine to me - but I am wondering why the change
+from -ENOSYS TO -ENOENT?
 
-on a command line then the command line crashes. The system stays responsive but still
-becomes unresponsive when I lock the screen.
+Thanks,
 
-Maybe a similar thing are happening in the kernel. Maybe one could use the above fact
-and a timeout to test for the problem and then take measures to deactivate the pm.
+- Greg
 
-I hope this gives you some more clues.
+>  	}
+>  
+>  	if (num_vfs == 0) {
+>  		/* disable VFs */
+>  		ret = pdev->driver->sriov_configure(pdev, 0);
+> -		if (ret < 0)
+> -			return ret;
+> -		return count;
+> +		goto exit;
+>  	}
+>  
+>  	/* enable VFs */
+>  	if (pdev->sriov->num_VFs) {
+>  		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
+>  			 pdev->sriov->num_VFs, num_vfs);
+> -		return -EBUSY;
+> +		ret = -EBUSY;
+> +		goto exit;
+>  	}
+>  
+>  	ret = pdev->driver->sriov_configure(pdev, num_vfs);
+>  	if (ret < 0)
+> -		return ret;
+> +		goto exit;
+>  
+>  	if (ret != num_vfs)
+>  		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
+>  			 num_vfs, ret);
+>  
+> +exit:
+> +	mutex_unlock(&iov->dev->sriov->lock);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	return count;
+>  }
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index cb17db2..8dd38e6 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -270,7 +270,7 @@ struct pci_sriov {
+>  	u16 driver_max_VFs;	/* max num VFs driver supports */
+>  	struct pci_dev *dev;	/* lowest numbered PF */
+>  	struct pci_dev *self;	/* this PF */
+> -	struct mutex lock;	/* lock for VF bus */
+> +	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+>  };
+>  
+> 
 
-Best regards
-Kilian
 
-PS: let me know which patches I should test. I am currently terribly busy with work. So if you would select the most urgent patches I would be delighted.
-
-
-
-On 04-Jan-17 09:16, Lukas Wunner wrote:
-> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
->> I don't *want* to apply the revert.  It's on my for-linus branch as a
->> worst-case scenario change if we can't figure out a better fix.
->>
->> The patch below is preferable, but I'd rather not take even it,
->> because it takes away functionality and forces people to use a boot
->> parameter to restore it.  I expect that somebody will figure out how
->> to fix the regression Kilian found and also keep the new functionality
->> (without requiring boot parameters) before v4.10.
-> The issue is constrained to hybrid graphics laptops with Nvidia discrete
-> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
-> PCI core.
->
-> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
-> when and how to call an ACPI method versus using PR3.)
->
-> (Neither are laptops using the Nvidia proprietary driver as it doesn't
-> runtime suspend the card.  But battery life will be terrible then.)
->
-> We're at rc2 so the time frame for coming up with a fix is probably
-> 4 weeks.  Peter and others have tried for months to reverse-engineer
-> how to handle runtime PM on newer Nvidia cards.  It seems likely that
-> we'll not find the ultimate solution to the problem within 4 weeks.
->
-> The way it is now, i.e. defaulting to PR3 when available, regresses
-> certain laptops such as Kilian's.  If on the other hand we default to
-> DSM when available, we'll regress certain other laptops, as Peter has
-> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
-> approach either, ideally we'd want to use PR3 as Windows does.
->
-> As said, the only short-term solution I see is to add an "optimus"
-> module_param to nouveau to allow users to select which method to use.
-> So in Kilian's case an additional command line parameter would be
-> necessary to fix the issue.
->
-> Does anyone see a better solution or can we agree on this one?  If so
-> I can come up with a patch.  This could go in via Dave Airlie's tree.
->
-> Thanks,
->
-> Lukas
