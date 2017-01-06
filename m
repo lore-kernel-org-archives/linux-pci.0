@@ -1,120 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58568 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:43986 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751002AbdAKS21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 13:28:27 -0500
-Date: Wed, 11 Jan 2017 12:28:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
-Message-ID: <20170111182822.GC14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+        id S936536AbdAFRh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Jan 2017 12:37:27 -0500
+Date: Fri, 6 Jan 2017 12:37:22 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170106173722.GB3804@redhat.com>
+References: <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
+ <20170106003034.GB4670@obsidianresearch.com>
+ <20170106015831.GA2226@gmail.com>
+ <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 12, 2016 at 07:51:27PM +0800, Shawn Lin wrote:
-> Rockchip's RC outputs 100MHz reference clock but there are
-> two methods for PHY to generate it.
-> 
-> (1)One of them is to use system PLL to generate 100MHz clock and
-> the PHY will relock it and filter signal noise then outputs the
-> reference clock.
-> 
-> (2)Another way is to share Soc's 24MHZ crystal oscillator with
-> PHY and force PHY's DLL to generate 100MHz internally.
-> 
-> When using case(2), the exit from L0s doesn't work fine occasionally
-> due to the broken design of RC receiver's logical circuit. So even if
-> we use extended-synch, it still fails for PHY to relock the bits from
-> FTS sometimes. This will hang the system.
-> 
-> Maybe we could argue that why not use case(1) to avoid it? The reason
-> is that as we could see the reference clock is derived from system PLL
-> and the path from it to PHY isn't so clean which means there are some
-> noise introduced by power-domain and other buses can't be filterd out
-> by PHY and we could see noise from the frequency spectrum by
-> oscilloscope. This makes the TX compatibility test a little difficult
-> to pass the spec. So case(1) and case(2) are both used indeed now. If
-> using case(2), we should disable RC's L0s support, and that is why we
-> need this property to indicate this quirk.
-> 
-> Also after checking quirk.c, I noticed there is already a quirk for
-> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
-> shouldn't do that as mentioned above that case(1) could still works fine
-> with L0s.
-> 
-> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Cc: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v2:
-> - drop the quirk prefix
-> 
->  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
->  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
->  2 files changed, 11 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> index 71aeda1..1453a73 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -43,6 +43,8 @@ Required properties:
->  - interrupt-map-mask and interrupt-map: standard PCI properties
->  
->  Optional Property:
-> +- aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
-> +	using 24MHz OSC for RC's PHY.
->  - ep-gpios: contain the entry for pre-reset gpio
->  - num-lanes: number of lanes to use
->  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index f2dca7b..35988fc 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -140,6 +140,8 @@
->  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
->  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
->  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-> +#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
-> +#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
->  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
->  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
->  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
-> @@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
->  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
->  
-> +	/* Clear L0s from RC's link cap */
-> +	if (of_property_read_bool(dev->of_node, "apsm-no-l0s")) {
+On Fri, Jan 06, 2017 at 11:56:30AM -0500, Serguei Sagalovitch wrote:
+> On 2017-01-05 08:58 PM, Jerome Glisse wrote:
+> > On Thu, Jan 05, 2017 at 05:30:34PM -0700, Jason Gunthorpe wrote:
+> > > On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
+> > > 
+> > > > > I still don't understand what you driving at - you've said in both
+> > > > > cases a user VMA exists.
+> > > > In the former case no, there is no VMA directly but if you want one than
+> > > > a device can provide one. But such VMA is useless as CPU access is not
+> > > > expected.
+> > > I disagree it is useless, the VMA is going to be necessary to support
+> > > upcoming things like CAPI, you need it to support O_DIRECT from the
+> > > filesystem, DPDK, etc. This is why I am opposed to any model that is
+> > > not VMA based for setting up RDMA - that is shorted sighted and does
+> > > not seem to reflect where the industry is going.
+> > > 
+> > > So focus on having VMA backed by actual physical memory that covers
+> > > your GPU objects and ask how do we wire up the '__user *' to the DMA
+> > > API in the best way so the DMA API still has enough information to
+> > > setup IOMMUs and whatnot.
+> > I am talking about 2 different thing. Existing hardware and API where you
+> > _do not_ have a vma and you do not need one. This is just existing stuff.
+> I do not understand why you assume that existing API doesn't  need one.
+> I would say that a lot of __existing__ user level API and their support in
+> kernel (especially outside of graphics domain) assumes that we have vma and
+> deal with __user * pointers.
 
-Did you test this?  This string ("apsm-no-l0s") doesn't match the
-"aspm-no-l0s" documented above.  The current tree doesn't contain either
-string in any DTS.
+Well i am thinking to GPUDirect here. Some of GPUDirect use case do not have
+vma (struct vm_area_struct) associated with them they directly apply to GPU
+object that aren't expose to CPU. Yes some use case have vma for share buffer.
 
-> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LINK_CAP);
-> +		status &= ~PCIE_RC_CONFIG_LINK_CAP_L0S;
-> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
-> +	}
-> +
->  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
->  
->  	rockchip_pcie_write(rockchip,
-> -- 
-> 1.9.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In the open source driver it is true that we have vma most often than not.
+
+> > Some close driver provide a functionality on top of this design. Question
+> > is do we want to do the same ? If yes and you insist on having a vma we
+> > could provide one but this is does not apply and is useless for where we
+> > are going with new hardware.
+> > 
+> > With new hardware you just use malloc or mmap to allocate memory and then
+> > you use it directly with the device. Device driver can migrate any part of
+> > the process address space to device memory. In this scheme you have your
+> > usual VMAs but there is nothing special about them.
+>
+> Assuming that the whole device memory is CPU accessible and it looks
+> like the direction where we are going:
+> - You forgot about use case when we want or need to allocate memory
+> directly on device (why we need to migrate anything if not needed?).
+> - We may want to use CPU to access such memory on device to avoid
+> any unnecessary migration back.
+> - We may have more device memory than the system one.
+> E.g. if you have 12 GPUs w/64GB each it will already give us ~0.7 TB
+> not mentioning NVDIMM cards which could also be used as memory
+> storage for other device access.
+> - We also may want/need to share GPU memory between different
+> processes.
+
+Here i am talking about platform where GPU memory is not accessible at
+all by the CPU (because of PCIe restriction, think CPU atomic operation
+on IO memory).
+
+So i really distinguish between CAPI/CCIX and PCIe. Some platform will
+have CAPI/CCIX other wont. HMM apply mostly to the latter. Some of HMM
+functionalities are still usefull with CAPI/CCIX.
+
+Note that HMM do support allocation on GPU first. In current design this
+can happen when GPU is the first to access an unpopulated virtual address.
+
+
+For platform where GPU memory is accessible plan is either something
+like CDM (Coherent Device Memory) or rely on ZONE_DEVICE. So all GPU
+memory have struct page and those are like ordinary pages. CDM still
+wants some restrictions like avoiding CPU allocation to happen on GPU
+when there is memory pressure ... For all intent and purposes this
+will work transparently in respect to RDMA because we assume on those
+system that the RDMA is CAPI/CCIX and that it can peer to other device.
+
+
+> > Now when you try to do get_user_page() on any page that is inside the
+> > device it will fails because we do not allow any device memory to be pin.
+> > There is various reasons for that and they are not going away in any hw
+> > in the planing (so for next few years).
+> > 
+> > Still we do want to support peer to peer mapping. Plan is to only do so
+> > with ODP capable hardware. Still we need to solve the IOMMU issue and
+> > it needs special handling inside the RDMA device. The way it works is
+> > that RDMA ask for a GPU page, GPU check if it has place inside its PCI
+> > bar to map this page for the device, this can fail. If it succeed then
+> > you need the IOMMU to let the RDMA device access the GPU PCI bar.
+> > 
+> > So here we have 2 orthogonal problem. First one is how to make 2 drivers
+> > talks to each other to setup mapping to allow peer to peer But I would assume  and second is
+> > about IOMMU.
+> > 
+> I think that there is the third problem:  A lot of existing user level API
+> (MPI, IB Verbs, file i/o, etc.) deal with pointers to the buffers.
+> Potentially it would be ideally to support use cases when those buffers are
+> located in device memory avoiding any unnecessary migration /
+> double-buffering.
+> Currently a lot of infrastructure in kernel assumes that this is the user
+> pointer and call "get_user_pages"  to get s/g.   What is your opinion
+> how it should be changed to deal with cases when "buffer" is in
+> device memory?
+
+For HMM plan is to restrict to ODP and either to replace ODP with HMM or change
+ODP to not use get_user_pages_remote() but directly fetch informations from
+CPU page table. Everything else stay as it is. I posted patchset to replace
+ODP with HMM in the past.
+
+For the older kind of API (GPUDirect on yesterday hardware) it uses special
+userspace API. If we don't care about supporting those i don't mind much but
+some people see benefit in not having to deal with vma (struct vm_area_struct).
+
+Cheers,
+Jérôme
