@@ -1,94 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-Date: Wed, 04 Jan 2017 14:29:01 +0100
-Message-ID: <2104402.puPT8SttTe@wuerfel>
-In-Reply-To: <4bbc3494-bf95-9765-ccaf-cc3b3e1cd297@cogentembedded.com>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <5224989.KFLmAz9Gqk@wuerfel>
- <4bbc3494-bf95-9765-ccaf-cc3b3e1cd297@cogentembedded.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:51974 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933336AbdAFVgk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 16:36:40 -0500
+Received: from mail-irv-17.broadcom.com (mail-irv-17.broadcom.com [10.15.198.34])
+        by relay.smtp.broadcom.com (Postfix) with ESMTP id 550EB2803EA
+        for <linux-pci@vger.kernel.org>; Fri,  6 Jan 2017 13:35:59 -0800 (PST)
+From: Andy Gospodarek <gospo@broadcom.com>
+To: linux-pci@vger.kernel.org
+Cc: Ray Jui <rjui@broadcom.com>, Andy Gospodarek <gospo@broadcom.com>
+Subject: [PATCH next v2] PCI: iproc: Allow more than slot 0 on PAXC
+Date: Fri,  6 Jan 2017 16:35:33 -0500
+Message-Id: <1483738533-18300-1-git-send-email-gospo@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 4, 2017 9:24:09 AM CET Nikita Yushchenko wrote:
-> > commit 9a57d58d116800a535510053136c6dd7a9c26e25
-> > Author: Arnd Bergmann <arnd@arndb.de>
-> > Date:   Tue Nov 17 14:06:55 2015 +0100
-> > 
-> >     [EXPERIMENTAL] ARM64: check implement dma_set_mask
-> >     
-> >     Needs work for coherent mask
-> >     
-> >     Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> Unfortunately this is far incomplete
-> 
-> > @@ -957,6 +983,18 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
-> >  	if (!dev->archdata.dma_ops)
-> >  		dev->archdata.dma_ops = &swiotlb_dma_ops;
-> >  
-> > +	/*
-> > +	 * we don't yet support buses that have a non-zero mapping.
-> > +	 *  Let's hope we won't need it
-> > +	 */
-> > +	WARN_ON(dma_base != 0);
-> > +
-> > +	/*
-> > +	 * Whatever the parent bus can set. A device must not set
-> > +	 * a DMA mask larger than this.
-> > +	 */
-> > +	dev->archdata.parent_dma_mask = size;
-> > +
-> 
-> ... because size/mask passed here for PCI devices are meaningless.
-> 
-> For OF platforms, this is called via of_dma_configure(), that checks
-> dma-ranges of node that is *parent* for host bridge. Host bridge
-> currently does not control this at all.
+The iproc host driver limits the number of slots that are available on
+PAXC devices.  Enforcing this limit prevents VFs from being created
+beyond the first port.  After this change it is possible to create VFs
+associated with all four devices.
 
-We need to think about this a bit. Is it actually the PCI host
-bridge that limits the ranges here, or the bus that it is connected
-to. In the latter case, the caller needs to be adapted to handle
-both.
+The first four devices below are the PFs and the next four are the newly
+created VFs:
 
-> In current device trees no dma-ranges is defined for nodes that are
-> parents to pci host bridges. This will make of_dma_configure() to fall
-> back to 32-bit size for all devices on all current platforms.  Thus
-> applying this patch will immediately break 64-bit dma masks on all
-> hardware that supports it.
+0008:01:00.0 Ethernet controller: Broadcom Limited Device 16cd
+0008:01:00.1 Ethernet controller: Broadcom Limited Device 16cd
+0008:01:00.2 Ethernet controller: Broadcom Limited Device 16cd
+0008:01:00.3 Ethernet controller: Broadcom Limited Device 16cd
+0008:01:00.4 Ethernet controller: Broadcom Limited BCM57304 NetXtreme-C Ethernet Virtual Function
+0008:01:01.0 Ethernet controller: Broadcom Limited BCM57304 NetXtreme-C Ethernet Virtual Function
+0008:01:01.4 Ethernet controller: Broadcom Limited BCM57304 NetXtreme-C Ethernet Virtual Function
+0008:01:02.0 Ethernet controller: Broadcom Limited BCM57304 NetXtreme-C Ethernet Virtual Function
 
-No, it won't break it, it will just fall back to swiotlb for all the
-ones that are lacking the dma-ranges property. I think this is correct
-behavior.
+v2: Added check to only allow this on PAXCv1 hardware at the suggestion of Ray
+Jui.
 
-> Also related: dma-ranges property used by several pci host bridges is
-> *not* compatible with "legacy" dma-ranges parsed by of_get_dma_range() -
-> former uses additional flags word at beginning.
+Signed-off-by: Andy Gospodarek <gospo@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Can you elaborate? Do we have PCI host bridges that use wrongly formatted
-dma-ranges properties?
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 3ebc025..ae101d6 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -478,11 +478,11 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 	}
+ 
+ 	/*
+-	 * PAXC is connected to an internally emulated EP within the SoC.  It
+-	 * allows only one device.
++	 * PAXC is connected to an internally emulated EP within the SoC.
++	 * Allow multiple slots only on PAXCv1 hardware.
+ 	 */
+ 	if (pcie->ep_is_internal)
+-		if (slot > 0)
++		if (slot > 0 && pcie->type != IPROC_PCIE_PAXC)
+ 			return NULL;
+ 
+ 	/* EP device access */
+-- 
+2.1.0
 
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
