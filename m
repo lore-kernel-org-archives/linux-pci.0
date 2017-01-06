@@ -1,91 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 17 Jan 2017 11:15:40 -0800
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        ashok.raj@intel.com
-Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
-Message-ID: <20170117191539.GA155748@otc-nc-03>
-References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:41803 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932094AbdAFAao (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Jan 2017 19:30:44 -0500
+Date: Thu, 5 Jan 2017 17:30:34 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Jerome Glisse <j.glisse@gmail.com>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
+        david1.zhou@amd.com, qiang.yu@amd.com
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170106003034.GB4670@obsidianresearch.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <20170105183927.GA5324@gmail.com>
+ <20170105190113.GA12587@obsidianresearch.com>
+ <20170105195424.GB2166@redhat.com>
+ <20170105200719.GB31047@obsidianresearch.com>
+ <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170105232352.GB6426@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
 
-Sorry to bug you, didn't hear from you after i added the lock for consistency
-to address the feedback.
+> > I still don't understand what you driving at - you've said in both
+> > cases a user VMA exists.
+> 
+> In the former case no, there is no VMA directly but if you want one than
+> a device can provide one. But such VMA is useless as CPU access is not
+> expected.
 
-Let me know if there is anymore changes you like to see.
+I disagree it is useless, the VMA is going to be necessary to support
+upcoming things like CAPI, you need it to support O_DIRECT from the
+filesystem, DPDK, etc. This is why I am opposed to any model that is
+not VMA based for setting up RDMA - that is shorted sighted and does
+not seem to reflect where the industry is going.
 
-Cheers,
-Ashok
+So focus on having VMA backed by actual physical memory that covers
+your GPU objects and ask how do we wire up the '__user *' to the DMA
+API in the best way so the DMA API still has enough information to
+setup IOMMUs and whatnot.
 
-On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
-> Changes from v1:
-> 	Address comments from Bjorn:
-> 		Added p_slot->lock mutex around changes to p_slot->state
-> 		Updated commit message to call out mutex names
+> What i was trying to get accross is that no matter what level you
+> consider in the end you still need something at the DMA API level.
+> And that the 2 different use case (device vma or regular vma) means
+> 2 differents API for the device driver.
+
+I agree we need new stuff at the DMA API level, but I am opposed to
+the idea we need two API paths that the *driver* has to figure out.
+That is fundamentally not what I want as a driver developer.
+
+Give me a common API to convert '__user *' to a scatter list and pin
+the pages. This needs to figure out your two cases. And Huge
+Pages. And ZONE_DIRECT.. (a better get_user_pages)
+
+Give me an API to take the scatter list and DMA map it, handling all
+the stuff associated with peer-peer. (a better dma_map_sg)
+
+Give me a notifier scheme to rework my scatter list when physical
+pages need to change (mmu notifiers)
+
+Use the scatter list memory to convey needed information from the
+first step to the second.
+
+Do not bother the driver with distinctions on what kind of memory is
+behind that VMA. Don't ask me to use get_user_pages or
+gpu_get_user_pages, do not ask me to use dma_map_sg or
+dma_map_sg_peer_direct. The Driver Doesn't Need To Know.
+
+IMHO this is why GPU direct is not mergable - it creates a crazy
+parallel mini-mm subsystem inside RDMA and uses that to connect to a
+GPU driver, everything is expected to have parallel paths for GPU
+direct and normal MM. No good at all.
+
+> > So, how do you identify these GPU objects? How do you expect RDMA
+> > convert them to scatter lists? How will ODP work?
 > 
-> A surprise link down may retrain very quickly, causing the same slot to
-> generate a link up event before handling the link down completes.
-> 
-> Since the link is active, the power off work queued from the first link
-> down will cause a second down event when the power is disabled. The second
-> down event should be ignored because the slot is already powering off;
-> however, the "link up" event sets the slot state to POWERON before the
-> event to handle this is enqueued, making the second down event believe
-> it needs to do something. This creates a constant link up and down
-> event cycle.
-> 
-> This patch fixes that by setting the p_slot->state only when the work to
-> handle the power event is executing, protected by the p_slot->hotplug_lock.
-> 
-> To: Bjorn Helgass <bhelgaas@google.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: Keith Busch <keith.busch@intel.com>
-> 
-> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> Reviewed-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index ec0b4c1..4cf4772 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
->  	switch (info->req) {
->  	case DISABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
-> +		mutex_lock(&p_slot->lock);
-> +		p_slot->state = POWEROFF_STATE;
-> +		mutex_unlock(&p_slot->lock);
->  		pciehp_disable_slot(p_slot);
->  		mutex_unlock(&p_slot->hotplug_lock);
->  		mutex_lock(&p_slot->lock);
-> @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
->  		break;
->  	case ENABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
-> +		mutex_lock(&p_slot->lock);
-> +		p_slot->state = POWERON_STATE;
-> +		mutex_unlock(&p_slot->lock);
->  		ret = pciehp_enable_slot(p_slot);
->  		mutex_unlock(&p_slot->hotplug_lock);
->  		if (ret)
-> @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
->  {
->  	struct power_work_info *info;
->  
-> -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
-> -
->  	info = kmalloc(sizeof(*info), GFP_KERNEL);
->  	if (!info) {
->  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
-> -- 
-> 2.7.4
-> 
+> No ODP on those. If you want vma, the GPU device driver can provide
+
+You said you needed invalidate, that has to be done via ODP.
+
+Jason
