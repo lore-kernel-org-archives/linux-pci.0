@@ -1,111 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46295 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162626AbdAGBHA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 20:07:00 -0500
-Date: Fri, 6 Jan 2017 20:06:51 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Dan Streetman <dan.streetman@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, boris.ostrovsky@oracle.com
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-Message-ID: <20170107010651.GV16608@char.us.oracle.com>
-References: <20170105192856.25559-1-dan.streetman@canonical.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <3158203.Yc9Qgx82xo@wuerfel>
+ <9d5e32d3-000c-2f95-7ea8-c64d53ab6b56@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+Date: Fri, 6 Jan 2017 16:47:59 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170105192856.25559-1-dan.streetman@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2723285.JORgusvJv4@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 02:28:56PM -0500, Dan Streetman wrote:
-> Do not read a pci device's msi message data to see if a pirq was
-> previously configured for the device's msi/msix, as the old pirq was
-> unmapped and may now be in use by another pci device.  The previous
-> pirq should never be re-used; instead a new pirq should always be
-> allocated from the hypervisor.
+>>> Just a guess, but if the inbound translation windows in the host
+>>> bridge are wider than 32-bit, the reason for setting up a single
+>>> 32-bit window is probably because that is what the parent bus supports.
 
-Won't this cause a starvation problem? That is we will run out of PIRQs
-as we are not reusing them?
+I've re-checked rcar-pcie hardware documentation.
+
+It indeed mentions that AXI bus it sits on is 32-bit.
+
+
+>> Well anyway applying patch similar to your's will fix pcie-rcar + nvme
+>> case - thus I don't object :)   But it can break other cases ...
+>>
+>> But why do you hook at set_dma_mask() and overwrite mask inside, instead
+>> of hooking at dma_supported() and rejecting unsupported mask?
+>>
+>> I think later is better, because it lets drivers to handle unsupported
+>> high-dma case, like documented in DMA-API_HOWTO.
 > 
-> The xen_hvm_setup_msi_irqs() function currently checks the pci device's
-> msi descriptor message data for each msi/msix vector it sets up, and if
-> it finds the vector was previously configured with a pirq, and that pirq
-> is mapped to an irq, it re-uses the pirq instead of requesting a new pirq
-> from the hypervisor.  However, that pirq was unmapped when the pci device
-> disabled its msi/msix, and it cannot be re-used; it may have been given
-> to a different pci device.
-
-Hm, but this implies that we do keep track of it.
-
-
-while (true)
-do
- rmmod nvme
- modprobe nvme
-done
-
-Things go boom without this patch. But with this patch does this
-still work? As in we don't run out of PIRQs?
-
-Thanks.
+> I think the behavior I put in there is required for swiotlb to make
+> sense, otherwise you would rely on the driver to handle dma_set_mask()
+> failure gracefully with its own bounce buffers (as network and
+> scsi drivers do but others don't).
 > 
-> This exact situation is happening in a Xen guest where multiple NVMe
-> controllers (pci devices) are present.  The NVMe driver configures each
-> pci device's msi/msix twice; first to configure a single vector (to
-> talk to the controller for its configuration info), and then it disables
-> that msi/msix and re-configures with all the msi/msix it needs.  When
-> multiple NVMe controllers are present, this happens concurrently on all
-> of them, and in the time between controller A calling pci_disable_msix()
-> and then calling pci_enable_msix_range(), controller B enables its msix
-> and gets controller A's pirq allocated from the hypervisor.  Then when
-> controller A re-configures its msix, its first vector tries to re-use
-> the same pirq that it had before; but that pirq was allocated to
-> controller B, and thus the Xen event channel for controller A's re-used
-> pirq fails to map its irq to that pirq; the hypervisor already has the
-> pirq mapped elsewhere.
+> Having swiotlb or iommu enabled should result in dma_set_mask() always
+> succeeding unless the mask is too small to cover the swiotlb
+> bounce buffer area or the iommu virtual address space. This behavior
+> is particularly important in case the bus address space is narrower
+> than 32-bit, as we have to guarantee that the fallback to 32-bit
+> DMA always succeeds. There are also a lot of drivers that try to
+> set a 64-bit mask but don't implement bounce buffers for streaming
+> mappings if that fails, and swiotlb is what we use to make those
+> drivers work.
 > 
-> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
-> ---
->  arch/x86/pci/xen.c | 23 +++++++----------------
->  1 file changed, 7 insertions(+), 16 deletions(-)
-> 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index bedfab9..a00a6c0 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  		return 1;
->  
->  	for_each_pci_msi_entry(msidesc, dev) {
-> -		__pci_read_msi_msg(msidesc, &msg);
-> -		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
-> -			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
-> -		if (msg.data != XEN_PIRQ_MSI_DATA ||
-> -		    xen_irq_from_pirq(pirq) < 0) {
-> -			pirq = xen_allocate_pirq_msi(dev, msidesc);
-> -			if (pirq < 0) {
-> -				irq = -ENODEV;
-> -				goto error;
-> -			}
-> -			xen_msi_compose_msg(dev, pirq, &msg);
-> -			__pci_write_msi_msg(msidesc, &msg);
-> -			dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
-> -		} else {
-> -			dev_dbg(&dev->dev,
-> -				"xen: msi already bound to pirq=%d\n", pirq);
-> +		pirq = xen_allocate_pirq_msi(dev, msidesc);
-> +		if (pirq < 0) {
-> +			irq = -ENODEV;
-> +			goto error;
->  		}
-> +		xen_msi_compose_msg(dev, pirq, &msg);
-> +		__pci_write_msi_msg(msidesc, &msg);
-> +		dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
->  		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
->  					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
->  					       (type == PCI_CAP_ID_MSIX) ?
-> -- 
-> 2.9.3
-> 
+> And yes, the API is a horrible mess.
+
+With my patch applied and thus 32bit dma_mask set for NVMe device, I do
+see high addresses passed to dma_map_*() routines and handled by
+swiotlb. Thus your statement that behavior "succeed 64bit dma_set_mask()
+operation but silently replace mask behind the scene" is required for
+swiotlb to be used, does not match reality.
+
+It can be interpreted as a breakage elsewhere, but it's hard to point
+particular "root cause". The entire infrastructure to allocate and use
+DMA memory is messy.
+
+Still current code does not work, thus fix is needed.
+
+Perhaps need to introduce some generic API to "allocate memory best
+suited for DMA to particular device", and fix allocation points (in
+drivers, filesystems, etc) to use it. Such an API could try to allocate
+area that can be DMAed by hardware, and fallback to other memory that
+can be used via swiotlb or other bounce buffer implementation.
+
+But for now, have to stay with dma masks. Will follow-up with a patch
+based on your but with coherent mask handling added.
+
+Nikita
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
