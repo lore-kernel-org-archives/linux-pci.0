@@ -1,149 +1,127 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 11/37] PCI: dwc: Split pcie-designware.c into host and
- core files
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-12-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <4a89fb45-af84-d660-5ef0-12227b141cda@synopsys.com>
-Date: Fri, 13 Jan 2017 16:49:44 +0000
+Return-Path: <SRS0=fKwQ=YV=redhat.com=hdegoede@kernel.org>
+Return-Path: <SRS0=fKwQ=YV=redhat.com=hdegoede@kernel.org>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+To: Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
+ <59349185.1aqio7kYFn@aspire.rjw.lan>
+ <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+ <20170105150646.GB21446@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Peter Jones <pjones@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com>
+Date: Sat, 7 Jan 2017 12:45:35 +0100
 MIME-Version: 1.0
-In-Reply-To: <1484216786-17292-12-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170105150646.GB21446@wunner.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
-> Split pcie-designware.c into pcie-designware-host.c that contains
-> the host specific parts of the driver and pcie-designware.c that
-> contains the parts used by both host driver and endpoint driver.
-> =
+Hi,
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/Makefile               |    2 +-
->  drivers/pci/dwc/pcie-designware-host.c |  619 ++++++++++++++++++++++++++=
-++++++
->  drivers/pci/dwc/pcie-designware.c      |  613 +-------------------------=
------
->  drivers/pci/dwc/pcie-designware.h      |    8 +
->  4 files changed, 634 insertions(+), 608 deletions(-)
->  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
-> =
+On 05-01-17 16:06, Lukas Wunner wrote:
+> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
+>>> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
+>>>> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
+>>>>> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
+>>>>>> I don't *want* to apply the revert.  It's on my for-linus branch as a
+>>>>>> worst-case scenario change if we can't figure out a better fix.
+>>>>>>
+>>>>>> The patch below is preferable, but I'd rather not take even it,
+>>>>>> because it takes away functionality and forces people to use a boot
+>>>>>> parameter to restore it.  I expect that somebody will figure out how
+>>>>>> to fix the regression Kilian found and also keep the new functionality
+>>>>>> (without requiring boot parameters) before v4.10.
+>>>>>
+>>>>> The issue is constrained to hybrid graphics laptops with Nvidia discrete
+>>>>> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
+>>>>> PCI core.
+>>>>
+>>>> The problem is not necessarily in the nouveau driver, the same problem
+>>>> occurs when you enable RPM without loading nouveau. The issue is limited
+>>>> though to some newer hybrid graphics laptops with Nvidia GPUs. While a
+>>>> quirk can be added to nouveau, I think that a (temporary) quirk in core
+>>>> would also be reasonable (since it also occurs without nouveau).
+>>>>
+>>>>> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
+>>>>> when and how to call an ACPI method versus using PR3.)
+>>>>>
+>>>>> (Neither are laptops using the Nvidia proprietary driver as it doesn't
+>>>>> runtime suspend the card.  But battery life will be terrible then.)
+>>>>>
+>>>>> We're at rc2 so the time frame for coming up with a fix is probably
+>>>>> 4 weeks.  Peter and others have tried for months to reverse-engineer
+>>>>> how to handle runtime PM on newer Nvidia cards.  It seems likely that
+>>>>> we'll not find the ultimate solution to the problem within 4 weeks.
+>>>>
+>>>> Yep, a quick proper fix seems unlikely.
+>>>> [ Help/ideas are welcome, I suspect that these failures to restore power
+>>>> on laptops designed for Win8+ all have the same cause, related to some
+>>>> unknown interaction between ACPI and PCI. Some links:
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=190861
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
+>>>>
+>>>>> The way it is now, i.e. defaulting to PR3 when available, regresses
+>>>>> certain laptops such as Kilian's.  If on the other hand we default to
+>>>>> DSM when available, we'll regress certain other laptops, as Peter has
+>>>>> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
+>>>>> approach either, ideally we'd want to use PR3 as Windows does.
+>>>>>
+>>>>> As said, the only short-term solution I see is to add an "optimus"
+>>>>> module_param to nouveau to allow users to select which method to use.
+>>>>> So in Kilian's case an additional command line parameter would be
+>>>>> necessary to fix the issue.
+>>>>>
+>>>>> Does anyone see a better solution or can we agree on this one?  If so
+>>>>> I can come up with a patch.  This could go in via Dave Airlie's tree.
+>>>>
+>>>> As pcie_port_pm=off already reverts to DSM, I do not think that an
+>>>> additional (temporary) nouveau module parameter is going to help. I
+>>>> instead propose a (hopefully temporary) quirk in pci core that disables
+>>>> D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
+>>>> pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
+>>>> to test possible solutions in the future.
+>>>
+>>> I would rather add a quirk to the ACPI core to prevent the power resources in
+>>> question from being enumerated.  Or even to prevent ACPI PM from being
+>>> used for the port in question.
+>>
+>> I do have a W541 in a cupboard in the office somewhere, but I won't be close to
+>> it for a couple of weeks. The W541 was the first place I tested the pm patches
+>> so I'm kinda wondering whether it's all W541's or just some specific model/bios
+>> combo.
+>>
+>> However I'm pretty much unavailable to do anything much until late Jan on this.
+>
+> Is there anyone else at Red Hat who might be able to look into this?
+>
+> ISTR that Hans de Goede is working on improving laptop support in Fedora,
+> and Peter Jones recently got a patch merged for the W541 with the exact
+> same firmware Kilian is using to work around a botched EFI memory map.
+> Adding them to cc: in the hope that they may be able to help.
+>
+> @Peter, have you noticed issues with the discrete Nvidia GPU on your W541
+> related to runtime suspend and system sleep?
 
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> index 7d27c14..3b57e55 100644
-> --- a/drivers/pci/dwc/Makefile
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -1,4 +1,4 @@
+I've a W541 sitting in my home office at well. I will take it through
+some gpu runtime suspend/resume testing. Which kernel introduces the
+problem I'm looking for ?
 
-(snip...)
+I believe mine has the old BIOS / EFI which is less troublesome so I
+will first see if I can reproduce the problem with that and then upgrade
+to see if that introduces the problem.
 
-> -static void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
-> -				      int type, u64 cpu_addr, u64 pci_addr,
-> -				      u32 size)
-> +void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
-> +			       u64 cpu_addr, u64 pci_addr, u32 size)
->  {
->  	u32 retries, val;
->  =
+Peter IIRC you said that after upgrading the firmware I need a new enough
+kernel to be able to even boot, from which kernel onwards will the machine
+boot with the new firmware ?
 
-> @@ -186,220 +151,6 @@ static void dw_pcie_prog_outbound_atu(struct dw_pci=
-e *pci, int index,
->  	dev_err(pci->dev, "iATU is not being enabled\n");
->  }
+Also is it possible to downgrade the EFI again ? ...
 
-Kishon, iATU only makes sense in The Root Complex (host), so it should be i=
-nside
-the pcie-designware-host.
+Regards,
 
->  =
-
-> -static struct irq_chip dw_msi_irq_chip =3D {
-> -	.name =3D "PCI-MSI",
-> -	.irq_enable =3D pci_msi_unmask_irq,
-> -	.irq_disable =3D pci_msi_mask_irq,
-> -	.irq_mask =3D pci_msi_mask_irq,
-> -	.irq_unmask =3D pci_msi_unmask_irq,
-> -};
-> -
-
-(snip...)
-
-> -
-> -static const struct irq_domain_ops msi_domain_ops =3D {
-> -	.map =3D dw_pcie_msi_map,
-> -};
-> -
->  static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
->  {
->  	u32 val;
-> @@ -454,303 +192,11 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pc=
-ie *pci)
->  	return 0;
->  }
-
-Kishon, iATU only makes sense in The Root Complex (host), so it should be i=
-nside
-the pcie-designware-host.
-
-(snip...)
-
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-des=
-ignware.h
-> index 491fbe3..808d17b 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -14,6 +14,10 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
->  =
-
-> +#include <linux/irq.h>
-> +#include <linux/msi.h>
-> +#include <linux/pci.h>
-> +
->  /* Parameters for the waiting for link up routine */
->  #define LINK_WAIT_MAX_RETRIES		10
->  #define LINK_WAIT_USLEEP_MIN		90000
-> @@ -167,4 +171,8 @@ struct dw_pcie {
->  void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
->  int dw_pcie_link_up(struct dw_pcie *pci);
->  int dw_pcie_wait_for_link(struct dw_pcie *pci);
-> +void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
-> +			       int type, u64 cpu_addr, u64 pci_addr,
-> +			       u32 size);
-> +void dw_pcie_setup(struct dw_pcie *pci);
-
-
-Kishon, iATU only makes sense in The Root Complex (host), so it should be i=
-nside
-the pcie-designware-host as static.
-
->  #endif /* _PCIE_DESIGNWARE_H */
-> =
-
-
-Thanks,
-Joao
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Hans
