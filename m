@@ -1,57 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Jan 2017 10:28:50 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 36/37] ARM: DRA7: clockdomain: Change the CLKTRCTRL of
- CM_PCIE_CLKSTCTRL to SW_WKUP
-Message-ID: <20170120182850.GE7403@atomide.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-37-git-send-email-kishon@ti.com>
- <20170113171537.GZ2630@atomide.com> <587C628E.7070804@ti.com>
+Return-Path: <SRS0=vzn2=YV=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=vzn2=YV=wunner.de=lukas@kernel.org>
+Date: Sat, 7 Jan 2017 13:19:59 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Dave Airlie <airlied@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170107121959.GB22429@wunner.de>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <3913750.OA6IItgEjC@aspire.rjw.lan>
+ <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
+ <16155135.jUckSz7QPL@aspire.rjw.lan>
+ <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <20170104210954.GA11946@al>
+ <20170105144220.GA21446@wunner.de>
+ <20170107113510.GA10680@al>
 MIME-Version: 1.0
-In-Reply-To: <587C628E.7070804@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170107113510.GA10680@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-* Kishon Vijay Abraham I <kishon@ti.com> [170115 22:06]:
-> Hi Tony,
-> 
-> On Friday 13 January 2017 10:45 PM, Tony Lindgren wrote:
-> > * Kishon Vijay Abraham I <kishon@ti.com> [170112 02:35]:
-> >> The PCIe programming sequence in TRM suggests CLKSTCTRL of PCIe should
-> >> be set to SW_WKUP. There are no issues when CLKSTCTRL is set to HW_AUTO
-> >> in RC mode. However in EP mode, the host system is not able to access the
-> >> MEMSPACE and setting the CLKSTCTRL to SW_WKUP fixes it.
+On Sat, Jan 07, 2017 at 12:35:10PM +0100, Peter Wu wrote:
+> On Thu, Jan 05, 2017 at 03:42:20PM +0100, Lukas Wunner wrote:
+> > On Wed, Jan 04, 2017 at 10:09:54PM +0100, Peter Wu wrote:
+> > > [ Help/ideas are welcome, I suspect that these failures to restore power
+> > > on laptops designed for Win8+ all have the same cause, related to some
+> > > unknown interaction between ACPI and PCI. Some links:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
 > > 
-> > I guess ideally in the long run we would set this dynamically based on
-> > the selected mode, right?
+> > Looking at Kilian's acpidump again I notice that the methods to power
+> > the GPU on or off (GPON / GPOF) are called from two places:
+> > 
+> > - From the _PS0 and _PS3 methods of the GPU and
+> > - from the _PR3 power resource of the root port above the GPU.
+> > 
+> > In the former case they're called for pre Windows 2013 or if VDAD is true.
+> > In the latter case they're called unconditionally but GPOF becomes a no-op
+> > in the pre Windows 2013 case.
+> > 
+> > This means that GPOF would be executed *twice* on Windows 2013+ if VDAD
+> > is true.  I could imagine this to cause issues.
 > 
-> The programming sequence mentioned in the TRM w.r.t clock programming is same
-> for both host mode or device mode. Though we never faced any issues in host
-> mode when HW_AUTO is set, it's better to follow TRM recommended settings IMHO.
+> There is a flag "DGOS" which is set when PGON/PGOF are called, so
+> multiple invocations should not matter for the powerdown/up sequence.
+> There are some SMI calls though that might have side-effects though.
 
-OK best to merge this with the whole series:
+The PGON method becomes a no-op if DGOS is true.  But the PGOF method
+doesn't check DGOS.
 
-Acked-by: Tony Lindgren <tony@atomide.com>
+Thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lukas
