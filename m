@@ -1,123 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:43268 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750849AbdAONTx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 08:19:53 -0500
-From: Lukasz Majewski <lukma@denx.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lukasz Majewski <lukma@denx.de>
-Subject: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-Date: Sun, 15 Jan 2017 14:19:14 +0100
-Message-Id: <1484486354-4585-1-git-send-email-lukma@denx.de>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:53873 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935449AbdAHIoF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2017 03:44:05 -0500
+Message-Id: <bc77efb7da66b7c81c751a4b07f3b306e6dcba8f.1483806825.git.lukas@wunner.de>
+In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
+References: <cover.1483806825.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 8 Jan 2017 09:41:45 +0100
+Subject: [PATCH v4 6/8] PM / sleep: Define constant for direct_complete
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Chen Yu <yu.c.chen@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Lee Jones <lee.jones@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices (due to e.g. bad PCIe signal integrity) require to run
-with forced GEN1 speed on PCIe bus.
+From: Chen Yu <yu.c.chen@intel.com>
 
-This patch changes the speed explicitly on dra7 based devices when
-proper device tree attribute is defined for the PCIe controller.
+The PM core introduced the ability to keep devices runtime suspended
+during the entire system sleep process with commit aae4518b3124
+("PM / sleep: Mechanism to avoid resuming runtime-suspended devices
+unnecessarily").
 
-Signed-off-by: Lukasz Majewski <lukma@denx.de>
+Drivers opt in to this so-called "direct_complete" mechanism by
+returning a positive value from their ->prepare hook.  Usually this is
+achieved with a "return 1;" statement, which looks somewhat cryptic to
+readers not intimately familiar with the PM core.
+
+Improve clarity by defining a DPM_DIRECT_COMPLETE constant which drivers
+may use instead.
+
+Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Lee Jones <lee.jones@linaro.org>
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+[LW: separate this hunk out of mfd patch, add commit message]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
+ include/linux/pm.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Patch applies on newest origin/master
-SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
-
-Tested at AM5728
-
----
- Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
- drivers/pci/host/pci-dra7xx.c                    | 23 +++++++++++++++++++++++
- drivers/pci/host/pcie-designware.h               |  1 +
- 3 files changed, 25 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 60e2516..9f97409 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -25,6 +25,7 @@ PCIe Designware Controller
- 
- Optional Property:
-  - gpios : Should be added if a gpio line is required to drive PERST# line
-+ - to,pcie-is-gen1: Indicates that forced gen1 port operation is needed.
- 
- Example:
- axi {
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 9595fad..eec5fae 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -63,6 +63,13 @@
- #define	LINK_UP						BIT(16)
- #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
- 
-+#define         PCIECTRL_EP_DBICS_LNK_CAP                       0x007C
-+#define         MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
-+#define         MAX_LINK_SPEEDS_GEN1                            BIT(0)
-+
-+#define         PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
-+#define         CFG_DIRECTED_SPEED_CHANGE                       BIT(17)
-+
- struct dra7xx_pcie {
- 	struct pcie_port	pp;
- 	void __iomem		*base;		/* DT ti_conf */
-@@ -270,6 +277,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	struct pcie_port *pp = &dra7xx->pp;
- 	struct device *dev = pp->dev;
- 	struct resource *res;
-+	u32 val;
- 
- 	pp->irq = platform_get_irq(pdev, 1);
- 	if (pp->irq < 0) {
-@@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	if (!pp->dbi_base)
- 		return -ENOMEM;
- 
-+	if (pp->is_gen1) {
-+		dev_info(dev, "GEN1 forced\n");
-+
-+		val = readl(pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
-+		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK, MAX_LINK_SPEEDS_GEN1);
-+		writel(val, pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
-+
-+		val = readl(pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
-+		val &= ~CFG_DIRECTED_SPEED_CHANGE;
-+		writel(val, pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
-+	}
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
-@@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		goto err_gpio;
- 	}
- 
-+	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
-+		pp->is_gen1 = true;
-+
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
- 	reg &= ~LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a567ea2..2fb0b18 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -50,6 +50,7 @@ struct pcie_port {
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
- 	u8			iatu_unroll_enabled;
-+	u8                      is_gen1;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+diff --git a/include/linux/pm.h b/include/linux/pm.h
+index f926af4..2d651a3 100644
+--- a/include/linux/pm.h
++++ b/include/linux/pm.h
+@@ -788,4 +788,11 @@ enum dpm_order {
+ 	DPM_ORDER_DEV_LAST,
  };
  
++/*
++ * Return this from system suspend/hibernation ->prepare() callback to
++ * request the core to leave the device runtime-suspended during system
++ * suspend if possible.
++ */
++#define DPM_DIRECT_COMPLETE 1
++
+ #endif /* _LINUX_PM_H */
 -- 
-2.1.4
+2.11.0
 
