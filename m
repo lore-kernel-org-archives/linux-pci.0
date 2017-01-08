@@ -1,49 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39822 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750726AbdA1V2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Jan 2017 16:28:05 -0500
-Date: Sat, 28 Jan 2017 15:27:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, krzk@kernel.org,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        Pankaj Dubey <pankaj.dubey@samsung.com>
-Subject: Re: [PATCH V3 0/5] PCI: exynos: cleans the minor things
-Message-ID: <20170128212730.GA22283@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20170116063140epcas5p38fffe5effdcfd2650cad98c25c31335e@epcas5p3.samsung.com>
- <20170116063138.25805-1-jh80.chung@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170116063138.25805-1-jh80.chung@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <2dd9744308f87f15e4e252157b327fcae5633693.1483806825.git.lukas@wunner.de>
+In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
+References: <cover.1483806825.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 8 Jan 2017 09:41:45 +0100
+Subject: [PATCH v4 8/8] thunderbolt: Runtime suspend NHI when idle
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Chen Yu <yu.c.chen@intel.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Amir Levy <amir.jer.levy@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 16, 2017 at 03:31:33PM +0900, Jaehoon Chung wrote:
-> Current pci-exynos.c is used for only EXYNOS5440.
-> It's too complex to support the other Exynos SoCs.
-> Before supporting the other Exynos SoCs, it needs to clean the codes.
-> 
-> Changelog on V3:
-> - Splits "PCI: exynos: replace to one register accessor from each accessors"
-> 
-> Changelog on V2:
-> - Changes the all pointer names as "ep" instead of "exynos_pcie"
-> 
-> Jaehoon Chung (5):
->   PCI: exynos: Rename all pointer names from "exynos_pcie" to "ep"
->   PCI: exynos: Replace the *_blk/*_phy/*_elb accessors
->   PCI: exynos: Remove the unnecessary variables
->   PCI: exynos: Use the bitops API to operate the bit shifting
->   PCI: exynos: remove the duplicated codes
-> 
->  drivers/pci/host/pci-exynos.c | 392 +++++++++++++++++++-----------------------
+Runtime suspend the NHI when no Thunderbolt devices have been plugged in
+for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
 
-Waiting for ack from Jingoom, per MAINTAINERS:
+The NHI is not able to detect plug events while suspended, it relies on
+the GPE handler to resume it on hotplug.
 
-Jingoo Han <jingoohan1@gmail.com> (maintainer:PCI DRIVER FOR SAMSUNG EXYNOS)
+After the NHI resumes, it takes about 700 ms until a hotplug event
+appears on the RX ring.  In case autosuspend_delay_ms has been reduced
+to 0 by the user, we need to wait in tb_resume() to avoid going back to
+sleep before we had a chance to detect a hotplugged device.  A runtime
+pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
+awake while the hotplug event is processed.
 
-Pankaj has a follow-on patch that depends on this series:
-https://patchwork.ozlabs.org/patch/711210/
+Apart from that we acquire a runtime pm ref for each newly allocated
+switch (except for the root switch) and drop one when a switch is freed,
+thereby ensuring the NHI stays active as long as devices are plugged in.
+This behaviour is identical to the macOS driver.
+
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/nhi.c    |  2 ++
+ drivers/thunderbolt/power.c  |  9 +++++++++
+ drivers/thunderbolt/switch.c |  9 +++++++++
+ drivers/thunderbolt/tb.c     | 13 +++++++++++++
+ 4 files changed, 33 insertions(+)
+
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 88fb2fb..319ed81 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -632,6 +632,8 @@ static void nhi_remove(struct pci_dev *pdev)
+ 					    * pci-tunnels stay alive.
+ 					    */
+ 	.restore_noirq = nhi_resume_noirq,
++	.runtime_suspend = nhi_suspend_noirq,
++	.runtime_resume = nhi_resume_noirq,
+ };
+ 
+ static struct pci_device_id nhi_ids[] = {
+diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
+index 6e7ef07..06f535c 100644
+--- a/drivers/thunderbolt/power.c
++++ b/drivers/thunderbolt/power.c
+@@ -319,6 +319,12 @@ void thunderbolt_power_init(struct tb *tb)
+ 
+ 	tb->power = power;
+ 
++	pm_runtime_allow(nhi_dev);
++	pm_runtime_set_autosuspend_delay(nhi_dev, 10000);
++	pm_runtime_use_autosuspend(nhi_dev);
++	pm_runtime_mark_last_busy(nhi_dev);
++	pm_runtime_put_autosuspend(nhi_dev);
++
+ 	return;
+ 
+ err_free:
+@@ -335,6 +341,9 @@ void thunderbolt_power_fini(struct tb *tb)
+ 	if (!power)
+ 		return; /* thunderbolt_power_init() failed */
+ 
++	pm_runtime_get(nhi_dev);
++	pm_runtime_forbid(nhi_dev);
++
+ 	tb->power = NULL;
+ 	dev_pm_domain_set(upstream_dev, NULL);
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c6f30b1..422fe6e 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ #include "tb.h"
+@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
+ 	if (!sw->is_unplugged)
+ 		tb_plug_events_active(sw, false);
+ 
++	if (sw != sw->tb->root_switch) {
++		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
++		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
++	}
++
+ 	kfree(sw->ports);
+ 	kfree(sw->drom);
+ 	kfree(sw);
+@@ -420,6 +426,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
++	if (tb->root_switch)
++		pm_runtime_get(&tb->nhi->pdev->dev);
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 24b6d30..a3fedf9 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "tb.h"
+ #include "tb_regs.h"
+@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct device *dev = &tb->nhi->pdev->dev;
+ 	struct tb_switch *sw;
+ 	struct tb_port *port;
++
++	pm_runtime_get(dev);
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
+ }
+ 
+ /**
+@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+ 	tb_info(tb, "resume finished\n");
++
++	/*
++	 * If runtime resuming due to a hotplug event (rather than resuming
++	 * from system sleep), wait for it to arrive. May take about 700 ms.
++	 */
++	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
++		msleep(1000);
+ }
+-- 
+2.11.0
