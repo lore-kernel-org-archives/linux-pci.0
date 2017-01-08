@@ -1,61 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 16/37] PCI: endpoint: Introduce configfs entry for
- configuring EP functions
-To: Christoph Hellwig <hch@infradead.org>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-17-git-send-email-kishon@ti.com>
- <20170113180602.GA30346@infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <587C61B3.3070107@ti.com>
-Date: Mon, 16 Jan 2017 11:31:23 +0530
-MIME-Version: 1.0
-In-Reply-To: <20170113180602.GA30346@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:39309 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032022AbdAHIns (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2017 03:43:48 -0500
+Message-Id: <9ac30e009e7a86ae7b24e088d29a6d386c513d82.1483806825.git.lukas@wunner.de>
+In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
+References: <cover.1483806825.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 8 Jan 2017 09:41:45 +0100
+Subject: [PATCH v4 5/8] PM: Make requirements of dev_pm_domain_set() more
+ precise
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Chen Yu <yu.c.chen@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Tomeu Vizoso <tomeu.vizoso@collabora.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph,
+Since commit 989561de9b51 ("PM / Domains: add setter for dev.pm_domain")
+a PM domain may only be assigned to unbound devices.
 
-On Friday 13 January 2017 11:36 PM, Christoph Hellwig wrote:
-> Hi Kishon,
-> 
-> a couple comments on the configfs layout based on my experiments with
-> your previous drop to implement a NVMe device using it.
+The motivation was not made explicit in the changelog other than "in the
+general case that can cause problems and also [...] we can simplify code
+quite a bit if we can always assume that".  Rafael J. Wysocki elaborated
+in a mailing list conversation that "setting a PM domain generally
+changes the set of PM callbacks for the device and it may not be safe to
+call it after the driver has been bound".
 
-Thanks for trying it out!
-> 
-> I don't think most of these configfs files should be present here, as
-> they are properties of the implemented PCIe devices.  E.g. for my
-> NVMe device they will be sort of hardcoded most of the time, as they
-> would be for other devices that would always have a fixed vendor/device/
-> class ID, cacheline size, etc.
+The concern seems to be that if a device is put to sleep and its PM
+callbacks are changed, the device may end up in an undefined state or
+not resume at all.  The real underlying requirement is thus to ensure
+that the device is awake and execution of its PM callbacks is prevented
+while the PM domain is assigned.  Unbound devices happen to fulfill this
+requirement, but bound devices can be made to satisfy it as well:
+The caller can prevent execution of PM ops with lock_system_sleep() and
+by holding a runtime PM reference to the device.
 
-Actually not all devices have hardcoded headers. E.g the platform I'm using
-doesn't have hardcoded headers and it can be configured based on the function
-the user would like to use. If the devices are hardcoded, then using configfs
-can be skipped altogether. In such cases, APIs like pci_epf_create() can
-directly be used by the drivers instead of going via configfs.
+Accordingly, adjust dev_pm_domain_set() to WARN only if the device is in
+the midst of a system sleep transition, or runtime PM is enabled and the
+device is either not active or may become inactive imminently (because
+it has no active children or its refcount is zero).
 
-Thanks
-Kishon
+The change is required to support runtime PM for Thunderbolt on the Mac,
+which poses the unique issue that a child device (the NHI) needs to
+assign a PM domain to its grandparent (the upstream bridge).  Because
+the grandparent's driver is built-in and the child's driver is a module,
+the grandparent is usually already bound when the child probes,
+resulting in a WARN splat when calling dev_pm_domain_set().  However the
+PM core guarantees both that the grandparent is active and that system
+sleep is not commenced until the child has finished probing.  So in this
+case it is safe to call dev_pm_domain_set() from the child's ->probe
+hook and the WARN splat is entirely gratuitous.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Note that commit e79aee49bcf9 ("PM: Avoid false-positive warnings in
+dev_pm_domain_set()") modified the WARN to not apply if a PM domain is
+removed.  This is unsafe as it allows removal of the PM domain while
+the device is asleep.  The present commit rectifies this.
+
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Tomeu Vizoso <tomeu.vizoso@collabora.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/base/power/common.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
+index f6a9ad5..d02c1e0 100644
+--- a/drivers/base/power/common.c
++++ b/drivers/base/power/common.c
+@@ -13,6 +13,7 @@
+ #include <linux/pm_clock.h>
+ #include <linux/acpi.h>
+ #include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "power.h"
+ 
+@@ -136,8 +137,10 @@ void dev_pm_domain_detach(struct device *dev, bool power_off)
+  * @dev: Device whose PM domain is to be set.
+  * @pd: PM domain to be set, or NULL.
+  *
+- * Sets the PM domain the device belongs to. The PM domain of a device needs
+- * to be set before its probe finishes (it's bound to a driver).
++ * Sets the PM domain the device belongs to.  The PM domain of a device needs
++ * to be set while the device is awake.  This is guaranteed during ->probe.
++ * Otherwise the caller is responsible for ensuring wakefulness, e.g. by
++ * holding a runtime PM reference as well as invoking lock_system_sleep().
+  *
+  * This function must be called with the device lock held.
+  */
+@@ -146,8 +149,12 @@ void dev_pm_domain_set(struct device *dev, struct dev_pm_domain *pd)
+ 	if (dev->pm_domain == pd)
+ 		return;
+ 
+-	WARN(pd && device_is_bound(dev),
+-	     "PM domains can only be changed for unbound devices\n");
++	WARN(dev->power.is_prepared || dev->power.is_suspended ||
++	     (pm_runtime_enabled(dev) &&
++	      (dev->power.runtime_status != RPM_ACTIVE ||
++	       (pm_children_suspended(dev) &&
++		!atomic_read(&dev->power.usage_count)))),
++	     "PM domains can only be changed for awake devices\n");
+ 	dev->pm_domain = pd;
+ 	device_pm_check_callbacks(dev);
+ }
+-- 
+2.11.0
+
