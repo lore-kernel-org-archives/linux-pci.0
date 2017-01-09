@@ -1,69 +1,106 @@
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Date: Tue, 3 Jan 2017 18:08:38 +0100 (CET)
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <952083402.13.1483463318493.JavaMail.zimbra@quantumtechnology.info>
-In-Reply-To: <20170102114040.GA20127@wunner.de>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com> <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info> <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info> <20161229175028.GA18510@wunner.de> <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info> <20161230000731.GB18700@wunner.de> <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info> <20170102114040.GA20127@wunner.de>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:40366 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753251AbdAINjH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 08:39:07 -0500
+Subject: Re: [PATCH V2 3/5] Documetation: binding: modify the exynos5440 pcie
+ binding
+To: Jaehoon Chung <jh80.chung@samsung.com>, linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
+        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
+        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
+        cpgs@samsung.com
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Message-id: <c3b9b19a-1ece-6ec3-9127-aaeeac2c54a0@samsung.com>
+Date: Mon, 09 Jan 2017 19:06:43 +0530
+MIME-version: 1.0
+In-reply-to: <20170104123435.30740-4-jh80.chung@samsung.com>
+Content-type: text/plain; charset=windows-1252; format=flowed
+References: <20170104123435.30740-1-jh80.chung@samsung.com>
+ <CGME20170104123436epcas1p1040f1e074748fabe58af52eb0b833713@epcas1p1.samsung.com>
+ <20170104123435.30740-4-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry I should mention the patch.
-I tried the 4.9.0 kernel and the patch:
-disable_pm_v4.9.patch
+Hi Jaehoon,
 
- fixes both the screen lock and firefox issue.
+On 01/04/2017 06:04 PM, Jaehoon Chung wrote:
+> According to using PHY framework, updates the exynos5440-pcie binding.
+> For maintaining backward compatibility, leaves the current dt-binding.
+> (It should be deprecated.)
+>
+> Recommends to use the Phy Framework and "config" property to follow
+> the designware-pcie binding.
+> If you use the old way, can see "mssing *config* reg space" message.
+> Because the getting configuration space address from range is old way.
+>
+> NOTE: When use the "config" property, first name of 'reg-names' must be
+> set to "elbi". Otherwise driver can't maintain the backward capability.
+>
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
 
------ Original Message -----
-From: "Lukas Wunner" <lukas@wunner.de>
-To: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "linux-pci" <linux-pci@vger.kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sent: Monday, January 2, 2017 12:40:40 PM
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
-> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
-> if that helps but needs some time again to compile.
-> The debug messages from the first rpm_... to the crash are:
-[...]
-> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
-> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
-> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
-> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
-> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
-> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
-> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
-> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
-> [   26.207691] pcieport 0000:00:01.0: rpm_idle
-> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
-> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
-> SYSTEM IS NOW NOT RESPONSIVE
-
-So two seconds before the system became unresponsive, the root port above
-the discrete GPU suspended, suggesting that's the culprit.  Could you test
-either of the attached patches to confirm this theory?  They disable
-runtime PM on this specific root port but allow it on all the others.
-
-You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
-Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
-Method).  That's what we did up until v4.7.
-
-However on newer laptops Windows no longer cuts power to the discrete GPU
-by invoking the _DSM, but rather by suspending the root port above the
-GPU.  (More specifically by turning off Power Resources required for D3
-of the root port, those are specified in a _PR3 object.)  We started
-supporting this with v4.8.
-
-If the above theory is correct, we need to involve Optimus experts
-because this is not an issue then with powering down root ports in
-general, but rather specific to this Optimus use case.
-
-Thanks,
-
-Lukas
+> Changelog on V2:
+> - Describes more commit message
+> - Fixes the typos
+> - Adds the new example for using PHY framework
+> - Deprecated the old dt-binding description
+> - Removes 'phy-names'
+>
+>  .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 ++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> index 4f9d23d..1d0af0e 100644
+> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> @@ -7,8 +7,19 @@ Required properties:
+>  - compatible: "samsung,exynos5440-pcie"
+>  - reg: base addresses and lengths of the pcie controller,
+>  	the phy controller, additional register for the phy controller.
+> +	(Registers for the phy controller are DEPRECATED.
+> +	 Use the PHY framework.)
+> +- reg-names : First name should be set to "elbi".
+> +	And use the "config" instead of getting the confgiruation address space
+> +	from "ranges".
+> +	NOTE: When use the "config" property, reg-names must be set.
+>  - interrupts: A list of interrupt outputs for level interrupt,
+>  	pulse interrupt, special interrupt.
+> +- phys: From PHY binding. Phandle for the Generic PHY.
+> +	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
+> +
+> +Other common properties refer to
+> +	Documentation/devicetree/binding/pci/designware-pcie.txt
+>
+>  Example:
+>
+> @@ -54,6 +65,24 @@ SoC specific DT Entry:
+>  		num-lanes = <4>;
+>  	};
+>
+> +With using PHY framework:
+> +	pcie_phy0: pcie-phy@270000 {
+> +		...
+> +		reg = <0x270000 0x1000>, <0x271000 0x40>;
+> +		regn-names = "phy", "block";
+> +		...
+> +	};
+> +
+> +	pcie@290000 {
+> +		...
+> +		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
+> +		reg-names = "elbi", "config";
+> +		phys = <&pcie_phy0>;
+> +		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
+> +			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
+> +		...
+> +	};
+> +
+>  Board specific DT Entry:
+>
+>  	pcie@290000 {
+>
