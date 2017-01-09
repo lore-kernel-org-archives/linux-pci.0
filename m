@@ -1,111 +1,269 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-To: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Sricharan R <sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
- <20170124123711.GA11996@red-moon>
- <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
-Date: Mon, 30 Jan 2017 08:59:10 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56324 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763420AbdAITap (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Jan 2017 14:30:45 -0500
+Date: Mon, 9 Jan 2017 11:30:37 -0800 (PST)
+From: Stefano Stabellini <sstabellini@kernel.org>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+cc: Dan Streetman <ddstreet@ieee.org>, stefano@char.us.oracle.com,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in
+ pci device msi msg data
+In-Reply-To: <20170109155929.GA10991@char.us.oracle.com>
+Message-ID: <alpine.DEB.2.10.1701091049130.2866@sstabellini-ThinkPad-X260>
+References: <20170105192856.25559-1-dan.streetman@canonical.com> <20170107010651.GV16608@char.us.oracle.com> <42d912c2-596e-29f6-8385-dc82a891895c@oracle.com> <CALZtONBNhh9WKPV16+cod-P1Fp2YudTkVzHQZMq81_NEne67pA@mail.gmail.com>
+ <20170109155929.GA10991@char.us.oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
- bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/30/2017 7:22 AM, Robin Murphy wrote:
-> On 29/01/17 17:53, Sinan Kaya wrote:
->> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
->>> [+hanjun, tomasz, sinan]
->>>
->>> It is quite a key patchset, I would be glad if they can test on their
->>> respective platforms with IORT.
->>>
->>
->> Tested on top of 4.10-rc5.
->>
->> 1.	Platform Hidma device passed dmatest
->> 2.	Seeing some USB stalls on a platform USB device.
->> 3.	PCIe NVME drive probed and worked fine with MSI interrupts after boot.
->> 4. 	NVMe driver didn't probe following a hotplug insertion and received an
->> SMMU error event during the insertion.
+On Mon, 9 Jan 2017, Konrad Rzeszutek Wilk wrote:
+> On Mon, Jan 09, 2017 at 10:42:41AM -0500, Dan Streetman wrote:
+> > On Mon, Jan 9, 2017 at 9:59 AM, Boris Ostrovsky
+> > <boris.ostrovsky@oracle.com> wrote:
+> > > On 01/06/2017 08:06 PM, Konrad Rzeszutek Wilk wrote:
+> > >> On Thu, Jan 05, 2017 at 02:28:56PM -0500, Dan Streetman wrote:
+> > >>> Do not read a pci device's msi message data to see if a pirq was
+> > >>> previously configured for the device's msi/msix, as the old pirq was
+> > >>> unmapped and may now be in use by another pci device.  The previous
+> > >>> pirq should never be re-used; instead a new pirq should always be
+> > >>> allocated from the hypervisor.
+> > >> Won't this cause a starvation problem? That is we will run out of PIRQs
+> > >> as we are not reusing them?
+> > >
+> > > Don't we free the pirq when we unmap it?
+> > 
+> > I think this is actually a bit worse than I initially thought.  After
+> > looking a bit closer, and I think there's an asymmetry with pirq
+> > allocation:
 > 
-> What was the SMMU error - a translation/permission fault (implying the
-> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
-> the SMMU about the device at all)?
+> Lets include Stefano,
 > 
+> Thank you for digging in this! This has quite the deja-vu
+> feeling as I believe I hit this at some point in the past and
+> posted some possible ways of fixing this. But sadly I can't
+> find the thread.
 
-root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+This issue seems to be caused by:
 
-[__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
-[  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
-[  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event ignored; already powering off
+commit af42b8d12f8adec6711cb824549a0edac6a4ae8f
+Author: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Date:   Wed Dec 1 14:51:44 2010 +0000
 
-root@ubuntu:/sys/bus/pci/slots/4#
+    xen: fix MSI setup and teardown for PV on HVM guests
 
-[__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
-[  254.820599] nvme nvme0: pci function 0003:01:00.0
-[  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
-[  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
-[  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
-[  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-[  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-[  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-root@ubuntu:/sys/bus/pci/slots/4#
+which was a fix to a bug:
 
-root@ubuntu:/sys/bus/pci/slots/4#ls /dev/nvme*
-/dev/nvme0
+    This fixes a bug in xen_hvm_setup_msi_irqs that manifests itself when
+    trying to enable the same MSI for the second time: the old MSI to pirq
+    mapping is still valid at this point but xen_hvm_setup_msi_irqs would
+    try to assign a new pirq anyway.
+    A simple way to reproduce this bug is to assign an MSI capable network
+    card to a PV on HVM guest, if the user brings down the corresponding
+    ethernet interface and up again, Linux would fail to enable MSIs on the
+    device.
 
-I should have seen /dev/nvme0n1 partition here. 
+I don't remember any of the details. From the description of this bug,
+it seems that Xen changed behavior in the past few years: before it used
+to keep the pirq-MSI mapping, while today it doesn't. If I wrote "the
+old MSI to pirq mapping is still valid at this point", the pirq couldn't
+have been completely freed, then reassigned to somebody else the way it
+is described in this email.
 
-> Robin.
+I think we should indentify the changeset or Xen version that introduced
+the new behavior. If it is old enough, we might be able to just revert
+af42b8d12f8adec6711cb824549a0edac6a4ae8f. Otherwise we could make the
+behavior conditional to the Xen version.
+
+
+> > tl;dr:
+> > 
+> > pci_enable_msix_range() -> each MSIX (or MSI) now has a pirq
+> > allocated, and reserved in the hypervisor
+> > 
+> > request_irq() -> an event channel is opened for the specific pirq, and
+> > maps the pirq with the hypervisor
+> > 
+> > free_irq() -> the event channel is closed, and the pirq is unmapped,
+> > but that unmap function also frees the pirq!  The hypervisor can/will
+> > give it away to the next call to get_free_pirq.  However, the pci
+> > msi/msix data area still contains the pirq number, and the next call
+> > to request_irq() will re-use the pirq.
+> > 
+> > pci_disable_msix() -> this has no effect on the pirq in the hypervisor
+> > (it's already been freed), and it also doesn't clear anything from the
+> > msi/msix data area, so the pirq is still cached there.
+> > 
+> > 
+> > It seems like the hypervisor needs to be fixed to *not* unmap the pirq
+> > when the event channel is closed - or at least, not to change it to
+> > IRQ_UNBOUND state?  And, the pci_disable_msix call should eventually
+> > call into something in the Xen guest kernel that actually does the
+> > pirq unmapping, and clear it from the msi data area (i.e.
+> > pci_write_msi_msg)
 > 
->>
->> /sys/bus/pci/slots/4 #
->> /sys/bus/pci/slots/4 # dmesg | grep nvme
->> [   14.041357] nvme nvme0: pci function 0003:01:00.0
->> [  198.399521] nvme nvme0: pci function 0003:01:00.0
->> [__198.416232]_nvme_0003:01:00.0:_enabling_device_(0000_->_0002)
->> [  264.402216] nvme nvme0: I/O 228 QID 0 timeout, disable controller
->> [  264.402313] nvme nvme0: Identify Controller failed (-4)
->> [  264.421270] nvme nvme0: Removing after probe failure status: -5
->> /sys/bus/pci/slots/4 #
->>
->>
->>
+> The problem is that Xen changes have sailed a long long time ago.
+> > 
+> > Alternately, if the hypervisor doesn't change, then the call into the
+> > hypervisor to actually allocate a pirq needs to move from the
+> > pci_enable_msix_range() call to the request_irq() call?  So that when
+> > the msi/msix range is enabled, it doesn't actually reserve any pirq's
+> > for any of the vectors; each request_irq/free_irq pair do the pirq
+> > allocate-and-map/unmap...
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+> Or a third one: We keep an pirq->device lookup and inhibit free_irq()
+> from actually calling evtchn_close() until the pci_disable_msix() is done?
+
+I think that's a reasonable alternative: we mask the evtchn, but do not
+call xen_evtchn_close in shutdown_pirq for PV on HVM guests.
+Something like (not compiled, untested):
+
+diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
+index 137bd0e..3174923 100644
+--- a/drivers/xen/events/events_base.c
++++ b/drivers/xen/events/events_base.c
+@@ -577,7 +577,8 @@ static void shutdown_pirq(struct irq_data *data)
+ 		return;
+ 
+ 	mask_evtchn(evtchn);
+-	xen_evtchn_close(evtchn);
++	if (!xen_hvm_domain())
++		xen_evtchn_close(evtchn);
+ 	xen_irq_info_cleanup(info);
+ }
+ 
+
+We want to keep the pirq allocated to the device - not closing the
+evtchn seems like the right thing to do. I suggest we test for the
+original bug too: enable/disable the network interface of an MSI capable
+network card.
 
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > longer details:
+> > 
+> > The chain of function calls starts in the initial call to configure
+> > the msi vectors, which eventually calls __pci_enable_msix_range (or
+> > msi_) which then eventually reaches xen_hvm_setup_msi_irqs(), which
+> > either tries to re-use any cached pirq in the MSI data area, or (for
+> > the first time setup) allocates a new pirq from the hypervisor via
+> > PHYSDEVOP_get_free_pirq.  That pirq is then reserved from the
+> > hypervisor's perspective, but it's not mapped to anything in the guest
+> > kernel.
+> > 
+> > Then, the driver calls request_irq to actually start using the irq,
+> > which calls __setup_irq to irq_startup to startup_pirq.  The
+> > startup_pirq call actually creates the evtchn and binds it to the
+> > previously allocated pirq via EVTCHNOP_bind_pirq.
+> > 
+> > At this point, the pirq is bound to a guest kernel evtchn (and irq)
+> > and is in use.  But then, when the driver doesn't want it anymore, it
+> > calls free_irq, and that calls irq_shutdown to shutdown_pirq; and that
+> > function closes the evtchn via EVTCHNOP_close.
+> > 
+> > Inside the hypervisor, in xen/common/event_channel.c in
+> > evtchn_close(), if the channel is type ECS_PIRQ (which our pirq
+> > channel is) then it unmaps the pirq mapping via
+> > unmap_domain_pirq_emuirq.  This unmaps the pirq, but also puts it back
+> > to state IRQ_UNBOUND, which makes it available for the hypervisor to
+> > give away to anyone requesting a new pirq!
+> > 
+> > 
+> > 
+> > 
+> > 
+> > >
+> > > -boris
+> > >
+> > >>> The xen_hvm_setup_msi_irqs() function currently checks the pci device's
+> > >>> msi descriptor message data for each msi/msix vector it sets up, and if
+> > >>> it finds the vector was previously configured with a pirq, and that pirq
+> > >>> is mapped to an irq, it re-uses the pirq instead of requesting a new pirq
+> > >>> from the hypervisor.  However, that pirq was unmapped when the pci device
+> > >>> disabled its msi/msix, and it cannot be re-used; it may have been given
+> > >>> to a different pci device.
+> > >> Hm, but this implies that we do keep track of it.
+> > >>
+> > >>
+> > >> while (true)
+> > >> do
+> > >>  rmmod nvme
+> > >>  modprobe nvme
+> > >> done
+> > >>
+> > >> Things go boom without this patch. But with this patch does this
+> > >> still work? As in we don't run out of PIRQs?
+> > >>
+> > >> Thanks.
+> > >>> This exact situation is happening in a Xen guest where multiple NVMe
+> > >>> controllers (pci devices) are present.  The NVMe driver configures each
+> > >>> pci device's msi/msix twice; first to configure a single vector (to
+> > >>> talk to the controller for its configuration info), and then it disables
+> > >>> that msi/msix and re-configures with all the msi/msix it needs.  When
+> > >>> multiple NVMe controllers are present, this happens concurrently on all
+> > >>> of them, and in the time between controller A calling pci_disable_msix()
+> > >>> and then calling pci_enable_msix_range(), controller B enables its msix
+> > >>> and gets controller A's pirq allocated from the hypervisor.  Then when
+> > >>> controller A re-configures its msix, its first vector tries to re-use
+> > >>> the same pirq that it had before; but that pirq was allocated to
+> > >>> controller B, and thus the Xen event channel for controller A's re-used
+> > >>> pirq fails to map its irq to that pirq; the hypervisor already has the
+> > >>> pirq mapped elsewhere.
+> > >>>
+> > >>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+> > >>> ---
+> > >>>  arch/x86/pci/xen.c | 23 +++++++----------------
+> > >>>  1 file changed, 7 insertions(+), 16 deletions(-)
+> > >>>
+> > >>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> > >>> index bedfab9..a00a6c0 100644
+> > >>> --- a/arch/x86/pci/xen.c
+> > >>> +++ b/arch/x86/pci/xen.c
+> > >>> @@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> > >>>              return 1;
+> > >>>
+> > >>>      for_each_pci_msi_entry(msidesc, dev) {
+> > >>> -            __pci_read_msi_msg(msidesc, &msg);
+> > >>> -            pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+> > >>> -                    ((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+> > >>> -            if (msg.data != XEN_PIRQ_MSI_DATA ||
+> > >>> -                xen_irq_from_pirq(pirq) < 0) {
+> > >>> -                    pirq = xen_allocate_pirq_msi(dev, msidesc);
+> > >>> -                    if (pirq < 0) {
+> > >>> -                            irq = -ENODEV;
+> > >>> -                            goto error;
+> > >>> -                    }
+> > >>> -                    xen_msi_compose_msg(dev, pirq, &msg);
+> > >>> -                    __pci_write_msi_msg(msidesc, &msg);
+> > >>> -                    dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+> > >>> -            } else {
+> > >>> -                    dev_dbg(&dev->dev,
+> > >>> -                            "xen: msi already bound to pirq=%d\n", pirq);
+> > >>> +            pirq = xen_allocate_pirq_msi(dev, msidesc);
+> > >>> +            if (pirq < 0) {
+> > >>> +                    irq = -ENODEV;
+> > >>> +                    goto error;
+> > >>>              }
+> > >>> +            xen_msi_compose_msg(dev, pirq, &msg);
+> > >>> +            __pci_write_msi_msg(msidesc, &msg);
+> > >>> +            dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+> > >>>              irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
+> > >>>                                             (type == PCI_CAP_ID_MSI) ? nvec : 1,
+> > >>>                                             (type == PCI_CAP_ID_MSIX) ?
+> > >>> --
+> > >>> 2.9.3
+> > >>>
+> > >
+> > >
+> > > _______________________________________________
+> > > Xen-devel mailing list
+> > > Xen-devel@lists.xen.org
+> > > https://lists.xen.org/xen-devel
+> 
