@@ -1,257 +1,164 @@
-Return-Path: <SRS0=aMqE=YX=redhat.com=hdegoede@kernel.org>
-Return-Path: <SRS0=aMqE=YX=redhat.com=hdegoede@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: Lyude Paul <lyude@redhat.com>, David Airlie <airlied@redhat.com>,
-        Peter Jones <pjones@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
- <20170105181322.wnvdytpgddcdk3ry@redhat.com>
- <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
- <1483974686.28993.3.camel@redhat.com>
-Cc: Lukas Wunner <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>, Lyude <cpaul@redhat.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
-Date: Mon, 9 Jan 2017 16:21:16 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+To: Arnd Bergmann <arnd@linaro.org>, linux-arm-kernel@lists.infradead.org
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+ <6374144.HVL0QxNJiT@wuerfel>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+Date: Mon, 9 Jan 2017 23:34:55 +0300
 MIME-Version: 1.0
-In-Reply-To: <1483974686.28993.3.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <6374144.HVL0QxNJiT@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lyude,
+[CCing NVMe maintainers since we are discussion issues in that driver]
 
-On 09-01-17 16:11, Lyude Paul wrote:
-> fwiw, I just tried on the W541 I have 4.8.15-300.fc25.x86_64 running on
-> here and so far it seems to suspend/resume just fine using firmware
-> version 2.19
+>> With my patch applied and thus 32bit dma_mask set for NVMe device, I do
+>> see high addresses passed to dma_map_*() routines and handled by
+>> swiotlb. Thus your statement that behavior "succeed 64bit dma_set_mask()
+>> operation but silently replace mask behind the scene" is required for
+>> swiotlb to be used, does not match reality.
+> 
+> See my point about drivers that don't implement bounce buffering.
+> Apparently NVMe is one of them, unlike the SATA/SCSI/MMC storage
+> drivers that do their own thing.
 
-Note this is not about normal suspend resume, but runtime
-suspend/resume of the nvidia discrete GPU...
+I believe the bounce buffering code you refer to is not in SATA/SCSI/MMC
+but in block layer, in particular it should be controlled by
+blk_queue_bounce_limit().  [Yes there is CONFIG_MMC_BLOCK_BOUNCE but it
+is something completely different, namely it is for request merging for
+hw not supporting scatter-gather].  And NVMe also uses block layer and
+thus should get same support.
 
-Try running glxgears like this:
+But blk_queue_bounce_limit() is somewhat broken, it has very strange
+code under #if BITS_PER_LONG == 64 that makes setting max_addr to
+0xffffffff not working if max_low_pfn is above 4G.
 
-DRI_PRIME=1 glxgears -info | grep REND
-
-(the grep is to check you're really running on the nvidia GPU).
-
-Then you should see msgs in dmesg about nouveau resuming the gpu,
-then kill glxgears and wait for 5 seconds, now the nouveau drv
-should say the gpu is suspending, etc.
-
-If it never runtime suspends, then make sure you are not using
-any external screens, only the built-in laptop screen.
-
-Regards,
-
-Hans
+Maybe fixing that, together with making NVMe use this API, could stop it
+from issuing dma_map()s of addresses beyond mask.
 
 
->
-> On Thu, 2017-01-05 at 14:36 -0500, David Airlie wrote:
->> (cc'ing Lyude, who has the hw also I think).
+> What I think happened here in chronological order is:
+> 
+> - In the old days, 64-bit architectures tended to use an IOMMU 
+>   all the time to work around 32-bit limitations on DMA masters
+> - Some architectures had no IOMMU that fully solved this and the
+>   dma-mapping API required drivers to set the right mask and check
+>   the return code. If this failed, the driver needed to use its
+>   own bounce buffers as network and scsi do. See also the
+>   grossly misnamed "PCI_DMA_BUS_IS_PHYS" macro.
+> - As we never had support for bounce buffers in all drivers, and
+>   early 64-bit Intel machines had no IOMMU, the swiotlb code was
+>   introduced as a workaround, so we can use the IOMMU case without
+>   driver specific bounce buffers everywhere
+> - As most of the important 64-bit architectures (x86, arm64, powerpc)
+>   now always have either IOMMU or swiotlb enabled, drivers like
+>   NVMe started relying on it, and no longer handle a dma_set_mask
+>   failure properly.
+
+... and architectures started to add to this breakage, not handling
+dma_set_mask() as documented.
+
+
+As for PCI_DMA_BUS_IS_PHYS - ironically, what all current usages of this
+macro in the kernel do is - *disable* bounce buffers in block layer if
+PCI_DMA_BUS_IS_PHYS is zero.  Defining it to zero (as arm64 currently
+does) on system with memory above 4G makes all block drivers to depend
+on swiotlb (or iommu). Affected drivers are SCSI and IDE.
+
+> We may need to audit how drivers typically handle dma_set_mask()
+> failure. The NVMe driver in its current state will probably cause
+> silent data corruption when used on a 64-bit architecture that has
+> a 32-bit bus but neither swiotlb nor iommu enabled at runtime.
+
+With current code NVME causes system memory breakage even if swiotlb is
+there - because it's dma_set_mask_and_coherent(DMA_BIT_MASK(64)) call
+has effect of silent disable of swiotlb.
+
+
+> I would argue that the driver should be fixed to either refuse
+> working in that configuration to avoid data corruption, or that
+> it should implement bounce buffering like SCSI does.
+
+Difference from "SCSI" (actually - from block drivers that work) is in
+that dma_set_mask_and_coherent(DMA_BIT_MASK(64)) call: driver that does
+not do it works, driver that does it fails.
+
+Per documentation, driver *should* do it if it's hardware supports
+64-bit dma, and platform *should* either fail this call, or ensure that
+64-bit addresses can be dma_map()ed successfully.
+
+So what we have on arm64 is - drivers that follow documented procedure
+fail, drivers that don't follow it work, That's nonsense.
+
+> If we make it
+> simply not work, then your suggestion of making dma_set_mask()
+> fail will break your system in a different way.
+
+Proper fix should fix *both* architecture and NVMe.
+
+- architecture should stop breaking 64-bit DMA when driver attempts to
+set 64-bit dma mask,
+
+- NVMe should issue proper blk_queue_bounce_limit() call based on what
+is actually set mask,
+
+- and blk_queue_bounce_limit() should also be fixed to actually set
+0xffffffff limit, instead of replacing it with (max_low_pfn <<
+PAGE_SHIFT) as it does now.
+
+
+>> Still current code does not work, thus fix is needed.
 >>
->> ----- Original Message -----
->>> From: "Peter Jones" <pjones@redhat.com>
->>> To: "Lukas Wunner" <lukas@wunner.de>
->>> Cc: "David Airlie" <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@r
->>> jwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
->>> "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.weste
->>> rberg@linux.intel.com>, "Kilian Singer"
->>> <kilian.singer@quantumtechnology.info>, "linux-pci" <linux-pci@vger
->>> .kernel.org>, "Alex Deucher"
->>> <alexander.deucher@amd.com>, "Hans de Goede" <hdegoede@redhat.com>
->>> Sent: Friday, 6 January, 2017 4:13:23 AM
->>> Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe
->>> ports"
->>>
->>> On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner wrote:
->>>> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
->>>>>> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
->>>>>>> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner
->>>>>>> wrote:
->>>>>>>> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas
->>>>>>>> wrote:
->>>>>>>>> I don't *want* to apply the revert.  It's on my for-
->>>>>>>>> linus branch
->>>>>>>>> as a
->>>>>>>>> worst-case scenario change if we can't figure out a
->>>>>>>>> better fix.
->>>>>>>>>
->>>>>>>>> The patch below is preferable, but I'd rather not take
->>>>>>>>> even it,
->>>>>>>>> because it takes away functionality and forces people
->>>>>>>>> to use a
->>>>>>>>> boot
->>>>>>>>> parameter to restore it.  I expect that somebody will
->>>>>>>>> figure out
->>>>>>>>> how
->>>>>>>>> to fix the regression Kilian found and also keep the
->>>>>>>>> new
->>>>>>>>> functionality
->>>>>>>>> (without requiring boot parameters) before v4.10.
->>>>>>>>
->>>>>>>> The issue is constrained to hybrid graphics laptops with
->>>>>>>> Nvidia
->>>>>>>> discrete
->>>>>>>> GPU using nouveau.  Hence it needs to be fixed in
->>>>>>>> nouveau, not in
->>>>>>>> the
->>>>>>>> PCI core.
->>>>>>>
->>>>>>> The problem is not necessarily in the nouveau driver, the
->>>>>>> same
->>>>>>> problem
->>>>>>> occurs when you enable RPM without loading nouveau. The
->>>>>>> issue is
->>>>>>> limited
->>>>>>> though to some newer hybrid graphics laptops with Nvidia
->>>>>>> GPUs. While
->>>>>>> a
->>>>>>> quirk can be added to nouveau, I think that a (temporary)
->>>>>>> quirk in
->>>>>>> core
->>>>>>> would also be reasonable (since it also occurs without
->>>>>>> nouveau).
->>>>>>>
->>>>>>>> (AFAIUI, laptops with AMD discrete GPU are not affected
->>>>>>>> as it is
->>>>>>>> known
->>>>>>>> when and how to call an ACPI method versus using PR3.)
->>>>>>>>
->>>>>>>> (Neither are laptops using the Nvidia proprietary driver
->>>>>>>> as it
->>>>>>>> doesn't
->>>>>>>> runtime suspend the card.  But battery life will be
->>>>>>>> terrible then.)
->>>>>>>>
->>>>>>>> We're at rc2 so the time frame for coming up with a fix
->>>>>>>> is probably
->>>>>>>> 4 weeks.  Peter and others have tried for months to
->>>>>>>> reverse-engineer
->>>>>>>> how to handle runtime PM on newer Nvidia cards.  It seems
->>>>>>>> likely
->>>>>>>> that
->>>>>>>> we'll not find the ultimate solution to the problem
->>>>>>>> within 4 weeks.
->>>>>>>
->>>>>>> Yep, a quick proper fix seems unlikely.
->>>>>>> [ Help/ideas are welcome, I suspect that these failures to
->>>>>>> restore
->>>>>>> power
->>>>>>> on laptops designed for Win8+ all have the same cause,
->>>>>>> related to
->>>>>>> some
->>>>>>> unknown interaction between ACPI and PCI. Some links:
->>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=190861
->>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
->>>>>>>
->>>>>>>> The way it is now, i.e. defaulting to PR3 when available,
->>>>>>>> regresses
->>>>>>>> certain laptops such as Kilian's.  If on the other hand
->>>>>>>> we default
->>>>>>>> to
->>>>>>>> DSM when available, we'll regress certain other laptops,
->>>>>>>> as Peter
->>>>>>>> has
->>>>>>>> pointed out.  Whitelisting or blacklisting laptops
->>>>>>>> doesn't seem a
->>>>>>>> good
->>>>>>>> approach either, ideally we'd want to use PR3 as Windows
->>>>>>>> does.
->>>>>>>>
->>>>>>>> As said, the only short-term solution I see is to add an
->>>>>>>> "optimus"
->>>>>>>> module_param to nouveau to allow users to select which
->>>>>>>> method to
->>>>>>>> use.
->>>>>>>> So in Kilian's case an additional command line parameter
->>>>>>>> would be
->>>>>>>> necessary to fix the issue.
->>>>>>>>
->>>>>>>> Does anyone see a better solution or can we agree on this
->>>>>>>> one?  If
->>>>>>>> so
->>>>>>>> I can come up with a patch.  This could go in via Dave
->>>>>>>> Airlie's
->>>>>>>> tree.
->>>>>>>
->>>>>>> As pcie_port_pm=off already reverts to DSM, I do not think
->>>>>>> that an
->>>>>>> additional (temporary) nouveau module parameter is going to
->>>>>>> help. I
->>>>>>> instead propose a (hopefully temporary) quirk in pci core
->>>>>>> that
->>>>>>> disables
->>>>>>> D3cold RPM for just Kilians Lenovo laptop (basically
->>>>>>> defaulting to
->>>>>>> pcie_port_pm=off). Then the option pcie_port_pm=force can
->>>>>>> still be
->>>>>>> used
->>>>>>> to test possible solutions in the future.
->>>>>>
->>>>>> I would rather add a quirk to the ACPI core to prevent the
->>>>>> power
->>>>>> resources in
->>>>>> question from being enumerated.  Or even to prevent ACPI PM
->>>>>> from being
->>>>>> used for the port in question.
->>>>>
->>>>> I do have a W541 in a cupboard in the office somewhere, but I
->>>>> won't be
->>>>> close to
->>>>> it for a couple of weeks. The W541 was the first place I tested
->>>>> the pm
->>>>> patches
->>>>> so I'm kinda wondering whether it's all W541's or just some
->>>>> specific
->>>>> model/bios
->>>>> combo.
->>>
->>> They seem to all ship with the 1.10 firmware, and 2.80 is current
->>> (there
->>> are a bunch of intermediate 2.xx versions).  Somewhere along the
->>> line
->>> they introduced some bugs in the UEFI stuff, so it wouldn't be
->>> surprising if there's bugs introduced elsewhere as well.
->>>
->>>>> However I'm pretty much unavailable to do anything much until
->>>>> late Jan on
->>>>> this.
->>>>
->>>> Is there anyone else at Red Hat who might be able to look into
->>>> this?
->>>>
->>>> ISTR that Hans de Goede is working on improving laptop support in
->>>> Fedora,
->>>> and Peter Jones recently got a patch merged for the W541 with the
->>>> exact
->>>> same firmware Kilian is using to work around a botched EFI memory
->>>> map.
->>>> Adding them to cc: in the hope that they may be able to help.
->>>>
->>>> @Peter, have you noticed issues with the discrete Nvidia GPU on
->>>> your W541
->>>> related to runtime suspend and system sleep?
->>>
->>> I was using a borrowed one (I can certainly find it again, but I'm
->>> not
->>> working on graphics/pm really), but yeah - shutdown and lspci both
->>> broke
->>> sometime after pci_pm_runtime_resume().  Here's the traceback from
->>> SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
->>>
->>> Dave, if you know who in Westford should have a look at this, I can
->>> see
->>> about getting them hardware.  I am more or less surrounded by that
->>> team.
->>>
->>> --
->>>         Peter
->>>
+>> Perhaps need to introduce some generic API to "allocate memory best
+>> suited for DMA to particular device", and fix allocation points (in
+>> drivers, filesystems, etc) to use it. Such an API could try to allocate
+>> area that can be DMAed by hardware, and fallback to other memory that
+>> can be used via swiotlb or other bounce buffer implementation.
+> 
+> The DMA mapping API is meant to do this, but we can definitely improve
+> it or clarify some of the rules.
+
+DMA mapping API can't help here, it's about mapping, not about allocation.
+
+What I mean is some API to allocate memory for use with streaming DMA in
+such way that bounce buffers won't be needed. There are many cases when
+at buffer allocation time, it is already known that buffer will be used
+for DMA with particular device. Bounce buffers will still be needed
+cases when no such information is available at allocation time, or when
+there is no directly-DMAable memory available at allocation time.
+
+>> But for now, have to stay with dma masks. Will follow-up with a patch
+>> based on your but with coherent mask handling added.
+> 
+> Ok.
+
+Already posted. Can we have that merged? At least it will make things to
+stop breaking memory and start working.
+
+Nikita
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
