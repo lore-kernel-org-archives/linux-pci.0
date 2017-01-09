@@ -1,90 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36672 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966612AbdACWZO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Jan 2017 17:25:14 -0500
-Date: Tue, 3 Jan 2017 16:25:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170103163130.GC9763@al>
- <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
- <3913750.OA6IItgEjC@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@linaro.org>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+Date: Mon, 09 Jan 2017 15:05:38 +0100
+Message-ID: <6374144.HVL0QxNJiT@wuerfel>
+In-Reply-To: <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3913750.OA6IItgEjC@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 03, 2017 at 10:38:24PM +0100, Rafael J. Wysocki wrote:
-> On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
-> > On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
-> > > On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
-> > > > [cc += Dave Airlie:
-> > > > 
-> > > > Dave, we're about to lose support for newer Optimus laptops which use
-> > > > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
-> > > > a commit on his for-linus branch to remove runtime PM for PCIe ports.
-> > > > This fixes a regression on Kilian Singer's laptop on which locking the
-> > > > screen breaks USB and PS/2 input devices:  Mouse movements are still
-> > > > visible, but button or key presses no longer have any effect.  The GPU
-> > > > is powered down upon locking the screen and the current theory is that
-> > > > this causes the issues.]
-> > > 
-> > > (+cc Alex: this might affect amdgpu/radeon too.]
-> > > 
-> > > Bjorn, please reconsider the rpm patch. Reverting support would
-> > > introduce other regressions (see issues below) and make future
-> > > Thunderbolt work harder (according to Lukas). If Kilian's laptop has
-> > > issues, what about a "temporary" quirk?
+On Friday, January 6, 2017 4:47:59 PM CET Nikita Yushchenko wrote:
+> >>> Just a guess, but if the inbound translation windows in the host
+> >>> bridge are wider than 32-bit, the reason for setting up a single
+> >>> 32-bit window is probably because that is what the parent bus supports.
+> 
+> I've re-checked rcar-pcie hardware documentation.
+> 
+> It indeed mentions that AXI bus it sits on is 32-bit.
+> 
+> 
+> >> Well anyway applying patch similar to your's will fix pcie-rcar + nvme
+> >> case - thus I don't object :)   But it can break other cases ...
+> >>
+> >> But why do you hook at set_dma_mask() and overwrite mask inside, instead
+> >> of hooking at dma_supported() and rejecting unsupported mask?
+> >>
+> >> I think later is better, because it lets drivers to handle unsupported
+> >> high-dma case, like documented in DMA-API_HOWTO.
 > > 
-> > As I mentioned at the beginning, the outcome I'm hoping for is a patch
-> > that fixes Kilian's laptop while preserving the runtime PM support.
+> > I think the behavior I put in there is required for swiotlb to make
+> > sense, otherwise you would rely on the driver to handle dma_set_mask()
+> > failure gracefully with its own bounce buffers (as network and
+> > scsi drivers do but others don't).
 > > 
-> > As I also mentioned at the beginning, preserving the runtime PM
-> > support at the expense of breaking Kilian's laptop is not one of the
-> > options.
+> > Having swiotlb or iommu enabled should result in dma_set_mask() always
+> > succeeding unless the mask is too small to cover the swiotlb
+> > bounce buffer area or the iommu virtual address space. This behavior
+> > is particularly important in case the bus address space is narrower
+> > than 32-bit, as we have to guarantee that the fallback to 32-bit
+> > DMA always succeeds. There are also a lot of drivers that try to
+> > set a 64-bit mask but don't implement bounce buffers for streaming
+> > mappings if that fails, and swiotlb is what we use to make those
+> > drivers work.
+> > 
+> > And yes, the API is a horrible mess.
 > 
-> But the revert doesn't really help.
+> With my patch applied and thus 32bit dma_mask set for NVMe device, I do
+> see high addresses passed to dma_map_*() routines and handled by
+> swiotlb. Thus your statement that behavior "succeed 64bit dma_set_mask()
+> operation but silently replace mask behind the scene" is required for
+> swiotlb to be used, does not match reality.
+
+See my point about drivers that don't implement bounce buffering.
+Apparently NVMe is one of them, unlike the SATA/SCSI/MMC storage
+drivers that do their own thing.
+
+The problem again is the inconsistency of the API.
+
+> It can be interpreted as a breakage elsewhere, but it's hard to point
+> particular "root cause". The entire infrastructure to allocate and use
+> DMA memory is messy.
+
+Absolutely.
+
+What I think happened here in chronological order is:
+
+- In the old days, 64-bit architectures tended to use an IOMMU 
+  all the time to work around 32-bit limitations on DMA masters
+- Some architectures had no IOMMU that fully solved this and the
+  dma-mapping API required drivers to set the right mask and check
+  the return code. If this failed, the driver needed to use its
+  own bounce buffers as network and scsi do. See also the
+  grossly misnamed "PCI_DMA_BUS_IS_PHYS" macro.
+- As we never had support for bounce buffers in all drivers, and
+  early 64-bit Intel machines had no IOMMU, the swiotlb code was
+  introduced as a workaround, so we can use the IOMMU case without
+  driver specific bounce buffers everywhere
+- As most of the important 64-bit architectures (x86, arm64, powerpc)
+  now always have either IOMMU or swiotlb enabled, drivers like
+  NVMe started relying on it, and no longer handle a dma_set_mask
+  failure properly.
+
+We may need to audit how drivers typically handle dma_set_mask()
+failure. The NVMe driver in its current state will probably cause
+silent data corruption when used on a 64-bit architecture that has
+a 32-bit bus but neither swiotlb nor iommu enabled at runtime.
+
+I would argue that the driver should be fixed to either refuse
+working in that configuration to avoid data corruption, or that
+it should implement bounce buffering like SCSI does. If we make it
+simply not work, then your suggestion of making dma_set_mask()
+fail will break your system in a different way.
+
+> Still current code does not work, thus fix is needed.
 > 
-> It doesn't fix system suspend/resume on that laptop, which also breaks when
-> PCIe ports PM is enabled on it.
-> 
-> If you really want to use a sledgehammer approach here (which I don't recommend,
-> but that's your call), you can change the initial value of pci_bridge_d3_disable to
-> "true" (and update the pcie_ports_pm= command line to take "on" in case
-> someone wants to enable the feature).  That at least will take care of the
-> regression entirely and not just partly.
+> Perhaps need to introduce some generic API to "allocate memory best
+> suited for DMA to particular device", and fix allocation points (in
+> drivers, filesystems, etc) to use it. Such an API could try to allocate
+> area that can be DMAed by hardware, and fallback to other memory that
+> can be used via swiotlb or other bounce buffer implementation.
 
-What the heck is the problem here?  I'm not trying to be difficult,
-but I didn't write this code and I'm not really interested in figuring
-out how to fix it, so my only real option is to solicit fixes and, if
-none appear, revert changes that break things.
+The DMA mapping API is meant to do this, but we can definitely improve
+it or clarify some of the rules.
+ 
+> But for now, have to stay with dma masks. Will follow-up with a patch
+> based on your but with coherent mask handling added.
 
-As I've said more than once, I hope and expect that there is a better
-solution than reverting the patch.  But *I* am not going to write it.
-As soon as somebody proposes a better patch, I'll use it instead of
-the revert.
+Ok.
 
-If you want to fix the regression by changing the
-pci_bridge_d3_disable value, all you have to do is post a patch doing
-that.
+	Arnd
 
-I really don't understand why people are so wrapped around the axle
-about this.  This is just the way Linux works -- we try really hard
-not to cause regressions on platforms that used to work.  I *SAID* in
-the very first posting of the revert that I assume Mika will have a
-better solution soon.
-
-When a better patch appears, I'll take that and drop the revert.
-What's the problem with that?
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
