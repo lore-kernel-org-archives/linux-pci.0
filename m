@@ -1,82 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:34307 "EHLO
-        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751788AbdAZN1P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2017 08:27:15 -0500
-Received: by mail-lf0-f43.google.com with SMTP id v186so145450185lfa.1
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2017 05:27:14 -0800 (PST)
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH] pci: host: dra7xx: use GPIO descriptor
-Date: Thu, 26 Jan 2017 14:27:07 +0100
-Message-Id: <20170126132707.23249-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 9 Jan 2017 21:57:46 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
+ DMA mask
+Message-ID: <20170109205746.GA6274@lst.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+ <6374144.HVL0QxNJiT@wuerfel>
+ <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+MIME-Version: 1.0
+In-Reply-To: <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, Arnd Bergmann <arnd@linaro.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of parsing around in the device tree and determine
-polarity for the GPIO line and whatnot: utilize the GPIO
-library's intrinsic handling of OF GPIOs and polarity.
+On Mon, Jan 09, 2017 at 11:34:55PM +0300, Nikita Yushchenko wrote:
+> I believe the bounce buffering code you refer to is not in SATA/SCSI/MMC
+> but in block layer, in particular it should be controlled by
+> blk_queue_bounce_limit().  [Yes there is CONFIG_MMC_BLOCK_BOUNCE but it
+> is something completely different, namely it is for request merging for
+> hw not supporting scatter-gather].  And NVMe also uses block layer and
+> thus should get same support.
 
-If the line is flagged active low, gpiolib will deal with
-this.
+NVMe shouldn't have to call blk_queue_bounce_limit - 
+blk_queue_bounce_limit is to set the DMA addressing limit of the device.
+NVMe devices must support unlimited 64-bit addressing and thus calling
+blk_queue_bounce_limit from NVMe does not make sense.
 
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
----
-Would be nice if someone with the hardware could test this
-and see if it works.
----
- drivers/pci/host/pci-dra7xx.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+That being said currently the default for a queue without a call
+to blk_queue_make_request which does the wrong thing on highmem
+setups, so we should fix it.  In fact BLK_BOUNCE_HIGH as-is doesn't
+really make much sense these days as no driver should ever dereference
+pages passed to it directly.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 9595fad63f6f..85ac2856c80f 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -16,7 +16,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
--#include <linux/of_gpio.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
-@@ -320,9 +320,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	char name[10];
--	int gpio_sel;
--	enum of_gpio_flags flags;
--	unsigned long gpio_flags;
-+	struct gpio_desc *gpiod;
- 
- 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
- 	if (!dra7xx)
-@@ -388,19 +386,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
- 
--	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
--	if (gpio_is_valid(gpio_sel)) {
--		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
--				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
--		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
--					    "pcie_reset");
--		if (ret) {
--			dev_err(dev, "gpio%d request failed, ret %d\n",
--				gpio_sel, ret);
--			goto err_gpio;
--		}
--	} else if (gpio_sel == -EPROBE_DEFER) {
--		ret = -EPROBE_DEFER;
-+	gpiod = devm_gpiod_get(dev, "pcie_reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(gpiod)) {
-+		ret = PTR_ERR(gpiod);
- 		goto err_gpio;
- 	}
- 
--- 
-2.9.3
+> Maybe fixing that, together with making NVMe use this API, could stop it
+> from issuing dma_map()s of addresses beyond mask.
 
+NVMe should never bounce, the fact that it currently possibly does
+for highmem pages is a bug.
+
+> As for PCI_DMA_BUS_IS_PHYS - ironically, what all current usages of this
+> macro in the kernel do is - *disable* bounce buffers in block layer if
+> PCI_DMA_BUS_IS_PHYS is zero.
+
+That's not ironic but the whole point of the macro (horrible name and
+the fact that it should be a dma_ops setting aside).
+
+> - architecture should stop breaking 64-bit DMA when driver attempts to
+> set 64-bit dma mask,
+> 
+> - NVMe should issue proper blk_queue_bounce_limit() call based on what
+> is actually set mask,
+
+Or even better remove the call to dma_set_mask_and_coherent with
+DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
+addressing, there is not point in trying to pretent it works without that
+
+> - and blk_queue_bounce_limit() should also be fixed to actually set
+> 0xffffffff limit, instead of replacing it with (max_low_pfn <<
+> PAGE_SHIFT) as it does now.
+
+We need to kill off BLK_BOUNCE_HIGH, it just doesn't make sense to
+mix the highmem aspect with the addressing limits.  In fact the whole
+block bouncing scheme doesn't make much sense at all these days, we
+should rely on swiotlb instead.
+
+> What I mean is some API to allocate memory for use with streaming DMA in
+> such way that bounce buffers won't be needed. There are many cases when
+> at buffer allocation time, it is already known that buffer will be used
+> for DMA with particular device. Bounce buffers will still be needed
+> cases when no such information is available at allocation time, or when
+> there is no directly-DMAable memory available at allocation time.
+
+For block I/O that is never the case.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
