@@ -1,75 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:32940 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934968AbdAFPIr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 10:08:47 -0500
+Return-Path: <SRS0=kCOs=YX=redhat.com=pjones@kernel.org>
+Return-Path: <SRS0=kCOs=YX=redhat.com=pjones@kernel.org>
+Date: Mon, 9 Jan 2017 18:00:10 -0500
+From: Peter Jones <pjones@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kilian Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170109230010.mzcnw6aw3j6lduhw@redhat.com>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+ <20170104081639.GA21076@wunner.de>
+ <20170104210954.GA11946@al>
+ <59349185.1aqio7kYFn@aspire.rjw.lan>
+ <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+ <20170105150646.GB21446@wunner.de>
+ <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170105190113.GA12587@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com> <20170105190113.GA12587@obsidianresearch.com>
-From: Henrique Almeida <hdante.lnls@gmail.com>
-Date: Fri, 6 Jan 2017 12:08:22 -0300
-Message-ID: <CAP_Z8cn=O5-6A=udgOj6Rd_9_phR1K+aJ0ELXG7pZ5QEyhS3TQ@mail.gmail.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jerome Glisse <j.glisse@gmail.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
-        david1.zhou@amd.com, qiang.yu@amd.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
- Hello, I've been watching this thread not as a kernel developer, but
-as an user interested in doing peer-to-peer access between network
-card and GPU. I believe that merging raw direct access with vma
-overcomplicates things for our use case. We'll have a very large
-camera streaming data at high throughput (up to 100 Gbps) to the GPU,
-which will operate in soft real time mode and write back the results
-to a RDMA enabled network storage. The CPU will only arrange the
-connection between GPU and network card. Having things like paging or
-memory overcommit is possible, but they are not required and they
-might consistently decrease the quality of the data acquisition.
+On Sat, Jan 07, 2017 at 12:45:35PM +0100, Hans de Goede wrote:
 
- I see my use case something likely to exist for others and a strong
-reason to split the implementation in two.
+> I've a W541 sitting in my home office at well. I will take it through
+> some gpu runtime suspend/resume testing. Which kernel introduces the
+> problem I'm looking for ?
+> 
+> I believe mine has the old BIOS / EFI which is less troublesome so I
+> will first see if I can reproduce the problem with that and then upgrade
+> to see if that introduces the problem.
+> 
+> Peter IIRC you said that after upgrading the firmware I need a new enough
+> kernel to be able to even boot, from which kernel onwards will the machine
+> boot with the new firmware ?
 
+That fix is currently commit b2a91a35 in the "next" branch of the repo
+at git://git.kernel.org/pub/scm/linux/kernel/git/efi/efi .  I'm not sure
+what the timeframe for it landing in linus' tree is, but it doesn't look
+like it has yet.
 
-2017-01-05 16:01 GMT-03:00 Jason Gunthorpe <jgunthorpe@obsidianresearch.com>:
-> On Thu, Jan 05, 2017 at 01:39:29PM -0500, Jerome Glisse wrote:
->
->>   1) peer-to-peer because of userspace specific API like NVidia GPU
->>     direct (AMD is pushing its own similar API i just can't remember
->>     marketing name). This does not happen through a vma, this happens
->>     through specific device driver call going through device specific
->>     ioctl on both side (GPU and RDMA). So both kernel driver are aware
->>     of each others.
->
-> Today you can only do user-initiated RDMA operations in conjection
-> with a VMA.
->
-> We'd need a really big and strong reason to create an entirely new
-> non-VMA based memory handle scheme for RDMA.
->
-> So my inclination is to just completely push back on this idea. You
-> need a VMA to do RMA.
->
-> GPUs need to create VMAs for the memory they want to RDMA from, even
-> if the VMA handle just causes SIGBUS for any CPU access.
->
-> Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also is it possible to downgrade the EFI again ? ...
+
+IIRC that model has a switch in the firmware to enable downgrading.  I
+have not tried it.  Also, there's some chance the firmware you're
+starting from isn't available.
+
+-- 
+        Peter
