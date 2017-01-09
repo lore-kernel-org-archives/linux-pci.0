@@ -1,98 +1,138 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 03/11] of: dma: Move range size workaround to of_dma_get_range()
-Date: Mon, 23 Jan 2017 21:48:05 +0530
-Message-Id: <1485188293-20263-4-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:38134 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935945AbdAIUhz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 15:37:55 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        netdev@vger.kernel.org, linux-media@vger.kernel.org
+Subject: [PATCH 2/3] xgbe: switch to pci_irq_alloc_vectors
+Date: Mon,  9 Jan 2017 21:37:39 +0100
+Message-Id: <1483994260-19797-3-git-send-email-hch@lst.de>
+In-Reply-To: <1483994260-19797-1-git-send-email-hch@lst.de>
+References: <1483994260-19797-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+The newly added xgbe drivers uses the deprecated pci_enable_msi_exact
+and pci_enable_msix_range interfaces.  Switch it to use
+pci_irq_alloc_vectors instead.
 
-Invalid dma-ranges values should be worked around when retrieving the
-DMA range in of_dma_get_range(), not by all callers of the function.
-This isn't much of a problem now that we have a single caller, but that
-situation will change when moving DMA configuration to device probe
-time.
-
-Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/of/address.c | 20 ++++++++++++++++++--
- drivers/of/device.c  | 15 ---------------
- 2 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/net/ethernet/amd/xgbe/xgbe-pci.c | 47 +++++++++++++-------------------
+ drivers/net/ethernet/amd/xgbe/xgbe.h     |  1 -
+ 2 files changed, 19 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903..6aeb816 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
-  *	CPU addr (phys_addr_t)	: pna cells
-  *	size			: nsize cells
-  *
-- * It returns -ENODEV if "dma-ranges" property was not found
-- * for this device in DT.
-+ * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
-+ * this device in DT, or -EINVAL if the CPU address or size is invalid.
-  */
- int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
- {
-@@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- 	*dma_addr = dmaaddr;
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+index e76b7f6..be2690e 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
++++ b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+@@ -133,12 +133,13 @@ static int xgbe_config_msi(struct xgbe_prv_data *pdata)
+ 			 pdata->tx_ring_count);
+ 	msi_count = roundup_pow_of_two(msi_count);
  
- 	*size = of_read_number(ranges + naddr + pna, nsize);
-+	/*
-+	 * DT nodes sometimes incorrectly set the size as a mask. Work around
-+	 * those incorrect DT by computing the size as mask + 1.
-+	 */
-+	if (*size & 1) {
-+		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
-+			__func__, *size, np->full_name);
-+		*size = *size + 1;
-+	}
-+
-+	if (!*size) {
-+		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
-+		       __func__, np->full_name);
-+		ret = -EINVAL;
-+		goto out;
-+	}
+-	ret = pci_enable_msi_exact(pdata->pcidev, msi_count);
++	ret = pci_alloc_irq_vectors(pdata->pcidev, msi_count, msi_count,
++			PCI_IRQ_MSI);
+ 	if (ret < 0) {
+ 		dev_info(pdata->dev, "MSI request for %u interrupts failed\n",
+ 			 msi_count);
  
- 	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
- 		 *dma_addr, *paddr, *size);
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index fd5cfad..d9898d9 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 		size = dev->coherent_dma_mask + 1;
+-		ret = pci_enable_msi(pdata->pcidev);
++		ret = pci_alloc_irq_vectors(pdata->pcidev, 1, 1, PCI_IRQ_MSI);
+ 		if (ret < 0) {
+ 			dev_info(pdata->dev, "MSI enablement failed\n");
+ 			return ret;
+@@ -149,25 +150,26 @@ static int xgbe_config_msi(struct xgbe_prv_data *pdata)
+ 
+ 	pdata->irq_count = msi_count;
+ 
+-	pdata->dev_irq = pdata->pcidev->irq;
++	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
+ 
+ 	if (msi_count > 1) {
+-		pdata->ecc_irq = pdata->pcidev->irq + 1;
+-		pdata->i2c_irq = pdata->pcidev->irq + 2;
+-		pdata->an_irq = pdata->pcidev->irq + 3;
++		pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
++		pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
++		pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
+ 
+ 		for (i = XGBE_MSIX_BASE_COUNT, j = 0;
+ 		     (i < msi_count) && (j < XGBE_MAX_DMA_CHANNELS);
+ 		     i++, j++)
+-			pdata->channel_irq[j] = pdata->pcidev->irq + i;
++			pdata->channel_irq[j] =
++				pci_irq_vector(pdata->pcidev, i);
+ 		pdata->channel_irq_count = j;
+ 
+ 		pdata->per_channel_irq = 1;
+ 		pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
  	} else {
- 		offset = PFN_DOWN(paddr - dma_addr);
--
--		/*
--		 * Add a work around to treat the size as mask + 1 in case
--		 * it is defined in DT as a mask.
--		 */
--		if (size & 1) {
--			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
--				 size);
--			size = size + 1;
--		}
--
--		if (!size) {
--			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
--			return;
--		}
- 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+-		pdata->ecc_irq = pdata->pcidev->irq;
+-		pdata->i2c_irq = pdata->pcidev->irq;
+-		pdata->an_irq = pdata->pcidev->irq;
++		pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 0);
++		pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 0);
++		pdata->an_irq = pci_irq_vector(pdata->pcidev, 0);
  	}
  
+ 	if (netif_msg_probe(pdata))
+@@ -186,33 +188,22 @@ static int xgbe_config_msix(struct xgbe_prv_data *pdata)
+ 	msix_count += max(pdata->rx_ring_count,
+ 			  pdata->tx_ring_count);
+ 
+-	pdata->msix_entries = devm_kcalloc(pdata->dev, msix_count,
+-					   sizeof(struct msix_entry),
+-					   GFP_KERNEL);
+-	if (!pdata->msix_entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < msix_count; i++)
+-		pdata->msix_entries[i].entry = i;
+-
+-	ret = pci_enable_msix_range(pdata->pcidev, pdata->msix_entries,
+-				    XGBE_MSIX_MIN_COUNT, msix_count);
++	ret = pci_alloc_irq_vectors(pdata->pcidev, XGBE_MSIX_MIN_COUNT,
++			msix_count, PCI_IRQ_MSIX);
+ 	if (ret < 0) {
+ 		dev_info(pdata->dev, "MSI-X enablement failed\n");
+-		devm_kfree(pdata->dev, pdata->msix_entries);
+-		pdata->msix_entries = NULL;
+ 		return ret;
+ 	}
+ 
+ 	pdata->irq_count = ret;
+ 
+-	pdata->dev_irq = pdata->msix_entries[0].vector;
+-	pdata->ecc_irq = pdata->msix_entries[1].vector;
+-	pdata->i2c_irq = pdata->msix_entries[2].vector;
+-	pdata->an_irq = pdata->msix_entries[3].vector;
++	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
++	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
++	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
++	pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
+ 
+ 	for (i = XGBE_MSIX_BASE_COUNT, j = 0; i < ret; i++, j++)
+-		pdata->channel_irq[j] = pdata->msix_entries[i].vector;
++		pdata->channel_irq[j] = pci_irq_vector(pdata->pcidev, i);
+ 	pdata->channel_irq_count = j;
+ 
+ 	pdata->per_channel_irq = 1;
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe.h b/drivers/net/ethernet/amd/xgbe/xgbe.h
+index f52a9bd..3bcb6f5 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe.h
++++ b/drivers/net/ethernet/amd/xgbe/xgbe.h
+@@ -980,7 +980,6 @@ struct xgbe_prv_data {
+ 	unsigned int desc_ded_count;
+ 	unsigned int desc_sec_count;
+ 
+-	struct msix_entry *msix_entries;
+ 	int dev_irq;
+ 	int ecc_irq;
+ 	int i2c_irq;
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.1.4
 
