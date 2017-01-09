@@ -1,95 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] ACPI / scan: Prefer devices without _HID/_CID for _ADR
- matching
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <20161225102148.7706-1-hdegoede@redhat.com>
- <CAJZ5v0gjcaYtskSMueAz+GjHcLZv=4A8Qz_Lf6Bn7S0CLSkgPg@mail.gmail.com>
- <20161229084135.GC1460@lahna.fi.intel.com>
- <2022116.4lq1KAmrJA@aspire.rjw.lan>
-Cc: Len Brown <lenb@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linux-mmc@vger.kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <651067e1-e87f-6dba-0b99-c158655d2086@redhat.com>
-Date: Sun, 1 Jan 2017 21:30:06 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32886 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752155AbdAIVqA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 16:46:00 -0500
 MIME-Version: 1.0
-In-Reply-To: <2022116.4lq1KAmrJA@aspire.rjw.lan>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <58730600.3080802@hisilicon.com>
+References: <1483513206-113046-1-git-send-email-wangzhou1@hisilicon.com> <58730600.3080802@hisilicon.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 9 Jan 2017 22:45:59 +0100
+Message-ID: <CAJZ5v0iv99MB=Eyw=-s=9RhtxhogTNwk0TdLY=gO46GYsRhZqg@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: Fix bus range comparation in pci_mcfg_lookup
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+        Jayachandran C <jchandra@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        jorn Helgaas <bhelgaas@google.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        xuwei5@hisilicon.com,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Jan 9, 2017 at 4:39 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> On 2017/1/4 15:00, Zhou Wang wrote:
+>> The configuration data provided by an MCFG region (ie PCI segment and
+>> bus range) may span multiple host bridges.
+>>
+>> Current code in pci_mcfg_lookup() carries out an exact match of host
+>> bridge bus range start value against the MCFG region(s) bus range start
+>> value which would cause configurations like the following:
+>>
+>> MCFG region:
+>>       bus range: 0x00~0xff.
+>>       segment: 0.
+>>
+>> PCI host bridges configuration (segment numbers and bus ranges):
+>>       host bridge 1:
+>>               bus range: 0x00~0x1f.
+>>               segment: 0.
+>>       host bridge 2:
+>>               bus range: 0x20~0x4f.
+>>               segment: 0.
+>>
+>> to fail, in that the bus range start value for host bridge 2 does
+>> not match the bus range start value of the respective MCFG region.
+>>
+>> Relax the bus range check in pci_mcfg_lookup() to cater for
+>> PCI configurations with multiple host bridges sharing the same
+>> MCFG region.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+>> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> ---
+>>  drivers/acpi/pci_mcfg.c | 5 ++---
+>>  1 file changed, 2 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> index a6a4cea..2944353 100644
+>> --- a/drivers/acpi/pci_mcfg.c
+>> +++ b/drivers/acpi/pci_mcfg.c
+>> @@ -195,11 +195,10 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
+>>               goto skip_lookup;
+>>
+>>       /*
+>> -      * We expect exact match, unless MCFG entry end bus covers more than
+>> -      * specified by caller.
+>> +      * We expect the range in bus_res in the coverage of MCFG bus range.
+>>        */
+>>       list_for_each_entry(e, &pci_mcfg_list, list) {
+>> -             if (e->segment == seg && e->bus_start == bus_res->start &&
+>> +             if (e->segment == seg && e->bus_start <= bus_res->start &&
+>>                   e->bus_end >= bus_res->end) {
+>>                       root->mcfg_addr = e->addr;
+>>               }
+>>
+>
+> Hi Rafael,
+>
+> Could you please look into this patch if you have time?
 
-On 30-12-16 02:27, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> The way acpi_find_child_device() works currently is that, if there
-> are two (or more) devices with the same _ADR value in the same
-> namespace scope (which is not specifically allowed by the spec and
-> the OS behavior in that case is not defined), the first one of them
-> found to be present (with the help of _STA) will be returned.
->
-> This covers the majority of cases, but is not sufficient if some of
-> the devices in question have a _HID (or _CID) returning some valid
-> ACPI/PNP device IDs (which is disallowed by the spec) and the
-> ASL writers' expectation appears to be that the OS will match
-> devices without a valid ACPI/PNP device ID against a given bus
-> address first.
->
-> To cover this special case as well, modify find_child_checks()
-> to prefer devices without ACPI/PNP device IDs over devices that
-> have them.
->
-> Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->
-> I'm not actually sure if this is sufficient to fix the original 80860F14 uid "2"
-> sd-controller problem on CherryTrail.  Hans, can you please check?
+Well, it makes sense to me, but this is PCI, so Bjorn has to decide here.
 
-Ok, just booted a kernel with this patch replacing my own attempt
-at fixing this, and the kernel still sees and initializes the
-mmc controller in question correctly with this patch:
-
-Tested-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-
-
-> Thanks,
-> Rafael
->
-> ---
->  drivers/acpi/glue.c |   10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
->
-> Index: linux-pm/drivers/acpi/glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/glue.c
-> +++ linux-pm/drivers/acpi/glue.c
-> @@ -98,7 +98,15 @@ static int find_child_checks(struct acpi
->  	if (check_children && list_empty(&adev->children))
->  		return -ENODEV;
->
-> -	return sta_present ? FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
-> +	/*
-> +	 * If the device has a _HID (or _CID) returning a valid ACPI/PNP
-> +	 * device ID, it is better to make it look less attractive here, so that
-> +	 * the other device with the same _ADR value (that may not have a valid
-> +	 * device ID) can be matched going forward.  [This means a second spec
-> +	 * violation in a row, so whatever we do here is best effort anyway.]
-> +	 */
-> +	return sta_present && list_empty(&adev->pnp.ids) ?
-> +			FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
->  }
->
->  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
->
+Thanks,
+Rafael
