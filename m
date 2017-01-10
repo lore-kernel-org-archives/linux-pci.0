@@ -1,80 +1,99 @@
-Return-Path: <SRS0=pVbd=YY=redhat.com=airlied@kernel.org>
-Return-Path: <SRS0=pVbd=YY=redhat.com=airlied@kernel.org>
-Date: Mon, 9 Jan 2017 21:15:26 -0500 (EST)
-From: David Airlie <airlied@redhat.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Peter Jones <pjones@redhat.com>, Hans de Goede <hdegoede@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>
-Message-ID: <1542703851.9541414.1484014526290.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20170110012403.GA23513@wunner.de>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <59349185.1aqio7kYFn@aspire.rjw.lan> <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com> <20170105150646.GB21446@wunner.de> <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com> <20170109230010.mzcnw6aw3j6lduhw@redhat.com> <1041052319.9522810.1484007437052.JavaMail.zimbra@redhat.com> <20170110012403.GA23513@wunner.de>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:38060 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760395AbdAJK0g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2017 05:26:36 -0500
+Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
+ keystone PCIe h/w
+To: Murali Karicheri <m-karicheri2@ti.com>, <jingoohan1@gmail.com>,
+        <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
+ <5873BD56.4040100@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <d973a128-f038-2cb9-f6d3-d50b9970999c@synopsys.com>
+Date: Tue, 10 Jan 2017 10:26:30 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5873BD56.4040100@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-> On Mon, Jan 09, 2017 at 07:17:17PM -0500, David Airlie wrote:
-> > just FYI, but W541 with Fedora 25 and Linux 4.10-rc3 + drm-next and the efi
-> > fix (you might want to motivate that fix a bit harder), seems to be working
-> > well.
+Às 4:41 PM de 1/9/2017, Murali Karicheri escreveu:
+> On 01/04/2017 02:32 PM, Murali Karicheri wrote:
+>> Recent fixes for iATU unroll support introduced a bug that causes
+>> asynchronous external abort in Keystone PCIe h/w which doesn't have
+>> ATU port and the corresponding register. So the check should be moved
+>> below where dw_pcie_prog_outbound_atu() is called to avoid that
+>> being called on keystine PCIe h/w.
+>>
+>> Here is the backtrace
+>>
+>> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
+>> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+>> [    0.785548] pgd = c0003000
+>> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
+>> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
+>> [    0.799197] Modules linked in:
+>> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
+>> [    0.810130] Hardware name: Keystone
+>> [    0.813717] task: eb878000 task.stack: eb866000
+>> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
+>> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
+>>
+>> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  - Applies to pci/master
+>>  - Bug was introduced in v4.9
+>>  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
+>>
+>>  drivers/pci/host/pcie-designware.c | 10 +++++-----
+>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> index bed1999..af8f6e9 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>>  	u32 val;
+>>  
+>> -	/* get iATU unroll support */
+>> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
+>> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
+>> -
+>>  	/* set the number of lanes */
+>>  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
+>>  	val &= ~PORT_LINK_MODE_MASK;
+>> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  	 * we should not program the ATU here.
+>>  	 */
+>>  	if (!pp->ops->rd_other_conf) {
+>> +		/* get iATU unroll support */
+>> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
+>> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
+>> +
+>>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+>>  					  pp->mem_bus_addr, pp->mem_size);
+>>
+> Bjorn,
 > 
-> The efi fix is on the efi.git next branch without stable designation,
-> i.e. slated for 4.11 not 4.10, and Matt Fleming usually sends his pull
-> to Ingo between rc4 and rc5.
-> 
-> 
-> > I can suspend/resume, and the nvidia seems to go off.
-> > 
-> > [  411.799035] nouveau 0000:01:00.0: DRM: suspending console...
-> > [  411.799059] nouveau 0000:01:00.0: DRM: suspending display...
-> > [  411.799119] nouveau 0000:01:00.0: DRM: evicting buffers...
-> > [  411.799125] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go
-> > idle...
-> > [  411.799176] nouveau 0000:01:00.0: DRM: suspending client object trees...
-> > [  411.805616] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
-> > [  413.217090] device_pm-0235 device_set_power      : Device [VID1]
-> > transitioned to D3hot
-> > [  413.217099] device_pm-0124 device_get_power      : Device [VID1] power
-> > state is (unknown)
-> > [  413.230201] thinkpad_acpi: EC reports that Thermal Table has changed
-> > [  413.351497]     power-0275 __acpi_power_off      : Power resource [NVP3]
-> > turned off
-> > [  413.351507] device_pm-0235 device_set_power      : Device [PEG]
-> > transitioned to D3hot
-> > [  413.351526]     power-0189 power_get_state       : Resource [NVP3] is
-> > off
-> > [  413.351530]     power-0219 power_get_list_state  : Resource list is off
-> > [  413.351542]     power-0189 power_get_state       : Resource [NVP2] is on
-> > [  413.351545]     power-0219 power_get_list_state  : Resource list is on
-> > [  413.351548] device_pm-0124 device_get_power      : Device [PEG] power
-> > state is D2
-> > 
-> > That is with some acpi debugging enabled (though I'm not quite sure why D2
-> > is where it ends up).
-> 
-> The ACPI D2 state seems fishy indeed, could you post the log for a
-> runtime resume as well?  It would be interesting to see how it gets
-> out of this incorrect power state.  Also, what is the firmware version
-> that you're using?  If it's not GNET80WW (2.28), could you attach an
-> acpidump to the bugzilla entry?
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=190861
+> A Gentle ping to merge this important fix to v4.10-rc kernel for Keystone PCI as
+> it is broken since v4.9.
 > 
 
-Okay I found a possible race and sent patches to fix it dri-devel
+In my understanding your proposal will have no impact in platform using ATU, so
+for me is fine.
 
-https://patchwork.freedesktop.org/series/17731/
+Acked-By: Joao Pinto <jpinto@synopsys.com>
 
-also https://cgit.freedesktop.org/~airlied/linux/log/?h=drm-next-wip-fix-runtime-race
-here with the efi patch also.
+> Thanks
+> 
 
-It might just be that enabling runtime PM makes things actually suspend/resume and
-we can hit this, or else I've just found something else in the area.
-
-Dave.
