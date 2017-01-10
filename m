@@ -1,46 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:54707 "EHLO
-        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751012AbdAPXaw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 18:30:52 -0500
-Received: from ALA-HCB.corp.ad.wrs.com (ala-hcb.corp.ad.wrs.com [147.11.189.41])
-        by mail.windriver.com (8.15.2/8.15.1) with ESMTPS id v0GNTRbH017241
-        (version=TLSv1 cipher=AES128-SHA bits=128 verify=FAIL)
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jan 2017 15:29:27 -0800 (PST)
-From: "Richard, Joseph" <Joseph.Richard@windriver.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Hotplugging PCI device with large BAR
-Date: Mon, 16 Jan 2017 23:29:26 +0000
-Message-ID: <7B6A2AE64F40F245AE81F245059F0C3651381A56@ALA-MBA.corp.ad.wrs.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 10 Jan 2017 08:07:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: NVMe vs DMA addressing limitations
+Message-ID: <20170110070719.GA17208@lst.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+ <6374144.HVL0QxNJiT@wuerfel>
+ <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+ <20170109205746.GA6274@lst.de>
+ <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Arnd Bergmann <arnd@linaro.org>,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-I am trying to hotplug a device with a large BAR to a KVM guest, but it is failing to map the memory for the BAR.
+On Tue, Jan 10, 2017 at 09:47:21AM +0300, Nikita Yushchenko wrote:
+> I'm now working with HW that:
+> - is now way "low end" or "obsolete", it has 4G of RAM and 8 CPU cores,
+> and is being manufactured and developed,
+> - has 75% of it's RAM located beyond first 4G of address space,
+> - can't physically handle incoming PCIe transactions addressed to memory
+> beyond 4G.
 
->From dmesg, here is the output when hotplugging the device, with the failure on BAR 2:
-[  891.614017] ACPI: \_SB_.PCI0.S60_: ACPI_NOTIFY_DEVICE_CHECK event
-[  891.614036] ACPI: \_SB_.PCI0.S60_: Device check in hotplug_event()
-[  891.614100] pci 0000:00:0c.0: [1af4:1110] type 00 class 0x050000
-[  891.614277] pci 0000:00:0c.0: reg 0x10: [mem 0x00000000-0x00000fff]
-[  891.614391] pci 0000:00:0c.0: reg 0x14: [mem 0x00000000-0x00000fff]
-[  891.614557] pci 0000:00:0c.0: reg 0x18: [mem 0x00000000-0x7fffffff 64bit pref]
-[  891.614670] pci 0000:00:0c.0: reg 0x20: [mem 0x00000000-0x000fffff pref]
-[  891.614780] pci 0000:00:0c.0: reg 0x24: [mem 0x00000000-0x000fffff pref]
-[  891.615277] pci 0000:00:0c.0: BAR 2: no space for [mem size 0x80000000 64bit pref]
-[  891.615279] pci 0000:00:0c.0: BAR 2: failed to assign [mem size 0x80000000 64bit pref]
-[  891.615281] pci 0000:00:0c.0: BAR 4: assigned [mem 0xc0300000-0xc03fffff pref]
-[  891.617759] pci 0000:00:0c.0: BAR 5: assigned [mem 0xc0400000-0xc04fffff pref]
-[  891.620473] pci 0000:00:0c.0: BAR 0: assigned [mem 0xc0202000-0xc0202fff]
-[  891.623148] pci 0000:00:0c.0: BAR 1: assigned [mem 0xc0203000-0xc0203fff]
+It might not be low end or obselete, but it's absolutely braindead.
+Your I/O performance will suffer badly for the life of the platform
+because someone tries to save 2 cents, and there is not much we can do
+about it.
 
-When the node is rebooted, the allocation gets fixed.
-Also, when a similar device has previously been removed, it can allocate the memory that has previously been used for that device to this device, so allocation will succeed
-Note, this is on a guest that has 9.8GB of RAM.  The same result was also observed on guests with lower amounts of RAM.
+> (1) it constantly runs of swiotlb space, logs are full of warnings
+> despite of rate limiting,
 
-Does anyone have any suggestions?   Do you need any additional data?
+> Per my current understanding, blk-level bounce buffering will at least
+> help with (1) - if done properly it will allocate bounce buffers within
+> entire memory below 4G, not within dedicated swiotlb space (that is
+> small and enlarging it makes memory permanently unavailable for other
+> use).  This looks simple and safe (in sense of not anyhow breaking
+> unrelated use cases).
 
-Thanks,
-Joseph Richard
+Yes.  Although there is absolutely no reason why swiotlb could not
+do the same.
+
+> (2) it runs far suboptimal due to bounce-buffering almost all i/o,
+> despite of lots of free memory in area where direct DMA is possible.
+
+> Addressing (2) looks much more difficult because different memory
+> allocation policy is required for that.
+
+It's basically not possible.  Every piece of memory in a Linux
+kernel is a possible source of I/O, and depending on the workload
+type it might even be a the prime source of I/O.
+
+> > NVMe should never bounce, the fact that it currently possibly does
+> > for highmem pages is a bug.
+> 
+> The entire topic is absolutely not related to highmem (i.e. memory not
+> directly addressable by 32-bit kernel).
+
+I did not say this affects you, but thanks to your mail I noticed that
+NVMe has a suboptimal setting there.  Also note that highmem does not
+have to imply a 32-bit kernel, just physical memory that is not in the
+kernel mapping.
+
+> What we are discussing is hw-originated restriction on where DMA is
+> possible.
+
+Yes, where hw means the SOC, and not the actual I/O device, which is an
+important distinction.
+
+> > Or even better remove the call to dma_set_mask_and_coherent with
+> > DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
+> > addressing, there is not point in trying to pretent it works without that
+> 
+> Are you claiming that NVMe driver in mainline is intentionally designed
+> to not work on HW that can't do DMA to entire 64-bit space?
+
+It is not intenteded to handle the case where the SOC / chipset
+can't handle DMA to all physical memoery, yes.
+
+> Such setups do exist and there is interest to make them working.
+
+Sure, but it's not the job of the NVMe driver to work around such a broken
+system.  It's something your architecture code needs to do, maybe with
+a bit of core kernel support.
+
+> Quite a few pages used for block I/O are allocated by filemap code - and
+> at allocation point it is known what inode page is being allocated for.
+> If this inode is from filesystem located on a known device with known
+> DMA limitations, this knowledge can be used to allocate page that can be
+> DMAed directly.
+
+But in other cases we might never DMA to it.  Or we rarely DMA to it, say
+for a machine running databses or qemu and using lots of direct I/O. Or
+a storage target using it's local alloc_pages buffers.
+
+> Sure there are lots of cases when at allocation time there is no idea
+> what device will run DMA on page being allocated, or perhaps page is
+> going to be shared, or whatever. Such cases unavoidably require bounce
+> buffers if page ends to be used with device with DMA limitations. But
+> still there are cases when better allocation can remove need for bounce
+> buffers - without any hurt for other cases.
+
+It takes your max 1GB DMA addressable memoery away from other uses,
+and introduce the crazy highmem VM tuning issues we had with big
+32-bit x86 systems in the past.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
