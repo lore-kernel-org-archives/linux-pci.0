@@ -1,785 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V6 4/5] LPC: Support the device-tree LPC host on Hip06/Hip07
-Date: Tue, 24 Jan 2017 15:05:24 +0800
-Message-ID: <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: NVMe vs DMA addressing limitations
+To: Christoph Hellwig <hch@lst.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+ <6374144.HVL0QxNJiT@wuerfel>
+ <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+ <20170109205746.GA6274@lst.de>
+ <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
+ <20170110070719.GA17208@lst.de>
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <c4fd007c-3f07-fc2a-8cbb-7152f578609d@cogentembedded.com>
+Date: Tue, 10 Jan 2017 10:31:47 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170110070719.GA17208@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ Arnd Bergmann <arnd@linaro.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
-I/O port addresses. This patch implements the LPC host controller driver which
-perform the I/O operations on the underlying hardware.
-We don't want to touch those existing peripherals' driver, such as ipmi-bt. So
-this driver applies the indirect-IO introduced in the previous patch after
-registering an indirect-IO node to the indirect-IO devices list which will be
-searched in the I/O accessors.
-As the I/O translations for LPC children depend on the host I/O registration,
-we should ensure the host I/O registration is finished before all the LPC
-children scanning. That is why an arch_init() hook was added in this patch.
+Christoph, thanks for clear input.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
- MAINTAINERS                                        |   9 +
- arch/arm64/boot/dts/hisilicon/hip06-d03.dts        |   4 +
- arch/arm64/boot/dts/hisilicon/hip06.dtsi           |  14 +
- drivers/bus/Kconfig                                |   8 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 599 +++++++++++++++++++++
- 7 files changed, 668 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 drivers/bus/hisi_lpc.c
+Arnd, I think that given this discussion, best short-term solution is
+indeed the patch I've submitted yesterday. That is, your version +
+coherent mask support.  With that, set_dma_mask(DMA_BIT_MASK(64)) will
+succeed and hardware with work with swiotlb.
 
-diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-new file mode 100644
-index 0000000..213181f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-@@ -0,0 +1,33 @@
-+Hisilicon Hip06 low-pin-count device
-+  Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
-+  provides I/O access to some legacy ISA devices.
-+  Hip06 is based on arm64 architecture where there is no I/O space. So, the
-+  I/O ports here are not cpu addresses, and there is no 'ranges' property in
-+  LPC device node.
-+
-+Required properties:
-+- compatible:  value should be as follows:
-+	(a) "hisilicon,hip06-lpc"
-+	(b) "hisilicon,hip07-lpc"
-+- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
-+- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
-+- reg: base memory range where the LPC register set is mapped.
-+
-+Note:
-+  The node name before '@' must be "isa" to represent the binding stick to the
-+  ISA/EISA binding specification.
-+
-+Example:
-+
-+isa@a01b0000 {
-+	compatible = "hisilicon,hip06-lpc";
-+	#address-cells = <2>;
-+	#size-cells = <1>;
-+	reg = <0x0 0xa01b0000 0x0 0x1000>;
-+
-+	ipmi0: bt@e4 {
-+		compatible = "ipmi-bt";
-+		device_type = "ipmi";
-+		reg = <0x01 0xe4 0x04>;
-+	};
-+};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 26edd83..0153707 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5855,6 +5855,15 @@ F:	include/uapi/linux/if_hippi.h
- F:	net/802/hippi.c
- F:	drivers/net/hippi/
- 
-+HISILICON LPC BUS DRIVER
-+M:	Zhichang Yuan <yuanzhichang@hisilicon.com>
-+L:	linux-arm-kernel@lists.infradead.org
-+W:	http://www.hisilicon.com
-+S:	Maintained
-+F:	drivers/bus/hisi_lpc.c
-+F:	lib/extio.c
-+F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-+
- HISILICON NETWORK SUBSYSTEM DRIVER
- M:	Yisen Zhuang <yisen.zhuang@huawei.com>
- M:	Salil Mehta <salil.mehta@huawei.com>
-diff --git a/arch/arm64/boot/dts/hisilicon/hip06-d03.dts b/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
-index 7c4114a..75b2b5c 100644
---- a/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
-@@ -52,3 +52,7 @@
- &usb_ehci {
- 	status = "ok";
- };
-+
-+&ipmi0 {
-+	status = "ok";
-+};
-diff --git a/arch/arm64/boot/dts/hisilicon/hip06.dtsi b/arch/arm64/boot/dts/hisilicon/hip06.dtsi
-index a049b64..c450f8d 100644
---- a/arch/arm64/boot/dts/hisilicon/hip06.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hip06.dtsi
-@@ -318,6 +318,20 @@
- 		#size-cells = <2>;
- 		ranges;
- 
-+		isa@a01b0000 {
-+			compatible = "hisilicon,hip06-lpc";
-+			#size-cells = <1>;
-+			#address-cells = <2>;
-+			reg = <0x0 0xa01b0000 0x0 0x1000>;
-+
-+			ipmi0: bt@e4 {
-+				compatible = "ipmi-bt";
-+				device_type = "ipmi";
-+				reg = <0x01 0xe4 0x04>;
-+				status = "disabled";
-+			};
-+		};
-+
- 		refclk: refclk {
- 			compatible = "fixed-clock";
- 			clock-frequency = <50000000>;
-diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
-index b9e8cfc..58cee84 100644
---- a/drivers/bus/Kconfig
-+++ b/drivers/bus/Kconfig
-@@ -64,6 +64,14 @@ config BRCMSTB_GISB_ARB
- 	  arbiter. This driver provides timeout and target abort error handling
- 	  and internal bus master decoding.
- 
-+config HISILICON_LPC
-+	bool "Workaround for nonstandard ISA I/O space on Hisilicon Hip0X"
-+	depends on (ARM64 && ARCH_HISI && PCI) || COMPILE_TEST
-+	select INDIRECT_PIO
-+	help
-+	  Driver needed for some legacy ISA devices attached to Low-Pin-Count
-+	  on Hisilicon Hip0X SoC.
-+
- config IMX_WEIM
- 	bool "Freescale EIM DRIVER"
- 	depends on ARCH_MXC
-diff --git a/drivers/bus/Makefile b/drivers/bus/Makefile
-index cc6364b..28e3862 100644
---- a/drivers/bus/Makefile
-+++ b/drivers/bus/Makefile
-@@ -7,6 +7,7 @@ obj-$(CONFIG_ARM_CCI)		+= arm-cci.o
- obj-$(CONFIG_ARM_CCN)		+= arm-ccn.o
- 
- obj-$(CONFIG_BRCMSTB_GISB_ARB)	+= brcmstb_gisb.o
-+obj-$(CONFIG_HISILICON_LPC)	+= hisi_lpc.o
- obj-$(CONFIG_IMX_WEIM)		+= imx-weim.o
- obj-$(CONFIG_MIPS_CDMM)		+= mips_cdmm.o
- obj-$(CONFIG_MVEBU_MBUS) 	+= mvebu-mbus.o
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-new file mode 100644
-index 0000000..a96e384
---- /dev/null
-+++ b/drivers/bus/hisi_lpc.c
-@@ -0,0 +1,599 @@
-+/*
-+ * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ * Author: Zou Rongrong <zourongrong@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/console.h>
-+#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci.h>
-+#include <linux/serial_8250.h>
-+#include <linux/slab.h>
-+
-+/*
-+ * Setting this bit means each IO operation will target to a
-+ * different port address:
-+ * 0 means repeatedly IO operations will stick on the same port,
-+ * such as BT;
-+ */
-+#define FG_INCRADDR_LPC		0x02
-+
-+struct lpc_cycle_para {
-+	unsigned int opflags;
-+	unsigned int csize; /* the data length of each operation */
-+};
-+
-+struct hisilpc_dev {
-+	spinlock_t cycle_lock;
-+	void __iomem  *membase;
-+	struct extio_node *extio;
-+};
-+
-+/* bounds of the LPC bus address range */
-+#define LPC_MIN_BUS_RANGE	0x0
-+
-+/*
-+ * The maximal IO size for each leagcy bus.
-+ * The port size of legacy I/O devices is normally less than 0x400.
-+ * Defining the I/O range size as 0x400 here should be sufficient for
-+ * all peripherals under one bus.
-+ */
-+#define LPC_BUS_IO_SIZE		0x400
-+
-+/* The maximum continuous operations */
-+#define LPC_MAX_OPCNT	16
-+/* only support IO data unit length is four at maximum */
-+#define LPC_MAX_DULEN	4
-+#if LPC_MAX_DULEN > LPC_MAX_OPCNT
-+#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
-+#endif
-+
-+#define LPC_REG_START		0x00 /* start a new LPC cycle */
-+#define LPC_REG_OP_STATUS	0x04 /* the current LPC status */
-+#define LPC_REG_IRQ_ST		0x08 /* interrupt enable&status */
-+#define LPC_REG_OP_LEN		0x10 /* how many LPC cycles each start */
-+#define LPC_REG_CMD		0x14 /* command for the required LPC cycle */
-+#define LPC_REG_ADDR		0x20 /* LPC target address */
-+#define LPC_REG_WDATA		0x24 /* data to be written */
-+#define LPC_REG_RDATA		0x28 /* data coming from peer */
-+
-+
-+/* The command register fields */
-+#define LPC_CMD_SAMEADDR	0x08
-+#define LPC_CMD_TYPE_IO		0x00
-+#define LPC_CMD_WRITE		0x01
-+#define LPC_CMD_READ		0x00
-+/* the bit attribute is W1C. 1 represents OK. */
-+#define LPC_STAT_BYIRQ		0x02
-+
-+#define LPC_STATUS_IDLE		0x01
-+#define LPC_OP_FINISHED		0x02
-+
-+#define START_WORK		0x01
-+
-+/*
-+ * The minimal waiting interval... Suggest it is not less than 10.
-+ * Bigger value probably will lower the performance.
-+ */
-+#define LPC_NSEC_PERWAIT	100
-+/*
-+ * The maximum waiting time is about 128us.
-+ * The fastest IO cycle time is about 390ns, but the worst case will wait
-+ * for extra 256 lpc clocks, so (256 + 13) * 30ns = 8 us. The maximum
-+ * burst cycles is 16. So, the maximum waiting time is about 128us under
-+ * worst case.
-+ * choose 1300 as the maximum.
-+ */
-+#define LPC_MAX_WAITCNT		1300
-+/* About 10us. This is specific for single IO operation, such as inb. */
-+#define LPC_PEROP_WAITCNT	100
-+
-+
-+static inline int wait_lpc_idle(unsigned char *mbase,
-+				unsigned int waitcnt) {
-+	u32 opstatus;
-+
-+	while (waitcnt--) {
-+		ndelay(LPC_NSEC_PERWAIT);
-+		opstatus = readl(mbase + LPC_REG_OP_STATUS);
-+		if (opstatus & LPC_STATUS_IDLE)
-+			return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
-+	}
-+	return -ETIME;
-+}
-+
-+/*
-+ * hisilpc_target_in - trigger a series of lpc cycles to read required data
-+ *		       from target peripheral.
-+ * @pdev: pointer to hisi lpc device
-+ * @para: some parameters used to control the lpc I/O operations
-+ * @ptaddr: the lpc I/O target port address
-+ * @buf: where the read back data is stored
-+ * @opcnt: how many I/O operations required in this calling
-+ *
-+ * Only one byte data is read each I/O operation.
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int
-+hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
-+		  unsigned long ptaddr, unsigned char *buf,
-+		  unsigned long opcnt)
-+{
-+	unsigned long cnt_per_trans;
-+	unsigned int cmd_word;
-+	unsigned int waitcnt;
-+	int ret;
-+
-+	if (!buf || !opcnt || !para || !para->csize || !lpcdev)
-+		return -EINVAL;
-+
-+	if (opcnt  > LPC_MAX_OPCNT)
-+		return -EINVAL;
-+
-+	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
-+	waitcnt = LPC_PEROP_WAITCNT;
-+	if (!(para->opflags & FG_INCRADDR_LPC)) {
-+		cmd_word |= LPC_CMD_SAMEADDR;
-+		waitcnt = LPC_MAX_WAITCNT;
-+	}
-+
-+	ret = 0;
-+	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
-+	for (; opcnt && !ret; cnt_per_trans = para->csize) {
-+		unsigned long flags;
-+
-+		/* whole operation must be atomic */
-+		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-+
-+		writel(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
-+
-+		writel(cmd_word, lpcdev->membase + LPC_REG_CMD);
-+
-+		writel(ptaddr, lpcdev->membase + LPC_REG_ADDR);
-+
-+		writel(START_WORK, lpcdev->membase + LPC_REG_START);
-+
-+		/* whether the operation is finished */
-+		ret = wait_lpc_idle(lpcdev->membase, waitcnt);
-+		if (!ret) {
-+			opcnt -= cnt_per_trans;
-+			for (; cnt_per_trans--; buf++)
-+				*buf = readl(lpcdev->membase + LPC_REG_RDATA);
-+		}
-+
-+		spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * hisilpc_target_out - trigger a series of lpc cycles to write required
-+ *			data to target peripheral.
-+ * @pdev: pointer to hisi lpc device
-+ * @para: some parameters used to control the lpc I/O operations
-+ * @ptaddr: the lpc I/O target port address
-+ * @buf: where the data to be written is stored
-+ * @opcnt: how many I/O operations required
-+ *
-+ * Only one byte data is read each I/O operation.
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int
-+hisilpc_target_out(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
-+		   unsigned long ptaddr, const unsigned char *buf,
-+		   unsigned long opcnt)
-+{
-+	unsigned long cnt_per_trans;
-+	unsigned int cmd_word;
-+	unsigned int waitcnt;
-+	int ret;
-+
-+	if (!buf || !opcnt || !para || !lpcdev)
-+		return -EINVAL;
-+
-+	if (opcnt > LPC_MAX_OPCNT)
-+		return -EINVAL;
-+	/* default is increasing address */
-+	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_WRITE;
-+	waitcnt = LPC_PEROP_WAITCNT;
-+	if (!(para->opflags & FG_INCRADDR_LPC)) {
-+		cmd_word |= LPC_CMD_SAMEADDR;
-+		waitcnt = LPC_MAX_WAITCNT;
-+	}
-+
-+	ret = 0;
-+	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
-+	for (; opcnt && !ret; cnt_per_trans = para->csize) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-+
-+		writel(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
-+		opcnt -= cnt_per_trans;
-+		for (; cnt_per_trans--; buf++)
-+			writel(*buf, lpcdev->membase + LPC_REG_WDATA);
-+
-+		writel(cmd_word, lpcdev->membase + LPC_REG_CMD);
-+
-+		writel(ptaddr, lpcdev->membase + LPC_REG_ADDR);
-+
-+		writel(START_WORK, lpcdev->membase + LPC_REG_START);
-+
-+		/* whether the operation is finished */
-+		ret = wait_lpc_idle(lpcdev->membase, waitcnt);
-+
-+		spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
-+	}
-+
-+	return ret;
-+}
-+
-+static inline unsigned long
-+hisi_lpc_pio_to_addr(struct hisilpc_dev *lpcdev, unsigned long pio)
-+{
-+	return pio - lpcdev->extio->io_start + lpcdev->extio->bus_start;
-+}
-+
-+
-+/**
-+ * hisilpc_comm_in - read/input the data from the I/O peripheral
-+ *		     through LPC.
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @dlen: the data length required to read from the target I/O port.
-+ *
-+ * when succeed, the data read back is stored in buffer pointed by inbuf.
-+ * For inb, return the data read from I/O or -1 when error occur.
-+ */
-+static u64 hisilpc_comm_in(void *devobj, unsigned long pio, size_t dlen)
-+{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	u32 rd_data;
-+	unsigned char *newbuf;
-+	int ret = 0;
-+	unsigned long ptaddr;
-+
-+	if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN ||	(dlen & (dlen - 1)))
-+		return -1;
-+
-+	/* the local buffer must be enough for one data unit */
-+	if (sizeof(rd_data) < dlen)
-+		return -1;
-+
-+	newbuf = (unsigned char *)&rd_data;
-+
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+
-+	iopara.opflags = FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	ret = hisilpc_target_in(lpcdev, &iopara, ptaddr, newbuf, dlen);
-+	if (ret)
-+		return -1;
-+
-+	return le32_to_cpu(rd_data);
-+}
-+
-+/**
-+ * hisilpc_comm_out - output the data whose maximum length is four bytes
-+		      to the I/O peripheral through the LPC host.
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @outval: a value to be outputted from caller, maximum is four bytes.
-+ * @pio: the target I/O port address.
-+ * @dlen: the data length required writing to the target I/O port.
-+ *
-+ * This function is corresponding to out(b,w,l) only
-+ *
-+ */
-+static void hisilpc_comm_out(void *devobj, unsigned long pio,
-+			     u32 outval, size_t dlen)
-+{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	const unsigned char *newbuf;
-+	unsigned long ptaddr;
-+
-+	if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN)
-+		return;
-+
-+	if (sizeof(outval) < dlen)
-+		return;
-+
-+	outval = cpu_to_le32(outval);
-+
-+	newbuf = (const unsigned char *)&outval;
-+
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+
-+	iopara.opflags = FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	hisilpc_target_out(lpcdev, &iopara, ptaddr, newbuf, dlen);
-+}
-+
-+/*
-+ * hisilpc_comm_ins - read/input the data in buffer to the I/O
-+ *		peripheral through LPC, it corresponds to ins(b,w,l)
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @inbuf: a buffer where read/input data bytes are stored.
-+ * @dlen: the data length required writing to the target I/O port.
-+ * @count: how many data units whose length is dlen will be read.
-+ *
-+ */
-+static u64
-+hisilpc_comm_ins(void *devobj, unsigned long pio, void *inbuf,
-+		 size_t dlen, unsigned int count)
-+{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	unsigned char *newbuf;
-+	unsigned int loopcnt, cntleft;
-+	unsigned int max_perburst;
-+	unsigned long ptaddr;
-+
-+	if (!lpcdev || !inbuf || !count || !dlen ||
-+			dlen > LPC_MAX_DULEN || (dlen & (dlen - 1)))
-+		return -1;
-+
-+	iopara.opflags = 0;
-+	if (dlen > 1)
-+		iopara.opflags |= FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+	newbuf = (unsigned char *)inbuf;
-+	/*
-+	 * ensure data stream whose length is multiple of dlen to be processed
-+	 * each IO input
-+	 */
-+	max_perburst = LPC_MAX_OPCNT & (~(dlen - 1));
-+	cntleft = count * dlen;
-+	do {
-+		int ret;
-+
-+		loopcnt = (cntleft >= max_perburst) ? max_perburst : cntleft;
-+		ret = hisilpc_target_in(lpcdev, &iopara, ptaddr,
-+					newbuf, loopcnt);
-+		if (ret)
-+			return ret;
-+		newbuf += loopcnt;
-+		cntleft -= loopcnt;
-+	} while (cntleft);
-+
-+	return 0;
-+}
-+
-+/*
-+ * hisilpc_comm_outs - write/output the data in buffer to the I/O
-+ *		peripheral through LPC, it corresponds to outs(b,w,l)
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @outbuf: a buffer where write/output data bytes are stored.
-+ * @dlen: the data length required writing to the target I/O port .
-+ * @count: how many data units whose length is dlen will be written.
-+ *
-+ */
-+static void
-+hisilpc_comm_outs(void *devobj, unsigned long pio, const void *outbuf,
-+		  size_t dlen, unsigned int count)
-+{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	const unsigned char *newbuf;
-+	unsigned int loopcnt, cntleft;
-+	unsigned int max_perburst;
-+	unsigned long ptaddr;
-+
-+	if (!lpcdev || !outbuf || !count || !dlen ||
-+			dlen > LPC_MAX_DULEN || (dlen & (dlen - 1)))
-+		return;
-+
-+	iopara.opflags = 0;
-+	if (dlen > 1)
-+		iopara.opflags |= FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+	newbuf = (unsigned char *)outbuf;
-+	/*
-+	 * ensure data stream whose length is multiple of dlen to be processed
-+	 * each IO input
-+	 */
-+	max_perburst = LPC_MAX_OPCNT & (~(dlen - 1));
-+	cntleft = count * dlen;
-+	do {
-+		loopcnt = (cntleft >= max_perburst) ? max_perburst : cntleft;
-+		if (hisilpc_target_out(lpcdev, &iopara, ptaddr, newbuf,
-+						loopcnt))
-+			break;
-+		newbuf += loopcnt;
-+		cntleft -= loopcnt;
-+	} while (cntleft);
-+}
-+
-+static struct extio_ops hisi_lpc_ops = {
-+	.pfin = hisilpc_comm_in,
-+	.pfout = hisilpc_comm_out,
-+	.pfins = hisilpc_comm_ins,
-+	.pfouts = hisilpc_comm_outs,
-+};
-+
-+/**
-+ * hisilpc_probe - the probe callback function for hisi lpc device,
-+ *		   will finish all the initialization.
-+ * @pdev: the platform device corresponding to hisi lpc
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int hisilpc_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct resource *res;
-+	struct hisilpc_dev *lpcdev;
-+	int ret = 0;
-+
-+	dev_info(dev, "probing...\n");
-+
-+	lpcdev = devm_kzalloc(dev, sizeof(struct hisilpc_dev), GFP_KERNEL);
-+	if (!lpcdev)
-+		return -ENOMEM;
-+
-+	spin_lock_init(&lpcdev->cycle_lock);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		dev_err(dev, "no MEM resource\n");
-+		return -ENODEV;
-+	}
-+
-+	lpcdev->membase = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(lpcdev->membase)) {
-+		dev_err(dev, "remap failed\n");
-+		return PTR_ERR(lpcdev->membase);
-+	}
-+
-+	/* get the linux virtual IO node registered before. */
-+	lpcdev->extio = extio_find_node(dev->fwnode);
-+	if (!lpcdev->extio) {
-+		dev_err(dev, "No extio node registered!\n");
-+		return -EFAULT;
-+	}
-+
-+	lpcdev->extio->devpara = lpcdev;
-+	lpcdev->extio->ops = &hisi_lpc_ops;
-+
-+	platform_set_drvdata(pdev, lpcdev);
-+
-+	/*
-+	 * The children scanning is only for dts. For ACPI children, the
-+	 * corresponding devices had be created during ACPI scanning.
-+	 */
-+	if (!has_acpi_companion(dev)) {
-+		ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
-+		if (ret)
-+			dev_err(dev, "OF: enumerate LPC bus fail(%d)\n", ret);
-+	}
-+
-+	if (!ret)
-+		dev_info(dev, "hslpc end probing. range[0x%lx - %lx]\n",
-+			 lpcdev->extio->io_start,
-+			 lpcdev->extio->io_start + lpcdev->extio->range_size);
-+	else
-+		dev_info(dev, "hslpc probing is fail(%d)\n", ret);
-+
-+	return ret;
-+}
-+
-+static const struct of_device_id hisilpc_of_match[] = {
-+	{ .compatible = "hisilicon,hip06-lpc", },
-+	{ .compatible = "hisilicon,hip07-lpc", },
-+	{},
-+};
-+
-+static const struct acpi_device_id hisilpc_acpi_match[] = {
-+	{"HISI0191", },
-+	{},
-+};
-+
-+static struct platform_driver hisilpc_driver = {
-+	.driver = {
-+		.name           = "hisi_lpc",
-+		.of_match_table = hisilpc_of_match,
-+		.acpi_match_table = hisilpc_acpi_match,
-+	},
-+	.probe = hisilpc_probe,
-+};
-+
-+
-+builtin_platform_driver(hisilpc_driver);
-+
-+/*
-+ * hisilpc_bus_platform_notify -- notify callback function specific for
-+ *			hisi-lpc bus. Here, will register linux virtual
-+ *			PIO for the bus detected, then the bus children
-+ *			can translate their bus-local IO to linux PIO.
-+ */
-+static int hisilpc_bus_platform_notify(struct notifier_block *nb,
-+			unsigned long action, void *data)
-+{
-+	struct extio_node *io_node;
-+	struct device *dev = data;
-+	int ret;
-+
-+	if (!is_of_node(dev->fwnode) && !is_acpi_node(dev->fwnode))
-+		return NOTIFY_DONE;
-+
-+	if (action != BUS_NOTIFY_ADD_DEVICE)
-+		return NOTIFY_DONE;
-+
-+	/* whether the device notified is hisi-lpc? */
-+	if (has_acpi_companion(dev)) {
-+		if (!acpi_match_device(hisilpc_acpi_match, dev))
-+			return NOTIFY_DONE;
-+	} else {
-+		if (!of_match_node(hisilpc_of_match, dev->of_node))
-+			return NOTIFY_DONE;
-+	}
-+
-+	/*
-+	 * indirectIO bus was detected, time to request the linux virtual
-+	 * IO.
-+	 */
-+	io_node = kzalloc(sizeof(*io_node), GFP_KERNEL);
-+	if (!io_node)
-+		return NOTIFY_DONE;
-+
-+	io_node->bus_start = LPC_MIN_BUS_RANGE;
-+	io_node->range_size = LPC_BUS_IO_SIZE;
-+
-+	ret = pci_register_io_range(dev->fwnode, IO_RANGE_IOEXT,
-+			io_node->range_size, &io_node->io_start);
-+	if (ret) {
-+		dev_err(dev, "register indirectIO range FAIL!\n");
-+		kfree(io_node);
-+		return NOTIFY_DONE;
-+	}
-+	io_node->fwnode = dev->fwnode;
-+	/* register the linux virtual IO range node to list. */
-+	register_extio(io_node);
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block hisilpc_preinit_nb = {
-+	.notifier_call = hisilpc_bus_platform_notify,
-+};
-+
-+static int __init hisilpc_init(void)
-+{
-+	return bus_register_notifier(&platform_bus_type, &hisilpc_preinit_nb);
-+}
-+
-+/* This initial funtion must be called before the platform bus scanning. */
-+arch_initcall(hisilpc_init);
--- 
-1.9.1
+Possible next step is to teach swiotlb to dynamically allocate bounce
+buffers within entire arm64's ZONE_DMA.
+
+Also there is some hope that R-Car *can* iommu-translate addresses that
+PCIe module issues to system bus.  Although previous attempts to make
+that working failed. Additional research is needed here.
+
+Nikita
+
+> On Tue, Jan 10, 2017 at 09:47:21AM +0300, Nikita Yushchenko wrote:
+>> I'm now working with HW that:
+>> - is now way "low end" or "obsolete", it has 4G of RAM and 8 CPU cores,
+>> and is being manufactured and developed,
+>> - has 75% of it's RAM located beyond first 4G of address space,
+>> - can't physically handle incoming PCIe transactions addressed to memory
+>> beyond 4G.
+> 
+> It might not be low end or obselete, but it's absolutely braindead.
+> Your I/O performance will suffer badly for the life of the platform
+> because someone tries to save 2 cents, and there is not much we can do
+> about it.
+> 
+>> (1) it constantly runs of swiotlb space, logs are full of warnings
+>> despite of rate limiting,
+> 
+>> Per my current understanding, blk-level bounce buffering will at least
+>> help with (1) - if done properly it will allocate bounce buffers within
+>> entire memory below 4G, not within dedicated swiotlb space (that is
+>> small and enlarging it makes memory permanently unavailable for other
+>> use).  This looks simple and safe (in sense of not anyhow breaking
+>> unrelated use cases).
+> 
+> Yes.  Although there is absolutely no reason why swiotlb could not
+> do the same.
+> 
+>> (2) it runs far suboptimal due to bounce-buffering almost all i/o,
+>> despite of lots of free memory in area where direct DMA is possible.
+> 
+>> Addressing (2) looks much more difficult because different memory
+>> allocation policy is required for that.
+> 
+> It's basically not possible.  Every piece of memory in a Linux
+> kernel is a possible source of I/O, and depending on the workload
+> type it might even be a the prime source of I/O.
+> 
+>>> NVMe should never bounce, the fact that it currently possibly does
+>>> for highmem pages is a bug.
+>>
+>> The entire topic is absolutely not related to highmem (i.e. memory not
+>> directly addressable by 32-bit kernel).
+> 
+> I did not say this affects you, but thanks to your mail I noticed that
+> NVMe has a suboptimal setting there.  Also note that highmem does not
+> have to imply a 32-bit kernel, just physical memory that is not in the
+> kernel mapping.
+> 
+>> What we are discussing is hw-originated restriction on where DMA is
+>> possible.
+> 
+> Yes, where hw means the SOC, and not the actual I/O device, which is an
+> important distinction.
+> 
+>>> Or even better remove the call to dma_set_mask_and_coherent with
+>>> DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
+>>> addressing, there is not point in trying to pretent it works without that
+>>
+>> Are you claiming that NVMe driver in mainline is intentionally designed
+>> to not work on HW that can't do DMA to entire 64-bit space?
+> 
+> It is not intenteded to handle the case where the SOC / chipset
+> can't handle DMA to all physical memoery, yes.
+> 
+>> Such setups do exist and there is interest to make them working.
+> 
+> Sure, but it's not the job of the NVMe driver to work around such a broken
+> system.  It's something your architecture code needs to do, maybe with
+> a bit of core kernel support.
+> 
+>> Quite a few pages used for block I/O are allocated by filemap code - and
+>> at allocation point it is known what inode page is being allocated for.
+>> If this inode is from filesystem located on a known device with known
+>> DMA limitations, this knowledge can be used to allocate page that can be
+>> DMAed directly.
+> 
+> But in other cases we might never DMA to it.  Or we rarely DMA to it, say
+> for a machine running databses or qemu and using lots of direct I/O. Or
+> a storage target using it's local alloc_pages buffers.
+> 
+>> Sure there are lots of cases when at allocation time there is no idea
+>> what device will run DMA on page being allocated, or perhaps page is
+>> going to be shared, or whatever. Such cases unavoidably require bounce
+>> buffers if page ends to be used with device with DMA limitations. But
+>> still there are cases when better allocation can remove need for bounce
+>> buffers - without any hurt for other cases.
+> 
+> It takes your max 1GB DMA addressable memoery away from other uses,
+> and introduce the crazy highmem VM tuning issues we had with big
+> 32-bit x86 systems in the past.
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
