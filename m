@@ -1,107 +1,139 @@
-Return-Path: <SRS0=kadG=Y2=samsung.com=jh80.chung@kernel.org>
-Return-Path: <SRS0=kadG=Y2=samsung.com=jh80.chung@kernel.org>
-Subject: Re: [PATCH 1/4] PCI: exynos: replace to one register accessor from
- each accessors
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, helgaas@google.com, krzk@kernel.org,
- linux-kernel@vger.kernel.org, jingoohan1@gmail.com, javier@osg.samsung.com,
- kgene@kernel.org, linux-samsung-soc@vger.kernel.org, CPGS <cpgs@samsung.com>
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <38b40475-97fc-da8a-82f4-4c5932a008a1@samsung.com>
-Date: Thu, 12 Jan 2017 10:13:18 +0900
-MIME-version: 1.0
-In-reply-to: <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
-Content-type: text/plain; charset=windows-1252
-References: <20161219081614.5403-1-jh80.chung@samsung.com>
- <20161219081614.5403-2-jh80.chung@samsung.com>
- <CGME20170111185058epcas4p3b75597ea7f18d0ac10a16fc752a708ca@epcas4p3.samsung.com>
- <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: NVMe vs DMA addressing limitations
+To: Christoph Hellwig <hch@lst.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <2723285.JORgusvJv4@wuerfel>
+ <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
+ <6374144.HVL0QxNJiT@wuerfel>
+ <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+ <20170109205746.GA6274@lst.de>
+Cc: Arnd Bergmann <arnd@linaro.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        artemi.ivanov@cogentembedded.com,
+        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org
+From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Message-ID: <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
+Date: Tue, 10 Jan 2017 09:47:21 +0300
+MIME-Version: 1.0
+In-Reply-To: <20170109205746.GA6274@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 01/12/2017 03:50 AM, Bjorn Helgaas wrote:
-> Hi Jaehoon,
+>> I believe the bounce buffering code you refer to is not in SATA/SCSI/MMC
+>> but in block layer, in particular it should be controlled by
+>> blk_queue_bounce_limit().  [Yes there is CONFIG_MMC_BLOCK_BOUNCE but it
+>> is something completely different, namely it is for request merging for
+>> hw not supporting scatter-gather].  And NVMe also uses block layer and
+>> thus should get same support.
 > 
-> On Mon, Dec 19, 2016 at 05:16:11PM +0900, Jaehoon Chung wrote:
->> There is no reason to maintain *_blk/phy/elbi_* as register accessors.
->> It can be replaced to one register accessor.
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  drivers/pci/host/pci-exynos.c | 214 +++++++++++++++++++-----------------------
->>  1 file changed, 97 insertions(+), 117 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
->> index f1c544b..6dbfa2c 100644
->> --- a/drivers/pci/host/pci-exynos.c
->> +++ b/drivers/pci/host/pci-exynos.c
->> @@ -102,197 +102,175 @@ struct exynos_pcie {
->>  #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
->>  #define PCIE_PHY_TRSV3_LVCC		0x31c
->>  
->> -static void exynos_elb_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
->> +static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
->>  {
->> -	writel(val, exynos_pcie->elbi_base + reg);
->> +	writel(val, base + reg);
->>  }
->>  
->> -static u32 exynos_elb_readl(struct exynos_pcie *exynos_pcie, u32 reg)
->> +static u32 exynos_pcie_readl(void __iomem *base, u32 reg)
->>  {
->> -	return readl(exynos_pcie->elbi_base + reg);
->> +	return readl(base + reg);
->>  }
->>  
->> -static void exynos_phy_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
->> -{
->> -	writel(val, exynos_pcie->phy_base + reg);
->> -}
->> -
->> -static u32 exynos_phy_readl(struct exynos_pcie *exynos_pcie, u32 reg)
->> -{
->> -	return readl(exynos_pcie->phy_base + reg);
->> -}
->> -
->> -static void exynos_blk_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
->> -{
->> -	writel(val, exynos_pcie->block_base + reg);
->> -}
->> -
->> -static u32 exynos_blk_readl(struct exynos_pcie *exynos_pcie, u32 reg)
->> -{
->> -	return readl(exynos_pcie->block_base + reg);
->> -}
->> -
->> -static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos_pcie,
->> -					    bool on)
->> +static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
-> 
-> Replacing all the separate accessors with one that takes the base
-> pointer is OK, but please use the same name for all the "struct
-> exynos_pcie *" pointers in the whole file.
-> 
-> Before your patch, they were all called "exynos_pci"; after it some
-> are called "exynos_pci" and some are called "ep".
+> NVMe shouldn't have to call blk_queue_bounce_limit - 
+> blk_queue_bounce_limit is to set the DMA addressing limit of the device.
+> NVMe devices must support unlimited 64-bit addressing and thus calling
+> blk_queue_bounce_limit from NVMe does not make sense.
 
-I will use the 'ep' as name, exynos_pcie is a little bit long.
-When 'exynos_pcie' is used, some code is need to change lines because of 80 char.
-I think it's the meaningless line changing.
+I'm now working with HW that:
+- is now way "low end" or "obsolete", it has 4G of RAM and 8 CPU cores,
+and is being manufactured and developed,
+- has 75% of it's RAM located beyond first 4G of address space,
+- can't physically handle incoming PCIe transactions addressed to memory
+beyond 4G.
 
-I will resend the PATCH v2..also patches relevant to using PHY framework.
-After applying everything, i will upstream TM2(Exynos5433) PCIe patches.
+Swiotlb is used there, sure (once a bug in arm64 arch is patched). But
+that setup still has at least two issues.
 
-Thanks for reviewing.
+(1) it constantly runs of swiotlb space, logs are full of warnings
+despite of rate limiting,
 
-Best Regards,
-Jaehoon Chung
+(2) it runs far suboptimal due to bounce-buffering almost all i/o,
+despite of lots of free memory in area where direct DMA is possible.
 
+I'm looking for proper way to address these. Shooting HW designer as you
+suggested elsewhere doesn't look like a practical solution. Any better
+ideas?
+
+
+Per my current understanding, blk-level bounce buffering will at least
+help with (1) - if done properly it will allocate bounce buffers within
+entire memory below 4G, not within dedicated swiotlb space (that is
+small and enlarging it makes memory permanently unavailable for other
+use).  This looks simple and safe (in sense of not anyhow breaking
+unrelated use cases).
+
+Addressing (2) looks much more difficult because different memory
+allocation policy is required for that.
+
+
+> That being said currently the default for a queue without a call
+> to blk_queue_make_request which does the wrong thing on highmem
+> setups, so we should fix it.  In fact BLK_BOUNCE_HIGH as-is doesn't
+> really make much sense these days as no driver should ever dereference
+> pages passed to it directly.
 > 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Maybe fixing that, together with making NVMe use this API, could stop it
+>> from issuing dma_map()s of addresses beyond mask.
 > 
+> NVMe should never bounce, the fact that it currently possibly does
+> for highmem pages is a bug.
+
+The entire topic is absolutely not related to highmem (i.e. memory not
+directly addressable by 32-bit kernel).
+
+What we are discussing is hw-originated restriction on where DMA is
+possible.
+
+
+> Or even better remove the call to dma_set_mask_and_coherent with
+> DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
+> addressing, there is not point in trying to pretent it works without that
+
+Are you claiming that NVMe driver in mainline is intentionally designed
+to not work on HW that can't do DMA to entire 64-bit space?
+
+Such setups do exist and there is interest to make them working.
+
+
+> We need to kill off BLK_BOUNCE_HIGH, it just doesn't make sense to
+> mix the highmem aspect with the addressing limits.  In fact the whole
+> block bouncing scheme doesn't make much sense at all these days, we
+> should rely on swiotlb instead.
+
+I agree that centralized bounce buffering is better than
+subsystem-implemented bounce buffering.
+
+I still claim that even better - especially from performance point of
+view - is some memory allocation policy that is aware of HW limitations
+and avoids bounce buffering at least when it is possible.
+
+
+>> What I mean is some API to allocate memory for use with streaming DMA in
+>> such way that bounce buffers won't be needed. There are many cases when
+>> at buffer allocation time, it is already known that buffer will be used
+>> for DMA with particular device. Bounce buffers will still be needed
+>> cases when no such information is available at allocation time, or when
+>> there is no directly-DMAable memory available at allocation time.
 > 
+> For block I/O that is never the case.
+
+Quite a few pages used for block I/O are allocated by filemap code - and
+at allocation point it is known what inode page is being allocated for.
+If this inode is from filesystem located on a known device with known
+DMA limitations, this knowledge can be used to allocate page that can be
+DMAed directly.
+
+Sure there are lots of cases when at allocation time there is no idea
+what device will run DMA on page being allocated, or perhaps page is
+going to be shared, or whatever. Such cases unavoidably require bounce
+buffers if page ends to be used with device with DMA limitations. But
+still there are cases when better allocation can remove need for bounce
+buffers - without any hurt for other cases.
+
+
+Nikita
