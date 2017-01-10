@@ -1,75 +1,57 @@
-Return-Path: <SRS0=3W2o=Y2=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=3W2o=Y2=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH] pci: Fix typo in MAINTAINERS file
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
- <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <f60025df-e43d-4e71-89b1-9417244d1be3@synopsys.com>
-Date: Thu, 12 Jan 2017 12:10:27 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@linaro.org>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: NVMe vs DMA addressing limitations
+Date: Tue, 10 Jan 2017 11:54:26 +0100
+Message-ID: <1967203.EWsxCL11oI@wuerfel>
+In-Reply-To: <20170110070719.GA17208@lst.de>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
+ <20170110070719.GA17208@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tuesday, January 10, 2017 8:07:20 AM CET Christoph Hellwig wrote:
+> On Tue, Jan 10, 2017 at 09:47:21AM +0300, Nikita Yushchenko wrote:
+> > I'm now working with HW that:
+> > - is now way "low end" or "obsolete", it has 4G of RAM and 8 CPU cores,
+> > and is being manufactured and developed,
+> > - has 75% of it's RAM located beyond first 4G of address space,
+> > - can't physically handle incoming PCIe transactions addressed to memory
+> > beyond 4G.
+> 
+> It might not be low end or obselete, but it's absolutely braindead.
+> Your I/O performance will suffer badly for the life of the platform
+> because someone tries to save 2 cents, and there is not much we can do
+> about it.
 
-Às 9:10 PM de 1/11/2017, Bjorn Helgaas escreveu:
-> Hi Joao,
-> 
-> On Wed, Dec 28, 2016 at 04:05:11PM +0000, Joao Pinto wrote:
->> This patch fixes a typo in MAINTAINERS file.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
->>  MAINTAINERS | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index cfff2c9..1056392 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -9512,7 +9512,7 @@ L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
->>  S:	Maintained
->>  F:	drivers/pci/host/pci-exynos.c
->>  
->> -PCI DRIVER FOR SYNOPSIS DESIGNWARE
->> +PCI DRIVER FOR SYNOPSYS DESIGNWARE
-> 
-> "git grep -i synopsis" finds several other occurrences in the tree.
-> 
-> Most of them are the English word "synopsis", and those are correct.
-> But several look like similar typos for the "Synopsys" company name:
-> 
->   Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
->   Documentation/devicetree/bindings/pci/pci-armada8k.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
->   Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
->   Documentation/devicetree/bindings/pci/spear13xx-pcie.txt:SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
->   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:DWC3 PHY nodes are defined to describe on-chip Synopsis Physical layer
->   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-hs-usb-phy" for High Speed Synopsis PHY controller
->   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-ss-usb-phy" for Super Speed Synopsis PHY controller
->   arch/x86/include/asm/apb_timer.h: * apb_timer.h: Driver for Langwell APB timer based on Synopsis DesignWare
->   drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware AHB Audio interface"
->   drivers/gpu/drm/bridge/Kconfig:   Support the AHB Audio interface which is part of the Synopsis
->   drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware I2S Audio interface"
->   drivers/gpu/drm/bridge/Kconfig:   Support the I2S Audio interface which is part of the Synopsis
->   drivers/gpu/drm/bridge/dw-hdmi-ahb-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI AHB ALSA interface");
->   drivers/gpu/drm/bridge/dw-hdmi-i2s-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI I2S ALSA SoC interface");
->   drivers/usb/phy/phy-msm-usb.c: * SNPS_28NM_INTEGRATED_PHY       Synopsis 28nm integrated PHY
-> 
+Unfortunately it is a common problem for arm64 chips that were designed
+by taking a 32-bit SoC and replacing the CPU core. The swiotlb is the
+right workaround for this, and I think we all agree that we should
+just make it work correctly.
 
-Yes, I will do that!
+	Arnd
 
-> Can you take a look at those and fix any others that are typos at the
-> same time?
-> 
->>  M:	Jingoo Han <jingoohan1@gmail.com>
->>  M:	Joao Pinto <Joao.Pinto@synopsys.com>
->>  L:	linux-pci@vger.kernel.org
->> -- 
->> 2.9.3
->>
-
-Thanks.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
