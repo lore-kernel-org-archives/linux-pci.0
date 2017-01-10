@@ -1,94 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49816 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:34368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935456AbdAKR7v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 12:59:51 -0500
-Date: Wed, 11 Jan 2017 19:59:51 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        linux-pci@vger.kernel.org, dennis.dalessandro@intel.com,
-        ira.weiny@intel.com
-Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
- device
-Message-ID: <20170111175951.GD20392@mtr-leonro.local>
-References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
- <20170111071252.GV7218@mtr-leonro.local>
- <dda30e58-41fd-b778-3b6c-6e59d08c41c7@intel.com>
+        id S1761358AbdAJPM7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Jan 2017 10:12:59 -0500
+Date: Tue, 10 Jan 2017 09:12:54 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: jingoohan1@gmail.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
+ keystone PCIe h/w
+Message-ID: <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
+References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="aT9PWwzfKXlsBJM1"
-In-Reply-To: <dda30e58-41fd-b778-3b6c-6e59d08c41c7@intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Murali,
 
---aT9PWwzfKXlsBJM1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
+> Recent fixes for iATU unroll support introduced a bug that causes
+> asynchronous external abort in Keystone PCIe h/w which doesn't have
+> ATU port and the corresponding register. So the check should be moved
+> below where dw_pcie_prog_outbound_atu() is called to avoid that
+> being called on keystine PCIe h/w.
+> 
+> Here is the backtrace
+> 
+> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
+> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+> [    0.785548] pgd = c0003000
+> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
+> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
+> [    0.799197] Modules linked in:
+> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
+> [    0.810130] Hardware name: Keystone
+> [    0.813717] task: eb878000 task.stack: eb866000
+> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
+> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
+> 
+> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
 
-On Wed, Jan 11, 2017 at 09:20:54AM -0800, Tadeusz Struk wrote:
-> Hi Leon,
-> On 01/10/2017 11:12 PM, Leon Romanovsky wrote:
-> > Can't you recognize such device at the initialization phase?
->
-> Yes, this is exactly what it does. It checks the device GUID
-> and reorders the ports during insmod.
+I tentatively applied this to for-linus for v4.10, with a stable tag
+for v4.9+.
 
-Why don't your firmware report the need to revert the ports?
+The patch itself mostly makes sense in terms of the code: we only use
+iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
+when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
 
->
-> > This is definitely specific HW implementation bug/issue/limitation.
->
-> Correct. As the commit message says this is to fix a HW issue.
->
-> >
-> > I always had an impression that module parameters are rarely beneficial
-> > in upstream kernel for driver modules and adding them for new driver
-> > code should be explicitly prohibited in CodingStyle guide.
-> >
-> > You are adding new module parameter which will be with us forever to fix
-> > special HW bug/implementation in some legacy installations. It will be
-> > insane to add such thing to upstream kernel, errata and out-of-tree
-> > implementations are best places for such things.
->
-> Agree, but the reality is that there are 5505 $(git grep module_param drivers/ | wc -l)
-> module parameters in the kernel already, and even mlx4 and mlx5 drivers use them.
+So it makes sense that we only need to initialize iatu_unroll_enabled
+in those cases.  But the current patch only initializes it if
+"!pp->ops->rd_other_conf".
 
-Regarding mlx4/mlx5, I'm not proud of that code and if it was dependent
-on me, I would remove it without thinking twice.
+If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
+would use iatu_unroll_enabled uninitialized in the
+dw_pcie_wr_other_conf() path.  I suppose that's an invalid
+configuration, but it'd be better if we didn't have to rely on the
+host drivers to avoid that configuration.
 
-Previous copy-paste can not be an excuse to add another module parameter.
+It's not obvious how this is connected to 416379f9ebde, though.  It
+*looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
+before and after that commit, so it seems like the external abort
+should have happened even before it.
 
-> I really considered every other possible solution, but module parameter is the
-> only possible way to do such things during insmod.
-
-This is another problem with the module parameters - assumption that
-everyone is running modules, but this is simply incorrect, most of my
-smoke tests are performed with monolithic kernel.
-
-> Thanks,
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  - Applies to pci/master
+>  - Bug was introduced in v4.9
+>  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
+> 
+>  drivers/pci/host/pcie-designware.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index bed1999..af8f6e9 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>  	u32 val;
+>  
+> -	/* get iATU unroll support */
+> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
+> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
+> -
+>  	/* set the number of lanes */
+>  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
+>  	val &= ~PORT_LINK_MODE_MASK;
+> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	 * we should not program the ATU here.
+>  	 */
+>  	if (!pp->ops->rd_other_conf) {
+> +		/* get iATU unroll support */
+> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
+> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
+> +
+>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+>  					  pp->mem_bus_addr, pp->mem_size);
+> -- 
+> 1.9.1
+> 
 > --
-> Tadeusz
-
---aT9PWwzfKXlsBJM1
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlh2cpcACgkQ5GN7iDZy
-WKd0Bg/9HdHNWx21SQZ9nC1jXT5rD8U498TqPcpAKEE8xyTMNm5w3Ffh2aShlbAO
-oW2LQQjmtL677DH7E8n86SH96kHBoNF+WWng0KKf/OsEPTv+YsI/9mzbAfORv4RS
-FhOxKuz8NUeMKZq6EV4KNIXjEjITgLJ8lYgMSxWfDd0a8KIt6Wnx02sOaeAFYJuA
-cvyxmG69Dr1oMLhK54jeCvoeHos9hLD/DZsgl6eNO/YqR1vSUNjEFtBVWufyMnWG
-F6mJZJtTyiRDp5kQxrlumIDbUZsx7bQZPKXELKYOeukjYbbwAsxPu/dTcW4Vf3Un
-bnaZK6/c8Mk7+M72zCjIDWYO/bpHmZrsqpA5llG2FqXRI9mRtg2UajPyX4SpBM9E
-zlvLeJhy8Qkc+msPmYBm7pW9iB/ps61c2vXcjLA10sUaCT/7JapLIuTDy2ozdkMS
-wizo4sSJ/OxCrquij/W3Q51BQ367WhheJQctCmNVU57XN2wxV9kkTcu2+AqoNeSE
-KEDmEZGdtK19PK24jc9vDf9k9Bl4ThyMrAP9d+e2q2ru6IOkNzF+xD0zY+r6AQcX
-EfmsceQZuwyFQZ1lGfRLtQl4/2aE7MSNtBUq3KOFz6EGQ6gkIKRQJ6qf4nQgZ7yc
-4GbyApsLUaKSdrPZTgmJuRL6UzcpWAFZ6P0V8dCbO+2EOBFR614=
-=pof/
------END PGP SIGNATURE-----
-
---aT9PWwzfKXlsBJM1--
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
