@@ -1,117 +1,150 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Jan 2017 16:51:24 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-Message-ID: <20170130165124.GA11712@red-moon>
-References: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
- <20170124123711.GA11996@red-moon>
- <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
- <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
- <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
- <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
- <20170130143851.GJ16461@arm.com>
- <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
- <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:26304
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752433AbdAJSkX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Jan 2017 13:40:23 -0500
+Subject: Re: [PATCH 2/3] xgbe: switch to pci_irq_alloc_vectors
+To: Christoph Hellwig <hch@lst.de>, <linux-pci@vger.kernel.org>
+References: <1483994260-19797-1-git-send-email-hch@lst.de>
+ <1483994260-19797-3-git-send-email-hch@lst.de>
+CC: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        <netdev@vger.kernel.org>, <linux-media@vger.kernel.org>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <11ed330c-84e9-79e9-7945-ca17a497359c@amd.com>
+Date: Tue, 10 Jan 2017 12:40:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- bhelgaas@google.com, Sricharan R <sricharan@codeaurora.org>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>,
- Tomasz Nowicki <tn@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1483994260-19797-3-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 10:46:39AM -0500, Sinan Kaya wrote:
-> On 1/30/2017 9:54 AM, Nate Watterson wrote:
-> > On 2017-01-30 09:38, Will Deacon wrote:
-> >> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
-> >>> On 1/30/2017 9:23 AM, Nate Watterson wrote:
-> >>> > On 2017-01-30 08:59, Sinan Kaya wrote:
-> >>> >> On 1/30/2017 7:22 AM, Robin Murphy wrote:
-> >>> >>> On 29/01/17 17:53, Sinan Kaya wrote:
-> >>> >>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
-> >>> >>>>> [+hanjun, tomasz, sinan]
-> >>> >>>>>
-> >>> >>>>> It is quite a key patchset, I would be glad if they can test on their
-> >>> >>>>> respective platforms with IORT.
-> >>> >>>>>
-> >>> >>>>
-> >>> >>>> Tested on top of 4.10-rc5.
-> >>> >>>>
-> >>> >>>> 1.    Platform Hidma device passed dmatest
-> >>> >>>> 2.    Seeing some USB stalls on a platform USB device.
-> >>> >>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
-> >>> >>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
-> >>> >>>> SMMU error event during the insertion.
-> >>> >>>
-> >>> >>> What was the SMMU error - a translation/permission fault (implying the
-> >>> >>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
-> >>> >>> the SMMU about the device at all)?
-> >>> >>>
-> >>> >>
-> >>> >> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
-> >>> >>
-> >>> >> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
-> >>> >> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
-> >>> >> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
-> >>> >> ignored; already powering off
-> >>> >>
-> >>> >> root@ubuntu:/sys/bus/pci/slots/4#
-> >>> >>
-> >>> >> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
-> >>> >> [  254.820599] nvme nvme0: pci function 0003:01:00.0
-> >>> >> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
-> >>> >> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
-> >>> >> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
-> >>> >> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>> >> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>> >> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>>
-> >>> > Looks like C_BAD_CD. Can you please try with:
-> >>> > iommu/arm-smmu-v3: Clear prior settings when updating STEs
-> >>>
-> >>> This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
-> >>> this issue again.
-> >>
-> >> I already sent the pull request to Joerg for 4.11. Do you see this problem
-> >> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need to
-> >> send the patch to stable after -rc1.
-> > Using vanilla mainline, I see it most commonly when directly assigning
-> > a device to a guest machine. I think I've also seen it after removing then
-> > re-adding a PCI device. Basically anytime an STE's CTX pointer is changed
-> > from a non-NULL value and STE[CFG] indicates translation will be performed.
-> > 
+On 1/9/2017 2:37 PM, Christoph Hellwig wrote:
+> The newly added xgbe drivers uses the deprecated pci_enable_msi_exact
+> and pci_enable_msix_range interfaces.  Switch it to use
+> pci_irq_alloc_vectors instead.
+
+I was just working on switching over to this API with some additional
+changes / simplification.  I'm ok with using this patch so that you get
+the API removal accomplished.  Going through the PCI tree just means
+it will probably be easier for me to hold off on the additional changes
+I wanted to make until later.
+
+Acked-by: Tom Lendacky <thomas.lendacky@amd.com>
+
 > 
-> I was not able to reproduce the issue with Vanilla kernel. I only
-> tested hotplug.
-
-I would like to get the complete code path leading to this issue, it is
-not clear to me why the probe deferral code triggers it and why we are
-not able to trigger it with vanilla mainline, we must understand that first
-before applying any fix to this series.
-
-I do not have a platform to reproduce this issue I will send you a patch
-to trace what's going on here please help us debug it.
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/net/ethernet/amd/xgbe/xgbe-pci.c | 47 +++++++++++++-------------------
+>  drivers/net/ethernet/amd/xgbe/xgbe.h     |  1 -
+>  2 files changed, 19 insertions(+), 29 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+> index e76b7f6..be2690e 100644
+> --- a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+> +++ b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+> @@ -133,12 +133,13 @@ static int xgbe_config_msi(struct xgbe_prv_data *pdata)
+>  			 pdata->tx_ring_count);
+>  	msi_count = roundup_pow_of_two(msi_count);
+>  
+> -	ret = pci_enable_msi_exact(pdata->pcidev, msi_count);
+> +	ret = pci_alloc_irq_vectors(pdata->pcidev, msi_count, msi_count,
+> +			PCI_IRQ_MSI);
+>  	if (ret < 0) {
+>  		dev_info(pdata->dev, "MSI request for %u interrupts failed\n",
+>  			 msi_count);
+>  
+> -		ret = pci_enable_msi(pdata->pcidev);
+> +		ret = pci_alloc_irq_vectors(pdata->pcidev, 1, 1, PCI_IRQ_MSI);
+>  		if (ret < 0) {
+>  			dev_info(pdata->dev, "MSI enablement failed\n");
+>  			return ret;
+> @@ -149,25 +150,26 @@ static int xgbe_config_msi(struct xgbe_prv_data *pdata)
+>  
+>  	pdata->irq_count = msi_count;
+>  
+> -	pdata->dev_irq = pdata->pcidev->irq;
+> +	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
+>  
+>  	if (msi_count > 1) {
+> -		pdata->ecc_irq = pdata->pcidev->irq + 1;
+> -		pdata->i2c_irq = pdata->pcidev->irq + 2;
+> -		pdata->an_irq = pdata->pcidev->irq + 3;
+> +		pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
+> +		pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
+> +		pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
+>  
+>  		for (i = XGBE_MSIX_BASE_COUNT, j = 0;
+>  		     (i < msi_count) && (j < XGBE_MAX_DMA_CHANNELS);
+>  		     i++, j++)
+> -			pdata->channel_irq[j] = pdata->pcidev->irq + i;
+> +			pdata->channel_irq[j] =
+> +				pci_irq_vector(pdata->pcidev, i);
+>  		pdata->channel_irq_count = j;
+>  
+>  		pdata->per_channel_irq = 1;
+>  		pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
+>  	} else {
+> -		pdata->ecc_irq = pdata->pcidev->irq;
+> -		pdata->i2c_irq = pdata->pcidev->irq;
+> -		pdata->an_irq = pdata->pcidev->irq;
+> +		pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 0);
+> +		pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 0);
+> +		pdata->an_irq = pci_irq_vector(pdata->pcidev, 0);
+>  	}
+>  
+>  	if (netif_msg_probe(pdata))
+> @@ -186,33 +188,22 @@ static int xgbe_config_msix(struct xgbe_prv_data *pdata)
+>  	msix_count += max(pdata->rx_ring_count,
+>  			  pdata->tx_ring_count);
+>  
+> -	pdata->msix_entries = devm_kcalloc(pdata->dev, msix_count,
+> -					   sizeof(struct msix_entry),
+> -					   GFP_KERNEL);
+> -	if (!pdata->msix_entries)
+> -		return -ENOMEM;
+> -
+> -	for (i = 0; i < msix_count; i++)
+> -		pdata->msix_entries[i].entry = i;
+> -
+> -	ret = pci_enable_msix_range(pdata->pcidev, pdata->msix_entries,
+> -				    XGBE_MSIX_MIN_COUNT, msix_count);
+> +	ret = pci_alloc_irq_vectors(pdata->pcidev, XGBE_MSIX_MIN_COUNT,
+> +			msix_count, PCI_IRQ_MSIX);
+>  	if (ret < 0) {
+>  		dev_info(pdata->dev, "MSI-X enablement failed\n");
+> -		devm_kfree(pdata->dev, pdata->msix_entries);
+> -		pdata->msix_entries = NULL;
+>  		return ret;
+>  	}
+>  
+>  	pdata->irq_count = ret;
+>  
+> -	pdata->dev_irq = pdata->msix_entries[0].vector;
+> -	pdata->ecc_irq = pdata->msix_entries[1].vector;
+> -	pdata->i2c_irq = pdata->msix_entries[2].vector;
+> -	pdata->an_irq = pdata->msix_entries[3].vector;
+> +	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
+> +	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
+> +	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
+> +	pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
+>  
+>  	for (i = XGBE_MSIX_BASE_COUNT, j = 0; i < ret; i++, j++)
+> -		pdata->channel_irq[j] = pdata->msix_entries[i].vector;
+> +		pdata->channel_irq[j] = pci_irq_vector(pdata->pcidev, i);
+>  	pdata->channel_irq_count = j;
+>  
+>  	pdata->per_channel_irq = 1;
+> diff --git a/drivers/net/ethernet/amd/xgbe/xgbe.h b/drivers/net/ethernet/amd/xgbe/xgbe.h
+> index f52a9bd..3bcb6f5 100644
+> --- a/drivers/net/ethernet/amd/xgbe/xgbe.h
+> +++ b/drivers/net/ethernet/amd/xgbe/xgbe.h
+> @@ -980,7 +980,6 @@ struct xgbe_prv_data {
+>  	unsigned int desc_ded_count;
+>  	unsigned int desc_sec_count;
+>  
+> -	struct msix_entry *msix_entries;
+>  	int dev_irq;
+>  	int ecc_irq;
+>  	int i2c_irq;
+> 
