@@ -1,245 +1,314 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V6 2/5] PCI: Adapt pci_register_io_range() for indirect-IO and  PCI I/O translation
-Date: Tue, 24 Jan 2017 15:05:22 +0800
-Message-ID: <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:49964 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751353AbdAJX5x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Jan 2017 18:57:53 -0500
+Subject: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport device
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+To: dledford@redhat.com
+Cc: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        dennis.dalessandro@intel.com, ira.weiny@intel.com,
+        tadeusz.struk@intel.com
+Date: Tue, 10 Jan 2017 15:57:52 -0800
+Message-ID: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After indirect-IO is introduced, system must can assigned indirect-IO devices
-with logical I/O ranges which are different from those for PCI I/O devices.
-Otherwise, I/O accessors can't identify whether the I/O port is for memory
-mapped I/O or indirect-IO.
-As current helper, pci_register_io_range(), is used for PCI I/O ranges
-registration and translation, indirect-IO devices should also apply these
-helpers to manage the I/O ranges. It will be easy to ensure the assigned
-logical I/O ranges unique.
-But for indirect-IO devices, there is no cpu address. The current
-pci_register_io_range() can not work for this case.
+Some hardware have multiple HFIs within the same ASIC. In some devices the
+numbers labeled on the faceplate of the device don't match the PCI bus
+order, and the result is that the devices (ports) are probed in the opposite
+order of their port numbers. The result is IB device unit numbers are in
+reverse order from the faceplate numbering. This leads to confusion, and
+errors.
+We can fix this by enforcing the correct port order at module load time.
+To reorder the ports to match the numbering labels on the back of the
+device we need to delay registering devices with the ib_core until we
+receive a probe for the affected devices, reorder them and start
+initialization in the correct order later. We use a timer with 1 second
+timeout. On hfi1 probes devices are ordered and stored in a list.
+Each hfi1 probe updates the timer. When the timer timeouts all devices are
+initialized and registered with ib_core in the right order.
+When there will more than one second time gap between hfi1 probes,
+the timer will be update in each call so there is no danger that a device
+will be "missed".
 
-This patch makes some changes on the pci_register_io_range() to support the
-I/O range registration with device's fwnode also. After this, the indirect-IO
-devices can register the device-local I/O range to system logical I/O and
-easily perform the translation between device-local I/O range and sytem
-logical I/O range.
+A new module param called port_reorder is introduced to cover users, who
+already prewired their clusters in the 'invalid' order. The default
+behavior does not change and results in devices ordered in the PCI bus
+order. Port_reorder=1 is used to apply special reordering to these devices.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
 ---
- drivers/acpi/pci_root.c | 12 +++++-------
- drivers/of/address.c    |  8 ++------
- drivers/pci/pci.c       | 44 ++++++++++++++++++++++++++++++++++++++++----
- include/linux/pci.h     |  7 +++++--
- 4 files changed, 52 insertions(+), 19 deletions(-)
+ drivers/infiniband/hw/hfi1/chip.c |    3 -
+ drivers/infiniband/hw/hfi1/chip.h |    4 +
+ drivers/infiniband/hw/hfi1/init.c |  170 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 173 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index bf601d4..6cadf05 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -730,7 +730,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
- 	}
+diff --git a/drivers/infiniband/hw/hfi1/chip.c b/drivers/infiniband/hw/hfi1/chip.c
+index ef72bc2..d9aadac 100644
+--- a/drivers/infiniband/hw/hfi1/chip.c
++++ b/drivers/infiniband/hw/hfi1/chip.c
+@@ -129,9 +129,6 @@ struct flag_table {
+ #define NUM_MAP_ENTRIES		256
+ #define NUM_MAP_REGS             32
+ 
+-/* Bit offset into the GUID which carries HFI id information */
+-#define GUID_HFI_INDEX_SHIFT     39
+-
+ /* extract the emulation revision */
+ #define emulator_rev(dd) ((dd)->irev >> 8)
+ /* parallel and serial emulation versions are 3 and 4 respectively */
+diff --git a/drivers/infiniband/hw/hfi1/chip.h b/drivers/infiniband/hw/hfi1/chip.h
+index 043fd21..aa322b0 100644
+--- a/drivers/infiniband/hw/hfi1/chip.h
++++ b/drivers/infiniband/hw/hfi1/chip.h
+@@ -575,6 +575,10 @@ enum {
+ #define LOOPBACK_LCB	2
+ #define LOOPBACK_CABLE	3	/* external cable */
+ 
++/* Bit offset into the GUID which carries HFI id information */
++#define GUID_HFI_INDEX_SHIFT     39
++#define HFI_ASIC_GUID(guid) ((guid) & ~(1ULL << GUID_HFI_INDEX_SHIFT))
++
+ /* read and write hardware registers */
+ u64 read_csr(const struct hfi1_devdata *dd, u32 offset);
+ void write_csr(const struct hfi1_devdata *dd, u32 offset, u64 value);
+diff --git a/drivers/infiniband/hw/hfi1/init.c b/drivers/infiniband/hw/hfi1/init.c
+index e3b5bc9..93436bd 100644
+--- a/drivers/infiniband/hw/hfi1/init.c
++++ b/drivers/infiniband/hw/hfi1/init.c
+@@ -116,12 +116,29 @@ unsigned int user_credit_return_threshold = 33;	/* default is 33% */
+ module_param(user_credit_return_threshold, uint, S_IRUGO);
+ MODULE_PARM_DESC(user_credit_return_threshold, "Credit return threshold for user send contexts, return when unreturned credits passes this many blocks (in percent of allocated blocks, 0 is off)");
+ 
++static bool port_reorder;
++module_param(port_reorder, bool, S_IRUGO);
++MODULE_PARM_DESC(port_reorder, "Device port reorder: 1 - order HFIs on the same ASIC in increasing port order, or 0 - order exactly as the kernel enumerates (default)");
++
+ static inline u64 encode_rcv_header_entry_size(u16);
+ 
+ static struct idr hfi1_unit_table;
+ u32 hfi1_cpulist_count;
+ unsigned long *hfi1_cpulist;
+ 
++struct hfi1_init_dev {
++	struct list_head list;
++	struct pci_dev *pdev;
++	const struct pci_device_id *ent;
++	u64 guid;
++};
++
++static struct timer_list init_timer;
++static LIST_HEAD(init_list);
++static DEFINE_MUTEX(init_mutex); /* protects init_list */
++static struct workqueue_struct *hfi1_init_wq;
++static void hfi1_deferred_init(struct work_struct *work);
++
+ /*
+  * Common code for creating the receive context array.
+  */
+@@ -1165,6 +1182,7 @@ void hfi1_disable_after_error(struct hfi1_devdata *dd)
+ 
+ static void remove_one(struct pci_dev *);
+ static int init_one(struct pci_dev *, const struct pci_device_id *);
++static void hfi1_probe_done(unsigned long data);
+ 
+ #define DRIVER_LOAD_MSG "Intel " DRIVER_NAME " loaded: "
+ #define PFX DRIVER_NAME ": "
+@@ -1209,6 +1227,16 @@ static int __init hfi1_mod_init(void)
+ 	if (ret)
+ 		goto bail;
+ 
++	if (port_reorder) {
++		hfi1_init_wq = alloc_workqueue("hfi1_init_wq", WQ_MEM_RECLAIM,
++					       0);
++		if (!hfi1_init_wq) {
++			pr_err("Failed to create deffered dev init wq\n");
++			ret = -ENOMEM;
++			goto bail;
++		}
++	}
++
+ 	/* validate max MTU before any devices start */
+ 	if (!valid_opa_max_mtu(hfi1_max_mtu)) {
+ 		pr_err("Invalid max_mtu 0x%x, using 0x%x instead\n",
+@@ -1264,6 +1292,9 @@ static int __init hfi1_mod_init(void)
+ 	ret = hfi1_wss_init();
+ 	if (ret < 0)
+ 		goto bail_wss;
++
++	setup_timer(&init_timer, hfi1_probe_done, 0);
++
+ 	ret = pci_register_driver(&hfi1_pci_driver);
+ 	if (ret < 0) {
+ 		pr_err("Unable to register driver: error %d\n", -ret);
+@@ -1288,6 +1319,8 @@ module_init(hfi1_mod_init);
+  */
+ static void __exit hfi1_mod_cleanup(void)
+ {
++	struct hfi1_init_dev *pos, *tmp;
++
+ 	pci_unregister_driver(&hfi1_pci_driver);
+ 	node_affinity_destroy();
+ 	hfi1_wss_exit();
+@@ -1298,6 +1331,18 @@ static void __exit hfi1_mod_cleanup(void)
+ 	idr_destroy(&hfi1_unit_table);
+ 	dispose_firmware();	/* asymmetric with obtain_firmware() */
+ 	dev_cleanup();
++
++	mutex_lock(&init_mutex);
++	list_for_each_entry_safe(pos, tmp, &init_list, list) {
++		list_del(&pos->list);
++		kfree(pos);
++	}
++	mutex_unlock(&init_mutex);
++	del_timer(&init_timer);
++	if (hfi1_init_wq) {
++		destroy_workqueue(hfi1_init_wq);
++		hfi1_init_wq = NULL;
++	}
  }
  
--static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+static void acpi_pci_root_remap_iospace(struct fwnode_handle *node,
-+					struct resource_entry *entry)
+ module_exit(hfi1_mod_cleanup);
+@@ -1415,7 +1460,7 @@ static int init_validate_rcvhdrcnt(struct device *dev, uint thecnt)
+ 	return 0;
+ }
+ 
+-static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
++static int do_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
- #ifdef PCI_IOBASE
- 	struct resource *res = entry->res;
-@@ -739,11 +740,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
- 	resource_size_t length = resource_size(res);
- 	unsigned long port;
+ 	int ret = 0, j, pidx, initfail;
+ 	struct hfi1_devdata *dd;
+@@ -1545,6 +1590,129 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	return ret;
+ }
  
--	if (pci_register_io_range(cpu_addr, length))
--		goto err;
--
--	port = pci_address_to_pio(cpu_addr);
--	if (port == (unsigned long)-1)
-+	if (pci_register_io_range(node, cpu_addr, length, &port))
- 		goto err;
- 
- 	res->start = port;
-@@ -781,7 +778,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
- 			if (entry->res->flags & IORESOURCE_IO)
--				acpi_pci_root_remap_iospace(entry);
-+				acpi_pci_root_remap_iospace(&device->fwnode,
-+							    entry);
- 
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903..d85d228 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -2,6 +2,7 @@
- #define pr_fmt(fmt)	"OF: " fmt
- 
- #include <linux/device.h>
-+#include <linux/fwnode.h>
- #include <linux/io.h>
- #include <linux/ioport.h>
- #include <linux/module.h>
-@@ -323,14 +324,9 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 
- 	if (res->flags & IORESOURCE_IO) {
- 		unsigned long port;
--		err = pci_register_io_range(range->cpu_addr, range->size);
-+		err = pci_register_io_range(&np->fwnode, range->cpu_addr, range->size, &port);
- 		if (err)
- 			goto invalid_range;
--		port = pci_address_to_pio(range->cpu_addr);
--		if (port == (unsigned long)-1) {
--			err = -EINVAL;
--			goto invalid_range;
--		}
- 		res->start = port;
- 	} else {
- 		if ((sizeof(resource_size_t) < 8) &&
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d..5289221 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3241,6 +3241,7 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- #ifdef PCI_IOBASE
- struct io_range {
- 	struct list_head list;
-+	struct fwnode_handle *node;
- 	phys_addr_t start;
- 	resource_size_t size;
- };
-@@ -3253,7 +3254,8 @@ struct io_range {
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int __weak pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-+				 resource_size_t size, unsigned long *port)
++static void hfi1_deferred_init(struct work_struct *work)
++{
++	struct hfi1_init_dev *pos, *tmp;
++	int ret;
++
++	mutex_lock(&init_mutex);
++	list_for_each_entry_safe(pos, tmp, &init_list, list) {
++		ret = do_init_one(pos->pdev, pos->ent);
++		if (ret)
++			hfi1_early_err(&pos->pdev->dev, "%s: dev init failed, err %d\n",
++				       __func__, ret);
++
++		list_del(&pos->list);
++		kfree(pos);
++	}
++	mutex_unlock(&init_mutex);
++	kfree(work);
++}
++
++static void hfi1_probe_done(unsigned long data)
++{
++	struct work_struct *work;
++
++	if (!hfi1_init_wq)
++		return;
++
++	/* Got probe for all devices. Now invoke hfi1_deferred_init */
++	work = kzalloc(sizeof(*work), GFP_ATOMIC);
++	if (!work)
++		return;
++
++	INIT_WORK(work, hfi1_deferred_init);
++	queue_work(hfi1_init_wq, work);
++}
++
++static int get_guid(struct pci_dev *pdev, u64 *guid)
++{
++	void __iomem *bar;
++
++	bar = ioremap_nocache(pci_resource_start(pdev, 0),
++			      DC_DC8051_CFG_LOCAL_GUID + 8);
++	if (!bar) {
++		hfi1_early_err(&pdev->dev, "%s: unable to ioremap bar\n",
++			       __func__);
++		return -ENOMEM;
++	}
++	/* make sure the DC is not in reset so the GUID is readable */
++	writeq(0ull, bar + CCE_DC_CTRL);
++	(void)readq(bar + CCE_DC_CTRL); /* force the write */
++
++	/* read device guid */
++	*guid = readq(bar + DC_DC8051_CFG_LOCAL_GUID);
++	iounmap(bar);
++	return 0;
++}
++
++static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
++{
++	struct hfi1_init_dev *probed_pdev;
++	struct hfi1_init_dev *pos;
++	u64 guid;
++	int ret;
++
++	if (!port_reorder)
++		return do_init_one(pdev, ent);
++
++	probed_pdev = kzalloc(sizeof(*probed_pdev), GFP_KERNEL);
++	if (!probed_pdev)
++		return -ENOMEM;
++
++	ret = pci_enable_device(pdev);
++	if (ret) {
++		hfi1_early_err(&pdev->dev, "%s: cannot enable device, err %d\n",
++			       __func__, ret);
++		goto fail;
++	}
++
++	ret = get_guid(pdev, &guid);
++	if (ret)
++		goto fail_get_guid;
++
++	probed_pdev->pdev = pdev;
++	probed_pdev->ent = ent;
++	probed_pdev->guid = guid;
++
++	mutex_lock(&init_mutex);
++	if (list_empty(&init_list)) {
++		list_add_tail(&probed_pdev->list, &init_list);
++	} else {
++		list_for_each_entry(pos, &init_list, list)
++			if (HFI_ASIC_GUID(pos->guid) == HFI_ASIC_GUID(guid))
++				break;
++
++		/* Match found, pos and entry are valid */
++		if (pos->guid == probed_pdev->guid) {
++			/* Something wrong - same hardware id */
++			hfi1_early_err(&pdev->dev, "%s: duplicate guid 0x%llx\n",
++				       __func__, guid);
++			mutex_unlock(&init_mutex);
++			goto fail_get_guid;
++		}
++
++		/*
++		 * Order around the first of the pair that was enumerated.
++		 * Insert before or after the one already in the list.
++		 */
++		if ((pos->guid >> GUID_HFI_INDEX_SHIFT) & 1)
++			list_add_tail(&probed_pdev->list, &pos->list);
++		else
++			list_add(&probed_pdev->list, &pos->list);
++	}
++	mutex_unlock(&init_mutex);
++	mod_timer(&init_timer, jiffies + msecs_to_jiffies(1000));
++	pci_disable_device(pdev);
++	return 0;
++
++fail_get_guid:
++	pci_disable_device(pdev);
++fail:
++	kfree(probed_pdev);
++	return ret;
++}
++
+ static void wait_for_clients(struct hfi1_devdata *dd)
  {
- 	int err = 0;
- 
-@@ -3261,10 +3263,31 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 	struct io_range *range;
- 	resource_size_t allocated_size = 0;
- 
-+	/*
-+	 * As indirect-IO which support multiple bus instances is introduced,
-+	 * the input 'addr' is probably not page-aligned. If the PCI I/O
-+	 * ranges are registered after indirect-IO, there is risk that the
-+	 * start logical PIO assigned to PCI I/O is not page-aligned.
-+	 * This will cause some I/O subranges are not remapped or overlapped
-+	 * in pci_remap_iospace() handling.
-+	 */
-+	WARN_ON(addr != IO_RANGE_IOEXT && !(addr & PAGE_MASK));
-+	/*
-+	 * MMIO will call ioremap, it is better to align size with PAGE_SIZE,
-+	 * then the return linux virtual PIO is page-aligned.
-+	 */
-+	if (size & PAGE_MASK)
-+		size = PAGE_ALIGN(size);
-+
- 	/* check if the range hasn't been previously recorded */
- 	spin_lock(&io_range_lock);
- 	list_for_each_entry(range, &io_range_list, list) {
--		if (addr >= range->start && addr + size <= range->start + size) {
-+		if (node == range->node)
-+			goto end_register;
-+
-+		if (addr != IO_RANGE_IOEXT &&
-+		    addr >= range->start &&
-+		    addr + size <= range->start + size) {
- 			/* range already registered, bail out */
- 			goto end_register;
- 		}
-@@ -3290,6 +3313,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 		goto end_register;
- 	}
- 
-+	range->node = node;
- 	range->start = addr;
- 	range->size = size;
- 
-@@ -3297,6 +3321,14 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
- 
- end_register:
- 	spin_unlock(&io_range_lock);
-+
-+	*port = allocated_size;
-+#else
-+	/*
-+	 * powerpc and microblaze have their own registration,
-+	 * just look up the value here
-+	 */
-+	*port = pci_address_to_pio(addr);
- #endif
- 
- 	return err;
-@@ -3315,7 +3347,9 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- 
- 	spin_lock(&io_range_lock);
- 	list_for_each_entry(range, &io_range_list, list) {
--		if (pio >= allocated_size && pio < allocated_size + range->size) {
-+		if (range->start != IO_RANGE_IOEXT &&
-+			pio >= allocated_size &&
-+			pio < allocated_size + range->size) {
- 			address = range->start + pio - allocated_size;
- 			break;
- 		}
-@@ -3336,7 +3370,9 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
- 
- 	spin_lock(&io_range_lock);
- 	list_for_each_entry(res, &io_range_list, list) {
--		if (address >= res->start && address < res->start + res->size) {
-+		if (res->start != IO_RANGE_IOEXT &&
-+			address >= res->start &&
-+			address < res->start + res->size) {
- 			addr = address - res->start + offset;
- 			break;
- 		}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..8d91af8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -34,6 +34,9 @@
- 
- #include <linux/pci_ids.h>
- 
-+/* the macro below flags an invalid cpu address
-+ * and is used by IO special hosts              */
-+#define IO_RANGE_IOEXT (resource_size_t)(-1ull)
- /*
-  * The PCI interface treats multi-function devices as independent
-  * devices.  The slot/function address of each device is encoded
-@@ -1197,8 +1200,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
- 
--
--int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-+int pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-+			  resource_size_t size, unsigned long *port);
- unsigned long pci_address_to_pio(phys_addr_t addr);
- phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
--- 
-1.9.1
+ 	/*
+
