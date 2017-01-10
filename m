@@ -1,17 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 12/37] PCI: dwc: Create a new config symbol to enable pci
- dwc host
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Jingoo Han <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-13-git-send-email-kishon@ti.com>
- <3d34f9c4-7ec4-ac2b-ea7f-18d239dfa554@synopsys.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <587C58A3.7080600@ti.com>
-Date: Mon, 16 Jan 2017 10:52:43 +0530
+From: Arnd Bergmann <arnd@linaro.org>
+To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+Subject: Re: NVMe vs DMA addressing limitations
+Date: Tue, 10 Jan 2017 12:01:05 +0100
+Message-ID: <4137257.d2v87kqLLv@wuerfel>
+In-Reply-To: <c4fd007c-3f07-fc2a-8cbb-7152f578609d@cogentembedded.com>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170110070719.GA17208@lst.de>
+ <c4fd007c-3f07-fc2a-8cbb-7152f578609d@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <3d34f9c4-7ec4-ac2b-ea7f-18d239dfa554@synopsys.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,232 +17,53 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
+Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
+ Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+On Tuesday, January 10, 2017 10:31:47 AM CET Nikita Yushchenko wrote:
+> Christoph, thanks for clear input.
+> 
+> Arnd, I think that given this discussion, best short-term solution is
+> indeed the patch I've submitted yesterday. That is, your version +
+> coherent mask support.  With that, set_dma_mask(DMA_BIT_MASK(64)) will
+> succeed and hardware with work with swiotlb.
 
-On Friday 13 January 2017 11:20 PM, Joao Pinto wrote:
-> Hi Kishon,
-> =
+Ok, good.
 
-> =C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
->> Now that pci designware host has a separate file, create a new
->> config symbol to select the host only driver. This is in preparation
->> to enable endpoint support to designware driver.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
->>  drivers/pci/dwc/Makefile          |    3 ++-
->>  drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
->>  3 files changed, 42 insertions(+), 16 deletions(-)
->>
-> =
+> Possible next step is to teach swiotlb to dynamically allocate bounce
+> buffers within entire arm64's ZONE_DMA.
 
-> You are already working in a base where dwc/ already exists. I know you m=
-ade a
-> rename / re-structure patch for pci, but I think it was not yet accepted,=
- right?
-> I don't see it in any of Bjorn' dev branches.
+That seems reasonable, yes. We probably have to do both, as there are
+cases where a device has dma_mask smaller than ZONE_DMA but the swiotlb
+bounce area is low enough to work anyway.
 
-He said he'll merge that a little later.
+Another workaround me might need is to limit amount of concurrent DMA
+in the NVMe driver based on some platform quirk. The way that NVMe works,
+it can have very large amounts of data that is concurrently mapped into
+the device. SWIOTLB is one case where this currently fails, but another
+example would be old PowerPC servers that have a 256MB window of virtual
+I/O addresses per VM guest in their IOMMU. Those will likely fail the same
+way that your does.
 
-Thanks
-Kishon
+> Also there is some hope that R-Car *can* iommu-translate addresses that
+> PCIe module issues to system bus.  Although previous attempts to make
+> that working failed. Additional research is needed here.
 
-> =
+Does this IOMMU support remapping data within a virtual machine? I believe
+there are some that only do one of the two -- either you can have guest
+machines with DMA access to their low memory, or you can remap data on
+the fly in the host.
 
-> Thanks.
-> =
-
->> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->> index 8b08519..d0bdfb5 100644
->> --- a/drivers/pci/dwc/Kconfig
->> +++ b/drivers/pci/dwc/Kconfig
->> @@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
->>  =
-
->>  config PCIE_DW
->>  	bool
->> +
->> +config PCIE_DW_HOST
->> +        bool
->>  	depends on PCI_MSI_IRQ_DOMAIN
->> +        select PCIE_DW
->>  =
-
->>  config PCI_DRA7XX
->>  	bool "TI DRA7xx PCIe controller"
->>  	depends on OF && HAS_IOMEM && TI_PIPE3
->>  	depends on PCI_MSI_IRQ_DOMAIN
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	 Enables support for the PCIe controller in the DRA7xx SoC.  There
->>  	 are two instances of PCIe controller in DRA7xx.  This controller can
->> @@ -18,7 +22,7 @@ config PCI_DRA7XX
->>  config PCIE_DW_PLAT
->>  	bool "Platform bus based DesignWare PCIe Controller"
->>  	depends on PCI_MSI_IRQ_DOMAIN
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	---help---
->>  	 This selects the DesignWare PCIe controller support. Select this if
->>  	 you have a PCIe controller on Platform bus.
->> @@ -32,21 +36,21 @@ config PCI_EXYNOS
->>  	depends on SOC_EXYNOS5440 || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  =
-
->>  config PCI_IMX6
->>  	bool "Freescale i.MX6 PCIe controller"
->>  	depends on SOC_IMX6Q || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  =
-
->>  config PCIE_SPEAR13XX
->>  	bool "STMicroelectronics SPEAr PCIe controller"
->>  	depends on ARCH_SPEAR13XX || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
->>  =
-
->> @@ -55,7 +59,7 @@ config PCI_KEYSTONE
->>  	depends on ARCH_KEYSTONE || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here if you want to enable PCI controller support on Keystone
->>  	  SoCs. The PCI controller on Keystone is based on Designware hardware
->> @@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
->>  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select MFD_SYSCON
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
->>  =
-
->> @@ -76,7 +80,7 @@ config PCI_HISI
->>  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here if you want PCIe controller support on HiSilicon
->>  	  Hip05 and Hip06 SoCs
->> @@ -86,7 +90,7 @@ config PCIE_QCOM
->>  	depends on (ARCH_QCOM || COMPILE_TEST) && OF
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
->>  	  PCIe controller uses the Designware core plus Qualcomm-specific
->> @@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
->>  	depends on ARCH_MVEBU || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here if you want to enable PCIe controller support on
->>  	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
->> @@ -109,7 +113,7 @@ config PCIE_ARTPEC6
->>  	depends on MACH_ARTPEC6 || COMPILE_TEST
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->> -	select PCIE_DW
->> +	select PCIE_DW_HOST
->>  	help
->>  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->>  	  SoCs.  This PCIe controller uses the DesignWare core.
->> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
->> index 3b57e55..a2df13c 100644
->> --- a/drivers/pci/dwc/Makefile
->> +++ b/drivers/pci/dwc/Makefile
->> @@ -1,4 +1,5 @@
->> -obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o pcie-designware-host.o
->> +obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
->> +obj-$(CONFIG_PCIE_DW_HOST) +=3D pcie-designware-host.o
->>  obj-$(CONFIG_PCIE_DW_PLAT) +=3D pcie-designware-plat.o
->>  obj-$(CONFIG_PCI_DRA7XX) +=3D pci-dra7xx.o
->>  obj-$(CONFIG_PCI_EXYNOS) +=3D pci-exynos.o
->> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-de=
-signware.h
->> index 808d17b..8f3dcb2 100644
->> --- a/drivers/pci/dwc/pcie-designware.h
->> +++ b/drivers/pci/dwc/pcie-designware.h
->> @@ -162,10 +162,6 @@ struct dw_pcie {
->>  =
-
->>  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
->>  int dw_pcie_write(void __iomem *addr, int size, u32 val);
->> -irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->> -void dw_pcie_msi_init(struct pcie_port *pp);
->> -void dw_pcie_setup_rc(struct pcie_port *pp);
->> -int dw_pcie_host_init(struct pcie_port *pp);
->>  =
-
->>  u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
->>  void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
->> @@ -175,4 +171,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,=
- int index,
->>  			       int type, u64 cpu_addr, u64 pci_addr,
->>  			       u32 size);
->>  void dw_pcie_setup(struct dw_pcie *pci);
->> +
->> +#ifdef CONFIG_PCIE_DW_HOST
->> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->> +void dw_pcie_msi_init(struct pcie_port *pp);
->> +void dw_pcie_setup_rc(struct pcie_port *pp);
->> +int dw_pcie_host_init(struct pcie_port *pp);
->> +#else
->> +static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->> +{
->> +	return IRQ_NONE;
->> +}
->> +
->> +static inline void dw_pcie_msi_init(struct pcie_port *pp)
->> +{
->> +}
->> +
->> +static inline void dw_pcie_setup_rc(struct pcie_port *pp)
->> +{
->> +}
->> +
->> +static inline int dw_pcie_host_init(struct pcie_port *pp)
->> +{
->> +	return 0;
->> +}
->> +#endif
->>  #endif /* _PCIE_DESIGNWARE_H */
->>
-> =
-
+	Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
