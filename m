@@ -1,80 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750808AbdALUcI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jan 2017 15:32:08 -0500
-Subject: [PATCH] PCI: Apply _HPX settings only to relevant devices
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Thu, 12 Jan 2017 14:32:04 -0600
-Message-ID: <20170112203204.17379.9783.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=OzsA=YY=ti.com=m-karicheri2@kernel.org>
+Return-Path: <SRS0=OzsA=YY=ti.com=m-karicheri2@kernel.org>
+Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
+ keystone PCIe h/w
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
+ <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
+CC: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <58751765.8090908@ti.com>
+Date: Tue, 10 Jan 2017 12:18:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously we didn't check the type of device before trying to apply Type 1
-(PCI-X) or Type 2 (PCIe) Setting Records from _HPX.
+On 01/10/2017 10:12 AM, Bjorn Helgaas wrote:
+> Hi Murali,
+> 
+> On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
+>> Recent fixes for iATU unroll support introduced a bug that causes
+>> asynchronous external abort in Keystone PCIe h/w which doesn't have
+>> ATU port and the corresponding register. So the check should be moved
+>> below where dw_pcie_prog_outbound_atu() is called to avoid that
+>> being called on keystine PCIe h/w.
+>>
+>> Here is the backtrace
+>>
+>> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
+>> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+>> [    0.785548] pgd = c0003000
+>> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
+>> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
+>> [    0.799197] Modules linked in:
+>> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
+>> [    0.810130] Hardware name: Keystone
+>> [    0.813717] task: eb878000 task.stack: eb866000
+>> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
+>> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
+>>
+>> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
+> 
+> I tentatively applied this to for-linus for v4.10, with a stable tag
+> for v4.9+.
+> 
 
-We don't support PCI-X Setting Records, so this was harmless, but the
-warning was useless.
+Ok  Thanks!
 
-We do support PCIe Setting Records, and we didn't check whether a device
-was PCIe before applying settings.  I don't think anything bad happened on
-non-PCIe devices because pcie_capability_clear_and_set_word(),
-pcie_cap_has_lnkctl(), etc., would fail before doing any harm.  But it's
-ugly to depend on those internals.
+> The patch itself mostly makes sense in terms of the code: we only use
+> iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
+> when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
+> 
+> So it makes sense that we only need to initialize iatu_unroll_enabled
+> in those cases.  But the current patch only initializes it if
+> "!pp->ops->rd_other_conf".
+> 
 
-Check the device type before attempting to apply Type 1 and Type 2 Setting
-Records (Type 0 records are applicable to PCI, PCI-X, and PCIe devices).
+I think the code before also should have checked for both 
+if ((!pp->ops->rd_other_conf) && (!pp->ops->wr_other_conf))
 
-A side benefit is that this prevents useless "not supported" warnings when
-a BIOS supplies a Type 1 (PCI-X) Setting Record and we try to apply it to
-every single device:
+The assumption was if rd_other_conf is Null, the platform provides 
+both rd_other_conf and wr_other_conf. I see I have added this API 
+to support Keystone and the above assumption is true so far. 
+It make sense to fix it if you agree.
 
-  pci 0000:00:00.0: PCI-X settings not supported
+> If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
+> would use iatu_unroll_enabled uninitialized in the
+> dw_pcie_wr_other_conf() path.  I suppose that's an invalid
 
-After this patch, we'll get the warning only when a BIOS supplies a Type 1
-record and we have a PCI-X device to which it should be applied.
+Yes. So we need to fix the above to make the code correct instead
+of leaving it exposed.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=187731
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+> configuration, but it'd be better if we didn't have to rely on the
+> host drivers to avoid that configuration.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e164b5c9f0f0..aca5b2466adb 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1554,8 +1554,16 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
- 
- static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
- {
--	if (hpp)
--		dev_warn(&dev->dev, "PCI-X settings not supported\n");
-+	int pos;
-+
-+	if (!hpp)
-+		return;
-+
-+	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
-+	if (!pos)
-+		return;
-+
-+	dev_warn(&dev->dev, "PCI-X settings not supported\n");
- }
- 
- static bool pcie_root_rcb_set(struct pci_dev *dev)
-@@ -1581,6 +1589,9 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 	if (!hpp)
- 		return;
- 
-+	if (!pci_is_pcie(dev))
-+		return;
-+
- 	if (hpp->revision > 1) {
- 		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
- 			 hpp->revision);
+You mean to introduce the check in the designware core code above 
+right?
 
+Murali
+> 
+> It's not obvious how this is connected to 416379f9ebde, though.  It
+> *looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
+> before and after that commit, so it seems like the external abort
+> should have happened even before it.
+> 
+
+You are right. The problem was introduced by 
+
+commit a0601a47053714eecec726aea5ebcd829f817497
+Author: Joao Pinto <Joao.Pinto@synopsys.com>
+Date:   Wed Aug 10 11:02:39 2016 +0100
+
+    PCI: designware: Add iATU Unroll feature
+
+which is fixed by commit 416379f9ebde and is again fixed by my 
+commit. So probably I should have added both commits in
+my description. 
+
+Murali
+
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  - Applies to pci/master
+>>  - Bug was introduced in v4.9
+>>  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
+>>
+>>  drivers/pci/host/pcie-designware.c | 10 +++++-----
+>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> index bed1999..af8f6e9 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>>  	u32 val;
+>>  
+>> -	/* get iATU unroll support */
+>> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
+>> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
+>> -
+>>  	/* set the number of lanes */
+>>  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
+>>  	val &= ~PORT_LINK_MODE_MASK;
+>> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  	 * we should not program the ATU here.
+>>  	 */
+>>  	if (!pp->ops->rd_other_conf) {
+>> +		/* get iATU unroll support */
+>> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+>> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
+>> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
+>> +
+>>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+>>  					  pp->mem_bus_addr, pp->mem_size);
+>> -- 
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
