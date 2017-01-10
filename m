@@ -1,255 +1,183 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1484785188.2406.73.camel@redhat.com>
-Subject: Re: [PATCH] pci: drop link_reset
-From: Doug Ledford <dledford@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Cc: Linas Vepstas <linasvepstas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Sean Hefty <sean.hefty@intel.com>,
-        Hal Rosenstock <hal.rosenstock@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org
-Date: Wed, 18 Jan 2017 19:19:48 -0500
-In-Reply-To: <1484775540-8405-1-git-send-email-mst@redhat.com>
-References: <1484775540-8405-1-git-send-email-mst@redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-km/rawHupG5hejW5E2Um"
-Mime-Version: 1.0
+Date: Tue, 10 Jan 2017 17:06:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: jingoohan1@gmail.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
+ keystone PCIe h/w
+Message-ID: <20170110230629.GA4468@bhelgaas-glaptop.roam.corp.google.com>
+References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
+ <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
+ <58751765.8090908@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <58751765.8090908@ti.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jan 10, 2017 at 12:18:29PM -0500, Murali Karicheri wrote:
+> On 01/10/2017 10:12 AM, Bjorn Helgaas wrote:
+> > Hi Murali,
+> > 
+> > On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
+> >> Recent fixes for iATU unroll support introduced a bug that causes
+> >> asynchronous external abort in Keystone PCIe h/w which doesn't have
+> >> ATU port and the corresponding register. So the check should be moved
+> >> below where dw_pcie_prog_outbound_atu() is called to avoid that
+> >> being called on keystine PCIe h/w.
+> >>
+> >> Here is the backtrace
+> >>
+> >> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
+> >> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+> >> [    0.785548] pgd = c0003000
+> >> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
+> >> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
+> >> [    0.799197] Modules linked in:
+> >> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
+> >> [    0.810130] Hardware name: Keystone
+> >> [    0.813717] task: eb878000 task.stack: eb866000
+> >> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
+> >> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
+> >>
+> >> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
+> > 
+> > I tentatively applied this to for-linus for v4.10, with a stable tag
+> > for v4.9+.
+> > 
+> 
+> Ok  Thanks!
+> 
+> > The patch itself mostly makes sense in terms of the code: we only use
+> > iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
+> > when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
+> > 
+> > So it makes sense that we only need to initialize iatu_unroll_enabled
+> > in those cases.  But the current patch only initializes it if
+> > "!pp->ops->rd_other_conf".
+> > 
+> 
+> I think the code before also should have checked for both 
+> if ((!pp->ops->rd_other_conf) && (!pp->ops->wr_other_conf))
+> 
+> The assumption was if rd_other_conf is Null, the platform provides 
+> both rd_other_conf and wr_other_conf. I see I have added this API 
+> to support Keystone and the above assumption is true so far. 
+> It make sense to fix it if you agree.
+> 
+> > If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
+> > would use iatu_unroll_enabled uninitialized in the
+> > dw_pcie_wr_other_conf() path.  I suppose that's an invalid
+> 
+> Yes. So we need to fix the above to make the code correct instead
+> of leaving it exposed.
+> 
+> > configuration, but it'd be better if we didn't have to rely on the
+> > host drivers to avoid that configuration.
+> 
+> You mean to introduce the check in the designware core code above 
+> right?
 
---=-km/rawHupG5hejW5E2Um
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+We *could* make the code look like:
 
-On Wed, 2017-01-18 at 23:39 +0200, Michael S. Tsirkin wrote:
-> No hardware seems to actually call link_reset, and
-> no driver implements it as more than a nop stub.
->=20
-> This drops the mentions of the callback from everywhere.
-> It's dropped from the documentation as well, but
-> the doc really needs to be updated to reflect
-> reality better (e.g. on pcie slot reset is the link reset).
->=20
-> This will be done in a later patch.
->=20
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+  if (!pp->ops->rd_other_conf || !pp->ops->rd_other_conf)
+    pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
 
-This is going to conflict with the two patches I have in my for-next
-branch related to this same thing (it drops the stubs from qib and
-hfi1). =C2=A0It would be easiest if I just added this to my for-next and
-fixed up the conflicts prior to submission.
+but that seems a little clunky and the connection between ATU and the
+->*_other_conf() pointers is slightly obscure.  I guess it just ends
+up being more detailed than I personally really want to worry about,
+so I'm fine with leaving it as-is for now.
 
-> ---
-> =C2=A0Documentation/PCI/pci-error-recovery.txt | 24 +++------------------=
+> > It's not obvious how this is connected to 416379f9ebde, though.  It
+> > *looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
+> > before and after that commit, so it seems like the external abort
+> > should have happened even before it.
+> > 
+> 
+> You are right. The problem was introduced by 
+> 
+> commit a0601a47053714eecec726aea5ebcd829f817497
+> Author: Joao Pinto <Joao.Pinto@synopsys.com>
+> Date:   Wed Aug 10 11:02:39 2016 +0100
+> 
+>     PCI: designware: Add iATU Unroll feature
+> 
+> which is fixed by commit 416379f9ebde and is again fixed by my 
+> commit. So probably I should have added both commits in
+> my description. 
+
+I added that.  The reason I wanted the correct "Fixes" information is
+to figure out which stable kernels need this fix.  In this case, both:
+
+  a0601a470537 ("PCI: designware: Add iATU Unroll feature") and
+  416379f9ebde ("PCI: designware: Check for iATU unroll support after
+    initializing host")
+
+appeared in v4.9, so it doesn't change anything as far as the stable
+tag is concerned.
+
+The below is what I have on my for-linus branch:
+
+commit 6fdb996a55684016de1ce639b9316b7092fde95f
+Author: Murali Karicheri <m-karicheri2@ti.com>
+Date:   Wed Jan 4 14:32:30 2017 -0500
+
+    PCI: designware: Check for iATU unroll only on platforms that use ATU
+    
+    Previously we checked for iATU unroll support by reading PCIE_ATU_VIEWPORT
+    even on platforms, e.g., Keystone, that do not have ATU ports.  This can
+    cause bad behavior such as asynchronous external aborts:
+    
+      OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
+      Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+      pgd = c0003000
+      [00000000] *pgd=80000800004003, *pmd=00000000
+      Internal error: : 1211 [#1] PREEMPT SMP ARM
+      Modules linked in:
+      CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
+      Hardware name: Keystone
+      task: eb878000 task.stack: eb866000
+      PC is at dw_pcie_setup_rc+0x24/0x380
+      LR is at ks_pcie_host_init+0x10/0x170
+    
+    Move the dw_pcie_iatu_unroll_enabled() check so we only call it on
+    platforms that do not use the ATU.  These platforms supply their own
+    ->rd_other_conf() and ->wr_other_conf() methods.
+    
+    [bhelgaas: changelog]
+    Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
+    Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
+    Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+    Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org      # v4.9+
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index bed19994c1e9..af8f6e92e885 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+ 	u32 val;
+ 
+-	/* get iATU unroll support */
+-	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
+-	dev_dbg(pp->dev, "iATU unroll: %s\n",
+-		pp->iatu_unroll_enabled ? "enabled" : "disabled");
 -
-> --
-> =C2=A0drivers/infiniband/hw/hfi1/pcie.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0| 10 ----------
-> =C2=A0drivers/infiniband/hw/qib/qib_pcie.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0|=
-=C2=A0=C2=A08 --------
-> =C2=A0drivers/media/pci/ngene/ngene-cards.c=C2=A0=C2=A0=C2=A0=C2=A0|=C2=
-=A0=C2=A07 -------
-> =C2=A0include/linux/pci.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0|=C2=A0=C2=A03 ---
-> =C2=A05 files changed, 3 insertions(+), 49 deletions(-)
->=20
-> diff --git a/Documentation/PCI/pci-error-recovery.txt
-> b/Documentation/PCI/pci-error-recovery.txt
-> index ac26869..da3b217 100644
-> --- a/Documentation/PCI/pci-error-recovery.txt
-> +++ b/Documentation/PCI/pci-error-recovery.txt
-> @@ -78,7 +78,6 @@ struct pci_error_handlers
-> =C2=A0{
-> =C2=A0	int (*error_detected)(struct pci_dev *dev, enum
-> pci_channel_state);
-> =C2=A0	int (*mmio_enabled)(struct pci_dev *dev);
-> -	int (*link_reset)(struct pci_dev *dev);
-> =C2=A0	int (*slot_reset)(struct pci_dev *dev);
-> =C2=A0	void (*resume)(struct pci_dev *dev);
-> =C2=A0};
-> @@ -104,8 +103,7 @@ if it implements any, it must implement
-> error_detected(). If a callback
-> =C2=A0is not implemented, the corresponding feature is considered
-> unsupported.
-> =C2=A0For example, if mmio_enabled() and resume() aren't there, then it
-> =C2=A0is assumed that the driver is not doing any direct recovery and
-> requires
-> -a slot reset. If link_reset() is not implemented, the card is
-> assumed to
-> -not care about link resets. Typically a driver will want to know
-> about
-> +a slot reset.=C2=A0=C2=A0Typically a driver will want to know about
-> =C2=A0a slot_reset().
-> =C2=A0
-> =C2=A0The actual steps taken by a platform to recover from a PCI error
-> @@ -232,25 +230,9 @@ proceeds to STEP 4 (Slot Reset)
-> =C2=A0
-> =C2=A0STEP 3: Link Reset
-> =C2=A0------------------
-> -The platform resets the link, and then calls the link_reset()
-> callback
-> -on all affected device drivers.=C2=A0=C2=A0This is a PCI-Express specifi=
-c
-> state
-> +The platform resets the link.=C2=A0=C2=A0This is a PCI-Express specific =
-step
-> =C2=A0and is done whenever a non-fatal error has been detected that can b=
-e
-> -"solved" by resetting the link. This call informs the driver of the
-> -reset and the driver should check to see if the device appears to be
-> -in working condition.
-> -
-> -The driver is not supposed to restart normal driver I/O operations
-> -at this point.=C2=A0=C2=A0It should limit itself to "probing" the device=
- to
-> -check its recoverability status. If all is right, then the platform
-> -will call resume() once all drivers have ack'd link_reset().
-> -
-> -	Result codes:
-> -		(identical to STEP 3 (MMIO Enabled)
-> -
-> -The platform then proceeds to either STEP 4 (Slot Reset) or STEP 5
-> -(Resume Operations).
-> -
-> ->>> The current powerpc implementation does not implement this
-> callback.
-> +"solved" by resetting the link.
-> =C2=A0
-> =C2=A0STEP 4: Slot Reset
-> =C2=A0------------------
-> diff --git a/drivers/infiniband/hw/hfi1/pcie.c
-> b/drivers/infiniband/hw/hfi1/pcie.c
-> index 4ac8f33..ebd941f 100644
-> --- a/drivers/infiniband/hw/hfi1/pcie.c
-> +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -598,15 +598,6 @@ pci_slot_reset(struct pci_dev *pdev)
-> =C2=A0	return PCI_ERS_RESULT_CAN_RECOVER;
-> =C2=A0}
-> =C2=A0
-> -static pci_ers_result_t
-> -pci_link_reset(struct pci_dev *pdev)
-> -{
-> -	struct hfi1_devdata *dd =3D pci_get_drvdata(pdev);
-> -
-> -	dd_dev_info(dd, "HFI1 link_reset function called,
-> ignored\n");
-> -	return PCI_ERS_RESULT_CAN_RECOVER;
-> -}
-> -
-> =C2=A0static void
-> =C2=A0pci_resume(struct pci_dev *pdev)
-> =C2=A0{
-> @@ -625,7 +616,6 @@ pci_resume(struct pci_dev *pdev)
-> =C2=A0const struct pci_error_handlers hfi1_pci_err_handler =3D {
-> =C2=A0	.error_detected =3D pci_error_detected,
-> =C2=A0	.mmio_enabled =3D pci_mmio_enabled,
-> -	.link_reset =3D pci_link_reset,
-> =C2=A0	.slot_reset =3D pci_slot_reset,
-> =C2=A0	.resume =3D pci_resume,
-> =C2=A0};
-> diff --git a/drivers/infiniband/hw/qib/qib_pcie.c
-> b/drivers/infiniband/hw/qib/qib_pcie.c
-> index 6abe1c6..c379b83 100644
-> --- a/drivers/infiniband/hw/qib/qib_pcie.c
-> +++ b/drivers/infiniband/hw/qib/qib_pcie.c
-> @@ -682,13 +682,6 @@ qib_pci_slot_reset(struct pci_dev *pdev)
-> =C2=A0	return PCI_ERS_RESULT_CAN_RECOVER;
-> =C2=A0}
-> =C2=A0
-> -static pci_ers_result_t
-> -qib_pci_link_reset(struct pci_dev *pdev)
-> -{
-> -	qib_devinfo(pdev, "QIB link_reset function called,
-> ignored\n");
-> -	return PCI_ERS_RESULT_CAN_RECOVER;
-> -}
-> -
-> =C2=A0static void
-> =C2=A0qib_pci_resume(struct pci_dev *pdev)
-> =C2=A0{
-> @@ -707,7 +700,6 @@ qib_pci_resume(struct pci_dev *pdev)
-> =C2=A0const struct pci_error_handlers qib_pci_err_handler =3D {
-> =C2=A0	.error_detected =3D qib_pci_error_detected,
-> =C2=A0	.mmio_enabled =3D qib_pci_mmio_enabled,
-> -	.link_reset =3D qib_pci_link_reset,
-> =C2=A0	.slot_reset =3D qib_pci_slot_reset,
-> =C2=A0	.resume =3D qib_pci_resume,
-> =C2=A0};
-> diff --git a/drivers/media/pci/ngene/ngene-cards.c
-> b/drivers/media/pci/ngene/ngene-cards.c
-> index 423e8c8..8438c1c 100644
-> --- a/drivers/media/pci/ngene/ngene-cards.c
-> +++ b/drivers/media/pci/ngene/ngene-cards.c
-> @@ -781,12 +781,6 @@ static pci_ers_result_t
-> ngene_error_detected(struct pci_dev *dev,
-> =C2=A0	return PCI_ERS_RESULT_CAN_RECOVER;
-> =C2=A0}
-> =C2=A0
-> -static pci_ers_result_t ngene_link_reset(struct pci_dev *dev)
-> -{
-> -	printk(KERN_INFO DEVICE_NAME ": link reset\n");
-> -	return 0;
-> -}
-> -
-> =C2=A0static pci_ers_result_t ngene_slot_reset(struct pci_dev *dev)
-> =C2=A0{
-> =C2=A0	printk(KERN_INFO DEVICE_NAME ": slot reset\n");
-> @@ -800,7 +794,6 @@ static void ngene_resume(struct pci_dev *dev)
-> =C2=A0
-> =C2=A0static const struct pci_error_handlers ngene_errors =3D {
-> =C2=A0	.error_detected =3D ngene_error_detected,
-> -	.link_reset =3D ngene_link_reset,
-> =C2=A0	.slot_reset =3D ngene_slot_reset,
-> =C2=A0	.resume =3D ngene_resume,
-> =C2=A0};
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 30d6c16..316379c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -661,9 +661,6 @@ struct pci_error_handlers {
-> =C2=A0	/* MMIO has been re-enabled, but not DMA */
-> =C2=A0	pci_ers_result_t (*mmio_enabled)(struct pci_dev *dev);
-> =C2=A0
-> -	/* PCI Express link has been reset */
-> -	pci_ers_result_t (*link_reset)(struct pci_dev *dev);
-> -
-> =C2=A0	/* PCI slot has been reset */
-> =C2=A0	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
-> =C2=A0
---=20
-Doug Ledford <dledford@redhat.com>
-=C2=A0 =C2=A0 GPG KeyID: B826A3330E572FDD
-=C2=A0 =C2=A0
-Key fingerprint =3D AE6B 1BDA 122B 23B4 265B =C2=A01274 B826 A333 0E57 2FDD
-
---=-km/rawHupG5hejW5E2Um
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJYgAYkAAoJELgmozMOVy/dQ7wP/3+2/QI8ZdmtTQVd0mdi8qSf
-HC+KjY/f1cewrV3lU/YYhtZYtCe1EtRFJLGDomuXRsczfzmQ56QaMo2Yx3ZNyEX+
-cDRCEQr2YQvnuLLGKy2rkyad2m9b9pagmxaSIO4+Bgas1+RMr8aJY7XW9Cp4Q8Gf
-aZ+pFFE3jaVn5OuxE3OQRzeJ6tm7thKNQY3IH/wpRvlOROfDA8V5K7BsVSxGPtJn
-Gm+PJcBBtO7gK53YvXrOcURbI1TbDOrDSBtXCVpje5a1kYpxV932T2Kv4rjUDFYi
-raXikWzpcG6eX8Br8dJ5txERrEOvXVWEdP5DfRjXmt0psH82qvKVDzCjGb2gfkr7
-Fr4RCs3VDXxF8CbZeXmllvxlk1J5BNFgfMb3GUOKEIyZuTfysqwv7i1E9lSJmvRi
-soM4z69ifXE11WV5JbkjnKId+2DwVzix2W8XeYm0BDuvYLBROcJ+YyVONL3V5Rif
-3Bh+bryF0rLY2TiGsEoaDTaZ7/677VyxDEJS0jj1c2WBAMCWuw5HH+eLrlA+igDo
-2UBTjiEeldKPEGP+dgAKnGR5ALziqntibFjz2NN/h7JyzABuZ384syBPDd6dppnp
-eKJk0OPYsTEkR/ctlvo4qcDN93Mz4jpbq4lcrJmk7qLpF/BP1ZXII3qN/U/dHO8C
-YwTx9HrNX7QetUIoUksm
-=2/4A
------END PGP SIGNATURE-----
-
---=-km/rawHupG5hejW5E2Um--
+ 	/* set the number of lanes */
+ 	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
+ 	val &= ~PORT_LINK_MODE_MASK;
+@@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	 * we should not program the ATU here.
+ 	 */
+ 	if (!pp->ops->rd_other_conf) {
++		/* get iATU unroll support */
++		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
++		dev_dbg(pp->dev, "iATU unroll: %s\n",
++			pp->iatu_unroll_enabled ? "enabled" : "disabled");
++
+ 		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+ 					  pp->mem_bus_addr, pp->mem_size);
