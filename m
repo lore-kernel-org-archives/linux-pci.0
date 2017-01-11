@@ -1,62 +1,229 @@
-Return-Path: <SRS0=v4Ee=YZ=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=v4Ee=YZ=chromium.org=briannorris@kernel.org>
-Date: Wed, 11 Jan 2017 10:38:56 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Jeffy Chen <jeffy.chen@rock-chips.com>, devicetree@vger.kernel.org,
-	Heiko Stuebner <heiko@sntech.de>
-Subject: Re: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
-Message-ID: <20170111183855.GA85547@google.com>
-References: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
- <20170111182822.GC14532@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=P80y=YZ=intel.com=tomas.winkler@kernel.org>
+Return-Path: <SRS0=P80y=YZ=intel.com=tomas.winkler@kernel.org>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andreas Noever
+	<andreas.noever@gmail.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-pm@vger.kernel.org"
+	<linux-pm@vger.kernel.org>, "Chen, Yu C" <yu.c.chen@intel.com>, "Levy, Amir
+ (Jer)" <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: RE: [PATCH v4 1/8] PCI: Recognize Thunderbolt devices
+Date: Wed, 11 Jan 2017 10:01:14 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B5437A15E@hasmsx108.ger.corp.intel.com>
+References: <cover.1483806825.git.lukas@wunner.de>
+ <dbb277a11a08c515fe518447ad496dfbffc3e1d8.1483806825.git.lukas@wunner.de>
+ <5B8DA87D05A7694D9FA63FD143655C1B54376D27@hasmsx108.ger.corp.intel.com>
+ <20170108134751.GA23120@wunner.de>
+In-Reply-To: <20170108134751.GA23120@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170111182822.GC14532@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-+ Heiko
+>=20
+> On Sun, Jan 08, 2017 at 10:23:03AM +0000, Winkler, Tomas wrote:
+> > > We're about to allow runtime PM on Thunderbolt ports in
+> > > pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
+> > > hotplug ports in pci_dev_check_d3cold().  In both cases we need to
+> > > uniquely identify if a PCI device belongs to a Thunderbolt controller=
+.
+> > >
+> > > We also have the need to detect presence of a Thunderbolt controller
+> > > in drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros
+> > > cannot switch external DP/HDMI ports between GPUs if they have
+> Thunderbolt.
+> > >
+> > > Furthermore, in multiple places in the DRM subsystem we need to
+> > > detect whether a GPU is on-board or attached with Thunderbolt.  As
+> > > an example, Thunderbolt-attached GPUs shall not be registered with
+> vga_switcheroo.
+> > >
+> > > Intel uses a Vendor-Specific Extended Capability (VSEC) with ID
+> > > 0x1234 on devices belonging to a Thunderbolt controller which allows
+> > > us to recognize them.
+> > >
+> > > Detect presence of this VSEC on device probe and cache it in a newly
+> > > added is_thunderbolt bit in struct pci_dev which can then be queried
+> > > by pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and
+> others.
+> > >
+> > > Cc: Andreas Noever <andreas.noever@gmail.com>
+> > > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > > Cc: Amir Levy <amir.jer.levy@intel.com>
+> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > > ---
+> > >  drivers/pci/pci.h   |  2 ++
+> > >  drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
+> > >  include/linux/pci.h |  1 +
+> > >  3 files changed, 37 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index
+> > > cb17db2..45c2b81
+> > > 100644
+> > > --- a/drivers/pci/pci.h
+> > > +++ b/drivers/pci/pci.h
+> > > @@ -3,6 +3,8 @@
+> > >
+> > >  #define PCI_FIND_CAP_TTL	48
+> > >
+> > > +#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+> >
+> > Shouldn't bet this defined in pci_ids.h ?
+>=20
+> That file is solely intended for IDs used in multiple places, as explaine=
+d in the
+> comment at its top.  This particular ID is only used in the PCI core, hen=
+ce it's in
+> the PCI core's private drivers/pci/pci.h.
+>=20
+> However the line is formatted such that it can just be moved to the globa=
+l
+> include/linux/pci_ids.h should it be needed someplace else in the future.
+>=20
+>=20
+> > >  extern const unsigned char pcie_link_speed[];
+> > >
+> > >  bool pcie_cap_has_lnkctl(const struct pci_dev *dev); diff --git
+> > > a/drivers/pci/probe.c b/drivers/pci/probe.c index e164b5c..891a8fa
+> > > 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev
+> > > *pdev)
+> > >  		pdev->is_hotplug_bridge =3D 1;
+> > >  }
+> > >
+> > > +static void set_pcie_vendor_specific(struct pci_dev *dev) {
+> >
+> >
+> > Why don't u implement this  in quirk.c ?
+>=20
+> The is_thunderbolt bit signifies whether a given PCI device is part of a
+> Thunderbolt daisy chain.  (As explained in the comment in include/linux/p=
+ci.h,
+> see below.)  So it is set on all the PCI devices that comprise a Thunderb=
+olt
+> controller, but also on all endpoint devices that are attached via Thunde=
+rbolt.
+>=20
+> Consequently this function needs to be executed for all PCI devices, not =
+just
+> for a subset that could be identified by a vendor, device or class ID.
 
-On Wed, Jan 11, 2017 at 12:28:22PM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 12, 2016 at 07:51:27PM +0800, Shawn Lin wrote:
-> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> > index f2dca7b..35988fc 100644
-> > --- a/drivers/pci/host/pcie-rockchip.c
-> > +++ b/drivers/pci/host/pcie-rockchip.c
-> > @@ -140,6 +140,8 @@
-> >  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
-> >  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
-> >  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-> > +#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
-> > +#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
-> >  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
-> >  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
-> >  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
-> > @@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-> >  	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
-> >  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
-> >  
-> > +	/* Clear L0s from RC's link cap */
-> > +	if (of_property_read_bool(dev->of_node, "apsm-no-l0s")) {
-> 
-> Did you test this?  This string ("apsm-no-l0s") doesn't match the
-> "aspm-no-l0s" documented above.  The current tree doesn't contain either
-> string in any DTS.
+Ok, god it.=20
 
-Ha, wow. FWIW in the tree I'm using, I have both this patch and a DTS
-patch that uses the matching (but improperly-spelled) property. So *I*
-have tested it. But I obviously didn't read it well enough. Or maybe I'm
-mildly dyslexic?
+>=20
+> In the DRM drivers nouveau, radeon and amdgpu I need to prevent calls to
+> vga_switcheroo_register_client() and vga_switcheroo_init_domain_pm_ops()
+> if the device in question is attached via Thunderbolt.  That's because ex=
+ternal
+> GPUs can't drive the panel of a laptop or be powered down like an on-boar=
+d
+> Optimus/PowerXpress GPU.  We've got a bug there right now that manifests
+> itself once someone attaches an eGPU to a dual GPU laptop.
+> With this patch I'll be able to just skip registration with vga_switchero=
+o if
+> is_thunderbolt is set on a GPU's pci_dev, thereby fixing the bug.
+>=20
+>=20
+> BTW do you have information on the contents/meaning of the VSEC that you
+> would be able/allowed to share?  What I've seen so far is that its length=
+ is 0x1c
+> bytes on older controllers (e.g. Light Ridge, Port Ridge) and its content=
+s are
+> always the same, regardless if the controller is used in host mode or end=
+point
+> mode:
 
-Notably, Shawn sent a NON-matching DTS patch already here:
-
-https://patchwork.kernel.org/patch/9477651/
-
-So this definitely needs to get straightened out. Preferably by
-s/apsm/aspm/ in this patch.
-
-Regards,
-Brian
+Sorry, currently nothing I can share.
+=20
+> 500: 0b 00 01 00 34 12 c1 01|50 09 00 00 39 00 00 00
+> 510: 00 00 00 00 00 00 00 00 00 00 00 00
+>=20
+> However on Alpine Ridge the size of the VSEC has increased significantly =
+to
+> 0xd8 bytes, even though the version stayed at 1 as before:
+>=20
+> 500: 0b 00 01 60 34 12 81 0d 50 09 b0 0c b9 06 18 08
+> 510: 00 38 00 01 00 00 00 00 00 00 00 00 32 02 10 00
+> 520: ef d3 00 40 00 00 00 00 f0 f0 30 c1 00 02 30 00
+> 530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 590: 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00
+> 5a0: 00 00 00 00 00 00 00 00 00 00 00 00 38 24 01 00
+> 5b0: 08 40 00 1c 00 00 01 18 04 03 00 f0 06 00 00 00
+> 5c0: 00 00 08 40 06 00 00 01 90 00 08 1b 00 08 80 08
+> 5d0: 80 7f 08 00 00 00 00 00
+>=20
+> Thanks,
+>=20
+> Lukas
+>=20
+> >
+> > > +	int vsec =3D 0;
+> > > +	u32 header;
+> > > +
+> > > +	while ((vsec =3D pci_find_next_ext_capability(dev, vsec,
+> > > +						    PCI_EXT_CAP_ID_VNDR))) {
+> > > +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
+> > > &header);
+> > > +
+> > > +		/* Is the device part of a Thunderbolt controller? */
+> > > +		if (dev->vendor =3D=3D PCI_VENDOR_ID_INTEL &&
+> > > +		    PCI_VNDR_HEADER_ID(header) =3D=3D PCI_VSEC_ID_INTEL_TBT)
+> > > +			dev->is_thunderbolt =3D 1;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Is the device attached with Thunderbolt?  Walk upwards and
+> > > +check
+> > > for
+> > > +	 * each encountered bridge if it's part of a Thunderbolt controller=
+.
+> > > +	 * Reaching the host bridge means dev is soldered to the mainboard.
+> > > +	 */
+> > > +	if (!dev->is_thunderbolt) {
+> > > +		struct pci_dev *parent =3D dev;
+> > > +
+> > > +		while ((parent =3D pci_upstream_bridge(parent)))
+> > > +			if (parent->is_thunderbolt) {
+> > > +				dev->is_thunderbolt =3D 1;
+> > > +				break;
+> > > +			}
+> > > +	}
+> > > +}
+> > > +
+> > >  /**
+> > >   * pci_ext_cfg_is_aliased - is ext config space just an alias of std=
+ config?
+> > >   * @dev: PCI device
+> > > @@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
+> > >  	/* need to have dev->class ready */
+> > >  	dev->cfg_size =3D pci_cfg_space_size(dev);
+> > >
+> > > +	/* need to have dev->cfg_size ready */
+> > > +	set_pcie_vendor_specific(dev);
+> > > +
+> > >  	/* "Unknown power state" */
+> > >  	dev->current_state =3D PCI_UNKNOWN;
+> > >
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h index
+> > > e2d1a12..3c775e8
+> > > 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -358,6 +358,7 @@ struct pci_dev {
+> > >  	unsigned int	is_virtfn:1;
+> > >  	unsigned int	reset_fn:1;
+> > >  	unsigned int    is_hotplug_bridge:1;
+> > > +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain
+> */
+> > >  	unsigned int    __aer_firmware_first_valid:1;
+> > >  	unsigned int	__aer_firmware_first:1;
+> > >  	unsigned int	broken_intx_masking:1;
+> > > --
+> > > 2.11.0
