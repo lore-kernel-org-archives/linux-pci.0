@@ -1,172 +1,92 @@
-Return-Path: <SRS0=nMQ4=ZF=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=nMQ4=ZF=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: Help request
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <6c47f48a-ec0e-e0ff-bfd6-ae7adf4df828@synopsys.com>
- <8ea3f9ef-8927-003a-a778-bb9d8bda308d@synopsys.com>
- <20170120192752.GC6619@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <929a85f1-ce02-9b81-a015-3a34aac492da@synopsys.com>
-Date: Mon, 23 Jan 2017 10:29:58 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:56605 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755106AbdAKTFo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 14:05:44 -0500
+Date: Wed, 11 Jan 2017 11:04:42 -0800
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        ashok.raj@intel.com
+Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
+Message-ID: <20170111190442.GA74162@otc-nc-03>
+References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170120192752.GC6619@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 7:27 PM de 1/20/2017, Bjorn Helgaas escreveu:
-> On Fri, Jan 20, 2017 at 06:01:26PM +0000, Joao Pinto wrote:
->>
->> Hello,
->> Just to say that the problem was in a commit that was not related with the PCI
->> subystem.
-> 
-> Does that mean you've figured out the problem and we don't need to do
-> anything?
+Hi Keith
 
-Yes, correct. PCI is fine, it was an ARC related commit that was causing the USB
-Endpoint to fail initialization.
-Thanks.
+did you have a chance to look at this?
 
+Cheers,
+Ashok
+
+On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
+> Changes from v1:
+> 	Address comments from Bjorn:
+> 		Added p_slot->lock mutex around changes to p_slot->state
+> 		Updated commit message to call out mutex names
 > 
->> Às 8:46 PM de 1/18/2017, Joao Pinto escreveu:
->>> Hi,
->>>
->>> I am testing my 4.80 Root Complex Reference design (PCIe Core 4.80 with iATU
->>> Unroll) and I am facing an issue in kernel v4.9.
->>>
->>> My setup is:
->>> ARC Board --- AXI --- HAPS (RC refrence Design) --- Backplane --- USB 3.0 Endpoint
->>>
->>> If I use 4.9-rc7 the USB Endpoint gets configured correctly, but when using
->>> 4.9-rc8 it does not. I have checked and no changes were made to USB between rc7
->>> and rc8, so there's something in the PCI.
->>>
->>> The PCI initialization log seems with more info in 4.9-rc8, so maybe some
->>> operation that causing some confusion in my setup. Could you please give me your
->>> opinion?
->>>
->>> Bellow I added the logs for 4.9-rc7 and 4.9-rc8. Thank you for your help!
->>>
->>> Joao
->>>
->>>
->>> ***** LOGS for 4.9-rc7:
->>>
->>> OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
->>> OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
->>> OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
->>> OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
->>> dw-pcie dfc00000.pcie: link up
->>> dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
->>> pci_bus 0000:00: root bus resource [bus 00-ff]
->>> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>> pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
->>> pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
->>> pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
->>> pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
->>> pci 0000:00:00.0: PCI bridge to [bus 01]
->>> pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
->>> pci 0000:01:00.0: enabling device (0000 -> 0002)
->>> (...)
->>> xhci_hcd 0000:01:00.0: xHCI Host Controller
->>> xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
->>> xhci_hcd 0000:01:00.0: hcc params 0x014042cb hci version 0x96 quirks 0x00000004
->>> hub 3-0:1.0: USB hub found
->>> hub 3-0:1.0: 2 ports detected
->>> xhci_hcd 0000:01:00.0: xHCI Host Controller
->>> xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 4
->>>
->>> # lspci -v
->>> 00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
->>>         Flags: bus master, fast devsel, latency 0, IRQ 45
->>>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->>>         Memory behind bridge: d0400000-d04fffff
->>>         [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
->>>         Capabilities: [40] Power Management version 3
->>>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>         Capabilities: [70] Express Root Port (Slot-), MSI 00
->>>         Capabilities: [100] Advanced Error Reporting
->>>         Capabilities: [148] #19
->>>         Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
->>>         Kernel driver in use: pcieport
->>>
->>> 01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
->>> 03) (prog-if 30 [XHCI])
->>>         Flags: bus master, fast devsel, latency 0, IRQ 46
->>>         Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
->>>         Capabilities: [50] Power Management version 3
->>>         Capabilities: [70] MSI: Enable+ Count=1/8 Maskable- 64bit+
->>>         Capabilities: [90] MSI-X: Enable- Count=8 Masked-
->>>         Capabilities: [a0] Express Endpoint, MSI 00
->>>         Capabilities: [100] Advanced Error Reporting
->>>         Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
->>>         Capabilities: [150] Latency Tolerance Reporting
->>>         Kernel driver in use: xhci_hcd
->>>
->>> ****** LOGS for 4.9-rc8:
->>>
->>> OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
->>> OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
->>> OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
->>> OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
->>> dw-pcie dfc00000.pcie: link up
->>> dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
->>> pci_bus 0000:00: root bus resource [bus 00-ff]
->>> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>> pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
->>> pci 0000:00:00.0: [16c3:eddc] type 01 class 0x060400
->>> pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
->>> pci 0000:00:00.0: supports D1
->>> pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
->>> pci 0000:01:00.0: [1033:0194] type 00 class 0x0c0330
->>> pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
->>> pci 0000:01:00.0: PME# supported from D0 D3hot
->>> pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
->>> pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
->>> pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
->>> pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
->>> pci 0000:00:00.0: PCI bridge to [bus 01]
->>> pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
->>> aer 0000:00:00.0:pcie002: service driver aer loaded
->>> pci 0000:01:00.0: enabling device (0000 -> 0002)
->>> (...)
->>> xhci_hcd 0000:01:00.0: xHCI Host Controller
->>> xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
->>> xhci_hcd 0000:01:00.0: can't setup: -110
->>> xhci_hcd 0000:01:00.0: USB bus 3 deregistered
->>> xhci_hcd 0000:01:00.0: init 0000:01:00.0 fail, -110
->>> xhci_hcd: probe of 0000:01:00.0 failed with error -110
->>>
->>> # lspci -v
->>> 00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
->>>         Flags: bus master, fast devsel, latency 0, IRQ 45
->>>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->>>         Memory behind bridge: d0400000-d04fffff
->>>         [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
->>>         Capabilities: [40] Power Management version 3
->>>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>         Capabilities: [70] Express Root Port (Slot-), MSI 00
->>>         Capabilities: [100] Advanced Error Reporting
->>>         Capabilities: [148] #19
->>>         Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
->>>         Kernel driver in use: pcieport
->>>
->>> 01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
->>> 03) (prog-if 30 [XHCI])
->>>         Flags: fast devsel
->>>         Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
->>>         Capabilities: [50] Power Management version 3
->>>         Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
->>>         Capabilities: [90] MSI-X: Enable- Count=8 Masked-
->>>         Capabilities: [a0] Express Endpoint, MSI 00
->>>         Capabilities: [100] Advanced Error Reporting
->>>         Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
->>>         Capabilities: [150] Latency Tolerance Reporting
->>>
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIDAw&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FscJtPBcOmz2pVs8R6rs_3WdCM2qhVTgSH610SgafbU&s=CvWZsl_GD38RTJgCMI30Yr9EznhC1lUnBMyAJoo0UuQ&e= 
+> A surprise link down may retrain very quickly, causing the same slot to
+> generate a link up event before handling the link down completes.
+> 
+> Since the link is active, the power off work queued from the first link
+> down will cause a second down event when the power is disabled. The second
+> down event should be ignored because the slot is already powering off;
+> however, the "link up" event sets the slot state to POWERON before the
+> event to handle this is enqueued, making the second down event believe
+> it needs to do something. This creates a constant link up and down
+> event cycle.
+> 
+> This patch fixes that by setting the p_slot->state only when the work to
+> handle the power event is executing, protected by the p_slot->hotplug_lock.
+> 
+> To: Bjorn Helgass <bhelgaas@google.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: Keith Busch <keith.busch@intel.com>
+> 
+> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+> Reviewed-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index ec0b4c1..4cf4772 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
+>  	switch (info->req) {
+>  	case DISABLE_REQ:
+>  		mutex_lock(&p_slot->hotplug_lock);
+> +		mutex_lock(&p_slot->lock);
+> +		p_slot->state = POWEROFF_STATE;
+> +		mutex_unlock(&p_slot->lock);
+>  		pciehp_disable_slot(p_slot);
+>  		mutex_unlock(&p_slot->hotplug_lock);
+>  		mutex_lock(&p_slot->lock);
+> @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
+>  		break;
+>  	case ENABLE_REQ:
+>  		mutex_lock(&p_slot->hotplug_lock);
+> +		mutex_lock(&p_slot->lock);
+> +		p_slot->state = POWERON_STATE;
+> +		mutex_unlock(&p_slot->lock);
+>  		ret = pciehp_enable_slot(p_slot);
+>  		mutex_unlock(&p_slot->hotplug_lock);
+>  		if (ret)
+> @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+>  {
+>  	struct power_work_info *info;
+>  
+> -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
+> -
+>  	info = kmalloc(sizeof(*info), GFP_KERNEL);
+>  	if (!info) {
+>  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+> -- 
+> 2.7.4
+> 
