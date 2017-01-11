@@ -1,84 +1,98 @@
-Return-Path: <SRS0=mc2Y=XY=etas.com=mathias.koehrer@kernel.org>
-Return-Path: <SRS0=mc2Y=XY=etas.com=mathias.koehrer@kernel.org>
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Matthew Garrett <mjg59@coreos.com>, Julia Cartwright
-	<julia@ni.com>, Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>
-Subject: RE: [PATCH] Force to clear ASPM bits if CONFIG_PCIEASPM_PERFORMANCE
- is set
-Date: Fri, 9 Dec 2016 09:57:03 +0000
-Message-ID: <70624f4bf1514e48ae29e84998a81a80@FE-MBX1012.de.bosch.com>
-References: <95e1fc6e84cf42e094d4a8478c37b18e@FE-MBX1012.de.bosch.com>
- <20161208222025.GB6693@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20161208222025.GB6693@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: thunder-pem: Add support for cn81xx and cn83xx SoCs.
+Date: Wed, 11 Jan 2017 11:11:41 -0800
+Message-Id: <20170111191141.28747-1-ddaney.cavm@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David Daney <david.daney@cavium.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: David Daney <david.daney@cavium.com>
 
-thanks for the response.
+The pci-thunder-pem driver was initially developed for cn88xx SoCs.
+The cn81xx and cn83xx members of the same family of SoCs has a
+slightly different configuration of interrupt resources in the PEM
+hardware, which prevents the INTA legacy interrupt source from
+functioning with the current driver.
 
-> > On systems that have PCIe ASPM support in the BIOS enabled the commit
-> > 387d37577fdd05e9472c20885464c2a53b3c945f may lead to the situation
-> > that accesses to registers of enabled PCIe devices are extremely slow.
-> > This happens if the ACPI FADT declares incorrectly that the system
-> > doesn't support PCIe ASPM even if this is enabled in the BIOS.
-> > In this case the function pcie_no_aspm() will be called.
-> > However this sets the aspm_policy to POLICY_DEFAULT even if
-> > CONFIG_PCIEASPM_PERFORMANCE has been configured.
-> > As result, the ASPM on a PCIe may still be set even if this is not
-> > expected.
-> >
-> > This happens e.g. on a HP workstation 800 G1 together with an Intel
-> > dual port Ethernet server adapter i350 plugged in.
-> > Whenever ASPM is enabled in the BIOS the access to the LAN registers
-> > are really slow (read access: slower than 20us).
-> > In this setup the LnkCap of the two LAN controllers and of the
-> > integrated PCIe switch is set to "ASPM L1 Enabled"
-> > even if the controller is configured to be up and running.
-> > There has been a lengthy discussion on this performance issue due to
-> > this issue on the linux-rt-users list:
-> > http://marc.info/?l=3Dlinux-rt-users&m=3D147454824515022&w=3D2
-> >
-> > This patch solves this issue by forcing to disable ASPM if
-> > CONFIG_PCIEASPM_PERFORMANCE has been set.
->=20
-> The 387d37577fdd changelog says that when ACPI_FADT_NO_ASPM is set, the
-> expected behavior is for the OS to not touch the ASPM configuration, and =
-that this is
-> what Windows does.
->=20
-> If I understand correctly, your proposal in this patch is to change this =
-so that if
-> ACPI_FADT_NO_ASPM is set and CONFIG_PCIEASPM_PERFORMANCE=3Dy,
-> we go ahead and disable ASPM.
->=20
-> Only the firmware author can tell whether it's really a bug that this sys=
-tem sets
-> ACPI_FADT_NO_ASPM.  It could be that there's some platform issue that is
-> avoided by leaving the BIOS ASPM configuration untouched.
->=20
-> If it really *is* a firmware bug, and ACPI_FADT_NO_ASPM is not supposed t=
-o be
-> set on this platform, CONFIG_PCIEASPM_PERFORMANCE doesn't feel like the
-> right mechanism for working around it.  It should be safe to enable that =
-for all
-> systems, and for other systems that set ACPI_FADT_NO_ASPM correctly, we
-> should not touch ASPM configuration.
->=20
-> Can you open a bugzilla at http://bugzilla.kernel.org and attach the comp=
-lete dmesg
-> log and "lspci -vv" output?  This is a subtle area where we've had many b=
-reak/fix
-> cycles, and it's important to be able to go back and look at details of p=
-roblems that
-> motivated previous changes.
->=20
-I have create a new bug report (id=3D189951).
-https://bugzilla.kernel.org/show_bug.cgi?id=3D189951=20
+There are two fixes required:
 
-Regards
+1) Don't fixup the PME interrupt on the newer SoCs as it already has
+the proper value.
 
-Mathias
+2) Report MSI-X Capability Table Size of 2 for the newer SoCs, so the
+core MSI-X code doesn't inadvertently clobber the INTA machinery that
+happens to reside immediately following the table.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/host/pci-thunder-pem.c | 25 ++++++++++++++++++++-----
+ 1 file changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index af722eb..eea466f 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -36,7 +36,7 @@ struct thunder_pem_pci {
+ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+ 				   int where, int size, u32 *val)
+ {
+-	u64 read_val;
++	u64 read_val, tmp_val;
+ 	struct pci_config_window *cfg = bus->sysdata;
+ 	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
+ 
+@@ -65,13 +65,28 @@ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+ 		read_val |= 0x00007000; /* Skip MSI CAP */
+ 		break;
+ 	case 0x70: /* Express Cap */
+-		/* PME interrupt on vector 2*/
+-		read_val |= (2u << 25);
++		/*
++		 * Change PME interrupt to vector 2 on T88 where it
++		 * reads as 0, else leave it alone.
++		 */
++		if (!(read_val & (0x1f << 25)))
++			read_val |= (2u << 25);
+ 		break;
+ 	case 0xb0: /* MSI-X Cap */
+-		/* TableSize=4, Next Cap is EA */
++		/* TableSize=2 or 4, Next Cap is EA */
+ 		read_val &= 0xc00000ff;
+-		read_val |= 0x0003bc00;
++		/*
++		 * If Express Cap(0x70) raw PME vector reads as 2 we are on
++		 * T88 and TableSize is reported as 4, else TableSize
++		 * is 2.
++		 */
++		writeq(0x70, pem_pci->pem_reg_base + PEM_CFG_RD);
++		tmp_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
++		tmp_val >>= 32;
++		if (!(tmp_val & (0x1f << 25)))
++			read_val |= 0x0003bc00;
++		else
++			read_val |= 0x0001bc00;
+ 		break;
+ 	case 0xb4:
+ 		/* Table offset=0, BIR=0 */
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
