@@ -1,51 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <5887532B.3070506@linaro.org>
-Date: Tue, 24 Jan 2017 21:14:19 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59126 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755062AbdAKVPn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 16:15:43 -0500
+Date: Wed, 11 Jan 2017 15:15:06 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci: fix msi.c kernel-doc warnings
+Message-ID: <20170111211506.GM14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <35dfbd78-99a3-39b8-3d67-6f0916d6504e@infradead.org>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
- <20170124123711.GA11996@red-moon>
-In-Reply-To: <20170124123711.GA11996@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
- Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>, robin.murphy@arm.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35dfbd78-99a3-39b8-3d67-6f0916d6504e@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo, Sricharan,
+On Wed, Dec 28, 2016 at 08:25:04AM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Fix kernel-doc warnings in pci/msi.c:
+> 
+> ..//drivers/pci/msi.c:623: warning: No description found for parameter 'affd'
+> ..//drivers/pci/msi.c:623: warning: Excess function parameter 'affinity' description in 'msi_capability_init'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-On 01/24/2017 08:37 PM, Lorenzo Pieralisi wrote:
-> [+hanjun, tomasz, sinan]
->
-> It is quite a key patchset, I would be glad if they can test on their
-> respective platforms with IORT.
+Thanks, applied to pci/msi for v4.11 with this changelog:
 
-ACPI patches are conflict with my acpi platform msi patches (I need
-them to enable devices on my ARM64 platform then test this patch set),
-I will fix the conflict and test it tomorrow (out of office now and
-can't reach the test machines) :)
+    PCI/MSI: Fix msi_capability_init() kernel-doc warnings
+    
+    Fix kernel-doc warnings in pci/msi.c:
+    
+      ..//drivers/pci/msi.c:623: warning: No description found for parameter 'affd'
+      ..//drivers/pci/msi.c:623: warning: Excess function parameter 'affinity' description in 'msi_capability_init'
+    
+    Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks
-Hanjun
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/msi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- lnx-410-rc1.orig/drivers/pci/msi.c
+> +++ lnx-410-rc1/drivers/pci/msi.c
+> @@ -610,7 +610,7 @@ static int msi_verify_entries(struct pci
+>   * msi_capability_init - configure device's MSI capability structure
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: number of interrupts to allocate
+> - * @affinity: flag to indicate cpu irq affinity mask should be set
+> + * @affd: description of automatic irq affinity assignments (may be %NULL)
+>   *
+>   * Setup the MSI capability structure of the device with the requested
+>   * number of interrupts.  A return value of zero indicates the successful
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
