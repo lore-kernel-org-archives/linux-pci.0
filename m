@@ -1,62 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 17 Jan 2017 08:49:39 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753535AbdAKSmS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 13:42:18 -0500
+Date: Wed, 11 Jan 2017 12:42:12 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>, stable@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v2] PCI/MSI: pci-xgene-msi: Fix CPU hotplug registration
- handling
-Message-ID: <20170117144939.GC22776@bhelgaas-glaptop.roam.corp.google.com>
-References: <1484662916-9549-1-git-send-email-marc.zyngier@arm.com>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Subject: Re: [PATCH pci/next] PCI: rcar: return ENODEV code when PCIe card
+ does not insert
+Message-ID: <20170111184212.GF14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <1481889004-26124-1-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1484662916-9549-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1481889004-26124-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 02:21:56PM +0000, Marc Zyngier wrote:
-> The conversion to the new hotplug state machine introduced a regression
-> where a successful hotplug registration would be treated as an error,
-> effectively disabling the MSI driver forever.
+On Fri, Dec 16, 2016 at 12:50:04PM +0100, Simon Horman wrote:
+> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 > 
-> Fix it by doing the proper check on the return value.
+> R-Car PCIe does not support hotplug so it is appropriate to
+> treat the absence of a PCIe card as an ENODEV error.
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: stable@vger.kernel.org
-> Fixes: 9c248f8896e6 ("PCI/xgene-msi: Convert to hotplug state machine")
-> Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+> [simon: updated changelog]
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-Applied to for-linus for v4.10, thanks!
+Applied to pci/host-rcar for v4.11 with the following changelog (I updated
+the summary line):
 
-> ---
-> * From v1: added Sebastian's Ack and Duc's Tested-by, cc'ing linux-pci
-> 
->  drivers/pci/host/pci-xgene-msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index 1f38d08..f1b633b 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -517,7 +517,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  
->  	rc = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "pci/xgene:online",
->  			       xgene_msi_hwirq_alloc, NULL);
-> -	if (rc)
-> +	if (rc < 0)
->  		goto err_cpuhp;
->  	pci_xgene_online = rc;
->  	rc = cpuhp_setup_state(CPUHP_PCI_XGENE_DEAD, "pci/xgene:dead", NULL,
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+commit e94888d23736cec51ba851f6e798d0eeb9ef5f41
+Author: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Date:   Fri Dec 16 12:50:04 2016 +0100
+
+    PCI: rcar: Return -ENODEV from host bridge probe when no card present
+    
+    R-Car PCIe does not support hotplug so it is appropriate to treat the
+    absence of a PCIe card as an -ENODEV error.
+    
+    Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+    [simon: updated changelog]
+    Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
