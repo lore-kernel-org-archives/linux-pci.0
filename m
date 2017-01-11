@@ -1,62 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0066.outbound.protection.outlook.com ([104.47.41.66]:15328
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756976AbdACA0S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Jan 2017 19:26:18 -0500
-Date: Mon, 2 Jan 2017 16:26:07 -0800
-From: Satanand Burla <satananda.burla@caviumnetworks.com>
-To: Martin Mares <mj@ucw.cz>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] pciutils: Add decode for Atomic Ops in lspci
-Message-ID: <20170103002607.syhxuum4it6zx2ck@caviumnetworks.com>
-References: <1482882756-12151-1-git-send-email-satananda.burla@caviumnetworks.com>
- <mj+md-20161231.152720.17786.albireo@ucw.cz>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:57406 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965366AbdAKMHO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 07:07:14 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 1/5] PCI: dwc: Add COMPILE_TEST to all designware based drivers
+Date: Wed, 11 Jan 2017 17:36:51 +0530
+Message-ID: <1484136415-20798-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1484136415-20798-1-git-send-email-kishon@ti.com>
+References: <1484136415-20798-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <mj+md-20161231.152720.17786.albireo@ucw.cz>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The 12/31/2016 16:28, Martin Mares wrote:
-> Hi!
-> 
-> > This adds support for decoding Atomic ops added in ECN
-> > https://pcisig.com/sites/default/files/specification_documents/ECN_Atomic_Ops_080417.pdf
-> 
-> This is much better, however, it still prints extra spaces sometimes.
-> Could you please fix it?
-> 
-Can you let me know in which situation would extra spaces be printed?
-Do you want me to get rid of spaces between the fields ?
-The outputs look like this
-Root complex:
-DevCap2: Completion Timeout: Range BCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-AtomicOpsCap: Routing- 32bit+ 64bit+ 128bitCAS+
-DevCtl2: Completion Timeout: 65ms to 210ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-AtomicOpsCtl: ReqEn- EgressBlck-
-LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+Add COMPILE_TEST to all designware based drivers so that it is possible
+to perform compile test even when a particular architecture specific
+config symbol is not set.
 
-endpoint with memory bar:
-DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
-AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-AtomicOpsCtl: ReqEn-
-LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-upstream/downstream port:
-DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-, OBFF Not Supported
-AtomicOpsCap: Routing-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-AtomicOpsCtl: EgressBlck-
-LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-
-> Also, I woule like to have a test case for the new code -- a configuration
-> space dump similar to those in tests/*. Do you have one?
-Sure.I can provide this as an updated patch.
-> 
-> 				Martin
-
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index deae261..8b08519 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -29,21 +29,21 @@ config PCIE_DW_PLAT
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+-	depends on SOC_EXYNOS5440
++	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+-	depends on SOC_IMX6Q
++	depends on SOC_IMX6Q || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+-	depends on ARCH_SPEAR13XX
++	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -52,7 +52,7 @@ config PCIE_SPEAR13XX
+ 
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+-	depends on ARCH_KEYSTONE
++	depends on ARCH_KEYSTONE || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -64,7 +64,7 @@ config PCI_KEYSTONE
+ 
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+-	depends on OF && (ARM || ARCH_LAYERSCAPE)
++	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW
+@@ -83,7 +83,7 @@ config PCI_HISI
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+-	depends on ARCH_QCOM && OF
++	depends on (ARCH_QCOM || COMPILE_TEST) && OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -94,7 +94,7 @@ config PCIE_QCOM
+ 
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+-	depends on ARCH_MVEBU
++	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -106,7 +106,7 @@ config PCIE_ARMADA_8K
+ 
+ config PCIE_ARTPEC6
+ 	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on MACH_ARTPEC6
++	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
 -- 
-Regards
-Satanand
+1.7.9.5
+
