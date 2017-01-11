@@ -1,140 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:52481 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934333AbdADIea (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 03:34:30 -0500
-Subject: Re: [PATCH 3/4] Documetation: binding: modify the exynos5440 pcie
- binding
-To: Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
-        alim.akhtar@samsung.com, cpgs@samsung.com
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <1c7c1319-70cd-e6d5-87d1-c329a8166497@samsung.com>
-Date: Wed, 04 Jan 2017 17:23:24 +0900
-MIME-version: 1.0
-In-reply-to: <20170103195144.7fwtlvhzxhq3r25z@rob-hp-laptop>
-Content-type: text/plain; charset=windows-1252
-References: <20161228103454.26467-1-jh80.chung@samsung.com>
- <CGME20161228103455epcas5p2b3ea563efc00c776e77477ab3c778bb1@epcas5p2.samsung.com>
- <20161228103454.26467-4-jh80.chung@samsung.com>
- <20170103195144.7fwtlvhzxhq3r25z@rob-hp-laptop>
+Received: from mail-co1nam03on0088.outbound.protection.outlook.com ([104.47.40.88]:55952
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753168AbdAKQqw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 11:46:52 -0500
+Subject: Re: [PATCH 2/3] xgbe: switch to pci_irq_alloc_vectors
+To: Christoph Hellwig <hch@lst.de>
+References: <1483994260-19797-1-git-send-email-hch@lst.de>
+ <1483994260-19797-3-git-send-email-hch@lst.de>
+ <11ed330c-84e9-79e9-7945-ca17a497359c@amd.com> <20170111090357.GB7350@lst.de>
+CC: <linux-pci@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        <netdev@vger.kernel.org>, <linux-media@vger.kernel.org>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <c3f96e57-0a22-99dd-ca48-b0b84913e4df@amd.com>
+Date: Wed, 11 Jan 2017 10:46:45 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170111090357.GB7350@lst.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/04/2017 04:51 AM, Rob Herring wrote:
-> On Wed, Dec 28, 2016 at 07:34:53PM +0900, Jaehoon Chung wrote:
->> According to using PHY framework, modified the exynos5440-pcie binding.
->> And use "config" property to follow the designware-pcie binding.
-> 
-> You are breaking compatibility here. Please state that and why it is 
-> okay to do so.
-
-I will update it..And i'm modifying the patches about maintaining the backward compatibility.
-So i will leave the current dt-binding. Just will add the dt-binding example for using phy framework.
-How about?
-
-And will add the "DEPRECATED" for some properties. Also will display the kernel message.
-
-> 
+On 1/11/2017 3:03 AM, Christoph Hellwig wrote:
+> On Tue, Jan 10, 2017 at 12:40:10PM -0600, Tom Lendacky wrote:
+>> On 1/9/2017 2:37 PM, Christoph Hellwig wrote:
+>>> The newly added xgbe drivers uses the deprecated pci_enable_msi_exact
+>>> and pci_enable_msix_range interfaces.  Switch it to use
+>>> pci_irq_alloc_vectors instead.
 >>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 +++++++++++++---------
->>  1 file changed, 17 insertions(+), 12 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
->> index 4f9d23d..51f6214 100644
->> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
->> @@ -5,10 +5,15 @@ and thus inherits all the common properties defined in designware-pcie.txt.
->>  
->>  Required properties:
->>  - compatible: "samsung,exynos5440-pcie"
->> -- reg: base addresses and lengths of the pcie controller,
->> -	the phy controller, additional register for the phy controller.
->> +- reg: base addresses and lengths of the pcie controller
->>  - interrupts: A list of interrupt outputs for level interrupt,
->>  	pulse interrupt, special interrupt.
->> +- phys: From PHY binding. Phandle for the Generic PHY.
->> +	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
->> +- phy-names: Must be "pcie-phy".
+>> I was just working on switching over to this API with some additional
+>> changes / simplification.  I'm ok with using this patch so that you get
+>> the API removal accomplished.  Going through the PCI tree just means
+>> it will probably be easier for me to hold off on the additional changes
+>> I wanted to make until later.
 > 
-> -names is pointless for a single element.
+> Hi Tom,
 
-Will remove.
+Hi Christoph,
 
 > 
->> +
->> +Other common properties refer to
->> +	Documentation/devicetree/binding/pci/designware-pcie.txt
->>  
->>  Example:
->>  
->> @@ -16,18 +21,18 @@ SoC specific DT Entry:
->>  
->>  	pcie@290000 {
->>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
->> -		reg = <0x290000 0x1000
->> -			0x270000 0x1000
->> -			0x271000 0x40>;
->> +		reg = <0x290000 0x1000>, <0x40000000 0x100>;
-> 
-> 256 bytes of config space?
+> if you have a better patch I'd be more than happy to use that one instead,
+> this one was intended as a stupid search and replace.  The important
+> part for me is to get the two conversions and the interface removal
+> in together.
 
-Typo. Will fix.
+That sounds good, I'll send the patch to you in a separate email for use
+in your series.
+
+Thanks,
+Tom
 
 > 
->> +		reg-names = "elbi", "config";
->>  		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
->>  		clocks = <&clock 28>, <&clock 27>;
->>  		clock-names = "pcie", "pcie_bus";
->>  		#address-cells = <3>;
->>  		#size-cells = <2>;
->>  		device_type = "pci";
->> -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
->> -			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
->> +		ranges = <0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
->>  			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
->> +		phys = <&pcie_phy0>;
->> +		phy-names = "pcie-phy";
->>  		#interrupt-cells = <1>;
->>  		interrupt-map-mask = <0 0 0 0>;
->>  		interrupt-map = <0 0 0 0 &gic GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
->> @@ -36,17 +41,17 @@ SoC specific DT Entry:
->>  
->>  	pcie@2a0000 {
->>  		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
->> -		reg = <0x2a0000 0x1000
->> -			0x272000 0x1000
->> -			0x271040 0x40>;
->> +		reg = <0x2a0000 0x1000>, <0x60000000 0x1000>;
->> +		reg-names = "elbi", "config";
->>  		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
->>  		clocks = <&clock 29>, <&clock 27>;
->>  		clock-names = "pcie", "pcie_bus";
->>  		#address-cells = <3>;
->>  		#size-cells = <2>;
->>  		device_type = "pci";
->> -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
->> -			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
->> +		phys = <&pcie_phy1>;
->> +		phy-names = "pcie-phy";
->> +		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
->>  			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
->>  		#interrupt-cells = <1>;
->>  		interrupt-map-mask = <0 0 0 0>;
->> -- 
->> 2.10.2
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> E.g. I've alreayd wondered why the driver requires the exact vector
+> number for MSI and a variable one for MSI-X, and there certainly is
+> all kinds of opportunity for cosmetic cleanup.
 > 
-> 
-> 
-
