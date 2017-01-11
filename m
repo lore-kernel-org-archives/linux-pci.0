@@ -1,14 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 11 Jan 2017 12:30:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
+ enabled
+Message-ID: <20170111183055.GD14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161212183020.GA30274@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <988ae7dc-ff41-0a06-903f-8681b8ddf13f@broadcom.com>
-References: <1484265521-13497-1-git-send-email-aospan@netup.ru>
- <988ae7dc-ff41-0a06-903f-8681b8ddf13f@broadcom.com>
-From: Abylay Ospan <aospan@netup.ru>
-Date: Fri, 13 Jan 2017 00:32:06 -0500
-Message-ID: <CAK3bHNWUa5m2s8jj0kBhgnFwRH7=qq2Hd-FwLOyA3XLuFaTYFg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: iproc: fix resource allocation for BCMA PCIe
-To: Ray Jui <ray.jui@broadcom.com>
+In-Reply-To: <20161212183020.GA30274@obsidianresearch.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,156 +16,198 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Gregory CLEMENT <gregory.clement@free-electrons.com>,
  Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ray,
+On Mon, Dec 12, 2016 at 11:30:20AM -0700, Jason Gunthorpe wrote:
+> The PCI core will write to the bridge window config multiple times
+> while they are enabled. This can lead to mbus failures like:
+> 
+>  mvebu_mbus: cannot add window '4:e8', conflicts with another window
+>  mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
+> 
+> For me this is happening during a hotplug cycle. The PCI core is
+> not changing the values, just writing them twice while active.
+> 
+> The patch addresses the general case of any change to an active window,
+> but not atomically. The code is slightly refactored so io and mem
+> can share more of the window logic.
 
-i'm not sure but looks so. Following drivers is doing same allocation on stack:
+Looks good to me, but I'm waiting for an ack from Thomas or Jason (listed
+as maintainers and already cc'd).
 
-drivers/pci/host/pcie-designware.c
-drivers/pci/host/pcie-rockchip.c
-drivers/pci/host/pcie-xilinx.c
-drivers/pci/host/pcie-xilinx-nwl.c
-drivers/pci/host/pci-host-common.c
- -> drivers/pci/host/pci-thunder-ecam.c
- -> drivers/pci/host/pci-thunder-pem.c
- -> drivers/pci/host/pci-host-generic.c
-drivers/pci/host/pci-versatile.c
-drivers/pci/host/pci-xgene.c
-
-other drivers is ok. But need to double-check.
-
-Below is more detailed description of the problem.
-
-Problem is visible when second PCIe bridge registering (but can cause
-kernel crash with only one PCIe bridge because broken pointer
-introduced to 'iomem_resource' anyway). Here is my global
-'iomem_resource' list dump:
-
-after first PCIe bridge registered:
-[    3.578650] iomem_resource child=cb039d40 name=PCIe MEM space start=08000000
-[    3.585811] iomem_resource child=cb41da80 name=serial start=18000300
-[    3.592267] iomem_resource child=cb15ce80 name=serial start=18000400
-[    3.598719] iomem_resource child=cb57df00 name=nand start=18028000
-[    3.605001] iomem_resource child=cb57dc80 name=iproc-ext start=18028f00
-[    3.611723] iomem_resource child=cb57da00 name=iproc-idm start=1811a408
-[    3.618433] iomem_resource child=cbfffe80 name=System RAM start=80000000
-
-this dump looks good but before registering second PCIe same dump looks broken:
-[    3.669225] iomem_resource child=cb039d40 name=PCIe MEM space start=40000000
-[    3.676395] iomem_resource child=cb5e3410 name=bcma0:8 start=cb0f6e10
-[    3.682948] iomem_resource child=cb061080 name= start=c1604b04
-
-and second PCIe registration fail with:
-[    3.694207] pcie_iproc_bcma bcma0:8: resource collision: [mem
-0x40000000-0x47ffffff] conflicts with PCIe MEM space [mem
-0x40000000-0x47ffffff]
-[    3.707024] pcie_iproc_bcma bcma0:8: PCIe controller setup failed
-
-address 0xcb039d40 from this dumps is allocated on stack and is not
-valid after 'iproc_pcie_bcma_probe' exit.
-
-Proposed patch is fixing this issue.
-
-2017-01-12 19:40 GMT-05:00 Ray Jui <ray.jui@broadcom.com>:
-> Hi Abylay,
->
-> On 1/12/2017 3:58 PM, Abylay Ospan wrote:
->> Resource allocated on stack was saved by 'devm_request_resource' to
->> global 'iomem_resource' but become invalid after 'iproc_pcie_bcma_probe' exit.
->> So the global 'iomem_resource' was poisoned. This may cause kernel crash
->> or second PCIe bridge registration failure.
->>
->> Tested on Broadcom NorthStar machine ('Edgecore ECW7220-L') with two PCIe wifi
->> adapters (b43 BCM4331 and ath10k QCA988X).
->>
->> Signed-off-by: Abylay Ospan <aospan@netup.ru>
->
-> I have not yet looked into this in great details. But if what you
-> claimed is true, do we have the same problem with multiple PCIe host
-> drivers that all have their resource allocated on the stack and have
-> 'devm_request_resource' called to save it?
->
-> Thanks,
->
-> Ray
->
->> ---
->>  drivers/pci/host/pcie-iproc-bcma.c | 18 ++++++++----------
->>  drivers/pci/host/pcie-iproc.h      |  2 ++
->>  2 files changed, 10 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
->> index bd4c9ec..28f9b89 100644
->> --- a/drivers/pci/host/pcie-iproc-bcma.c
->> +++ b/drivers/pci/host/pcie-iproc-bcma.c
->> @@ -44,8 +44,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>  {
->>       struct device *dev = &bdev->dev;
->>       struct iproc_pcie *pcie;
->> -     LIST_HEAD(res);
->> -     struct resource res_mem;
->>       int ret;
->>
->>       pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
->> @@ -62,21 +60,21 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>       }
->>
->>       pcie->base_addr = bdev->addr;
->> +     INIT_LIST_HEAD(&pcie->resources);
->>
->> -     res_mem.start = bdev->addr_s[0];
->> -     res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
->> -     res_mem.name = "PCIe MEM space";
->> -     res_mem.flags = IORESOURCE_MEM;
->> -     pci_add_resource(&res, &res_mem);
->> +     pcie->res_mem.start = bdev->addr_s[0];
->> +     pcie->res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
->> +     pcie->res_mem.name = "PCIe MEM space";
->> +     pcie->res_mem.flags = IORESOURCE_MEM;
->> +     pcie->res_mem.child = NULL;
->> +     pci_add_resource(&pcie->resources, &pcie->res_mem);
->>
->>       pcie->map_irq = iproc_pcie_bcma_map_irq;
->>
->> -     ret = iproc_pcie_setup(pcie, &res);
->> +     ret = iproc_pcie_setup(pcie, &pcie->resources);
->>       if (ret)
->>               dev_err(dev, "PCIe controller setup failed\n");
->>
->> -     pci_free_resource_list(&res);
->> -
->>       bcma_set_drvdata(bdev, pcie);
->>       return ret;
->>  }
->> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
->> index 04fed8e..866d649 100644
->> --- a/drivers/pci/host/pcie-iproc.h
->> +++ b/drivers/pci/host/pcie-iproc.h
->> @@ -105,6 +105,8 @@ struct iproc_pcie {
->>
->>       bool need_msi_steer;
->>       struct iproc_msi *msi;
->> +     struct resource res_mem;
->> +     struct list_head resources;
->>  };
->>
->>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->>
-
-
-
--- 
-Abylay Ospan,
-NetUP Inc.
-http://www.netup.tv
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 101 +++++++++++++++++++++++++------------------
+>  1 file changed, 60 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 307f81d6b479af..af724731b22f53 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -133,6 +133,12 @@ struct mvebu_pcie {
+>  	int nports;
+>  };
+>  
+> +struct mvebu_pcie_window {
+> +	phys_addr_t base;
+> +	phys_addr_t remap;
+> +	size_t size;
+> +};
+> +
+>  /* Structure representing one PCIe interface */
+>  struct mvebu_pcie_port {
+>  	char *name;
+> @@ -150,10 +156,8 @@ struct mvebu_pcie_port {
+>  	struct mvebu_sw_pci_bridge bridge;
+>  	struct device_node *dn;
+>  	struct mvebu_pcie *pcie;
+> -	phys_addr_t memwin_base;
+> -	size_t memwin_size;
+> -	phys_addr_t iowin_base;
+> -	size_t iowin_size;
+> +	struct mvebu_pcie_window memwin;
+> +	struct mvebu_pcie_window iowin;
+>  	u32 saved_pcie_stat;
+>  };
+>  
+> @@ -379,23 +383,45 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
+>  	}
+>  }
+>  
+> +static void mvebu_pcie_set_window(struct mvebu_pcie_port *port,
+> +				  unsigned int target, unsigned int attribute,
+> +				  const struct mvebu_pcie_window *desired,
+> +				  struct mvebu_pcie_window *cur)
+> +{
+> +	if (desired->base == cur->base && desired->remap == cur->remap &&
+> +	    desired->size == cur->size)
+> +		return;
+> +
+> +	if (cur->size != 0) {
+> +		mvebu_pcie_del_windows(port, cur->base, cur->size);
+> +		cur->size = 0;
+> +		cur->base = 0;
+> +
+> +		/*
+> +		 * If something tries to change the window while it is enabled
+> +		 * the change will not be done atomically. That would be
+> +		 * difficult to do in the general case.
+> +		 */
+> +	}
+> +
+> +	if (desired->size == 0)
+> +		return;
+> +
+> +	mvebu_pcie_add_windows(port, target, attribute, desired->base,
+> +			       desired->size, desired->remap);
+> +	*cur = *desired;
+> +}
+> +
+>  static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+>  {
+> -	phys_addr_t iobase;
+> +	struct mvebu_pcie_window desired = {};
+>  
+>  	/* Are the new iobase/iolimit values invalid? */
+>  	if (port->bridge.iolimit < port->bridge.iobase ||
+>  	    port->bridge.iolimitupper < port->bridge.iobaseupper ||
+>  	    !(port->bridge.command & PCI_COMMAND_IO)) {
+> -
+> -		/* If a window was configured, remove it */
+> -		if (port->iowin_base) {
+> -			mvebu_pcie_del_windows(port, port->iowin_base,
+> -					       port->iowin_size);
+> -			port->iowin_base = 0;
+> -			port->iowin_size = 0;
+> -		}
+> -
+> +		mvebu_pcie_set_window(port, port->io_target, port->io_attr,
+> +				      &desired, &port->iowin);
+>  		return;
+>  	}
+>  
+> @@ -412,32 +438,27 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+>  	 * specifications. iobase is the bus address, port->iowin_base
+>  	 * is the CPU address.
+>  	 */
+> -	iobase = ((port->bridge.iobase & 0xF0) << 8) |
+> -		(port->bridge.iobaseupper << 16);
+> -	port->iowin_base = port->pcie->io.start + iobase;
+> -	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+> -			    (port->bridge.iolimitupper << 16)) -
+> -			    iobase) + 1;
+> -
+> -	mvebu_pcie_add_windows(port, port->io_target, port->io_attr,
+> -			       port->iowin_base, port->iowin_size,
+> -			       iobase);
+> +	desired.remap = ((port->bridge.iobase & 0xF0) << 8) |
+> +			(port->bridge.iobaseupper << 16);
+> +	desired.base = port->pcie->io.start + desired.remap;
+> +	desired.size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+> +			 (port->bridge.iolimitupper << 16)) -
+> +			desired.remap) +
+> +		       1;
+> +
+> +	mvebu_pcie_set_window(port, port->io_target, port->io_attr, &desired,
+> +			      &port->iowin);
+>  }
+>  
+>  static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+>  {
+> +	struct mvebu_pcie_window desired = {.remap = MVEBU_MBUS_NO_REMAP};
+> +
+>  	/* Are the new membase/memlimit values invalid? */
+>  	if (port->bridge.memlimit < port->bridge.membase ||
+>  	    !(port->bridge.command & PCI_COMMAND_MEMORY)) {
+> -
+> -		/* If a window was configured, remove it */
+> -		if (port->memwin_base) {
+> -			mvebu_pcie_del_windows(port, port->memwin_base,
+> -					       port->memwin_size);
+> -			port->memwin_base = 0;
+> -			port->memwin_size = 0;
+> -		}
+> -
+> +		mvebu_pcie_set_window(port, port->mem_target, port->mem_attr,
+> +				      &desired, &port->memwin);
+>  		return;
+>  	}
+>  
+> @@ -447,14 +468,12 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+>  	 * window to setup, according to the PCI-to-PCI bridge
+>  	 * specifications.
+>  	 */
+> -	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
+> -	port->memwin_size  =
+> -		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+> -		port->memwin_base + 1;
+> -
+> -	mvebu_pcie_add_windows(port, port->mem_target, port->mem_attr,
+> -			       port->memwin_base, port->memwin_size,
+> -			       MVEBU_MBUS_NO_REMAP);
+> +	desired.base = ((port->bridge.membase & 0xFFF0) << 16);
+> +	desired.size = (((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+> +		       desired.base + 1;
+> +
+> +	mvebu_pcie_set_window(port, port->mem_target, port->mem_attr, &desired,
+> +			      &port->memwin);
+>  }
+>  
+>  /*
+> -- 
+> 2.7.4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 linux-arm-kernel mailing list
