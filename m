@@ -1,74 +1,41 @@
-Return-Path: <SRS0=Qt75=YT=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=Qt75=YT=linux.intel.com=mika.westerberg@kernel.org>
-Date: Thu, 5 Jan 2017 16:20:29 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170105142029.GF3353@lahna.fi.intel.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de>
- <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <20170105104940.GA3353@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:44811 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965911AbdAKMHh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 07:07:37 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 0/5] PCI: dwc: miscellaneous cleanups and fixes
+Date: Wed, 11 Jan 2017 17:36:50 +0530
+Message-ID: <1484136415-20798-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170105104940.GA3353@lahna.fi.intel.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 12:49:40PM +0200, Mika Westerberg wrote:
-> On Wed, Jan 04, 2017 at 10:58:10PM +0100, Rafael J. Wysocki wrote:
-> > I would rather add a quirk to the ACPI core to prevent the power resources in
-> > question from being enumerated.  Or even to prevent ACPI PM from being
-> > used for the port in question.
-> 
-> If we are going to add a quirk, I agree that it should be put to the
-> ACPI core.
-> 
-> However, Windows seems to be able to use _PR3 just fine. So there is
-> something that we are missing or do not implement properly which causes
-> all the troubles. IMHO we should try to find out what that difference is
-> and fix that if possible.
+This series includes miscellaneous cleanups and fixes in dra7xx
+pci driver and it also adds COMPILE_TEST to all designware
+based drivers (except dra7xx driver and hisi driver), since
+dra7xx driver doesn't depend on architecture specific config and
+hisi driver is compiled based on only ARM64.
 
-Here is one idea. The _OSC method is used as a handshake between OS and
-the BIOS to enable/disable certain features. One of those features is
-_PR3 support (ACPI specification 6.1 p.328):
+These patches have been created after applying [1].
 
-  This bit is set if OSPM supports reading _PR3and using power
-  resources to switch power. Note this handshake translates to an
-  operating model that the platform and OSPM supports both the power
-  model containing both D3hot and D3.
+[1] -> https://lkml.org/lkml/2017/1/6/246
 
-Some of our development platforms has BIOS option "RTD3 enable" which
-is used to enable/disable this flag (among other things). The BIOS
-should return acked caps when _OSC returns but we never check those in
-Linux.
+Kishon Vijay Abraham I (5):
+  PCI: dwc: Add COMPILE_TEST to all designware based drivers
+  PCI: dwc: dra7xx: Simplify the probe code
+  PCI: dwc: dra7xx: Add support to force RC to work in GEN1 mode
+  PCI: dwc: dra7xx: Enable MSI and legacy interrupts simultaneously
+  PCI: dwc: dra7xx: Group phy API invocations
 
-Kilian, can you try the below patch and send back dmesg when the system
-has been booted? It should show if the BIOS acks _PR3 or not.
+ drivers/pci/dwc/Kconfig      |   16 ++--
+ drivers/pci/dwc/pci-dra7xx.c |  174 ++++++++++++++++++++++++------------------
+ 2 files changed, 106 insertions(+), 84 deletions(-)
 
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index 95855cb9d6fb..463eb2d69271 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -345,8 +345,15 @@ static void acpi_bus_osc_support(void)
- 		capbuf[OSC_SUPPORT_DWORD] |= OSC_SB_APEI_SUPPORT;
- 	if (ACPI_FAILURE(acpi_get_handle(NULL, "\\_SB", &handle)))
- 		return;
-+
-+	acpi_handle_info(handle, "Supported caps: 0x%08x\n", capbuf[1]);
-+
- 	if (ACPI_SUCCESS(acpi_run_osc(handle, &context))) {
- 		u32 *capbuf_ret = context.ret.pointer;
-+
-+		acpi_handle_info(handle, "Acked caps: 0x%08x (_PR3: %s)\n", capbuf_ret[1],
-+				 capbuf_ret[1] & OSC_SB_PR3_SUPPORT ? "on" : "off");
-+
- 		if (context.ret.length > OSC_SUPPORT_DWORD) {
- 			osc_sb_apei_support_acked =
- 				capbuf_ret[OSC_SUPPORT_DWORD] & OSC_SB_APEI_SUPPORT;
+-- 
+1.7.9.5
+
