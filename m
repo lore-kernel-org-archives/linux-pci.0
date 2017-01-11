@@ -1,234 +1,94 @@
-Return-Path: <SRS0=B+os=YX=redhat.com=lyude@kernel.org>
-Return-Path: <SRS0=B+os=YX=redhat.com=lyude@kernel.org>
-Message-ID: <1483974686.28993.3.camel@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-From: Lyude Paul <lyude@redhat.com>
-To: David Airlie <airlied@redhat.com>, Peter Jones <pjones@redhat.com>
-Cc: Lukas Wunner <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika
- Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer
- <kilian.singer@quantumtechnology.info>,
-        linux-pci
- <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Hans de Goede <hdegoede@redhat.com>, Lyude <cpaul@redhat.com>
-Date: Mon, 09 Jan 2017 10:11:26 -0500
-In-Reply-To: <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
-	 <59349185.1aqio7kYFn@aspire.rjw.lan>
-	 <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
-	 <20170105150646.GB21446@wunner.de>
-	 <20170105181322.wnvdytpgddcdk3ry@redhat.com>
-	 <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49816 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935456AbdAKR7v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 12:59:51 -0500
+Date: Wed, 11 Jan 2017 19:59:51 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        linux-pci@vger.kernel.org, dennis.dalessandro@intel.com,
+        ira.weiny@intel.com
+Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
+ device
+Message-ID: <20170111175951.GD20392@mtr-leonro.local>
+References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
+ <20170111071252.GV7218@mtr-leonro.local>
+ <dda30e58-41fd-b778-3b6c-6e59d08c41c7@intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="aT9PWwzfKXlsBJM1"
+In-Reply-To: <dda30e58-41fd-b778-3b6c-6e59d08c41c7@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fwiw, I just tried on the W541 I have 4.8.15-300.fc25.x86_64 running on
-here and so far it seems to suspend/resume just fine using firmware
-version 2.19
 
-On Thu, 2017-01-05 at 14:36 -0500, David Airlie wrote:
-> (cc'ing Lyude, who has the hw also I think).
-> 
-> ----- Original Message -----
-> > From: "Peter Jones" <pjones@redhat.com>
-> > To: "Lukas Wunner" <lukas@wunner.de>
-> > Cc: "David Airlie" <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@r
-> > jwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
-> > "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.weste
-> > rberg@linux.intel.com>, "Kilian Singer"
-> > <kilian.singer@quantumtechnology.info>, "linux-pci" <linux-pci@vger
-> > .kernel.org>, "Alex Deucher"
-> > <alexander.deucher@amd.com>, "Hans de Goede" <hdegoede@redhat.com>
-> > Sent: Friday, 6 January, 2017 4:13:23 AM
-> > Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe
-> > ports"
-> > 
-> > On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner wrote:
-> > > On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
-> > > > > On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
-> > > > > > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner
-> > > > > > wrote:
-> > > > > > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas
-> > > > > > > wrote:
-> > > > > > > > I don't *want* to apply the revert.  It's on my for-
-> > > > > > > > linus branch
-> > > > > > > > as a
-> > > > > > > > worst-case scenario change if we can't figure out a
-> > > > > > > > better fix.
-> > > > > > > > 
-> > > > > > > > The patch below is preferable, but I'd rather not take
-> > > > > > > > even it,
-> > > > > > > > because it takes away functionality and forces people
-> > > > > > > > to use a
-> > > > > > > > boot
-> > > > > > > > parameter to restore it.  I expect that somebody will
-> > > > > > > > figure out
-> > > > > > > > how
-> > > > > > > > to fix the regression Kilian found and also keep the
-> > > > > > > > new
-> > > > > > > > functionality
-> > > > > > > > (without requiring boot parameters) before v4.10.
-> > > > > > > 
-> > > > > > > The issue is constrained to hybrid graphics laptops with
-> > > > > > > Nvidia
-> > > > > > > discrete
-> > > > > > > GPU using nouveau.  Hence it needs to be fixed in
-> > > > > > > nouveau, not in
-> > > > > > > the
-> > > > > > > PCI core.
-> > > > > > 
-> > > > > > The problem is not necessarily in the nouveau driver, the
-> > > > > > same
-> > > > > > problem
-> > > > > > occurs when you enable RPM without loading nouveau. The
-> > > > > > issue is
-> > > > > > limited
-> > > > > > though to some newer hybrid graphics laptops with Nvidia
-> > > > > > GPUs. While
-> > > > > > a
-> > > > > > quirk can be added to nouveau, I think that a (temporary)
-> > > > > > quirk in
-> > > > > > core
-> > > > > > would also be reasonable (since it also occurs without
-> > > > > > nouveau).
-> > > > > > 
-> > > > > > > (AFAIUI, laptops with AMD discrete GPU are not affected
-> > > > > > > as it is
-> > > > > > > known
-> > > > > > > when and how to call an ACPI method versus using PR3.)
-> > > > > > > 
-> > > > > > > (Neither are laptops using the Nvidia proprietary driver
-> > > > > > > as it
-> > > > > > > doesn't
-> > > > > > > runtime suspend the card.  But battery life will be
-> > > > > > > terrible then.)
-> > > > > > > 
-> > > > > > > We're at rc2 so the time frame for coming up with a fix
-> > > > > > > is probably
-> > > > > > > 4 weeks.  Peter and others have tried for months to
-> > > > > > > reverse-engineer
-> > > > > > > how to handle runtime PM on newer Nvidia cards.  It seems
-> > > > > > > likely
-> > > > > > > that
-> > > > > > > we'll not find the ultimate solution to the problem
-> > > > > > > within 4 weeks.
-> > > > > > 
-> > > > > > Yep, a quick proper fix seems unlikely.
-> > > > > > [ Help/ideas are welcome, I suspect that these failures to
-> > > > > > restore
-> > > > > > power
-> > > > > > on laptops designed for Win8+ all have the same cause,
-> > > > > > related to
-> > > > > > some
-> > > > > > unknown interaction between ACPI and PCI. Some links:
-> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
-> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
-> > > > > > 
-> > > > > > > The way it is now, i.e. defaulting to PR3 when available,
-> > > > > > > regresses
-> > > > > > > certain laptops such as Kilian's.  If on the other hand
-> > > > > > > we default
-> > > > > > > to
-> > > > > > > DSM when available, we'll regress certain other laptops,
-> > > > > > > as Peter
-> > > > > > > has
-> > > > > > > pointed out.  Whitelisting or blacklisting laptops
-> > > > > > > doesn't seem a
-> > > > > > > good
-> > > > > > > approach either, ideally we'd want to use PR3 as Windows
-> > > > > > > does.
-> > > > > > > 
-> > > > > > > As said, the only short-term solution I see is to add an
-> > > > > > > "optimus"
-> > > > > > > module_param to nouveau to allow users to select which
-> > > > > > > method to
-> > > > > > > use.
-> > > > > > > So in Kilian's case an additional command line parameter
-> > > > > > > would be
-> > > > > > > necessary to fix the issue.
-> > > > > > > 
-> > > > > > > Does anyone see a better solution or can we agree on this
-> > > > > > > one?  If
-> > > > > > > so
-> > > > > > > I can come up with a patch.  This could go in via Dave
-> > > > > > > Airlie's
-> > > > > > > tree.
-> > > > > > 
-> > > > > > As pcie_port_pm=off already reverts to DSM, I do not think
-> > > > > > that an
-> > > > > > additional (temporary) nouveau module parameter is going to
-> > > > > > help. I
-> > > > > > instead propose a (hopefully temporary) quirk in pci core
-> > > > > > that
-> > > > > > disables
-> > > > > > D3cold RPM for just Kilians Lenovo laptop (basically
-> > > > > > defaulting to
-> > > > > > pcie_port_pm=off). Then the option pcie_port_pm=force can
-> > > > > > still be
-> > > > > > used
-> > > > > > to test possible solutions in the future.
-> > > > > 
-> > > > > I would rather add a quirk to the ACPI core to prevent the
-> > > > > power
-> > > > > resources in
-> > > > > question from being enumerated.  Or even to prevent ACPI PM
-> > > > > from being
-> > > > > used for the port in question.
-> > > > 
-> > > > I do have a W541 in a cupboard in the office somewhere, but I
-> > > > won't be
-> > > > close to
-> > > > it for a couple of weeks. The W541 was the first place I tested
-> > > > the pm
-> > > > patches
-> > > > so I'm kinda wondering whether it's all W541's or just some
-> > > > specific
-> > > > model/bios
-> > > > combo.
-> > 
-> > They seem to all ship with the 1.10 firmware, and 2.80 is current
-> > (there
-> > are a bunch of intermediate 2.xx versions).  Somewhere along the
-> > line
-> > they introduced some bugs in the UEFI stuff, so it wouldn't be
-> > surprising if there's bugs introduced elsewhere as well.
-> > 
-> > > > However I'm pretty much unavailable to do anything much until
-> > > > late Jan on
-> > > > this.
-> > > 
-> > > Is there anyone else at Red Hat who might be able to look into
-> > > this?
-> > > 
-> > > ISTR that Hans de Goede is working on improving laptop support in
-> > > Fedora,
-> > > and Peter Jones recently got a patch merged for the W541 with the
-> > > exact
-> > > same firmware Kilian is using to work around a botched EFI memory
-> > > map.
-> > > Adding them to cc: in the hope that they may be able to help.
-> > > 
-> > > @Peter, have you noticed issues with the discrete Nvidia GPU on
-> > > your W541
-> > > related to runtime suspend and system sleep?
-> > 
-> > I was using a borrowed one (I can certainly find it again, but I'm
-> > not
-> > working on graphics/pm really), but yeah - shutdown and lspci both
-> > broke
-> > sometime after pci_pm_runtime_resume().  Here's the traceback from
-> > SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
-> > 
-> > Dave, if you know who in Westford should have a look at this, I can
-> > see
-> > about getting them hardware.  I am more or less surrounded by that
-> > team.
-> > 
-> > --
-> >         Peter
-> > 
+--aT9PWwzfKXlsBJM1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Wed, Jan 11, 2017 at 09:20:54AM -0800, Tadeusz Struk wrote:
+> Hi Leon,
+> On 01/10/2017 11:12 PM, Leon Romanovsky wrote:
+> > Can't you recognize such device at the initialization phase?
+>
+> Yes, this is exactly what it does. It checks the device GUID
+> and reorders the ports during insmod.
+
+Why don't your firmware report the need to revert the ports?
+
+>
+> > This is definitely specific HW implementation bug/issue/limitation.
+>
+> Correct. As the commit message says this is to fix a HW issue.
+>
+> >
+> > I always had an impression that module parameters are rarely beneficial
+> > in upstream kernel for driver modules and adding them for new driver
+> > code should be explicitly prohibited in CodingStyle guide.
+> >
+> > You are adding new module parameter which will be with us forever to fix
+> > special HW bug/implementation in some legacy installations. It will be
+> > insane to add such thing to upstream kernel, errata and out-of-tree
+> > implementations are best places for such things.
+>
+> Agree, but the reality is that there are 5505 $(git grep module_param drivers/ | wc -l)
+> module parameters in the kernel already, and even mlx4 and mlx5 drivers use them.
+
+Regarding mlx4/mlx5, I'm not proud of that code and if it was dependent
+on me, I would remove it without thinking twice.
+
+Previous copy-paste can not be an excuse to add another module parameter.
+
+> I really considered every other possible solution, but module parameter is the
+> only possible way to do such things during insmod.
+
+This is another problem with the module parameters - assumption that
+everyone is running modules, but this is simply incorrect, most of my
+smoke tests are performed with monolithic kernel.
+
+> Thanks,
+> --
+> Tadeusz
+
+--aT9PWwzfKXlsBJM1
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlh2cpcACgkQ5GN7iDZy
+WKd0Bg/9HdHNWx21SQZ9nC1jXT5rD8U498TqPcpAKEE8xyTMNm5w3Ffh2aShlbAO
+oW2LQQjmtL677DH7E8n86SH96kHBoNF+WWng0KKf/OsEPTv+YsI/9mzbAfORv4RS
+FhOxKuz8NUeMKZq6EV4KNIXjEjITgLJ8lYgMSxWfDd0a8KIt6Wnx02sOaeAFYJuA
+cvyxmG69Dr1oMLhK54jeCvoeHos9hLD/DZsgl6eNO/YqR1vSUNjEFtBVWufyMnWG
+F6mJZJtTyiRDp5kQxrlumIDbUZsx7bQZPKXELKYOeukjYbbwAsxPu/dTcW4Vf3Un
+bnaZK6/c8Mk7+M72zCjIDWYO/bpHmZrsqpA5llG2FqXRI9mRtg2UajPyX4SpBM9E
+zlvLeJhy8Qkc+msPmYBm7pW9iB/ps61c2vXcjLA10sUaCT/7JapLIuTDy2ozdkMS
+wizo4sSJ/OxCrquij/W3Q51BQ367WhheJQctCmNVU57XN2wxV9kkTcu2+AqoNeSE
+KEDmEZGdtK19PK24jc9vDf9k9Bl4ThyMrAP9d+e2q2ru6IOkNzF+xD0zY+r6AQcX
+EfmsceQZuwyFQZ1lGfRLtQl4/2aE7MSNtBUq3KOFz6EGQ6gkIKRQJ6qf4nQgZ7yc
+4GbyApsLUaKSdrPZTgmJuRL6UzcpWAFZ6P0V8dCbO+2EOBFR614=
+=pof/
+-----END PGP SIGNATURE-----
+
+--aT9PWwzfKXlsBJM1--
