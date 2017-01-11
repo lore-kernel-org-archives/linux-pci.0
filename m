@@ -1,46 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:59202 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750734AbdALQqg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 11:46:36 -0500
-Subject: Re: [PATCH] PCI: dwc: Add COMPILE_TEST to all designware based
- drivers
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1484214183-31805-1-git-send-email-kishon@ti.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nsekhar@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <d3743b45-a7de-f8a6-feeb-f6a2cd85d6f1@synopsys.com>
-Date: Thu, 12 Jan 2017 16:46:31 +0000
+Received: from mail.kernel.org ([198.145.29.136]:55430 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752669AbdAKUzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 15:55:53 -0500
+Date: Wed, 11 Jan 2017 14:55:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rahul Krishnan <mrahul.krishnan@gmail.com>
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+        bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: hotplug: This patch removes unnecessary return
+ statement using spatch tool
+Message-ID: <20170111205514.GI14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161224093800.GA24893@rahul>
 MIME-Version: 1.0
-In-Reply-To: <1484214183-31805-1-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161224093800.GA24893@rahul>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Kishon,
-
-Às 9:43 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
-> Add COMPILE_TEST to all designware based drivers so that it is possible
-> to perform compile test even when a particular architecture specific
-> config symbol is not set.
+On Sat, Dec 24, 2016 at 03:08:00PM +0530, Rahul Krishnan wrote:
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> This patch removes unnecessary return statement using spatch tool
+> 
+> Signed-off-by: Rahul Krishnan <mrahul.krishnan@gmail.com>
+
+Applied to pci/hotplug for v4.11 with Tyrel's Reviewed-by, thanks!
+
+Are there other similar instances elsewhere in drivers/pci?  If so,
+can you fix them all at once?
+
 > ---
->  drivers/pci/dwc/Kconfig |   16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
+>  drivers/pci/hotplug/rpadlpar_core.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-
-Your suggestion is interesting and I think it will improve the kbuild robot job,
-since any change in a common file will be tested in all SoC specific drivers,
-which does not happen at this moment.
-
-This option is massively used across the kernel, and so it is a very welcome
-addition to PCI in my opinion! Thanks.
-
-Joao
-
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> index dc67f39..78ce2c7 100644
+> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> @@ -455,7 +455,6 @@ static inline int is_dlpar_capable(void)
+>  
+>  int __init rpadlpar_io_init(void)
+>  {
+> -	int rc = 0;
+>  
+>  	if (!is_dlpar_capable()) {
+>  		printk(KERN_WARNING "%s: partition not DLPAR capable\n",
+> @@ -463,8 +462,7 @@ int __init rpadlpar_io_init(void)
+>  		return -EPERM;
+>  	}
+>  
+> -	rc = dlpar_sysfs_init();
+> -	return rc;
+> +	return dlpar_sysfs_init();
+>  }
+>  
+>  void rpadlpar_io_exit(void)
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
