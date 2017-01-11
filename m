@@ -1,76 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59292 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:57790 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750912AbdAVIQm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 22 Jan 2017 03:16:42 -0500
-Date: Sun, 22 Jan 2017 10:16:40 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Doug Ledford <dledford@redhat.com>,
-        Tadeusz Struk <tadeusz.struk@intel.com>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dennis.dalessandro@intel.com, ira.weiny@intel.com
-Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
- device
-Message-ID: <20170122081640.GG28570@mtr-leonro.local>
-References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
- <20170111181042.GC22783@obsidianresearch.com>
- <1484773260.2406.58.camel@redhat.com>
- <20170118210831.GA7590@obsidianresearch.com>
- <1484784989.2406.67.camel@redhat.com>
- <20170119175802.GB8109@obsidianresearch.com>
+        id S1756926AbdAKVKX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 16:10:23 -0500
+Date: Wed, 11 Jan 2017 15:10:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: Fix typo in MAINTAINERS file
+Message-ID: <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="B8ONY/mu/bqBak9m"
-In-Reply-To: <20170119175802.GB8109@obsidianresearch.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Joao,
 
---B8ONY/mu/bqBak9m
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Wed, Dec 28, 2016 at 04:05:11PM +0000, Joao Pinto wrote:
+> This patch fixes a typo in MAINTAINERS file.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+>  MAINTAINERS | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index cfff2c9..1056392 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9512,7 +9512,7 @@ L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	drivers/pci/host/pci-exynos.c
+>  
+> -PCI DRIVER FOR SYNOPSIS DESIGNWARE
+> +PCI DRIVER FOR SYNOPSYS DESIGNWARE
 
-On Thu, Jan 19, 2017 at 10:58:02AM -0700, Jason Gunthorpe wrote:
-> On Wed, Jan 18, 2017 at 07:16:29PM -0500, Doug Ledford wrote:
->
->
-> > No, mlx5 could have easily hit this too as their ports are separate
-> > PCI functions.
->
-> Sound like intel and mellanox should collaborate on getting udev
-> stable naming working right for RDMA... They are eventually going to
-> get burned.
+"git grep -i synopsis" finds several other occurrences in the tree.
 
-Send patches and we will be happy to review and test them.
+Most of them are the English word "synopsis", and those are correct.
+But several look like similar typos for the "Synopsys" company name:
 
-Thanks
+  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+  Documentation/devicetree/bindings/pci/pci-armada8k.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+  Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+  Documentation/devicetree/bindings/pci/spear13xx-pcie.txt:SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
+  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:DWC3 PHY nodes are defined to describe on-chip Synopsis Physical layer
+  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-hs-usb-phy" for High Speed Synopsis PHY controller
+  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-ss-usb-phy" for Super Speed Synopsis PHY controller
+  arch/x86/include/asm/apb_timer.h: * apb_timer.h: Driver for Langwell APB timer based on Synopsis DesignWare
+  drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware AHB Audio interface"
+  drivers/gpu/drm/bridge/Kconfig:   Support the AHB Audio interface which is part of the Synopsis
+  drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware I2S Audio interface"
+  drivers/gpu/drm/bridge/Kconfig:   Support the I2S Audio interface which is part of the Synopsis
+  drivers/gpu/drm/bridge/dw-hdmi-ahb-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI AHB ALSA interface");
+  drivers/gpu/drm/bridge/dw-hdmi-i2s-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI I2S ALSA SoC interface");
+  drivers/usb/phy/phy-msm-usb.c: * SNPS_28NM_INTEGRATED_PHY       Synopsis 28nm integrated PHY
 
->
-> Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can you take a look at those and fix any others that are typos at the
+same time?
 
---B8ONY/mu/bqBak9m
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAliEamgACgkQ5GN7iDZy
-WKc1PQ/+PH/GxdzdZ5OIW2P0T4qjRcoK/8cyyN4l/+kmM/ozINdNv4ue5HxsZlyx
-y0q7/I+rza83FVEl/9m8C+9ezTZyVf28pRRpqqbAOagb+9JS9ErLKV6oUJ8hHRl9
-WJLxJFlT/JviAWBO67YPfuJwGIKybPr1fjOrumHYN+yrBeLn0Iu/YPFOmpeOWtJN
-1PVjYLXUPOXL/T/YecKjAk7OyCZ4lgPbyMhvRK144LoYeEfD8QIRHfcx2Ii4AxEH
-bFqICb/XxNiuE71RHjRbFu2Q/e5mdbQOH9caRH4cox+AUPWpA0zGtxp+kHeo4MTA
-VuRUtnZYiTYd+Z6nkBkqZrXkbCafZlUsJlSK+YDFnO6u9G/duaWKIDHLB+LP2zUj
-8SiwcT5Jstax8R/mGfhh0oNwotIClvAjhw0V0D/OC8nWX5x/1cHuaQ1fn0idhU+j
-JqxPS+BvK4vEH3wde7G7P2CcTf7EweDgt2J3nFchdHwKaAal01JkE46nMF65vVhT
-xvbOGiJGy0M8L0Mv1lEbXK7Xf+lpyTBzLhb1LaOS12+FLNWI6+1TGK5TsoNQBh7U
-kWPomf+Vplw6d/NCyQfHcG1giuLF7AIVNYkWJXQUEboyUYyBc7qynCfPsa6qwdnG
-DvpIowXYcOvIWT/+XmSm9au2hvo9drK7EcTJlJ9xwz9Rdvjy5MI=
-=crFK
------END PGP SIGNATURE-----
-
---B8ONY/mu/bqBak9m--
+>  M:	Jingoo Han <jingoohan1@gmail.com>
+>  M:	Joao Pinto <Joao.Pinto@synopsys.com>
+>  L:	linux-pci@vger.kernel.org
+> -- 
+> 2.9.3
+> 
