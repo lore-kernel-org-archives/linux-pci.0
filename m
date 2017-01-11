@@ -1,64 +1,228 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jon Mason <jon.mason@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] PCI: iproc: allow the MPS to be set
-Date: Fri, 27 Jan 2017 16:44:08 -0500
-Message-Id: <1485553449-9345-2-git-send-email-jon.mason@broadcom.com>
-In-Reply-To: <1485553449-9345-1-git-send-email-jon.mason@broadcom.com>
-References: <1485553449-9345-1-git-send-email-jon.mason@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36464 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755208AbdAKB0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Jan 2017 20:26:00 -0500
+Date: Tue, 10 Jan 2017 17:25:55 -0800 (PST)
+From: Stefano Stabellini <sstabellini@kernel.org>
+To: Dan Streetman <ddstreet@ieee.org>
+cc: Stefano Stabellini <sstabellini@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in
+ pci device msi msg data
+In-Reply-To: <CALZtONAuMvFP-GX801k1Cy=ja_65PDWO2ZXfSof-1mGfhV=Pew@mail.gmail.com>
+Message-ID: <alpine.DEB.2.10.1701101710530.8205@sstabellini-ThinkPad-X260>
+References: <20170105192856.25559-1-dan.streetman@canonical.com> <20170107010651.GV16608@char.us.oracle.com> <42d912c2-596e-29f6-8385-dc82a891895c@oracle.com> <CALZtONBNhh9WKPV16+cod-P1Fp2YudTkVzHQZMq81_NEne67pA@mail.gmail.com> <20170109155929.GA10991@char.us.oracle.com>
+ <alpine.DEB.2.10.1701091049130.2866@sstabellini-ThinkPad-X260> <CALZtONDSD6SF9cd2uftGWsXARF-QiNaBA5zPdnjwQ7j0Z-C76g@mail.gmail.com> <CALZtONBJ=kjsKiKtLORxBq3Xn6=SV7+33GAkSi+3cqjs9wVW2g@mail.gmail.com> <alpine.DEB.2.10.1701101046270.8205@sstabellini-ThinkPad-X260>
+ <CALZtONAuMvFP-GX801k1Cy=ja_65PDWO2ZXfSof-1mGfhV=Pew@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie_bus_configure_settings() needs to be called on each of the root
-ports to allow for the MPS to be configured for all of the children
-devices.
+On Tue, 10 Jan 2017, Dan Streetman wrote:
+> On Tue, Jan 10, 2017 at 2:03 PM, Stefano Stabellini
+> <sstabellini@kernel.org> wrote:
+> > On Tue, 10 Jan 2017, Dan Streetman wrote:
+> >> On Tue, Jan 10, 2017 at 10:57 AM, Dan Streetman <ddstreet@ieee.org> wrote:
+> >> > On Mon, Jan 9, 2017 at 2:30 PM, Stefano Stabellini
+> >> > <sstabellini@kernel.org> wrote:
+> >> >> On Mon, 9 Jan 2017, Konrad Rzeszutek Wilk wrote:
+> >> >>> On Mon, Jan 09, 2017 at 10:42:41AM -0500, Dan Streetman wrote:
+> >> >>> > On Mon, Jan 9, 2017 at 9:59 AM, Boris Ostrovsky
+> >> >>> > <boris.ostrovsky@oracle.com> wrote:
+> >> >>> > > On 01/06/2017 08:06 PM, Konrad Rzeszutek Wilk wrote:
+> >> >>> > >> On Thu, Jan 05, 2017 at 02:28:56PM -0500, Dan Streetman wrote:
+> >> >>> > >>> Do not read a pci device's msi message data to see if a pirq was
+> >> >>> > >>> previously configured for the device's msi/msix, as the old pirq was
+> >> >>> > >>> unmapped and may now be in use by another pci device.  The previous
+> >> >>> > >>> pirq should never be re-used; instead a new pirq should always be
+> >> >>> > >>> allocated from the hypervisor.
+> >> >>> > >> Won't this cause a starvation problem? That is we will run out of PIRQs
+> >> >>> > >> as we are not reusing them?
+> >> >>> > >
+> >> >>> > > Don't we free the pirq when we unmap it?
+> >> >>> >
+> >> >>> > I think this is actually a bit worse than I initially thought.  After
+> >> >>> > looking a bit closer, and I think there's an asymmetry with pirq
+> >> >>> > allocation:
+> >> >>>
+> >> >>> Lets include Stefano,
+> >> >>>
+> >> >>> Thank you for digging in this! This has quite the deja-vu
+> >> >>> feeling as I believe I hit this at some point in the past and
+> >> >>> posted some possible ways of fixing this. But sadly I can't
+> >> >>> find the thread.
+> >> >>
+> >> >> This issue seems to be caused by:
+> >> >>
+> >> >> commit af42b8d12f8adec6711cb824549a0edac6a4ae8f
+> >> >> Author: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+> >> >> Date:   Wed Dec 1 14:51:44 2010 +0000
+> >> >>
+> >> >>     xen: fix MSI setup and teardown for PV on HVM guests
+> >> >>
+> >> >> which was a fix to a bug:
+> >> >>
+> >> >>     This fixes a bug in xen_hvm_setup_msi_irqs that manifests itself when
+> >> >>     trying to enable the same MSI for the second time: the old MSI to pirq
+> >> >>     mapping is still valid at this point but xen_hvm_setup_msi_irqs would
+> >> >>     try to assign a new pirq anyway.
+> >> >>     A simple way to reproduce this bug is to assign an MSI capable network
+> >> >>     card to a PV on HVM guest, if the user brings down the corresponding
+> >> >>     ethernet interface and up again, Linux would fail to enable MSIs on the
+> >> >>     device.
+> >> >>
+> >> >> I don't remember any of the details. From the description of this bug,
+> >> >> it seems that Xen changed behavior in the past few years: before it used
+> >> >> to keep the pirq-MSI mapping, while today it doesn't. If I wrote "the
+> >> >> old MSI to pirq mapping is still valid at this point", the pirq couldn't
+> >> >> have been completely freed, then reassigned to somebody else the way it
+> >> >> is described in this email.
+> >> >>
+> >> >> I think we should indentify the changeset or Xen version that introduced
+> >> >> the new behavior. If it is old enough, we might be able to just revert
+> >> >> af42b8d12f8adec6711cb824549a0edac6a4ae8f. Otherwise we could make the
+> >> >> behavior conditional to the Xen version.
+> >> >
+> >> > Are PT devices the only MSI-capable devices available in a Xen guest?
+> >> > That's where I'm seeing this problem, with PT NVMe devices.
+> >
+> > They are the main ones. It is possible to have emulated virtio devices
+> > with emulated MSIs, for example virtio-net. Althought they are not in
+> > the Xen Project CI-loop, so I wouldn't be surprised if they are broken
+> > too.
+> >
+> >
+> >> > I can say that on the Xen guest with NVMe PT devices I'm testing on,
+> >> > with the patch from this thread (which essentially reverts your commit
+> >> > above) as well as some added debug to see the pirq numbers, cycles of
+> >> > 'modprobe nvme ; rmmod nvme' don't cause pirq starvation, as the
+> >> > hypervisor provides essentially the same pirqs for each modprobe,
+> >> > since they were freed by the rmmod.
+> >
+> > I am fine with reverting the old patch, but we need to understand what
+> > caused the change in behavior first. Maybe somebody else with a Xen PCI
+> > passthrough setup at hand can help with that.
+> >
+> > In the Xen code I can still see:
+> >
+> >     case ECS_PIRQ: {
+> >         struct pirq *pirq = pirq_info(d1, chn1->u.pirq.irq);
+> >
+> >         if ( !pirq )
+> >             break;
+> >         if ( !is_hvm_domain(d1) )
+> >             pirq_guest_unbind(d1, pirq);
+> >
+> > which means that pirq_guest_unbind should only be called on evtchn_close
+> > if the guest is not an HVM guest.
+> 
+> I tried an experiment to call get_free_pirq on both sides of a
+> evtchn_close hcall, using two SRIOV nics.  When I rmmod/modprobe, I
+> see something interesting; each nic uses 3 MSIs, and it looks like
+> when they shut down, each nic's 3 pirqs are not available until after
+> the nic is done shutting down, so it seems like closing the evtchn
+> isn't what makes the pirq free.
+> 
+> [3697700.390188] xen:events: creating evtchn using pirq 101 irq 290
+> [3697700.390214] xen:events: creating evtchn using pirq 100 irq 291
+> [3697700.390228] xen:events: creating evtchn using pirq 99 irq 292
+> [3697700.392789] ixgbevf 0000:00:03.0: NIC Link is Up 10 Gbps
+> [3697700.406167] xen:events: creating evtchn using pirq 98 irq 293
+> [3697700.406222] xen:events: creating evtchn using pirq 97 irq 294
+> [3697700.406259] xen:events: creating evtchn using pirq 96 irq 295
+> [3697700.408345] ixgbevf 0000:00:04.0: NIC Link is Up 10 Gbps
+> 
+> nic 3 uses pirq 99-101, while nic 4 uses pirq 96-98.
+> 
+> [3697705.470151] xen:events: shutdown_pirq: xen_domain() == 1,
+> xen_pv_domain() == 0, xen_hvm_domain() == 1, xen_initial_domain() ==
+> 0, xen_pvh_domain() == 0
+> 
+> just to be sure, a bit of dbg so I know what domain this is :-)
+> 
+> [3697778.781463] xen:events: shutdown_pirq: get_free_pirq returned pirq 93
+> [3697778.781465] xen:events: shutdown_pirq: closing evtchn for pirq 96 irq 295
+> [3697778.781475] xen:events: shutdown_pirq: get_free_pirq returned pirq 92
+> [3697778.781489] xen:events: shutdown_pirq: get_free_pirq returned pirq 91
+> [3697778.781490] xen:events: shutdown_pirq: closing evtchn for pirq 97 irq 294
+> [3697778.781498] xen:events: shutdown_pirq: get_free_pirq returned pirq 90
+> [3697778.781508] xen:events: shutdown_pirq: get_free_pirq returned pirq 89
+> [3697778.781509] xen:events: shutdown_pirq: closing evtchn for pirq 98 irq 293
+> [3697778.781517] xen:events: shutdown_pirq: get_free_pirq returned pirq 88
+> 
+> nic 4 is shutdown first, and closes its evtchns for pirqs 96-98; but
+> none of those become available for get_free_pirq.
+> 
+> [3697779.005501] xen:events: shutdown_pirq: get_free_pirq returned pirq 98
+> 
+> aha, now nic 4 has fully finished shutting down, and nic 3 has started
+> shutdown; we see those pirqs from nic 4 are now available.  So it must
+> not be evtchn closing that frees the pirqs.
+> 
+> [3697779.005503] xen:events: shutdown_pirq: closing evtchn for pirq 99 irq 292
+> [3697779.005512] xen:events: shutdown_pirq: get_free_pirq returned pirq 97
+> [3697779.005524] xen:events: shutdown_pirq: get_free_pirq returned pirq 96
+> [3697779.005526] xen:events: shutdown_pirq: closing evtchn for pirq 100 irq 291
+> [3697779.005540] xen:events: shutdown_pirq: get_free_pirq returned pirq 87
+> [3697779.005611] xen:events: shutdown_pirq: get_free_pirq returned pirq 86
+> [3697779.005624] xen:events: shutdown_pirq: closing evtchn for pirq 101 irq 290
+> [3697779.005659] xen:events: shutdown_pirq: get_free_pirq returned pirq 85
+> 
+> 
+> so, since pci_disable_msix eventually calls xen_teardown_msi_irq()
+> which calls xen_destroy_irq(), i moved the dbg to xen_destroy_irq()
+> (and recompiled/rebooted) and found the pirqs have already been freed
+> before that is called:
+> 
+> [3700084.714686] xen:events: shutdown_pirq: closing evtchn for pirq 98 irq 295
+> [3700084.714702] xen:events: shutdown_pirq: closing evtchn for pirq 99 irq 294
+> [3700084.714708] xen:events: shutdown_pirq: closing evtchn for pirq 100 irq 293
+> [3700084.775598] xen:events: xen_destroy_irq: get_free_pirq returned pirq 100
+> [3700084.775599] xen:events: xen_destroy_irq: pirq 100 irq 293
+> [3700084.775624] xen:events: xen_destroy_irq: get_free_pirq returned pirq 99
+> [3700084.775631] xen:events: xen_destroy_irq: get_free_pirq returned pirq 98
+> [3700084.775632] xen:events: xen_destroy_irq: pirq 99 irq 294
+> [3700084.775646] xen:events: xen_destroy_irq: get_free_pirq returned pirq 97
+> [3700084.775653] xen:events: xen_destroy_irq: get_free_pirq returned pirq 96
+> [3700084.775654] xen:events: xen_destroy_irq: pirq 98 irq 295
+> [3700084.775666] xen:events: xen_destroy_irq: get_free_pirq returned pirq 95
+> 
+> 
+> I'm still following thru the kernel code, but it's not immediately
+> obvious what exactly is telling the hypervisor to free the pirqs; any
+> idea?
+> 
+> >From the hypervisor code, it seems that the pirq is "available" via
+> is_free_pirq():
+>     return !pirq || (!pirq->arch.irq && (!is_hvm_domain(d) ||
+>         pirq->arch.hvm.emuirq == IRQ_UNBOUND));
+> 
+> when the evtchn is closed, it does:
+>         if ( is_hvm_domain(d1) && domain_pirq_to_irq(d1, pirq->pirq) > 0 )
+>             unmap_domain_pirq_emuirq(d1, pirq->pirq);
+> 
+> and that call to unmap_domain_pirq_emuirq does:
+>         info->arch.hvm.emuirq = IRQ_UNBOUND;
+> 
+> so, the only thing left is to clear pirq->arch.irq,but the only place
+> I can find that does that is clear_domain_irq_pirq(), which is only
+> called from pirq_guest_unbind() and unmap_domain_pirq(), but I'm not
+> seeing where either of those would be called when all the kernel is
+> doing is disabling a pci device.
 
-Signed-off-by: Jon Mason <jon.mason@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Thanks for the info. I think I know what causes the pirq to be unmapped:
+when Linux disables msi or msix on the device, using the regular pci
+config space based method, QEMU (which emulates the PCI config space)
+tells Xen to unmap the pirq.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 3ebc025..0f39bd2 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1205,7 +1205,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 	struct device *dev;
- 	int ret;
- 	void *sysdata;
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *child;
- 
- 	dev = pcie->dev;
- 
-@@ -1278,6 +1278,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 	if (pcie->map_irq)
- 		pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
- 
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
- 	pci_bus_add_devices(bus);
- 
- 	return 0;
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+If that's the case, and if it isn't possible for xen_hvm_setup_msi_irqs
+to be called a second time without msis being disabled first, then I
+think we can revert the patch.
