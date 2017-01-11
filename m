@@ -1,65 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:55125 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751324AbdAOUGP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 15:06:15 -0500
-Message-Id: <9deb018c4b1286ccd69bb264f1a784148c4b3d16.1484486499.git.lukas@wunner.de>
-In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 15 Jan 2017 21:03:45 +0100
-Subject: [PATCH v5 6/8] PM / sleep: Define constant for direct_complete
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Chen Yu <yu.c.chen@intel.com>, Lee Jones <lee.jones@linaro.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:33558 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751116AbdAKBU2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2017 20:20:28 -0500
+Date: Tue, 10 Jan 2017 20:20:24 -0500 (EST)
+Message-Id: <20170110.202024.798810764764725086.davem@davemloft.net>
+To: hch@lst.de
+Cc: linux-pci@vger.kernel.org, mchehab@s-opensource.com,
+        netdev@vger.kernel.org, linux-media@vger.kernel.org
+Subject: Re: kill off pci_enable_msi_{exact,range}
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1483994260-19797-1-git-send-email-hch@lst.de>
+References: <1483994260-19797-1-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Chen Yu <yu.c.chen@intel.com>
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon,  9 Jan 2017 21:37:37 +0100
 
-The PM core introduced the ability to keep devices runtime suspended
-during the entire system sleep process with commit aae4518b3124
-("PM / sleep: Mechanism to avoid resuming runtime-suspended devices
-unnecessarily").
+> I had hope that we could kill these old interfaces of for 4.10-rc,
+> but as of today Linus tree still has two users:
+> 
+>  (1) the cobalt media driver, for which I sent a patch long time ago,
+>      it got missed in the merge window.
+>  (2) the new xgbe driver was merged in 4.10-rc but used the old interfaces
+>      anyway
+> 
+> This series resend the patch for (1) and adds a new one for (2), as well
+> as having the final removal patch behind it.  Maybe we should just queue
+> up all three together in the PCI tree for 4.11?
 
-Drivers opt in to this so-called "direct_complete" mechanism by
-returning a positive value from their ->prepare hook.  Usually this is
-achieved with a "return 1;" statement, which looks somewhat cryptic to
-readers not intimately familiar with the PM core.
-
-Improve clarity by defining a DPM_DIRECT_COMPLETE constant which drivers
-may use instead.
-
-Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Lee Jones <lee.jones@linaro.org>
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-[LW: separate this hunk out of mfd patch, add commit message]
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- include/linux/pm.h | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/include/linux/pm.h b/include/linux/pm.h
-index f926af41e122..2d651a30b35c 100644
---- a/include/linux/pm.h
-+++ b/include/linux/pm.h
-@@ -788,4 +788,11 @@ enum dpm_order {
- 	DPM_ORDER_DEV_LAST,
- };
- 
-+/*
-+ * Return this from system suspend/hibernation ->prepare() callback to
-+ * request the core to leave the device runtime-suspended during system
-+ * suspend if possible.
-+ */
-+#define DPM_DIRECT_COMPLETE 1
-+
- #endif /* _LINUX_PM_H */
--- 
-2.11.0
-
+Feel free to toss this into the PCI tree.
