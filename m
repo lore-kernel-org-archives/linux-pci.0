@@ -1,147 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: NVMe vs DMA addressing limitations
-To: Christoph Hellwig <hch@lst.de>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <2723285.JORgusvJv4@wuerfel>
- <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
- <6374144.HVL0QxNJiT@wuerfel>
- <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
- <20170109205746.GA6274@lst.de>
- <e084dbad-29ab-25bd-5e17-da0fcd92f7ac@cogentembedded.com>
- <20170110070719.GA17208@lst.de>
-From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Message-ID: <c4fd007c-3f07-fc2a-8cbb-7152f578609d@cogentembedded.com>
-Date: Tue, 10 Jan 2017 10:31:47 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:57411 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965832AbdAKMHS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 07:07:18 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 3/5] PCI: dwc: dra7xx: Add support to force RC to work in GEN1 mode
+Date: Wed, 11 Jan 2017 17:36:53 +0530
+Message-ID: <1484136415-20798-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1484136415-20798-1-git-send-email-kishon@ti.com>
+References: <1484136415-20798-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170110070719.GA17208@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
- Arnd Bergmann <arnd@linaro.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Christoph, thanks for clear input.
+PCIe in AM57x/DRA7x devices is by default
+configured to work in GEN2 mode.  However there
+may be situations when working in GEN1 mode is
+desired. One example is limitation i925 (PCIe GEN2
+mode not supported at junction temperatures < 0C).
 
-Arnd, I think that given this discussion, best short-term solution is
-indeed the patch I've submitted yesterday. That is, your version +
-coherent mask support.  With that, set_dma_mask(DMA_BIT_MASK(64)) will
-succeed and hardware with work with swiotlb.
+Add support to force Root Complex to work in GEN1
+mode if so desired, but don't force GEN1 mode on
+any board just yet.
 
-Possible next step is to teach swiotlb to dynamically allocate bounce
-buffers within entire arm64's ZONE_DMA.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-Also there is some hope that R-Car *can* iommu-translate addresses that
-PCIe module issues to system bus.  Although previous attempts to make
-that working failed. Additional research is needed here.
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index f6d0c63..587b18c 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/of_gpio.h>
++#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+@@ -63,11 +64,14 @@
+ #define	LINK_UP						BIT(16)
+ #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+ 
++#define EXP_CAP_ID_OFFSET				0x70
++
+ struct dra7xx_pcie {
+ 	struct pcie_port	pp;
+ 	void __iomem		*base;		/* DT ti_conf */
+ 	int			phy_count;	/* DT phy-names count */
+ 	struct phy		**phy;
++	int			link_gen;
+ };
+ 
+ #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+@@ -96,12 +100,33 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
+ 	struct pcie_port *pp = &dra7xx->pp;
+ 	struct device *dev = pp->dev;
+ 	u32 reg;
++	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(dev, "link is already up\n");
+ 		return 0;
+ 	}
+ 
++	if (dra7xx->link_gen == 1) {
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
++				 4, &reg);
++		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
++			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
++			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++					  PCI_EXP_LNKCAP, 4, reg);
++		}
++
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
++				 2, &reg);
++		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
++			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
++			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++					  PCI_EXP_LNKCTL2, 2, reg);
++		}
++	}
++
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+ 	reg |= LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+@@ -397,6 +422,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	reg &= ~LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
++	dra7xx->link_gen = of_pci_get_max_link_speed(np);
++	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
++		dra7xx->link_gen = 2;
++
+ 	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 	if (ret < 0)
+ 		goto err_gpio;
+-- 
+1.7.9.5
 
-Nikita
-
-> On Tue, Jan 10, 2017 at 09:47:21AM +0300, Nikita Yushchenko wrote:
->> I'm now working with HW that:
->> - is now way "low end" or "obsolete", it has 4G of RAM and 8 CPU cores,
->> and is being manufactured and developed,
->> - has 75% of it's RAM located beyond first 4G of address space,
->> - can't physically handle incoming PCIe transactions addressed to memory
->> beyond 4G.
-> 
-> It might not be low end or obselete, but it's absolutely braindead.
-> Your I/O performance will suffer badly for the life of the platform
-> because someone tries to save 2 cents, and there is not much we can do
-> about it.
-> 
->> (1) it constantly runs of swiotlb space, logs are full of warnings
->> despite of rate limiting,
-> 
->> Per my current understanding, blk-level bounce buffering will at least
->> help with (1) - if done properly it will allocate bounce buffers within
->> entire memory below 4G, not within dedicated swiotlb space (that is
->> small and enlarging it makes memory permanently unavailable for other
->> use).  This looks simple and safe (in sense of not anyhow breaking
->> unrelated use cases).
-> 
-> Yes.  Although there is absolutely no reason why swiotlb could not
-> do the same.
-> 
->> (2) it runs far suboptimal due to bounce-buffering almost all i/o,
->> despite of lots of free memory in area where direct DMA is possible.
-> 
->> Addressing (2) looks much more difficult because different memory
->> allocation policy is required for that.
-> 
-> It's basically not possible.  Every piece of memory in a Linux
-> kernel is a possible source of I/O, and depending on the workload
-> type it might even be a the prime source of I/O.
-> 
->>> NVMe should never bounce, the fact that it currently possibly does
->>> for highmem pages is a bug.
->>
->> The entire topic is absolutely not related to highmem (i.e. memory not
->> directly addressable by 32-bit kernel).
-> 
-> I did not say this affects you, but thanks to your mail I noticed that
-> NVMe has a suboptimal setting there.  Also note that highmem does not
-> have to imply a 32-bit kernel, just physical memory that is not in the
-> kernel mapping.
-> 
->> What we are discussing is hw-originated restriction on where DMA is
->> possible.
-> 
-> Yes, where hw means the SOC, and not the actual I/O device, which is an
-> important distinction.
-> 
->>> Or even better remove the call to dma_set_mask_and_coherent with
->>> DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
->>> addressing, there is not point in trying to pretent it works without that
->>
->> Are you claiming that NVMe driver in mainline is intentionally designed
->> to not work on HW that can't do DMA to entire 64-bit space?
-> 
-> It is not intenteded to handle the case where the SOC / chipset
-> can't handle DMA to all physical memoery, yes.
-> 
->> Such setups do exist and there is interest to make them working.
-> 
-> Sure, but it's not the job of the NVMe driver to work around such a broken
-> system.  It's something your architecture code needs to do, maybe with
-> a bit of core kernel support.
-> 
->> Quite a few pages used for block I/O are allocated by filemap code - and
->> at allocation point it is known what inode page is being allocated for.
->> If this inode is from filesystem located on a known device with known
->> DMA limitations, this knowledge can be used to allocate page that can be
->> DMAed directly.
-> 
-> But in other cases we might never DMA to it.  Or we rarely DMA to it, say
-> for a machine running databses or qemu and using lots of direct I/O. Or
-> a storage target using it's local alloc_pages buffers.
-> 
->> Sure there are lots of cases when at allocation time there is no idea
->> what device will run DMA on page being allocated, or perhaps page is
->> going to be shared, or whatever. Such cases unavoidably require bounce
->> buffers if page ends to be used with device with DMA limitations. But
->> still there are cases when better allocation can remove need for bounce
->> buffers - without any hurt for other cases.
-> 
-> It takes your max 1GB DMA addressable memoery away from other uses,
-> and introduce the crazy highmem VM tuning issues we had with big
-> 32-bit x86 systems in the past.
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
