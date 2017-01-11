@@ -1,81 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44616 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:56638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751247AbdAaUUs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 15:20:48 -0500
-Subject: [PATCH 1 4/4] PCI: rcar: Use of_device_get_match_data() to simplify
- probe
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Scott Branden <sbranden@broadcom.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-renesas-soc@vger.kernel.org,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shailendra Verma <shailendra.v@samsung.com>
-Date: Tue, 31 Jan 2017 14:20:20 -0600
-Message-ID: <20170131202020.27605.39560.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1750793AbdAKVDG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 16:03:06 -0500
+Date: Wed, 11 Jan 2017 15:03:02 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: Re: [PATCH] PCI: imx6: Remove redundant message
+Message-ID: <20170111210302.GK14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <1482849643-1861-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1482849643-1861-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
-match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
+On Tue, Dec 27, 2016 at 12:40:43PM -0200, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@nxp.com>
+> 
+> When a PCI card is not connected, the following messages are seen on mx6:
+> 
+> imx6q-pcie 1ffc000.pcie: phy link never came up
+> imx6q-pcie 1ffc000.pcie: Link never came up
+> 
+> The first one comes from the pcie-designware.c core file, so remove
+> the redundant one from the imx6 driver.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 
-Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
-has a NULL .data member.  That's a driver defect, and we don't want to
-return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
-dereference so we notice the problem and fix it.
+Applied to pci/host-imx6 for v4.11 with Lucas' Reviewed-by and the
+following changelog:
 
-Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
-functional change intended.
+    PCI: imx6: Remove redundant "Link never came up" message
+    
+    When a PCI card is not connected, the following messages are seen on mx6:
+    
+      imx6q-pcie 1ffc000.pcie: phy link never came up
+      imx6q-pcie 1ffc000.pcie: Link never came up
+    
+    The first one comes from the pcie-designware.c core file, so remove
+    the redundant one from the imx6 driver.
+    
+    Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-rcar.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index aca85be101f8..b3b6d5273347 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1125,7 +1125,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct rcar_pcie *pcie;
- 	unsigned int data;
--	const struct of_device_id *of_id;
- 	int err;
- 	int (*hw_init_fn)(struct rcar_pcie *);
- 
-@@ -1149,11 +1148,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	of_id = of_match_device(rcar_pcie_of_match, dev);
--	if (!of_id || !of_id->data)
--		return -EINVAL;
--	hw_init_fn = of_id->data;
--
- 	pm_runtime_enable(dev);
- 	err = pm_runtime_get_sync(dev);
- 	if (err < 0) {
-@@ -1162,6 +1156,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Failure to get a link might just be that no cards are inserted */
-+	hw_init_fn = of_device_get_match_data(dev);
- 	err = hw_init_fn(pcie);
- 	if (err) {
- 		dev_info(dev, "PCIe link down\n");
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c8cefb0..66c3b84 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -502,10 +502,8 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>  			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+>  
+>  	ret = imx6_pcie_wait_for_link(imx6_pcie);
+> -	if (ret) {
+> -		dev_info(dev, "Link never came up\n");
+> +	if (ret)
+>  		goto err_reset_phy;
+> -	}
+>  
+>  	if (imx6_pcie->link_gen == 2) {
+>  		/* Allow Gen2 mode after the link is up. */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
