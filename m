@@ -1,130 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 18/37] Documentation: PCI: Add specification for the *pci
- test* function device
-Date: Thu, 12 Jan 2017 15:56:07 +0530
-Message-ID: <1484216786-17292-19-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34560 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754337AbdAKSuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 13:50:13 -0500
+Date: Wed, 11 Jan 2017 12:50:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, helgaas@google.com, krzk@kernel.org,
+        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
+        javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: exynos: replace to one register accessor from
+ each accessors
+Message-ID: <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161219081614.5403-1-jh80.chung@samsung.com>
+ <20161219081614.5403-2-jh80.chung@samsung.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161219081614.5403-2-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add specification for the *pci test* virtual function device. The endpoint
-function driver and the host pci driver should be created based on this
-specification.
+Hi Jaehoon,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                       |    2 +
- Documentation/PCI/endpoint/pci-test-function.txt |   66 ++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
+On Mon, Dec 19, 2016 at 05:16:11PM +0900, Jaehoon Chung wrote:
+> There is no reason to maintain *_blk/phy/elbi_* as register accessors.
+> It can be replaced to one register accessor.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  drivers/pci/host/pci-exynos.c | 214 +++++++++++++++++++-----------------------
+>  1 file changed, 97 insertions(+), 117 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index f1c544b..6dbfa2c 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -102,197 +102,175 @@ struct exynos_pcie {
+>  #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
+>  #define PCIE_PHY_TRSV3_LVCC		0x31c
+>  
+> -static void exynos_elb_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+> +static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
+>  {
+> -	writel(val, exynos_pcie->elbi_base + reg);
+> +	writel(val, base + reg);
+>  }
+>  
+> -static u32 exynos_elb_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+> +static u32 exynos_pcie_readl(void __iomem *base, u32 reg)
+>  {
+> -	return readl(exynos_pcie->elbi_base + reg);
+> +	return readl(base + reg);
+>  }
+>  
+> -static void exynos_phy_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+> -{
+> -	writel(val, exynos_pcie->phy_base + reg);
+> -}
+> -
+> -static u32 exynos_phy_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+> -{
+> -	return readl(exynos_pcie->phy_base + reg);
+> -}
+> -
+> -static void exynos_blk_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+> -{
+> -	writel(val, exynos_pcie->block_base + reg);
+> -}
+> -
+> -static u32 exynos_blk_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+> -{
+> -	return readl(exynos_pcie->block_base + reg);
+> -}
+> -
+> -static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos_pcie,
+> -					    bool on)
+> +static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index f84a23c..4e5a283 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
- endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
-+endpoint/pci-test-function.txt
-+	- specification of *pci test* function device.
-diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
-new file mode 100644
-index 0000000..1324376
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-test-function.txt
-@@ -0,0 +1,66 @@
-+				PCI TEST
-+		    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+Traditionally PCI RC has always been validated by using standard
-+PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
-+However with the addition of EP-core in linux kernel, it is possible
-+to configure a PCI controller that can operate in EP mode to work as
-+a test device.
-+
-+The PCI endpoint test device is a virtual device (defined in software)
-+used to test the endpoint functionality and serve as a sample driver
-+for other PCI endpoint devices (to use the EP framework).
-+
-+The PCI endpoint test device has the following registers:
-+
-+	1) PCI_ENDPOINT_TEST_MAGIC
-+	2) PCI_ENDPOINT_TEST_COMMAND
-+	3) PCI_ENDPOINT_TEST_STATUS
-+	4) PCI_ENDPOINT_TEST_SRC_ADDR
-+	5) PCI_ENDPOINT_TEST_DST_ADDR
-+	6) PCI_ENDPOINT_TEST_SIZE
-+	7) PCI_ENDPOINT_TEST_CHECKSUM
-+
-+*) PCI_ENDPOINT_TEST_MAGIC
-+
-+This register will be used to test BAR0. A known pattern will be written
-+and read back from MAGIC register to verify BAR0.
-+
-+*) PCI_ENDPOINT_TEST_COMMAND:
-+
-+This register will be used by the host driver to indicate the function
-+that the endpoint device must perform.
-+
-+Bitfield Description:
-+  Bit 0		: raise legacy irq
-+  Bit 1		: raise MSI irq
-+  Bit 2 - 7	: MSI interrupt number
-+  Bit 8		: read command (read data from RC buffer)
-+  Bit 9		: write command (write data to RC buffer)
-+  Bit 10	: copy command (copy data from one RC buffer to another
-+		  RC buffer)
-+
-+*) PCI_ENDPOINT_TEST_STATUS
-+
-+This register reflects the status of the PCI endpoint device.
-+
-+Bitfield Description:
-+  Bit 0		: read success
-+  Bit 1		: read fail
-+  Bit 2		: write success
-+  Bit 3		: write fail
-+  Bit 4		: copy success
-+  Bit 5		: copy fail
-+  Bit 6		: irq raised
-+  Bit 7		: source address is invalid
-+  Bit 8		: destination address is invalid
-+
-+*) PCI_ENDPOINT_TEST_SRC_ADDR
-+
-+This register contains the source address (RC buffer address) for the
-+COPY/READ command.
-+
-+*) PCI_ENDPOINT_TEST_DST_ADDR
-+
-+This register contains the destination address (RC buffer address) for
-+the COPY/WRITE command.
--- 
-1.7.9.5
+Replacing all the separate accessors with one that takes the base
+pointer is OK, but please use the same name for all the "struct
+exynos_pcie *" pointers in the whole file.
 
+Before your patch, they were all called "exynos_pci"; after it some
+are called "exynos_pci" and some are called "ep".
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
