@@ -1,117 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51866 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:39938 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751525AbdAaSJU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 13:09:20 -0500
-Date: Tue, 31 Jan 2017 12:09:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Simon Horman <horms@verge.net.au>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: rcar: Check for OF device match early
-Message-ID: <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com>
+        id S1755343AbdAKHMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jan 2017 02:12:50 -0500
+Date: Wed, 11 Jan 2017 09:12:52 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        linux-pci@vger.kernel.org, dennis.dalessandro@intel.com,
+        ira.weiny@intel.com
+Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
+ device
+Message-ID: <20170111071252.GV7218@mtr-leonro.local>
+References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="wxIXENaY2CYUgF8u"
+In-Reply-To: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 04:33:15PM +0100, Geert Uytterhoeven wrote:
-> Hi Bjorn,
-> 
-> On Tue, Jan 31, 2017 at 4:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > A match in the rcar_pcie_of_match[] table is required, so check that first,
-> > before we start setting up things that need to be undone if it fails.  No
-> > functional change intended.
-> >
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/host/pcie-rcar.c |   10 +++++-----
-> >  1 file changed, 5 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index 0d9b96c3c49d..c91ff0b91be8 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
-> >         int err;
-> >         int (*hw_init_fn)(struct rcar_pcie *);
-> >
-> > +       of_id = of_match_device(rcar_pcie_of_match, dev);
-> > +       if (!of_id || !of_id->data)
-> > +               return -EINVAL;
-> > +
-> 
-> As this driver is DT-only, none of the above can fail, and you could just do
-> 
->        hw_init_fn = of_device_get_match_data(dev);
-> 
-> instead, getting rid of of_id completely.
 
-Oh, I really like that, thanks for pointing that out!
+--wxIXENaY2CYUgF8u
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I was about to say that I personally would not check of_id->data for NULL,
-because it is only NULL if somebody adds an entry to rcar_pcie_of_match
-without a .data member.  In that case, I'd rather take the NULL pointer
-dereference than return -EINVAL because it's too easy to ignore the
--EINVAL.
+On Tue, Jan 10, 2017 at 03:57:52PM -0800, Tadeusz Struk wrote:
+> Some hardware have multiple HFIs within the same ASIC. In some devices the
+> numbers labeled on the faceplate of the device don't match the PCI bus
+> order, and the result is that the devices (ports) are probed in the opposite
+> order of their port numbers. The result is IB device unit numbers are in
+> reverse order from the faceplate numbering. This leads to confusion, and
+> errors.
 
-What do you think about the following?
+Can't you recognize such device at the initialization phase?
+This is definitely specific HW implementation bug/issue/limitation.
 
+> We can fix this by enforcing the correct port order at module load time.
+> To reorder the ports to match the numbering labels on the back of the
+> device we need to delay registering devices with the ib_core until we
+> receive a probe for the affected devices, reorder them and start
+> initialization in the correct order later. We use a timer with 1 second
+> timeout. On hfi1 probes devices are ordered and stored in a list.
+> Each hfi1 probe updates the timer. When the timer timeouts all devices are
+> initialized and registered with ib_core in the right order.
+> When there will more than one second time gap between hfi1 probes,
+> the timer will be update in each call so there is no danger that a device
+> will be "missed".
+>
+> A new module param called port_reorder is introduced to cover users, who
+> already prewired their clusters in the 'invalid' order. The default
+> behavior does not change and results in devices ordered in the PCI bus
+> order. Port_reorder=1 is used to apply special reordering to these devices.
 
-commit 25bd3aa972ee32f04590aa68b2b785dce36b036a
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Jan 31 08:45:49 2017 -0600
+I always had an impression that module parameters are rarely beneficial
+in upstream kernel for driver modules and adding them for new driver
+code should be explicitly prohibited in CodingStyle guide.
 
-    PCI: rcar: Use of_device_get_match_data() to simplify probe
-    
-    This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
-    match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
-    
-    Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
-    has a NULL .data member.  That's a driver defect, and we don't want to
-    return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
-    dereference so we notice the problem and fix it.
-    
-    Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
-    functional change intended.
-    
-    Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+You are adding new module parameter which will be with us forever to fix
+special HW bug/implementation in some legacy installations. It will be
+insane to add such thing to upstream kernel, errata and out-of-tree
+implementations are best places for such things.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 0d9b96c3c49d..cb07c45c1858 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1125,7 +1125,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct rcar_pcie *pcie;
- 	unsigned int data;
--	const struct of_device_id *of_id;
- 	int err;
- 	int (*hw_init_fn)(struct rcar_pcie *);
- 
-@@ -1149,11 +1148,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	of_id = of_match_device(rcar_pcie_of_match, dev);
--	if (!of_id || !of_id->data)
--		return -EINVAL;
--	hw_init_fn = of_id->data;
--
- 	pm_runtime_enable(dev);
- 	err = pm_runtime_get_sync(dev);
- 	if (err < 0) {
-@@ -1162,6 +1156,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Failure to get a link might just be that no cards are inserted */
-+	hw_init_fn = of_device_get_match_data(dev);
- 	err = hw_init_fn(pcie);
- 	if (err) {
- 		dev_info(dev, "PCIe link down\n");
+Thanks
+
+--wxIXENaY2CYUgF8u
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlh12vMACgkQ5GN7iDZy
+WKfakA//e66PTutXEHUMznuovRZCXZUp/wklPWHguGB9XbrBV7t8Z9xM2jVlo/yn
+6o2loiGZmMMAN8zxrcTghJcfIs7fCkpsXbOF1DPdxEjFnj8O68D86psVrDc3JhdJ
+rLQ3QW5CfxeCE6UK69QhAG8kz5fN8HYBUDKhc2qhyn8xLpcBtDOvZLBVEiFpqlQp
+ykGIlcm3ovHd1FU/SV2IyOh74LDOn3u1l9vFZk9T96uvLjvYIfQrdT1B8GwZ+gy1
+xQOvCzFtwQMJvlx3FrH9GygmTwsufEJLMEWFIq8gaRu7O0ZKUhjVnfGp8c6yD9/E
+OIlegZvcxyO/k3KUFHhjnX1ETsGfpeaajTEnnVxQxrSDBcaql9FSTP3Y008rwp5A
+ON1VJpZdcrGY/RDK6lIs+zIu0wxE+TGye2wzeXRuYTAzzr/uTcqSkOhT6/MoPRaD
+4eniS///igPEqdImrunTRPew8qwJNwA7O3+ZQpBsNLntase3ZUXItj/dFxLVHpfr
+dqV75zt/9FDWDiWIAhRR4JfyGUtDmkCF6znpOxJbSzbRvl03YZDyJuTdr0X2PIxi
+ra0ac5y1D9RlLetRyc+2yUZtAd6pZwrey+SbGx+nCD0l3V6kkv82A2FLecQwRV4j
+Ddthc3gDvZBhW1xQ8kfa6kWmxJG2aulY2Poh0Wl3E4frFmVtg/E=
+=blXo
+-----END PGP SIGNATURE-----
+
+--wxIXENaY2CYUgF8u--
