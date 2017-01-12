@@ -1,48 +1,150 @@
-Return-Path: <SRS0=/N/E=ZA=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=/N/E=ZA=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Wed, 18 Jan 2017 17:55:20 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
-	David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170118175520.GN27312@n2100.armlinux.org.uk>
-References: <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
- <20170117175728.GE27312@n2100.armlinux.org.uk>
- <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117193414.GG27312@n2100.armlinux.org.uk>
- <20170117210258.GH27312@n2100.armlinux.org.uk>
- <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
- <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
- <20170118142250.GB6534@bhelgaas-glaptop.roam.corp.google.com>
- <1137f732-f31e-8162-af8f-6a7f577a9648@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:20030 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751465AbdALK3u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:29:50 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 07/37] PCI: dwc: designware: Get device pointer at the start of dw_pcie_host_init
+Date: Thu, 12 Jan 2017 15:55:56 +0530
+Message-ID: <1484216786-17292-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1137f732-f31e-8162-af8f-6a7f577a9648@caviumnetworks.com>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2017 at 09:36:55AM -0800, David Daney wrote:
-> On 01/18/2017 06:22 AM, Bjorn Helgaas wrote:
-> The tricky thing here is assigning the blame for failure in link training.
-> In the case in question we spent many months analysing the analog properties
-> of the bus and examining/decoding  analog scope captures of the failures
-> before credibly assigning blame to the other guy.  Usually what happens is
-> the device vendor accurately claims that their device works flawlessly in
-> conjunction with certain Intel root ports, so the problem must be fixed in
-> the root port of the failing system.  If you have a black list, you may be
-> disabling ASPM in systems where it can work without failures.
+No functional change. Get device pointer at the beginning of
+dw_pcie_host_init instead of getting it all over dw_pcie_host_init.
+This is in preparation for splitting struct pcie_port into host and
+core structures (Once split pcie_port will not have device pointer).
 
-So what we need is not a table of just devices, but a combination of
-devices... iow, "when root A and endpoint B are combined, retrains
-need to be avoided."
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index d0ea310..330596b 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -449,8 +449,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
+ 
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+-	struct device_node *np = pp->dev->of_node;
+-	struct platform_device *pdev = to_platform_device(pp->dev);
++	struct device *dev = pp->dev;
++	struct device_node *np = dev->of_node;
++	struct platform_device *pdev = to_platform_device(dev);
+ 	struct pci_bus *bus, *child;
+ 	struct resource *cfg_res;
+ 	int i, ret;
+@@ -464,14 +465,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "missing *config* reg space\n");
++		dev_err(dev, "missing *config* reg space\n");
+ 	}
+ 
+ 	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = devm_request_pci_bus_resources(&pdev->dev, &res);
++	ret = devm_request_pci_bus_resources(dev, &res);
+ 	if (ret)
+ 		goto error;
+ 
+@@ -481,7 +482,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		case IORESOURCE_IO:
+ 			ret = pci_remap_iospace(win->res, pp->io_base);
+ 			if (ret) {
+-				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 ret, win->res);
+ 				resource_list_destroy_entry(win);
+ 			} else {
+@@ -511,10 +512,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (!pp->dbi_base) {
+-		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg->start,
++		pp->dbi_base = devm_ioremap(dev, pp->cfg->start,
+ 					resource_size(pp->cfg));
+ 		if (!pp->dbi_base) {
+-			dev_err(pp->dev, "error with ioremap\n");
++			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -523,20 +524,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pp->mem_base = pp->mem->start;
+ 
+ 	if (!pp->va_cfg0_base) {
+-		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
+ 						pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+-			dev_err(pp->dev, "error with ioremap in function\n");
++			dev_err(dev, "error with ioremap in function\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+ 	}
+ 
+ 	if (!pp->va_cfg1_base) {
+-		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+-			dev_err(pp->dev, "error with ioremap\n");
++			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -552,11 +553,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		if (!pp->ops->msi_host_init) {
+-			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
++			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+ 						MAX_MSI_IRQS, &msi_domain_ops,
+ 						&dw_pcie_msi_chip);
+ 			if (!pp->irq_domain) {
+-				dev_err(pp->dev, "irq domain init failed\n");
++				dev_err(dev, "irq domain init failed\n");
+ 				ret = -ENXIO;
+ 				goto error;
+ 			}
+@@ -575,12 +576,12 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
++		bus = pci_scan_root_bus_msi(dev, pp->root_bus_nr,
+ 					    &dw_pcie_ops, pp, &res,
+ 					    &dw_pcie_msi_chip);
+-		dw_pcie_msi_chip.dev = pp->dev;
++		dw_pcie_msi_chip.dev = dev;
+ 	} else
+-		bus = pci_scan_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
++		bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
+ 					pp, &res);
+ 	if (!bus) {
+ 		ret = -ENOMEM;
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+1.7.9.5
+
