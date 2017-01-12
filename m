@@ -1,14 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Jan 2017 18:31:37 -0600
+Date: Thu, 12 Jan 2017 09:03:10 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 1/4] PCI: add DT bindings for Cortina Gemini PCI Host
- Bridge
-Message-ID: <20170131003137.GE20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170128204839.18330-1-linus.walleij@linaro.org>
+To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+Message-ID: <20170112150310.GA5746@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+ <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
 MIME-Version: 1.0
-In-Reply-To: <20170128204839.18330-1-linus.walleij@linaro.org>
+In-Reply-To: <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,126 +17,74 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
- Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, Russell King <rmk+kernel@arm.linux.org.uk>,
+ linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thu, Jan 12, 2017 at 02:18:46PM +0100, Uwe Kleine-K=F6nig wrote:
+> On 01/11/2017 11:02 PM, Bjorn Helgaas wrote:
+> > Hi Uwe,
+> > =
 
-On Sat, Jan 28, 2017 at 09:48:36PM +0100, Linus Walleij wrote:
-> This adds device tree bindings for the Cortina Systems Gemini PCI
-> Host Bridge.
-> 
-> Cc: Janos Laube <janos.dev@gmail.com>
-> Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-> Cc: Florian Fainelli <f.fainelli@gmail.com>
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> > On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-K=F6nig wrote:
+> >> Hello,
+> >>
+> >> on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
+> >> ath10k driver fails to bind to the matching hardware if CONFIG_PCIEASPM
+> >> is enabled:
+> >>
+> >> [...]
+> > We have several open issues related to ASPM:
+> > =
 
-I'm hoping one of the DT folks will take a quick look at this.
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D102311 ASPM: ASMEDA asm=
+1062 not working
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D187731 Null pointer der=
+eference in ASPM
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D189951 Enabling ASPM ca=
+uses NIC performance issue
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=3D60111 NULL pointer dere=
+f in ASPM alloc_pcie_link_state()
+> > =
 
-> ---
-> This can be merged to the PCI tree whenever it is considered
-> fine for inclusion.
-> ---
->  .../devicetree/bindings/pci/cortina,gemini-pci.txt | 64 ++++++++++++++++++++++
->  1 file changed, 64 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt b/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
-> new file mode 100644
-> index 000000000000..e3090d995e1e
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
-> @@ -0,0 +1,64 @@
-> +* Cortina Systems Gemini PCI Host Bridge
-> +
-> +Mandatory properties:
-> +
-> +- compatible: should be "cortina,gemini-pci"
-> +- reg: memory base and size for the host bridge
-> +- interrupts: the four PCI interrupts
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- #interrupt-cells: set to <1>
-> +- bus-range: set to <0x00 0x00> (only root bus)
+> > I don't recognize yours as being one of these.  Can you open a new
+> > issue and attach the complete dmesg log and "lspci -vv" output?
+> =
 
-Why is this limited to bus 0?  Is everything completely soldered down
-with no possibility of adding or replacing PCI devices?  The interrupt-map
-below suggests slots, though.  If there's a slot, we could plug in a card
-with a bridge, which would mean more than just bus 0.
+> Done: https://bugzilla.kernel.org/show_bug.cgi?id=3D192441
 
-> +- device_type, set to "pci"
-> +- ranges: see pci.txt
-> +- interrupt-map-mask: see pci.txt
-> +- interrupt-map: see pci.txt
-> +
-> +Mandatory subnodes:
-> +- One node reprenting the interrupt-controller inside the host bridge
+Thanks!  Can you attach a dmesg with CONFIG_PCIEASPM turned off, too?
 
-s/reprenting/representing/
+There are several interesting things going on with that ath10k device,
+and not all of them seem ASPM-related:
 
-> +  with the following mandatory properties:
-> +  - interrupt-controller: see interrupt-controller/interrupts.txt
-> +  - #address-cells: set to <0>
-> +  - #interrupt-cells: set to <1>
-> +
-> +Example:
-> +
-> +pci@50000000 {
-> +	compatible = "cortina,gemini-pci";
-> +	reg = <0x50000000 0x100>;
-> +	interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
-> +			<26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
-> +			<27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
-> +			<28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
-> +	#address-cells = <3>;
-> +	#size-cells = <2>;
-> +	#interrupt-cells = <1>;
-> +
-> +	bus-range = <0x00 0x00>; /* Only root bus */
-> +	ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
-> +		 <0x01000000 0 0          0x50000000 0 0x00100000>,
-> +		 /* 128MiB non-prefetchable memory 0x58000000-0x5fffffff */
-> +		 <0x02000000 0 0x58000000 0x58000000 0 0x08000000>;
-> +	interrupt-map-mask = <0xff00 0 0 7>;
-> +	interrupt-map = <0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
-> +			<0x4900 0 0 2 &pci_intc 1>,
-> +			<0x4a00 0 0 3 &pci_intc 2>,
-> +			<0x4b00 0 0 4 &pci_intc 3>,
-> +			<0x5000 0 0 1 &pci_intc 0>, /* Slot 10 */
-> +			<0x5100 0 0 2 &pci_intc 1>,
-> +			<0x5200 0 0 3 &pci_intc 2>,
-> +			<0x5300 0 0 4 &pci_intc 3>,
-> +			<0x5800 0 0 1 &pci_intc 0>, /* Slot 11 */
-> +			<0x5900 0 0 2 &pci_intc 1>,
-> +			<0x5a00 0 0 3 &pci_intc 2>,
-> +			<0x5b00 0 0 4 &pci_intc 3>,
-> +			<0x6000 0 0 1 &pci_intc 0>, /* Slot 12 */
-> +			<0x6100 0 0 2 &pci_intc 1>,
-> +			<0x6200 0 0 3 &pci_intc 2>,
-> +			<0x6300 0 0 4 &pci_intc 3>;
-> +	pci_intc: interrupt-controller {
-> +		interrupt-controller;
-> +		#address-cells = <0>;
-> +		#interrupt-cells = <1>;
-> +	};
-> +};
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  pci_bus 0000:00: root bus resource [mem 0xe0000000-0xe7ffffff]
+  pci 0000:02:00.0: reg 0x10: [mem 0xe8000000-0xe81fffff 64bit]
+  pci 0000:02:00.0: reg 0x30: [mem 0xe8200000-0xe820ffff pref]
+  pci 0000:02:00.0: of_irq_parse_pci() failed with rc=3D134
+  pci 0000:02:00.0: BAR 0: assigned [mem 0xe0000000-0xe01fffff 64bit]
+  pci 0000:02:00.0: BAR 0: error updating (0xe0000004 !=3D 0xffffffff)
+  pci 0000:02:00.0: BAR 0: error updating (high 0x000000 !=3D 0xffffffff)
+
+1) We found BAR 0 (reg 0x10) with 0xe8000000, so firmware probably
+   programmed it, and it probably works there.
+
+2) The host bridge window doesn't include that BAR 0 space.
+   Unfortunately I don't think we print the initial 00:02.0 bridge
+   window leading to bus 02; we only print the new window we assign to
+   it.
+
+3) No idea what the of_irq_parse_pci() issue is.
+
+4) No idea why the BAR 0 update failed.  Maybe a Marvell config
+   accessor problem?
+
+I don't see any connection between these and ASPM, so I'm curious why
+things work with CONFIG_PCIEASPM turned off.
 
 _______________________________________________
 linux-arm-kernel mailing list
