@@ -1,60 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50359 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751547AbdATKIe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 05:08:34 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0K7d2bh055983
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:02 -0500
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 283arkye36-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:01 -0500
-Received: from localhost
-        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Fri, 20 Jan 2017 00:42:01 -0700
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v8 1/3] PCI: Ignore requested alignment for IOV BARs
-Date: Fri, 20 Jan 2017 15:41:51 +0800
-In-Reply-To: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1484898113-24939-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 12 Jan 2017 16:02:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Subject: Re: [PATCH v2] PCI: thunder-pem: Add support for cn81xx and cn83xx
+ SoCs.
+Message-ID: <20170112220219.GG8312@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170111192211.29049-1-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <20170111192211.29049-1-ddaney.cavm@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ David Daney <david.daney@cavium.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We would call pci_reassigndev_resource_alignment() before
-pci_init_capabilities(). So the requested alignment would
-never work for IOV BARs.
+On Wed, Jan 11, 2017 at 11:22:11AM -0800, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The pci-thunder-pem driver was initially developed for cn88xx SoCs.
+> The cn81xx and cn83xx members of the same family of SoCs has a
+> slightly different configuration of interrupt resources in the PEM
+> hardware, which prevents the INTA legacy interrupt source from
+> functioning with the current driver.
+> 
+> There are two fixes required:
+> 
+> 1) Don't fixup the PME interrupt on the newer SoCs as it already has
+> the proper value.
+> 
+> 2) Report MSI-X Capability Table Size of 2 for the newer SoCs, so the
+> core MSI-X code doesn't inadvertently clobber the INTA machinery that
+> happens to reside immediately following the table.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
 
-Furthermore, it's meaningless to request additional alignment
-for IOV BARs, the IOV BAR alignment is only determined by the
-VF BAR size.
+Applied to pci/host-thunder for v4.11, thanks!
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> ---
+> 
+> Changes from v1: Fixed comment typo.
+> 
+>  drivers/pci/host/pci-thunder-pem.c | 25 ++++++++++++++++++++-----
+>  1 file changed, 20 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> index af722eb..52b5bdc 100644
+> --- a/drivers/pci/host/pci-thunder-pem.c
+> +++ b/drivers/pci/host/pci-thunder-pem.c
+> @@ -36,7 +36,7 @@ struct thunder_pem_pci {
+>  static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+>  				   int where, int size, u32 *val)
+>  {
+> -	u64 read_val;
+> +	u64 read_val, tmp_val;
+>  	struct pci_config_window *cfg = bus->sysdata;
+>  	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
+>  
+> @@ -65,13 +65,28 @@ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+>  		read_val |= 0x00007000; /* Skip MSI CAP */
+>  		break;
+>  	case 0x70: /* Express Cap */
+> -		/* PME interrupt on vector 2*/
+> -		read_val |= (2u << 25);
+> +		/*
+> +		 * Change PME interrupt to vector 2 on T88 where it
+> +		 * reads as 0, else leave it alone.
+> +		 */
+> +		if (!(read_val & (0x1f << 25)))
+> +			read_val |= (2u << 25);
+>  		break;
+>  	case 0xb0: /* MSI-X Cap */
+> -		/* TableSize=4, Next Cap is EA */
+> +		/* TableSize=2 or 4, Next Cap is EA */
+>  		read_val &= 0xc00000ff;
+> -		read_val |= 0x0003bc00;
+> +		/*
+> +		 * If Express Cap(0x70) raw PME vector reads as 0 we are on
+> +		 * T88 and TableSize is reported as 4, else TableSize
+> +		 * is 2.
+> +		 */
+> +		writeq(0x70, pem_pci->pem_reg_base + PEM_CFG_RD);
+> +		tmp_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
+> +		tmp_val >>= 32;
+> +		if (!(tmp_val & (0x1f << 25)))
+> +			read_val |= 0x0003bc00;
+> +		else
+> +			read_val |= 0x0001bc00;
+>  		break;
+>  	case 0xb4:
+>  		/* Table offset=0, BIR=0 */
+> -- 
+> 2.9.3
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d..220c31e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5084,7 +5084,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	command &= ~PCI_COMMAND_MEMORY;
- 	pci_write_config_word(dev, PCI_COMMAND, command);
- 
--	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		r = &dev->resource[i];
- 		if (!(r->flags & IORESOURCE_MEM))
- 			continue;
--- 
-1.7.9.5
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
