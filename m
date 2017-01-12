@@ -1,509 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:34291 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031543AbdADQ5x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 11:57:53 -0500
-Subject: Re: [PATCH v2] PCI: add a new directory for designware core
-To: Kishon Vijay Abraham I <kishon@ti.com>, <jingoohan1@gmail.com>,
-        "Bjorn Helgaas" <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1483531695-9377-1-git-send-email-kishon@ti.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <802c0889-17ba-5fa9-a68b-ecbd0e198be5@synopsys.com>
-Date: Wed, 4 Jan 2017 16:51:37 +0000
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:20120 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751622AbdALKbe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:31:34 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 29/37] PCI: dwc: dra7xx: Workaround for errata id i870
+Date: Thu, 12 Jan 2017 15:56:18 +0530
+Message-ID: <1484216786-17292-30-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1483531695-9377-1-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+According to errata i870, access to the PCIe slave port
+that are not 32-bit aligned will result in incorrect mapping
+to TLP Address and Byte enable fields.
 
-Hi Kishon,
+Accessing non 32-bit aligned data causes incorrect data in the target
+buffer if memcpy is used. Implement the workaround for this
+errata here.
 
-Nice job! In my opinion, isolating dwc base drivers and cores in one dwc folder
-will improve code organization now and in the future. By creating
-pcie-designware-host and pcie-designware-endpoint cores will then add even more
-readbility. I think this is a good work base for your future developments. Thanks!
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   50 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-Às 12:08 PM de 1/4/2017, Kishon Vijay Abraham I escreveu:
-> Group all the PCI drivers that use designware core in dwc directory.
-> dwc IP is capable of operating in both host mode and device mode and
-> keeping it inside the *host* directory is misleading.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> Changes from v1:
-> *) instead of renaming *host* directory to *controller* directory,
->    move all the dwc drivers to dwc/ directory.
-> Next Steps:
-> Split pcie-designware.c to core, host-only and endpoint-only files.
-> 
->  drivers/pci/Kconfig                              |    1 +
->  drivers/pci/Makefile                             |    3 +
->  drivers/pci/dwc/Kconfig                          |  108 +++++++++++++++++++++
->  drivers/pci/dwc/Makefile                         |   23 +++++
->  drivers/pci/{host => dwc}/pci-dra7xx.c           |    0
->  drivers/pci/{host => dwc}/pci-exynos.c           |    0
->  drivers/pci/{host => dwc}/pci-imx6.c             |    0
->  drivers/pci/{host => dwc}/pci-keystone-dw.c      |    0
->  drivers/pci/{host => dwc}/pci-keystone.c         |    0
->  drivers/pci/{host => dwc}/pci-layerscape.c       |    0
->  drivers/pci/{host => dwc}/pcie-armada8k.c        |    0
->  drivers/pci/{host => dwc}/pcie-artpec6.c         |    0
->  drivers/pci/{host => dwc}/pcie-designware-plat.c |    0
->  drivers/pci/{host => dwc}/pcie-designware.c      |    0
->  drivers/pci/{host => dwc}/pcie-designware.h      |    0
->  drivers/pci/{host => dwc}/pcie-hisi.c            |    0
->  drivers/pci/{host => dwc}/pcie-qcom.c            |    0
->  drivers/pci/{host => dwc}/pcie-spear13xx.c       |    0
->  drivers/pci/host/Kconfig                         |  113 ----------------------
->  drivers/pci/host/Makefile                        |   12 ---
->  20 files changed, 135 insertions(+), 125 deletions(-)
->  create mode 100644 drivers/pci/dwc/Kconfig
->  create mode 100644 drivers/pci/dwc/Makefile
->  rename drivers/pci/{host => dwc}/pci-dra7xx.c (100%)
->  rename drivers/pci/{host => dwc}/pci-exynos.c (100%)
->  rename drivers/pci/{host => dwc}/pci-imx6.c (100%)
->  rename drivers/pci/{host => dwc}/pci-keystone-dw.c (100%)
->  rename drivers/pci/{host => dwc}/pci-keystone.c (100%)
->  rename drivers/pci/{host => dwc}/pci-layerscape.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-armada8k.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-artpec6.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-designware-plat.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-designware.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-designware.h (100%)
->  rename drivers/pci/{host => dwc}/pcie-hisi.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-qcom.c (100%)
->  rename drivers/pci/{host => dwc}/pcie-spear13xx.c (100%)
-> 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 6555eb7..df14142 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -132,4 +132,5 @@ config PCI_HYPERV
->            PCI devices from a PCI backend to support PCI driver domains.
->  
->  source "drivers/pci/hotplug/Kconfig"
-> +source "drivers/pci/dwc/Kconfig"
->  source "drivers/pci/host/Kconfig"
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 8db5079..b7e9751 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -66,5 +66,8 @@ obj-$(CONFIG_OF) += of.o
->  
->  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
->  
-> +# PCI dwc controller drivers
-> +obj-y += dwc/
-> +
->  # PCI host controller drivers
->  obj-y += host/
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> new file mode 100644
-> index 0000000..3144a06
-> --- /dev/null
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -0,0 +1,108 @@
-> +menuconfig PCIE_DW
-> +	bool "DesignWare PCI Core Support"
-> +	depends on PCI
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +        help
-> +	 Say Y if your system has Designware PCI core
-> +
-> +if PCIE_DW
-> +
-> +config PCI_DRA7XX
-> +	bool "TI DRA7xx PCIe controller"
-> +	depends on OF && HAS_IOMEM && TI_PIPE3
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	help
-> +	 Enables support for the PCIe controller in the DRA7xx SoC.  There
-> +	 are two instances of PCIe controller in DRA7xx.  This controller can
-> +	 act both as EP and RC.  This reuses the Designware core.
-> +
-> +config PCIE_DW_PLAT
-> +	bool "Platform bus based DesignWare PCIe Controller"
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	---help---
-> +	 This selects the DesignWare PCIe controller support. Select this if
-> +	 you have a PCIe controller on Platform bus.
-> +
-> +	 If you have a controller with this interface, say Y or M here.
-> +
-> +	 If unsure, say N.
-> +
-> +config PCI_EXYNOS
-> +	bool "Samsung Exynos PCIe controller"
-> +	depends on SOC_EXYNOS5440
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +
-> +config PCI_IMX6
-> +	bool "Freescale i.MX6 PCIe controller"
-> +	depends on SOC_IMX6Q
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +
-> +config PCIE_SPEAR13XX
-> +	bool "STMicroelectronics SPEAr PCIe controller"
-> +	depends on ARCH_SPEAR13XX
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
-> +
-> +config PCI_KEYSTONE
-> +	bool "TI Keystone PCIe controller"
-> +	depends on ARCH_KEYSTONE
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here if you want to enable PCI controller support on Keystone
-> +	  SoCs. The PCI controller on Keystone is based on Designware hardware
-> +	  and therefore the driver re-uses the Designware core functions to
-> +	  implement the driver.
-> +
-> +config PCI_LAYERSCAPE
-> +	bool "Freescale Layerscape PCIe controller"
-> +	depends on OF && (ARM || ARCH_LAYERSCAPE)
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select MFD_SYSCON
-> +	help
-> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-> +
-> +config PCI_HISI
-> +	depends on OF && ARM64
-> +	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here if you want PCIe controller support on HiSilicon
-> +	  Hip05 and Hip06 SoCs
-> +
-> +config PCIE_QCOM
-> +	bool "Qualcomm PCIe controller"
-> +	depends on ARCH_QCOM && OF
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
-> +	  PCIe controller uses the Designware core plus Qualcomm-specific
-> +	  hardware wrappers.
-> +
-> +config PCIE_ARMADA_8K
-> +	bool "Marvell Armada-8K PCIe controller"
-> +	depends on ARCH_MVEBU
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here if you want to enable PCIe controller support on
-> +	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
-> +	  Designware hardware and therefore the driver re-uses the
-> +	  Designware core functions to implement the driver.
-> +
-> +config PCIE_ARTPEC6
-> +	bool "Axis ARTPEC-6 PCIe controller"
-> +	depends on MACH_ARTPEC6
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	help
-> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
-> +	  SoCs.  This PCIe controller uses the DesignWare core.
-> +
-> +endif
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> new file mode 100644
-> index 0000000..7d27c14
-> --- /dev/null
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -0,0 +1,23 @@
-> +obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-> +obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
-> +obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-> +obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-> +obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
-> +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> +obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
-> +obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-> +obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-> +obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
-> +obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +
-> +# The following drivers are for devices that use the generic ACPI
-> +# pci_root.c driver but don't support standard ECAM config access.
-> +# They contain MCFG quirks to replace the generic ECAM accessors with
-> +# device-specific ones that are shared with the DT driver.
-> +
-> +# The ACPI driver is generic and should not require driver-specific
-> +# config options to be enabled, so we always build these drivers on
-> +# ARM64 and use internal ifdefs to only build the pieces we need
-> +# depending on whether ACPI, the DT driver, or both are enabled.
-> +
-> +obj-$(CONFIG_ARM64) += pcie-hisi.o
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-dra7xx.c
-> rename to drivers/pci/dwc/pci-dra7xx.c
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-exynos.c
-> rename to drivers/pci/dwc/pci-exynos.c
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-imx6.c
-> rename to drivers/pci/dwc/pci-imx6.c
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-keystone-dw.c
-> rename to drivers/pci/dwc/pci-keystone-dw.c
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-keystone.c
-> rename to drivers/pci/dwc/pci-keystone.c
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> similarity index 100%
-> rename from drivers/pci/host/pci-layerscape.c
-> rename to drivers/pci/dwc/pci-layerscape.c
-> diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-armada8k.c
-> rename to drivers/pci/dwc/pcie-armada8k.c
-> diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-artpec6.c
-> rename to drivers/pci/dwc/pcie-artpec6.c
-> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-designware-plat.c
-> rename to drivers/pci/dwc/pcie-designware-plat.c
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-designware.c
-> rename to drivers/pci/dwc/pcie-designware.c
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> similarity index 100%
-> rename from drivers/pci/host/pcie-designware.h
-> rename to drivers/pci/dwc/pcie-designware.h
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-hisi.c
-> rename to drivers/pci/dwc/pcie-hisi.c
-> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-qcom.c
-> rename to drivers/pci/dwc/pcie-qcom.c
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-> similarity index 100%
-> rename from drivers/pci/host/pcie-spear13xx.c
-> rename to drivers/pci/dwc/pcie-spear13xx.c
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 898d2c4..f7c1d4d 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -1,16 +1,6 @@
->  menu "PCI host controller drivers"
->  	depends on PCI
->  
-> -config PCI_DRA7XX
-> -	bool "TI DRA7xx PCIe controller"
-> -	depends on OF && HAS_IOMEM && TI_PIPE3
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	help
-> -	 Enables support for the PCIe controller in the DRA7xx SoC.  There
-> -	 are two instances of PCIe controller in DRA7xx.  This controller can
-> -	 act both as EP and RC.  This reuses the Designware core.
-> -
->  config PCI_MVEBU
->  	bool "Marvell EBU PCIe controller"
->  	depends on ARCH_MVEBU || ARCH_DOVE
-> @@ -37,36 +27,6 @@ config PCIE_XILINX_NWL
->  	 or End Point. The current option selection will only
->  	 support root port enabling.
->  
-> -config PCIE_DW_PLAT
-> -	bool "Platform bus based DesignWare PCIe Controller"
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	---help---
-> -	 This selects the DesignWare PCIe controller support. Select this if
-> -	 you have a PCIe controller on Platform bus.
-> -
-> -	 If you have a controller with this interface, say Y or M here.
-> -
-> -	 If unsure, say N.
-> -
-> -config PCIE_DW
-> -	bool
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -
-> -config PCI_EXYNOS
-> -	bool "Samsung Exynos PCIe controller"
-> -	depends on SOC_EXYNOS5440
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIEPORTBUS
-> -	select PCIE_DW
-> -
-> -config PCI_IMX6
-> -	bool "Freescale i.MX6 PCIe controller"
-> -	depends on SOC_IMX6Q
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIEPORTBUS
-> -	select PCIE_DW
-> -
->  config PCI_TEGRA
->  	bool "NVIDIA Tegra PCIe controller"
->  	depends on ARCH_TEGRA
-> @@ -103,27 +63,6 @@ config PCI_HOST_GENERIC
->  	  Say Y here if you want to support a simple generic PCI host
->  	  controller, such as the one emulated by kvmtool.
->  
-> -config PCIE_SPEAR13XX
-> -	bool "STMicroelectronics SPEAr PCIe controller"
-> -	depends on ARCH_SPEAR13XX
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIEPORTBUS
-> -	select PCIE_DW
-> -	help
-> -	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
-> -
-> -config PCI_KEYSTONE
-> -	bool "TI Keystone PCIe controller"
-> -	depends on ARCH_KEYSTONE
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	select PCIEPORTBUS
-> -	help
-> -	  Say Y here if you want to enable PCI controller support on Keystone
-> -	  SoCs. The PCI controller on Keystone is based on Designware hardware
-> -	  and therefore the driver re-uses the Designware core functions to
-> -	  implement the driver.
-> -
->  config PCIE_XILINX
->  	bool "Xilinx AXI PCIe host bridge support"
->  	depends on ARCH_ZYNQ || MICROBLAZE
-> @@ -150,15 +89,6 @@ config PCI_XGENE_MSI
->  	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
->  	  This MSI driver supports 5 PCIe ports on the APM X-Gene v1 SoC.
->  
-> -config PCI_LAYERSCAPE
-> -	bool "Freescale Layerscape PCIe controller"
-> -	depends on OF && (ARM || ARCH_LAYERSCAPE)
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	select MFD_SYSCON
-> -	help
-> -	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-> -
->  config PCI_VERSATILE
->  	bool "ARM Versatile PB PCI controller"
->  	depends on ARCH_VERSATILE
-> @@ -217,27 +147,6 @@ config PCIE_ALTERA_MSI
->  	  Say Y here if you want PCIe MSI support for the Altera FPGA.
->  	  This MSI driver supports Altera MSI to GIC controller IP.
->  
-> -config PCI_HISI
-> -	depends on OF && ARM64
-> -	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIEPORTBUS
-> -	select PCIE_DW
-> -	help
-> -	  Say Y here if you want PCIe controller support on HiSilicon
-> -	  Hip05 and Hip06 SoCs
-> -
-> -config PCIE_QCOM
-> -	bool "Qualcomm PCIe controller"
-> -	depends on ARCH_QCOM && OF
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	select PCIEPORTBUS
-> -	help
-> -	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
-> -	  PCIe controller uses the Designware core plus Qualcomm-specific
-> -	  hardware wrappers.
-> -
->  config PCI_HOST_THUNDER_PEM
->  	bool "Cavium Thunder PCIe controller to off-chip devices"
->  	depends on ARM64
-> @@ -254,28 +163,6 @@ config PCI_HOST_THUNDER_ECAM
->  	help
->  	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
->  
-> -config PCIE_ARMADA_8K
-> -	bool "Marvell Armada-8K PCIe controller"
-> -	depends on ARCH_MVEBU
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	select PCIEPORTBUS
-> -	help
-> -	  Say Y here if you want to enable PCIe controller support on
-> -	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
-> -	  Designware hardware and therefore the driver re-uses the
-> -	  Designware core functions to implement the driver.
-> -
-> -config PCIE_ARTPEC6
-> -	bool "Axis ARTPEC-6 PCIe controller"
-> -	depends on MACH_ARTPEC6
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> -	select PCIEPORTBUS
-> -	help
-> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
-> -	  SoCs.  This PCIe controller uses the DesignWare core.
-> -
->  config PCIE_ROCKCHIP
->  	bool "Rockchip PCIe controller"
->  	depends on ARCH_ROCKCHIP || COMPILE_TEST
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index bfe3179..4d36866 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -1,8 +1,3 @@
-> -obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-> -obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
-> -obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-> -obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-> -obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
->  obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
->  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
->  obj-$(CONFIG_PCI_AARDVARK) += pci-aardvark.o
-> @@ -11,12 +6,9 @@ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
->  obj-$(CONFIG_PCIE_RCAR) += pcie-rcar.o
->  obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
->  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
-> -obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> -obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
->  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
->  obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
->  obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
-> -obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
->  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
->  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
->  obj-$(CONFIG_PCIE_IPROC_MSI) += pcie-iproc-msi.o
-> @@ -24,9 +16,6 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
->  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
->  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-> -obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-> -obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
-> -obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
->  obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
->  obj-$(CONFIG_VMD) += vmd.o
->  
-> @@ -40,7 +29,6 @@ obj-$(CONFIG_VMD) += vmd.o
->  # ARM64 and use internal ifdefs to only build the pieces we need
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
-> -obj-$(CONFIG_ARM64) += pcie-hisi.o
->  obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
->  obj-$(CONFIG_ARM64) += pci-thunder-pem.o
->  obj-$(CONFIG_ARM64) += pci-xgene.o
-> 
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 333aa56..7666e3e 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -26,6 +26,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -531,6 +533,48 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	{},
+ };
+ 
++/*
++ * dra7xx_pcie_ep_legacy_mode: workaround for AM572x/AM571x Errata i870
++ * @dra7xx: the dra7xx device where the workaround should be applied
++ *
++ * Access to the PCIe slave port that are not 32-bit aligned will result
++ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
++ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
++ * 0x3.
++ *
++ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
++ */
++static int dra7xx_pcie_ep_legacy_mode(struct device *dev)
++{
++	int ret;
++	struct device_node *np = dev->of_node;
++	struct regmap *regmap;
++	unsigned int reg;
++	unsigned int field;
++
++	regmap = syscon_regmap_lookup_by_phandle(np, "syscon-legacy-mode");
++	if (IS_ERR(regmap)) {
++		dev_dbg(dev, "can't get syscon-legacy-mode\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-legacy-mode", 1, &reg)) {
++		dev_err(dev, "couldn't get legacy mode register offset\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-legacy-mode", 2, &field)) {
++		dev_err(dev, "can't get bit field for setting legacy mode\n");
++		return -EINVAL;
++	}
++
++	ret = regmap_update_bits(regmap, reg, field, field);
++	if (ret)
++		dev_err(dev, "failed to set legacy mode\n");
++
++	return ret;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -643,6 +687,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_RC_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
++
+ 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+@@ -650,6 +695,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_EP_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
++
++		ret = dra7xx_pcie_ep_legacy_mode(dev);
++		if (ret)
++			goto err_gpio;
++
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+-- 
+1.7.9.5
 
