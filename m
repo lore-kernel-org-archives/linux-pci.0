@@ -1,116 +1,113 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50180 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750985AbdALPLd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Jan 2017 10:11:33 -0500
+Date: Thu, 12 Jan 2017 10:11:29 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        david1.zhou@amd.com, qiang.yu@amd.com,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
+        "Kuehling, Felix" <felix.kuehling@amd.com>,
+        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "Koenig, Christian" <christian.koenig@amd.com>, hch@infradead.org,
+        "Deucher, Alexander" <alexander.deucher@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>,
+        "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        Jerome Glisse <j.glisse@gmail.com>,
+        "Blinzer, Paul" <paul.blinzer@amd.com>,
+        "'Linux-media@vger.kernel.org'" <linux-media@vger.kernel.org>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Message-ID: <20170112151129.GA10942@redhat.com>
+References: <20170105201935.GC2166@redhat.com>
+ <20170105224215.GA3855@obsidianresearch.com>
+ <20170105232352.GB6426@redhat.com>
+ <20170106003034.GB4670@obsidianresearch.com>
+ <20170106015831.GA2226@gmail.com>
+ <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
+ <20170106173722.GB3804@redhat.com>
+ <20170106182625.GB5724@obsidianresearch.com>
+ <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
+ <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
 MIME-Version: 1.0
-Date: Mon, 30 Jan 2017 09:54:46 -0500
-From: Nate Watterson <nwatters@codeaurora.org>
-To: Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-In-Reply-To: <20170130143851.GJ16461@arm.com>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
- <20170124123711.GA11996@red-moon>
- <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
- <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
- <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
- <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
- <20170130143851.GJ16461@arm.com>
-Message-ID: <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
- iommu@lists.linux-foundation.org, linux-arm-msm@vger.kernel.org,
- bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
- Sricharan R <sricharan@codeaurora.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-01-30 09:38, Will Deacon wrote:
-> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
->> On 1/30/2017 9:23 AM, Nate Watterson wrote:
->> > On 2017-01-30 08:59, Sinan Kaya wrote:
->> >> On 1/30/2017 7:22 AM, Robin Murphy wrote:
->> >>> On 29/01/17 17:53, Sinan Kaya wrote:
->> >>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
->> >>>>> [+hanjun, tomasz, sinan]
->> >>>>>
->> >>>>> It is quite a key patchset, I would be glad if they can test on their
->> >>>>> respective platforms with IORT.
->> >>>>>
->> >>>>
->> >>>> Tested on top of 4.10-rc5.
->> >>>>
->> >>>> 1.    Platform Hidma device passed dmatest
->> >>>> 2.    Seeing some USB stalls on a platform USB device.
->> >>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
->> >>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
->> >>>> SMMU error event during the insertion.
->> >>>
->> >>> What was the SMMU error - a translation/permission fault (implying the
->> >>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
->> >>> the SMMU about the device at all)?
->> >>>
->> >>
->> >> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
->> >>
->> >> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
->> >> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
->> >> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
->> >> ignored; already powering off
->> >>
->> >> root@ubuntu:/sys/bus/pci/slots/4#
->> >>
->> >> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
->> >> [  254.820599] nvme nvme0: pci function 0003:01:00.0
->> >> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
->> >> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
->> >> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
->> >> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
->> >> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
->> >> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
->> 
->> > Looks like C_BAD_CD. Can you please try with:
->> > iommu/arm-smmu-v3: Clear prior settings when updating STEs
->> 
->> This resolved the issue. Can we pull Nate's patch to 4.10 so that I 
->> don't see
->> this issue again.
+On Wed, Jan 11, 2017 at 10:54:39PM -0600, Stephen Bates wrote:
+> On Fri, January 6, 2017 4:10 pm, Logan Gunthorpe wrote:
+> >
+> >
+> > On 06/01/17 11:26 AM, Jason Gunthorpe wrote:
+> >
+> >
+> >> Make a generic API for all of this and you'd have my vote..
+> >>
+> >>
+> >> IMHO, you must support basic pinning semantics - that is necessary to
+> >> support generic short lived DMA (eg filesystem, etc). That hardware can
+> >> clearly do that if it can support ODP.
+> >
+> > I agree completely.
+> >
+> >
+> > What we want is for RDMA, O_DIRECT, etc to just work with special VMAs
+> > (ie. at least those backed with ZONE_DEVICE memory). Then
+> > GPU/NVME/DAX/whatever drivers can just hand these VMAs to userspace
+> > (using whatever interface is most appropriate) and userspace can do what
+> > it pleases with them. This makes _so_ much sense and actually largely
+> > already works today (as demonstrated by iopmem).
 > 
-> I already sent the pull request to Joerg for 4.11. Do you see this 
-> problem
-> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need 
-> to
-> send the patch to stable after -rc1.
-Using vanilla mainline, I see it most commonly when directly assigning
-a device to a guest machine. I think I've also seen it after removing 
-then
-re-adding a PCI device. Basically anytime an STE's CTX pointer is 
-changed
-from a non-NULL value and STE[CFG] indicates translation will be 
-performed.
-
-Nate
+> +1 for iopmem ;-)
 > 
-> Will
+> I feel like we are going around and around on this topic. I would like to
+> see something that is upstream that enables P2P even if it is only the
+> minimum viable useful functionality to begin. I think aiming for the moon
+> (which is what HMM and things like it are) are simply going to take more
+> time if they ever get there.
+> 
+> There is a use case for in-kernel P2P PCIe transfers between two NVMe
+> devices and between an NVMe device and an RDMA NIC (using NVMe CMBs or
+> BARs on the NIC). I am even seeing users who now want to move data P2P
+> between FPGAs and NVMe SSDs and the upstream kernel should be able to
+> support these users or they will look elsewhere.
+> 
+> The iopmem patchset addressed all the use cases above and while it is not
+> an in kernel API it could have been modified to be one reasonably easily.
+> As Logan states the driver can then choose to pass the VMAs to user-space
+> in a manner that makes sense.
+> 
+> Earlier in the thread someone mentioned LSF/MM. There is already a
+> proposal to discuss this topic so if you are interested please respond to
+> the email letting the committee know this topic is of interest to you [1].
+> 
+> Also earlier in the thread someone discussed the issues around the IOMMU.
+> Given the known issues around P2P transfers in certain CPU root complexes
+> [2] it might just be a case of only allowing P2P when a PCIe switch
+> connects the two EPs. Another option is just to use CONFIG_EXPERT and make
+> sure people are aware of the pitfalls if they invoke the P2P option.
 
--- 
-Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
-Linux
-Foundation Collaborative Project.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+iopmem is not applicable to GPU what i propose is to split the issue in 2
+so that everyone can reuse the part that needs to be common namely the DMA
+API part where you have to create IOMMU mapping for one device to point
+to the other device memory.
+
+We can have a DMA API that is agnostic to how the device memory is manage
+(so does not matter if device memory have struct page or not). This what
+i have been arguing in this thread. To make progress on this issue we need
+to stop conflicting different use case.
+
+So i say let solve the IOMMU issue first and let everyone use it in their
+own way with their device. I do not think we can share much more than
+that.
+
+Cheers,
+Jérôme
