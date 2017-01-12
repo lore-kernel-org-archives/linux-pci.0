@@ -1,124 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Robin Murphy'" <robin.murphy@arm.com>,
- "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
- <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
- <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
- <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
- <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
- <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
- <009901d278c7$34fee230$9efca690$@codeaurora.org>
- <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
- <003601d27ac6$84866840$8d9338c0$@codeaurora.org>
- <8387d057-15bd-500c-134e-0e731ff837d6@arm.com>
-In-Reply-To: <8387d057-15bd-500c-134e-0e731ff837d6@arm.com>
-Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-Date: Tue, 31 Jan 2017 18:41:44 +0530
-Message-ID: <006001d27bc3$96156770$c2403650$@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53512 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750730AbdALXRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Jan 2017 18:17:30 -0500
+Date: Thu, 12 Jan 2017 17:17:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Matthew Garrett <mjg59@coreos.com>
+Cc: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Julia Cartwright <julia@ni.com>,
+        Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH] Force to clear ASPM bits if CONFIG_PCIEASPM_PERFORMANCE
+ is set
+Message-ID: <20170112231726.GH8312@bhelgaas-glaptop.roam.corp.google.com>
+References: <95e1fc6e84cf42e094d4a8478c37b18e@FE-MBX1012.de.bosch.com>
+ <20161208222025.GB6693@bhelgaas-glaptop.roam.corp.google.com>
+ <70624f4bf1514e48ae29e84998a81a80@FE-MBX1012.de.bosch.com>
+ <20170112205458.GC8312@bhelgaas-glaptop.roam.corp.google.com>
+ <CAPeXnHvbGMC-MuQbVTV+CCjqEbbp6WC4PaWmijEVWv=Nnbm8Zg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPeXnHvbGMC-MuQbVTV+CCjqEbbp6WC4PaWmijEVWv=Nnbm8Zg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+[+cc Emmanuel because of https://bugzilla.kernel.org/show_bug.cgi?id=57331]
 
->>>>>> I gave the whole patch set a try on ThunderX. really_probe() is failing
->>>>>> on dma_configure()->of_pci_iommu_init() for each PCI device.
->>>>>
->>>>> When you say "failing", do you mean cleanly, or with a crash? I've
->>>>> managed to hit __of_match_node() dereferencing NULL from
->>>>> of_iommu_xlate() in a horribly complicated chain of events, which I'm
->>>>> trying to figure out now, and I wonder if the two might be related.
->>>>
->>>> Sorry that there is crash still. __of_match_node seems to checking
->>>> for NULL arguments , feels like some invalid pointer was passed in.
->>>> Is there any particular sequence to try for this ?
->>>
->>> Ah, I did figure it out - it wasn't actually a NULL dereference, but an
->>> unmapped address. Turns out __iommu_of_table is in initdata, so any
->>> driver probing after init, connected to an unprobed IOMMU (in this case
->>> disabled in DT), trips over trying to match the now-freed table. I'm
->>> working on the fix - technically the bug's in my patch (#2) anyway ;)
->>>
->>
->> Ok, thanks for bringing this out. There is also an issue that
->> Sinan has mentioned while testing the ACPI hotplug path, probably
->> its related to the above, not sure. I will try to check more on that
->> in the meanwhile. Then, taking your fix and fixing the hotplug case
->> i will do one more repost.
->
->OK, I've finally settled on the below fixup for patch #2 - I have some
->follow-on ideas for eventually getting of the magic table altogether,
->but they can wait until we've got the baseline functionality sorted.
->Updated full patch here:
->
->http://www.linux-arm.org/git?p=linux-rm.git;a=commitdiff;h=5616af885f7c5c24f7239d5c689583b2b583c407
+On Thu, Jan 12, 2017 at 01:48:15PM -0800, Matthew Garrett wrote:
+> On Thu, Jan 12, 2017 at 12:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> > Thanks for that.  In addition to yours, we have the following report,
+> > which was also bisected to 387d37577fdd:
+> >
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=102311 ASPM: ASMEDA asm1062 not working
+> >
+> > The changelog for 387d37577fdd doesn't mention any actual bugs that it
+> > fixes.  Should we consider reverting it?  Can you shed any light on
+> > this, Matthew?
+> 
+> Without this commit we disable ASPM on devices that expect to have it
+> enabled and increase idle power consumption by approximately 200% on
+> some laptops. Windows drivers may explicitly change the ASPM state on
+> devices or PCIe bridges, and if so we should be mimicing that
+> behaviour as well.
 
-Thanks, will use this. Yes, the magic iommu_of_table makes little
-use with probe deferral in place, except that we are using it at the
-moment. And the other hotplug issue is not related this though.
+Thanks, I should have asked for that information in the 387d37577fdd
+changelog, but it's good to have it now.
 
-Regards,
- Sricharan
+On a system with ACPI_FADT_NO_ASPM set (as in both
+https://bugzilla.kernel.org/show_bug.cgi?id=189951 and
+https://bugzilla.kernel.org/show_bug.cgi?id=102311):
 
+  - We set aspm_disabled = 1 (since 5fde244d39b8).
 
->-----8<-----
->
->diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->index 349bd1d01612..1f92d98237d5 100644
->--- a/drivers/iommu/of_iommu.c
->+++ b/drivers/iommu/of_iommu.c
->@@ -96,6 +96,19 @@ int of_get_dma_window(struct device_node *dn, const
->char *prefix, int index,
-> }
-> EXPORT_SYMBOL_GPL(of_get_dma_window);
->
->+static bool of_iommu_driver_present(struct device_node *np)
->+{
->+	/*
->+	 * If the IOMMU still isn't ready by the time we reach init, assume
->+	 * it never will be. We don't want to defer indefinitely, nor attempt
->+	 * to dereference __iommu_of_table after it's been freed.
->+	 */
->+	if (system_state > SYSTEM_BOOTING)
->+		return false;
->+
->+	return of_match_node(&__iommu_of_table, np);
->+}
->+
-> static const struct iommu_ops
-> *of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
-> {
->@@ -105,7 +118,7 @@ static const struct iommu_ops
->
-> 	ops = iommu_get_instance(fwnode);
-> 	if ((ops && !ops->of_xlate) ||
->-	    (!ops && !of_match_node(&__iommu_of_table, iommu_spec->np)))
->+	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
-> 		return NULL;
->
-> 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
->--
->To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  - Before 387d37577fdd, we called pcie_clear_aspm(), which disabled
+    all ASPM link states, even if aspm_disabled == 1.
 
+  - After 387d37577fdd, we leave ASPM link states as BIOS configured
+    them.  This explains why the NIC performance issue is related to
+    this commit.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+A driver can explicitly change the ASPM state with
+pci_disable_link_state().  But that doesn't do anything when
+ACPI_FADT_NO_ASPM (and thus aspm_disabled) is set.
+
+Are you suggesting that we should remove the aspm_disabled check and
+make pci_disable_link_state() work regardless of ACPI_FADT_NO_ASPM?
+It's only called by drivers that presumably know about their device
+issues, and one would think it would be relatively safe to *disable*
+ASPM states (or at least safer than *enabling* them).
+
+Bjorn
