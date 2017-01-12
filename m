@@ -1,88 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0076.outbound.protection.outlook.com ([104.47.33.76]:58353
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750714AbdAXKPk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Jan 2017 05:15:40 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: [PATCH 1/4] PCI: Xilinx NWL: Fix, do not check for legacy
- status in while loop
-Date: Tue, 24 Jan 2017 10:15:33 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263CCF96@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
- <ec10b089-acc5-7764-6346-9dc1869d05c7@arm.com>
-In-Reply-To: <ec10b089-acc5-7764-6346-9dc1869d05c7@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=T4mu=Y2=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=T4mu=Y2=wunner.de=lukas@kernel.org>
+Date: Thu, 12 Jan 2017 02:47:07 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Chen Yu <yu.c.chen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Amir Levy <amir.jer.levy@intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v4 3/8] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+Message-ID: <20170112014707.GA24136@wunner.de>
+References: <cover.1483806825.git.lukas@wunner.de>
+ <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
+ <20170111100210.GL2330@lahna.fi.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170111100210.GL2330@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 21/01/17 11:11, Bharat Kumar Gogada wrote:
-> > - The legacy status register value for particular INTx becomes low
-> > only after DEASSERT_INTx is received.
-> > - Few End Points take time for sending DEASSERT_INTx, checking legacy
-> > status register in while loop causes invoking of EP handler
-> > continuosly until DEASSERT_INTx is received.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+On Wed, Jan 11, 2017 at 12:02:10PM +0200, Mika Westerberg wrote:
+> On Sun, Jan 08, 2017 at 09:41:45AM +0100, Lukas Wunner wrote:
+> > Hotplug ports generally block their parents from suspending to D3hot as
+> > otherwise their interrupts couldn't be delivered.
+> > 
+> > An exception are Thunderbolt host controllers:  They have a separate
+> > GPIO pin to side-band signal plug events even if the controller is
+> > powered down or its parent ports are suspended to D3.  They can be told
+> > apart from Thunderbolt controllers in attached devices by checking if
+> > they're situated below a non-Thunderbolt device (typically a root port,
+> > or the downstream port of a PCIe switch in the case of the MacPro6,1).
+> > 
+> > To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
+> > of a host controller must not block runtime PM on the upstream bridge as
+> > power to the chip is only cut once the upstream bridge has suspended.
+> > Amend the condition in pci_dev_check_d3cold() accordingly.
+> > 
+> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Andreas Noever <andreas.noever@gmail.com>
+> > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > Cc: Amir Levy <amir.jer.levy@intel.com>
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
 > > ---
-> >  drivers/pci/host/pcie-xilinx-nwl.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
-> > b/drivers/pci/host/pcie-xilinx-nwl.c
-> > index 43eaa4a..c8b5a33 100644
-> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> > @@ -342,9 +342,10 @@ static void nwl_pcie_leg_handler(struct irq_desc
-> > *desc)
-> >
-> >  	chained_irq_enter(chip, desc);
-> >  	pcie =3D irq_desc_get_handler_data(desc);
-> > +	status =3D nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> > +				  MSGF_LEG_SR_MASKALL;
-> >
-> > -	while ((status =3D nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> > -				MSGF_LEG_SR_MASKALL) !=3D 0) {
-> > +	if (status !=3D 0) {
-> >  		for_each_set_bit(bit, &status, INTX_NUM) {
-> >  			virq =3D irq_find_mapping(pcie->legacy_irq_domain,
-> >  						bit + 1);
-> >
->=20
-> But even if you only handle the interrupt once, it is still asserted, rig=
-ht? You exit
-> the low-level exception handler, only to take the interrupt immediately a=
-gain. So
-> what is the gain here?
->=20
-Whenever masking of INTx happens (like as in my next patch[PATCH 2/4]), the=
- irq line goes low,
-but  status bit will be set until DEASSERT_INTx comes.
-In this scenario if it is always in while loop, even though line went low i=
-t will not be seen=20
-until DEASSERT_INTx, unnecessarily invoking EP driver. so instead of while =
-loop =20
-using if condition so that this change in line is noticed.
-> As an aside, please add a cover letter to your patch series. It is immens=
-ely useful
-> as a summary of what is being done, as well as an anchor for the patches
-> themselves.
->=20
-Agreed, will do next time.=20
+> >  drivers/pci/pci.c | 13 ++++++++++++-
+> >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 8ed098d..0b03fe7 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+> >  
+> >  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+> >  {
+> > +	struct pci_dev *parent, *grandparent;
+> >  	bool *d3cold_ok = data;
+> >  
+> >  	if (/* The device needs to be allowed to go D3cold ... */
+> > @@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+> >  	    !pci_power_manageable(dev) ||
+> >  
+> >  	    /* Hotplug interrupts cannot be delivered if the link is down. */
+> > -	    dev->is_hotplug_bridge)
+> > +	    (dev->is_hotplug_bridge &&
+> > +
+> > +		/*
+> > +		 * Exception:  Thunderbolt host controllers have a pin to
+> > +		 * side-band signal plug events.  Their hotplug ports are
+> > +		 * recognizable by having a non-Thunderbolt device as
+> > +		 * grandparent.
+> > +		 */
+> > +		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
+> > +				 (grandparent = pci_upstream_bridge(parent)) &&
+> > +						!grandparent->is_thunderbolt)))
+> 
+> Can you move this to its own helper function?
 
-Thanks & Regards,
-Bharat
+I can certainly do that.
 
+Could one of you guys confirm that the code above is safe on non-Macs?
+
+Specifically, the very first Thunderbolt chips (Light Ridge, Eagle Ridge)
+had no POC, i.e. they were unable to power themselves off.  Apple put an
+ARM Cortex (NXP LPC1112) on the logic board which snoops on the connector
+lines for hotplug detection while the Thunderbolt controller is powered
+down.  The power rails to the controller are brought up and down with
+separate load switches.  This functionality became integrated into the
+controller starting with Cactus Ridge in 2012.
+
+So I know the above code is safe on Macs.  However on non-Macs these
+extra chips for power management may not exist, i.e. the controller
+stays on all the time and then I shouldn't suspend the upstream bridge
+to D3.  I assume that such machines do not exist as Apple was pretty
+much the only vendor with Thunderbolt gear in the 2010-2012 time frame.
+The only other one I know of was the Sony Vaio Z21 which used the
+optical version of Thunderbolt to attach a docking station, but these
+are rare.
+
+If you know of non-Macs which might be broken by the above code snippet,
+I could dmi-quirk this to Macs plus constrain to CONFIG_THUNDERBOLT being
+enabled.
+
+Thanks,
+
+Lukas
+
+> 
+> >  
+> >  		*d3cold_ok = false;
+> >  
+> > -- 
+> > 2.11.0
