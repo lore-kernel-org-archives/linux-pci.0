@@ -1,83 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:48207 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032408AbdAEGEu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2017 01:04:50 -0500
-Subject: Re: [PATCH V2 1/5] Documetation: samsung-phy: add the exynos-pcie-phy
- binding
-To: Alim Akhtar <alim.akhtar@samsung.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, cpgs@samsung.com
-From: "pankaj.dubey" <pankaj.dubey@samsung.com>
-Message-id: <d6a81e81-3ac2-5d83-15f3-9de07fb2d421@samsung.com>
-Date: Thu, 05 Jan 2017 11:36:32 +0530
-MIME-version: 1.0
-In-reply-to: <4110cfa2-bbe8-337e-5f2c-13d82cd23713@samsung.com>
-Content-type: text/plain; charset=windows-1252
-References: <20170104123435.30740-1-jh80.chung@samsung.com>
- <CGME20170104123436epcas1p1d3d840e4ade396a60ce690b09d486990@epcas1p1.samsung.com>
- <20170104123435.30740-2-jh80.chung@samsung.com>
- <4110cfa2-bbe8-337e-5f2c-13d82cd23713@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=x9XS=Y2=lunn.ch=andrew@kernel.org>
+Return-Path: <SRS0=x9XS=Y2=lunn.ch=andrew@kernel.org>
+Date: Thu, 12 Jan 2017 16:24:20 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+Message-ID: <20170112152420.GK13033@lunn.ch>
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+ <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
+ <20170112150310.GA5746@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170112150310.GA5746@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thursday 05 January 2017 09:46 AM, Alim Akhtar wrote:
-> Hi Jaehoon,
+>   pci_bus 0000:00: root bus resource [mem 0xe0000000-0xe7ffffff]
+>   pci 0000:02:00.0: reg 0x10: [mem 0xe8000000-0xe81fffff 64bit]
+>   pci 0000:02:00.0: reg 0x30: [mem 0xe8200000-0xe820ffff pref]
+>   pci 0000:02:00.0: of_irq_parse_pci() failed with rc=134
+>   pci 0000:02:00.0: BAR 0: assigned [mem 0xe0000000-0xe01fffff 64bit]
+>   pci 0000:02:00.0: BAR 0: error updating (0xe0000004 != 0xffffffff)
+>   pci 0000:02:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
 > 
-> On 01/04/2017 06:04 PM, Jaehoon Chung wrote:
->> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
->> This is for using generic PHY framework.
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->> Changelog on V2:
->> - Remove the child node.
->> - Add 2nd address to the parent reg prop.
->>
->>  Documentation/devicetree/bindings/phy/samsung-phy.txt | 17
->> +++++++++++++++++
->>  1 file changed, 17 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> index 9872ba8..ab80bfe 100644
->> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> @@ -191,3 +191,20 @@ Example:
->>          usbdrdphy0 = &usb3_phy0;
->>          usbdrdphy1 = &usb3_phy1;
->>      };
->> +
->> +Samsung Exynos SoC series PCIe PHY controller
->> +--------------------------------------------------
->> +Required properties:
->> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
->> +- #phy-cells : Must be zero
->> +- reg : a register used by phy driver.
->> +    - First is for phy register, second is for block register.
->> +- reg-names : Must be set to "phy" and "block".
->> +
-> In general PHY uses a "reference clock" to work, if that is true for
-> 5440 also, will you consider adding an (may be) optional clock
-> properties as well?
-> 
+> 3) No idea what the of_irq_parse_pci() issue is.
 
-Yes, right, second clock, referred as "bus_clk" in pcie node should
-actually refer to "phy" clock. From Exynos5433 DT patch also you are
-mapping it to CLK_PCLK_PCIE_PHY which is a phy clk. This is same in
-Exynos7 as well. So better we have clocks property defined in pcie-phy
-binding. What do you say?
+134 is 0x86.
 
->From Exynos5440 UM, PCIe-Phy needs 250 MHz, clock and second clock used
-as "bus_clk" is providing 250 MHz, so this can be moved in phy driver.
+Could it be:
 
+#define PCIBIOS_DEVICE_NOT_FOUND        0x86
 
-Thanks,
-Pankaj Dubey
+pci-mvebu.c will return this in a few places, mvebu_pcie_wr_conf(),
+mvebu_pcie_rd_conf().
+
+Could this be
+
+rc = pci_read_config_byte(pdev, PCI_INTERRUPT_PIN, &pin);
+
+It looks like pci_read_config_byte() is expected to return a real
+errno value, and maybe it is returning PCIBIOS_DEVICE_NOT_FOUND?
+
+      Andrew
