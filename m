@@ -1,78 +1,97 @@
-Return-Path: <SRS0=8DCY=Y2=TI.COM=kishon@kernel.org>
-Return-Path: <SRS0=8DCY=Y2=TI.COM=kishon@kernel.org>
-Subject: Re: [PATCH v2 0/3] PCI: designware/dra7xx: misc fixes and cleanups
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1483091774-8332-1-git-send-email-kishon@ti.com>
- <20170111212135.GN14532@bhelgaas-glaptop.roam.corp.google.com>
- <587712B0.2030806@ti.com>
- <20170112131552.GA23045@bhelgaas-glaptop.roam.corp.google.com>
- <5877835D.80508@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nsekhar@TI.COM>
-From: Kishon Vijay Abraham I <kishon@TI.COM>
-Message-ID: <58778731.8060700@ti.com>
-Date: Thu, 12 Jan 2017 19:10:01 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 25/37] dt-bindings: PCI: Add dt bindings for pci designware EP
+ mode
+Date: Thu, 12 Jan 2017 15:56:14 +0530
+Message-ID: <1484216786-17292-26-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <5877835D.80508@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add device tree binding documentation for pci designware EP mode.
 
-On Thursday 12 January 2017 06:53 PM, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Thursday 12 January 2017 06:45 PM, Bjorn Helgaas wrote:
->> On Thu, Jan 12, 2017 at 10:52:56AM +0530, Kishon Vijay Abraham I wrote:
->>> Hi Bjorn,
->>>
->>> On Thursday 12 January 2017 02:51 AM, Bjorn Helgaas wrote:
->>>> On Fri, Dec 30, 2016 at 03:26:11PM +0530, Kishon Vijay Abraham I wrote:
->>>>> This series contains
->>>>>         *) a patch to cleanup dra7xx probe
->>>>>         *) a patch to force DRA7xx controller to work in GEN1 mode
->>>>>         *) a patch to fix dra7xx driver so that even if CONFIG_PCI_MSI
->>>>>            is enabled, dra7xx driver can service legacy interrupts
->>>>>            (provided the device support only legacy interrupts).
->>>>>
->>>>> Changes from v1:
->>>>> *) rebased to 4.10-rc1 (and [1])
->>>>> *) use existing dt property "max-link-speed" instead of creating a new
->>>>>    TI specific dt property.
->>>>>
->>>>> [1] -> https://lkml.org/lkml/2016/12/28/34
->>>>>
->>>>> Kishon Vijay Abraham I (3):
->>>>>   PCI: dra7xx: simplify the probe code
->>>>>   PCI: dra7xx: Add support to force RC to work in GEN1 mode
->>>>>   PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
->>>>>
->>>>>  drivers/pci/controller/pci-dra7xx.c |   81 ++++++++++++++++++++---------------
->>>>>  1 file changed, 47 insertions(+), 34 deletions(-)
->>>>
->>>> Applied to pci/host-dra7xx for v4.11.  I haven't applied the directory
->>>> rename yet, so I'll fix that up as necessary.
->>>
->>> I'd have liked that to be merged as well. Is that because Arnd hasn't Acked
->>> that one yet?
->>
->> Nope, I expect to do the rename in some form.  I'm just trying to
->> clear out the easy stuff first before moving on to the harder patches
->> in the queue.
-> 
-> cool, thanks. Let me know if I have to resend the patches based on one of your
-> branches (i.e after you apply the easy stuff).
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++++++++++++++------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
-Btw, I had sent a new patch series [1] which had a couple of additional patches
-(that was after creating drivers/pci/dwc/). Consider merging that too or I can
-resend the missing patches.
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1392c70..b2480dd 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -6,30 +6,40 @@ Required properties:
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+     is deprecated and should be avoided.)
++- num-lanes: number of lanes to use
++RC mode:
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+ - device_type: set to "pci"
+ - ranges: ranges for the PCI memory and I/O regions
+ - #interrupt-cells: set to <1>
+-- interrupt-map-mask and interrupt-map: standard PCI properties
+-	to define the mapping of the PCIe interface to interrupt
++- interrupt-map-mask and interrupt-map: standard PCI
++	properties to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+-- num-lanes: number of lanes to use
++EP mode:
++- num-ib-windows: number of inbound address translation
++        windows
++- num-ob-windows: number of outbound address translation
++        windows
+ 
+ Optional properties:
+-- num-viewport: number of view ports configured in hardware.  If a platform
+-  does not specify it, the driver assumes 2.
+ - num-lanes: number of lanes to use (this property should be specified unless
+   the link is brought already up in BIOS)
+ - reset-gpio: gpio pin number of power good signal
+-- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+-  specify this property, to keep backwards compatibility a range of 0x00-0xff
+-  is assumed if not present)
+ - clocks: Must contain an entry for each entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+ 	- "pcie"
+ 	- "pcie_bus"
++RC mode:
++- num-viewport: number of view ports configured in
++  hardware. If a platform does not specify it, the driver assumes 2.
++- bus-range: PCI bus numbers covered (it is recommended
++  for new devicetrees to specify this property, to keep backwards
++  compatibility a range of 0x00-0xff is assumed if not present)
++EP mode:
++- max-functions: maximum number of functions that can be
++  configured
+ 
+ Example configuration:
+ 
+-- 
+1.7.9.5
 
-Thanks
-Kishon
 
-[1] -> https://lkml.org/lkml/2017/1/11/238
-> 
-> Thanks
-> Kishon
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
