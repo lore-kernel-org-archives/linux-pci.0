@@ -1,75 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:33231 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932348AbdAIJcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 04:32:45 -0500
-Subject: Re: [PATCH v5] PCI: add a new directory for designware core
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1483707168-1436-1-git-send-email-kishon@ti.com>
- <4757539.Mx4pNLiAHf@wuerfel> <586F97B8.8040300@ti.com>
- <ed3b67ec-1764-bd48-379c-b449678b79a4@synopsys.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5873588C.1080809@ti.com>
-Date: Mon, 9 Jan 2017 15:01:56 +0530
-MIME-Version: 1.0
-In-Reply-To: <ed3b67ec-1764-bd48-379c-b449678b79a4@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mailout4.samsung.com ([203.254.224.34]:36167 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751412AbdALCR1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 21:17:27 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V2 4/4] PCI: exynos: remove the duplicated codes
+Date: Thu, 12 Jan 2017 11:17:19 +0900
+Message-id: <20170112021719.24986-4-jh80.chung@samsung.com>
+In-reply-to: <20170112021719.24986-1-jh80.chung@samsung.com>
+References: <20170112021719.24986-1-jh80.chung@samsung.com>
+ <CGME20170112021722epcas5p483ea584341324ad650a1d7fbe9a76793@epcas5p4.samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Removed the duplicated codes.
+It can use the more simply than now.
 
-On Friday 06 January 2017 07:10 PM, Joao Pinto wrote:
-> Hello,
-> 
-> Às 1:12 PM de 1/6/2017, Kishon Vijay Abraham I escreveu:
->> Hi Arnd,
->>
->> On Friday 06 January 2017 06:31 PM, Arnd Bergmann wrote:
->>> On Friday, January 6, 2017 6:22:48 PM CET Kishon Vijay Abraham I wrote:
->>>> Group all the PCI drivers that use designware core in dwc directory.
->>>> dwc IP is capable of operating in both host mode and device mode and
->>>> keeping it inside the *host* directory is misleading.
->>>
->>> I have no objections to the patch, it makes a lot of sense, but I think
->>> the reasoning above is a bit questionable, as a lot of the other
->>> host drivers (at least tegra, mvebu and xgene, probably more) equally support
->>> endpoint mode and remain in the same directory.
->>>
->>> Any suggestion to what we should do with them?
->>
->> I'm not sure of the exact IP's used by these SoCs. Now that we decided to group
->> the drivers by IPs used, the best would be identify the IPs used in these SoCs
->> and create a separate directory for each of the IPs. If the vendors own IP is
->> used, then create a directory with the name of the vendor?. I'm sure such a
->> change would increase the number of directories but I'm not sure what else to
->> do here.
-> 
-> In case of designware based drivers you already did the clean up nicely. Next
-> would be, like Arnd is sugesting, to do the same to the others. If they are all
-> self-contained I suggest we leave them as they are and in the future if a
-> endpoint variant driver comes up for any of them, we can suggest to add a folder
-> with the vendor or SoC name in order to follow the rule. What do you think?
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+Changelog on V2:
+- None
 
-That's my idea as well. Arnd, do you think it's okay not to disturb other
-drivers/directories until endpoint support is added to those drivers?
+ drivers/pci/host/pci-exynos.c | 22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-Thanks
-Kishon
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 6cbc1cc..a558fa1 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -116,30 +116,24 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
+ {
+ 	u32 val;
+ 
+-	if (on) {
+-		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
++	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
++	if (on)
+ 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
+-	} else {
+-		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
++	else
+ 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
+-	}
++	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
+ }
+ 
+ static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *ep, bool on)
+ {
+ 	u32 val;
+ 
+-	if (on) {
+-		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
++	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
++	if (on)
+ 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
+-	} else {
+-		val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
++	else
+ 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+-		exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
+-	}
++	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
+ }
+ 
+ static void exynos_pcie_assert_core_reset(struct exynos_pcie *ep)
+-- 
+2.10.2
+
