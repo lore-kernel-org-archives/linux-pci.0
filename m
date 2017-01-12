@@ -1,99 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41803 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932094AbdAFAao (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Jan 2017 19:30:44 -0500
-Date: Thu, 5 Jan 2017 17:30:34 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: Jerome Glisse <j.glisse@gmail.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
-        david1.zhou@amd.com, qiang.yu@amd.com
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20170106003034.GB4670@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
- <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
- <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 23/37] PCI: dwc: Add *ops* to start and stop pcie link
+Date: Thu, 12 Jan 2017 15:56:12 +0530
+Message-ID: <1484216786-17292-24-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170105232352.GB6426@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
+Add start_link and stop_link ops in dw_pcie_ops to start or stop
+the link. This will be used by endpoint functions to start the
+link once the setup has been done.
 
-> > I still don't understand what you driving at - you've said in both
-> > cases a user VMA exists.
-> 
-> In the former case no, there is no VMA directly but if you want one than
-> a device can provide one. But such VMA is useless as CPU access is not
-> expected.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-I disagree it is useless, the VMA is going to be necessary to support
-upcoming things like CAPI, you need it to support O_DIRECT from the
-filesystem, DPDK, etc. This is why I am opposed to any model that is
-not VMA based for setting up RDMA - that is shorted sighted and does
-not seem to reflect where the industry is going.
-
-So focus on having VMA backed by actual physical memory that covers
-your GPU objects and ask how do we wire up the '__user *' to the DMA
-API in the best way so the DMA API still has enough information to
-setup IOMMUs and whatnot.
-
-> What i was trying to get accross is that no matter what level you
-> consider in the end you still need something at the DMA API level.
-> And that the 2 different use case (device vma or regular vma) means
-> 2 differents API for the device driver.
-
-I agree we need new stuff at the DMA API level, but I am opposed to
-the idea we need two API paths that the *driver* has to figure out.
-That is fundamentally not what I want as a driver developer.
-
-Give me a common API to convert '__user *' to a scatter list and pin
-the pages. This needs to figure out your two cases. And Huge
-Pages. And ZONE_DIRECT.. (a better get_user_pages)
-
-Give me an API to take the scatter list and DMA map it, handling all
-the stuff associated with peer-peer. (a better dma_map_sg)
-
-Give me a notifier scheme to rework my scatter list when physical
-pages need to change (mmu notifiers)
-
-Use the scatter list memory to convey needed information from the
-first step to the second.
-
-Do not bother the driver with distinctions on what kind of memory is
-behind that VMA. Don't ask me to use get_user_pages or
-gpu_get_user_pages, do not ask me to use dma_map_sg or
-dma_map_sg_peer_direct. The Driver Doesn't Need To Know.
-
-IMHO this is why GPU direct is not mergable - it creates a crazy
-parallel mini-mm subsystem inside RDMA and uses that to connect to a
-GPU driver, everything is expected to have parallel paths for GPU
-direct and normal MM. No good at all.
-
-> > So, how do you identify these GPU objects? How do you expect RDMA
-> > convert them to scatter lists? How will ODP work?
-> 
-> No ODP on those. If you want vma, the GPU device driver can provide
-
-You said you needed invalidate, that has to be done via ODP.
-
-Jason
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 0ef6ae7..25b3b8b 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -149,6 +149,8 @@ struct dw_pcie_ops {
+ 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+ 			     int size, u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
++	int	(*start_link)(struct dw_pcie *pcie);
++	void	(*stop_link)(struct dw_pcie *pcie);
+ };
+ 
+ struct dw_pcie {
+-- 
+1.7.9.5
