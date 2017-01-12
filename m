@@ -1,42 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40200 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750848AbdAaWk4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 17:40:56 -0500
-Date: Tue, 31 Jan 2017 16:33:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jayachandran C <jnair@caviumnetworks.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Skip parent link state check for PCI-to-PCIe
- bridges
-Message-ID: <20170131223316.GC14127@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485895501-1780-1-git-send-email-jnair@caviumnetworks.com>
- <20170131211323.GB14127@bhelgaas-glaptop.roam.corp.google.com>
- <20170131214929.GA1819@localhost>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 34/37] tools: PCI: Add sample test script to invoke pcitest
+Date: Thu, 12 Jan 2017 15:56:23 +0530
+Message-ID: <1484216786-17292-35-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170131214929.GA1819@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 09:49:29PM +0000, Jayachandran C wrote:
-> On Tue, Jan 31, 2017 at 03:13:23PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Jan 31, 2017 at 08:45:01PM +0000, Jayachandran C wrote:
-> > > Commit 51ebfc92b72b4f7dac1ab45683bf56741e454b8c ("PCI: Enumerate
-> > > switches below PCI-to-PCIe bridges") sets the has_secondary_link
-> > > value for device type PCI_EXP_TYPE_PCIE_BRIDGE. With this change
-> > > the function alloc_pcie_link_state() can be called with devices
-> > > of this type as well.
-> > 
-> > You mean like this:
-> > https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=672980c62c684a625fe3a688ca8c6214062d712b
-> > 
-> > Practically identical to yours :)
-> > 
-> 
-> I should have checked the list before sending out the patch...
-> Anyway, your fix works for me. So,
-> 
-> Tested-by: Jayachandran C. <jnair@caviumnetworks.com>
+Add a simple test script that invokes the pcitest userspace tool
+to perform all the PCI endpoint tests (BAR tests, interrupt tests,
+read tests, write tests and copy tests).
 
-Thanks a lot!  I added your Tested-by.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ tools/pci/pcitest.sh |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 tools/pci/pcitest.sh
+
+diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
+new file mode 100644
+index 0000000..5442bbe
+--- /dev/null
++++ b/tools/pci/pcitest.sh
+@@ -0,0 +1,56 @@
++#!/bin/sh
++
++echo "BAR tests"
++echo
++
++bar=0
++
++while [ $bar -lt 6 ]
++do
++	pcitest -b $bar
++	bar=`expr $bar + 1`
++done
++echo
++
++echo "Interrupt tests"
++echo
++
++pcitest -l
++msi=1
++
++while [ $msi -lt 33 ]
++do
++        pcitest -m $msi
++        msi=`expr $msi + 1`
++done
++echo
++
++echo "Read Tests"
++echo
++
++pcitest -r -s 1
++pcitest -r -s 1024
++pcitest -r -s 1025
++pcitest -r -s 1024000
++pcitest -r -s 1024001
++echo
++
++echo "Write Tests"
++echo
++
++pcitest -w -s 1
++pcitest -w -s 1024
++pcitest -w -s 1025
++pcitest -w -s 1024000
++pcitest -w -s 1024001
++echo
++
++echo "Copy Tests"
++echo
++
++pcitest -c -s 1
++pcitest -c -s 1024
++pcitest -c -s 1025
++pcitest -c -s 1024000
++pcitest -c -s 1024001
++echo
+-- 
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
