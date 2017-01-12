@@ -1,17 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <3158203.Yc9Qgx82xo@wuerfel>
- <9d5e32d3-000c-2f95-7ea8-c64d53ab6b56@cogentembedded.com>
- <2723285.JORgusvJv4@wuerfel>
-From: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Message-ID: <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
-Date: Fri, 6 Jan 2017 16:47:59 +0300
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 16/37] PCI: endpoint: Introduce configfs entry for configuring
+ EP functions
+Date: Thu, 12 Jan 2017 15:56:05 +0530
+Message-ID: <1484216786-17292-17-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <2723285.JORgusvJv4@wuerfel>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,73 +17,489 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Just a guess, but if the inbound translation windows in the host
->>> bridge are wider than 32-bit, the reason for setting up a single
->>> 32-bit window is probably because that is what the parent bus supports.
+Introduce a new configfs entry to configure the EP function (like
+configuring the standard configuration header entries) and to
+bind the EP function with EP controller.
 
-I've re-checked rcar-pcie hardware documentation.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/endpoint/Kconfig      |    4 +-
+ drivers/pci/endpoint/Makefile     |    2 +-
+ drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 431 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
 
-It indeed mentions that AXI bus it sits on is 32-bit.
+diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+index 7eb1c79..930e87a 100644
+--- a/drivers/pci/endpoint/Kconfig
++++ b/drivers/pci/endpoint/Kconfig
+@@ -14,7 +14,9 @@ config PCI_ENDPOINT
+ 
+ 	   Enabling this option will build the endpoint library, which
+ 	   includes endpoint controller library and endpoint function
+-	   library.
++	   library. This will also enable the configfs entry required to
++	   configure the endpoint function and used to bind the
++	   function with a endpoint controller.
+ 
+ 	   If in doubt, say "N" to disable Endpoint support.
+ 
+diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
+index eeef1b7..a599c18 100644
+--- a/drivers/pci/endpoint/Makefile
++++ b/drivers/pci/endpoint/Makefile
+@@ -3,4 +3,4 @@
+ #
+ 
+ obj-$(CONFIG_PCI_ENDPOINT)		:= pci-epc-core.o pci-epf-core.o\
+-					   pci-epc-mem.o
++					   pci-epc-mem.o pci-ep-cfs.o
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+new file mode 100644
+index 0000000..ed0f8c2
+--- /dev/null
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -0,0 +1,427 @@
++/**
++ * configfs to configure the PCI endpoint
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/configfs.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++
++#include <linux/pci-epc.h>
++#include <linux/pci-epf.h>
++
++struct pci_epf_info {
++	struct config_group group;
++	struct list_head list;
++	struct pci_epf *epf;
++};
++
++struct pci_ep_info {
++	struct config_group group;
++	struct config_group pci_epf_group;
++	/* mutex to protect pci_epf list */
++	struct mutex lock;
++	struct list_head pci_epf;
++	const char *epc_name;
++	struct pci_epc *epc;
++};
++
++static inline struct pci_epf_info *to_pci_epf_info(struct config_item *item)
++{
++	return container_of(to_config_group(item), struct pci_epf_info, group);
++}
++
++static inline struct pci_ep_info *to_pci_ep_info(struct config_item *item)
++{
++	return container_of(to_config_group(item), struct pci_ep_info, group);
++}
++
++#define PCI_EPF_HEADER_R(_name)						       \
++static ssize_t pci_epf_##_name##_show(struct config_item *item,	char *page)    \
++{									       \
++	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
++	if (!epf->header) {						       \
++		WARN_ON_ONCE("epf device not bound to function driver\n");     \
++		return 0;						       \
++	}								       \
++	return sprintf(page, "0x%04x\n", epf->header->_name);		       \
++}
++
++#define PCI_EPF_HEADER_W_u32(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u32 val;							       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
++	if (!epf->header) {						       \
++		WARN_ON_ONCE("epf device not bound to function driver\n");     \
++		return 0;						       \
++	}								       \
++	ret = kstrtou32(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u16(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u16 val;							       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
++	if (!epf->header) {						       \
++		WARN_ON_ONCE("epf device not bound to function driver\n");     \
++		return 0;						       \
++	}								       \
++	ret = kstrtou16(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u8(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u8 val;								       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
++	if (!epf->header) {						       \
++		WARN_ON_ONCE("epf device not bound to function driver\n");     \
++		return 0;						       \
++	}								       \
++	ret = kstrtou8(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++static ssize_t pci_epf_msi_interrupts_store(struct config_item *item,
++					    const char *page, size_t len)
++{
++	u8 val;
++	int ret;
++
++	ret = kstrtou8(page, 0, &val);
++	if (ret)
++		return ret;
++
++	to_pci_epf_info(item)->epf->msi_interrupts = val;
++
++	return len;
++}
++
++static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
++					   char *page)
++{
++	return sprintf(page, "%d\n",
++		       to_pci_epf_info(item)->epf->msi_interrupts);
++}
++
++static ssize_t pci_epf_function_show(struct config_item *item,
++				     char *page)
++{
++	return sprintf(page, "%s\n",
++		       to_pci_epf_info(item)->epf->name);
++}
++
++PCI_EPF_HEADER_R(vendorid)
++PCI_EPF_HEADER_W_u16(vendorid)
++
++PCI_EPF_HEADER_R(deviceid)
++PCI_EPF_HEADER_W_u16(deviceid)
++
++PCI_EPF_HEADER_R(revid)
++PCI_EPF_HEADER_W_u8(revid)
++
++PCI_EPF_HEADER_R(progif_code)
++PCI_EPF_HEADER_W_u8(progif_code)
++
++PCI_EPF_HEADER_R(subclass_code)
++PCI_EPF_HEADER_W_u8(subclass_code)
++
++PCI_EPF_HEADER_R(baseclass_code)
++PCI_EPF_HEADER_W_u8(baseclass_code)
++
++PCI_EPF_HEADER_R(cache_line_size)
++PCI_EPF_HEADER_W_u8(cache_line_size)
++
++PCI_EPF_HEADER_R(subsys_vendor_id)
++PCI_EPF_HEADER_W_u16(subsys_vendor_id)
++
++PCI_EPF_HEADER_R(subsys_id)
++PCI_EPF_HEADER_W_u16(subsys_id)
++
++PCI_EPF_HEADER_R(interrupt_pin)
++PCI_EPF_HEADER_W_u8(interrupt_pin)
++
++CONFIGFS_ATTR(pci_epf_, vendorid);
++CONFIGFS_ATTR(pci_epf_, deviceid);
++CONFIGFS_ATTR(pci_epf_, revid);
++CONFIGFS_ATTR(pci_epf_, progif_code);
++CONFIGFS_ATTR(pci_epf_, subclass_code);
++CONFIGFS_ATTR(pci_epf_, baseclass_code);
++CONFIGFS_ATTR(pci_epf_, cache_line_size);
++CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
++CONFIGFS_ATTR(pci_epf_, subsys_id);
++CONFIGFS_ATTR(pci_epf_, interrupt_pin);
++CONFIGFS_ATTR(pci_epf_, msi_interrupts);
++CONFIGFS_ATTR_RO(pci_epf_, function);
++
++static struct configfs_attribute *pci_epf_attrs[] = {
++	&pci_epf_attr_vendorid,
++	&pci_epf_attr_deviceid,
++	&pci_epf_attr_revid,
++	&pci_epf_attr_progif_code,
++	&pci_epf_attr_subclass_code,
++	&pci_epf_attr_baseclass_code,
++	&pci_epf_attr_cache_line_size,
++	&pci_epf_attr_subsys_vendor_id,
++	&pci_epf_attr_subsys_id,
++	&pci_epf_attr_interrupt_pin,
++	&pci_epf_attr_msi_interrupts,
++	&pci_epf_attr_function,
++	NULL,
++};
++
++static void pci_epf_release(struct config_item *item)
++{
++	struct pci_epf_info *epf_info = to_pci_epf_info(item);
++
++	pci_epf_destroy(epf_info->epf);
++	kfree(epf_info);
++}
++
++static struct configfs_item_operations pci_epf_ops = {
++	.release		= pci_epf_release,
++};
++
++static struct config_item_type pci_epf_type = {
++	.ct_item_ops	= &pci_epf_ops,
++	.ct_attrs	= pci_epf_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_group *pci_epf_make(struct config_group *group,
++					 const char *name)
++{
++	struct pci_epf_info *epf_info;
++	struct pci_ep_info *ep_info;
++	struct pci_epf *epf;
++
++	epf_info = kzalloc(sizeof(*epf_info), GFP_KERNEL);
++	if (!epf_info)
++		return ERR_PTR(-ENOMEM);
++
++	config_group_init_type_name(&epf_info->group, name, &pci_epf_type);
++
++	epf = pci_epf_create(name);
++	if (IS_ERR(epf)) {
++		pr_err("failed to create endpoint function device\n");
++		return ERR_PTR(-EINVAL);
++	}
++
++	epf_info->epf = epf;
++	ep_info = container_of(group, struct pci_ep_info, pci_epf_group);
++
++	mutex_lock(&ep_info->lock);
++	list_add_tail(&epf_info->list, &ep_info->pci_epf);
++	mutex_unlock(&ep_info->lock);
++
++	return &epf_info->group;
++}
++
++static void pci_epf_drop(struct config_group *group, struct config_item *item)
++{
++	struct pci_ep_info *ep_info;
++	struct pci_epf_info *epf_info = to_pci_epf_info(item);
++
++	ep_info = container_of(group, struct pci_ep_info, pci_epf_group);
++
++	pci_epf_unbind(epf_info->epf);
++	pci_epc_remove_epf(ep_info->epc, epf_info->epf);
++
++	mutex_lock(&ep_info->lock);
++	list_del(&epf_info->list);
++	mutex_unlock(&ep_info->lock);
++
++	config_item_put(item);
++}
++
++static struct configfs_group_operations pci_epfs_ops = {
++	.make_group	= &pci_epf_make,
++	.drop_item	= &pci_epf_drop,
++};
++
++static struct config_item_type pci_epfs_type = {
++	.ct_group_ops	= &pci_epfs_ops,
++	.ct_owner	= THIS_MODULE,
++};
++
++static ssize_t pci_ep_epc_store(struct config_item *item, const char *page,
++				size_t len)
++{
++	int ret;
++	u8 func_no = 0;
++	char *epc_name;
++	struct pci_epc *epc;
++	struct pci_epf *epf;
++	struct pci_epf_info *epf_info;
++	struct pci_ep_info *ep_info = to_pci_ep_info(item);
++
++	epc_name = kstrdup(page, GFP_KERNEL);
++	if (!epc_name)
++		return -ENOMEM;
++	if (epc_name[len - 1] == '\n')
++		epc_name[len - 1] = '\0';
++
++	if (ep_info->epc) {
++		ret = -EBUSY;
++		goto err;
++	}
++
++	epc = pci_epc_get(epc_name);
++	if (IS_ERR(epc)) {
++		ret = PTR_ERR(epc);
++		goto err;
++	}
++
++	ep_info->epc = epc;
++	ep_info->epc_name = epc_name;
++
++	list_for_each_entry(epf_info, &ep_info->pci_epf, list) {
++		epf = epf_info->epf;
++		epf->func_no = func_no;
++		epf->epc = epc;
++		pci_epc_add_epf(epc, epf);
++		pci_epf_bind(epf);
++		func_no++;
++	}
++
++	return len;
++
++err:
++	kfree(epc_name);
++	return ret;
++}
++
++static ssize_t pci_ep_epc_show(struct config_item *item, char *page)
++{
++	return sprintf(page, "%s\n",
++		       to_pci_ep_info(item)->epc_name);
++}
++
++CONFIGFS_ATTR(pci_ep_, epc);
++
++static struct configfs_attribute *pci_ep_attrs[] = {
++	&pci_ep_attr_epc,
++	NULL,
++};
++
++static void pci_ep_attr_release(struct config_item *item)
++{
++	struct pci_ep_info *ep_info = to_pci_ep_info(item);
++
++	pci_epc_put(ep_info->epc);
++	kfree(ep_info->epc_name);
++	kfree(ep_info);
++}
++
++static struct configfs_item_operations pci_ep_device_ops = {
++	.release	= pci_ep_attr_release,
++};
++
++static struct config_item_type pci_ep_device_type = {
++	.ct_item_ops	= &pci_ep_device_ops,
++	.ct_attrs	= pci_ep_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_group *pci_ep_make(struct config_group *group,
++					const char *name)
++{
++	struct pci_ep_info *ep_info;
++
++	ep_info = kzalloc(sizeof(*ep_info), GFP_KERNEL);
++	if (!ep_info)
++		return ERR_PTR(-ENOMEM);
++
++	config_group_init_type_name(&ep_info->group, name, &pci_ep_device_type);
++	config_group_init_type_name(&ep_info->pci_epf_group,
++				    "epf", &pci_epfs_type);
++	configfs_add_default_group(&ep_info->pci_epf_group, &ep_info->group);
++
++	mutex_init(&ep_info->lock);
++	INIT_LIST_HEAD(&ep_info->pci_epf);
++
++	return &ep_info->group;
++}
++
++static void pci_ep_drop(struct config_group *group, struct config_item *item)
++{
++	config_item_put(item);
++}
++
++static struct configfs_group_operations pci_ep_ops = {
++	.make_group	= &pci_ep_make,
++	.drop_item	= &pci_ep_drop,
++};
++
++static struct config_item_type pci_ep_type = {
++	.ct_group_ops	= &pci_ep_ops,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem pci_ep_cfs_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_namebuf = "pci_ep",
++			.ci_type = &pci_ep_type,
++		},
++	},
++	.su_mutex = __MUTEX_INITIALIZER(pci_ep_cfs_subsys.su_mutex),
++};
++
++static int __init pci_ep_cfs_init(void)
++{
++	int ret;
++
++	config_group_init(&pci_ep_cfs_subsys.su_group);
++
++	ret = configfs_register_subsystem(&pci_ep_cfs_subsys);
++	if (ret)
++		pr_err("Error %d while registering subsystem %s\n",
++		       ret, pci_ep_cfs_subsys.su_group.cg_item.ci_namebuf);
++
++	return ret;
++}
++module_init(pci_ep_cfs_init);
++
++static void __exit pci_ep_cfs_exit(void)
++{
++	configfs_unregister_subsystem(&pci_ep_cfs_subsys);
++}
++module_exit(pci_ep_cfs_exit);
++
++MODULE_DESCRIPTION("PCI EP CONFIGFS");
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+1.7.9.5
 
-
->> Well anyway applying patch similar to your's will fix pcie-rcar + nvme
->> case - thus I don't object :)   But it can break other cases ...
->>
->> But why do you hook at set_dma_mask() and overwrite mask inside, instead
->> of hooking at dma_supported() and rejecting unsupported mask?
->>
->> I think later is better, because it lets drivers to handle unsupported
->> high-dma case, like documented in DMA-API_HOWTO.
-> 
-> I think the behavior I put in there is required for swiotlb to make
-> sense, otherwise you would rely on the driver to handle dma_set_mask()
-> failure gracefully with its own bounce buffers (as network and
-> scsi drivers do but others don't).
-> 
-> Having swiotlb or iommu enabled should result in dma_set_mask() always
-> succeeding unless the mask is too small to cover the swiotlb
-> bounce buffer area or the iommu virtual address space. This behavior
-> is particularly important in case the bus address space is narrower
-> than 32-bit, as we have to guarantee that the fallback to 32-bit
-> DMA always succeeds. There are also a lot of drivers that try to
-> set a 64-bit mask but don't implement bounce buffers for streaming
-> mappings if that fails, and swiotlb is what we use to make those
-> drivers work.
-> 
-> And yes, the API is a horrible mess.
-
-With my patch applied and thus 32bit dma_mask set for NVMe device, I do
-see high addresses passed to dma_map_*() routines and handled by
-swiotlb. Thus your statement that behavior "succeed 64bit dma_set_mask()
-operation but silently replace mask behind the scene" is required for
-swiotlb to be used, does not match reality.
-
-It can be interpreted as a breakage elsewhere, but it's hard to point
-particular "root cause". The entire infrastructure to allocate and use
-DMA memory is messy.
-
-Still current code does not work, thus fix is needed.
-
-Perhaps need to introduce some generic API to "allocate memory best
-suited for DMA to particular device", and fix allocation points (in
-drivers, filesystems, etc) to use it. Such an API could try to allocate
-area that can be DMAed by hardware, and fallback to other memory that
-can be used via swiotlb or other bounce buffer implementation.
-
-But for now, have to stay with dma masks. Will follow-up with a patch
-based on your but with coherent mask handling added.
-
-Nikita
 
 _______________________________________________
 linux-arm-kernel mailing list
