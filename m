@@ -1,54 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:62976
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S969765AbdAFAlf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Jan 2017 19:41:35 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Jerome Glisse <jglisse@redhat.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
- <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
- <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
-CC: Jerome Glisse <j.glisse@gmail.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, <hch@infradead.org>,
-        <david1.zhou@amd.com>, <qiang.yu@amd.com>
-From: Serguei Sagalovitch <serguei.sagalovitch@amd.com>
-Message-ID: <26f86650-5302-0df2-9b51-dd967f3e5a7b@amd.com>
-Date: Thu, 5 Jan 2017 19:41:26 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Abylay Ospan <aospan@netup.ru>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: iproc: fix resource allocation for BCMA PCIe
+Date: Fri, 13 Jan 2017 02:58:41 +0300
+Message-Id: <1484265521-13497-1-git-send-email-aospan@netup.ru>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Abylay Ospan <aospan@netup.ru>
 MIME-Version: 1.0
-In-Reply-To: <20170106003034.GB4670@obsidianresearch.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-01-05 07:30 PM, Jason Gunthorpe wrote:
-> ........ but I am opposed to
-> the idea we need two API paths that the *driver* has to figure out.
-> That is fundamentally not what I want as a driver developer.
->
-> Give me a common API to convert '__user *' to a scatter list and pin
-> the pages.
-Completely agreed. IMHO there is no sense to duplicate the same logic
-everywhere as well as  trying to find places where it is missing.
+Resource allocated on stack was saved by 'devm_request_resource' to
+global 'iomem_resource' but become invalid after 'iproc_pcie_bcma_probe' exit.
+So the global 'iomem_resource' was poisoned. This may cause kernel crash
+or second PCIe bridge registration failure.
 
-Sincerely yours,
-Serguei Sagalovitch
+Tested on Broadcom NorthStar machine ('Edgecore ECW7220-L') with two PCIe wifi
+adapters (b43 BCM4331 and ath10k QCA988X).
 
+Signed-off-by: Abylay Ospan <aospan@netup.ru>
+---
+ drivers/pci/host/pcie-iproc-bcma.c | 18 ++++++++----------
+ drivers/pci/host/pcie-iproc.h      |  2 ++
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
+index bd4c9ec..28f9b89 100644
+--- a/drivers/pci/host/pcie-iproc-bcma.c
++++ b/drivers/pci/host/pcie-iproc-bcma.c
+@@ -44,8 +44,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+ {
+ 	struct device *dev = &bdev->dev;
+ 	struct iproc_pcie *pcie;
+-	LIST_HEAD(res);
+-	struct resource res_mem;
+ 	int ret;
+ 
+ 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+@@ -62,21 +60,21 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+ 	}
+ 
+ 	pcie->base_addr = bdev->addr;
++	INIT_LIST_HEAD(&pcie->resources);
+ 
+-	res_mem.start = bdev->addr_s[0];
+-	res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+-	res_mem.name = "PCIe MEM space";
+-	res_mem.flags = IORESOURCE_MEM;
+-	pci_add_resource(&res, &res_mem);
++	pcie->res_mem.start = bdev->addr_s[0];
++	pcie->res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
++	pcie->res_mem.name = "PCIe MEM space";
++	pcie->res_mem.flags = IORESOURCE_MEM;
++	pcie->res_mem.child = NULL;
++	pci_add_resource(&pcie->resources, &pcie->res_mem);
+ 
+ 	pcie->map_irq = iproc_pcie_bcma_map_irq;
+ 
+-	ret = iproc_pcie_setup(pcie, &res);
++	ret = iproc_pcie_setup(pcie, &pcie->resources);
+ 	if (ret)
+ 		dev_err(dev, "PCIe controller setup failed\n");
+ 
+-	pci_free_resource_list(&res);
+-
+ 	bcma_set_drvdata(bdev, pcie);
+ 	return ret;
+ }
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 04fed8e..866d649 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -105,6 +105,8 @@ struct iproc_pcie {
+ 
+ 	bool need_msi_steer;
+ 	struct iproc_msi *msi;
++	struct resource res_mem;
++	struct list_head resources;
+ };
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
