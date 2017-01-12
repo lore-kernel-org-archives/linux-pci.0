@@ -1,88 +1,226 @@
-Return-Path: <SRS0=CWUG=YS=lekensteyn.nl=peter@kernel.org>
-Return-Path: <SRS0=CWUG=YS=lekensteyn.nl=peter@kernel.org>
-Date: Wed, 4 Jan 2017 22:09:54 +0100
-From: Peter Wu <peter@lekensteyn.nl>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170104210954.GA11946@al>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <3913750.OA6IItgEjC@aspire.rjw.lan>
- <20170103222509.GA4499@bhelgaas-glaptop.roam.corp.google.com>
- <16155135.jUckSz7QPL@aspire.rjw.lan>
- <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 33/37] tools: PCI: Add a userspace tool to test PCI endpoint
+Date: Thu, 12 Jan 2017 15:56:22 +0530
+Message-ID: <1484216786-17292-34-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170104081639.GA21076@wunner.de>
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
-> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
-> > I don't *want* to apply the revert.  It's on my for-linus branch as a
-> > worst-case scenario change if we can't figure out a better fix.
-> > 
-> > The patch below is preferable, but I'd rather not take even it,
-> > because it takes away functionality and forces people to use a boot
-> > parameter to restore it.  I expect that somebody will figure out how
-> > to fix the regression Kilian found and also keep the new functionality
-> > (without requiring boot parameters) before v4.10.
-> 
-> The issue is constrained to hybrid graphics laptops with Nvidia discrete
-> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
-> PCI core.
+Add a userspace tool to invoke the ioctls exposed by the
+PCI endpoint test driver to perform various PCI tests.
 
-The problem is not necessarily in the nouveau driver, the same problem
-occurs when you enable RPM without loading nouveau. The issue is limited
-though to some newer hybrid graphics laptops with Nvidia GPUs. While a
-quirk can be added to nouveau, I think that a (temporary) quirk in core
-would also be reasonable (since it also occurs without nouveau).
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ tools/pci/pcitest.c |  186 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 186 insertions(+)
+ create mode 100644 tools/pci/pcitest.c
 
-> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
-> when and how to call an ACPI method versus using PR3.)
-> 
-> (Neither are laptops using the Nvidia proprietary driver as it doesn't
-> runtime suspend the card.  But battery life will be terrible then.)
-> 
-> We're at rc2 so the time frame for coming up with a fix is probably
-> 4 weeks.  Peter and others have tried for months to reverse-engineer
-> how to handle runtime PM on newer Nvidia cards.  It seems likely that
-> we'll not find the ultimate solution to the problem within 4 weeks.
-
-Yep, a quick proper fix seems unlikely.
-[ Help/ideas are welcome, I suspect that these failures to restore power
-on laptops designed for Win8+ all have the same cause, related to some
-unknown interaction between ACPI and PCI. Some links:
-https://bugzilla.kernel.org/show_bug.cgi?id=190861
-https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
-
-> The way it is now, i.e. defaulting to PR3 when available, regresses
-> certain laptops such as Kilian's.  If on the other hand we default to
-> DSM when available, we'll regress certain other laptops, as Peter has
-> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
-> approach either, ideally we'd want to use PR3 as Windows does.
-> 
-> As said, the only short-term solution I see is to add an "optimus"
-> module_param to nouveau to allow users to select which method to use.
-> So in Kilian's case an additional command line parameter would be
-> necessary to fix the issue.
-> 
-> Does anyone see a better solution or can we agree on this one?  If so
-> I can come up with a patch.  This could go in via Dave Airlie's tree.
-
-As pcie_port_pm=off already reverts to DSM, I do not think that an
-additional (temporary) nouveau module parameter is going to help. I
-instead propose a (hopefully temporary) quirk in pci core that disables
-D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
-pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
-to test possible solutions in the future.
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+new file mode 100644
+index 0000000..39b5b0b
+--- /dev/null
++++ b/tools/pci/pcitest.c
+@@ -0,0 +1,186 @@
++/**
++ * Userspace PCI Endpoint Test Module
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/ioctl.h>
++#include <time.h>
++#include <unistd.h>
++
++#include <linux/pcitest.h>
++
++#define BILLION 1E9
++
++static char *result[] = { "NOT OKAY", "OKAY" };
++
++struct pci_test {
++	char		*device;
++	char		barnum;
++	bool		legacyirq;
++	unsigned int	msinum;
++	bool		read;
++	bool		write;
++	bool		copy;
++	unsigned long	size;
++};
++
++static int run_test(struct pci_test *test)
++{
++	long ret;
++	int fd;
++	struct timespec start, end;
++	double time;
++
++	fd = open(test->device, O_RDWR);
++	if (fd < 0) {
++		perror("can't open PCI Endpoint Test device");
++		return fd;
++	}
++
++	if (test->barnum >= 0 && test->barnum <= 5) {
++		ret = ioctl(fd, PCITEST_BAR, test->barnum);
++		fprintf(stdout, "BAR%d:\t\t", test->barnum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->legacyirq) {
++		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
++		fprintf(stdout, "LEGACY IRQ:\t");
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->msinum > 0 && test->msinum <= 32) {
++		ret = ioctl(fd, PCITEST_MSI, test->msinum);
++		fprintf(stdout, "MSI%d:\t\t", test->msinum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->write) {
++		ret = ioctl(fd, PCITEST_WRITE, test->size);
++		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->read) {
++		ret = ioctl(fd, PCITEST_READ, test->size);
++		fprintf(stdout, "READ (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->copy) {
++		ret = ioctl(fd, PCITEST_COPY, test->size);
++		fprintf(stdout, "COPY (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	fflush(stdout);
++}
++
++int main(int argc, char **argv)
++{
++	int c;
++	struct pci_test *test;
++
++	test = calloc(1, sizeof(*test));
++	if (!test) {
++		perror("Fail to allocate memory for pci_test\n");
++		return -ENOMEM;
++	}
++
++	/* since '0' is a valid BAR number, initialize it to -1 */
++	test->barnum = -1;
++
++	/* set default size as 100KB */
++	test->size = 0x19000;
++
++	/* set default endpoint device */
++	test->device = "/dev/pci-endpoint-test.0";
++
++	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
++	switch (c) {
++	case 'D':
++		test->device = optarg;
++		continue;
++	case 'b':
++		test->barnum = atoi(optarg);
++		if (test->barnum < 0 || test->barnum > 5)
++			goto usage;
++		continue;
++	case 'l':
++		test->legacyirq = true;
++		continue;
++	case 'm':
++		test->msinum = atoi(optarg);
++		if (test->msinum < 1 || test->msinum > 32)
++			goto usage;
++		continue;
++	case 'r':
++		test->read = true;
++		continue;
++	case 'w':
++		test->write = true;
++		continue;
++	case 'c':
++		test->copy = true;
++		continue;
++	case 's':
++		test->size = strtoul(optarg, NULL, 0);
++		continue;
++	case '?':
++	case 'h':
++	default:
++usage:
++		fprintf(stderr,
++			"usage: %s [options]\n"
++			"Options:\n"
++			"\t-D <dev>		pci endpoint test device {default: /dev/pci-endpoint-test.0}\n"
++			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
++			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
++			"\t-r			Read buffer test\n"
++			"\t-w			Write buffer test\n"
++			"\t-c			Copy buffer test\n"
++			"\t-s <size>		Size of buffer {default: 100KB}\n",
++			argv[0]);
++		return -EINVAL;
++	}
++
++	run_test(test);
++	return 0;
++}
 -- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+1.7.9.5
