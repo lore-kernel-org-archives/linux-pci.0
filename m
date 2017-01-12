@@ -1,116 +1,149 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 09/37] PCI: dwc: designware: Parse *num-lanes* property in
- dw_pcie_setup_rc
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Jingoo Han <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-10-git-send-email-kishon@ti.com>
- <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:44407 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752034AbdALKa6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:30:58 -0500
 From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <587C57FD.7050601@ti.com>
-Date: Mon, 16 Jan 2017 10:49:57 +0530
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 37/37] ARM: dts: DRA7: Add pcie1 dt node for EP mode
+Date: Thu, 12 Jan 2017 15:56:26 +0530
+Message-ID: <1484216786-17292-38-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add pcie1 dt node in order for the controller to operate in
+endpoint mode. However since none of the dra7 based boards have
+slots configured to operate in endpoint mode, keep EP mode
+disabled.
 
-On Friday 13 January 2017 10:43 PM, Joao Pinto wrote:
-> Hi,
-> =
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/am572x-idk.dts                |    7 ++++++-
+ arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi |    7 ++++++-
+ arch/arm/boot/dts/dra7-evm.dts                  |    4 ++++
+ arch/arm/boot/dts/dra7.dtsi                     |   22 +++++++++++++++++++++-
+ arch/arm/boot/dts/dra72-evm-common.dtsi         |    4 ++++
+ 5 files changed, 41 insertions(+), 3 deletions(-)
 
-> =C0s 10:25 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
->> *num-lanes* dt property is parsed in dw_pcie_host_init. However
->> *num-lanes* property is applicable to both root complex mode and
->> endpoint mode. As a first step, move the parsing of this property
->> outside dw_pcie_host_init. This is in preparation for splitting
->> pcie-designware.c to pcie-designware.c and pcie-designware-host.c
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  drivers/pci/dwc/pcie-designware.c |   18 +++++++++++-------
->>  drivers/pci/dwc/pcie-designware.h |    1 -
->>  2 files changed, 11 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-de=
-signware.c
->> index 00a0fdc..89cdb6b 100644
->> --- a/drivers/pci/dwc/pcie-designware.c
->> +++ b/drivers/pci/dwc/pcie-designware.c
->> @@ -551,10 +551,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>  		}
->>  	}
->>  =
+diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
+index 1540f7a..2ca2839 100644
+--- a/arch/arm/boot/dts/am572x-idk.dts
++++ b/arch/arm/boot/dts/am572x-idk.dts
+@@ -88,6 +88,11 @@
+ 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
+ };
+ 
+-&pcie1 {
++&pcie1_rc {
++	status = "okay";
++	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
++};
++
++&pcie1_ep {
+ 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+ };
+diff --git a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
+index 78bee26..079a7e1 100644
+--- a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
++++ b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
+@@ -556,7 +556,12 @@
+ 	};
+ };
+ 
+-&pcie1 {
++&pcie1_rc {
++	status = "ok";
++	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
++};
++
++&pcie1_ep {
+ 	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
+ };
+ 
+diff --git a/arch/arm/boot/dts/dra7-evm.dts b/arch/arm/boot/dts/dra7-evm.dts
+index 132f2be..fd0aa3a 100644
+--- a/arch/arm/boot/dts/dra7-evm.dts
++++ b/arch/arm/boot/dts/dra7-evm.dts
+@@ -937,3 +937,7 @@
+ 		status = "okay";
+ 	};
+ };
++
++&pcie1_rc {
++	status = "okay";
++};
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index addb753..bf9c668 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -272,7 +272,11 @@
+ 			#address-cells = <1>;
+ 			ranges = <0x51000000 0x51000000 0x3000
+ 				  0x0	     0x20000000 0x10000000>;
+-			pcie1: pcie@51000000 {
++			/**
++			 * To enable PCI endpoint mode, disable the pcie1_rc
++			 * node and enable pcie1_ep mode.
++			 */
++			pcie1_rc: pcie@51000000 {
+ 				compatible = "ti,dra7-pcie";
+ 				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+@@ -293,12 +297,28 @@
+ 						<0 0 0 2 &pcie1_intc 2>,
+ 						<0 0 0 3 &pcie1_intc 3>,
+ 						<0 0 0 4 &pcie1_intc 4>;
++				status = "disabled";
+ 				pcie1_intc: interrupt-controller {
+ 					interrupt-controller;
+ 					#address-cells = <0>;
+ 					#interrupt-cells = <1>;
+ 				};
+ 			};
++
++			pcie1_ep: pcie_ep@51000000 {
++				compatible = "ti,dra7-pcie-ep";
++				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
++				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
++				interrupts = <0 232 0x4>;
++				num-lanes = <1>;
++				num-ib-windows = <4>;
++				num-ob-windows = <16>;
++				ti,hwmods = "pcie1";
++				phys = <&pcie1_phy>;
++				phy-names = "pcie-phy0";
++				syscon-legacy-mode = <&scm_conf1 0x14 2>;
++				status = "disabled";
++			};
+ 		};
+ 
+ 		axi@1 {
+diff --git a/arch/arm/boot/dts/dra72-evm-common.dtsi b/arch/arm/boot/dts/dra72-evm-common.dtsi
+index e50fbee..5d9762c 100644
+--- a/arch/arm/boot/dts/dra72-evm-common.dtsi
++++ b/arch/arm/boot/dts/dra72-evm-common.dtsi
+@@ -545,3 +545,7 @@
+ 		status = "okay";
+ 	};
+ };
++
++&pcie1_rc {
++	status = "okay";
++};
+-- 
+1.7.9.5
 
->> -	ret =3D of_property_read_u32(np, "num-lanes", &pci->lanes);
->> -	if (ret)
->> -		pci->lanes =3D 0;
->> -
->>  	ret =3D of_property_read_u32(np, "num-viewport", &pci->num_viewport);
->>  	if (ret)
->>  		pci->num_viewport =3D 2;
->> @@ -751,18 +747,26 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u3=
-2 devfn,
->>  =
-
->>  void dw_pcie_setup_rc(struct pcie_port *pp)
->>  {
->> +	int ret;
->> +	u32 lanes;
->>  	u32 val;
->>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
->> +	struct device *dev =3D pci->dev;
->> +	struct device_node *np =3D dev->of_node;
->>  =
-
->>  	/* get iATU unroll support */
->>  	pci->iatu_unroll_enabled =3D dw_pcie_iatu_unroll_enabled(pci);
->>  	dev_dbg(pci->dev, "iATU unroll: %s\n",
->>  		pci->iatu_unroll_enabled ? "enabled" : "disabled");
->>  =
-
->> +	ret =3D of_property_read_u32(np, "num-lanes", &lanes);
->> +	if (ret)
->> +		lanes =3D 0;
-> =
-
-> You moved from host_init to root complex setup function, which in my opin=
-ion did
-> not improve (in this scope).
-> =
-
-> I suggest that instead of making so much intermediary patches, which is n=
-ice to
-> understand your development sequence, but hard to review. Wouldn't be bet=
-ter to
-> condense some of the patches? We would have a cloear vision of the final =
-product :)
-
-I thought the other way. If squashing patches is easier to review, I'll do =
-it.
-
-Btw, thanks for reviewing.
-
-Cheers
-Kishon
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
