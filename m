@@ -1,86 +1,81 @@
-Return-Path: <SRS0=1VDW=YZ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=1VDW=YZ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 11 Jan 2017 12:02:10 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Chen Yu <yu.c.chen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Amir Levy <amir.jer.levy@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v4 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-Message-ID: <20170111100210.GL2330@lahna.fi.intel.com>
-References: <cover.1483806825.git.lukas@wunner.de>
- <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:38961 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752363AbdALCR2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 21:17:28 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V2 2/4] PCI: exynos: Remove the unnecessary variables
+Date: Thu, 12 Jan 2017 11:17:17 +0900
+Message-id: <20170112021719.24986-2-jh80.chung@samsung.com>
+In-reply-to: <20170112021719.24986-1-jh80.chung@samsung.com>
+References: <20170112021719.24986-1-jh80.chung@samsung.com>
+ <CGME20170112021721epcas5p4a68623b842f9233c7303deb8cd3b3ee2@epcas5p4.samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 08, 2017 at 09:41:45AM +0100, Lukas Wunner wrote:
-> Hotplug ports generally block their parents from suspending to D3hot as
-> otherwise their interrupts couldn't be delivered.
-> 
-> An exception are Thunderbolt host controllers:  They have a separate
-> GPIO pin to side-band signal plug events even if the controller is
-> powered down or its parent ports are suspended to D3.  They can be told
-> apart from Thunderbolt controllers in attached devices by checking if
-> they're situated below a non-Thunderbolt device (typically a root port,
-> or the downstream port of a PCIe switch in the case of the MacPro6,1).
-> 
-> To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
-> of a host controller must not block runtime PM on the upstream bridge as
-> power to the chip is only cut once the upstream bridge has suspended.
-> Amend the condition in pci_dev_check_d3cold() accordingly.
-> 
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Andreas Noever <andreas.noever@gmail.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: Amir Levy <amir.jer.levy@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8ed098d..0b03fe7 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  
->  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
->  {
-> +	struct pci_dev *parent, *grandparent;
->  	bool *d3cold_ok = data;
->  
->  	if (/* The device needs to be allowed to go D3cold ... */
-> @@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
->  	    !pci_power_manageable(dev) ||
->  
->  	    /* Hotplug interrupts cannot be delivered if the link is down. */
-> -	    dev->is_hotplug_bridge)
-> +	    (dev->is_hotplug_bridge &&
-> +
-> +		/*
-> +		 * Exception:  Thunderbolt host controllers have a pin to
-> +		 * side-band signal plug events.  Their hotplug ports are
-> +		 * recognizable by having a non-Thunderbolt device as
-> +		 * grandparent.
-> +		 */
-> +		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
-> +				 (grandparent = pci_upstream_bridge(parent)) &&
-> +						!grandparent->is_thunderbolt)))
+Remove the unnecessary variables(elbi/phy/block_base).
+It needs one resource structure for assigning each resource.
+So it replaces with one 'res' variable.
 
-Can you move this to its own helper function?
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+Changelog on V2:
+- None
 
->  
->  		*d3cold_ok = false;
->  
-> -- 
-> 2.11.0
+ drivers/pci/host/pci-exynos.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 92856cd..3a7e09b 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -509,9 +509,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	struct exynos_pcie *ep;
+ 	struct pcie_port *pp;
+ 	struct device_node *np = dev->of_node;
+-	struct resource *elbi_base;
+-	struct resource *phy_base;
+-	struct resource *block_base;
++	struct resource *res;
+ 	int ret;
+ 
+ 	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
+@@ -542,22 +540,22 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto fail_clk;
+ 
+-	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	ep->elbi_base = devm_ioremap_resource(dev, elbi_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	ep->elbi_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->elbi_base)) {
+ 		ret = PTR_ERR(ep->elbi_base);
+ 		goto fail_bus_clk;
+ 	}
+ 
+-	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	ep->phy_base = devm_ioremap_resource(dev, phy_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	ep->phy_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->phy_base)) {
+ 		ret = PTR_ERR(ep->phy_base);
+ 		goto fail_bus_clk;
+ 	}
+ 
+-	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+-	ep->block_base = devm_ioremap_resource(dev, block_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
++	ep->block_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->block_base)) {
+ 		ret = PTR_ERR(ep->block_base);
+ 		goto fail_bus_clk;
+-- 
+2.10.2
+
