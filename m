@@ -1,150 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lukasz Majewski <lukma@denx.de>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
- <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
- <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
- <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <587DAD37.5030201@ti.com>
-Date: Tue, 17 Jan 2017 11:05:51 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: NVMe vs DMA addressing limitations
+To: Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@linaro.org>
+References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+ <20170110070719.GA17208@lst.de>
+ <c4fd007c-3f07-fc2a-8cbb-7152f578609d@cogentembedded.com>
+ <4137257.d2v87kqLLv@wuerfel> <20170110144839.GB27156@lst.de>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <80676b35-121b-0462-23fc-ed5608e1e671@grimberg.me>
+Date: Thu, 12 Jan 2017 12:09:11 +0200
 MIME-Version: 1.0
-In-Reply-To: <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170110144839.GB27156@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
+ Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
 
-On Monday 16 January 2017 10:31 PM, Joao Pinto wrote:
-> 
-> Hi,
-> 
-> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
->> + Joao, Jingoo
->>
->> Hi,
->>
->> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
->>> Hi Kishon,
->>>
->>>> Hi Łukasz,
->>>>
->>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
->>>>> Hi Kishon,
->>>>>
->>>>>> Hi,
->>>>>>
->>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
->>>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
->>>>>>> run with forced GEN1 speed on PCIe bus.
->>>>>>>
->>>>>>> This patch changes the speed explicitly on dra7 based devices when
->>>>>>> proper device tree attribute is defined for the PCIe controller.
->>>>>>>
->>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
->>>>>>
->>>>>> Bjorn has already queued a patch to do the same thing
->>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
->>>>>
->>>>> It seems like Bjorn only modifies CAP registers.
->>>>
->>>> The patch also modifies the LNKCTL2 register.
->>>>>
->>>>> He also needs to change register with 0x080C offset to actually
->>>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
->>>>
->>>> This bit is used to initiate speed change (after the link is
->>>> initialized in GEN1). Resetting the bit (like what you have done
->>>> here) prevents speed change.
->>>
->>> This is strange, but e2e advised me to do things as I did in the patch
->>> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
->>>
->>> Link:
->>> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
->>>
->>> Both patches modify 0x5180 007C register to set GEN1 capability
->>> (PCI_EXP_LNKCAP_SLS_2_5GB)
->>>
->>> The problem is with second register (in your patch):
->>>
->>> From SPRUHZ6G TRM:
->>>
->>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
->>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
->>>   description in TRM
->>>
->>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
->>> default /reset value.
->>
->> The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
->>>
->>>
->>> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
->>> Mine shows differences in lspci output (as posted in [1]).
->>
->> You'll see the difference even with the patch in Bjorn's tree ;-)
->>
->> I think these are 2 different approaches to keep the link at GEN1. Joao or
->> Jingoo, do you have any suggestion here?
-> 
-> I studied the Databook, and both approaches seem to be right, dependently of the
-> Core configuration and setup.
-> 
-> The standard manual speed change sequence is:
-> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
-> b) Clear "Directed Speed Change"
-> c) Set "Directed Speed Change"
-> 
-> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the default
-> value), it will execute LTSSM to initiate speed change to Gen2 or Gen3, after
-> link is started in Gen1, and then the bit is automatically cleared.
-> 
-> Lukasz is reseting this bit, in order to avoid the LTSSM to be executed, which
-> is correct. There is another way to prevent this automatic speed change, which
-> is to set GEN1 speed before link up which might be difficult in some setups, so
-> Kishon's also right.
+>> Another workaround me might need is to limit amount of concurrent DMA
+>> in the NVMe driver based on some platform quirk. The way that NVMe works,
+>> it can have very large amounts of data that is concurrently mapped into
+>> the device.
+>
+> That's not really just NVMe - other storage and network controllers also
+> can DMA map giant amounts of memory.  There are a couple aspects to it:
+>
+>  - dma coherent memoery - right now NVMe doesn't use too much of it,
+>    but upcoming low-end NVMe controllers will soon start to require
+>    fairl large amounts of it for the host memory buffer feature that
+>    allows for DRAM-less controller designs.  As an interesting quirk
+>    that is memory only used by the PCIe devices, and never accessed
+>    by the Linux host at all.
 
-Just for my understanding, why do you think this will be difficult in some setups?
-> 
-> In my opinion Lukasz approach would be the one that might be more universal and
-> more "secure".
+Would it make sense to convert the nvme driver to use normal allocations
+and use the DMA streaming APIs (dma_sync_single_for_[cpu|device]) for
+both queues and future HMB?
 
-IMHO setting link control in the standard PCIe header space should be more
-universal. I'm not sure about the secure part though.
+>  - size vs number of the dynamic mapping.  We probably want the dma_ops
+>    specify a maximum mapping size for a given device.  As long as we
+>    can make progress with a few mappings swiotlb / the iommu can just
+>    fail mapping and the driver will propagate that to the block layer
+>    that throttles I/O.
 
-Thanks
-Kishon
-> 
-> Joao
-> 
-> 
->>
->>>
->>>>
->>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
->>>> the IP register.
->>>
->>> From the original patch description:
->>>
->>> "Add support to force Root Complex to work in GEN1 mode if so desired,
->>> but don't force GEN1 mode on any board just yet."
->>>
->>> Are there any (floating around) patches allowing forcing GEN1 operation
->>> on any board (I would like to reuse/port them to my current solution)?
->>
->> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
->> patch in Bjorn's tree.
->>
->> Thanks
->> Kishon
->>
-> 
+Isn't max mapping size per device too restrictive? it is possible that
+not all devices posses active mappings concurrently.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
