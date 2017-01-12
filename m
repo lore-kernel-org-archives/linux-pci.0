@@ -1,181 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:16831 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750944AbdAPINM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 03:13:12 -0500
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-To: Lukasz Majewski <lukma@denx.de>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
- <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <587C8088.80905@ti.com>
-Date: Mon, 16 Jan 2017 13:42:56 +0530
+Return-Path: <SRS0=nk3a=Y2=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=nk3a=Y2=linux.intel.com=mika.westerberg@kernel.org>
+Date: Thu, 12 Jan 2017 11:02:59 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Chen Yu <yu.c.chen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Amir Levy <amir.jer.levy@intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v4 3/8] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+Message-ID: <20170112090259.GW2330@lahna.fi.intel.com>
+References: <cover.1483806825.git.lukas@wunner.de>
+ <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
+ <20170111100210.GL2330@lahna.fi.intel.com>
+ <20170112014707.GA24136@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170116074927.086418f4@jawa>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170112014707.GA24136@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Łukasz,
+On Thu, Jan 12, 2017 at 02:47:07AM +0100, Lukas Wunner wrote:
+> On Wed, Jan 11, 2017 at 12:02:10PM +0200, Mika Westerberg wrote:
+> > On Sun, Jan 08, 2017 at 09:41:45AM +0100, Lukas Wunner wrote:
+> > > Hotplug ports generally block their parents from suspending to D3hot as
+> > > otherwise their interrupts couldn't be delivered.
+> > > 
+> > > An exception are Thunderbolt host controllers:  They have a separate
+> > > GPIO pin to side-band signal plug events even if the controller is
+> > > powered down or its parent ports are suspended to D3.  They can be told
+> > > apart from Thunderbolt controllers in attached devices by checking if
+> > > they're situated below a non-Thunderbolt device (typically a root port,
+> > > or the downstream port of a PCIe switch in the case of the MacPro6,1).
+> > > 
+> > > To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
+> > > of a host controller must not block runtime PM on the upstream bridge as
+> > > power to the chip is only cut once the upstream bridge has suspended.
+> > > Amend the condition in pci_dev_check_d3cold() accordingly.
+> > > 
+> > > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > Cc: Andreas Noever <andreas.noever@gmail.com>
+> > > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > > Cc: Amir Levy <amir.jer.levy@intel.com>
+> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > > ---
+> > >  drivers/pci/pci.c | 13 ++++++++++++-
+> > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 8ed098d..0b03fe7 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+> > >  
+> > >  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+> > >  {
+> > > +	struct pci_dev *parent, *grandparent;
+> > >  	bool *d3cold_ok = data;
+> > >  
+> > >  	if (/* The device needs to be allowed to go D3cold ... */
+> > > @@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+> > >  	    !pci_power_manageable(dev) ||
+> > >  
+> > >  	    /* Hotplug interrupts cannot be delivered if the link is down. */
+> > > -	    dev->is_hotplug_bridge)
+> > > +	    (dev->is_hotplug_bridge &&
+> > > +
+> > > +		/*
+> > > +		 * Exception:  Thunderbolt host controllers have a pin to
+> > > +		 * side-band signal plug events.  Their hotplug ports are
+> > > +		 * recognizable by having a non-Thunderbolt device as
+> > > +		 * grandparent.
+> > > +		 */
+> > > +		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
+> > > +				 (grandparent = pci_upstream_bridge(parent)) &&
+> > > +						!grandparent->is_thunderbolt)))
+> > 
+> > Can you move this to its own helper function?
+> 
+> I can certainly do that.
+> 
+> Could one of you guys confirm that the code above is safe on non-Macs?
+> 
+> Specifically, the very first Thunderbolt chips (Light Ridge, Eagle Ridge)
+> had no POC, i.e. they were unable to power themselves off.  Apple put an
+> ARM Cortex (NXP LPC1112) on the logic board which snoops on the connector
+> lines for hotplug detection while the Thunderbolt controller is powered
+> down.  The power rails to the controller are brought up and down with
+> separate load switches.  This functionality became integrated into the
+> controller starting with Cactus Ridge in 2012.
+> 
+> So I know the above code is safe on Macs.  However on non-Macs these
+> extra chips for power management may not exist, i.e. the controller
+> stays on all the time and then I shouldn't suspend the upstream bridge
+> to D3.  I assume that such machines do not exist as Apple was pretty
+> much the only vendor with Thunderbolt gear in the 2010-2012 time frame.
+> The only other one I know of was the Sony Vaio Z21 which used the
+> optical version of Thunderbolt to attach a docking station, but these
+> are rare.
+> 
+> If you know of non-Macs which might be broken by the above code snippet,
+> I could dmi-quirk this to Macs plus constrain to CONFIG_THUNDERBOLT being
+> enabled.
 
-On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
-> Hi Kishon,
-> 
->> Hi,
->>
->> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
->>> Some devices (due to e.g. bad PCIe signal integrity) require to run
->>> with forced GEN1 speed on PCIe bus.
->>>
->>> This patch changes the speed explicitly on dra7 based devices when
->>> proper device tree attribute is defined for the PCIe controller.
->>>
->>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
->>
->> Bjorn has already queued a patch to do the same thing
->> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
-> 
-> It seems like Bjorn only modifies CAP registers.
+The thunderbolt chips I have seen all include the side-band hotplug
+detection GPIO. In addition the whole PCIe hierarchy is powered down
+when there is nothing connected. So in that sense, I don't see how this
+could break them.
 
-The patch also modifies the LNKCTL2 register.
-> 
-> He also needs to change register with 0x080C offset to actually
-> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
-
-This bit is used to initiate speed change (after the link is initialized in
-GEN1). Resetting the bit (like what you have done here) prevents speed change.
-
-IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking the IP
-register.
-
-Thanks
-Kishon
-
-> 
-> Best regards,
-> Łukasz
-> 
->>
->> Thanks
->> Kishon
->>
->>> ---
->>>
->>> Patch applies on newest origin/master
->>> SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
->>>
->>> Tested at AM5728
->>>
->>> ---
->>>  Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
->>>  drivers/pci/host/pci-dra7xx.c                    | 23
->>> +++++++++++++++++++++++
->>> drivers/pci/host/pcie-designware.h               |  1 + 3 files
->>> changed, 25 insertions(+)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt
->>> b/Documentation/devicetree/bindings/pci/ti-pci.txt index
->>> 60e2516..9f97409 100644 ---
->>> a/Documentation/devicetree/bindings/pci/ti-pci.txt +++
->>> b/Documentation/devicetree/bindings/pci/ti-pci.txt @@ -25,6 +25,7
->>> @@ PCIe Designware Controller 
->>>  Optional Property:
->>>   - gpios : Should be added if a gpio line is required to drive
->>> PERST# line
->>> + - to,pcie-is-gen1: Indicates that forced gen1 port operation is
->>> needed. 
->>>  Example:
->>>  axi {
->>> diff --git a/drivers/pci/host/pci-dra7xx.c
->>> b/drivers/pci/host/pci-dra7xx.c index 9595fad..eec5fae 100644
->>> --- a/drivers/pci/host/pci-dra7xx.c
->>> +++
->>> b/drivers/pci/host/pci-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xxdra7xx.c
->>> @@ -63,6 +63,13 @@ #define
->>> LINK_UP						BIT(16)
->>> #define
->>> DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
->>> +#define         PCIECTRL_EP_DBICS_LNK_CAP
->>> 0x007C +#define
->>> MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
->>> +#define         MAX_LINK_SPEEDS_GEN1
->>> BIT(0) + +#define
->>> PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
->>> +#define         CFG_DIRECTED_SPEED_CHANGE
->>> BIT(17) + struct dra7xx_pcie { struct pcie_port	pp;
->>>  	void __iomem		*base;		/* DT
->>> ti_conf */ @@ -270,6 +277,7 @@ static int __init
->>> dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx, struct pcie_port
->>> *pp = &dra7xx->pp; struct device *dev = pp->dev;
->>>  	struct resource *res;
->>> +	u32 val;
->>>  
->>>  	pp->irq = platform_get_irq(pdev, 1);
->>>  	if (pp->irq < 0) {
->>> @@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct
->>> dra7xx_pcie *dra7xx, if (!pp->dbi_base)
->>>  		return -ENOMEM;
->>>  
->>> +	if (pp->is_gen1) {
->>> +		dev_info(dev, "GEN1 forced\n");
->>> +
->>> +		val = readl(pp->dbi_base +
->>> PCIECTRL_EP_DBICS_LNK_CAP);
->>> +		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK,
->>> MAX_LINK_SPEEDS_GEN1);
->>> +		writel(val, pp->dbi_base +
->>> PCIECTRL_EP_DBICS_LNK_CAP); +
->>> +		val = readl(pp->dbi_base +
->>> PCIECTRL_PL_WIDTH_SPEED_CTL);
->>> +		val &= ~CFG_DIRECTED_SPEED_CHANGE;
->>> +		writel(val, pp->dbi_base +
->>> PCIECTRL_PL_WIDTH_SPEED_CTL);
->>> +	}
->>> +
->>>  	ret = dw_pcie_host_init(pp);
->>>  	if (ret) {
->>>  		dev_err(dev, "failed to initialize host\n");
->>> @@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct
->>> platform_device *pdev) goto err_gpio;
->>>  	}
->>>  
->>> +	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
->>> +		pp->is_gen1 = true;
->>> +
->>>  	reg = dra7xx_pcie_readl(dra7xx,
->>> PCIECTRL_DRA7XX_CONF_DEVICE_CMD); reg &= ~LTSSM_EN;
->>>  	dra7xx_pcie_writel(dra7xx,
->>> PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg); diff --git
->>> a/drivers/pci/host/pcie-designware.h
->>> b/drivers/pci/host/pcie-designware.h index a567ea2..2fb0b18 100644
->>> --- a/drivers/pci/host/pcie-designware.h +++
->>> b/drivers/pci/host/pcie-designware.h @@ -50,6 +50,7 @@ struct
->>> pcie_port { struct irq_domain	*irq_domain;
->>>  	unsigned long		msi_data;
->>>  	u8			iatu_unroll_enabled;
->>> +	u8                      is_gen1;
->>>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->>>  };
->>>  
->>>
-> 
-> 
-> 
-> 
-> Best regards,
-> 
-> Lukasz Majewski
-> 
-> --
-> 
-> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-> 
+Constraining this to CONFIG_THUNDERBOLT does not limit anything because
+distros will have it enabled anyway ;-) Having DMI quirk might be good
+idea, just in case.
