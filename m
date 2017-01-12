@@ -1,112 +1,78 @@
-Return-Path: <SRS0=9PoU=YQ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=9PoU=YQ=wunner.de=lukas@kernel.org>
-Date: Mon, 2 Jan 2017 12:40:40 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170102114040.GA20127@wunner.de>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
- <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <2046793688.407.1483005524737.JavaMail.zimbra@quantumtechnology.info>
- <521048803.418.1483027350066.JavaMail.zimbra@quantumtechnology.info>
- <472708904.419.1483028422817.JavaMail.zimbra@quantumtechnology.info>
- <20161229175028.GA18510@wunner.de>
- <52715138.511.1483053634089.JavaMail.zimbra@quantumtechnology.info>
- <20161230000731.GB18700@wunner.de>
- <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 02/37] PCI: dwc: designware: Add new *ops* for cpu addr fixup
+Date: Thu, 12 Jan 2017 15:55:51 +0530
+Message-ID: <1484216786-17292-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="IJpNTDwzlM2Ie8A6"
-In-Reply-To: <1180505121.522.1483056977880.JavaMail.zimbra@quantumtechnology.info>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Some platforms (like dra7xx) require only the least 28 bits of the
+corresponding 32 bit CPU address to be programmed in the address
+translation unit. This modified address is stored in io_base/mem_base/
+cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
+host mode where the address range is fixed, device mode requires
+different addresses to be programmed based on the host buffer address.
+Add a new ops to get the least 28 bits of the corresponding 32 bit
+CPU address and invoke it before programming the address translation
+unit.
 
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.c |    3 +++
+ drivers/pci/dwc/pcie-designware.h |    1 +
+ 2 files changed, 4 insertions(+)
 
-On Fri, Dec 30, 2016 at 01:16:17AM +0100, Kilian Singer wrote:
-> I did the debug message on the 4.10-rc1 for now. I could go back to 4.9
-> if that helps but needs some time again to compile.
-> The debug messages from the first rpm_... to the crash are:
-[...]
-> [   24.831417] nouveau 0000:01:00.0: rpm_suspend
-> [   24.831427] nouveau 0000:01:00.0: DRM: suspending console...
-> [   24.831432] nouveau 0000:01:00.0: DRM: suspending display...
-> [   24.831477] nouveau 0000:01:00.0: DRM: evicting buffers...
-> [   24.865243] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
-> [   24.865269] nouveau 0000:01:00.0: DRM: suspending client object trees...
-> [   24.870724] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
-> [   26.080300] thinkpad_acpi: EC reports that Thermal Table has changed
-> [   26.207691] pcieport 0000:00:01.0: rpm_idle
-> [   26.207693] pcieport 0000:00:01.0: rpm_suspend
-> [   28.927640] snd_hda_codec_hdmi hdaudioC0D0: rpm_suspend
-> SYSTEM IS NOW NOT RESPONSIVE
-
-So two seconds before the system became unresponsive, the root port above
-the discrete GPU suspended, suggesting that's the culprit.  Could you test
-either of the attached patches to confirm this theory?  They disable
-runtime PM on this specific root port but allow it on all the others.
-
-You've got an Optimus laptop, i.e. power to the discrete GPU can be cut.
-Traditionally this is achieved by invoking an ACPI _DSM (Device Specific
-Method).  That's what we did up until v4.7.
-
-However on newer laptops Windows no longer cuts power to the discrete GPU
-by invoking the _DSM, but rather by suspending the root port above the
-GPU.  (More specifically by turning off Power Resources required for D3
-of the root port, those are specified in a _PR3 object.)  We started
-supporting this with v4.8.
-
-If the above theory is correct, we need to involve Optimus experts
-because this is not an issue then with powering down root ports in
-general, but rather specific to this Optimus use case.
-
-Thanks,
-
-Lukas
-
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="disable_pm_v4.9.patch"
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba34907..c9dd1e0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2242,6 +2242,10 @@ static bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (pci_bridge_d3_force)
- 			return true;
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index bed1999..d68bc7b 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -195,6 +195,9 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ {
+ 	u32 retries, val;
  
-+		if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+		    bridge->device == 0x0c01)
-+			return false;
++	if (pp->ops->cpu_addr_fixup)
++		cpu_addr = pp->ops->cpu_addr_fixup(cpu_addr);
 +
- 		/*
- 		 * It should be safe to put PCIe ports from 2015 or newer
- 		 * to D3.
-
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="disable_pm_v4.10-rc1.patch"
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d..2e4b32bd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2240,6 +2240,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (pci_bridge_d3_disable)
- 			return false;
+ 	if (pp->iatu_unroll_enabled) {
+ 		dw_pcie_writel_unroll(pp, index, PCIE_ATU_UNR_LOWER_BASE,
+ 			lower_32_bits(cpu_addr));
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index a567ea2..32f4602 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -54,6 +54,7 @@ struct pcie_port {
+ };
  
-+		if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+		    bridge->device == 0x0c01)
-+			return false;
-+
- 		/*
- 		 * Hotplug ports handled by firmware in System Management Mode
- 		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
+ struct pcie_host_ops {
++	u64 (*cpu_addr_fixup)(u64 cpu_addr);
+ 	u32 (*readl_rc)(struct pcie_port *pp, u32 reg);
+ 	void (*writel_rc)(struct pcie_port *pp, u32 reg, u32 val);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+-- 
+1.7.9.5
 
---IJpNTDwzlM2Ie8A6--
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
