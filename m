@@ -1,74 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@linaro.org>
-To: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: NVMe vs DMA addressing limitations
-Date: Thu, 12 Jan 2017 12:56:07 +0100
-Message-ID: <3306663.hKmLLq1hhl@wuerfel>
-In-Reply-To: <80676b35-121b-0462-23fc-ed5608e1e671@grimberg.me>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <20170110144839.GB27156@lst.de>
- <80676b35-121b-0462-23fc-ed5608e1e671@grimberg.me>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH] PCI: dwc: Add COMPILE_TEST to all designware based drivers
+Date: Thu, 12 Jan 2017 15:13:03 +0530
+Message-ID: <1484214183-31805-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
- Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- artemi.ivanov@cogentembedded.com, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 12, 2017 12:09:11 PM CET Sagi Grimberg wrote:
-> >> Another workaround me might need is to limit amount of concurrent DMA
-> >> in the NVMe driver based on some platform quirk. The way that NVMe works,
-> >> it can have very large amounts of data that is concurrently mapped into
-> >> the device.
-> >
-> > That's not really just NVMe - other storage and network controllers also
-> > can DMA map giant amounts of memory.  There are a couple aspects to it:
-> >
-> >  - dma coherent memoery - right now NVMe doesn't use too much of it,
-> >    but upcoming low-end NVMe controllers will soon start to require
-> >    fairl large amounts of it for the host memory buffer feature that
-> >    allows for DRAM-less controller designs.  As an interesting quirk
-> >    that is memory only used by the PCIe devices, and never accessed
-> >    by the Linux host at all.
-> 
-> Would it make sense to convert the nvme driver to use normal allocations
-> and use the DMA streaming APIs (dma_sync_single_for_[cpu|device]) for
-> both queues and future HMB?
+Add COMPILE_TEST to all designware based drivers so that it is possible
+to perform compile test even when a particular architecture specific
+config symbol is not set.
 
-That is an interesting question: We actually have the
-"DMA_ATTR_NO_KERNEL_MAPPING" for this case, and ARM implements
-it in the coherent interface, so that might be a good fit.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Implementing it in the streaming API makes no sense since we
-already have a kernel mapping here, but using a normal allocation
-(possibly with DMA_ATTR_NON_CONSISTENT or DMA_ATTR_SKIP_CPU_SYNC,
-need to check) might help on other architectures that have
-limited amounts of coherent memory and no CMA.
-
-Another benefit of the coherent API for this kind of buffer is
-that we can use CMA where available to get a large consecutive
-chunk of RAM on architectures without an IOMMU when normal
-memory is no longer available because of fragmentation.
-
-	Arnd
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index deae261..8b08519 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -29,21 +29,21 @@ config PCIE_DW_PLAT
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+-	depends on SOC_EXYNOS5440
++	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+-	depends on SOC_IMX6Q
++	depends on SOC_IMX6Q || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+-	depends on ARCH_SPEAR13XX
++	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -52,7 +52,7 @@ config PCIE_SPEAR13XX
+ 
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+-	depends on ARCH_KEYSTONE
++	depends on ARCH_KEYSTONE || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -64,7 +64,7 @@ config PCI_KEYSTONE
+ 
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+-	depends on OF && (ARM || ARCH_LAYERSCAPE)
++	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW
+@@ -83,7 +83,7 @@ config PCI_HISI
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+-	depends on ARCH_QCOM && OF
++	depends on (ARCH_QCOM || COMPILE_TEST) && OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -94,7 +94,7 @@ config PCIE_QCOM
+ 
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+-	depends on ARCH_MVEBU
++	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -106,7 +106,7 @@ config PCIE_ARMADA_8K
+ 
+ config PCIE_ARTPEC6
+ 	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on MACH_ARTPEC6
++	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+-- 
+1.7.9.5
