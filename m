@@ -1,94 +1,124 @@
-Return-Path: <SRS0=t7Pu=ZN=gmail.com=geert.uytterhoeven@kernel.org>
-Return-Path: <SRS0=t7Pu=ZN=gmail.com=geert.uytterhoeven@kernel.org>
-MIME-Version: 1.0
-Sender: geert.uytterhoeven@gmail.com
-In-Reply-To: <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com> <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 31 Jan 2017 22:43:39 +0100
-Message-ID: <CAMuHMdUKVsxAHtLBC70EOY5uTcSkMm1qLBUf6mLck6YA=1qaBg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Check for OF device match early
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Simon Horman <horms@verge.net.au>,
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <uwe@kleine-koenig.org>
+Message-ID: <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
+Date: Thu, 12 Jan 2017 14:18:46 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
+ linux-arm-kernel@lists.infradead.org,
+ Russell King <rmk+kernel@arm.linux.org.uk>
+Content-Type: multipart/mixed; boundary="===============6745860731278047750=="
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--===============6745860731278047750==
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="XUuhLucNQLGUfMka6ILx5CsjoiaugVEGE"
 
-On Tue, Jan 31, 2017 at 7:09 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jan 31, 2017 at 04:33:15PM +0100, Geert Uytterhoeven wrote:
->> On Tue, Jan 31, 2017 at 4:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > A match in the rcar_pcie_of_match[] table is required, so check that first,
->> > before we start setting up things that need to be undone if it fails.  No
->> > functional change intended.
->> >
->> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> > ---
->> >  drivers/pci/host/pcie-rcar.c |   10 +++++-----
->> >  1 file changed, 5 insertions(+), 5 deletions(-)
->> >
->> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->> > index 0d9b96c3c49d..c91ff0b91be8 100644
->> > --- a/drivers/pci/host/pcie-rcar.c
->> > +++ b/drivers/pci/host/pcie-rcar.c
->> > @@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->> >         int err;
->> >         int (*hw_init_fn)(struct rcar_pcie *);
->> >
->> > +       of_id = of_match_device(rcar_pcie_of_match, dev);
->> > +       if (!of_id || !of_id->data)
->> > +               return -EINVAL;
->> > +
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--XUuhLucNQLGUfMka6ILx5CsjoiaugVEGE
+Content-Type: multipart/mixed; boundary="2PQKE2rFpqmOul4133NS8FBk5UoS82H42";
+ protected-headers="v1"
+From: =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <uwe@kleine-koenig.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Russell King <rmk+kernel@arm.linux.org.uk>,
+ linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
+Message-ID: <9f48e2a8-e1e0-e3db-af48-12297f8521f2@kleine-koenig.org>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170111220235.GP14532@bhelgaas-glaptop.roam.corp.google.com>
+
+--2PQKE2rFpqmOul4133NS8FBk5UoS82H42
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+
+On 01/11/2017 11:02 PM, Bjorn Helgaas wrote:
+> Hi Uwe,
+>=20
+> On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-K=F6nig wrote:
+>> Hello,
 >>
->> As this driver is DT-only, none of the above can fail, and you could just do
+>> on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
+>> ath10k driver fails to bind to the matching hardware if CONFIG_PCIEASP=
+M
+>> is enabled:
 >>
->>        hw_init_fn = of_device_get_match_data(dev);
->>
->> instead, getting rid of of_id completely.
->
-> Oh, I really like that, thanks for pointing that out!
->
-> I was about to say that I personally would not check of_id->data for NULL,
-> because it is only NULL if somebody adds an entry to rcar_pcie_of_match
-> without a .data member.  In that case, I'd rather take the NULL pointer
-> dereference than return -EINVAL because it's too easy to ignore the
-> -EINVAL.
->
-> What do you think about the following?
+>> [...]
+> We have several open issues related to ASPM:
+>=20
+>   https://bugzilla.kernel.org/show_bug.cgi?id=3D102311 ASPM: ASMEDA asm=
+1062 not working
+>   https://bugzilla.kernel.org/show_bug.cgi?id=3D187731 Null pointer der=
+eference in ASPM
+>   https://bugzilla.kernel.org/show_bug.cgi?id=3D189951 Enabling ASPM ca=
+uses NIC performance issue
+>   https://bugzilla.kernel.org/show_bug.cgi?id=3D60111 NULL pointer dere=
+f in ASPM alloc_pcie_link_state()
+>=20
+> I don't recognize yours as being one of these.  Can you open a new
+> issue and attach the complete dmesg log and "lspci -vv" output?
 
-Thanks, looks fine!
+Done: https://bugzilla.kernel.org/show_bug.cgi?id=3D192441
 
-> commit 25bd3aa972ee32f04590aa68b2b785dce36b036a
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Jan 31 08:45:49 2017 -0600
->
->     PCI: rcar: Use of_device_get_match_data() to simplify probe
->
->     This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
->     match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
->
->     Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
->     has a NULL .data member.  That's a driver defect, and we don't want to
->     return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
->     dereference so we notice the problem and fix it.
->
->     Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
->     functional change intended.
->
->     Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Is this a regression?
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+As written in the bug report this also happens on 4.7.
 
-Gr{oetje,eeting}s,
+Best regards
+Uwe
 
-                        Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+--2PQKE2rFpqmOul4133NS8FBk5UoS82H42--
+
+--XUuhLucNQLGUfMka6ILx5CsjoiaugVEGE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAlh3gjcACgkQwfwUeK3K
+7AnG0Af/cRR4WnRtA1abp9p2zpEunYrWI01jOXeqg1U3XzNdqUGYchne/usqGJmJ
+wmudfb8nl84e77mDwjYHhSInHo9G0l/n+hEXPFxW4IjP/GaL5JofAg3rggVUThMq
+rrgpHvBV92Wf37TLo3hQlxQCb85wKeQ77y+1Z4tfGxL1oXnjHjKnMJAXWdGhiYUe
+E/zomHEU45ZG4G1id3tLUadA+NvhLoy9cFmrgDCsYtgClsrvuxPZTpPVadYoc3ON
+DDZhfS2CCUe5AupTIDludFizEWqP4jWF7D+z4wLDWJWVUDLGgopsbq3nbCL98+p/
+THbwJyvF8lmAbDnLnIwFV9WQ2YS5nw==
+=+99D
+-----END PGP SIGNATURE-----
+
+--XUuhLucNQLGUfMka6ILx5CsjoiaugVEGE--
+
+
+--===============6745860731278047750==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--===============6745860731278047750==--
