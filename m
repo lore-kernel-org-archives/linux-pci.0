@@ -1,133 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 28 Jan 2017 14:54:59 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37996 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750730AbdALV5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Jan 2017 16:57:45 -0500
+Date: Thu, 12 Jan 2017 15:57:40 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukasz Majewski <lukma@denx.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-Message-ID: <20170128205459.GD20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: rockchip: Add quirk to disable RC's ASPM L0s
+Message-ID: <20170112215740.GF8312@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484185997-55685-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1484486354-4585-1-git-send-email-lukma@denx.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1484185997-55685-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 15, 2017 at 02:19:14PM +0100, Lukasz Majewski wrote:
-> Some devices (due to e.g. bad PCIe signal integrity) require to run
-> with forced GEN1 speed on PCIe bus.
+On Thu, Jan 12, 2017 at 09:53:17AM +0800, Shawn Lin wrote:
+> Rockchip's RC outputs 100MHz reference clock but there are
+> two methods for PHY to generate it.
 > 
-> This patch changes the speed explicitly on dra7 based devices when
-> proper device tree attribute is defined for the PCIe controller.
+> (1)One of them is to use system PLL to generate 100MHz clock and
+> the PHY will relock it and filter signal noise then outputs the
+> reference clock.
 > 
-> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+> (2)Another way is to share Soc's 24MHZ crystal oscillator with
+> PHY and force PHY's DLL to generate 100MHz internally.
+> 
+> When using case(2), the exit from L0s doesn't work fine occasionally
+> due to the broken design of RC receiver's logical circuit. So even if
+> we use extended-synch, it still fails for PHY to relock the bits from
+> FTS sometimes. This will hang the system.
+> 
+> Maybe we could argue that why not use case(1) to avoid it? The reason
+> is that as we could see the reference clock is derived from system PLL
+> and the path from it to PHY isn't so clean which means there are some
+> noise introduced by power-domain and other buses can't be filterd out
+> by PHY and we could see noise from the frequency spectrum by
+> oscilloscope. This makes the TX compatibility test a little difficult
+> to pass the spec. So case(1) and case(2) are both used indeed now. If
+> using case(2), we should disable RC's L0s support, and that is why we
+> need this property to indicate this quirk.
+> 
+> Also after checking quirk.c, I noticed there is already a quirk for
+> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+> shouldn't do that as mentioned above that case(1) could still works fine
+> with L0s.
+> 
+> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Cc: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Hi Lukasz, there was a lot of discussion after this, so I'm going to
-drop this version and wait for a new one (if one is still needed).
-I think I saw a URL with more scenario details; please include that if
-appropriate (ideally the details would be in a permanent public place
-like the kernel.org bugzilla).
+I applied this to pci/host-rockchip for v4.11.  I added Brian's Reviewed-by
+and Rob's Acked-by, since you didn't change anything substantive.
+
+I assume there's no way to automatically discover whether the system is
+using the 24MHz oscillator?  If there is a way, we should use that instead
+of requiring a DT property.
+
+I reworded the changelog; I hope it still make sense:
+
+    PCI: rockchip: Disable RC's ASPM L0s based on DT "aspm-no-l0s"
+    
+    Rockchip's RC produces a 100MHz reference clock but there are two methods
+    for the PHY to generate it:
+    
+      (1) Use the system PLL to generate a 100MHz clock.  The PHY will relock
+          it, filter signal noise, and output the reference clock.  ASPM L0s
+          works correctly, but circuit noise issues make it difficult to pass
+	  the TX compatibility test.
+    
+      (2) Share the SoC's 24MHZ crystal oscillator with the PHY and force the
+          PHY's PLL to generate 100MHz internally.  In this case, exit from
+          ASPM L0s sometimes fails due to a design error in the RC receiver
+          circuit.  Even if we use extended-synch, the PHY sometimes fails to
+          relock the bits from FTS, which will hang the system.
+    
+    We want the flexibility to use both clocking methods, so add a DT property,
+    "aspm-no-l0s".  If that's present, disable L0s to avoid the issues with
+    case (2).
+    
+    [bhelgaas: changelog]
+    Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+    Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Brian Norris <briannorris@chromium.org>
+    Acked-by: Rob Herring <robh@kernel.org>
 
 > ---
 > 
-> Patch applies on newest origin/master
-> SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
+> Changes in v3:
+> - fix misspelled aspm for the property name
 > 
-> Tested at AM5728
+> Changes in v2:
+> - drop the quirk prefix
 > 
-> ---
->  Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
->  drivers/pci/host/pci-dra7xx.c                    | 23 +++++++++++++++++++++++
->  drivers/pci/host/pcie-designware.h               |  1 +
->  3 files changed, 25 insertions(+)
+>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+>  2 files changed, 11 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> index 60e2516..9f97409 100644
-> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> @@ -25,6 +25,7 @@ PCIe Designware Controller
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index 71aeda1..1453a73 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -43,6 +43,8 @@ Required properties:
+>  - interrupt-map-mask and interrupt-map: standard PCI properties
 >  
 >  Optional Property:
->   - gpios : Should be added if a gpio line is required to drive PERST# line
-> + - to,pcie-is-gen1: Indicates that forced gen1 port operation is needed.
+> +- aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+> +	using 24MHz OSC for RC's PHY.
+>  - ep-gpios: contain the entry for pre-reset gpio
+>  - num-lanes: number of lanes to use
+>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index f2dca7b..140cdc7 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -140,6 +140,8 @@
+>  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
+>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+> +#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
+> +#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
+>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+>  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+>  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+> @@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
 >  
->  Example:
->  axi {
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 9595fad..eec5fae 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -63,6 +63,13 @@
->  #define	LINK_UP						BIT(16)
->  #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
->  
-> +#define         PCIECTRL_EP_DBICS_LNK_CAP                       0x007C
-> +#define         MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
-> +#define         MAX_LINK_SPEEDS_GEN1                            BIT(0)
-> +
-> +#define         PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
-> +#define         CFG_DIRECTED_SPEED_CHANGE                       BIT(17)
-> +
->  struct dra7xx_pcie {
->  	struct pcie_port	pp;
->  	void __iomem		*base;		/* DT ti_conf */
-> @@ -270,6 +277,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  	struct pcie_port *pp = &dra7xx->pp;
->  	struct device *dev = pp->dev;
->  	struct resource *res;
-> +	u32 val;
->  
->  	pp->irq = platform_get_irq(pdev, 1);
->  	if (pp->irq < 0) {
-> @@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  	if (!pp->dbi_base)
->  		return -ENOMEM;
->  
-> +	if (pp->is_gen1) {
-> +		dev_info(dev, "GEN1 forced\n");
-> +
-> +		val = readl(pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
-> +		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK, MAX_LINK_SPEEDS_GEN1);
-> +		writel(val, pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
-> +
-> +		val = readl(pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
-> +		val &= ~CFG_DIRECTED_SPEED_CHANGE;
-> +		writel(val, pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
+> +	/* Clear L0s from RC's link cap */
+> +	if (of_property_read_bool(dev->of_node, "aspm-no-l0s")) {
+> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LINK_CAP);
+> +		status &= ~PCIE_RC_CONFIG_LINK_CAP_L0S;
+> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
 > +	}
 > +
->  	ret = dw_pcie_host_init(pp);
->  	if (ret) {
->  		dev_err(dev, "failed to initialize host\n");
-> @@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  		goto err_gpio;
->  	}
+>  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
 >  
-> +	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
-> +		pp->is_gen1 = true;
-> +
->  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
->  	reg &= ~LTSSM_EN;
->  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index a567ea2..2fb0b18 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -50,6 +50,7 @@ struct pcie_port {
->  	struct irq_domain	*irq_domain;
->  	unsigned long		msi_data;
->  	u8			iatu_unroll_enabled;
-> +	u8                      is_gen1;
->  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
->  
+>  	rockchip_pcie_write(rockchip,
 > -- 
-> 2.1.4
+> 1.9.1
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
