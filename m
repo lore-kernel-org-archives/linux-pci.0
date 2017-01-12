@@ -1,99 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 9 Jan 2017 21:57:46 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-Message-ID: <20170109205746.GA6274@lst.de>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <2723285.JORgusvJv4@wuerfel>
- <9a03c05d-ad4c-0547-d1fe-01edb8b082d6@cogentembedded.com>
- <6374144.HVL0QxNJiT@wuerfel>
- <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56778 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750730AbdALVBa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Jan 2017 16:01:30 -0500
+Date: Thu, 12 Jan 2017 15:01:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kgene@kernel.org, krzk@kernel.org, kishon@ti.com,
+        jingoohan1@gmail.com, vivek.gautam@codeaurora.org,
+        pankaj.dubey@samsung.com, alim.akhtar@samsung.com, cpgs@samsung.com
+Subject: Re: [PATCH V2 0/5] PCI: exynos: use the PHY generic framework
+Message-ID: <20170112210126.GD8312@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20170104123435epcas1p182b241236048160fb81ac473a74540da@epcas1p1.samsung.com>
+ <20170104123435.30740-1-jh80.chung@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
- linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- artemi.ivanov@cogentembedded.com, Arnd Bergmann <arnd@linaro.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170104123435.30740-1-jh80.chung@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 09, 2017 at 11:34:55PM +0300, Nikita Yushchenko wrote:
-> I believe the bounce buffering code you refer to is not in SATA/SCSI/MMC
-> but in block layer, in particular it should be controlled by
-> blk_queue_bounce_limit().  [Yes there is CONFIG_MMC_BLOCK_BOUNCE but it
-> is something completely different, namely it is for request merging for
-> hw not supporting scatter-gather].  And NVMe also uses block layer and
-> thus should get same support.
-
-NVMe shouldn't have to call blk_queue_bounce_limit - 
-blk_queue_bounce_limit is to set the DMA addressing limit of the device.
-NVMe devices must support unlimited 64-bit addressing and thus calling
-blk_queue_bounce_limit from NVMe does not make sense.
-
-That being said currently the default for a queue without a call
-to blk_queue_make_request which does the wrong thing on highmem
-setups, so we should fix it.  In fact BLK_BOUNCE_HIGH as-is doesn't
-really make much sense these days as no driver should ever dereference
-pages passed to it directly.
-
-> Maybe fixing that, together with making NVMe use this API, could stop it
-> from issuing dma_map()s of addresses beyond mask.
-
-NVMe should never bounce, the fact that it currently possibly does
-for highmem pages is a bug.
-
-> As for PCI_DMA_BUS_IS_PHYS - ironically, what all current usages of this
-> macro in the kernel do is - *disable* bounce buffers in block layer if
-> PCI_DMA_BUS_IS_PHYS is zero.
-
-That's not ironic but the whole point of the macro (horrible name and
-the fact that it should be a dma_ops setting aside).
-
-> - architecture should stop breaking 64-bit DMA when driver attempts to
-> set 64-bit dma mask,
+On Wed, Jan 04, 2017 at 09:34:30PM +0900, Jaehoon Chung wrote:
+> This patchset is for using PHY generic framework.
+> Current pci-exyons doesn't use the phy framework since there haven't been on
+> PHY subsystem when Exynos5440 had been upstremed.
+> The not using PHY framework make the difficult to upstream the other
+> Exynos SoCs.
 > 
-> - NVMe should issue proper blk_queue_bounce_limit() call based on what
-> is actually set mask,
+> Before upstreaming the other Exynos SoCs, it's goal what make to use the PHY framework.
+> 
+> This patchset has the below modifications:
+> 1) Introduces the phy-pcie-pcie
+> 2) Handles Phy controller from PHY framework for pci-exynos
+> 3) Modifies the dt-binding of pci-exynos
+> - The using the getting configuration space address from ranges is old.
+> - Deprecated the old way.
+> 4) Maintains the backward compatibility
+> 
+> NOTE: These patches based on below patches:
+> 	http://patchwork.ozlabs.org/patch/706998/
+> 	http://patchwork.ozlabs.org/patch/706997/
+> 	http://patchwork.ozlabs.org/patch/706995/
+> 	http://patchwork.ozlabs.org/patch/706994/
+> 	http://patchwork.ozlabs.org/patch/703530/
+> 	- This patch should be conflicted. so fixes the manually.
+> 	http://patchwork.ozlabs.org/patch/708414/
+> 
+> Changelog on V2:
+> - Keep current codes for backward compatibility
+> - Fixes some typos
+> - Split the patches for removing the dependency
+> - Removes the unnecessary codes
+> - Change the patch's sequence
+> - Based on latest PCI git repository.(next branch)
+> 
+> Jaehoon Chung (5):
+>   Documetation: samsung-phy: add the exynos-pcie-phy binding
+>   phy: phy-exynos-pcie: Add support for Exynos PCIe phy
+>   Documetation: binding: modify the exynos5440 pcie binding
+>   PCI: exynos: support the using PHY generic framework
+>   ARM: dts: exynos5440: support the phy-pcie node for pcie
 
-Or even better remove the call to dma_set_mask_and_coherent with
-DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
-addressing, there is not point in trying to pretent it works without that
+Since you're going to update this, please fix the typos in the above,
+e.g., s/Documetation/Documentation/.
 
-> - and blk_queue_bounce_limit() should also be fixed to actually set
-> 0xffffffff limit, instead of replacing it with (max_low_pfn <<
-> PAGE_SHIFT) as it does now.
+In addition, please run "git log --oneline" on the files you're
+changing and make your subject lines consistent in style and
+capitalization with previous ones, e.g., use "PCIe" consistently.
+"Modify the ..." contains no useful information.  Of course a patch
+modifies something -- please tell us what the modification is useful
+for.
 
-We need to kill off BLK_BOUNCE_HIGH, it just doesn't make sense to
-mix the highmem aspect with the addressing limits.  In fact the whole
-block bouncing scheme doesn't make much sense at all these days, we
-should rely on swiotlb instead.
-
-> What I mean is some API to allocate memory for use with streaming DMA in
-> such way that bounce buffers won't be needed. There are many cases when
-> at buffer allocation time, it is already known that buffer will be used
-> for DMA with particular device. Bounce buffers will still be needed
-> cases when no such information is available at allocation time, or when
-> there is no directly-DMAable memory available at allocation time.
-
-For block I/O that is never the case.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 +++
+>  .../devicetree/bindings/phy/samsung-phy.txt        |  17 ++
+>  arch/arm/boot/dts/exynos5440.dtsi                  |  34 ++-
+>  drivers/pci/host/pci-exynos.c                      |  61 ++++-
+>  drivers/phy/Kconfig                                |   9 +
+>  drivers/phy/Makefile                               |   1 +
+>  drivers/phy/phy-exynos-pcie.c                      | 280 +++++++++++++++++++++
+>  7 files changed, 408 insertions(+), 23 deletions(-)
+>  create mode 100644 drivers/phy/phy-exynos-pcie.c
+> 
+> -- 
+> 2.10.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
