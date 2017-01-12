@@ -1,75 +1,64 @@
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Message-Id: <cover.1483806825.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 8 Jan 2017 09:41:45 +0100
-Subject: [PATCH v4 0/8] Runtime PM for Thunderbolt on Macs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Chen Yu <yu.c.chen@intel.com>, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Tomeu Vizoso <tomeu.vizoso@collabora.com>, Lee Jones <lee.jones@linaro.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Return-Path: <SRS0=8DCY=Y2=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=8DCY=Y2=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH v2 0/3] PCI: designware/dra7xx: misc fixes and cleanups
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1483091774-8332-1-git-send-email-kishon@ti.com>
+ <20170111212135.GN14532@bhelgaas-glaptop.roam.corp.google.com>
+ <587712B0.2030806@ti.com>
+ <20170112131552.GA23045@bhelgaas-glaptop.roam.corp.google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5877835D.80508@ti.com>
+Date: Thu, 12 Jan 2017 18:53:41 +0530
+MIME-Version: 1.0
+In-Reply-To: <20170112131552.GA23045@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Power down Thunderbolt controllers on Macs when nothing is plugged in
-to save around 2W per controller.
+Hi,
 
-For details see the cover letter of v3:
-https://lkml.org/lkml/2016/12/17/56
+On Thursday 12 January 2017 06:45 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 12, 2017 at 10:52:56AM +0530, Kishon Vijay Abraham I wrote:
+>> Hi Bjorn,
+>>
+>> On Thursday 12 January 2017 02:51 AM, Bjorn Helgaas wrote:
+>>> On Fri, Dec 30, 2016 at 03:26:11PM +0530, Kishon Vijay Abraham I wrote:
+>>>> This series contains
+>>>>         *) a patch to cleanup dra7xx probe
+>>>>         *) a patch to force DRA7xx controller to work in GEN1 mode
+>>>>         *) a patch to fix dra7xx driver so that even if CONFIG_PCI_MSI
+>>>>            is enabled, dra7xx driver can service legacy interrupts
+>>>>            (provided the device support only legacy interrupts).
+>>>>
+>>>> Changes from v1:
+>>>> *) rebased to 4.10-rc1 (and [1])
+>>>> *) use existing dt property "max-link-speed" instead of creating a new
+>>>>    TI specific dt property.
+>>>>
+>>>> [1] -> https://lkml.org/lkml/2016/12/28/34
+>>>>
+>>>> Kishon Vijay Abraham I (3):
+>>>>   PCI: dra7xx: simplify the probe code
+>>>>   PCI: dra7xx: Add support to force RC to work in GEN1 mode
+>>>>   PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
+>>>>
+>>>>  drivers/pci/controller/pci-dra7xx.c |   81 ++++++++++++++++++++---------------
+>>>>  1 file changed, 47 insertions(+), 34 deletions(-)
+>>>
+>>> Applied to pci/host-dra7xx for v4.11.  I haven't applied the directory
+>>> rename yet, so I'll fix that up as necessary.
+>>
+>> I'd have liked that to be merged as well. Is that because Arnd hasn't Acked
+>> that one yet?
+> 
+> Nope, I expect to do the rename in some form.  I'm just trying to
+> clear out the easy stuff first before moving on to the harder patches
+> in the queue.
 
+cool, thanks. Let me know if I have to resend the patches based on one of your
+branches (i.e after you apply the easy stuff).
 
-Patches [1/7] to [3/7] need an ack from Bjorn (and possibly Rafael or
-Mika).  Patches [4/7] to [6/7] need an ack from Rafael.
-
-
-Changes since v3:
-
-- Additional patch [6/8] by Chen Yu to define a DPM_DIRECT_COMPLETE macro.
-  I had expected this to land in v4.10 but it didn't.
-
-- Rework patch [7/8] ("thunderbolt: Power down controller when idle")
-  according to Andy Shevchenko's feedback:  Drop unnecessary #ifdef pr_fmt,
-  add explanatory comments, rename goto labels.
-
-- Fix error path if the upstream bridge cannot be found.
-
-The patches are also browseable on GitHub:
-https://github.com/l1k/linux/commits/thunderbolt_runpm_v4
-
-Thanks,
-
-Lukas
-
-
-Chen Yu (1):
-  PM / sleep: Define constant for direct_complete
-
-Lukas Wunner (7):
-  PCI: Recognize Thunderbolt devices
-  PCI: Allow runtime PM on Thunderbolt ports
-  PCI: Don't block runtime PM for Thunderbolt host hotplug ports
-  Revert "PM / Runtime: Remove the exported function
-    pm_children_suspended()"
-  PM: Make requirements of dev_pm_domain_set() more precise
-  thunderbolt: Power down controller when idle
-  thunderbolt: Runtime suspend NHI when idle
-
- drivers/base/power/common.c  |  15 +-
- drivers/base/power/runtime.c |   3 +-
- drivers/pci/pci.c            |  20 ++-
- drivers/pci/pci.h            |   2 +
- drivers/pci/probe.c          |  34 +++++
- drivers/thunderbolt/Kconfig  |   3 +-
- drivers/thunderbolt/Makefile |   4 +-
- drivers/thunderbolt/nhi.c    |   5 +
- drivers/thunderbolt/power.c  | 355 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/power.h  |  37 +++++
- drivers/thunderbolt/switch.c |   9 ++
- drivers/thunderbolt/tb.c     |  13 ++
- drivers/thunderbolt/tb.h     |   2 +
- include/linux/pci.h          |   1 +
- include/linux/pm.h           |   7 +
- include/linux/pm_runtime.h   |   7 +
- 16 files changed, 506 insertions(+), 11 deletions(-)
- create mode 100644 drivers/thunderbolt/power.c
- create mode 100644 drivers/thunderbolt/power.h
-
--- 
-2.11.0
+Thanks
+Kishon
