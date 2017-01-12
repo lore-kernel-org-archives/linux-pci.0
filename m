@@ -1,115 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-To: Nate Watterson <nwatters@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
- <20170124123711.GA11996@red-moon>
- <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
- <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
- <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
-Date: Mon, 30 Jan 2017 09:33:50 -0500
+Return-Path: <SRS0=q+5X=Y2=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=q+5X=Y2=rock-chips.com=shawn.lin@kernel.org>
+Subject: Re: [PATCH v2] PCI: rockchip: Add quirk to disable RC's ASPM L0s
+To: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
+References: <1481543487-33152-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170111182822.GC14532@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Wenrui Li <wenrui.li@rock-chips.com>, Brian Norris
+ <briannorris@chromium.org>, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ devicetree@vger.kernel.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <e6968068-ba74-5073-e4ca-9eb81a7c1f47@rock-chips.com>
+Date: Thu, 12 Jan 2017 09:44:20 +0800
 MIME-Version: 1.0
-In-Reply-To: <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Robin Murphy <robin.murphy@arm.com>, will.deacon@arm.com,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- linux-arm-msm@vger.kernel.org, bhelgaas@google.com,
- Tomasz Nowicki <tn@semihalf.com>, Sricharan R <sricharan@codeaurora.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170111182822.GC14532@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/30/2017 9:23 AM, Nate Watterson wrote:
-> On 2017-01-30 08:59, Sinan Kaya wrote:
->> On 1/30/2017 7:22 AM, Robin Murphy wrote:
->>> On 29/01/17 17:53, Sinan Kaya wrote:
->>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
->>>>> [+hanjun, tomasz, sinan]
->>>>>
->>>>> It is quite a key patchset, I would be glad if they can test on their
->>>>> respective platforms with IORT.
->>>>>
->>>>
->>>> Tested on top of 4.10-rc5.
->>>>
->>>> 1.    Platform Hidma device passed dmatest
->>>> 2.    Seeing some USB stalls on a platform USB device.
->>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
->>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
->>>> SMMU error event during the insertion.
->>>
->>> What was the SMMU error - a translation/permission fault (implying the
->>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
->>> the SMMU about the device at all)?
->>>
+On 2017/1/12 2:28, Bjorn Helgaas wrote:
+> On Mon, Dec 12, 2016 at 07:51:27PM +0800, Shawn Lin wrote:
+>> Rockchip's RC outputs 100MHz reference clock but there are
+>> two methods for PHY to generate it.
 >>
->> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+>> (1)One of them is to use system PLL to generate 100MHz clock and
+>> the PHY will relock it and filter signal noise then outputs the
+>> reference clock.
 >>
->> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
->> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
->> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
->> ignored; already powering off
+>> (2)Another way is to share Soc's 24MHZ crystal oscillator with
+>> PHY and force PHY's DLL to generate 100MHz internally.
 >>
->> root@ubuntu:/sys/bus/pci/slots/4#
+>> When using case(2), the exit from L0s doesn't work fine occasionally
+>> due to the broken design of RC receiver's logical circuit. So even if
+>> we use extended-synch, it still fails for PHY to relock the bits from
+>> FTS sometimes. This will hang the system.
 >>
->> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
->> [  254.820599] nvme nvme0: pci function 0003:01:00.0
->> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
->> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
->> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
->> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
->> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
->> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> Maybe we could argue that why not use case(1) to avoid it? The reason
+>> is that as we could see the reference clock is derived from system PLL
+>> and the path from it to PHY isn't so clean which means there are some
+>> noise introduced by power-domain and other buses can't be filterd out
+>> by PHY and we could see noise from the frequency spectrum by
+>> oscilloscope. This makes the TX compatibility test a little difficult
+>> to pass the spec. So case(1) and case(2) are both used indeed now. If
+>> using case(2), we should disable RC's L0s support, and that is why we
+>> need this property to indicate this quirk.
+>>
+>> Also after checking quirk.c, I noticed there is already a quirk for
+>> disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
+>> shouldn't do that as mentioned above that case(1) could still works fine
+>> with L0s.
+>>
+>> Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> Cc: Brian Norris <briannorris@chromium.org>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>>
+>> Changes in v2:
+>> - drop the quirk prefix
+>>
+>>  Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
+>>  drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
+>>  2 files changed, 11 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> index 71aeda1..1453a73 100644
+>> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> @@ -43,6 +43,8 @@ Required properties:
+>>  - interrupt-map-mask and interrupt-map: standard PCI properties
+>>
+>>  Optional Property:
+>> +- aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+>> +	using 24MHz OSC for RC's PHY.
+>>  - ep-gpios: contain the entry for pre-reset gpio
+>>  - num-lanes: number of lanes to use
+>>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index f2dca7b..35988fc 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -140,6 +140,8 @@
+>>  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
+>>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+>>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+>> +#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
+>> +#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
+>>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+>>  #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+>>  #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+>> @@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>  	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
+>>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
+>>
+>> +	/* Clear L0s from RC's link cap */
+>> +	if (of_property_read_bool(dev->of_node, "apsm-no-l0s")) {
+>
+> Did you test this?  This string ("apsm-no-l0s") doesn't match the
+> "aspm-no-l0s" documented above.  The current tree doesn't contain either
+> string in any DTS.
+>
 
-> Looks like C_BAD_CD. Can you please try with:
-> iommu/arm-smmu-v3: Clear prior settings when updating STEs
+oops, mea culpa. I think I wrote this and tested it on the kernel4.4
+chromeOS tree. There were some non-upstream patches there so I slightly
+amend it when rebasing on your next branch, I guess I made the mistake
+then.
 
-This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
-this issue again.
+I will fix this.
 
-root@ubuntu:/sys/bus/pci/slots# cd 4
-root@ubuntu:/sys/bus/pci/slots/4# ls
-adapter  address  attention  cur_bus_speed  latch  max_bus_speed  module  power
-root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
-root@ubuntu:/sys/bus/pci/slots/4# echo 1 > power
-root@ubuntu:/sys/bus/pci/slots/4# dmesg |tail -n 10
-[   44.136028] pci 0003:01:00.0: BAR 0: assigned [mem 0xc0100110000-0xc0100113fff 64bit]
-[   44.136044] pcieport 0003:00:00.0: PCI bridge to [bus 01]
-[   44.136046] pcieport 0003:00:00.0:   bridge window [io  0x10000-0x10fff]
-[   44.136048] pcieport 0003:00:00.0:   bridge window [mem 0xc0100100000-0xc01002fffff]
-[   44.136050] pcieport 0003:00:00.0:   bridge window [mem 0xc0400000000-0xc04001fffff 64bit pref]
-[   44.136059] pcieport 0003:00:00.0: Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
-[   44.136073] pci 0003:01:00.0: Max Payload Size set to  256/ 256 (was  128), Max Read Rq  512
-[   44.136124] iommu: Adding device 0003:01:00.0 to group 8
-[   44.136275] nvme nvme0: pci function 0003:01:00.0
-[   44.136292] nvme 0003:01:00.0: enabling device (0000 -> 0002)
-root@ubuntu:/sys/bus/pci/slots/4# ls /dev/nvme*
-/dev/nvme0  /dev/nvme0n1
-root@ubuntu:/sys/bus/pci/slots/4#
-
-I'll look at the USB stalls next.
+>> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LINK_CAP);
+>> +		status &= ~PCIE_RC_CONFIG_LINK_CAP_L0S;
+>> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
+>> +	}
+>> +
+>>  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+>>
+>>  	rockchip_pcie_write(rockchip,
+>> --
+>> 1.9.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Best Regards
+Shawn Lin
