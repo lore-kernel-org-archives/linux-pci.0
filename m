@@ -1,110 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "paul.gortmaker@windriver.com"
- <paul.gortmaker@windriver.com>, "robh@kernel.org" <robh@kernel.org>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 1/4] PCI: Xilinx NWL: Fix, do not check for legacy
- status in while loop
-Date: Tue, 24 Jan 2017 14:00:52 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263CD2C7@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
- <ec10b089-acc5-7764-6346-9dc1869d05c7@arm.com>
- <8520D5D51A55D047800579B094147198263CCF96@XAP-PVEXMBX02.xlnx.xilinx.com>
- <0def9067-5c35-f7fe-8e15-bab70d479d1e@arm.com>
-In-Reply-To: <0def9067-5c35-f7fe-8e15-bab70d479d1e@arm.com>
+Return-Path: <SRS0=0UVf=Y2=huawei.com=wangyijing@kernel.org>
+Return-Path: <SRS0=0UVf=Y2=huawei.com=wangyijing@kernel.org>
+Subject: Re: [PATCH] PCI: Enumerate switches below PCI-to-PCIe bridges
+To: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+References: <20170111154403.GA8768@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-kernel@vger.kernel.org>, Blake Moore <blake.moore@men.de>,
+        "Jao
+ Ching Chen" <jcchen@pericom.com>
+From: wangyijing <wangyijing@huawei.com>
+Message-ID: <5876D8BA.1000400@huawei.com>
+Date: Thu, 12 Jan 2017 09:15:38 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "arnd@arndb.de" <arnd@arndb.de>, Ravikiran Gummaluri <rgummal@xilinx.com>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170111154403.GA8768@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 24/01/17 10:15, Bharat Kumar Gogada wrote:
-> >> On 21/01/17 11:11, Bharat Kumar Gogada wrote:
-> >>> - The legacy status register value for particular INTx becomes low
-> >>> only after DEASSERT_INTx is received.
-> >>> - Few End Points take time for sending DEASSERT_INTx, checking
-> >>> legacy status register in while loop causes invoking of EP handler
-> >>> continuosly until DEASSERT_INTx is received.
-> >>>
-> >>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> >>> ---
-> >>>  drivers/pci/host/pcie-xilinx-nwl.c |    5 +++--
-> >>>  1 files changed, 3 insertions(+), 2 deletions(-)
-> >>>
-> >>> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
-> >>> b/drivers/pci/host/pcie-xilinx-nwl.c
-> >>> index 43eaa4a..c8b5a33 100644
-> >>> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> >>> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> >>> @@ -342,9 +342,10 @@ static void nwl_pcie_leg_handler(struct
-> >>> irq_desc
-> >>> *desc)
-> >>>
-> >>>  	chained_irq_enter(chip, desc);
-> >>>  	pcie = irq_desc_get_handler_data(desc);
-> >>> +	status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> >>> +				  MSGF_LEG_SR_MASKALL;
-> >>>
-> >>> -	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> >>> -				MSGF_LEG_SR_MASKALL) != 0) {
-> >>> +	if (status != 0) {
-> >>>  		for_each_set_bit(bit, &status, INTX_NUM) {
-> >>>  			virq = irq_find_mapping(pcie->legacy_irq_domain,
-> >>>  						bit + 1);
-> >>>
-> >>
-> >> But even if you only handle the interrupt once, it is still asserted,
-> >> right? You exit the low-level exception handler, only to take the
-> >> interrupt immediately again. So what is the gain here?
-> >>
-> > Whenever masking of INTx happens (like as in my next patch[PATCH
-> > 2/4]), the irq line goes low, but  status bit will be set until DEASSERT_INTx
-> comes.
-> > In this scenario if it is always in while loop, even though line went
-> > low it will not be seen until DEASSERT_INTx, unnecessarily invoking EP
-> > driver. so instead of while loop using if condition so that this change in line is
-> noticed.
-> 
-> But what guarantees that you will observe this DEASSERT if you return to the
-> interrupted context early? From what I understand, your interrupt flow is the
-> following:
-> 
-> 
-> 	read status
-> 	mask
-> 	handler
-> 	unmask
-> 
-> If the EP takes time to send a deassert after the handler has poked it and the
-> interrupt is still active, then the only thing that this patch buys you is that by
-> returning to the interrupted context, you waste a lot of cycles, giving the device
-> a chance to send its deassert. But that's just luck. Plug this on a fast CPU, and
-> the same issue will resurface.
-> 
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
 
-Agreed, will leave it as it is.
-
-Thanks & Regards,
-Bharat
-
-
- 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+在 2017/1/11 23:44, Bjorn Helgaas 写道:
+> PCI: Enumerate switches below PCI-to-PCIe bridges
+> 
+> A PCI-to-PCIe bridge (a "reverse bridge") has a PCI or PCI-X primary
+> interface and a PCI Express secondary interface.  The PCIe interface is a
+> Downstream Port that originates a Link.  See the "PCI Express to PCI/PCI-X
+> Bridge Specification", rev 1.0, sections 1.2 and A.6.
+> 
+> The bug report below involves a PCI-to-PCIe bridge and a PCIe switch below
+> the bridge:
+> 
+>   00:1e.0 Intel 82801 PCI Bridge to [bus 01-0a]
+>   01:00.0 Pericom PI7C9X111SL PCIe-to-PCI Reversible Bridge to [bus 02-0a]
+>   02:00.0 Pericom Device 8608 [PCIe Upstream Port] to [bus 03-0a]
+>   03:01.0 Pericom Device 8608 [PCIe Downstream Port] to [bus 0a]
+> 
+> 01:00.0 is configured as a PCI-to-PCIe bridge (despite the name printed by
+> lspci).  As we traverse a PCIe hierarchy, device connections alternate
+> between PCIe Links and internal Switch logic.  Previously we did not
+> recognize that 01:00.0 had a secondary link, so we thought the 02:00.0
+> Upstream Port *did* have a secondary link.  In fact, it's the other way
+> around: 01:00.0 has a secondary link, and 02:00.0 has internal Switch logic
+> on its secondary side.
+> 
+> When we thought 02:00.0 had a secondary link, the pci_scan_slot() ->
+> only_one_child() path assumed 02:00.0 could have only one child, so 03:00.0
+> was the only possible downstream device.  But 03:00.0 doesn't exist, so we
+> didn't look for any other devices on bus 03.
+> 
+> Booting with "pci=pcie_scan_all" is a workaround, but we don't want users
+> to have to do that.
+> 
+> Recognize that PCI-to-PCIe bridges originate links on their secondary
+> interfaces.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=189361
+> Fixes: d0751b98dfa3 ("PCI: Add dev->has_secondary_link to track downstream PCIe links")
+> Tested-by: Blake Moore <blake.moore@men.de>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org      # v4.2+
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e164b5c9f0f0..204960e70333 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1169,6 +1169,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+>  	if (!pos)
+>  		return;
+> +
+>  	pdev->pcie_cap = pos;
+>  	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+>  	pdev->pcie_flags_reg = reg16;
+> @@ -1176,13 +1177,14 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+>  
+>  	/*
+> -	 * A Root Port is always the upstream end of a Link.  No PCIe
+> -	 * component has two Links.  Two Links are connected by a Switch
+> -	 * that has a Port on each Link and internal logic to connect the
+> -	 * two Ports.
+> +	 * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+> +	 * of a Link.  No PCIe component has two Links.  Two Links are
+> +	 * connected by a Switch that has a Port on each Link and internal
+> +	 * logic to connect the two Ports.
+>  	 */
+>  	type = pci_pcie_type(pdev);
+> -	if (type == PCI_EXP_TYPE_ROOT_PORT)
+> +	if (type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	    type == PCI_EXP_TYPE_PCIE_BRIDGE)
+>  		pdev->has_secondary_link = 1;
+>  	else if (type == PCI_EXP_TYPE_UPSTREAM ||
+>  		 type == PCI_EXP_TYPE_DOWNSTREAM) {
+> 
+> .
+> 
