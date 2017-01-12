@@ -1,71 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI: add a new directory for designware core
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Arnd Bergmann <arnd@arndb.de>
-References: <1483707168-1436-1-git-send-email-kishon@ti.com>
- <4757539.Mx4pNLiAHf@wuerfel> <586F97B8.8040300@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        "Roy Zang" <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        "Niklas Cassel" <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <ed3b67ec-1764-bd48-379c-b449678b79a4@synopsys.com>
-Date: Fri, 6 Jan 2017 13:40:01 +0000
+Return-Path: <SRS0=iz4c=Y2=lst.de=hch@kernel.org>
+Return-Path: <SRS0=iz4c=Y2=lst.de=hch@kernel.org>
+Date: Thu, 12 Jan 2017 14:42:18 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dennis Chen <dennis.chen@arm.com>, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Steve Capper <steve.capper@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Tom Long Nguyen <tom.l.nguyen@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tejun Heo <tj@kernel.org>, nd@arm.com,
+	Christoph Hellwig <hch@lst.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
+	enough
+Message-ID: <20170112134218.GA15178@lst.de>
+References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com> <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <586F97B8.8040300@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Jan 11, 2017 at 12:18:53PM -0600, Bjorn Helgaas wrote:
+> Unless Christoph objects, I'll apply this, but I don't understand the
+> situation with 17a51f12cfbd.  That commit doesn't check for EINVAL or
+> ENOSPC so I don't know what the connection with this patch is.
 
-Às 1:12 PM de 1/6/2017, Kishon Vijay Abraham I escreveu:
-> Hi Arnd,
-> 
-> On Friday 06 January 2017 06:31 PM, Arnd Bergmann wrote:
->> On Friday, January 6, 2017 6:22:48 PM CET Kishon Vijay Abraham I wrote:
->>> Group all the PCI drivers that use designware core in dwc directory.
->>> dwc IP is capable of operating in both host mode and device mode and
->>> keeping it inside the *host* directory is misleading.
->>
->> I have no objections to the patch, it makes a lot of sense, but I think
->> the reasoning above is a bit questionable, as a lot of the other
->> host drivers (at least tegra, mvebu and xgene, probably more) equally support
->> endpoint mode and remain in the same directory.
->>
->> Any suggestion to what we should do with them?
-> 
-> I'm not sure of the exact IP's used by these SoCs. Now that we decided to group
-> the drivers by IPs used, the best would be identify the IPs used in these SoCs
-> and create a separate directory for each of the IPs. If the vendors own IP is
-> used, then create a directory with the name of the vendor?. I'm sure such a
-> change would increase the number of directories but I'm not sure what else to
-> do here.
+I don't think that commit is the culprit.
 
-In case of designware based drivers you already did the clean up nicely. Next
-would be, like Arnd is sugesting, to do the same to the others. If they are all
-self-contained I suggest we leave them as they are and in the future if a
-endpoint variant driver comes up for any of them, we can suggest to add a folder
-with the vendor or SoC name in order to follow the rule. What do you think?
+> I know Christoph said he changed something in ahci to treat all errors
+> the same, but I don't know where that is, either.
 
-
-Joao
-
-> 
-> Thanks
-> Kishon
-> 
+"ahci: always fall back to single-MSI mode"
