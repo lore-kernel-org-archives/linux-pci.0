@@ -1,98 +1,388 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 28/37] dt-bindings: PCI: dra7xx: Add dt bindings for pci dra7xx EP mode
-Date: Thu, 12 Jan 2017 15:56:17 +0530
-Message-ID: <1484216786-17292-29-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=lzOr=Y2=redhat.com=lyude@kernel.org>
+Return-Path: <SRS0=lzOr=Y2=redhat.com=lyude@kernel.org>
+Message-ID: <1484244635.7089.1.camel@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+From: Lyude Paul <lyude@redhat.com>
+To: Kilian Singer <kilian.singer@quantumtechnology.info>,
+        David Airlie
+	 <airlied@redhat.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Peter Jones <pjones@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+        Mika
+ Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci
+ <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>, Lyude <cpaul@redhat.com>
+Date: Thu, 12 Jan 2017 13:10:35 -0500
+In-Reply-To: <724341af-4122-8601-8426-ab7cd10a365c@quantumtechnology.info>
+References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
+	 <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+	 <20170105150646.GB21446@wunner.de>
+	 <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+	 <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
+	 <1483974686.28993.3.camel@redhat.com>
+	 <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
+	 <c0d105a6-0913-3293-d98e-17f0461f21ab@quantumtechnology.info>
+	 <1304522798.9524227.1484008399844.JavaMail.zimbra@redhat.com>
+	 <724341af-4122-8601-8426-ab7cd10a365c@quantumtechnology.info>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for pci dra7xx EP mode.
+Fwiw, danvet showed me a patch he had already submitted that actually
+fixes this issue as well:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/pci/ti-pci.txt |   37 ++++++++++++++++++----
- 1 file changed, 30 insertions(+), 7 deletions(-)
+https://patchwork.freedesktop.org/patch/132477/
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 60e2516..62f5f59 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -1,17 +1,22 @@
- TI PCI Controllers
- 
- PCIe Designware Controller
-- - compatible: Should be "ti,dra7-pcie""
-- - reg : Two register ranges as listed in the reg-names property
-- - reg-names : The first entry must be "ti-conf" for the TI specific registers
--	       The second entry must be "rc-dbics" for the designware pcie
--	       registers
--	       The third entry must be "config" for the PCIe configuration space
-+ - compatible: Should be "ti,dra7-pcie" for RC
-+	       Should be "ti,dra7-pcie-ep" for EP
-  - phys : list of PHY specifiers (used by generic PHY framework)
-  - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
- 	       number of PHYs as specified in *phys* property.
-  - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
- 	       where <X> is the instance number of the pcie from the HW spec.
-+ - num-lanes as specified in ../designware-pcie.txt
-+
-+HOST MODE
-+=========
-+ - reg : Two register ranges as listed in the reg-names property
-+ - reg-names : The first entry must be "ti-conf" for the TI specific registers
-+	       The second entry must be "rc-dbics" for the designware pcie
-+	       registers
-+	       The third entry must be "config" for the PCIe configuration space
-  - interrupts : Two interrupt entries must be specified. The first one is for
- 		main interrupt line and the second for MSI interrupt line.
-  - #address-cells,
-@@ -19,13 +24,31 @@ PCIe Designware Controller
-    #interrupt-cells,
-    device_type,
-    ranges,
--   num-lanes,
-    interrupt-map-mask,
-    interrupt-map : as specified in ../designware-pcie.txt
- 
-+DEVICE MODE
-+===========
-+ - reg : Four register ranges as listed in the reg-names property
-+ - reg-names : "ti-conf" for the TI specific registers
-+	       "ep_dbics" for the standard configuration registers as
-+		they are locally accessed within the DIF CS space
-+	       "ep_dbics2" for the standard configuration registers as
-+		they are locally accessed within the DIF CS2 space
-+	       "addr_space" used to map remote RC address space
-+ - interrupts : one interrupt entries must be specified for main interrupt.
-+ - num-ib-windows : number of inbound address translation windows
-+ - num-ob-windows : number of outbound address translation windows
-+
- Optional Property:
-  - gpios : Should be added if a gpio line is required to drive PERST# line
- 
-+NOTE: Two dt nodes should be added for each PCI controller; one for host
-+mode and another for device mode. So in order for PCI to
-+work in host mode, EP mode dt node should be disabled and in order to PCI to
-+work in EP mode, host mode dt node should be disabled. And host mode and EP
-+mode are mutually exclusive.
-+
- Example:
- axi {
- 	compatible = "simple-bus";
--- 
-1.7.9.5
+So we're going to go with that. This doesn't fix the race conditions
+I've noticed in fbcon(), but danvet suggested that some of the code for
+that in nouveau should be cleaned up anyway.
+
+On Tue, 2017-01-10 at 10:17 +0100, Kilian Singer wrote:
+> It is a standart debian installation.
+> 
+> I have not installed powertop.
+> 
+> 
+> On 10-Jan-17 01:33, David Airlie wrote:
+> > Hi Killian,
+> > 
+> > do you use powertop or have you ever used it, I'm guessing some
+> > port is getting into suspend on your machine that isn't on ours due
+> > to differeing userspace or powertop settings.
+> > 
+> > Dave.
+> > 
+> > ----- Original Message -----
+> > > From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
+> > > To: "Hans de Goede" <hdegoede@redhat.com>, "Lyude Paul" <lyude@re
+> > > dhat.com>, "David Airlie" <airlied@redhat.com>,
+> > > "Peter Jones" <pjones@redhat.com>
+> > > Cc: "Lukas Wunner" <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rj
+> > > wysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
+> > > "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.wes
+> > > terberg@linux.intel.com>, "linux-pci"
+> > > <linux-pci@vger.kernel.org>, "Alex Deucher" <alexander.deucher@am
+> > > d.com>, "Lyude" <cpaul@redhat.com>
+> > > Sent: Tuesday, 10 January, 2017 4:48:22 AM
+> > > Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe
+> > > ports"
+> > > 
+> > > Hi Lyude Paul,
+> > > 
+> > > normal supend resume does not work neither on my machine.
+> > > 
+> > > Best regards
+> > > 
+> > > Kilian
+> > > 
+> > > 
+> > > On 09-Jan-17 16:21, Hans de Goede wrote:
+> > > > Hi Lyude,
+> > > > 
+> > > > On 09-01-17 16:11, Lyude Paul wrote:
+> > > > > fwiw, I just tried on the W541 I have 4.8.15-300.fc25.x86_64
+> > > > > running on
+> > > > > here and so far it seems to suspend/resume just fine using
+> > > > > firmware
+> > > > > version 2.19
+> > > > 
+> > > > Note this is not about normal suspend resume, but runtime
+> > > > suspend/resume of the nvidia discrete GPU...
+> > > > 
+> > > > Try running glxgears like this:
+> > > > 
+> > > > DRI_PRIME=1 glxgears -info | grep REND
+> > > > 
+> > > > (the grep is to check you're really running on the nvidia GPU).
+> > > > 
+> > > > Then you should see msgs in dmesg about nouveau resuming the
+> > > > gpu,
+> > > > then kill glxgears and wait for 5 seconds, now the nouveau drv
+> > > > should say the gpu is suspending, etc.
+> > > > 
+> > > > If it never runtime suspends, then make sure you are not using
+> > > > any external screens, only the built-in laptop screen.
+> > > > 
+> > > > Regards,
+> > > > 
+> > > > Hans
+> > > > 
+> > > > 
+> > > > > On Thu, 2017-01-05 at 14:36 -0500, David Airlie wrote:
+> > > > > > (cc'ing Lyude, who has the hw also I think).
+> > > > > > 
+> > > > > > ----- Original Message -----
+> > > > > > > From: "Peter Jones" <pjones@redhat.com>
+> > > > > > > To: "Lukas Wunner" <lukas@wunner.de>
+> > > > > > > Cc: "David Airlie" <airlied@redhat.com>, "Rafael J.
+> > > > > > > Wysocki" <rjw@r
+> > > > > > > jwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
+> > > > > > > "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg"
+> > > > > > > <mika.weste
+> > > > > > > rberg@linux.intel.com>, "Kilian Singer"
+> > > > > > > <kilian.singer@quantumtechnology.info>, "linux-pci" <linu
+> > > > > > > x-pci@vger
+> > > > > > > .kernel.org>, "Alex Deucher"
+> > > > > > > <alexander.deucher@amd.com>, "Hans de Goede" <hdegoede@re
+> > > > > > > dhat.com>
+> > > > > > > Sent: Friday, 6 January, 2017 4:13:23 AM
+> > > > > > > Subject: Re: PCI: Revert "PCI: Add runtime PM support for
+> > > > > > > PCIe
+> > > > > > > ports"
+> > > > > > > 
+> > > > > > > On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner
+> > > > > > > wrote:
+> > > > > > > > On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie
+> > > > > > > > wrote:
+> > > > > > > > > > On Wednesday, January 04, 2017 10:09:54 PM Peter Wu
+> > > > > > > > > > wrote:
+> > > > > > > > > > > On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas
+> > > > > > > > > > > Wunner
+> > > > > > > > > > > wrote:
+> > > > > > > > > > > > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn
+> > > > > > > > > > > > Helgaas
+> > > > > > > > > > > > wrote:
+> > > > > > > > > > > > > I don't *want* to apply the revert.  It's on
+> > > > > > > > > > > > > my for-
+> > > > > > > > > > > > > linus branch
+> > > > > > > > > > > > > as a
+> > > > > > > > > > > > > worst-case scenario change if we can't figure
+> > > > > > > > > > > > > out a
+> > > > > > > > > > > > > better fix.
+> > > > > > > > > > > > > 
+> > > > > > > > > > > > > The patch below is preferable, but I'd rather
+> > > > > > > > > > > > > not take
+> > > > > > > > > > > > > even it,
+> > > > > > > > > > > > > because it takes away functionality and
+> > > > > > > > > > > > > forces people
+> > > > > > > > > > > > > to use a
+> > > > > > > > > > > > > boot
+> > > > > > > > > > > > > parameter to restore it.  I expect that
+> > > > > > > > > > > > > somebody will
+> > > > > > > > > > > > > figure out
+> > > > > > > > > > > > > how
+> > > > > > > > > > > > > to fix the regression Kilian found and also
+> > > > > > > > > > > > > keep the
+> > > > > > > > > > > > > new
+> > > > > > > > > > > > > functionality
+> > > > > > > > > > > > > (without requiring boot parameters) before
+> > > > > > > > > > > > > v4.10.
+> > > > > > > > > > > > 
+> > > > > > > > > > > > The issue is constrained to hybrid graphics
+> > > > > > > > > > > > laptops with
+> > > > > > > > > > > > Nvidia
+> > > > > > > > > > > > discrete
+> > > > > > > > > > > > GPU using nouveau.  Hence it needs to be fixed
+> > > > > > > > > > > > in
+> > > > > > > > > > > > nouveau, not in
+> > > > > > > > > > > > the
+> > > > > > > > > > > > PCI core.
+> > > > > > > > > > > 
+> > > > > > > > > > > The problem is not necessarily in the nouveau
+> > > > > > > > > > > driver, the
+> > > > > > > > > > > same
+> > > > > > > > > > > problem
+> > > > > > > > > > > occurs when you enable RPM without loading
+> > > > > > > > > > > nouveau. The
+> > > > > > > > > > > issue is
+> > > > > > > > > > > limited
+> > > > > > > > > > > though to some newer hybrid graphics laptops with
+> > > > > > > > > > > Nvidia
+> > > > > > > > > > > GPUs. While
+> > > > > > > > > > > a
+> > > > > > > > > > > quirk can be added to nouveau, I think that a
+> > > > > > > > > > > (temporary)
+> > > > > > > > > > > quirk in
+> > > > > > > > > > > core
+> > > > > > > > > > > would also be reasonable (since it also occurs
+> > > > > > > > > > > without
+> > > > > > > > > > > nouveau).
+> > > > > > > > > > > 
+> > > > > > > > > > > > (AFAIUI, laptops with AMD discrete GPU are not
+> > > > > > > > > > > > affected
+> > > > > > > > > > > > as it is
+> > > > > > > > > > > > known
+> > > > > > > > > > > > when and how to call an ACPI method versus
+> > > > > > > > > > > > using PR3.)
+> > > > > > > > > > > > 
+> > > > > > > > > > > > (Neither are laptops using the Nvidia
+> > > > > > > > > > > > proprietary driver
+> > > > > > > > > > > > as it
+> > > > > > > > > > > > doesn't
+> > > > > > > > > > > > runtime suspend the card.  But battery life
+> > > > > > > > > > > > will be
+> > > > > > > > > > > > terrible then.)
+> > > > > > > > > > > > 
+> > > > > > > > > > > > We're at rc2 so the time frame for coming up
+> > > > > > > > > > > > with a fix
+> > > > > > > > > > > > is probably
+> > > > > > > > > > > > 4 weeks.  Peter and others have tried for
+> > > > > > > > > > > > months to
+> > > > > > > > > > > > reverse-engineer
+> > > > > > > > > > > > how to handle runtime PM on newer Nvidia
+> > > > > > > > > > > > cards.  It seems
+> > > > > > > > > > > > likely
+> > > > > > > > > > > > that
+> > > > > > > > > > > > we'll not find the ultimate solution to the
+> > > > > > > > > > > > problem
+> > > > > > > > > > > > within 4 weeks.
+> > > > > > > > > > > 
+> > > > > > > > > > > Yep, a quick proper fix seems unlikely.
+> > > > > > > > > > > [ Help/ideas are welcome, I suspect that these
+> > > > > > > > > > > failures to
+> > > > > > > > > > > restore
+> > > > > > > > > > > power
+> > > > > > > > > > > on laptops designed for Win8+ all have the same
+> > > > > > > > > > > cause,
+> > > > > > > > > > > related to
+> > > > > > > > > > > some
+> > > > > > > > > > > unknown interaction between ACPI and PCI. Some
+> > > > > > > > > > > links:
+> > > > > > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=19086
+> > > > > > > > > > > 1
+> > > > > > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=15634
+> > > > > > > > > > > 1 ]
+> > > > > > > > > > > 
+> > > > > > > > > > > > The way it is now, i.e. defaulting to PR3 when
+> > > > > > > > > > > > available,
+> > > > > > > > > > > > regresses
+> > > > > > > > > > > > certain laptops such as Kilian's.  If on the
+> > > > > > > > > > > > other hand
+> > > > > > > > > > > > we default
+> > > > > > > > > > > > to
+> > > > > > > > > > > > DSM when available, we'll regress certain other
+> > > > > > > > > > > > laptops,
+> > > > > > > > > > > > as Peter
+> > > > > > > > > > > > has
+> > > > > > > > > > > > pointed out.  Whitelisting or blacklisting
+> > > > > > > > > > > > laptops
+> > > > > > > > > > > > doesn't seem a
+> > > > > > > > > > > > good
+> > > > > > > > > > > > approach either, ideally we'd want to use PR3
+> > > > > > > > > > > > as Windows
+> > > > > > > > > > > > does.
+> > > > > > > > > > > > 
+> > > > > > > > > > > > As said, the only short-term solution I see is
+> > > > > > > > > > > > to add an
+> > > > > > > > > > > > "optimus"
+> > > > > > > > > > > > module_param to nouveau to allow users to
+> > > > > > > > > > > > select which
+> > > > > > > > > > > > method to
+> > > > > > > > > > > > use.
+> > > > > > > > > > > > So in Kilian's case an additional command line
+> > > > > > > > > > > > parameter
+> > > > > > > > > > > > would be
+> > > > > > > > > > > > necessary to fix the issue.
+> > > > > > > > > > > > 
+> > > > > > > > > > > > Does anyone see a better solution or can we
+> > > > > > > > > > > > agree on this
+> > > > > > > > > > > > one?  If
+> > > > > > > > > > > > so
+> > > > > > > > > > > > I can come up with a patch.  This could go in
+> > > > > > > > > > > > via Dave
+> > > > > > > > > > > > Airlie's
+> > > > > > > > > > > > tree.
+> > > > > > > > > > > 
+> > > > > > > > > > > As pcie_port_pm=off already reverts to DSM, I do
+> > > > > > > > > > > not think
+> > > > > > > > > > > that an
+> > > > > > > > > > > additional (temporary) nouveau module parameter
+> > > > > > > > > > > is going to
+> > > > > > > > > > > help. I
+> > > > > > > > > > > instead propose a (hopefully temporary) quirk in
+> > > > > > > > > > > pci core
+> > > > > > > > > > > that
+> > > > > > > > > > > disables
+> > > > > > > > > > > D3cold RPM for just Kilians Lenovo laptop
+> > > > > > > > > > > (basically
+> > > > > > > > > > > defaulting to
+> > > > > > > > > > > pcie_port_pm=off). Then the option
+> > > > > > > > > > > pcie_port_pm=force can
+> > > > > > > > > > > still be
+> > > > > > > > > > > used
+> > > > > > > > > > > to test possible solutions in the future.
+> > > > > > > > > > 
+> > > > > > > > > > I would rather add a quirk to the ACPI core to
+> > > > > > > > > > prevent the
+> > > > > > > > > > power
+> > > > > > > > > > resources in
+> > > > > > > > > > question from being enumerated.  Or even to prevent
+> > > > > > > > > > ACPI PM
+> > > > > > > > > > from being
+> > > > > > > > > > used for the port in question.
+> > > > > > > > > 
+> > > > > > > > > I do have a W541 in a cupboard in the office
+> > > > > > > > > somewhere, but I
+> > > > > > > > > won't be
+> > > > > > > > > close to
+> > > > > > > > > it for a couple of weeks. The W541 was the first
+> > > > > > > > > place I tested
+> > > > > > > > > the pm
+> > > > > > > > > patches
+> > > > > > > > > so I'm kinda wondering whether it's all W541's or
+> > > > > > > > > just some
+> > > > > > > > > specific
+> > > > > > > > > model/bios
+> > > > > > > > > combo.
+> > > > > > > 
+> > > > > > > They seem to all ship with the 1.10 firmware, and 2.80 is
+> > > > > > > current
+> > > > > > > (there
+> > > > > > > are a bunch of intermediate 2.xx versions).  Somewhere
+> > > > > > > along the
+> > > > > > > line
+> > > > > > > they introduced some bugs in the UEFI stuff, so it
+> > > > > > > wouldn't be
+> > > > > > > surprising if there's bugs introduced elsewhere as well.
+> > > > > > > 
+> > > > > > > > > However I'm pretty much unavailable to do anything
+> > > > > > > > > much until
+> > > > > > > > > late Jan on
+> > > > > > > > > this.
+> > > > > > > > 
+> > > > > > > > Is there anyone else at Red Hat who might be able to
+> > > > > > > > look into
+> > > > > > > > this?
+> > > > > > > > 
+> > > > > > > > ISTR that Hans de Goede is working on improving laptop
+> > > > > > > > support in
+> > > > > > > > Fedora,
+> > > > > > > > and Peter Jones recently got a patch merged for the
+> > > > > > > > W541 with the
+> > > > > > > > exact
+> > > > > > > > same firmware Kilian is using to work around a botched
+> > > > > > > > EFI memory
+> > > > > > > > map.
+> > > > > > > > Adding them to cc: in the hope that they may be able to
+> > > > > > > > help.
+> > > > > > > > 
+> > > > > > > > @Peter, have you noticed issues with the discrete
+> > > > > > > > Nvidia GPU on
+> > > > > > > > your W541
+> > > > > > > > related to runtime suspend and system sleep?
+> > > > > > > 
+> > > > > > > I was using a borrowed one (I can certainly find it
+> > > > > > > again, but I'm
+> > > > > > > not
+> > > > > > > working on graphics/pm really), but yeah - shutdown and
+> > > > > > > lspci both
+> > > > > > > broke
+> > > > > > > sometime after pci_pm_runtime_resume().  Here's the
+> > > > > > > traceback from
+> > > > > > > SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
+> > > > > > > 
+> > > > > > > Dave, if you know who in Westford should have a look at
+> > > > > > > this, I can
+> > > > > > > see
+> > > > > > > about getting them hardware.  I am more or less
+> > > > > > > surrounded by that
+> > > > > > > team.
+> > > > > > > 
+> > > > > > > --
+> > > > > > >         Peter
+> > > > > > > 
+> 
+> 
