@@ -1,65 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:50606 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754453AbdAEUIC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Jan 2017 15:08:02 -0500
-Date: Thu, 5 Jan 2017 13:07:19 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: Jerome Glisse <j.glisse@gmail.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
-        david1.zhou@amd.com, qiang.yu@amd.com
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20170105200719.GB31047@obsidianresearch.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
- <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170105195424.GB2166@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=kadG=Y2=samsung.com=jh80.chung@kernel.org>
+Return-Path: <SRS0=kadG=Y2=samsung.com=jh80.chung@kernel.org>
+Subject: Re: [PATCH 1/4] PCI: exynos: replace to one register accessor from
+ each accessors
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, helgaas@google.com, krzk@kernel.org,
+ linux-kernel@vger.kernel.org, jingoohan1@gmail.com, javier@osg.samsung.com,
+ kgene@kernel.org, linux-samsung-soc@vger.kernel.org, CPGS <cpgs@samsung.com>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <38b40475-97fc-da8a-82f4-4c5932a008a1@samsung.com>
+Date: Thu, 12 Jan 2017 10:13:18 +0900
+MIME-version: 1.0
+In-reply-to: <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
+Content-type: text/plain; charset=windows-1252
+References: <20161219081614.5403-1-jh80.chung@samsung.com>
+ <20161219081614.5403-2-jh80.chung@samsung.com>
+ <CGME20170111185058epcas4p3b75597ea7f18d0ac10a16fc752a708ca@epcas4p3.samsung.com>
+ <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 02:54:24PM -0500, Jerome Glisse wrote:
+Hi Bjorn,
 
-> Mellanox and NVidia support peer to peer with what they market a
-> GPUDirect. It only works without IOMMU. It is probably not upstream :
+On 01/12/2017 03:50 AM, Bjorn Helgaas wrote:
+> Hi Jaehoon,
 > 
-> https://www.mail-archive.com/linux-rdma@vger.kernel.org/msg21402.html
+> On Mon, Dec 19, 2016 at 05:16:11PM +0900, Jaehoon Chung wrote:
+>> There is no reason to maintain *_blk/phy/elbi_* as register accessors.
+>> It can be replaced to one register accessor.
+>>
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+>> ---
+>>  drivers/pci/host/pci-exynos.c | 214 +++++++++++++++++++-----------------------
+>>  1 file changed, 97 insertions(+), 117 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+>> index f1c544b..6dbfa2c 100644
+>> --- a/drivers/pci/host/pci-exynos.c
+>> +++ b/drivers/pci/host/pci-exynos.c
+>> @@ -102,197 +102,175 @@ struct exynos_pcie {
+>>  #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
+>>  #define PCIE_PHY_TRSV3_LVCC		0x31c
+>>  
+>> -static void exynos_elb_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+>> +static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
+>>  {
+>> -	writel(val, exynos_pcie->elbi_base + reg);
+>> +	writel(val, base + reg);
+>>  }
+>>  
+>> -static u32 exynos_elb_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+>> +static u32 exynos_pcie_readl(void __iomem *base, u32 reg)
+>>  {
+>> -	return readl(exynos_pcie->elbi_base + reg);
+>> +	return readl(base + reg);
+>>  }
+>>  
+>> -static void exynos_phy_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+>> -{
+>> -	writel(val, exynos_pcie->phy_base + reg);
+>> -}
+>> -
+>> -static u32 exynos_phy_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+>> -{
+>> -	return readl(exynos_pcie->phy_base + reg);
+>> -}
+>> -
+>> -static void exynos_blk_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
+>> -{
+>> -	writel(val, exynos_pcie->block_base + reg);
+>> -}
+>> -
+>> -static u32 exynos_blk_readl(struct exynos_pcie *exynos_pcie, u32 reg)
+>> -{
+>> -	return readl(exynos_pcie->block_base + reg);
+>> -}
+>> -
+>> -static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos_pcie,
+>> -					    bool on)
+>> +static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
 > 
-> I thought it was but it seems it require an out of tree driver to work.
+> Replacing all the separate accessors with one that takes the base
+> pointer is OK, but please use the same name for all the "struct
+> exynos_pcie *" pointers in the whole file.
+> 
+> Before your patch, they were all called "exynos_pci"; after it some
+> are called "exynos_pci" and some are called "ep".
 
-Right, it is out of tree and not under consideration for mainline.
+I will use the 'ep' as name, exynos_pcie is a little bit long.
+When 'exynos_pcie' is used, some code is need to change lines because of 80 char.
+I think it's the meaningless line changing.
 
-> Wether there is a vma or not isn't important to the issue anyway. If
-> you want to enforce VMA rule for RDMA it is an RDMA specific discussion
-> in which i don't want to be involve, it is not my turf :)
+I will resend the PATCH v2..also patches relevant to using PHY framework.
+After applying everything, i will upstream TM2(Exynos5433) PCIe patches.
 
-Always having a VMA changes the discussion - the question is how to
-create a VMA that reprensents IO device memory, and how do DMA
-consumers extract the correct information from that VMA to pass to the
-kernel DMA API so it can setup peer-peer DMA.
+Thanks for reviewing.
 
-> What matter is the back channel API between peer-to-peer device. Like
-> the above patchset points out for GPU we need to be able to invalidate
-> a mapping at any point in time. Pining is not something we want to
-> live with.
+Best Regards,
+Jaehoon Chung
 
-We have MMU notifiers to handle this today in RDMA. Async RDMA MR
-Invalidate like you see in the above out of tree patches is totally
-crazy and shouldn't be in mainline. Use ODP capable RDMA hardware.
-
-Jason
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
