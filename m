@@ -1,108 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:36167 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751367AbdALCRZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 21:17:25 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V2 3/4] PCI: exynos: Use the bitops API to operate the bit
- shifting
-Date: Thu, 12 Jan 2017 11:17:18 +0900
-Message-id: <20170112021719.24986-3-jh80.chung@samsung.com>
-In-reply-to: <20170112021719.24986-1-jh80.chung@samsung.com>
-References: <20170112021719.24986-1-jh80.chung@samsung.com>
- <CGME20170112021722epcas1p308bc0e69d541fe0e46445c2a464857b2@epcas1p3.samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=T4mu=Y2=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=T4mu=Y2=wunner.de=lukas@kernel.org>
+Date: Thu, 12 Jan 2017 03:12:35 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Lyude Paul <lyude@redhat.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, David Airlie <airlied@redhat.com>,
+	Peter Jones <pjones@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Kilian Singer <kilian.singer@quantumtechnology.info>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170112021235.GA24156@wunner.de>
+References: <59349185.1aqio7kYFn@aspire.rjw.lan>
+ <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+ <20170105150646.GB21446@wunner.de>
+ <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+ <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
+ <1483974686.28993.3.camel@redhat.com>
+ <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
+ <1484167244.25614.1.camel@redhat.com>
+ <1484183615.25614.3.camel@redhat.com>
+ <1484186688.25614.4.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484186688.25614.4.camel@redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Just use the bitops api to operate the bit.
+On Wed, Jan 11, 2017 at 09:04:48PM -0500, Lyude Paul wrote:
+> Finally got koji to work :). People having the runtime resume problem,
+> can you give this kernel RPM a try and tell me if the issue still
+> persists?
+> 
+> https://koji.fedoraproject.org/koji/taskinfo?taskID=17250338
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
----
-Changelog on V2:
-- None
+Kilian uses Debian but has a git repo with Linus' tree.  Could you post
+the relevant patch(es) based on either the tip of Linus' master branch
+or one of his tags (such as v4.9, v4.10-rc3)?  This would also allow us
+to review/comment on the patches.
 
- drivers/pci/host/pci-exynos.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Thanks!
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 3a7e09b..6cbc1cc 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -40,19 +40,19 @@ struct exynos_pcie {
- 
- /* PCIe ELBI registers */
- #define PCIE_IRQ_PULSE			0x000
--#define IRQ_INTA_ASSERT			(0x1 << 0)
--#define IRQ_INTB_ASSERT			(0x1 << 2)
--#define IRQ_INTC_ASSERT			(0x1 << 4)
--#define IRQ_INTD_ASSERT			(0x1 << 6)
-+#define IRQ_INTA_ASSERT			BIT(0)
-+#define IRQ_INTB_ASSERT			BIT(2)
-+#define IRQ_INTC_ASSERT			BIT(4)
-+#define IRQ_INTD_ASSERT			BIT(6)
- #define PCIE_IRQ_LEVEL			0x004
- #define PCIE_IRQ_SPECIAL		0x008
- #define PCIE_IRQ_EN_PULSE		0x00c
- #define PCIE_IRQ_EN_LEVEL		0x010
--#define IRQ_MSI_ENABLE			(0x1 << 2)
-+#define IRQ_MSI_ENABLE			BIT(2)
- #define PCIE_IRQ_EN_SPECIAL		0x014
- #define PCIE_PWR_RESET			0x018
- #define PCIE_CORE_RESET			0x01c
--#define PCIE_CORE_RESET_ENABLE		(0x1 << 0)
-+#define PCIE_CORE_RESET_ENABLE		BIT(0)
- #define PCIE_STICKY_RESET		0x020
- #define PCIE_NONSTICKY_RESET		0x024
- #define PCIE_APP_INIT_RESET		0x028
-@@ -61,7 +61,7 @@ struct exynos_pcie {
- #define PCIE_ELBI_LTSSM_ENABLE		0x1
- #define PCIE_ELBI_SLV_AWMISC		0x11c
- #define PCIE_ELBI_SLV_ARMISC		0x120
--#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-+#define PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
- 
- /* PCIe Purple registers */
- #define PCIE_PHY_GLOBAL_RESET		0x000
-@@ -79,27 +79,27 @@ struct exynos_pcie {
- #define PCIE_PHY_DCC_FEEDBACK		0x014
- #define PCIE_PHY_PLL_DIV_1		0x05c
- #define PCIE_PHY_COMMON_POWER		0x064
--#define PCIE_PHY_COMMON_PD_CMN		(0x1 << 3)
-+#define PCIE_PHY_COMMON_PD_CMN		BIT(3)
- #define PCIE_PHY_TRSV0_EMP_LVL		0x084
- #define PCIE_PHY_TRSV0_DRV_LVL		0x088
- #define PCIE_PHY_TRSV0_RXCDR		0x0ac
- #define PCIE_PHY_TRSV0_POWER		0x0c4
--#define PCIE_PHY_TRSV0_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV0_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV0_LVCC		0x0dc
- #define PCIE_PHY_TRSV1_EMP_LVL		0x144
- #define PCIE_PHY_TRSV1_RXCDR		0x16c
- #define PCIE_PHY_TRSV1_POWER		0x184
--#define PCIE_PHY_TRSV1_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV1_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV1_LVCC		0x19c
- #define PCIE_PHY_TRSV2_EMP_LVL		0x204
- #define PCIE_PHY_TRSV2_RXCDR		0x22c
- #define PCIE_PHY_TRSV2_POWER		0x244
--#define PCIE_PHY_TRSV2_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV2_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV2_LVCC		0x25c
- #define PCIE_PHY_TRSV3_EMP_LVL		0x2c4
- #define PCIE_PHY_TRSV3_RXCDR		0x2ec
- #define PCIE_PHY_TRSV3_POWER		0x304
--#define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
-+#define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV3_LVCC		0x31c
- 
- static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
--- 
-2.10.2
-
+Lukas
