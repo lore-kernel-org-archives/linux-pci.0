@@ -1,105 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: thunder-pem: Add support for cn81xx and cn83xx SoCs.
-To: David Daney <ddaney.cavm@gmail.com>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- <linux-arm-kernel@lists.infradead.org>
-References: <20170111191141.28747-1-ddaney.cavm@gmail.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <4841267a-35d8-4065-edb6-d0d4b1f272ed@caviumnetworks.com>
-Date: Wed, 11 Jan 2017 11:19:00 -0800
+Return-Path: <SRS0=3W2o=Y2=synopsys.com=Joao.Pinto@kernel.org>
+Return-Path: <SRS0=3W2o=Y2=synopsys.com=Joao.Pinto@kernel.org>
+Subject: Re: [PATCH] pci: Fix typo in MAINTAINERS file
+To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
+References: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
+ <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <f60025df-e43d-4e71-89b1-9417244d1be3@synopsys.com>
+Date: Thu, 12 Jan 2017 12:10:27 +0000
 MIME-Version: 1.0
-In-Reply-To: <20170111191141.28747-1-ddaney.cavm@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/11/2017 11:11 AM, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
->
-> The pci-thunder-pem driver was initially developed for cn88xx SoCs.
-> The cn81xx and cn83xx members of the same family of SoCs has a
-> slightly different configuration of interrupt resources in the PEM
-> hardware, which prevents the INTA legacy interrupt source from
-> functioning with the current driver.
->
-> There are two fixes required:
->
-> 1) Don't fixup the PME interrupt on the newer SoCs as it already has
-> the proper value.
->
-> 2) Report MSI-X Capability Table Size of 2 for the newer SoCs, so the
-> core MSI-X code doesn't inadvertently clobber the INTA machinery that
-> happens to reside immediately following the table.
->
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/host/pci-thunder-pem.c | 25 ++++++++++++++++++++-----
->  1 file changed, 20 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index af722eb..eea466f 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -36,7 +36,7 @@ struct thunder_pem_pci {
->  static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
->  				   int where, int size, u32 *val)
->  {
-> -	u64 read_val;
-> +	u64 read_val, tmp_val;
->  	struct pci_config_window *cfg = bus->sysdata;
->  	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
->
-> @@ -65,13 +65,28 @@ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
->  		read_val |= 0x00007000; /* Skip MSI CAP */
->  		break;
->  	case 0x70: /* Express Cap */
-> -		/* PME interrupt on vector 2*/
-> -		read_val |= (2u << 25);
-> +		/*
-> +		 * Change PME interrupt to vector 2 on T88 where it
-> +		 * reads as 0, else leave it alone.
-> +		 */
-> +		if (!(read_val & (0x1f << 25)))
-> +			read_val |= (2u << 25);
->  		break;
->  	case 0xb0: /* MSI-X Cap */
-> -		/* TableSize=4, Next Cap is EA */
-> +		/* TableSize=2 or 4, Next Cap is EA */
->  		read_val &= 0xc00000ff;
-> -		read_val |= 0x0003bc00;
-> +		/*
-> +		 * If Express Cap(0x70) raw PME vector reads as 2 we are on
+Hi Bjorn,
 
-Crap!  The comment is incorrect  s/2/0/, I guess I will send a corrected 
-patch.  The code is correct though.
+Às 9:10 PM de 1/11/2017, Bjorn Helgaas escreveu:
+> Hi Joao,
+> 
+> On Wed, Dec 28, 2016 at 04:05:11PM +0000, Joao Pinto wrote:
+>> This patch fixes a typo in MAINTAINERS file.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  MAINTAINERS | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index cfff2c9..1056392 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -9512,7 +9512,7 @@ L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
+>>  S:	Maintained
+>>  F:	drivers/pci/host/pci-exynos.c
+>>  
+>> -PCI DRIVER FOR SYNOPSIS DESIGNWARE
+>> +PCI DRIVER FOR SYNOPSYS DESIGNWARE
+> 
+> "git grep -i synopsis" finds several other occurrences in the tree.
+> 
+> Most of them are the English word "synopsis", and those are correct.
+> But several look like similar typos for the "Synopsys" company name:
+> 
+>   Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+>   Documentation/devicetree/bindings/pci/pci-armada8k.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+>   Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
+>   Documentation/devicetree/bindings/pci/spear13xx-pcie.txt:SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
+>   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:DWC3 PHY nodes are defined to describe on-chip Synopsis Physical layer
+>   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-hs-usb-phy" for High Speed Synopsis PHY controller
+>   Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-ss-usb-phy" for Super Speed Synopsis PHY controller
+>   arch/x86/include/asm/apb_timer.h: * apb_timer.h: Driver for Langwell APB timer based on Synopsis DesignWare
+>   drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware AHB Audio interface"
+>   drivers/gpu/drm/bridge/Kconfig:   Support the AHB Audio interface which is part of the Synopsis
+>   drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware I2S Audio interface"
+>   drivers/gpu/drm/bridge/Kconfig:   Support the I2S Audio interface which is part of the Synopsis
+>   drivers/gpu/drm/bridge/dw-hdmi-ahb-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI AHB ALSA interface");
+>   drivers/gpu/drm/bridge/dw-hdmi-i2s-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI I2S ALSA SoC interface");
+>   drivers/usb/phy/phy-msm-usb.c: * SNPS_28NM_INTEGRATED_PHY       Synopsis 28nm integrated PHY
+> 
 
+Yes, I will do that!
 
-> +		 * T88 and TableSize is reported as 4, else TableSize
-> +		 * is 2.
-> +		 */
-> +		writeq(0x70, pem_pci->pem_reg_base + PEM_CFG_RD);
-> +		tmp_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-> +		tmp_val >>= 32;
-> +		if (!(tmp_val & (0x1f << 25)))
-> +			read_val |= 0x0003bc00;
-> +		else
-> +			read_val |= 0x0001bc00;
->  		break;
->  	case 0xb4:
->  		/* Table offset=0, BIR=0 */
->
+> Can you take a look at those and fix any others that are typos at the
+> same time?
+> 
+>>  M:	Jingoo Han <jingoohan1@gmail.com>
+>>  M:	Joao Pinto <Joao.Pinto@synopsys.com>
+>>  L:	linux-pci@vger.kernel.org
+>> -- 
+>> 2.9.3
+>>
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks.
