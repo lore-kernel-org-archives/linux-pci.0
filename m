@@ -1,45 +1,208 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 5/5] ARM: dts: exynos5440: support the phy-pcie node for
- pcie
-To: Jaehoon Chung <jh80.chung@samsung.com>, linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, alim.akhtar@samsung.com,
-        cpgs@samsung.com
-From: "pankaj.dubey" <pankaj.dubey@samsung.com>
-Message-id: <e8ba6f6b-378e-0d7b-8416-2b578f78334a@samsung.com>
-Date: Thu, 05 Jan 2017 14:34:07 +0530
-MIME-version: 1.0
-In-reply-to: <20170104123435.30740-6-jh80.chung@samsung.com>
-Content-type: text/plain; charset=windows-1252
-References: <20170104123435.30740-1-jh80.chung@samsung.com>
- <CGME20170104123436epcas1p10b52f24e7d6c00edb44e4331a1870e4d@epcas1p1.samsung.com>
- <20170104123435.30740-6-jh80.chung@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:55817 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751423AbdALK2j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:28:39 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH 12/37] PCI: dwc: Create a new config symbol to enable pci dwc host
+Date: Thu, 12 Jan 2017 15:56:01 +0530
+Message-ID: <1484216786-17292-13-git-send-email-kishon@ti.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+Now that pci designware host has a separate file, create a new
+config symbol to select the host only driver. This is in preparation
+to enable endpoint support to designware driver.
 
-On Wednesday 04 January 2017 06:04 PM, Jaehoon Chung wrote:
-> Add phy-pcie node for using Exynos5440 pcie.
-> And use the reg-names as "elbi" and "config".
-> Because the getting configuratioin space address from ranges is old way.
-> It also is helpful to distinguish more clearly.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
-> Changelog on V2:
-> - Removes the child-node
-> - Fixes the typo
-> - Removes the unnecessary comments
-> 
->  arch/arm/boot/dts/exynos5440.dtsi | 34 ++++++++++++++++++++++------------
->  1 file changed, 22 insertions(+), 12 deletions(-)
-> 
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
+ drivers/pci/dwc/Makefile          |    3 ++-
+ drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
+ 3 files changed, 42 insertions(+), 16 deletions(-)
 
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 8b08519..d0bdfb5 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
+ 
+ config PCIE_DW
+ 	bool
++
++config PCIE_DW_HOST
++        bool
+ 	depends on PCI_MSI_IRQ_DOMAIN
++        select PCIE_DW
+ 
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+ 	 are two instances of PCIe controller in DRA7xx.  This controller can
+@@ -18,7 +22,7 @@ config PCI_DRA7XX
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	---help---
+ 	 This selects the DesignWare PCIe controller support. Select this if
+ 	 you have a PCIe controller on Platform bus.
+@@ -32,21 +36,21 @@ config PCI_EXYNOS
+ 	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+ 	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+ 
+@@ -55,7 +59,7 @@ config PCI_KEYSTONE
+ 	depends on ARCH_KEYSTONE || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCI controller support on Keystone
+ 	  SoCs. The PCI controller on Keystone is based on Designware hardware
+@@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
+@@ -76,7 +80,7 @@ config PCI_HISI
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe controller support on HiSilicon
+ 	  Hip05 and Hip06 SoCs
+@@ -86,7 +90,7 @@ config PCIE_QCOM
+ 	depends on (ARCH_QCOM || COMPILE_TEST) && OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+ 	  PCIe controller uses the Designware core plus Qualcomm-specific
+@@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
+ 	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on
+ 	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
+@@ -109,7 +113,7 @@ config PCIE_ARTPEC6
+ 	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+ 	  SoCs.  This PCIe controller uses the DesignWare core.
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index 3b57e55..a2df13c 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -1,4 +1,5 @@
+-obj-$(CONFIG_PCIE_DW) += pcie-designware.o pcie-designware-host.o
++obj-$(CONFIG_PCIE_DW) += pcie-designware.o
++obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+ obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 808d17b..8f3dcb2 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -162,10 +162,6 @@ struct dw_pcie {
+ 
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+-irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+-void dw_pcie_msi_init(struct pcie_port *pp);
+-void dw_pcie_setup_rc(struct pcie_port *pp);
+-int dw_pcie_host_init(struct pcie_port *pp);
+ 
+ u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+ void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
+@@ -175,4 +171,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+ 			       int type, u64 cpu_addr, u64 pci_addr,
+ 			       u32 size);
+ void dw_pcie_setup(struct dw_pcie *pci);
++
++#ifdef CONFIG_PCIE_DW_HOST
++irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
++void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_setup_rc(struct pcie_port *pp);
++int dw_pcie_host_init(struct pcie_port *pp);
++#else
++static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
++{
++	return IRQ_NONE;
++}
++
++static inline void dw_pcie_msi_init(struct pcie_port *pp)
++{
++}
++
++static inline void dw_pcie_setup_rc(struct pcie_port *pp)
++{
++}
++
++static inline int dw_pcie_host_init(struct pcie_port *pp)
++{
++	return 0;
++}
++#endif
+ #endif /* _PCIE_DESIGNWARE_H */
+-- 
+1.7.9.5
 
-Thanks,
-Pankaj Dubey
