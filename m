@@ -1,85 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39934 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934161AbdAHXpQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2017 18:45:16 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v08NiGaE027556
-        for <linux-pci@vger.kernel.org>; Sun, 8 Jan 2017 18:45:16 -0500
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27unddqump-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Sun, 08 Jan 2017 18:45:15 -0500
-Received: from localhost
-        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Mon, 9 Jan 2017 09:45:12 +1000
-Date: Mon, 9 Jan 2017 10:45:10 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Emil Tantilov <emil.s.tantilov@intel.com>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        alexander.h.duyck@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: lock each enable/disable num_vfs operation in
- sysfs
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 13 Jan 2017 09:15:37 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 36/37] ARM: DRA7: clockdomain: Change the CLKTRCTRL of
+ CM_PCIE_CLKSTCTRL to SW_WKUP
+Message-ID: <20170113171537.GZ2630@atomide.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-37-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
-Message-Id: <20170108234510.GA14008@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1484216786-17292-37-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 06, 2017 at 01:59:08PM -0800, Emil Tantilov wrote:
->Enabling/disabling SRIOV via sysfs by echo-ing multiple values
->simultaneously:
->
->echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
->echo 63 > /sys/class/net/ethX/device/sriov_numvfs
->
->sleep 5
->
->echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
->echo 0 > /sys/class/net/ethX/device/sriov_numvfs
->
->Results in the following bug:
->
->kernel BUG at drivers/pci/iov.c:495!
->invalid opcode: 0000 [#1] SMP
->CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
->RIP: 0010:[<ffffffff813b1647>]
->	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->
->Call Trace:
-> [<ffffffff81391726>] pci_release_dev+0x26/0x70
-> [<ffffffff8155be6e>] device_release+0x3e/0xb0
-> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
-> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
-> [<ffffffff8155bc27>] put_device+0x17/0x20
-> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
-> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
-> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
-> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
-> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
-> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
-> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
-> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
-> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
-> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
->...
->RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->
->Use the existing mutex lock to protect each enable/disable operation.
->
->-v2: move the existing lock from protecting the config of the IOV bus
->to protecting the writes to sriov_numvfs in sysfs without maintaining
->a "locked" version of pci_iov_add/remove_virtfn().
->As suggested by Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->CC: Alexander Duyck <alexander.h.duyck@intel.com>
->Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
->---
+* Kishon Vijay Abraham I <kishon@ti.com> [170112 02:35]:
+> The PCIe programming sequence in TRM suggests CLKSTCTRL of PCIe should
+> be set to SW_WKUP. There are no issues when CLKSTCTRL is set to HW_AUTO
+> in RC mode. However in EP mode, the host system is not able to access the
+> MEMSPACE and setting the CLKSTCTRL to SW_WKUP fixes it.
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+I guess ideally in the long run we would set this dynamically based on
+the selected mode, right?
 
+Regards,
+
+Tony
+
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  arch/arm/mach-omap2/clockdomains7xx_data.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/arm/mach-omap2/clockdomains7xx_data.c b/arch/arm/mach-omap2/clockdomains7xx_data.c
+> index 6c67965..67ebff8 100644
+> --- a/arch/arm/mach-omap2/clockdomains7xx_data.c
+> +++ b/arch/arm/mach-omap2/clockdomains7xx_data.c
+> @@ -524,7 +524,7 @@
+>  	.dep_bit	  = DRA7XX_PCIE_STATDEP_SHIFT,
+>  	.wkdep_srcs	  = pcie_wkup_sleep_deps,
+>  	.sleepdep_srcs	  = pcie_wkup_sleep_deps,
+> -	.flags		  = CLKDM_CAN_HWSUP_SWSUP,
+> +	.flags		  = CLKDM_CAN_SWSUP,
+>  };
+>  
+>  static struct clockdomain atl_7xx_clkdm = {
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
