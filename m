@@ -1,182 +1,272 @@
-Return-Path: <SRS0=SCap=Y2=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=SCap=Y2=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
-Subject: [PATCH 1/3] PCI:hisi: Add DT almost ECAM support for HiSilicon Hip06/Hip07 host controllers
-Date: Thu, 12 Jan 2017 14:28:22 +0800
-Message-ID: <1484202504-96686-2-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
-References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <SRS0=l9j+=Y3=lst.de=hch@kernel.org>
+Return-Path: <SRS0=l9j+=Y3=lst.de=hch@kernel.org>
+Date: Fri, 13 Jan 2017 09:05:53 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+	netdev@vger.kernel.org, linux-media@vger.kernel.org,
+	Tom Lendacky <thomas.lendacky@amd.com>
+Subject: Re: kill off pci_enable_msi_{exact,range}
+Message-ID: <20170113080553.GA26280@lst.de>
+References: <1483994260-19797-1-git-send-email-hch@lst.de> <20170112212900.GE8312@bhelgaas-glaptop.roam.corp.google.com> <20170113075503.GA26014@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170113075503.GA26014@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller in Hip06/Hip07 SoCs is not completely
-ECAM-compliant. It is non-ECAM only for the RC bus config space; for
-any other bus underneath the root bus it does support ECAM access.
-This is to add the almost ECAM support in DT way.
+On Fri, Jan 13, 2017 at 08:55:03AM +0100, Christoph Hellwig wrote:
+> On Thu, Jan 12, 2017 at 03:29:00PM -0600, Bjorn Helgaas wrote:
+> > Applied all three (with Tom's ack on the amd-xgbe patch) to pci/msi for
+> > v4.11, thanks!
+> 
+> Tom had just send me an event better version of the xgbe patch.  Tom,
+> maybe you can resend that relative to the PCI tree [1], so that we don't
+> lose it for next merge window?
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+Actually - Bjorn, your msi branch contains an empty commit from this
+thread:
+
+	https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=7a8191de43faa9869b421a1b06075d8126ce7c0b
+
+Maybe we should rebase it after all to avoid that?  In that case please
+pick up the xgbe patch from Tom below:
+
 ---
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 37 +++++++++++++++
- drivers/pci/host/pcie-hisi.c                       | 54 ++++++++++++++++++++--
- 2 files changed, 88 insertions(+), 3 deletions(-)
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Subject: [PATCH] amd-xgbe: Update PCI support to use new IRQ functions
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-index 59c2f47..38e6dc3 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -42,3 +42,40 @@ Hip05 Example (note that Hip06 is the same except compatible):
- 				 0x0 0 0 4 &mbigen_pcie 4 13>;
- 		status = "ok";
- 	};
-+
-+HiSilicon Hip06/Hip07 PCIe host bridge DT (almost ecam) description
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "hisilicon,pcie-almost-ecam"
-+
-+- reg            : Two entries: First the ECAM configuration space for any
-+		   other bus underneath the root bus. Second, the base
-+		   and size of the HiSilicon host bridge registers inculde
-+		   the RC itself config space.
-+
-+Example:
-+	pcie0: pcie@a0090000 {
-+		compatible = "hisilicon,pcie-almost-ecam";
-+		reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
-+		      <0 0xa0090000 0 0x10000>; /* host bridge registers */
-+		bus-range = <0  31>;
-+		msi-map = <0x0000 &its_dsa 0x0000 0x2000>;
-+		msi-map-mask = <0xffff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x02000000 0 0xb2000000 0x0 0xb2000000 0 0x5ff0000
-+			  0x01000000 0 0 0 0xb7ff0000 0 0x10000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0xf800 0 0 7>;
-+		interrupt-map = <0x0 0 0 1 &mbigen_pcie0 650 4
-+				 0x0 0 0 2 &mbigen_pcie0 650 4
-+				 0x0 0 0 3 &mbigen_pcie0 650 4
-+				 0x0 0 0 4 &mbigen_pcie0 650 4>;
-+		status = "ok";
-+	};
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index a301a71..f37f5a2 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -24,7 +24,7 @@
- #include <linux/regmap.h>
- #include "../pci.h"
+Some of the PCI MSI/MSI-X functions have been deprecated and it is
+recommended to use the new pci_alloc_irq_vectors() function. Convert
+the code over to use the new function. Also, modify the way in which
+the IRQs are requested - try for multiple MSI-X/MSI first, then a
+single MSI/legacy interrupt.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/net/ethernet/amd/xgbe/xgbe-pci.c |  128 +++++++++---------------------
+ drivers/net/ethernet/amd/xgbe/xgbe.h     |    8 +-
+ 2 files changed, 41 insertions(+), 95 deletions(-)
+
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+index e76b7f6..e436902 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
++++ b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
+@@ -122,104 +122,40 @@
+ #include "xgbe.h"
+ #include "xgbe-common.h"
  
--#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+#if defined(CONFIG_PCI_HISI) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
- 
- static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 				  int size, u32 *val)
-@@ -74,6 +74,8 @@ static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
- 		return pci_ecam_map_bus(bus, devfn, where);
- }
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-+
- static int hisi_pcie_init(struct pci_config_window *cfg)
+-static int xgbe_config_msi(struct xgbe_prv_data *pdata)
++static int xgbe_config_multi_msi(struct xgbe_prv_data *pdata)
  {
- 	struct device *dev = cfg->parent;
-@@ -262,17 +264,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	const struct of_device_id *match;
- 	struct resource *reg;
- 	struct device_driver *driver;
-+	struct pci_ecam_ops *ops;
+-	unsigned int msi_count;
++	unsigned int vector_count;
+ 	unsigned int i, j;
  	int ret;
  
-+	driver = dev->driver;
-+	match = of_match_device(driver->of_match_table, dev);
-+	if (!strcmp(match->compatible, "hisilicon,pcie-almost-ecam")) {
-+		ops = (struct pci_ecam_ops *)match->data;
-+		return pci_host_common_probe(pdev, ops);
+-	msi_count = XGBE_MSIX_BASE_COUNT;
+-	msi_count += max(pdata->rx_ring_count,
+-			 pdata->tx_ring_count);
+-	msi_count = roundup_pow_of_two(msi_count);
++	vector_count = XGBE_MSI_BASE_COUNT;
++	vector_count += max(pdata->rx_ring_count,
++			    pdata->tx_ring_count);
+ 
+-	ret = pci_enable_msi_exact(pdata->pcidev, msi_count);
++	ret = pci_alloc_irq_vectors(pdata->pcidev, XGBE_MSI_MIN_COUNT,
++				    vector_count, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+ 	if (ret < 0) {
+-		dev_info(pdata->dev, "MSI request for %u interrupts failed\n",
+-			 msi_count);
+-
+-		ret = pci_enable_msi(pdata->pcidev);
+-		if (ret < 0) {
+-			dev_info(pdata->dev, "MSI enablement failed\n");
+-			return ret;
+-		}
+-
+-		msi_count = 1;
+-	}
+-
+-	pdata->irq_count = msi_count;
+-
+-	pdata->dev_irq = pdata->pcidev->irq;
+-
+-	if (msi_count > 1) {
+-		pdata->ecc_irq = pdata->pcidev->irq + 1;
+-		pdata->i2c_irq = pdata->pcidev->irq + 2;
+-		pdata->an_irq = pdata->pcidev->irq + 3;
+-
+-		for (i = XGBE_MSIX_BASE_COUNT, j = 0;
+-		     (i < msi_count) && (j < XGBE_MAX_DMA_CHANNELS);
+-		     i++, j++)
+-			pdata->channel_irq[j] = pdata->pcidev->irq + i;
+-		pdata->channel_irq_count = j;
+-
+-		pdata->per_channel_irq = 1;
+-		pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
+-	} else {
+-		pdata->ecc_irq = pdata->pcidev->irq;
+-		pdata->i2c_irq = pdata->pcidev->irq;
+-		pdata->an_irq = pdata->pcidev->irq;
+-	}
+-
+-	if (netif_msg_probe(pdata))
+-		dev_dbg(pdata->dev, "MSI interrupts enabled\n");
+-
+-	return 0;
+-}
+-
+-static int xgbe_config_msix(struct xgbe_prv_data *pdata)
+-{
+-	unsigned int msix_count;
+-	unsigned int i, j;
+-	int ret;
+-
+-	msix_count = XGBE_MSIX_BASE_COUNT;
+-	msix_count += max(pdata->rx_ring_count,
+-			  pdata->tx_ring_count);
+-
+-	pdata->msix_entries = devm_kcalloc(pdata->dev, msix_count,
+-					   sizeof(struct msix_entry),
+-					   GFP_KERNEL);
+-	if (!pdata->msix_entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < msix_count; i++)
+-		pdata->msix_entries[i].entry = i;
+-
+-	ret = pci_enable_msix_range(pdata->pcidev, pdata->msix_entries,
+-				    XGBE_MSIX_MIN_COUNT, msix_count);
+-	if (ret < 0) {
+-		dev_info(pdata->dev, "MSI-X enablement failed\n");
+-		devm_kfree(pdata->dev, pdata->msix_entries);
+-		pdata->msix_entries = NULL;
++		dev_info(pdata->dev, "multi MSI/MSI-X enablement failed\n");
+ 		return ret;
+ 	}
+ 
+ 	pdata->irq_count = ret;
+ 
+-	pdata->dev_irq = pdata->msix_entries[0].vector;
+-	pdata->ecc_irq = pdata->msix_entries[1].vector;
+-	pdata->i2c_irq = pdata->msix_entries[2].vector;
+-	pdata->an_irq = pdata->msix_entries[3].vector;
++	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
++	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 1);
++	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 2);
++	pdata->an_irq = pci_irq_vector(pdata->pcidev, 3);
+ 
+-	for (i = XGBE_MSIX_BASE_COUNT, j = 0; i < ret; i++, j++)
+-		pdata->channel_irq[j] = pdata->msix_entries[i].vector;
++	for (i = XGBE_MSI_BASE_COUNT, j = 0; i < ret; i++, j++)
++		pdata->channel_irq[j] = pci_irq_vector(pdata->pcidev, i);
+ 	pdata->channel_irq_count = j;
+ 
+ 	pdata->per_channel_irq = 1;
+ 	pdata->channel_irq_mode = XGBE_IRQ_MODE_LEVEL;
+ 
+ 	if (netif_msg_probe(pdata))
+-		dev_dbg(pdata->dev, "MSI-X interrupts enabled\n");
++		dev_dbg(pdata->dev, "multi %s interrupts enabled\n",
++			pdata->pcidev->msix_enabled ? "MSI-X" : "MSI");
+ 
+ 	return 0;
+ }
+@@ -228,21 +164,28 @@ static int xgbe_config_irqs(struct xgbe_prv_data *pdata)
+ {
+ 	int ret;
+ 
+-	ret = xgbe_config_msix(pdata);
++	ret = xgbe_config_multi_msi(pdata);
+ 	if (!ret)
+ 		goto out;
+ 
+-	ret = xgbe_config_msi(pdata);
+-	if (!ret)
+-		goto out;
++	ret = pci_alloc_irq_vectors(pdata->pcidev, 1, 1,
++				    PCI_IRQ_LEGACY | PCI_IRQ_MSI);
++	if (ret < 0) {
++		dev_info(pdata->dev, "single IRQ enablement failed\n");
++		return ret;
 +	}
-+
- 	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
- 	if (!hisi_pcie)
- 		return -ENOMEM;
  
- 	pp = &hisi_pcie->pp;
- 	pp->dev = dev;
--	driver = dev->driver;
+ 	pdata->irq_count = 1;
+-	pdata->irq_shared = 1;
++	pdata->channel_irq_count = 1;
++
++	pdata->dev_irq = pci_irq_vector(pdata->pcidev, 0);
++	pdata->ecc_irq = pci_irq_vector(pdata->pcidev, 0);
++	pdata->i2c_irq = pci_irq_vector(pdata->pcidev, 0);
++	pdata->an_irq = pci_irq_vector(pdata->pcidev, 0);
  
--	match = of_match_device(driver->of_match_table, dev);
- 	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
+-	pdata->dev_irq = pdata->pcidev->irq;
+-	pdata->ecc_irq = pdata->pcidev->irq;
+-	pdata->i2c_irq = pdata->pcidev->irq;
+-	pdata->an_irq = pdata->pcidev->irq;
++	if (netif_msg_probe(pdata))
++		dev_dbg(pdata->dev, "single %s interrupt enabled\n",
++			pdata->pcidev->msi_enabled ?  "MSI" : "legacy");
  
- 	hisi_pcie->subctrl =
-@@ -302,6 +310,40 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 		&hisi_pcie_link_up_hip06
- };
+ out:
+ 	if (netif_msg_probe(pdata)) {
+@@ -412,12 +355,15 @@ static int xgbe_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* Configure the netdev resource */
+ 	ret = xgbe_config_netdev(pdata);
+ 	if (ret)
+-		goto err_pci_enable;
++		goto err_irq_vectors;
  
-+static int hisi_pcie_platform_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	struct resource *res;
-+	void __iomem *reg_base;
-+
-+	if (!dev->of_node)
-+		return -EINVAL;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!res) {
-+		dev_err(dev, "missing \"reg[1]\"property\n");
-+		return -EINVAL;
-+	}
-+
-+	reg_base = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!reg_base)
-+		return -ENOMEM;
-+
-+	cfg->priv = reg_base;
-+	return 0;
-+}
-+
-+struct pci_ecam_ops hisi_pcie_platform_ops = {
-+	.bus_shift    = 20,
-+	.init         =  hisi_pcie_platform_init,
-+	.pci_ops      = {
-+		.map_bus    = hisi_pcie_map_bus,
-+		.read       = hisi_pcie_acpi_rd_conf,
-+		.write      = hisi_pcie_acpi_wr_conf,
-+	}
-+};
-+
- static const struct of_device_id hisi_pcie_of_match[] = {
- 	{
- 			.compatible = "hisilicon,hip05-pcie",
-@@ -311,6 +353,11 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 			.compatible = "hisilicon,hip06-pcie",
- 			.data	    = (void *) &hip06_ops,
- 	},
-+
-+	{
-+			.compatible = "hisilicon,pcie-almost-ecam",
-+			.data	    = (void *) &hisi_pcie_platform_ops,
-+	},
- 	{},
- };
+ 	netdev_notice(pdata->netdev, "net device enabled\n");
  
-@@ -324,3 +371,4 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- builtin_platform_driver(hisi_pcie_driver);
+ 	return 0;
  
- #endif
-+#endif
--- 
-1.9.1
++err_irq_vectors:
++	pci_free_irq_vectors(pdata->pcidev);
++
+ err_pci_enable:
+ 	xgbe_free_pdata(pdata);
+ 
+@@ -433,6 +379,8 @@ static void xgbe_pci_remove(struct pci_dev *pdev)
+ 
+ 	xgbe_deconfig_netdev(pdata);
+ 
++	pci_free_irq_vectors(pdata->pcidev);
++
+ 	xgbe_free_pdata(pdata);
+ }
+ 
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe.h b/drivers/net/ethernet/amd/xgbe/xgbe.h
+index f52a9bd..99f1c87 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe.h
++++ b/drivers/net/ethernet/amd/xgbe/xgbe.h
+@@ -211,9 +211,9 @@
+ #define XGBE_MAC_PROP_OFFSET	0x1d000
+ #define XGBE_I2C_CTRL_OFFSET	0x1e000
+ 
+-/* PCI MSIx support */
+-#define XGBE_MSIX_BASE_COUNT	4
+-#define XGBE_MSIX_MIN_COUNT	(XGBE_MSIX_BASE_COUNT + 1)
++/* PCI MSI/MSIx support */
++#define XGBE_MSI_BASE_COUNT	4
++#define XGBE_MSI_MIN_COUNT	(XGBE_MSI_BASE_COUNT + 1)
+ 
+ /* PCI clock frequencies */
+ #define XGBE_V2_DMA_CLOCK_FREQ	500000000	/* 500 MHz */
+@@ -980,14 +980,12 @@ struct xgbe_prv_data {
+ 	unsigned int desc_ded_count;
+ 	unsigned int desc_sec_count;
+ 
+-	struct msix_entry *msix_entries;
+ 	int dev_irq;
+ 	int ecc_irq;
+ 	int i2c_irq;
+ 	int channel_irq[XGBE_MAX_DMA_CHANNELS];
+ 
+ 	unsigned int per_channel_irq;
+-	unsigned int irq_shared;
+ 	unsigned int irq_count;
+ 	unsigned int channel_irq_count;
+ 	unsigned int channel_irq_mode;
