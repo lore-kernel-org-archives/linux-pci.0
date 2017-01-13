@@ -1,278 +1,55 @@
-Return-Path: <SRS0=pVbd=YY=redhat.com=airlied@kernel.org>
-Return-Path: <SRS0=pVbd=YY=redhat.com=airlied@kernel.org>
-Date: Mon, 9 Jan 2017 19:33:19 -0500 (EST)
-From: David Airlie <airlied@redhat.com>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Hans de Goede <hdegoede@redhat.com>, Lyude Paul <lyude@redhat.com>,
-        Peter Jones <pjones@redhat.com>, Lukas Wunner <lukas@wunner.de>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>, Lyude <cpaul@redhat.com>
-Message-ID: <1304522798.9524227.1484008399844.JavaMail.zimbra@redhat.com>
-In-Reply-To: <c0d105a6-0913-3293-d98e-17f0461f21ab@quantumtechnology.info>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com> <20170105150646.GB21446@wunner.de> <20170105181322.wnvdytpgddcdk3ry@redhat.com> <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com> <1483974686.28993.3.camel@redhat.com> <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com> <c0d105a6-0913-3293-d98e-17f0461f21ab@quantumtechnology.info>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 07/37] PCI: dwc: designware: Get device pointer at the
+ start of dw_pcie_host_init
+To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-8-git-send-email-kishon@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <fbfa32a8-0897-9c8a-618c-bb41fa26c532@synopsys.com>
+Date: Fri, 13 Jan 2017 17:22:44 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1484216786-17292-8-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Killian,
 
-do you use powertop or have you ever used it, I'm guessing some port is getting into suspend on your machine that isn't on ours due to differeing userspace or powertop settings.
+Hi!
 
-Dave.
+=C0s 10:25 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+> No functional change. Get device pointer at the beginning of
+> dw_pcie_host_init instead of getting it all over dw_pcie_host_init.
+> This is in preparation for splitting struct pcie_port into host and
+> core structures (Once split pcie_port will not have device pointer).
+> =
 
------ Original Message -----
-> From: "Kilian Singer" <kilian.singer@quantumtechnology.info>
-> To: "Hans de Goede" <hdegoede@redhat.com>, "Lyude Paul" <lyude@redhat.com>, "David Airlie" <airlied@redhat.com>,
-> "Peter Jones" <pjones@redhat.com>
-> Cc: "Lukas Wunner" <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
-> "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.westerberg@linux.intel.com>, "linux-pci"
-> <linux-pci@vger.kernel.org>, "Alex Deucher" <alexander.deucher@amd.com>, "Lyude" <cpaul@redhat.com>
-> Sent: Tuesday, 10 January, 2017 4:48:22 AM
-> Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-> 
-> Hi Lyude Paul,
-> 
-> normal supend resume does not work neither on my machine.
-> 
-> Best regards
-> 
-> Kilian
-> 
-> 
-> On 09-Jan-17 16:21, Hans de Goede wrote:
-> > Hi Lyude,
-> >
-> > On 09-01-17 16:11, Lyude Paul wrote:
-> >> fwiw, I just tried on the W541 I have 4.8.15-300.fc25.x86_64 running on
-> >> here and so far it seems to suspend/resume just fine using firmware
-> >> version 2.19
-> >
-> > Note this is not about normal suspend resume, but runtime
-> > suspend/resume of the nvidia discrete GPU...
-> >
-> > Try running glxgears like this:
-> >
-> > DRI_PRIME=1 glxgears -info | grep REND
-> >
-> > (the grep is to check you're really running on the nvidia GPU).
-> >
-> > Then you should see msgs in dmesg about nouveau resuming the gpu,
-> > then kill glxgears and wait for 5 seconds, now the nouveau drv
-> > should say the gpu is suspending, etc.
-> >
-> > If it never runtime suspends, then make sure you are not using
-> > any external screens, only the built-in laptop screen.
-> >
-> > Regards,
-> >
-> > Hans
-> >
-> >
-> >>
-> >> On Thu, 2017-01-05 at 14:36 -0500, David Airlie wrote:
-> >>> (cc'ing Lyude, who has the hw also I think).
-> >>>
-> >>> ----- Original Message -----
-> >>>> From: "Peter Jones" <pjones@redhat.com>
-> >>>> To: "Lukas Wunner" <lukas@wunner.de>
-> >>>> Cc: "David Airlie" <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@r
-> >>>> jwysocki.net>, "Peter Wu" <peter@lekensteyn.nl>,
-> >>>> "Bjorn Helgaas" <helgaas@kernel.org>, "Mika Westerberg" <mika.weste
-> >>>> rberg@linux.intel.com>, "Kilian Singer"
-> >>>> <kilian.singer@quantumtechnology.info>, "linux-pci" <linux-pci@vger
-> >>>> .kernel.org>, "Alex Deucher"
-> >>>> <alexander.deucher@amd.com>, "Hans de Goede" <hdegoede@redhat.com>
-> >>>> Sent: Friday, 6 January, 2017 4:13:23 AM
-> >>>> Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe
-> >>>> ports"
-> >>>>
-> >>>> On Thu, Jan 05, 2017 at 04:06:46PM +0100, Lukas Wunner wrote:
-> >>>>> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
-> >>>>>>> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
-> >>>>>>>> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner
-> >>>>>>>> wrote:
-> >>>>>>>>> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas
-> >>>>>>>>> wrote:
-> >>>>>>>>>> I don't *want* to apply the revert.  It's on my for-
-> >>>>>>>>>> linus branch
-> >>>>>>>>>> as a
-> >>>>>>>>>> worst-case scenario change if we can't figure out a
-> >>>>>>>>>> better fix.
-> >>>>>>>>>>
-> >>>>>>>>>> The patch below is preferable, but I'd rather not take
-> >>>>>>>>>> even it,
-> >>>>>>>>>> because it takes away functionality and forces people
-> >>>>>>>>>> to use a
-> >>>>>>>>>> boot
-> >>>>>>>>>> parameter to restore it.  I expect that somebody will
-> >>>>>>>>>> figure out
-> >>>>>>>>>> how
-> >>>>>>>>>> to fix the regression Kilian found and also keep the
-> >>>>>>>>>> new
-> >>>>>>>>>> functionality
-> >>>>>>>>>> (without requiring boot parameters) before v4.10.
-> >>>>>>>>>
-> >>>>>>>>> The issue is constrained to hybrid graphics laptops with
-> >>>>>>>>> Nvidia
-> >>>>>>>>> discrete
-> >>>>>>>>> GPU using nouveau.  Hence it needs to be fixed in
-> >>>>>>>>> nouveau, not in
-> >>>>>>>>> the
-> >>>>>>>>> PCI core.
-> >>>>>>>>
-> >>>>>>>> The problem is not necessarily in the nouveau driver, the
-> >>>>>>>> same
-> >>>>>>>> problem
-> >>>>>>>> occurs when you enable RPM without loading nouveau. The
-> >>>>>>>> issue is
-> >>>>>>>> limited
-> >>>>>>>> though to some newer hybrid graphics laptops with Nvidia
-> >>>>>>>> GPUs. While
-> >>>>>>>> a
-> >>>>>>>> quirk can be added to nouveau, I think that a (temporary)
-> >>>>>>>> quirk in
-> >>>>>>>> core
-> >>>>>>>> would also be reasonable (since it also occurs without
-> >>>>>>>> nouveau).
-> >>>>>>>>
-> >>>>>>>>> (AFAIUI, laptops with AMD discrete GPU are not affected
-> >>>>>>>>> as it is
-> >>>>>>>>> known
-> >>>>>>>>> when and how to call an ACPI method versus using PR3.)
-> >>>>>>>>>
-> >>>>>>>>> (Neither are laptops using the Nvidia proprietary driver
-> >>>>>>>>> as it
-> >>>>>>>>> doesn't
-> >>>>>>>>> runtime suspend the card.  But battery life will be
-> >>>>>>>>> terrible then.)
-> >>>>>>>>>
-> >>>>>>>>> We're at rc2 so the time frame for coming up with a fix
-> >>>>>>>>> is probably
-> >>>>>>>>> 4 weeks.  Peter and others have tried for months to
-> >>>>>>>>> reverse-engineer
-> >>>>>>>>> how to handle runtime PM on newer Nvidia cards.  It seems
-> >>>>>>>>> likely
-> >>>>>>>>> that
-> >>>>>>>>> we'll not find the ultimate solution to the problem
-> >>>>>>>>> within 4 weeks.
-> >>>>>>>>
-> >>>>>>>> Yep, a quick proper fix seems unlikely.
-> >>>>>>>> [ Help/ideas are welcome, I suspect that these failures to
-> >>>>>>>> restore
-> >>>>>>>> power
-> >>>>>>>> on laptops designed for Win8+ all have the same cause,
-> >>>>>>>> related to
-> >>>>>>>> some
-> >>>>>>>> unknown interaction between ACPI and PCI. Some links:
-> >>>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=190861
-> >>>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
-> >>>>>>>>
-> >>>>>>>>> The way it is now, i.e. defaulting to PR3 when available,
-> >>>>>>>>> regresses
-> >>>>>>>>> certain laptops such as Kilian's.  If on the other hand
-> >>>>>>>>> we default
-> >>>>>>>>> to
-> >>>>>>>>> DSM when available, we'll regress certain other laptops,
-> >>>>>>>>> as Peter
-> >>>>>>>>> has
-> >>>>>>>>> pointed out.  Whitelisting or blacklisting laptops
-> >>>>>>>>> doesn't seem a
-> >>>>>>>>> good
-> >>>>>>>>> approach either, ideally we'd want to use PR3 as Windows
-> >>>>>>>>> does.
-> >>>>>>>>>
-> >>>>>>>>> As said, the only short-term solution I see is to add an
-> >>>>>>>>> "optimus"
-> >>>>>>>>> module_param to nouveau to allow users to select which
-> >>>>>>>>> method to
-> >>>>>>>>> use.
-> >>>>>>>>> So in Kilian's case an additional command line parameter
-> >>>>>>>>> would be
-> >>>>>>>>> necessary to fix the issue.
-> >>>>>>>>>
-> >>>>>>>>> Does anyone see a better solution or can we agree on this
-> >>>>>>>>> one?  If
-> >>>>>>>>> so
-> >>>>>>>>> I can come up with a patch.  This could go in via Dave
-> >>>>>>>>> Airlie's
-> >>>>>>>>> tree.
-> >>>>>>>>
-> >>>>>>>> As pcie_port_pm=off already reverts to DSM, I do not think
-> >>>>>>>> that an
-> >>>>>>>> additional (temporary) nouveau module parameter is going to
-> >>>>>>>> help. I
-> >>>>>>>> instead propose a (hopefully temporary) quirk in pci core
-> >>>>>>>> that
-> >>>>>>>> disables
-> >>>>>>>> D3cold RPM for just Kilians Lenovo laptop (basically
-> >>>>>>>> defaulting to
-> >>>>>>>> pcie_port_pm=off). Then the option pcie_port_pm=force can
-> >>>>>>>> still be
-> >>>>>>>> used
-> >>>>>>>> to test possible solutions in the future.
-> >>>>>>>
-> >>>>>>> I would rather add a quirk to the ACPI core to prevent the
-> >>>>>>> power
-> >>>>>>> resources in
-> >>>>>>> question from being enumerated.  Or even to prevent ACPI PM
-> >>>>>>> from being
-> >>>>>>> used for the port in question.
-> >>>>>>
-> >>>>>> I do have a W541 in a cupboard in the office somewhere, but I
-> >>>>>> won't be
-> >>>>>> close to
-> >>>>>> it for a couple of weeks. The W541 was the first place I tested
-> >>>>>> the pm
-> >>>>>> patches
-> >>>>>> so I'm kinda wondering whether it's all W541's or just some
-> >>>>>> specific
-> >>>>>> model/bios
-> >>>>>> combo.
-> >>>>
-> >>>> They seem to all ship with the 1.10 firmware, and 2.80 is current
-> >>>> (there
-> >>>> are a bunch of intermediate 2.xx versions).  Somewhere along the
-> >>>> line
-> >>>> they introduced some bugs in the UEFI stuff, so it wouldn't be
-> >>>> surprising if there's bugs introduced elsewhere as well.
-> >>>>
-> >>>>>> However I'm pretty much unavailable to do anything much until
-> >>>>>> late Jan on
-> >>>>>> this.
-> >>>>>
-> >>>>> Is there anyone else at Red Hat who might be able to look into
-> >>>>> this?
-> >>>>>
-> >>>>> ISTR that Hans de Goede is working on improving laptop support in
-> >>>>> Fedora,
-> >>>>> and Peter Jones recently got a patch merged for the W541 with the
-> >>>>> exact
-> >>>>> same firmware Kilian is using to work around a botched EFI memory
-> >>>>> map.
-> >>>>> Adding them to cc: in the hope that they may be able to help.
-> >>>>>
-> >>>>> @Peter, have you noticed issues with the discrete Nvidia GPU on
-> >>>>> your W541
-> >>>>> related to runtime suspend and system sleep?
-> >>>>
-> >>>> I was using a borrowed one (I can certainly find it again, but I'm
-> >>>> not
-> >>>> working on graphics/pm really), but yeah - shutdown and lspci both
-> >>>> broke
-> >>>> sometime after pci_pm_runtime_resume().  Here's the traceback from
-> >>>> SYS_reboot(): https://goo.gl/photos/T1fr1bksHQb9RSU67
-> >>>>
-> >>>> Dave, if you know who in Westford should have a look at this, I can
-> >>>> see
-> >>>> about getting them hardware.  I am more or less surrounded by that
-> >>>> team.
-> >>>>
-> >>>> --
-> >>>>         Peter
-> >>>>
-> 
-> 
+
+I think change should be condense with another patch to reduce the patch-set
+number and to give it real meaning. I understand why you are breaking so mu=
+ch
+the patch, it is has a lot of changes, but in my opinion is too much fragme=
+nted.
+
+Thanks
+Joao
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
