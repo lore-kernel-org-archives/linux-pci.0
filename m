@@ -1,75 +1,95 @@
-Return-Path: <SRS0=AzH2=ZN=pengutronix.de=l.stach@kernel.org>
-Return-Path: <SRS0=AzH2=ZN=pengutronix.de=l.stach@kernel.org>
-Message-ID: <1485858425.21479.31.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: mvebu: change delay after reset to the PCIe spec
- mandated 100ms
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Petazzoni
- <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>,
-  linux-pci@vger.kernel.org, kernel@pengutronix.de,
- linux-arm-kernel@lists.infradead.org, patchwork-lst@pengutronix.de
-Date: Tue, 31 Jan 2017 11:27:05 +0100
-In-Reply-To: <20170130204740.GT20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170116111142.6866-1-l.stach@pengutronix.de>
-	 <20170130204740.GT20550@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:36606 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751048AbdAMUIX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2017 15:08:23 -0500
+From: Dan Streetman <ddstreet@ieee.org>
+To: Stefano Stabellini <sstabellini@kernel.org>, jgross@suse.com,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Dan Streetman <ddstreet@ieee.org>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH] xen: do not re-use pirq number cached in pci device msi msg data
+Date: Fri, 13 Jan 2017 15:07:51 -0500
+Message-Id: <20170113200751.20125-1-ddstreet@ieee.org>
+In-Reply-To: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 30.01.2017, 14:47 -0600 schrieb Bjorn Helgaas:
-> On Mon, Jan 16, 2017 at 12:11:42PM +0100, Lucas Stach wrote:
-> > The current default of 20ms cause some devices, which are slow to initialize,
-> > to not show up during the bus scanning. Change this to the PCIe spec mandated
-> > 100ms and document this in the DT binding.
-> > 
-> > From PCIe base spec rev 3.0, chapter "6.6.1. Conventional Reset":
-> > 
-> > "To allow components to perform internal initialization, system software must
-> > wait a specified minimum period following the end of a Conventional Reset of
-> > one or more devices before it is permitted to issue Configuration Requests to
-> > those devices.
-> > 
-> > With a Downstream Port that does not support Link speeds greater than
-> > 5.0 GT/s, software must wait a minimum of 100 ms before sending a
-> > Configuration Request to the device immediately below that Port."
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  Documentation/devicetree/bindings/pci/mvebu-pci.txt | 3 ++-
-> >  drivers/pci/host/pci-mvebu.c                        | 2 +-
-> >  2 files changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> > index 08c716b2c6b6..2de6f65ecfb1 100644
-> > --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> > +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> > @@ -78,7 +78,8 @@ and the following optional properties:
-> >    multiple lanes. If this property is not found, we assume that the
-> >    value is 0.
-> >  - reset-gpios: optional gpio to PERST#
-> > -- reset-delay-us: delay in us to wait after reset de-assertion
-> > +- reset-delay-us: delay in us to wait after reset de-assertion, if not
-> > +  specified will default to 100ms, as required by the PCIe specification.
-> >  
-> >  Example:
-> >  
-> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> > index 45a89d969700..0c9dd47ce74d 100644
-> > --- a/drivers/pci/host/pci-mvebu.c
-> > +++ b/drivers/pci/host/pci-mvebu.c
-> > @@ -1162,7 +1162,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
-> >  		return ret;
-> >  
-> >  	if (port->reset_gpio) {
-> > -		u32 reset_udelay = 20000;
-> > +		u32 reset_udelay = 100000;
-> 
-> Can we use "PCI_PM_D3COLD_WAIT * 1000" for the initial value to connect it
-> with other similar cases?
+Revert the main part of commit:
+af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
 
-Sure, I didn't know there is a define for this. Will send an updated
-patch.
+That commit introduced reading the pci device's msi message data to see
+if a pirq was previously configured for the device's msi/msix, and re-use
+that pirq.  At the time, that was the correct behavior.  However, a
+later change to Qemu caused it to call into the Xen hypervisor to unmap
+all pirqs for a pci device, when the pci device disables its MSI/MSIX
+vectors; specifically the Qemu commit:
+c976437c7dba9c7444fb41df45468968aaa326ad
+("qemu-xen: free all the pirqs for msi/msix when driver unload")
 
-Regards,
-Lucas
+Once Qemu added this pirq unmapping, it was no longer correct for the
+kernel to re-use the pirq number cached in the pci device msi message
+data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+pirqs when the pci device disables its MSI/MSIX vectors.
+
+This bug is causing failures to initialize multiple NVMe controllers
+under Xen, because the NVMe driver sets up a single MSIX vector for
+each controller (concurrently), and then after using that to talk to
+the controller for some configuration data, it disables the single MSIX
+vector and re-configures all the MSIX vectors it needs.  So the MSIX
+setup code tries to re-use the cached pirq from the first vector
+for each controller, but the hypervisor has already given away that
+pirq to another controller, and its initialization fails.
+
+This is discussed in more detail at:
+https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+
+Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+---
+ arch/x86/pci/xen.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
+
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index bedfab9..a00a6c0 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	for_each_pci_msi_entry(msidesc, dev) {
+-		__pci_read_msi_msg(msidesc, &msg);
+-		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+-			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+-		if (msg.data != XEN_PIRQ_MSI_DATA ||
+-		    xen_irq_from_pirq(pirq) < 0) {
+-			pirq = xen_allocate_pirq_msi(dev, msidesc);
+-			if (pirq < 0) {
+-				irq = -ENODEV;
+-				goto error;
+-			}
+-			xen_msi_compose_msg(dev, pirq, &msg);
+-			__pci_write_msi_msg(msidesc, &msg);
+-			dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+-		} else {
+-			dev_dbg(&dev->dev,
+-				"xen: msi already bound to pirq=%d\n", pirq);
++		pirq = xen_allocate_pirq_msi(dev, msidesc);
++		if (pirq < 0) {
++			irq = -ENODEV;
++			goto error;
+ 		}
++		xen_msi_compose_msg(dev, pirq, &msg);
++		__pci_write_msi_msg(msidesc, &msg);
++		dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
+ 		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
+ 					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
+ 					       (type == PCI_CAP_ID_MSIX) ?
+-- 
+2.9.3
+
