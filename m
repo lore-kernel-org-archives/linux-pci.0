@@ -1,46 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40623 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932421AbdACJfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Jan 2017 04:35:25 -0500
-Message-ID: <1483435737.20054.6.camel@suse.com>
-Subject: Re: Thunderbolt adapter fails to instantiate USB and device
- enumeration if already connected at boot time
-From: Oliver Neukum <oneukum@suse.com>
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
-        linux-usb@vger.kernel.org
-Date: Tue, 03 Jan 2017 10:28:57 +0100
-In-Reply-To: <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com>
-References: <CAJCQCtS5gQObZr1j0stEnx9+U890_N-2FBFx_fZCZtmD8-2qJQ@mail.gmail.com>
-         <Pine.LNX.4.44L0.1701021626410.28032-100000@netrider.rowland.org>
-         <CAJCQCtTGYUFCvwPzugJ4TUtFPGKTy7r+HJr_1o8s=cbASa4zUA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
+To: Abylay Ospan <aospan@netup.ru>, Bjorn Helgaas <bhelgaas@google.com>,
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <6891f43f-25e7-1411-800e-97e6788f2f27@gmail.com>
+Date: Thu, 12 Jan 2017 16:22:04 -0800
+MIME-Version: 1.0
+In-Reply-To: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-01-02 at 14:45 -0700, Chris Murphy wrote:
-> I see these lines in the problem case, which don't occur in the
-> working case.
+On 01/12/2017 04:20 PM, Abylay Ospan wrote:
+> pcie->dev->of_node not always defined (NULL) and can cause crash:
 > 
-> [    0.561046] pci_bus 0000:37: busn_res: [bus 37-ff] end is updated
-> to 37
-> [    0.561047] pci_bus 0000:37: busn_res: can not insert [bus 37]
-> under domain [bus 00-ff] (conflicts with (null) [bus 00-fe])
+> [   19.053195] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000020
+> [<c0b0370c>] (of_n_addr_cells) from [<c06599c4>]
+> (iproc_pcie_setup+0x30c/0xce0)
 > 
-> [    0.579446] pci 0000:37:00.0: can't claim BAR 0 [mem
-> 0xb0000000-0xb000ffff]: address conflict with PCI Bus 0000:00 [mem
-> 0x40000000-0xdfffffff window]
+> this patch adds sanity check to prevent crash.
+
+Humm, how can it not be defined based on your earlier comment that you
+are using this on NSP which is Device Tree exclusively? I would agree if
+this was seen on e.g: MIPS/BCMA (47xx).
+
 > 
-> [    0.602277] pci 0000:37:00.0: can't derive routing for PCI INT A
-> [    0.602280] pci 0000:37:00.0: PCI INT A: not connected
-> [    0.612304] pci 0000:37:00.0: xHCI HW not ready after 5 sec (HC
-> bug?) status = 0xffffffff
+> Signed-off-by: Abylay Ospan <aospan@netup.ru>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 3ebc025..f2836a9 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+>  	const int na = 3, ns = 2;
+>  	int rlen;
+>  
+> +	if (!node)
+> +		return -ENOENT;
+> +
+>  	parser->node = node;
+>  	parser->pna = of_n_addr_cells(node);
+>  	parser->np = parser->pna + na + ns;
+> 
 
-Have you tried "pci=realloc"?
 
-	Regards
-		Oliver
+-- 
+Florian
 
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
