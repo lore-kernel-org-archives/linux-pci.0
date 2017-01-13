@@ -1,47 +1,72 @@
-Return-Path: <SRS0=ZXrq=YZ=redhat.com=pjones@kernel.org>
-Return-Path: <SRS0=ZXrq=YZ=redhat.com=pjones@kernel.org>
-Date: Wed, 11 Jan 2017 11:24:54 -0500
-From: Peter Jones <pjones@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Kilian Singer <kilian.singer@quantumtechnology.info>,
-        Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170111162453.zavhr2m3olufckio@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de>
- <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
- <bd9af400-6b8e-d852-8cf0-b437dffc507c@redhat.com>
- <ad5be7b2-a931-5db3-fafb-7784d9c5c1ea@quantumtechnology.info>
- <ad6e8189-eef6-4f18-7d22-f0fc9a665ec6@redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
+To: Abylay Ospan <aospan@netup.ru>, Bjorn Helgaas <bhelgaas@google.com>,
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <5c51f96f-1c49-3768-d3ef-1deb40bef713@broadcom.com>
+Date: Thu, 12 Jan 2017 16:45:49 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <ad6e8189-eef6-4f18-7d22-f0fc9a665ec6@redhat.com>
+In-Reply-To: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 02:26:09PM +0100, Hans de Goede wrote:
-> Hi,
-> 
-> On 11-01-17 14:24, Kilian Singer wrote:
-> > Dear all,
-> > 
-> > sounds interesting I could try to update to 2.29.
-> > 
-> > Shall I do so?
-> 
-> According to the BIOS changelog 2.29 has some
-> fixes for bugs introduces in 2.28, so trying
-> 2.29 is probably a good idea.
 
-I'd also be interested in seeing dmesg from that with efi=debug on the
-kernel command line, if you don't mind.
 
--- 
-        Peter
+On 1/12/2017 4:20 PM, Abylay Ospan wrote:
+> pcie->dev->of_node not always defined (NULL) and can cause crash:
+
+Ah I guess this can happen with the BCMA based platforms that do not use
+device tree for PCIe?
+
+> 
+> [   19.053195] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000020
+> [<c0b0370c>] (of_n_addr_cells) from [<c06599c4>]
+> (iproc_pcie_setup+0x30c/0xce0)
+> 
+> this patch adds sanity check to prevent crash.
+> 
+> Signed-off-by: Abylay Ospan <aospan@netup.ru>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 3ebc025..f2836a9 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+>  	const int na = 3, ns = 2;
+>  	int rlen;
+>  
+> +	if (!node)
+> +		return -ENOENT;
+> +
+
+Looks like a valid check to me.
+
+Acked-by: Ray Jui <ray.jui@broadcom.com>
+
+>  	parser->node = node;
+>  	parser->pna = of_n_addr_cells(node);
+>  	parser->np = parser->pna + na + ns;
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
