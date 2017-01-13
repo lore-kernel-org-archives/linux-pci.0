@@ -1,62 +1,26 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] PCI: imx6: Fix a typo in error message
-Date: Thu, 19 Jan 2017 08:36:29 -0800
-Message-Id: <20170119163631.10668-2-andrew.smirnov@gmail.com>
-In-Reply-To: <20170119163631.10668-1-andrew.smirnov@gmail.com>
-References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>, Shawn Guo <shawnguo@kernel.org>,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- yurovsky@gmail.com, Fabio Estevam <festevam@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Return-Path: <SRS0=l9j+=Y3=lst.de=hch@kernel.org>
+Return-Path: <SRS0=l9j+=Y3=lst.de=hch@kernel.org>
+Date: Fri, 13 Jan 2017 08:55:03 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+	netdev@vger.kernel.org, linux-media@vger.kernel.org,
+	Tom Lendacky <thomas.lendacky@amd.com>
+Subject: Re: kill off pci_enable_msi_{exact,range}
+Message-ID: <20170113075503.GA26014@lst.de>
+References: <1483994260-19797-1-git-send-email-hch@lst.de> <20170112212900.GE8312@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170112212900.GE8312@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: yurovsky@gmail.com
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On Thu, Jan 12, 2017 at 03:29:00PM -0600, Bjorn Helgaas wrote:
+> Applied all three (with Tom's ack on the amd-xgbe patch) to pci/msi for
+> v4.11, thanks!
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index c8cefb0..50a1291 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -678,8 +678,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
- 							   "pcie_inbound_axi");
- 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
--			dev_err(dev,
--				"pcie_incbound_axi clock missing or invalid\n");
-+			dev_err(dev, "pcie_inbound_axi clock missing or invalid\n");
- 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
- 		}
- 	}
--- 
-2.9.3
+Tom had just send me an event better version of the xgbe patch.  Tom,
+maybe you can resend that relative to the PCI tree [1], so that we don't
+lose it for next merge window?
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git)
