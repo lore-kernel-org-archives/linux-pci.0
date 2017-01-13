@@ -1,17 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 12/37] PCI: dwc: Create a new config symbol to enable pci
- dwc host
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-13-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <3d34f9c4-7ec4-ac2b-ea7f-18d239dfa554@synopsys.com>
-Date: Fri, 13 Jan 2017 17:50:43 +0000
+Subject: Re: [PATCH] PCI: iproc: fix resource allocation for BCMA PCIe
+To: Abylay Ospan <aospan@netup.ru>, Bjorn Helgaas <bhelgaas@google.com>,
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+References: <1484265521-13497-1-git-send-email-aospan@netup.ru>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <988ae7dc-ff41-0a06-903f-8681b8ddf13f@broadcom.com>
+Date: Thu, 12 Jan 2017 16:40:31 -0800
 MIME-Version: 1.0
-In-Reply-To: <1484216786-17292-13-git-send-email-kishon@ti.com>
+In-Reply-To: <1484265521-13497-1-git-send-email-aospan@netup.ru>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,221 +19,95 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+Hi Abylay,
 
-=C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
-> Now that pci designware host has a separate file, create a new
-> config symbol to select the host only driver. This is in preparation
-> to enable endpoint support to designware driver.
-> =
+On 1/12/2017 3:58 PM, Abylay Ospan wrote:
+> Resource allocated on stack was saved by 'devm_request_resource' to
+> global 'iomem_resource' but become invalid after 'iproc_pcie_bcma_probe' exit.
+> So the global 'iomem_resource' was poisoned. This may cause kernel crash
+> or second PCIe bridge registration failure.
+> 
+> Tested on Broadcom NorthStar machine ('Edgecore ECW7220-L') with two PCIe wifi
+> adapters (b43 BCM4331 and ath10k QCA988X).
+> 
+> Signed-off-by: Abylay Ospan <aospan@netup.ru>
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+I have not yet looked into this in great details. But if what you
+claimed is true, do we have the same problem with multiple PCIe host
+drivers that all have their resource allocated on the stack and have
+'devm_request_resource' called to save it?
+
+Thanks,
+
+Ray
+
 > ---
->  drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
->  drivers/pci/dwc/Makefile          |    3 ++-
->  drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
->  3 files changed, 42 insertions(+), 16 deletions(-)
-> =
-
-
-You are already working in a base where dwc/ already exists. I know you mad=
-e a
-rename / re-structure patch for pci, but I think it was not yet accepted, r=
-ight?
-I don't see it in any of Bjorn' dev branches.
-
-Thanks.
-
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 8b08519..d0bdfb5 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
->  =
-
->  config PCIE_DW
->  	bool
-> +
-> +config PCIE_DW_HOST
-> +        bool
->  	depends on PCI_MSI_IRQ_DOMAIN
-> +        select PCIE_DW
->  =
-
->  config PCI_DRA7XX
->  	bool "TI DRA7xx PCIe controller"
->  	depends on OF && HAS_IOMEM && TI_PIPE3
->  	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	 Enables support for the PCIe controller in the DRA7xx SoC.  There
->  	 are two instances of PCIe controller in DRA7xx.  This controller can
-> @@ -18,7 +22,7 @@ config PCI_DRA7XX
->  config PCIE_DW_PLAT
->  	bool "Platform bus based DesignWare PCIe Controller"
->  	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	---help---
->  	 This selects the DesignWare PCIe controller support. Select this if
->  	 you have a PCIe controller on Platform bus.
-> @@ -32,21 +36,21 @@ config PCI_EXYNOS
->  	depends on SOC_EXYNOS5440 || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  =
-
->  config PCI_IMX6
->  	bool "Freescale i.MX6 PCIe controller"
->  	depends on SOC_IMX6Q || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  =
-
->  config PCIE_SPEAR13XX
->  	bool "STMicroelectronics SPEAr PCIe controller"
->  	depends on ARCH_SPEAR13XX || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
->  =
-
-> @@ -55,7 +59,7 @@ config PCI_KEYSTONE
->  	depends on ARCH_KEYSTONE || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here if you want to enable PCI controller support on Keystone
->  	  SoCs. The PCI controller on Keystone is based on Designware hardware
-> @@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
->  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select MFD_SYSCON
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
->  =
-
-> @@ -76,7 +80,7 @@ config PCI_HISI
->  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here if you want PCIe controller support on HiSilicon
->  	  Hip05 and Hip06 SoCs
-> @@ -86,7 +90,7 @@ config PCIE_QCOM
->  	depends on (ARCH_QCOM || COMPILE_TEST) && OF
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
->  	  PCIe controller uses the Designware core plus Qualcomm-specific
-> @@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
->  	depends on ARCH_MVEBU || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here if you want to enable PCIe controller support on
->  	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
-> @@ -109,7 +113,7 @@ config PCIE_ARTPEC6
->  	depends on MACH_ARTPEC6 || COMPILE_TEST
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> -	select PCIE_DW
-> +	select PCIE_DW_HOST
->  	help
->  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->  	  SoCs.  This PCIe controller uses the DesignWare core.
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> index 3b57e55..a2df13c 100644
-> --- a/drivers/pci/dwc/Makefile
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -1,4 +1,5 @@
-> -obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o pcie-designware-host.o
-> +obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
-> +obj-$(CONFIG_PCIE_DW_HOST) +=3D pcie-designware-host.o
->  obj-$(CONFIG_PCIE_DW_PLAT) +=3D pcie-designware-plat.o
->  obj-$(CONFIG_PCI_DRA7XX) +=3D pci-dra7xx.o
->  obj-$(CONFIG_PCI_EXYNOS) +=3D pci-exynos.o
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-des=
-ignware.h
-> index 808d17b..8f3dcb2 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -162,10 +162,6 @@ struct dw_pcie {
->  =
-
->  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
->  int dw_pcie_write(void __iomem *addr, int size, u32 val);
-> -irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
-> -void dw_pcie_msi_init(struct pcie_port *pp);
-> -void dw_pcie_setup_rc(struct pcie_port *pp);
-> -int dw_pcie_host_init(struct pcie_port *pp);
->  =
-
->  u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
->  void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
-> @@ -175,4 +171,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, =
-int index,
->  			       int type, u64 cpu_addr, u64 pci_addr,
->  			       u32 size);
->  void dw_pcie_setup(struct dw_pcie *pci);
-> +
-> +#ifdef CONFIG_PCIE_DW_HOST
-> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
-> +void dw_pcie_msi_init(struct pcie_port *pp);
-> +void dw_pcie_setup_rc(struct pcie_port *pp);
-> +int dw_pcie_host_init(struct pcie_port *pp);
-> +#else
-> +static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-> +{
-> +	return IRQ_NONE;
-> +}
-> +
-> +static inline void dw_pcie_msi_init(struct pcie_port *pp)
-> +{
-> +}
-> +
-> +static inline void dw_pcie_setup_rc(struct pcie_port *pp)
-> +{
-> +}
-> +
-> +static inline int dw_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	return 0;
-> +}
-> +#endif
->  #endif /* _PCIE_DESIGNWARE_H */
-> =
-
-
+>  drivers/pci/host/pcie-iproc-bcma.c | 18 ++++++++----------
+>  drivers/pci/host/pcie-iproc.h      |  2 ++
+>  2 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
+> index bd4c9ec..28f9b89 100644
+> --- a/drivers/pci/host/pcie-iproc-bcma.c
+> +++ b/drivers/pci/host/pcie-iproc-bcma.c
+> @@ -44,8 +44,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+>  {
+>  	struct device *dev = &bdev->dev;
+>  	struct iproc_pcie *pcie;
+> -	LIST_HEAD(res);
+> -	struct resource res_mem;
+>  	int ret;
+>  
+>  	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> @@ -62,21 +60,21 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+>  	}
+>  
+>  	pcie->base_addr = bdev->addr;
+> +	INIT_LIST_HEAD(&pcie->resources);
+>  
+> -	res_mem.start = bdev->addr_s[0];
+> -	res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+> -	res_mem.name = "PCIe MEM space";
+> -	res_mem.flags = IORESOURCE_MEM;
+> -	pci_add_resource(&res, &res_mem);
+> +	pcie->res_mem.start = bdev->addr_s[0];
+> +	pcie->res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+> +	pcie->res_mem.name = "PCIe MEM space";
+> +	pcie->res_mem.flags = IORESOURCE_MEM;
+> +	pcie->res_mem.child = NULL;
+> +	pci_add_resource(&pcie->resources, &pcie->res_mem);
+>  
+>  	pcie->map_irq = iproc_pcie_bcma_map_irq;
+>  
+> -	ret = iproc_pcie_setup(pcie, &res);
+> +	ret = iproc_pcie_setup(pcie, &pcie->resources);
+>  	if (ret)
+>  		dev_err(dev, "PCIe controller setup failed\n");
+>  
+> -	pci_free_resource_list(&res);
+> -
+>  	bcma_set_drvdata(bdev, pcie);
+>  	return ret;
+>  }
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 04fed8e..866d649 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -105,6 +105,8 @@ struct iproc_pcie {
+>  
+>  	bool need_msi_steer;
+>  	struct iproc_msi *msi;
+> +	struct resource res_mem;
+> +	struct list_head resources;
+>  };
+>  
+>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+> 
 
 _______________________________________________
 linux-arm-kernel mailing list
