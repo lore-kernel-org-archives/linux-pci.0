@@ -1,84 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH] ACPI/PCI: Fix bus range comparation in
- pci_mcfg_lookup
-To: Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Jayachandran C <jchandra@broadcom.com>,
-        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>
-References: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
- <b3d00da9-cd88-cd43-370c-b10d93944024@semihalf.com>
-CC: <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <586B69BE.7050009@hisilicon.com>
-Date: Tue, 3 Jan 2017 17:07:10 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <b3d00da9-cd88-cd43-370c-b10d93944024@semihalf.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <6cfba8af-1e9b-cb43-4898-61d6fb8f12ca@broadcom.com>
+References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+ <6891f43f-25e7-1411-800e-97e6788f2f27@gmail.com>
+ <e5301de6-9a6c-7deb-4ff7-ccd462c4381e@broadcom.com>
+ <6cfba8af-1e9b-cb43-4898-61d6fb8f12ca@broadcom.com>
+From: Abylay Ospan <aospan@netup.ru>
+Date: Thu, 12 Jan 2017 23:55:23 -0500
+Message-ID: <CAK3bHNVQ9Rbuwf1i54h7uLLdkUvyGibmfJpD6zRjt1gYiQD7Hw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
+To: Florian Fainelli <florian.fainelli@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
+ Ray Jui <ray.jui@broadcom.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/1/3 14:39, Tomasz Nowicki wrote:
-> On 22.12.2016 10:07, Zhou Wang wrote:
->> Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
->> host bridge should be in the coverage of bus range of related PCIe segment.
->>
->> This patch will support this kind of scenario:
->>
->> MCFG:
->>     bus range: 0x00~0xff.
->>     segment: 0.
->> DSDT:
->>     host bridge 1:
->>         bus range: 0x00~0x1f.
->>         segment: 0.
->>     host bridge 2:
->>         bus range: 0x20~0x4f.
->>         segment: 0.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/acpi/pci_mcfg.c | 5 ++---
->>  1 file changed, 2 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index b5b376e..46a3e32 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->>      struct mcfg_entry *e;
->>
->>      /*
->> -     * We expect exact match, unless MCFG entry end bus covers more than
->> -     * specified by caller.
->> +     * We expect the range in bus_res in the coverage of MCFG bus range.
->>       */
->>      list_for_each_entry(e, &pci_mcfg_list, list) {
->> -        if (e->segment == seg && e->bus_start == bus_res->start &&
->> +        if (e->segment == seg && e->bus_start <= bus_res->start &&
->>              e->bus_end >= bus_res->end)
->>              return e->addr;
->>      }
->>
-> 
-> Looks good to me.
-> 
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+Hi Florian,
 
-Hi Tomasz,
+> Still, upstream Linux support for Northstar is Device Tree, and BCMA bus
+> should fill in of_nodes accordingly, if not, that's a bug that must be
+> fixed at the BCMA layer.
 
-Thanks for your review.
+yes, this is a source of the problem. Devices allocated in
+'bcma_bus_scan' but of_node doesn't assigned.
+Is some code missing in drivers/bcma/ which should assign of_node ?
 
-Regards,
-Zhou
+I can suggest following "hacky" patch for this (works for me):
 
-> 
-> Thanks,
-> Tomasz
-> 
-> .
-> 
+Author: Abylay Ospan <aospan@netup.ru>
+Date:   Fri Jan 13 07:24:13 2017 +0300
 
+    bcma: force assign 'of_node' for devices on the bus
+
+    prevent other code to fail if no 'of_node' defined
+
+    Signed-off-by: Abylay Ospan <aospan@netup.ru>
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 2c1798e..4fe1c92 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -301,6 +301,11 @@ void bcma_init_bus(struct bcma_bus *bus)
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+        int err;
++       struct device * dev;
++
++       dev = bcma_bus_get_host_dev(bus);
++       if (dev && !core->dev.of_node)
++               core->dev.of_node = dev->of_node;
+
+
+if it's ok I will send this patch in separate email.
+
+>
+>>
+>>>
+>>>>
+>>>> Signed-off-by: Abylay Ospan <aospan@netup.ru>
+>>>> ---
+>>>>  drivers/pci/host/pcie-iproc.c | 3 +++
+>>>>  1 file changed, 3 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>>>> index 3ebc025..f2836a9 100644
+>>>> --- a/drivers/pci/host/pcie-iproc.c
+>>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>>> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+>>>>     const int na = 3, ns = 2;
+>>>>     int rlen;
+>>>>
+>>>> +   if (!node)
+>>>> +           return -ENOENT;
+>>>> +
+>>>>     parser->node = node;
+>>>>     parser->pna = of_n_addr_cells(node);
+>>>>     parser->np = parser->pna + na + ns;
+>>>>
+>>>
+>>>
+>
+>
+> --
+> Florian
+
+
+
+-- 
+Abylay Ospan,
+NetUP Inc.
+http://www.netup.tv
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
