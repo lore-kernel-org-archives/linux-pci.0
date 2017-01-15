@@ -1,62 +1,123 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <paul.gortmaker@windriver.com>, <robh@kernel.org>,
- <colin.king@canonical.com>, <linux-pci@vger.kernel.org>,
- <marc.zyngier@arm.com>
-Subject: [PATCH 1/4] PCI: Xilinx NWL: Fix,
- do not check for legacy status in while loop
-Date: Sat, 21 Jan 2017 16:41:09 +0530
-Message-ID: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
- Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:43268 "EHLO
+        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750849AbdAONTx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 08:19:53 -0500
+From: Lukasz Majewski <lukma@denx.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lukasz Majewski <lukma@denx.de>
+Subject: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+Date: Sun, 15 Jan 2017 14:19:14 +0100
+Message-Id: <1484486354-4585-1-git-send-email-lukma@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- The legacy status register value for particular INTx becomes low
-only after DEASSERT_INTx is received.
-- Few End Points take time for sending DEASSERT_INTx, checking
-legacy status register in while loop causes invoking of EP
-handler continuosly until DEASSERT_INTx is received.
+Some devices (due to e.g. bad PCIe signal integrity) require to run
+with forced GEN1 speed on PCIe bus.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+This patch changes the speed explicitly on dra7 based devices when
+proper device tree attribute is defined for the PCIe controller.
+
+Signed-off-by: Lukasz Majewski <lukma@denx.de>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 43eaa4a..c8b5a33 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -342,9 +342,10 @@ static void nwl_pcie_leg_handler(struct irq_desc *desc)
+Patch applies on newest origin/master
+SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
+
+Tested at AM5728
+
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
+ drivers/pci/host/pci-dra7xx.c                    | 23 +++++++++++++++++++++++
+ drivers/pci/host/pcie-designware.h               |  1 +
+ 3 files changed, 25 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 60e2516..9f97409 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -25,6 +25,7 @@ PCIe Designware Controller
  
- 	chained_irq_enter(chip, desc);
- 	pcie = irq_desc_get_handler_data(desc);
-+	status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-+				  MSGF_LEG_SR_MASKALL;
+ Optional Property:
+  - gpios : Should be added if a gpio line is required to drive PERST# line
++ - to,pcie-is-gen1: Indicates that forced gen1 port operation is needed.
  
--	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
--				MSGF_LEG_SR_MASKALL) != 0) {
-+	if (status != 0) {
- 		for_each_set_bit(bit, &status, INTX_NUM) {
- 			virq = irq_find_mapping(pcie->legacy_irq_domain,
- 						bit + 1);
+ Example:
+ axi {
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 9595fad..eec5fae 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -63,6 +63,13 @@
+ #define	LINK_UP						BIT(16)
+ #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+ 
++#define         PCIECTRL_EP_DBICS_LNK_CAP                       0x007C
++#define         MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
++#define         MAX_LINK_SPEEDS_GEN1                            BIT(0)
++
++#define         PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
++#define         CFG_DIRECTED_SPEED_CHANGE                       BIT(17)
++
+ struct dra7xx_pcie {
+ 	struct pcie_port	pp;
+ 	void __iomem		*base;		/* DT ti_conf */
+@@ -270,6 +277,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 	struct pcie_port *pp = &dra7xx->pp;
+ 	struct device *dev = pp->dev;
+ 	struct resource *res;
++	u32 val;
+ 
+ 	pp->irq = platform_get_irq(pdev, 1);
+ 	if (pp->irq < 0) {
+@@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 	if (!pp->dbi_base)
+ 		return -ENOMEM;
+ 
++	if (pp->is_gen1) {
++		dev_info(dev, "GEN1 forced\n");
++
++		val = readl(pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
++		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK, MAX_LINK_SPEEDS_GEN1);
++		writel(val, pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
++
++		val = readl(pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
++		val &= ~CFG_DIRECTED_SPEED_CHANGE;
++		writel(val, pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
++	}
++
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(dev, "failed to initialize host\n");
+@@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		goto err_gpio;
+ 	}
+ 
++	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
++		pp->is_gen1 = true;
++
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+ 	reg &= ~LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a567ea2..2fb0b18 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -50,6 +50,7 @@ struct pcie_port {
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
+ 	u8			iatu_unroll_enabled;
++	u8                      is_gen1;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
 -- 
-1.7.1
+2.1.4
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
