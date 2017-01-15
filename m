@@ -1,99 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Jan 2017 16:22:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
- <20170117175728.GE27312@n2100.armlinux.org.uk>
- <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117193414.GG27312@n2100.armlinux.org.uk>
- <20170117210258.GH27312@n2100.armlinux.org.uk>
-MIME-Version: 1.0
-In-Reply-To: <20170117210258.GH27312@n2100.armlinux.org.uk>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>,
- Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
- David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:53485 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751270AbdAOUF3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 15:05:29 -0500
+Message-Id: <f8e6ef37e202e1c3c5ec3edc6e44370eb05c9fff.1484486499.git.lukas@wunner.de>
+In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 15 Jan 2017 21:03:45 +0100
+Subject: [PATCH v5 4/8] Revert "PM / Runtime: Remove the exported function
+ pm_children_suspended()"
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David]
+This reverts commit 62006c1702b3b1be0c0726949e0ee0ea2326be9c which
+removed pm_children_suspended() because it had only a single caller.
+We're about to add a second caller, so establish the status quo ante.
 
-On Tue, Jan 17, 2017 at 09:02:58PM +0000, Russell King - ARM Linux wrote:
-> On Tue, Jan 17, 2017 at 07:34:14PM +0000, Russell King - ARM Linux wrote:
-> > Uwe, can you try:
-> > 
-> > setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> > 	0x50.w=0x60
-> > 
-> > and see whether it remains alive (you can check by reading the root
-> > register 0x52.w - bit 12 should be set once bit 11 clears again.
-> 
-> For reference, this I got wrong...
-> 
-> 0xf1041a04 bit 0 indicates link status (0 = link up, 1 = link down).
-> 
-> > If that's successful, maybe setting the common clock bit on the PCIe
-> > device is what's causing the problem, in which case:
-> > 
-> > setpci -s 02:00.0 0x80.w=0x40
-> > setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> > 	0x50.w=0x60
-> 
-> Having worked with Uwe over IRC, it seems that any request to retrain
-> causes the link to go down, either with or without the common clock bit
-> set:
-> 
-> # setpci -s 2.0 0x50.w=0x60
-> # setpci -s 2.0 0x52.w
-> 0011
-> # memtool md 0xf1041a04+4
-> f1041a04: 00010201
-> ... reboot ...
-> # setpci -s 2.0 0x50.w=0x20
-> # memtool md 0xf1041a04+4
-> f1041a04: 00010201
-> 
-> which doesn't point towards ASPM itself, but the problem is caused by
-> a side effect of ASPM's setup code which always triggers a retrain.
-> 
-> Bit 5 in that register is documented (at least in the Armada 370 docs
-> and Armada XP docs I have) as:
-> 
-> 5  RetrnLnk  RW    Retrain Link
->              0x0   This bit forces the device to initiate link retraining.
->                    Always returns 0 when read.
->                    NOTE: If configured as an Endpoint, this field is
->                    reserved and has no effect.
-> 
-> Bjorn, are you aware of similar situations where a request for the PCIe
-> link to be retrained causes it to fail?
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/base/power/runtime.c | 3 +--
+ include/linux/pm_runtime.h   | 7 +++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-The only one that comes to mind is this patch from David (CC'd) that
-avoids ASPM-related retrains when we know the link doesn't support ASPM:
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e53f9a28bee3
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index 872eac4cb1df..03293c32793c 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -243,8 +243,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
+ 		retval = -EACCES;
+ 	else if (atomic_read(&dev->power.usage_count) > 0)
+ 		retval = -EAGAIN;
+-	else if (!dev->power.ignore_children &&
+-			atomic_read(&dev->power.child_count))
++	else if (!pm_children_suspended(dev))
+ 		retval = -EBUSY;
+ 
+ 	/* Pending resume requests take precedence over suspends. */
+diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
+index ca4823e675e2..7de2aa5c3692 100644
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -66,6 +66,12 @@ static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
+ 	dev->power.ignore_children = enable;
+ }
+ 
++static inline bool pm_children_suspended(struct device *dev)
++{
++	return dev->power.ignore_children
++		|| !atomic_read(&dev->power.child_count);
++}
++
+ static inline void pm_runtime_get_noresume(struct device *dev)
+ {
+ 	atomic_inc(&dev->power.usage_count);
+@@ -161,6 +167,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
+ static inline void pm_runtime_forbid(struct device *dev) {}
+ 
+ static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
++static inline bool pm_children_suspended(struct device *dev) { return false; }
+ static inline void pm_runtime_get_noresume(struct device *dev) {}
+ static inline void pm_runtime_put_noidle(struct device *dev) {}
+ static inline bool device_run_wake(struct device *dev) { return false; }
+-- 
+2.11.0
 
-Side note: it looks like we don't use the recommended retrain
-algorithm in the implementation note about avoiding race conditions in 
-PCIe r3.0, sec 7.8.7.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
