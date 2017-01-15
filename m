@@ -1,219 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33768 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756330AbdAFXRp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2017 18:17:45 -0500
-Message-ID: <1483744662.3868.1.camel@gmail.com>
-Subject: Re: [PATCH v2] PCI: lock each enable/disable num_vfs operation in
- sysfs
-From: Greg <gvrose8192@gmail.com>
-To: Emil Tantilov <emil.s.tantilov@intel.com>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+Received: from mailout2.hostsharing.net ([83.223.90.233]:36411 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbdAOUHD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 15:07:03 -0500
+Message-Id: <2422ada28df350e51b025884b9c6cd7f4242a1cd.1484486499.git.lukas@wunner.de>
+In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 15 Jan 2017 21:03:45 +0100
+Subject: [PATCH v5 8/8] thunderbolt: Runtime suspend NHI when idle
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org
-Date: Fri, 06 Jan 2017 15:17:42 -0800
-In-Reply-To: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
-References: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2017-01-06 at 13:59 -0800, Emil Tantilov wrote:
-> Enabling/disabling SRIOV via sysfs by echo-ing multiple values
-> simultaneously:
-> 
-> echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
-> echo 63 > /sys/class/net/ethX/device/sriov_numvfs
-> 
-> sleep 5
-> 
-> echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
-> echo 0 > /sys/class/net/ethX/device/sriov_numvfs
-> 
-> Results in the following bug:
-> 
-> kernel BUG at drivers/pci/iov.c:495!
-> invalid opcode: 0000 [#1] SMP
-> CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
-> RIP: 0010:[<ffffffff813b1647>]
-> 	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
-> 
-> Call Trace:
->  [<ffffffff81391726>] pci_release_dev+0x26/0x70
->  [<ffffffff8155be6e>] device_release+0x3e/0xb0
->  [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
->  [<ffffffff81365d9d>] kobject_put+0x2d/0x60
->  [<ffffffff8155bc27>] put_device+0x17/0x20
->  [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
->  [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
->  [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
->  [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
->  [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
->  [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
->  [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
->  [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
->  [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
->  [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
-> ...
-> RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
-> 
-> Use the existing mutex lock to protect each enable/disable operation.
-> 
-> -v2: move the existing lock from protecting the config of the IOV bus
-> to protecting the writes to sriov_numvfs in sysfs without maintaining
-> a "locked" version of pci_iov_add/remove_virtfn().
-> As suggested by Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> CC: Alexander Duyck <alexander.h.duyck@intel.com>
-> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
-> ---
->  drivers/pci/iov.c       |    7 -------
->  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++-------
->  drivers/pci/pci.h       |    2 +-
->  3 files changed, 17 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 4722782..2479ae8 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->  	struct pci_sriov *iov = dev->sriov;
->  	struct pci_bus *bus;
->  
-> -	mutex_lock(&iov->dev->sriov->lock);
->  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
->  	if (!bus)
->  		goto failed;
-> @@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->  		__pci_reset_function(virtfn);
->  
->  	pci_device_add(virtfn, virtfn->bus);
-> -	mutex_unlock(&iov->dev->sriov->lock);
->  
->  	pci_bus_add_device(virtfn);
->  	sprintf(buf, "virtfn%u", id);
-> @@ -181,12 +179,10 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->  	sysfs_remove_link(&dev->dev.kobj, buf);
->  failed1:
->  	pci_dev_put(dev);
-> -	mutex_lock(&iov->dev->sriov->lock);
->  	pci_stop_and_remove_bus_device(virtfn);
->  failed0:
->  	virtfn_remove_bus(dev->bus, bus);
->  failed:
-> -	mutex_unlock(&iov->dev->sriov->lock);
->  
->  	return rc;
->  }
-> @@ -195,7 +191,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
->  {
->  	char buf[VIRTFN_ID_LEN];
->  	struct pci_dev *virtfn;
-> -	struct pci_sriov *iov = dev->sriov;
->  
->  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
->  					     pci_iov_virtfn_bus(dev, id),
-> @@ -218,10 +213,8 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
->  	if (virtfn->dev.kobj.sd)
->  		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
->  
-> -	mutex_lock(&iov->dev->sriov->lock);
->  	pci_stop_and_remove_bus_device(virtfn);
->  	virtfn_remove_bus(dev->bus, virtfn->bus);
-> -	mutex_unlock(&iov->dev->sriov->lock);
->  
->  	/* balance pci_get_domain_bus_and_slot() */
->  	pci_dev_put(virtfn);
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 0666287..25d010d 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -472,6 +472,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  				  const char *buf, size_t count)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct pci_sriov *iov = pdev->sriov;
->  	int ret;
->  	u16 num_vfs;
->  
-> @@ -482,38 +483,46 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->  		return -ERANGE;
->  
-> +	mutex_lock(&iov->dev->sriov->lock);
-> +
->  	if (num_vfs == pdev->sriov->num_VFs)
-> -		return count;		/* no change */
-> +		goto exit;
->  
->  	/* is PF driver loaded w/callback */
->  	if (!pdev->driver || !pdev->driver->sriov_configure) {
->  		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
-> -		return -ENOSYS;
-> +		ret = -ENOENT;
-> +		goto exit;
+Runtime suspend the NHI when no Thunderbolt devices have been plugged in
+for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
 
-Hi Emil,
+The NHI is not able to detect plug events while suspended, it relies on
+the GPE handler to resume it on hotplug.
 
-Generally the patch looks fine to me - but I am wondering why the change
-from -ENOSYS TO -ENOENT?
+After the NHI resumes, it takes about 700 ms until a hotplug event
+appears on the RX ring.  In case autosuspend_delay_ms has been reduced
+to 0 by the user, we need to wait in tb_resume() to avoid going back to
+sleep before we had a chance to detect a hotplugged device.  A runtime
+pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
+awake while the hotplug event is processed.
 
-Thanks,
+Apart from that we acquire a runtime pm ref for each newly allocated
+switch (except for the root switch) and drop one when a switch is freed,
+thereby ensuring the NHI stays active as long as devices are plugged in.
+This behaviour is identical to the macOS driver.
 
-- Greg
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/nhi.c    |  2 ++
+ drivers/thunderbolt/power.c  |  9 +++++++++
+ drivers/thunderbolt/switch.c |  9 +++++++++
+ drivers/thunderbolt/tb.c     | 13 +++++++++++++
+ 4 files changed, 33 insertions(+)
 
->  	}
->  
->  	if (num_vfs == 0) {
->  		/* disable VFs */
->  		ret = pdev->driver->sriov_configure(pdev, 0);
-> -		if (ret < 0)
-> -			return ret;
-> -		return count;
-> +		goto exit;
->  	}
->  
->  	/* enable VFs */
->  	if (pdev->sriov->num_VFs) {
->  		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
->  			 pdev->sriov->num_VFs, num_vfs);
-> -		return -EBUSY;
-> +		ret = -EBUSY;
-> +		goto exit;
->  	}
->  
->  	ret = pdev->driver->sriov_configure(pdev, num_vfs);
->  	if (ret < 0)
-> -		return ret;
-> +		goto exit;
->  
->  	if (ret != num_vfs)
->  		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
->  			 num_vfs, ret);
->  
-> +exit:
-> +	mutex_unlock(&iov->dev->sriov->lock);
-> +
-> +	if (ret < 0)
-> +		return ret;
-> +
->  	return count;
->  }
->  
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index cb17db2..8dd38e6 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -270,7 +270,7 @@ struct pci_sriov {
->  	u16 driver_max_VFs;	/* max num VFs driver supports */
->  	struct pci_dev *dev;	/* lowest numbered PF */
->  	struct pci_dev *self;	/* this PF */
-> -	struct mutex lock;	/* lock for VF bus */
-> +	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
->  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
->  };
->  
-> 
-
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 88fb2fb8cf4e..319ed81422c5 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -632,6 +632,8 @@ static const struct dev_pm_ops nhi_pm_ops = {
+ 					    * pci-tunnels stay alive.
+ 					    */
+ 	.restore_noirq = nhi_resume_noirq,
++	.runtime_suspend = nhi_suspend_noirq,
++	.runtime_resume = nhi_resume_noirq,
+ };
+ 
+ static struct pci_device_id nhi_ids[] = {
+diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
+index 6e7ef07f4aa9..06f535c932e0 100644
+--- a/drivers/thunderbolt/power.c
++++ b/drivers/thunderbolt/power.c
+@@ -319,6 +319,12 @@ void thunderbolt_power_init(struct tb *tb)
+ 
+ 	tb->power = power;
+ 
++	pm_runtime_allow(nhi_dev);
++	pm_runtime_set_autosuspend_delay(nhi_dev, 10000);
++	pm_runtime_use_autosuspend(nhi_dev);
++	pm_runtime_mark_last_busy(nhi_dev);
++	pm_runtime_put_autosuspend(nhi_dev);
++
+ 	return;
+ 
+ err_free:
+@@ -335,6 +341,9 @@ void thunderbolt_power_fini(struct tb *tb)
+ 	if (!power)
+ 		return; /* thunderbolt_power_init() failed */
+ 
++	pm_runtime_get(nhi_dev);
++	pm_runtime_forbid(nhi_dev);
++
+ 	tb->power = NULL;
+ 	dev_pm_domain_set(upstream_dev, NULL);
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c6f30b1695a9..422fe6e96f09 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ #include "tb.h"
+@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
+ 	if (!sw->is_unplugged)
+ 		tb_plug_events_active(sw, false);
+ 
++	if (sw != sw->tb->root_switch) {
++		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
++		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
++	}
++
+ 	kfree(sw->ports);
+ 	kfree(sw->drom);
+ 	kfree(sw);
+@@ -420,6 +426,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
++	if (tb->root_switch)
++		pm_runtime_get(&tb->nhi->pdev->dev);
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 24b6d30c3c86..a3fedf90e545 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "tb.h"
+ #include "tb_regs.h"
+@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct device *dev = &tb->nhi->pdev->dev;
+ 	struct tb_switch *sw;
+ 	struct tb_port *port;
++
++	pm_runtime_get(dev);
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
+ }
+ 
+ /**
+@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+ 	tb_info(tb, "resume finished\n");
++
++	/*
++	 * If runtime resuming due to a hotplug event (rather than resuming
++	 * from system sleep), wait for it to arrive. May take about 700 ms.
++	 */
++	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
++		msleep(1000);
+ }
+-- 
+2.11.0
 
