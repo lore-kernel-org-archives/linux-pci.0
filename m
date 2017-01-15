@@ -1,47 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60082 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758595AbdAKVWE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 16:22:04 -0500
-Date: Wed, 11 Jan 2017 15:21:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nsekhar@ti.com
-Subject: Re: [PATCH v2 0/3] PCI: designware/dra7xx: misc fixes and cleanups
-Message-ID: <20170111212135.GN14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <1483091774-8332-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1483091774-8332-1-git-send-email-kishon@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Message-Id: <14d64f19bc1b1ea67371b8336dca618edddc0b52.1484486499.git.lukas@wunner.de>
+In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 15 Jan 2017 21:03:45 +0100
+Subject: [PATCH v5 2/8] PCI: Allow runtime PM on Thunderbolt ports
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 30, 2016 at 03:26:11PM +0530, Kishon Vijay Abraham I wrote:
-> This series contains
->         *) a patch to cleanup dra7xx probe
->         *) a patch to force DRA7xx controller to work in GEN1 mode
->         *) a patch to fix dra7xx driver so that even if CONFIG_PCI_MSI
->            is enabled, dra7xx driver can service legacy interrupts
->            (provided the device support only legacy interrupts).
-> 
-> Changes from v1:
-> *) rebased to 4.10-rc1 (and [1])
-> *) use existing dt property "max-link-speed" instead of creating a new
->    TI specific dt property.
-> 
-> [1] -> https://lkml.org/lkml/2016/12/28/34
-> 
-> Kishon Vijay Abraham I (3):
->   PCI: dra7xx: simplify the probe code
->   PCI: dra7xx: Add support to force RC to work in GEN1 mode
->   PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
-> 
->  drivers/pci/controller/pci-dra7xx.c |   81 ++++++++++++++++++++---------------
->  1 file changed, 47 insertions(+), 34 deletions(-)
+Currently PCIe ports are only allowed to go to D3 if the BIOS is dated
+2015 or newer to avoid potential issues with old chipsets.  However for
+Thunderbolt we know that even the oldest controller, Light Ridge (2010),
+is able to suspend its ports to D3 just fine.
 
-Applied to pci/host-dra7xx for v4.11.  I haven't applied the directory
-rename yet, so I'll fix that up as necessary.
+We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
+released two EFI security updates in 2015 which encompass all machines
+with Thunderbolt, but the achieved power saving should be made available
+to users even if they haven't updated their BIOS.  To this end,
+special-case Thunderbolt in pci_bridge_d3_possible().
 
-Bjorn
+This allows the Thunderbolt controller to power down but the root port
+to which the Thunderbolt controller is attached remains in D0 unless
+the EFI update is installed.  Users can pass pcie_port_pm=force on the
+kernel command line if they cannot install the EFI update but still want
+to benefit from the additional power saving of putting the root port
+into D3.  In practice, root ports can be suspended to D3 without issues
+at least on 2012 Ivy Bridge machines.
+
+If the BIOS cut-off date is ever lowered to 2010, the Thunderbolt
+special case can be removed.
+
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Amir Levy <amir.jer.levy@intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a881c0d3d2e8..8ed098db82e1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+  * @bridge: Bridge to check
+  *
+  * This function checks if it is possible to move the bridge to D3.
+- * Currently we only allow D3 for recent enough PCIe ports.
++ * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
+  */
+ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ {
+@@ -2258,6 +2258,11 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		    year >= 2015) {
+ 			return true;
+ 		}
++
++		/* Even the oldest 2010 Thunderbolt controller supports D3. */
++		if (bridge->is_thunderbolt)
++			return true;
++
+ 		break;
+ 	}
+ 
+-- 
+2.11.0
