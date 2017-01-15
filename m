@@ -1,105 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:51586 "EHLO mail5.wrs.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751662AbdASW6U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jan 2017 17:58:20 -0500
-From: "Richard, Joseph" <Joseph.Richard@windriver.com>
-To: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Hotplugging PCI device with large BAR
-Date: Thu, 19 Jan 2017 22:58:15 +0000
-Message-ID: <7B6A2AE64F40F245AE81F245059F0C3651381C7F@ALA-MBA.corp.ad.wrs.com>
-References: <7B6A2AE64F40F245AE81F245059F0C3651381A56@ALA-MBA.corp.ad.wrs.com>
- <20170117144128.GB22776@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6Fsory5iBV_PBoRX5je8Wf6f3_tzbQ=50GTkkg+dwEzaw@mail.gmail.com>
-In-Reply-To: <CACK8Z6Fsory5iBV_PBoRX5je8Wf6f3_tzbQ=50GTkkg+dwEzaw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Message-Id: <cover.1484486499.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 15 Jan 2017 21:03:45 +0100
+Subject: [PATCH v5 0/8] Runtime PM for Thunderbolt on Macs
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Tomeu Vizoso <tomeu.vizoso@collabora.com>, Chen Yu <yu.c.chen@intel.com>, Lee Jones <lee.jones@linaro.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQpXZSBoYXZlIGJlZW4gYWJsZSB0byB3b3JrIGFyb3VuZCB0aGlzIGJlIHNldHRpbmcg
-cGNpPW5vY3JzIG9uIHRoZSBrZXJuZWwgY21kbGluZS4NCg0KV2l0aG91dCBwY2k9bm9jcnMgc2V0
-LCB3ZSBzZWUgdGhlIGZvbGxvd2luZyBpbiB0aGUgc3RhcnR1cCBsb2c6DQpbICAgIDAuNDc2Njgx
-XSBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVzIDAwMDA6MDANClsgICAgMC40NzcyMTRdIHBjaV9idXMg
-MDAwMDowMDogcm9vdCBidXMgcmVzb3VyY2UgW2J1cyAwMC1mZl0NClsgICAgMC40Nzc4ODJdIHBj
-aV9idXMgMDAwMDowMDogcm9vdCBidXMgcmVzb3VyY2UgW2lvICAweDAwMDAtMHgwY2Y3XQ0KWyAg
-ICAwLjQ3ODU5MV0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbaW8gIDB4MGQw
-MC0weGZmZmZdDQpbICAgIDAuNDc5MzExXSBwY2lfYnVzIDAwMDA6MDA6IHJvb3QgYnVzIHJlc291
-cmNlIFttZW0gMHgwMDBhMDAwMC0weDAwMGJmZmZmXQ0KWyAgICAwLjQ4MDEwOV0gcGNpX2J1cyAw
-MDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbbWVtIDB4YzAwMDAwMDAtMHhmZWJmZmZmZl0NClsg
-ICAgMC40ODA5MDFdIHBjaV9idXMgMDAwMDowMDogcm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDMw
-MDAwMDAwMC0weDM3ZmZmZmZmZl0NCg0KV2l0aCBwY2k9bm9jcnMgc2V0LCB3ZSBzZWUgdGhlIGZv
-bGxvd2luZyBpbiB0aGUgc3RhcnR1cCBsb2csIGFuZCB0aGUgZGV2aWNlIGlzIGluaXRpYWxpemVk
-IGNvcnJlY3RseToNClsgICAgMC40Nzc1ODBdIFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDow
-MA0KWyAgICAwLjQ3ODEyM10gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbYnVz
-IDAwLWZmXQ0KWyAgICAwLjQ3ODc3MV0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJj
-ZSBbaW8gIDB4MDAwMC0weGZmZmZdDQpbICAgIDAuNDc5NTI3XSBwY2lfYnVzIDAwMDA6MDA6IHJv
-b3QgYnVzIHJlc291cmNlIFttZW0gMHgwMDAwMDAwMC0weDNmZmZmZmZmZmZmZl0NCg0KSXMgdGhp
-cyBzb21ldGhpbmcgdGhhdCBzaG91bGQgYmUgZXhwZWN0ZWQgd2hlbiBob3QtcGx1Z2dpbmcgZGV2
-aWNlcyB3aXRoIGxhcmdlIEJBUnM/ICBJcyBpdCBwb3NzaWJsZSB0byBtb2RpZnkgdGhlIHJvb3Qg
-YnVzIHJlc291cmNlIHdoZW4gaG90LXBsdWdnaW5nLCBvciBpcyBpdCBmaXhlZCBhZnRlciBib290
-aW5nPw0KDQpUaGFua3MsDQpKb3NlcGggUmljaGFyZA0KDQotLS0NCg0KRnJvbTogUmFqYXQgSmFp
-biBbbWFpbHRvOnJhamF0amFAZ29vZ2xlLmNvbV0gDQpTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDE3
-LCAyMDE3IDE6NDcgUE0NClRvOiBCam9ybiBIZWxnYWFzDQpDYzogUmljaGFyZCwgSm9zZXBoOyBs
-aW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogSG90cGx1Z2dpbmcgUENJIGRl
-dmljZSB3aXRoIGxhcmdlIEJBUg0KDQoNCg0KT24gVHVlLCBKYW4gMTcsIDIwMTcgYXQgNjo0MSBB
-TSwgQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPiB3cm90ZToNCk9uIE1vbiwgSmFu
-IDE2LCAyMDE3IGF0IDExOjI5OjI2UE0gKzAwMDAsIFJpY2hhcmQsIEpvc2VwaCB3cm90ZToNCj4g
-SGVsbG8sDQo+IEkgYW0gdHJ5aW5nIHRvIGhvdHBsdWcgYSBkZXZpY2Ugd2l0aCBhIGxhcmdlIEJB
-UiB0byBhIEtWTSBndWVzdCwgYnV0IGl0IGlzIGZhaWxpbmcgdG8gbWFwIHRoZSBtZW1vcnkgZm9y
-IHRoZSBCQVIuDQo+DQo+IEZyb20gZG1lc2csIGhlcmUgaXMgdGhlIG91dHB1dCB3aGVuIGhvdHBs
-dWdnaW5nIHRoZSBkZXZpY2UsIHdpdGggdGhlIGZhaWx1cmUgb24gQkFSIDI6DQo+IFvCoCA4OTEu
-NjE0MDE3XSBBQ1BJOiBcX1NCXy5QQ0kwLlM2MF86IEFDUElfTk9USUZZX0RFVklDRV9DSEVDSyBl
-dmVudA0KPiBbwqAgODkxLjYxNDAzNl0gQUNQSTogXF9TQl8uUENJMC5TNjBfOiBEZXZpY2UgY2hl
-Y2sgaW4gaG90cGx1Z19ldmVudCgpDQo+IFvCoCA4OTEuNjE0MTAwXSBwY2kgMDAwMDowMDowYy4w
-OiBbMWFmNDoxMTEwXSB0eXBlIDAwIGNsYXNzIDB4MDUwMDAwDQo+IFvCoCA4OTEuNjE0Mjc3XSBw
-Y2kgMDAwMDowMDowYy4wOiByZWcgMHgxMDogW21lbSAweDAwMDAwMDAwLTB4MDAwMDBmZmZdDQo+
-IFvCoCA4OTEuNjE0MzkxXSBwY2kgMDAwMDowMDowYy4wOiByZWcgMHgxNDogW21lbSAweDAwMDAw
-MDAwLTB4MDAwMDBmZmZdDQo+IFvCoCA4OTEuNjE0NTU3XSBwY2kgMDAwMDowMDowYy4wOiByZWcg
-MHgxODogW21lbSAweDAwMDAwMDAwLTB4N2ZmZmZmZmYgNjRiaXQgcHJlZl0NCj4gW8KgIDg5MS42
-MTQ2NzBdIHBjaSAwMDAwOjAwOjBjLjA6IHJlZyAweDIwOiBbbWVtIDB4MDAwMDAwMDAtMHgwMDBm
-ZmZmZiBwcmVmXQ0KPiBbwqAgODkxLjYxNDc4MF0gcGNpIDAwMDA6MDA6MGMuMDogcmVnIDB4MjQ6
-IFttZW0gMHgwMDAwMDAwMC0weDAwMGZmZmZmIHByZWZdDQo+IFvCoCA4OTEuNjE1Mjc3XSBwY2kg
-MDAwMDowMDowYy4wOiBCQVIgMjogbm8gc3BhY2UgZm9yIFttZW0gc2l6ZSAweDgwMDAwMDAwIDY0
-Yml0IHByZWZdDQo+IFvCoCA4OTEuNjE1Mjc5XSBwY2kgMDAwMDowMDowYy4wOiBCQVIgMjogZmFp
-bGVkIHRvIGFzc2lnbiBbbWVtIHNpemUgMHg4MDAwMDAwMCA2NGJpdCBwcmVmXQ0KPiBbwqAgODkx
-LjYxNTI4MV0gcGNpIDAwMDA6MDA6MGMuMDogQkFSIDQ6IGFzc2lnbmVkIFttZW0gMHhjMDMwMDAw
-MC0weGMwM2ZmZmZmIHByZWZdDQo+IFvCoCA4OTEuNjE3NzU5XSBwY2kgMDAwMDowMDowYy4wOiBC
-QVIgNTogYXNzaWduZWQgW21lbSAweGMwNDAwMDAwLTB4YzA0ZmZmZmYgcHJlZl0NCj4gW8KgIDg5
-MS42MjA0NzNdIHBjaSAwMDAwOjAwOjBjLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4YzAyMDIw
-MDAtMHhjMDIwMmZmZl0NCj4gW8KgIDg5MS42MjMxNDhdIHBjaSAwMDAwOjAwOjBjLjA6IEJBUiAx
-OiBhc3NpZ25lZCBbbWVtIDB4YzAyMDMwMDAtMHhjMDIwM2ZmZl0NCj4NCj4gV2hlbiB0aGUgbm9k
-ZSBpcyByZWJvb3RlZCwgdGhlIGFsbG9jYXRpb24gZ2V0cyBmaXhlZC4NCj4gQWxzbywgd2hlbiBh
-IHNpbWlsYXIgZGV2aWNlIGhhcyBwcmV2aW91c2x5IGJlZW4gcmVtb3ZlZCwgaXQgY2FuIGFsbG9j
-YXRlIHRoZSBtZW1vcnkgdGhhdCBoYXMgcHJldmlvdXNseSBiZWVuIHVzZWQgZm9yIHRoYXQgZGV2
-aWNlIHRvIHRoaXMgZGV2aWNlLCBzbyBhbGxvY2F0aW9uIHdpbGwgc3VjY2VlZA0KPiBOb3RlLCB0
-aGlzIGlzIG9uIGEgZ3Vlc3QgdGhhdCBoYXMgOS44R0Igb2YgUkFNLsKgIFRoZSBzYW1lIHJlc3Vs
-dCB3YXMgYWxzbyBvYnNlcnZlZCBvbiBndWVzdHMgd2l0aCBsb3dlciBhbW91bnRzIG9mIFJBTS4N
-Cg0KVGhpcyBpcyBhIHdlYWtuZXNzIG9mIHRoZSBQQ0kgY29yZSAtLSB3ZSBkb24ndCBkZWFsIHdl
-bGwgd2l0aCByZXNvdXJjZQ0KYWxsb2NhdGlvbiBpc3N1ZXMuDQoNClRvIHJlYWxseSBzZWUgd2hh
-dCdzIGdvaW5nIG9uIHdlIHdvdWxkIG5lZWQgdG8gc2VlIG1vcmUgb2YgdGhlIGRtZXNnDQoocHJl
-ZmVyYWJseSB0aGUgZW50aXJlIGxvZyksIHdoaWNoIHdvdWxkIHNob3cgdGhlIGF2YWlsYWJsZSBh
-ZGRyZXNzDQpzcGFjZS4NCg0KSW4gdGhpcyBjYXNlLCB0aGUgZGV2aWNlICgwMDowYy4wKSBpcyBv
-biBhIHJvb3QgYnVzLCBzbyBpdCdzIGENCnF1ZXN0aW9uIG9mIHdoYXQgdGhlIGhvc3QgYnJpZGdl
-IHdpbmRvd3MgYXJlIGFuZCBob3cgc3BhY2UgaXMNCmFzc2lnbmVkIHRvIHRoZSBvdGhlciBkZXZp
-Y2VzIG9uIHRoZSByb290IGJ1cy4NCg0KVGhlIHdheSB0aGlzIHdhcyBkZWFsdCBpbiBvbmUgb2Yg
-bXkgcHJldmlvdXMgb3Jncywgd2FzIHRvIGNoYW5nZSB0aGUgQklPUyB0byAicmVzZXJ2ZSIgZW5v
-dWdoIG1lbW9yeSBzcGFjZSBhdCB0aGUgcG9ydHMgd2hlcmUgd2Uga25vdyB0aGUgcGxhdGZvcm0g
-d291bGQgbmVlZCBsYXRlciAoZHVlIHRvIGFudGljaXBhdGVkIGhvdC1wbHVnZ2FibGUgZGV2aWNl
-cykuwqANCsKgDQoNClNpbmNlIGl0IHdvcmtzIGFmdGVyIGEgcmVib290LCBJIHN1c3BlY3QgdGhl
-IEJJT1MgaXMgYXNzaWduaW5nIHRoaW5ncw0KZGlmZmVyZW50bHkgd2hlbiB0aGUgZGV2aWNlIGlz
-IHByZXNlbnQgYXQgYm9vdC10aW1lLsKgIFRoZSBCSU9TIG1heQ0KYWxzbyBiZSBhYmxlIHRvIGlu
-Y3JlYXNlIHRoZSBob3N0IGJyaWRnZSB3aW5kb3cgc2l6ZXMuwqAgVGhlIGRtZXNnIGxvZ3MNCnNo
-b3dpbmcgdGhlIGhvdHBsdWcgYW5kIGEgc3Vic2VxdWVudCByZWJvb3Qgd291bGQgc2hvdyB3aGF0
-J3MNCmhhcHBlbmluZy4NCg0KTGludXggY291bGQgdGhlb3JldGljYWxseSBkbyBzb21ldGhpbmcg
-c2ltaWxhciBhdCBob3RwbHVnLXRpbWUsIGJ1dCBpdA0KaXMgY29tcGxpY2F0ZWQgYnkgdGhlIGZh
-Y3QgdGhhdCBvdGhlciBkZXZpY2VzIG1heSBhbHJlYWR5IGJlIG9wZXJhdGluZw0KKGFuZCB0aHVz
-IGRpZmZpY3VsdCB0byBtb3ZlKSwgYW5kIHRoZSBmYWN0IHRoYXQgd2UgZG9uJ3QgY3VycmVudGx5
-DQpoYXZlIHN1cHBvcnQgZm9yIGNoYW5naW5nIGhvc3QgYnJpZGdlIHdpbmRvd3MgKGFuZCBhbnkg
-c3VjaCBzdXBwb3J0DQp3b3VsZCByZWx5IG9uIGZpcm13YXJlIHN1cHBvcnQsIGkuZS4sIGEgaG9z
-dCBicmlkZ2UgX1NSUyBtZXRob2QpLg0KDQpCam9ybg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20g
-dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQp0aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KTW9yZSBtYWpv
-cmRvbW8gaW5mbyBhdMKgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
-bA0KDQo=
+Power down Thunderbolt controllers on Macs when nothing is plugged in
+to save around 2W per controller.
+
+For background info please see the cover letter of v3:
+https://lkml.org/lkml/2016/12/17/56
+
+
+Patches [1/8] to [3/8] need an ack from Bjorn and/or Rafael.
+Patches [4/8] to [6/8] need an ack from Rafael.
+Patches [7/8] to [8/8] need an ack from Andreas.
+
+
+Changes since v4:
+
+- Patch [2/8] has been reviewed by Mika. (Thanks!)
+
+- Patch [3/8] now uses a separate helper function instead of stuffing
+  its code into pci_dev_check_d3cold(), as requested by Mika.
+
+As usual the patches can be reviewed/fetched on GitHub:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v5
+
+Thanks,
+
+Lukas
+
+
+Chen Yu (1):
+  PM / sleep: Define constant for direct_complete
+
+Lukas Wunner (7):
+  PCI: Recognize Thunderbolt devices
+  PCI: Allow runtime PM on Thunderbolt ports
+  PCI: Don't block runtime PM for Thunderbolt host hotplug ports
+  Revert "PM / Runtime: Remove the exported function
+    pm_children_suspended()"
+  PM: Make requirements of dev_pm_domain_set() more precise
+  thunderbolt: Power down controller when idle
+  thunderbolt: Runtime suspend NHI when idle
+
+ drivers/base/power/common.c  |  15 +-
+ drivers/base/power/runtime.c |   3 +-
+ drivers/pci/pci.c            |  27 +++-
+ drivers/pci/pci.h            |   2 +
+ drivers/pci/probe.c          |  34 +++++
+ drivers/thunderbolt/Kconfig  |   3 +-
+ drivers/thunderbolt/Makefile |   4 +-
+ drivers/thunderbolt/nhi.c    |   5 +
+ drivers/thunderbolt/power.c  | 355 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/power.h  |  37 +++++
+ drivers/thunderbolt/switch.c |   9 ++
+ drivers/thunderbolt/tb.c     |  13 ++
+ drivers/thunderbolt/tb.h     |   2 +
+ include/linux/pci.h          |   1 +
+ include/linux/pm.h           |   7 +
+ include/linux/pm_runtime.h   |   7 +
+ 16 files changed, 513 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/thunderbolt/power.c
+ create mode 100644 drivers/thunderbolt/power.h
+
+-- 
+2.11.0
