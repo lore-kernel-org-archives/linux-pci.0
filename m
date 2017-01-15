@@ -1,96 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: pcie-designware: Incorrect programming of msi address register on
- some setups.
-To: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Message-ID: <922851d0-a847-762a-5067-88c92d416d58@linaro.org>
-Date: Tue, 24 Jan 2017 14:07:56 +0000
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, Arnd Bergmann <arnd@arndb.de>,
- Bjorn Andersson <bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
+Message-Id: <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
+In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 15 Jan 2017 21:03:45 +0100
+Subject: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hotplug ports generally block their parents from suspending to D3hot as
+otherwise their interrupts couldn't be delivered.
 
-Recently I hit a bug with pcie-designware driver with triggers a board 
-reboot, this is my analysis so far on the issue. Issue is because 
-designware driver is programming msi address which is above 32 address 
-space eventhough one of the pcie endpoint indicated that it does not 
-support 64 bit msi addresses.
+An exception are Thunderbolt host controllers:  They have a separate
+GPIO pin to side-band signal plug events even if the controller is
+powered down or its parent ports are suspended to D3.  They can be told
+apart from Thunderbolt controllers in attached devices by checking if
+they're situated below a non-Thunderbolt device (typically a root port,
+or the downstream port of a PCIe switch in the case of the MacPro6,1).
 
-My setup is arm64 board DB820c with 3 root complexes, and the system has 
-memory which spans across 4GB address space.
-First root complex is connected to a WLAN Chip (QCA6174) only supports 
-32 bit addresses.
-Second one is connected to a Ethernet Controller (ATL1c)
+To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
+of a host controller must not block runtime PM on the upstream bridge as
+power to the chip is only cut once the upstream bridge has suspended.
+Amend the condition in pci_dev_check_d3cold() accordingly.
 
-value of MSI control register aka PCI_MSI_FLAGS (0x2) for device QCA6174 
-is 0x106
-value of MSI control register aka PCI_MSI_FLAGS (0x2) for device ATL1C 
-is 0x80
+This change does not impact non-Macs as their Thunderbolt hotplug ports
+are handled by the firmware rather than natively by the OS:  The hotplug
+ports are not allowed to suspend in pci_bridge_d3_possible() and keep
+their parent ports awake all the time.  Consequently it is meaningless
+whether they block runtime PM on their parent ports or not.
 
-Now the problem is that on Synopsis IP, the MSI address register is 
-programmed at two places
-1> one at controller config dbi address space itself in 
-PCIE_MSI_ADDR_LO(0x820)  & PCIE_MSI_ADDR_HI (0x824)
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Amir Levy <amir.jer.levy@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-2> at PCI_MSI_ADDRESS_LO (0x2) and PCI_MSI_ADDRESS_HI of the device cfg.
-
-If step 1 allocates msi address which is above 32 bit address space, 
-then step 2 would truncate it to 32 bit address if it discovers endpoint 
-which does not support 64 bit msi address.
-Then if endpoint tries to read/write this address as part of MSI 
-mechanism it would fault and crash system.
-
-Am not sure how we can solve this correctly because we do not know about 
-endpoints at step 1. On the other hand if we can force step 1 to 
-allocate addresses with in 32 bit address space than it would work for 
-both 32 bit and 64 bit.
-
-Has anyone hit this issue before?
-Do we already have a solution?
-Any suggestions?
-
-Below ugly Hack is what Am using to workaround this issue on my platform 
-  but am not sure how this will influence other platforms.
-
----------------------------->cut<-------------------------------
-diff --git a/drivers/pci/host/pcie-designware.c 
-b/drivers/pci/host/pcie-designware.c
-index 4a81b72..d694e66 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -286,9 +286,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
-  {
-         u64 msi_target;
-
--       pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-+       pp->msi_data = __get_free_pages(GFP_KERNEL | GFP_DMA, 0);
-         msi_target = virt_to_phys((void *)pp->msi_data);
-
-         /* program the msi_data */
-         dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-                             (u32)(msi_target & 0xffffffff));
----------------------------->cut<-------------------------------
-
-
-Thanks,
-srini
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8ed098db82e1..e7a354cd13ce 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2269,6 +2269,24 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 	return false;
+ }
+ 
++static bool pci_hotplug_bridge_may_wakeup(struct pci_dev *dev)
++{
++	struct pci_dev *parent, *grandparent;
++
++	/*
++	 * Thunderbolt host controllers have a pin to side-band signal
++	 * plug events.  Their hotplug ports are recognizable by having
++	 * a non-Thunderbolt device as grandparent.
++	 */
++	if (dev->is_thunderbolt &&
++	    (parent = pci_upstream_bridge(dev)) &&
++	    (grandparent = pci_upstream_bridge(parent)) &&
++	    !grandparent->is_thunderbolt)
++		return true;
++
++	return false;
++}
++
+ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ {
+ 	bool *d3cold_ok = data;
+@@ -2284,7 +2302,7 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ 	    !pci_power_manageable(dev) ||
+ 
+ 	    /* Hotplug interrupts cannot be delivered if the link is down. */
+-	    dev->is_hotplug_bridge)
++	    (dev->is_hotplug_bridge && !pci_hotplug_bridge_may_wakeup(dev)))
+ 
+ 		*d3cold_ok = false;
+ 
+-- 
+2.11.0
