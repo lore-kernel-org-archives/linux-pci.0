@@ -1,94 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45124 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751686AbdATKnG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 05:43:06 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0K7dHdO098771
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:00 -0500
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2836xsehdb-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:00 -0500
-Received: from localhost
-        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Fri, 20 Jan 2017 00:41:59 -0700
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v8 0/3] PCI: Introduce a way to enforce all MMIO BARs not to share PAGE_SIZE
-Date: Fri, 20 Jan 2017 15:41:50 +0800
-Message-Id: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 09/37] PCI: dwc: designware: Parse *num-lanes* property in
+ dw_pcie_setup_rc
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-10-git-send-email-kishon@ti.com>
+ <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587C57FD.7050601@ti.com>
+Date: Mon, 16 Jan 2017 10:49:57 +0530
+MIME-Version: 1.0
+In-Reply-To: <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series introduces a way for PCI resource allocator to force
-MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
-driver. Because current VFIO implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
-with other BARs for security reasons. Thus, we have to handle mmio
-access to these BARs in QEMU emulation rather than in guest which
-will cause some performance loss.
+Hi,
 
-In our solution, we try to make use of the existing code path of
-resource_alignment kernel parameter and add a macro to set default
-alignment for it. Thus we can define this macro by default on some
-archs which may easily hit the performance issue because of their
-64K page.
+On Friday 13 January 2017 10:43 PM, Joao Pinto wrote:
+> Hi,
+> =
 
-In this series, patch 1,2 fixed bugs of using resource_alignment;
-patch 3 adds a macro to set the default alignment of all MMIO BARs.
+> =C0s 10:25 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+>> *num-lanes* dt property is parsed in dw_pcie_host_init. However
+>> *num-lanes* property is applicable to both root complex mode and
+>> endpoint mode. As a first step, move the parsing of this property
+>> outside dw_pcie_host_init. This is in preparation for splitting
+>> pcie-designware.c to pcie-designware.c and pcie-designware-host.c
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware.c |   18 +++++++++++-------
+>>  drivers/pci/dwc/pcie-designware.h |    1 -
+>>  2 files changed, 11 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-de=
+signware.c
+>> index 00a0fdc..89cdb6b 100644
+>> --- a/drivers/pci/dwc/pcie-designware.c
+>> +++ b/drivers/pci/dwc/pcie-designware.c
+>> @@ -551,10 +551,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  		}
+>>  	}
+>>  =
 
-Changelog v8:
-- Rebased against v4.10-rc4
-- Rework the patch 2
-- Change the commit log of patch 1
+>> -	ret =3D of_property_read_u32(np, "num-lanes", &pci->lanes);
+>> -	if (ret)
+>> -		pci->lanes =3D 0;
+>> -
+>>  	ret =3D of_property_read_u32(np, "num-viewport", &pci->num_viewport);
+>>  	if (ret)
+>>  		pci->num_viewport =3D 2;
+>> @@ -751,18 +747,26 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u3=
+2 devfn,
+>>  =
 
-Changelog v7:
-- Rebased against v4.9-rc2
-- Drop two merged patches
-- Rework the patch which fix a bug that resources's size is changed when
-  using resource_alignment
-- Add a patch that fix a bug for IOV BARs when using resource_alignment
+>>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>> +	int ret;
+>> +	u32 lanes;
+>>  	u32 val;
+>>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+>> +	struct device *dev =3D pci->dev;
+>> +	struct device_node *np =3D dev->of_node;
+>>  =
 
-Changelog v6:
-- Remove the option "noresize@" of resource_alignment
+>>  	/* get iATU unroll support */
+>>  	pci->iatu_unroll_enabled =3D dw_pcie_iatu_unroll_enabled(pci);
+>>  	dev_dbg(pci->dev, "iATU unroll: %s\n",
+>>  		pci->iatu_unroll_enabled ? "enabled" : "disabled");
+>>  =
 
-Changelog v5:
-- Rebased against v4.8-rc6
-- Drop the patch that forbidding disable memory decoding in
-  pci_reassigndev_resource_alignment()
+>> +	ret =3D of_property_read_u32(np, "num-lanes", &lanes);
+>> +	if (ret)
+>> +		lanes =3D 0;
+> =
 
-Changelog v4:
-- Rebased against v4.8-rc1
-- Drop one irrelevant patch
-- Drop the patch that adding wildcard to resource_alignment to enforce
-  the alignment of all MMIO BARs to be at least PAGE_SIZE
-- Change the format of option "noresize" of resource_alignment
-- Code style improvements
+> You moved from host_init to root complex setup function, which in my opin=
+ion did
+> not improve (in this scope).
+> =
 
-Changelog v3:
-- Ignore enforced alignment to fixed BARs
-- Fix issue that disabling memory decoding when reassigning the alignment
-- Only enable default alignment on PowerNV platform
+> I suggest that instead of making so much intermediary patches, which is n=
+ice to
+> understand your development sequence, but hard to review. Wouldn't be bet=
+ter to
+> condense some of the patches? We would have a cloear vision of the final =
+product :)
 
-Changelog v2:
-- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+I thought the other way. If squashing patches is easier to review, I'll do =
+it.
 
-Yongji Xie (3):
-  PCI: Ignore requested alignment for IOV BARs
-  PCI: Make sure the driver could get correct BAR size from pci_resource_len()
-  PCI: Add a macro to set default alignment for all PCI devices
+Btw, thanks for reviewing.
 
- arch/powerpc/include/asm/pci.h |    4 ++++
- drivers/pci/pci.c              |    6 +++++-
- include/linux/pci.h            |    6 +++++-
- 3 files changed, 14 insertions(+), 2 deletions(-)
+Cheers
+Kishon
 
--- 
-1.7.9.5
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
