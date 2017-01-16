@@ -1,91 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:32886 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752155AbdAIVqA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 16:46:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <58730600.3080802@hisilicon.com>
-References: <1483513206-113046-1-git-send-email-wangzhou1@hisilicon.com> <58730600.3080802@hisilicon.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 9 Jan 2017 22:45:59 +0100
-Message-ID: <CAJZ5v0iv99MB=Eyw=-s=9RhtxhogTNwk0TdLY=gO46GYsRhZqg@mail.gmail.com>
-Subject: Re: [PATCH] ACPI/PCI: Fix bus range comparation in pci_mcfg_lookup
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        xuwei5@hisilicon.com,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout2.samsung.com ([203.254.224.25]:42378 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751238AbdAPGbq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 01:31:46 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V3 3/5] PCI: exynos: Remove the unnecessary variables
+Date: Mon, 16 Jan 2017 15:31:36 +0900
+Message-id: <20170116063138.25805-4-jh80.chung@samsung.com>
+In-reply-to: <20170116063138.25805-1-jh80.chung@samsung.com>
+References: <20170116063138.25805-1-jh80.chung@samsung.com>
+ <CGME20170116063141epcas5p329a9496aabe28a9961176539c47065dc@epcas5p3.samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 9, 2017 at 4:39 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
-> On 2017/1/4 15:00, Zhou Wang wrote:
->> The configuration data provided by an MCFG region (ie PCI segment and
->> bus range) may span multiple host bridges.
->>
->> Current code in pci_mcfg_lookup() carries out an exact match of host
->> bridge bus range start value against the MCFG region(s) bus range start
->> value which would cause configurations like the following:
->>
->> MCFG region:
->>       bus range: 0x00~0xff.
->>       segment: 0.
->>
->> PCI host bridges configuration (segment numbers and bus ranges):
->>       host bridge 1:
->>               bus range: 0x00~0x1f.
->>               segment: 0.
->>       host bridge 2:
->>               bus range: 0x20~0x4f.
->>               segment: 0.
->>
->> to fail, in that the bus range start value for host bridge 2 does
->> not match the bus range start value of the respective MCFG region.
->>
->> Relax the bus range check in pci_mcfg_lookup() to cater for
->> PCI configurations with multiple host bridges sharing the same
->> MCFG region.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
->> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> ---
->>  drivers/acpi/pci_mcfg.c | 5 ++---
->>  1 file changed, 2 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index a6a4cea..2944353 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -195,11 +195,10 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
->>               goto skip_lookup;
->>
->>       /*
->> -      * We expect exact match, unless MCFG entry end bus covers more than
->> -      * specified by caller.
->> +      * We expect the range in bus_res in the coverage of MCFG bus range.
->>        */
->>       list_for_each_entry(e, &pci_mcfg_list, list) {
->> -             if (e->segment == seg && e->bus_start == bus_res->start &&
->> +             if (e->segment == seg && e->bus_start <= bus_res->start &&
->>                   e->bus_end >= bus_res->end) {
->>                       root->mcfg_addr = e->addr;
->>               }
->>
->
-> Hi Rafael,
->
-> Could you please look into this patch if you have time?
+Remove the unnecessary variables(elbi/phy/block_base).
+It needs one resource structure for assigning each resource.
+So it replaces with one 'res' variable.
 
-Well, it makes sense to me, but this is PCI, so Bjorn has to decide here.
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+Changelog on V3:
+- None
+Changelog on V2:
+- None
+ drivers/pci/host/pci-exynos.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 166881a..6255294 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -507,9 +507,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	struct exynos_pcie *ep;
+ 	struct pcie_port *pp;
+ 	struct device_node *np = dev->of_node;
+-	struct resource *elbi_base;
+-	struct resource *phy_base;
+-	struct resource *block_base;
++	struct resource *res;
+ 	int ret;
+ 
+ 	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
+@@ -540,22 +538,22 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto fail_clk;
+ 
+-	elbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	ep->elbi_base = devm_ioremap_resource(dev, elbi_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	ep->elbi_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->elbi_base)) {
+ 		ret = PTR_ERR(ep->elbi_base);
+ 		goto fail_bus_clk;
+ 	}
+ 
+-	phy_base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	ep->phy_base = devm_ioremap_resource(dev, phy_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	ep->phy_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->phy_base)) {
+ 		ret = PTR_ERR(ep->phy_base);
+ 		goto fail_bus_clk;
+ 	}
+ 
+-	block_base = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+-	ep->block_base = devm_ioremap_resource(dev, block_base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
++	ep->block_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->block_base)) {
+ 		ret = PTR_ERR(ep->block_base);
+ 		goto fail_bus_clk;
+-- 
+2.10.2
+
