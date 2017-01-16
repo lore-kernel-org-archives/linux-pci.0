@@ -1,12 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] PCI: imx6: Allow probe deferal by reset GPIO
-Date: Thu, 19 Jan 2017 08:36:30 -0800
-Message-Id: <20170119163631.10668-3-andrew.smirnov@gmail.com>
-In-Reply-To: <20170119163631.10668-1-andrew.smirnov@gmail.com>
-References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
+Subject: Re: [PATCH 36/37] ARM: DRA7: clockdomain: Change the CLKTRCTRL of
+ CM_PCIE_CLKSTCTRL to SW_WKUP
+To: Tony Lindgren <tony@atomide.com>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-37-git-send-email-kishon@ti.com>
+ <20170113171537.GZ2630@atomide.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587C628E.7070804@ti.com>
+Date: Mon, 16 Jan 2017 11:35:02 +0530
+MIME-Version: 1.0
+In-Reply-To: <20170113171537.GZ2630@atomide.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,67 +18,68 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>, Shawn Guo <shawnguo@kernel.org>,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- yurovsky@gmail.com, Fabio Estevam <festevam@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-MIME-Version: 1.0
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some designs implement reset GPIO via a GPIO expander connected to a
-peripheral bus. One such example would be i.MX7 Sabre board where said
-GPIO is provided by SPI shift register connected to a bitbanged SPI
-bus. In order to support such designs allow reset GPIO request to defer
-probing of the driver.
+Hi Tony,
 
-Cc: yurovsky@gmail.com
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+On Friday 13 January 2017 10:45 PM, Tony Lindgren wrote:
+> * Kishon Vijay Abraham I <kishon@ti.com> [170112 02:35]:
+>> The PCIe programming sequence in TRM suggests CLKSTCTRL of PCIe should
+>> be set to SW_WKUP. There are no issues when CLKSTCTRL is set to HW_AUTO
+>> in RC mode. However in EP mode, the host system is not able to access the
+>> MEMSPACE and setting the CLKSTCTRL to SW_WKUP fixes it.
+> 
+> I guess ideally in the long run we would set this dynamically based on
+> the selected mode, right?
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 50a1291..574f026 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -653,6 +653,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev, "unable to get reset gpio\n");
- 			return ret;
- 		}
-+	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
-+		dev_info(dev, "probe is defered by reset GPIO\n");
-+		return imx6_pcie->reset_gpio;
- 	}
- 
- 	/* Fetch clocks */
-@@ -746,11 +749,12 @@ static struct platform_driver imx6_pcie_driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
- 	},
-+	.probe    = imx6_pcie_probe,
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
- static int __init imx6_pcie_init(void)
- {
--	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
-+	return platform_driver_register(&imx6_pcie_driver);
- }
- device_initcall(imx6_pcie_init);
--- 
-2.9.3
+The programming sequence mentioned in the TRM w.r.t clock programming is same
+for both host mode or device mode. Though we never faced any issues in host
+mode when HW_AUTO is set, it's better to follow TRM recommended settings IMHO.
 
+Thanks
+Kishon
+
+> 
+> Regards,
+> 
+> Tony
+> 
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  arch/arm/mach-omap2/clockdomains7xx_data.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/arm/mach-omap2/clockdomains7xx_data.c b/arch/arm/mach-omap2/clockdomains7xx_data.c
+>> index 6c67965..67ebff8 100644
+>> --- a/arch/arm/mach-omap2/clockdomains7xx_data.c
+>> +++ b/arch/arm/mach-omap2/clockdomains7xx_data.c
+>> @@ -524,7 +524,7 @@
+>>  	.dep_bit	  = DRA7XX_PCIE_STATDEP_SHIFT,
+>>  	.wkdep_srcs	  = pcie_wkup_sleep_deps,
+>>  	.sleepdep_srcs	  = pcie_wkup_sleep_deps,
+>> -	.flags		  = CLKDM_CAN_HWSUP_SWSUP,
+>> +	.flags		  = CLKDM_CAN_SWSUP,
+>>  };
+>>  
+>>  static struct clockdomain atl_7xx_clkdm = {
+>> -- 
+>> 1.7.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 
 _______________________________________________
 linux-arm-kernel mailing list
