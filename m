@@ -1,191 +1,114 @@
-Return-Path: <SRS0=B3HD=YZ=ti.com=m-karicheri2@kernel.org>
-Return-Path: <SRS0=B3HD=YZ=ti.com=m-karicheri2@kernel.org>
-Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
- keystone PCIe h/w
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
- <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
- <58751765.8090908@ti.com>
- <20170110230629.GA4468@bhelgaas-glaptop.roam.corp.google.com>
-CC: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <58767216.3050104@ti.com>
-Date: Wed, 11 Jan 2017 12:57:42 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:63474 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750849AbdAPKP3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 05:15:29 -0500
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+To: Lukasz Majewski <lukma@denx.de>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+ <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
+ <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587C9CE6.8040001@ti.com>
+Date: Mon, 16 Jan 2017 15:43:58 +0530
 MIME-Version: 1.0
-In-Reply-To: <20170110230629.GA4468@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20170116103136.21c899ac@jawa>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/2017 06:06 PM, Bjorn Helgaas wrote:
-> On Tue, Jan 10, 2017 at 12:18:29PM -0500, Murali Karicheri wrote:
->> On 01/10/2017 10:12 AM, Bjorn Helgaas wrote:
->>> Hi Murali,
->>>
->>> On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
->>>> Recent fixes for iATU unroll support introduced a bug that causes
->>>> asynchronous external abort in Keystone PCIe h/w which doesn't have
->>>> ATU port and the corresponding register. So the check should be moved
->>>> below where dw_pcie_prog_outbound_atu() is called to avoid that
->>>> being called on keystine PCIe h/w.
->>>>
->>>> Here is the backtrace
->>>>
->>>> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
->>>> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
->>>> [    0.785548] pgd = c0003000
->>>> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
->>>> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
->>>> [    0.799197] Modules linked in:
->>>> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
->>>> [    0.810130] Hardware name: Keystone
->>>> [    0.813717] task: eb878000 task.stack: eb866000
->>>> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
->>>> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
->>>>
->>>> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
->>>
->>> I tentatively applied this to for-linus for v4.10, with a stable tag
->>> for v4.9+.
->>>
->>
->> Ok  Thanks!
->>
->>> The patch itself mostly makes sense in terms of the code: we only use
->>> iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
->>> when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
->>>
->>> So it makes sense that we only need to initialize iatu_unroll_enabled
->>> in those cases.  But the current patch only initializes it if
->>> "!pp->ops->rd_other_conf".
->>>
->>
->> I think the code before also should have checked for both 
->> if ((!pp->ops->rd_other_conf) && (!pp->ops->wr_other_conf))
->>
->> The assumption was if rd_other_conf is Null, the platform provides 
->> both rd_other_conf and wr_other_conf. I see I have added this API 
->> to support Keystone and the above assumption is true so far. 
->> It make sense to fix it if you agree.
->>
->>> If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
->>> would use iatu_unroll_enabled uninitialized in the
->>> dw_pcie_wr_other_conf() path.  I suppose that's an invalid
->>
->> Yes. So we need to fix the above to make the code correct instead
->> of leaving it exposed.
->>
->>> configuration, but it'd be better if we didn't have to rely on the
->>> host drivers to avoid that configuration.
->>
->> You mean to introduce the check in the designware core code above 
->> right?
-> 
-> We *could* make the code look like:
-> 
->   if (!pp->ops->rd_other_conf || !pp->ops->rd_other_conf)
->     pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> 
-> but that seems a little clunky and the connection between ATU and the
-> ->*_other_conf() pointers is slightly obscure.  I guess it just ends
-> up being more detailed than I personally really want to worry about,
-> so I'm fine with leaving it as-is for now.
-> 
->>> It's not obvious how this is connected to 416379f9ebde, though.  It
->>> *looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
->>> before and after that commit, so it seems like the external abort
->>> should have happened even before it.
->>>
->>
->> You are right. The problem was introduced by 
->>
->> commit a0601a47053714eecec726aea5ebcd829f817497
->> Author: Joao Pinto <Joao.Pinto@synopsys.com>
->> Date:   Wed Aug 10 11:02:39 2016 +0100
->>
->>     PCI: designware: Add iATU Unroll feature
->>
->> which is fixed by commit 416379f9ebde and is again fixed by my 
->> commit. So probably I should have added both commits in
->> my description. 
-> 
-> I added that.  The reason I wanted the correct "Fixes" information is
-> to figure out which stable kernels need this fix.  In this case, both:
-> 
->   a0601a470537 ("PCI: designware: Add iATU Unroll feature") and
->   416379f9ebde ("PCI: designware: Check for iATU unroll support after
->     initializing host")
-> 
-> appeared in v4.9, so it doesn't change anything as far as the stable
-> tag is concerned.
-> 
-> The below is what I have on my for-linus branch:
-> 
-> commit 6fdb996a55684016de1ce639b9316b7092fde95f
-> Author: Murali Karicheri <m-karicheri2@ti.com>
-> Date:   Wed Jan 4 14:32:30 2017 -0500
-> 
->     PCI: designware: Check for iATU unroll only on platforms that use ATU
->     
->     Previously we checked for iATU unroll support by reading PCIE_ATU_VIEWPORT
->     even on platforms, e.g., Keystone, that do not have ATU ports.  This can
->     cause bad behavior such as asynchronous external aborts:
->     
->       OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
->       Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
->       pgd = c0003000
->       [00000000] *pgd=80000800004003, *pmd=00000000
->       Internal error: : 1211 [#1] PREEMPT SMP ARM
->       Modules linked in:
->       CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
->       Hardware name: Keystone
->       task: eb878000 task.stack: eb866000
->       PC is at dw_pcie_setup_rc+0x24/0x380
->       LR is at ks_pcie_host_init+0x10/0x170
->     
->     Move the dw_pcie_iatu_unroll_enabled() check so we only call it on
->     platforms that do not use the ATU.  These platforms supply their own
->     ->rd_other_conf() and ->wr_other_conf() methods.
->     
->     [bhelgaas: changelog]
->     Fixes: a0601a470537 ("PCI: designware: Add iATU Unroll feature")
->     Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
->     Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
->     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org      # v4.9+
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index bed19994c1e9..af8f6e92e885 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
->  
-> -	/* get iATU unroll support */
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
-> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> -
->  	/* set the number of lanes */
->  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->  	val &= ~PORT_LINK_MODE_MASK;
-> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	 * we should not program the ATU here.
->  	 */
->  	if (!pp->ops->rd_other_conf) {
-> +		/* get iATU unroll support */
-> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
-> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> +
->  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->  					  pp->mem_bus_addr, pp->mem_size);
-> 
-Thanks Bjorn! Looks good.
++ Joao, Jingoo
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+Hi,
+
+On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+> Hi Kishon,
+> 
+>> Hi Łukasz,
+>>
+>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+>>> Hi Kishon,
+>>>
+>>>> Hi,
+>>>>
+>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
+>>>>> run with forced GEN1 speed on PCIe bus.
+>>>>>
+>>>>> This patch changes the speed explicitly on dra7 based devices when
+>>>>> proper device tree attribute is defined for the PCIe controller.
+>>>>>
+>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+>>>>
+>>>> Bjorn has already queued a patch to do the same thing
+>>>> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
+>>>
+>>> It seems like Bjorn only modifies CAP registers.
+>>
+>> The patch also modifies the LNKCTL2 register.
+>>>
+>>> He also needs to change register with 0x080C offset to actually
+>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+>>
+>> This bit is used to initiate speed change (after the link is
+>> initialized in GEN1). Resetting the bit (like what you have done
+>> here) prevents speed change.
+> 
+> This is strange, but e2e advised me to do things as I did in the patch
+> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+> 
+> Link:
+> [1] https://e2e.ti.com/support/arm/sitara_arm/f/791/t/566421
+> 
+> Both patches modify 0x5180 007C register to set GEN1 capability
+> (PCI_EXP_LNKCAP_SLS_2_5GB)
+> 
+> The problem is with second register (in your patch):
+> 
+> From SPRUHZ6G TRM:
+> 
+> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+>   description in TRM
+> 
+> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
+> default /reset value.
+
+The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
+> 
+> 
+> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
+> Mine shows differences in lspci output (as posted in [1]).
+
+You'll see the difference even with the patch in Bjorn's tree ;-)
+
+I think these are 2 different approaches to keep the link at GEN1. Joao or
+Jingoo, do you have any suggestion here?
+
+> 
+>>
+>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
+>> the IP register.
+> 
+> From the original patch description:
+> 
+> "Add support to force Root Complex to work in GEN1 mode if so desired,
+> but don't force GEN1 mode on any board just yet."
+> 
+> Are there any (floating around) patches allowing forcing GEN1 operation
+> on any board (I would like to reuse/port them to my current solution)?
+
+For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
+patch in Bjorn's tree.
+
+Thanks
+Kishon
