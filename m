@@ -1,104 +1,252 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52724 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750805AbdAMUyO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jan 2017 15:54:14 -0500
-Date: Fri, 13 Jan 2017 12:54:10 -0800 (PST)
-From: Stefano Stabellini <sstabellini@kernel.org>
-To: Dan Streetman <ddstreet@ieee.org>
-cc: Stefano Stabellini <sstabellini@kernel.org>, jgross@suse.com,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-In-Reply-To: <20170113200751.20125-1-ddstreet@ieee.org>
-Message-ID: <alpine.DEB.2.10.1701131253410.14454@sstabellini-ThinkPad-X260>
-References: <20170113200751.20125-1-ddstreet@ieee.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 12/37] PCI: dwc: Create a new config symbol to enable pci
+ dwc host
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-13-git-send-email-kishon@ti.com>
+ <3d34f9c4-7ec4-ac2b-ea7f-18d239dfa554@synopsys.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587C58A3.7080600@ti.com>
+Date: Mon, 16 Jan 2017 10:52:43 +0530
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3d34f9c4-7ec4-ac2b-ea7f-18d239dfa554@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 13 Jan 2017, Dan Streetman wrote:
-> Revert the main part of commit:
-> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
-> 
-> That commit introduced reading the pci device's msi message data to see
-> if a pirq was previously configured for the device's msi/msix, and re-use
-> that pirq.  At the time, that was the correct behavior.  However, a
-> later change to Qemu caused it to call into the Xen hypervisor to unmap
-> all pirqs for a pci device, when the pci device disables its MSI/MSIX
-> vectors; specifically the Qemu commit:
-> c976437c7dba9c7444fb41df45468968aaa326ad
-> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
-> 
-> Once Qemu added this pirq unmapping, it was no longer correct for the
-> kernel to re-use the pirq number cached in the pci device msi message
-> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
-> pirqs when the pci device disables its MSI/MSIX vectors.
-> 
-> This bug is causing failures to initialize multiple NVMe controllers
-> under Xen, because the NVMe driver sets up a single MSIX vector for
-> each controller (concurrently), and then after using that to talk to
-> the controller for some configuration data, it disables the single MSIX
-> vector and re-configures all the MSIX vectors it needs.  So the MSIX
-> setup code tries to re-use the cached pirq from the first vector
-> for each controller, but the hypervisor has already given away that
-> pirq to another controller, and its initialization fails.
-> 
-> This is discussed in more detail at:
-> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
-> 
-> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
-> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+Hi Joao,
 
-Reviewed-by: Stefano Stabellini <sstabellini@kernel.org>
+On Friday 13 January 2017 11:20 PM, Joao Pinto wrote:
+> Hi Kishon,
+> =
+
+> =C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+>> Now that pci designware host has a separate file, create a new
+>> config symbol to select the host only driver. This is in preparation
+>> to enable endpoint support to designware driver.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
+>>  drivers/pci/dwc/Makefile          |    3 ++-
+>>  drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
+>>  3 files changed, 42 insertions(+), 16 deletions(-)
+>>
+> =
+
+> You are already working in a base where dwc/ already exists. I know you m=
+ade a
+> rename / re-structure patch for pci, but I think it was not yet accepted,=
+ right?
+> I don't see it in any of Bjorn' dev branches.
+
+He said he'll merge that a little later.
+
+Thanks
+Kishon
+
+> =
+
+> Thanks.
+> =
+
+>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>> index 8b08519..d0bdfb5 100644
+>> --- a/drivers/pci/dwc/Kconfig
+>> +++ b/drivers/pci/dwc/Kconfig
+>> @@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
+>>  =
+
+>>  config PCIE_DW
+>>  	bool
+>> +
+>> +config PCIE_DW_HOST
+>> +        bool
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>> +        select PCIE_DW
+>>  =
+
+>>  config PCI_DRA7XX
+>>  	bool "TI DRA7xx PCIe controller"
+>>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+>>  	 are two instances of PCIe controller in DRA7xx.  This controller can
+>> @@ -18,7 +22,7 @@ config PCI_DRA7XX
+>>  config PCIE_DW_PLAT
+>>  	bool "Platform bus based DesignWare PCIe Controller"
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	---help---
+>>  	 This selects the DesignWare PCIe controller support. Select this if
+>>  	 you have a PCIe controller on Platform bus.
+>> @@ -32,21 +36,21 @@ config PCI_EXYNOS
+>>  	depends on SOC_EXYNOS5440 || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  =
+
+>>  config PCI_IMX6
+>>  	bool "Freescale i.MX6 PCIe controller"
+>>  	depends on SOC_IMX6Q || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  =
+
+>>  config PCIE_SPEAR13XX
+>>  	bool "STMicroelectronics SPEAr PCIe controller"
+>>  	depends on ARCH_SPEAR13XX || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+>>  =
+
+>> @@ -55,7 +59,7 @@ config PCI_KEYSTONE
+>>  	depends on ARCH_KEYSTONE || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here if you want to enable PCI controller support on Keystone
+>>  	  SoCs. The PCI controller on Keystone is based on Designware hardware
+>> @@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
+>>  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select MFD_SYSCON
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+>>  =
+
+>> @@ -76,7 +80,7 @@ config PCI_HISI
+>>  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here if you want PCIe controller support on HiSilicon
+>>  	  Hip05 and Hip06 SoCs
+>> @@ -86,7 +90,7 @@ config PCIE_QCOM
+>>  	depends on (ARCH_QCOM || COMPILE_TEST) && OF
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+>>  	  PCIe controller uses the Designware core plus Qualcomm-specific
+>> @@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
+>>  	depends on ARCH_MVEBU || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here if you want to enable PCIe controller support on
+>>  	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
+>> @@ -109,7 +113,7 @@ config PCIE_ARTPEC6
+>>  	depends on MACH_ARTPEC6 || COMPILE_TEST
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>>  	select PCIEPORTBUS
+>> -	select PCIE_DW
+>> +	select PCIE_DW_HOST
+>>  	help
+>>  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>>  	  SoCs.  This PCIe controller uses the DesignWare core.
+>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>> index 3b57e55..a2df13c 100644
+>> --- a/drivers/pci/dwc/Makefile
+>> +++ b/drivers/pci/dwc/Makefile
+>> @@ -1,4 +1,5 @@
+>> -obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o pcie-designware-host.o
+>> +obj-$(CONFIG_PCIE_DW) +=3D pcie-designware.o
+>> +obj-$(CONFIG_PCIE_DW_HOST) +=3D pcie-designware-host.o
+>>  obj-$(CONFIG_PCIE_DW_PLAT) +=3D pcie-designware-plat.o
+>>  obj-$(CONFIG_PCI_DRA7XX) +=3D pci-dra7xx.o
+>>  obj-$(CONFIG_PCI_EXYNOS) +=3D pci-exynos.o
+>> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-de=
+signware.h
+>> index 808d17b..8f3dcb2 100644
+>> --- a/drivers/pci/dwc/pcie-designware.h
+>> +++ b/drivers/pci/dwc/pcie-designware.h
+>> @@ -162,10 +162,6 @@ struct dw_pcie {
+>>  =
+
+>>  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+>>  int dw_pcie_write(void __iomem *addr, int size, u32 val);
+>> -irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>> -void dw_pcie_msi_init(struct pcie_port *pp);
+>> -void dw_pcie_setup_rc(struct pcie_port *pp);
+>> -int dw_pcie_host_init(struct pcie_port *pp);
+>>  =
+
+>>  u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+>>  void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
+>> @@ -175,4 +171,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,=
+ int index,
+>>  			       int type, u64 cpu_addr, u64 pci_addr,
+>>  			       u32 size);
+>>  void dw_pcie_setup(struct dw_pcie *pci);
+>> +
+>> +#ifdef CONFIG_PCIE_DW_HOST
+>> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>> +void dw_pcie_msi_init(struct pcie_port *pp);
+>> +void dw_pcie_setup_rc(struct pcie_port *pp);
+>> +int dw_pcie_host_init(struct pcie_port *pp);
+>> +#else
+>> +static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>> +{
+>> +	return IRQ_NONE;
+>> +}
+>> +
+>> +static inline void dw_pcie_msi_init(struct pcie_port *pp)
+>> +{
+>> +}
+>> +
+>> +static inline void dw_pcie_setup_rc(struct pcie_port *pp)
+>> +{
+>> +}
+>> +
+>> +static inline int dw_pcie_host_init(struct pcie_port *pp)
+>> +{
+>> +	return 0;
+>> +}
+>> +#endif
+>>  #endif /* _PCIE_DESIGNWARE_H */
+>>
+> =
 
 
-> ---
->  arch/x86/pci/xen.c | 23 +++++++----------------
->  1 file changed, 7 insertions(+), 16 deletions(-)
-> 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index bedfab9..a00a6c0 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -234,23 +234,14 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  		return 1;
->  
->  	for_each_pci_msi_entry(msidesc, dev) {
-> -		__pci_read_msi_msg(msidesc, &msg);
-> -		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
-> -			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
-> -		if (msg.data != XEN_PIRQ_MSI_DATA ||
-> -		    xen_irq_from_pirq(pirq) < 0) {
-> -			pirq = xen_allocate_pirq_msi(dev, msidesc);
-> -			if (pirq < 0) {
-> -				irq = -ENODEV;
-> -				goto error;
-> -			}
-> -			xen_msi_compose_msg(dev, pirq, &msg);
-> -			__pci_write_msi_msg(msidesc, &msg);
-> -			dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
-> -		} else {
-> -			dev_dbg(&dev->dev,
-> -				"xen: msi already bound to pirq=%d\n", pirq);
-> +		pirq = xen_allocate_pirq_msi(dev, msidesc);
-> +		if (pirq < 0) {
-> +			irq = -ENODEV;
-> +			goto error;
->  		}
-> +		xen_msi_compose_msg(dev, pirq, &msg);
-> +		__pci_write_msi_msg(msidesc, &msg);
-> +		dev_dbg(&dev->dev, "xen: msi bound to pirq=%d\n", pirq);
->  		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, pirq,
->  					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
->  					       (type == PCI_CAP_ID_MSIX) ?
-> -- 
-> 2.9.3
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
