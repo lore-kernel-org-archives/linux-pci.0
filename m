@@ -1,83 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from orbyte.nwl.cc ([151.80.46.58]:39499 "EHLO mail.nwl.cc"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754275AbdARNCC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 08:02:02 -0500
-From: Phil Sutter <phil@nwl.cc>
-To: David Miller <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [net-next PATCH 3/3] device: Implement a bus agnostic dev_num_vf routine
-Date: Wed, 18 Jan 2017 14:04:39 +0100
-Message-Id: <20170118130439.15023-4-phil@nwl.cc>
-In-Reply-To: <20170118130439.15023-1-phil@nwl.cc>
-References: <20170118130439.15023-1-phil@nwl.cc>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 16 Jan 2017 11:44:22 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: mvebu: change delay after reset to the PCIe spec
+ mandated 100ms
+Message-ID: <20170116114422.GA25924@io.lakedaemon.net>
+References: <20170116111142.6866-1-l.stach@pengutronix.de>
+MIME-Version: 1.0
+In-Reply-To: <20170116111142.6866-1-l.stach@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, patchwork-lst@pengutronix.de, kernel@pengutronix.de,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that pci_bus_type has num_vf callback set, dev_num_vf can be
-implemented in a bus type independent way and the check for whether a
-PCI device is being handled in rtnetlink can be dropped.
+Hi Lucas,
 
-Signed-off-by: Phil Sutter <phil@nwl.cc>
----
- include/linux/device.h | 7 +++++++
- include/linux/pci.h    | 2 --
- net/core/rtnetlink.c   | 3 +--
- 3 files changed, 8 insertions(+), 4 deletions(-)
+On Mon, Jan 16, 2017 at 12:11:42PM +0100, Lucas Stach wrote:
+> The current default of 20ms cause some devices, which are slow to initialize,
+> to not show up during the bus scanning. Change this to the PCIe spec mandated
+> 100ms and document this in the DT binding.
+> 
+> From PCIe base spec rev 3.0, chapter "6.6.1. Conventional Reset":
+> 
+> "To allow components to perform internal initialization, system software must
+> wait a specified minimum period following the end of a Conventional Reset of
+> one or more devices before it is permitted to issue Configuration Requests to
+> those devices.
+> 
+> With a Downstream Port that does not support Link speeds greater than
+> 5.0 GT/s, software must wait a minimum of 100 ms before sending a
+> Configuration Request to the device immediately below that Port."
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  Documentation/devicetree/bindings/pci/mvebu-pci.txt | 3 ++-
+>  drivers/pci/host/pci-mvebu.c                        | 2 +-
+>  2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 6d73b70a4a5d7..bd684fc8ec1d8 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -1144,6 +1144,13 @@ extern int device_online(struct device *dev);
- extern void set_primary_fwnode(struct device *dev, struct fwnode_handle *fwnode);
- extern void set_secondary_fwnode(struct device *dev, struct fwnode_handle *fwnode);
- 
-+static inline int dev_num_vf(struct device *dev)
-+{
-+	if (dev->bus && dev->bus->num_vf)
-+		return dev->bus->num_vf(dev);
-+	return 0;
-+}
-+
- /*
-  * Root device objects for grouping under /sys/devices
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a124216a9..adbc859fe7c4c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -885,7 +885,6 @@ void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type);
- void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
- #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
--#define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
- 
- /* Generic PCI functions exported to card drivers */
- 
-@@ -1630,7 +1629,6 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #define dev_is_pci(d) (false)
- #define dev_is_pf(d) (false)
--#define dev_num_vf(d) (0)
- #endif /* CONFIG_PCI */
- 
- /* Include architecture-dependent settings and functions */
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index 75e3ea7bda08f..94dd6d53ea9a5 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -837,8 +837,7 @@ static void copy_rtnl_link_stats(struct rtnl_link_stats *a,
- static inline int rtnl_vfinfo_size(const struct net_device *dev,
- 				   u32 ext_filter_mask)
- {
--	if (dev->dev.parent && dev_is_pci(dev->dev.parent) &&
--	    (ext_filter_mask & RTEXT_FILTER_VF)) {
-+	if (dev->dev.parent && (ext_filter_mask & RTEXT_FILTER_VF)) {
- 		int num_vfs = dev_num_vf(dev->dev.parent);
- 		size_t size = nla_total_size(0);
- 		size += num_vfs *
--- 
-2.11.0
+Acked-by: Jason Cooper <jason@lakedaemon.net>
 
+thx,
+
+Jason.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
