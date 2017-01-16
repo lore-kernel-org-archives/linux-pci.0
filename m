@@ -1,70 +1,46 @@
-Return-Path: <SRS0=uaRa=YY=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=uaRa=YY=wunner.de=lukas@kernel.org>
-Date: Tue, 10 Jan 2017 02:24:03 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: David Airlie <airlied@redhat.com>
-Cc: Peter Jones <pjones@redhat.com>, Hans de Goede <hdegoede@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170110012403.GA23513@wunner.de>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de>
- <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
- <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com>
- <20170109230010.mzcnw6aw3j6lduhw@redhat.com>
- <1041052319.9522810.1484007437052.JavaMail.zimbra@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:54707 "EHLO
+        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751012AbdAPXaw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 18:30:52 -0500
+Received: from ALA-HCB.corp.ad.wrs.com (ala-hcb.corp.ad.wrs.com [147.11.189.41])
+        by mail.windriver.com (8.15.2/8.15.1) with ESMTPS id v0GNTRbH017241
+        (version=TLSv1 cipher=AES128-SHA bits=128 verify=FAIL)
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jan 2017 15:29:27 -0800 (PST)
+From: "Richard, Joseph" <Joseph.Richard@windriver.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Hotplugging PCI device with large BAR
+Date: Mon, 16 Jan 2017 23:29:26 +0000
+Message-ID: <7B6A2AE64F40F245AE81F245059F0C3651381A56@ALA-MBA.corp.ad.wrs.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1041052319.9522810.1484007437052.JavaMail.zimbra@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 09, 2017 at 07:17:17PM -0500, David Airlie wrote:
-> just FYI, but W541 with Fedora 25 and Linux 4.10-rc3 + drm-next and the efi
-> fix (you might want to motivate that fix a bit harder), seems to be working
-> well.
+Hello,
+I am trying to hotplug a device with a large BAR to a KVM guest, but it is failing to map the memory for the BAR.
 
-The efi fix is on the efi.git next branch without stable designation,
-i.e. slated for 4.11 not 4.10, and Matt Fleming usually sends his pull
-to Ingo between rc4 and rc5.
+>From dmesg, here is the output when hotplugging the device, with the failure on BAR 2:
+[  891.614017] ACPI: \_SB_.PCI0.S60_: ACPI_NOTIFY_DEVICE_CHECK event
+[  891.614036] ACPI: \_SB_.PCI0.S60_: Device check in hotplug_event()
+[  891.614100] pci 0000:00:0c.0: [1af4:1110] type 00 class 0x050000
+[  891.614277] pci 0000:00:0c.0: reg 0x10: [mem 0x00000000-0x00000fff]
+[  891.614391] pci 0000:00:0c.0: reg 0x14: [mem 0x00000000-0x00000fff]
+[  891.614557] pci 0000:00:0c.0: reg 0x18: [mem 0x00000000-0x7fffffff 64bit pref]
+[  891.614670] pci 0000:00:0c.0: reg 0x20: [mem 0x00000000-0x000fffff pref]
+[  891.614780] pci 0000:00:0c.0: reg 0x24: [mem 0x00000000-0x000fffff pref]
+[  891.615277] pci 0000:00:0c.0: BAR 2: no space for [mem size 0x80000000 64bit pref]
+[  891.615279] pci 0000:00:0c.0: BAR 2: failed to assign [mem size 0x80000000 64bit pref]
+[  891.615281] pci 0000:00:0c.0: BAR 4: assigned [mem 0xc0300000-0xc03fffff pref]
+[  891.617759] pci 0000:00:0c.0: BAR 5: assigned [mem 0xc0400000-0xc04fffff pref]
+[  891.620473] pci 0000:00:0c.0: BAR 0: assigned [mem 0xc0202000-0xc0202fff]
+[  891.623148] pci 0000:00:0c.0: BAR 1: assigned [mem 0xc0203000-0xc0203fff]
 
+When the node is rebooted, the allocation gets fixed.
+Also, when a similar device has previously been removed, it can allocate the memory that has previously been used for that device to this device, so allocation will succeed
+Note, this is on a guest that has 9.8GB of RAM.  The same result was also observed on guests with lower amounts of RAM.
 
-> I can suspend/resume, and the nvidia seems to go off.
-> 
-> [  411.799035] nouveau 0000:01:00.0: DRM: suspending console...
-> [  411.799059] nouveau 0000:01:00.0: DRM: suspending display...
-> [  411.799119] nouveau 0000:01:00.0: DRM: evicting buffers...
-> [  411.799125] nouveau 0000:01:00.0: DRM: waiting for kernel channels to go idle...
-> [  411.799176] nouveau 0000:01:00.0: DRM: suspending client object trees...
-> [  411.805616] nouveau 0000:01:00.0: DRM: suspending kernel object tree...
-> [  413.217090] device_pm-0235 device_set_power      : Device [VID1] transitioned to D3hot
-> [  413.217099] device_pm-0124 device_get_power      : Device [VID1] power state is (unknown)
-> [  413.230201] thinkpad_acpi: EC reports that Thermal Table has changed
-> [  413.351497]     power-0275 __acpi_power_off      : Power resource [NVP3] turned off
-> [  413.351507] device_pm-0235 device_set_power      : Device [PEG] transitioned to D3hot
-> [  413.351526]     power-0189 power_get_state       : Resource [NVP3] is off
-> [  413.351530]     power-0219 power_get_list_state  : Resource list is off
-> [  413.351542]     power-0189 power_get_state       : Resource [NVP2] is on
-> [  413.351545]     power-0219 power_get_list_state  : Resource list is on
-> [  413.351548] device_pm-0124 device_get_power      : Device [PEG] power state is D2
-> 
-> That is with some acpi debugging enabled (though I'm not quite sure why D2 is where it ends up).
-
-The ACPI D2 state seems fishy indeed, could you post the log for a
-runtime resume as well?  It would be interesting to see how it gets
-out of this incorrect power state.  Also, what is the firmware version
-that you're using?  If it's not GNET80WW (2.28), could you attach an
-acpidump to the bugzilla entry?
-
-https://bugzilla.kernel.org/show_bug.cgi?id=190861
+Does anyone have any suggestions?   Do you need any additional data?
 
 Thanks,
-
-Lukas
+Joseph Richard
