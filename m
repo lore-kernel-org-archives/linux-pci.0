@@ -1,139 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0085.outbound.protection.outlook.com ([104.47.33.85]:22407
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1032907AbdAFTMh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Jan 2017 14:12:37 -0500
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-        Jerome Glisse <jglisse@redhat.com>
-CC: "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        Jerome Glisse <j.glisse@gmail.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "Zhou, David(ChunMing)" <David1.Zhou@amd.com>,
-        "Yu, Qiang" <Qiang.Yu@amd.com>
-Subject: RE: Enabling peer to peer device transactions for PCIe devices
-Date: Fri, 6 Jan 2017 19:12:32 +0000
-Message-ID: <BN6PR12MB1652CC50C4FB1CC17E14BD7DF7630@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
- <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
- <20170106015831.GA2226@gmail.com>
- <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
- <20170106173722.GB3804@redhat.com>
- <20170106182625.GB5724@obsidianresearch.com>
-In-Reply-To: <20170106182625.GB5724@obsidianresearch.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
+To: Abylay Ospan <aospan@netup.ru>
+References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+ <6891f43f-25e7-1411-800e-97e6788f2f27@gmail.com>
+ <e5301de6-9a6c-7deb-4ff7-ccd462c4381e@broadcom.com>
+ <6cfba8af-1e9b-cb43-4898-61d6fb8f12ca@broadcom.com>
+ <CAK3bHNVQ9Rbuwf1i54h7uLLdkUvyGibmfJpD6zRjt1gYiQD7Hw@mail.gmail.com>
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+Message-ID: <c5080024-d58c-7b7d-1602-36b2d4511bef@broadcom.com>
+Date: Mon, 16 Jan 2017 14:47:18 -0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAK3bHNVQ9Rbuwf1i54h7uLLdkUvyGibmfJpD6zRjt1gYiQD7Hw@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, zajec5@gmail.com, linux-kernel@vger.kernel.org,
+ Ray Jui <ray.jui@broadcom.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jason Gunthorpe [mailto:jgunthorpe@obsidianresearch.com]
-> Sent: Friday, January 06, 2017 1:26 PM
-> To: Jerome Glisse
-> Cc: Sagalovitch, Serguei; Jerome Glisse; Deucher, Alexander; 'linux-
-> kernel@vger.kernel.org'; 'linux-rdma@vger.kernel.org'; 'linux-
-> nvdimm@lists.01.org'; 'Linux-media@vger.kernel.org'; 'dri-
-> devel@lists.freedesktop.org'; 'linux-pci@vger.kernel.org'; Kuehling, Feli=
-x;
-> Blinzer, Paul; Koenig, Christian; Suthikulpanit, Suravee; Sander, Ben;
-> hch@infradead.org; Zhou, David(ChunMing); Yu, Qiang
-> Subject: Re: Enabling peer to peer device transactions for PCIe devices
->=20
-> On Fri, Jan 06, 2017 at 12:37:22PM -0500, Jerome Glisse wrote:
-> > On Fri, Jan 06, 2017 at 11:56:30AM -0500, Serguei Sagalovitch wrote:
-> > > On 2017-01-05 08:58 PM, Jerome Glisse wrote:
-> > > > On Thu, Jan 05, 2017 at 05:30:34PM -0700, Jason Gunthorpe wrote:
-> > > > > On Thu, Jan 05, 2017 at 06:23:52PM -0500, Jerome Glisse wrote:
-> > > > >
-> > > > > > > I still don't understand what you driving at - you've said in=
- both
-> > > > > > > cases a user VMA exists.
-> > > > > > In the former case no, there is no VMA directly but if you want=
- one
-> than
-> > > > > > a device can provide one. But such VMA is useless as CPU access=
- is
-> not
-> > > > > > expected.
-> > > > > I disagree it is useless, the VMA is going to be necessary to sup=
-port
-> > > > > upcoming things like CAPI, you need it to support O_DIRECT from t=
-he
-> > > > > filesystem, DPDK, etc. This is why I am opposed to any model that=
- is
-> > > > > not VMA based for setting up RDMA - that is shorted sighted and
-> does
-> > > > > not seem to reflect where the industry is going.
-> > > > >
-> > > > > So focus on having VMA backed by actual physical memory that
-> covers
-> > > > > your GPU objects and ask how do we wire up the '__user *' to the
-> DMA
-> > > > > API in the best way so the DMA API still has enough information t=
-o
-> > > > > setup IOMMUs and whatnot.
-> > > > I am talking about 2 different thing. Existing hardware and API whe=
-re
-> you
-> > > > _do not_ have a vma and you do not need one. This is just
-> > > > > existing stuff.
->=20
-> > > I do not understand why you assume that existing API doesn't  need on=
-e.
-> > > I would say that a lot of __existing__ user level API and their suppo=
-rt in
-> > > kernel (especially outside of graphics domain) assumes that we have v=
-ma
-> and
-> > > deal with __user * pointers.
->=20
-> +1
->=20
-> > Well i am thinking to GPUDirect here. Some of GPUDirect use case do not
-> have
-> > vma (struct vm_area_struct) associated with them they directly apply to
-> GPU
-> > object that aren't expose to CPU. Yes some use case have vma for share
-> buffer.
->=20
-> Lets stop talkind about GPU direct. Today we can't even make VMA
-> pointing at a PCI bar work properly in the kernel - lets start there
-> please. People can argue over other options once that is done.
->=20
-> > For HMM plan is to restrict to ODP and either to replace ODP with HMM o=
-r
-> change
-> > ODP to not use get_user_pages_remote() but directly fetch informations
-> from
-> > CPU page table. Everything else stay as it is. I posted patchset to rep=
-lace
-> > ODP with HMM in the past.
->=20
-> Make a generic API for all of this and you'd have my vote..
->=20
-> IMHO, you must support basic pinning semantics - that is necessary to
-> support generic short lived DMA (eg filesystem, etc). That hardware
-> can clearly do that if it can support ODP.
++Rafal,
 
-We would definitely like to have support for hardware that can't handle pag=
-e faults gracefully.
+On 01/12/2017 08:55 PM, Abylay Ospan wrote:
+> Hi Florian,
+> 
+>> Still, upstream Linux support for Northstar is Device Tree, and BCMA bus
+>> should fill in of_nodes accordingly, if not, that's a bug that must be
+>> fixed at the BCMA layer.
+> 
+> yes, this is a source of the problem. Devices allocated in
+> 'bcma_bus_scan' but of_node doesn't assigned.
+> Is some code missing in drivers/bcma/ which should assign of_node ?
 
-Alex
+bcma_of_fill_device() is responsible for assigning the core of_node
+pointer based on the core discovered. It sounds like we may have to add
+an entry under the "axi" bus node for the PCIe RC, very much like these
+ones already exist:
 
+              gmac0: ethernet@24000 {
+                        reg = <0x24000 0x800>;
+                };
+
+                gmac1: ethernet@25000 {
+                        reg = <0x25000 0x800>;
+                };
+
+                gmac2: ethernet@26000 {
+                        reg = <0x26000 0x800>;
+                };
+
+                gmac3: ethernet@27000 {
+                        reg = <0x27000 0x800>;
+                };
+
+Without that, you indeed do not have a proper linkage between the BCMA
+discovered device and its of_node pointer.
+
+Can you give it a spin?
+
+> 
+> I can suggest following "hacky" patch for this (works for me):
+> 
+> Author: Abylay Ospan <aospan@netup.ru>
+> Date:   Fri Jan 13 07:24:13 2017 +0300
+> 
+>     bcma: force assign 'of_node' for devices on the bus
+> 
+>     prevent other code to fail if no 'of_node' defined
+> 
+>     Signed-off-by: Abylay Ospan <aospan@netup.ru>
+> 
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index 2c1798e..4fe1c92 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -301,6 +301,11 @@ void bcma_init_bus(struct bcma_bus *bus)
+>  static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+>  {
+>         int err;
+> +       struct device * dev;
+> +
+> +       dev = bcma_bus_get_host_dev(bus);
+> +       if (dev && !core->dev.of_node)
+> +               core->dev.of_node = dev->of_node;
+> 
+> 
+> if it's ok I will send this patch in separate email.
+> 
+>>
+>>>
+>>>>
+>>>>>
+>>>>> Signed-off-by: Abylay Ospan <aospan@netup.ru>
+>>>>> ---
+>>>>>  drivers/pci/host/pcie-iproc.c | 3 +++
+>>>>>  1 file changed, 3 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>>>>> index 3ebc025..f2836a9 100644
+>>>>> --- a/drivers/pci/host/pcie-iproc.c
+>>>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>>>> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+>>>>>     const int na = 3, ns = 2;
+>>>>>     int rlen;
+>>>>>
+>>>>> +   if (!node)
+>>>>> +           return -ENOENT;
+>>>>> +
+>>>>>     parser->node = node;
+>>>>>     parser->pna = of_n_addr_cells(node);
+>>>>>     parser->np = parser->pna + na + ns;
+>>>>>
+>>>>
+>>>>
+>>
+>>
+>> --
+>> Florian
+> 
+> 
+> 
+
+
+-- 
+Florian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
