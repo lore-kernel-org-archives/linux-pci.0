@@ -1,53 +1,110 @@
-Return-Path: <SRS0=rFxE=ZB=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=rFxE=ZB=wunner.de=lukas@kernel.org>
-Date: Thu, 19 Jan 2017 06:35:13 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: How to improve PCI bug tracking?
-Message-ID: <20170119053513.GA25889@wunner.de>
-References: <20170118225332.GA22960@bhelgaas-glaptop.roam.corp.google.com>
- <88c6fcac-78d7-e2fd-e08f-62149b34e996@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 11/37] PCI: dwc: Split pcie-designware.c into host and
+ core files
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-12-git-send-email-kishon@ti.com>
+ <4a89fb45-af84-d660-5ef0-12227b141cda@synopsys.com> <587C586C.6070003@ti.com>
+ <0a16c862-312f-655e-3d66-bdb0c1f78584@synopsys.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587CAEBD.1010803@ti.com>
+Date: Mon, 16 Jan 2017 17:00:05 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <88c6fcac-78d7-e2fd-e08f-62149b34e996@codeaurora.org>
+In-Reply-To: <0a16c862-312f-655e-3d66-bdb0c1f78584@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2017 at 06:29:15PM -0500, Sinan Kaya wrote:
-> On 1/18/2017 5:53 PM, Bjorn Helgaas wrote:
-> > I want to improve PCI bug tracking.  It feels like our bugs don't get
-> > the attention they need, and I'm soliciting ideas for how to improve
-> > this.
-> > 
-> > Current situation:
-> > 
-> >   - People often report bugs via email to linux-pci.  I think this
-> >     is good because everybody can see it.
-> > 
-> >   - Even after an email report, I often request a bugzilla because
-> >     (1) it helps keep things from being forgotten, (2) it's a
-> >     convenient place to store bulky data, and (3) I like to have a
-> >     bugzilla URL to include in the changelog of a patch that fixes the
-> >     bug.
-> > 
-> >   - Sometimes people open a bugzilla directly.  I get email about
-> >     these (along with one or two other people), but this is sort of a
-> >     problem because linux-pci never sees it, sometimes I miss it, and
-> >     things tend to languish.
-> > 
-> >   - Discussion on a bugzilla is only seen by people listed in the
-> >     bugzilla, not on linux-pci.
-> > 
-> > I'm contemplating changing this so the bugzilla mail would also go to
-> > linux-pci.
-> 
-> I have seen this happening on linux-scsi.
-> 
-> http://www.spinics.net/lists/linux-scsi/msg103272.html
+Hi Joao,
 
-Same for dri-devel@ / nouveau@lists.freedesktop.org.
+On Monday 16 January 2017 03:57 PM, Joao Pinto wrote:
+> =
 
-Go for it.
+> Hi,
+> =
 
-Lukas
+> =C0s 5:21 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+>> Hi Joao,
+>>
+>> On Friday 13 January 2017 10:19 PM, Joao Pinto wrote:
+>>> =C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+>>>> Split pcie-designware.c into pcie-designware-host.c that contains
+>>>> the host specific parts of the driver and pcie-designware.c that
+>>>> contains the parts used by both host driver and endpoint driver.
+>>>>
+>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>> ---
+>>>>  drivers/pci/dwc/Makefile               |    2 +-
+>>>>  drivers/pci/dwc/pcie-designware-host.c |  619 +++++++++++++++++++++++=
++++++++++
+>>>>  drivers/pci/dwc/pcie-designware.c      |  613 +----------------------=
+--------
+>>>>  drivers/pci/dwc/pcie-designware.h      |    8 +
+>>>>  4 files changed, 634 insertions(+), 608 deletions(-)
+>>>>  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
+>>>>
+>>>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>>>> index 7d27c14..3b57e55 100644
+>>>> --- a/drivers/pci/dwc/Makefile
+>>>> +++ b/drivers/pci/dwc/Makefile
+>>>> @@ -1,4 +1,4 @@
+>>>
+>>> (snip...)
+>>>
+>>>> -static void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+>>>> -				      int type, u64 cpu_addr, u64 pci_addr,
+>>>> -				      u32 size)
+>>>> +void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int ty=
+pe,
+>>>> +			       u64 cpu_addr, u64 pci_addr, u32 size)
+>>>>  {
+>>>>  	u32 retries, val;
+>>>>  =
+
+>>>> @@ -186,220 +151,6 @@ static void dw_pcie_prog_outbound_atu(struct dw_=
+pcie *pci, int index,
+>>>>  	dev_err(pci->dev, "iATU is not being enabled\n");
+>>>>  }
+>>>
+>>> Kishon, iATU only makes sense in The Root Complex (host), so it should =
+be inside
+>>> the pcie-designware-host.
+>>
+>> That is not true. Outbound ATU should be programmed to access host side =
+buffers
+>> and inbound ATU should be programmed for the host to access EP mem space.
+> =
+
+> Sorry, I was not clear enough. What I was trying to suggest is, since the=
+ ATU
+> programming is done by the host, wouldn't be better to include it in the
+> pcie-designware-host? It is just an architectural detail.
+
+ATU programming is required in EP mode. See "[PATCH 24/37] PCI: dwc:
+designware: Add EP mode support" in this patch series.
+
+Anything that's required by both EP mode and RC mode, I've placed in
+pcie-designware.c
+
+Thanks
+Kishon
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
