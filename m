@@ -1,19 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "paul.gortmaker@windriver.com"
- <paul.gortmaker@windriver.com>, "robh@kernel.org" <robh@kernel.org>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 1/2] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-Date: Mon, 30 Jan 2017 05:56:43 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263DC7B2@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1485334353-26815-1-git-send-email-bharatku@xilinx.com>
- <a5ec5158-a8ac-26a9-37f2-91307a2320ba@arm.com>
-In-Reply-To: <a5ec5158-a8ac-26a9-37f2-91307a2320ba@arm.com>
+Subject: Re: [PATCH 11/37] PCI: dwc: Split pcie-designware.c into host and
+ core files
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
+ <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-12-git-send-email-kishon@ti.com>
+ <4a89fb45-af84-d660-5ef0-12227b141cda@synopsys.com> <587C586C.6070003@ti.com>
+ <0a16c862-312f-655e-3d66-bdb0c1f78584@synopsys.com> <587CAEBD.1010803@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <018295b9-00a1-1164-8af1-a01924fa931e@synopsys.com>
+Date: Mon, 16 Jan 2017 13:38:07 +0000
 MIME-Version: 1.0
+In-Reply-To: <587CAEBD.1010803@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,82 +21,98 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "arnd@arndb.de" <arnd@arndb.de>, Ravikiran Gummaluri <rgummal@xilinx.com>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> The subject line is not very descriptive. How about "Enforce level
-> triggering for legacy interrupts"?
-> 
-> On 25/01/17 08:52, Bharat Kumar Gogada wrote:
-> > - Few wifi end points which only support legacy interrupts,
-> > performs hardware reset functionalities after disabling interrupts
-> > by invoking disable_irq and then re-enable using enable_irq, they
-> > enable hardware interrupts first and then virtual irq line later.
-> > - The legacy irq line goes low only after DEASSERT_INTx is
-> > received.As the legacy irq line is high immediately after hardware
-> > interrupts are enabled but virq of EP is still in disabled state
-> > and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-> > irq chip is used, interrutps are not masked and system is
-> 
->                     interrupts
-> 
-> > hanging with CPU stall.
-> > - Adding irq chip functions instead of dummy irq chip for legacy
-> > interrupts.
-> > - Legacy interrupts are level sensitive, so using handle_level_irq
-> > is more appropriate as it is masks interrupts until End point handles
-> > interrupts and unmasks interrutps after End point handler is executed.
-> 
->                          interrupts
-> 
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > ---
-> >  drivers/pci/host/pcie-xilinx-nwl.c | 36
-> +++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 35 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-
-> nwl.c
-> > index 43eaa4a..6ac3e1d 100644
-> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> > @@ -395,10 +395,44 @@ static void nwl_pcie_msi_handler_low(struct
-> irq_desc *desc)
-> >  	chained_irq_exit(chip, desc);
-> >  }
-> >
-> > +static void nwl_mask_leg_irq(struct irq_data *data)
-> > +{
-> > +	struct irq_desc *desc = irq_to_desc(data->irq);
-> > +	struct nwl_pcie *pcie;
-> > +	u32 mask;
-> > +	u32 val;
-> > +
-> > +	pcie = irq_desc_get_chip_data(desc);
-> > +	mask = 1 << (data->hwirq - 1);
-> > +	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
-> > +	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
-> 
-> Oh please! Think of the following:
-> 
-> 	cpu0	cpu1
-> 	read
-> 		read
-> 		write
-> 	write
-> 
-> How can you make this reliable if you don't have any form of mutual
-> exclusion that spans both mask and unmask, and ensures the atomicity of
-> the RMW sequence?
-> 
-Agreed, will send with locks.
+=C0s 11:30 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+> Hi Joao,
+> =
+
+> On Monday 16 January 2017 03:57 PM, Joao Pinto wrote:
+>>
+>> Hi,
+>>
+>> =C0s 5:21 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+>>> Hi Joao,
+>>>
+>>> On Friday 13 January 2017 10:19 PM, Joao Pinto wrote:
+>>>> =C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+>>>>> Split pcie-designware.c into pcie-designware-host.c that contains
+>>>>> the host specific parts of the driver and pcie-designware.c that
+>>>>> contains the parts used by both host driver and endpoint driver.
+>>>>>
+>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>> ---
+>>>>>  drivers/pci/dwc/Makefile               |    2 +-
+>>>>>  drivers/pci/dwc/pcie-designware-host.c |  619 ++++++++++++++++++++++=
+++++++++++
+>>>>>  drivers/pci/dwc/pcie-designware.c      |  613 +---------------------=
+---------
+>>>>>  drivers/pci/dwc/pcie-designware.h      |    8 +
+>>>>>  4 files changed, 634 insertions(+), 608 deletions(-)
+>>>>>  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
+>>>>>
+>>>>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>>>>> index 7d27c14..3b57e55 100644
+>>>>> --- a/drivers/pci/dwc/Makefile
+>>>>> +++ b/drivers/pci/dwc/Makefile
+>>>>> @@ -1,4 +1,4 @@
+>>>>
+>>>> (snip...)
+>>>>
+>>>>> -static void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+>>>>> -				      int type, u64 cpu_addr, u64 pci_addr,
+>>>>> -				      u32 size)
+>>>>> +void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int t=
+ype,
+>>>>> +			       u64 cpu_addr, u64 pci_addr, u32 size)
+>>>>>  {
+>>>>>  	u32 retries, val;
+>>>>>  =
+
+>>>>> @@ -186,220 +151,6 @@ static void dw_pcie_prog_outbound_atu(struct dw=
+_pcie *pci, int index,
+>>>>>  	dev_err(pci->dev, "iATU is not being enabled\n");
+>>>>>  }
+>>>>
+>>>> Kishon, iATU only makes sense in The Root Complex (host), so it should=
+ be inside
+>>>> the pcie-designware-host.
+>>>
+>>> That is not true. Outbound ATU should be programmed to access host side=
+ buffers
+>>> and inbound ATU should be programmed for the host to access EP mem spac=
+e.
+>>
+>> Sorry, I was not clear enough. What I was trying to suggest is, since th=
+e ATU
+>> programming is done by the host, wouldn't be better to include it in the
+>> pcie-designware-host? It is just an architectural detail.
+> =
+
+> ATU programming is required in EP mode. See "[PATCH 24/37] PCI: dwc:
+> designware: Add EP mode support" in this patch series.
+> =
+
+> Anything that's required by both EP mode and RC mode, I've placed in
+> pcie-designware.c
+
+Agreed!
+
+> =
+
+> Thanks
+> Kishon
+> =
+
+
 
 _______________________________________________
 linux-arm-kernel mailing list
