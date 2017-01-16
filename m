@@ -1,167 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:35601 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750817AbdAQKT7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2017 05:19:59 -0500
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lukasz Majewski <lukma@denx.de>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
- <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
- <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
- <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
- <587DAD37.5030201@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 11/37] PCI: dwc: Split pcie-designware.c into host and
+ core files
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
+ <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-12-git-send-email-kishon@ti.com>
+ <4a89fb45-af84-d660-5ef0-12227b141cda@synopsys.com> <587C586C.6070003@ti.com>
 From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <24cff7e5-42d6-66e2-6f10-a6ea4ceb8899@synopsys.com>
-Date: Tue, 17 Jan 2017 10:19:53 +0000
+Message-ID: <0a16c862-312f-655e-3d66-bdb0c1f78584@synopsys.com>
+Date: Mon, 16 Jan 2017 10:27:58 +0000
 MIME-Version: 1.0
-In-Reply-To: <587DAD37.5030201@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <587C586C.6070003@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 Hi,
 
-Às 5:35 AM de 1/17/2017, Kishon Vijay Abraham I escreveu:
+=C0s 5:21 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
 > Hi Joao,
-> 
-> On Monday 16 January 2017 10:31 PM, Joao Pinto wrote:
->>
->> Hi,
->>
->> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
->>> + Joao, Jingoo
->>>
->>> Hi,
->>>
->>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
->>>> Hi Kishon,
->>>>
->>>>> Hi Łukasz,
->>>>>
->>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
->>>>>> Hi Kishon,
->>>>>>
->>>>>>> Hi,
->>>>>>>
->>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
->>>>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
->>>>>>>> run with forced GEN1 speed on PCIe bus.
->>>>>>>>
->>>>>>>> This patch changes the speed explicitly on dra7 based devices when
->>>>>>>> proper device tree attribute is defined for the PCIe controller.
->>>>>>>>
->>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
->>>>>>>
->>>>>>> Bjorn has already queued a patch to do the same thing
->>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
->>>>>>
->>>>>> It seems like Bjorn only modifies CAP registers.
->>>>>
->>>>> The patch also modifies the LNKCTL2 register.
->>>>>>
->>>>>> He also needs to change register with 0x080C offset to actually
->>>>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
->>>>>
->>>>> This bit is used to initiate speed change (after the link is
->>>>> initialized in GEN1). Resetting the bit (like what you have done
->>>>> here) prevents speed change.
->>>>
->>>> This is strange, but e2e advised me to do things as I did in the patch
->>>> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
->>>>
->>>> Link:
->>>> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
->>>>
->>>> Both patches modify 0x5180 007C register to set GEN1 capability
->>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
->>>>
->>>> The problem is with second register (in your patch):
->>>>
->>>> From SPRUHZ6G TRM:
->>>>
->>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
->>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
->>>>   description in TRM
->>>>
->>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
->>>> default /reset value.
->>>
->>> The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
->>>>
->>>>
->>>> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
->>>> Mine shows differences in lspci output (as posted in [1]).
->>>
->>> You'll see the difference even with the patch in Bjorn's tree ;-)
->>>
->>> I think these are 2 different approaches to keep the link at GEN1. Joao or
->>> Jingoo, do you have any suggestion here?
->>
->> I studied the Databook, and both approaches seem to be right, dependently of the
->> Core configuration and setup.
->>
->> The standard manual speed change sequence is:
->> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
->> b) Clear "Directed Speed Change"
->> c) Set "Directed Speed Change"
->>
->> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the default
->> value), it will execute LTSSM to initiate speed change to Gen2 or Gen3, after
->> link is started in Gen1, and then the bit is automatically cleared.
->>
->> Lukasz is reseting this bit, in order to avoid the LTSSM to be executed, which
->> is correct. There is another way to prevent this automatic speed change, which
->> is to set GEN1 speed before link up which might be difficult in some setups, so
->> Kishon's also right.
-> 
-> Just for my understanding, why do you think this will be difficult in some setups?
+> =
 
-It depends on the way some PCI Cores are configured.
-
+> On Friday 13 January 2017 10:19 PM, Joao Pinto wrote:
+>> =C0s 10:26 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
+>>> Split pcie-designware.c into pcie-designware-host.c that contains
+>>> the host specific parts of the driver and pcie-designware.c that
+>>> contains the parts used by both host driver and endpoint driver.
+>>>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>  drivers/pci/dwc/Makefile               |    2 +-
+>>>  drivers/pci/dwc/pcie-designware-host.c |  619 ++++++++++++++++++++++++=
+++++++++
+>>>  drivers/pci/dwc/pcie-designware.c      |  613 +-----------------------=
+-------
+>>>  drivers/pci/dwc/pcie-designware.h      |    8 +
+>>>  4 files changed, 634 insertions(+), 608 deletions(-)
+>>>  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
+>>>
+>>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>>> index 7d27c14..3b57e55 100644
+>>> --- a/drivers/pci/dwc/Makefile
+>>> +++ b/drivers/pci/dwc/Makefile
+>>> @@ -1,4 +1,4 @@
 >>
->> In my opinion Lukasz approach would be the one that might be more universal and
->> more "secure".
-> 
-> IMHO setting link control in the standard PCIe header space should be more
-> universal. I'm not sure about the secure part though.
+>> (snip...)
+>>
+>>> -static void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+>>> -				      int type, u64 cpu_addr, u64 pci_addr,
+>>> -				      u32 size)
+>>> +void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int typ=
+e,
+>>> +			       u64 cpu_addr, u64 pci_addr, u32 size)
+>>>  {
+>>>  	u32 retries, val;
+>>>  =
 
-When I said secure, I misleaded you, sorry. I meant more robust.
+>>> @@ -186,220 +151,6 @@ static void dw_pcie_prog_outbound_atu(struct dw_p=
+cie *pci, int index,
+>>>  	dev_err(pci->dev, "iATU is not being enabled\n");
+>>>  }
+>>
+>> Kishon, iATU only makes sense in The Root Complex (host), so it should b=
+e inside
+>> the pcie-designware-host.
+> =
 
-> 
+> That is not true. Outbound ATU should be programmed to access host side b=
+uffers
+> and inbound ATU should be programmed for the host to access EP mem space.
+
+Sorry, I was not clear enough. What I was trying to suggest is, since the A=
+TU
+programming is done by the host, wouldn't be better to include it in the
+pcie-designware-host? It is just an architectural detail.
+
+> =
+
 > Thanks
 > Kishon
->>
->> Joao
->>
->>
->>>
->>>>
->>>>>
->>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
->>>>> the IP register.
->>>>
->>>> From the original patch description:
->>>>
->>>> "Add support to force Root Complex to work in GEN1 mode if so desired,
->>>> but don't force GEN1 mode on any board just yet."
->>>>
->>>> Are there any (floating around) patches allowing forcing GEN1 operation
->>>> on any board (I would like to reuse/port them to my current solution)?
->>>
->>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
->>> patch in Bjorn's tree.
->>>
->>> Thanks
->>> Kishon
->>>
->>
+> =
 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
