@@ -1,118 +1,149 @@
-Return-Path: <SRS0=nk3a=Y2=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=nk3a=Y2=linux.intel.com=mika.westerberg@kernel.org>
-Date: Thu, 12 Jan 2017 11:02:59 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Chen Yu <yu.c.chen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Amir Levy <amir.jer.levy@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v4 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-Message-ID: <20170112090259.GW2330@lahna.fi.intel.com>
-References: <cover.1483806825.git.lukas@wunner.de>
- <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
- <20170111100210.GL2330@lahna.fi.intel.com>
- <20170112014707.GA24136@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:46095 "EHLO
+        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbdAPKeF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 05:34:05 -0500
+Date: Mon, 16 Jan 2017 11:34:01 +0100
+From: Lukasz Majewski <lukma@denx.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+Message-ID: <20170116113401.1364b079@jawa>
+In-Reply-To: <587C9CE6.8040001@ti.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+        <587C6A40.8070608@ti.com>
+        <20170116074927.086418f4@jawa>
+        <587C8088.80905@ti.com>
+        <20170116103136.21c899ac@jawa>
+        <587C9CE6.8040001@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170112014707.GA24136@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 02:47:07AM +0100, Lukas Wunner wrote:
-> On Wed, Jan 11, 2017 at 12:02:10PM +0200, Mika Westerberg wrote:
-> > On Sun, Jan 08, 2017 at 09:41:45AM +0100, Lukas Wunner wrote:
-> > > Hotplug ports generally block their parents from suspending to D3hot as
-> > > otherwise their interrupts couldn't be delivered.
-> > > 
-> > > An exception are Thunderbolt host controllers:  They have a separate
-> > > GPIO pin to side-band signal plug events even if the controller is
-> > > powered down or its parent ports are suspended to D3.  They can be told
-> > > apart from Thunderbolt controllers in attached devices by checking if
-> > > they're situated below a non-Thunderbolt device (typically a root port,
-> > > or the downstream port of a PCIe switch in the case of the MacPro6,1).
-> > > 
-> > > To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
-> > > of a host controller must not block runtime PM on the upstream bridge as
-> > > power to the chip is only cut once the upstream bridge has suspended.
-> > > Amend the condition in pci_dev_check_d3cold() accordingly.
-> > > 
-> > > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > Cc: Andreas Noever <andreas.noever@gmail.com>
-> > > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > > Cc: Amir Levy <amir.jer.levy@intel.com>
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > ---
-> > >  drivers/pci/pci.c | 13 ++++++++++++-
-> > >  1 file changed, 12 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 8ed098d..0b03fe7 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
-> > >  
-> > >  static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-> > >  {
-> > > +	struct pci_dev *parent, *grandparent;
-> > >  	bool *d3cold_ok = data;
-> > >  
-> > >  	if (/* The device needs to be allowed to go D3cold ... */
-> > > @@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-> > >  	    !pci_power_manageable(dev) ||
-> > >  
-> > >  	    /* Hotplug interrupts cannot be delivered if the link is down. */
-> > > -	    dev->is_hotplug_bridge)
-> > > +	    (dev->is_hotplug_bridge &&
-> > > +
-> > > +		/*
-> > > +		 * Exception:  Thunderbolt host controllers have a pin to
-> > > +		 * side-band signal plug events.  Their hotplug ports are
-> > > +		 * recognizable by having a non-Thunderbolt device as
-> > > +		 * grandparent.
-> > > +		 */
-> > > +		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
-> > > +				 (grandparent = pci_upstream_bridge(parent)) &&
-> > > +						!grandparent->is_thunderbolt)))
+Dear All,
+
+> + Joao, Jingoo
+> 
+> Hi,
+> 
+> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+> > Hi Kishon,
 > > 
-> > Can you move this to its own helper function?
+> >> Hi Łukasz,
+> >>
+> >> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+> >>> Hi Kishon,
+> >>>
+> >>>> Hi,
+> >>>>
+> >>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+> >>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
+> >>>>> run with forced GEN1 speed on PCIe bus.
+> >>>>>
+> >>>>> This patch changes the speed explicitly on dra7 based devices
+> >>>>> when proper device tree attribute is defined for the PCIe
+> >>>>> controller.
+> >>>>>
+> >>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+> >>>>
+> >>>> Bjorn has already queued a patch to do the same thing
+> >>>> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
+> >>>
+> >>> It seems like Bjorn only modifies CAP registers.
+> >>
+> >> The patch also modifies the LNKCTL2 register.
+> >>>
+> >>> He also needs to change register with 0x080C offset to actually
+> >>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+> >>
+> >> This bit is used to initiate speed change (after the link is
+> >> initialized in GEN1). Resetting the bit (like what you have done
+> >> here) prevents speed change.
+> > 
+> > This is strange, but e2e advised me to do things as I did in the
+> > patch to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+> > 
+> > Link:
+> > [1] https://e2e.ti.com/support/arm/sitara_arm/f/791/t/566421
+> > 
+> > Both patches modify 0x5180 007C register to set GEN1 capability
+> > (PCI_EXP_LNKCAP_SLS_2_5GB)
+> > 
+> > The problem is with second register (in your patch):
+> > 
+> > From SPRUHZ6G TRM:
+> > 
+> > PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+> > - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+> >   description in TRM
+> > 
+> > It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
+> > default /reset value.
 > 
-> I can certainly do that.
-> 
-> Could one of you guys confirm that the code above is safe on non-Macs?
-> 
-> Specifically, the very first Thunderbolt chips (Light Ridge, Eagle Ridge)
-> had no POC, i.e. they were unable to power themselves off.  Apple put an
-> ARM Cortex (NXP LPC1112) on the logic board which snoops on the connector
-> lines for hotplug detection while the Thunderbolt controller is powered
-> down.  The power rails to the controller are brought up and down with
-> separate load switches.  This functionality became integrated into the
-> controller starting with Cactus Ridge in 2012.
-> 
-> So I know the above code is safe on Macs.  However on non-Macs these
-> extra chips for power management may not exist, i.e. the controller
-> stays on all the time and then I shouldn't suspend the upstream bridge
-> to D3.  I assume that such machines do not exist as Apple was pretty
-> much the only vendor with Thunderbolt gear in the 2010-2012 time frame.
-> The only other one I know of was the Sony Vaio Z21 which used the
-> optical version of Thunderbolt to attach a docking station, but these
-> are rare.
-> 
-> If you know of non-Macs which might be broken by the above code snippet,
-> I could dmi-quirk this to Macs plus constrain to CONFIG_THUNDERBOLT being
-> enabled.
+> The default value is 0x2 (or else none of the cards would have
+> enumerated in GEN2)
 
-The thunderbolt chips I have seen all include the side-band hotplug
-detection GPIO. In addition the whole PCIe hierarchy is powered down
-when there is nothing connected. So in that sense, I don't see how this
-could break them.
+SPRUHZ6G – October 2014 – Revised June 2016 - page 6313. Maybe TRM is
+not up to date?
 
-Constraining this to CONFIG_THUNDERBOLT does not limit anything because
-distros will have it enabled anyway ;-) Having DMI quirk might be good
-idea, just in case.
+> > 
+> > 
+> > Could you clarify which way to _force_ PCIe GEN1 operation is
+> > correct? Mine shows differences in lspci output (as posted in [1]).
+> 
+> You'll see the difference even with the patch in Bjorn's tree ;-)
+
+:-) 
+
+The details of my test cases and output are in the post [1].
+
+> 
+> I think these are 2 different approaches to keep the link at GEN1.
+> Joao or Jingoo, do you have any suggestion here?
+
+Please read through thread [1]
+
+[1] https://e2e.ti.com/support/arm/sitara_arm/f/791/t/566421
+
+> 
+> > 
+> >>
+> >> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
+> >> the IP register.
+> > 
+> > From the original patch description:
+> > 
+> > "Add support to force Root Complex to work in GEN1 mode if so
+> > desired, but don't force GEN1 mode on any board just yet."
+> > 
+> > Are there any (floating around) patches allowing forcing GEN1
+> > operation on any board (I would like to reuse/port them to my
+> > current solution)?
+> 
+> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt
+> with the patch in Bjorn's tree.
+
+Ah.... ok.
+> 
+> Thanks
+> Kishon
+
+
+
+
+Best regards,
+
+Lukasz Majewski
+
+--
+
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
