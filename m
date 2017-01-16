@@ -1,140 +1,166 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-To: Bjorn Helgaas <helgaas@kernel.org>, Russell King - ARM Linux
- <linux@armlinux.org.uk>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
- <20170117175728.GE27312@n2100.armlinux.org.uk>
- <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117193414.GG27312@n2100.armlinux.org.uk>
- <20170117210258.GH27312@n2100.armlinux.org.uk>
- <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
-Date: Tue, 17 Jan 2017 15:37:10 -0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:39026 "EHLO
+        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750845AbdAPGtd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2017 01:49:33 -0500
+Date: Mon, 16 Jan 2017 07:49:27 +0100
+From: Lukasz Majewski <lukma@denx.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+Message-ID: <20170116074927.086418f4@jawa>
+In-Reply-To: <587C6A40.8070608@ti.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+        <587C6A40.8070608@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>,
- =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <uwe@kleine-koenig.org>,
- David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/17/2017 02:22 PM, Bjorn Helgaas wrote:
-> [+cc David]
->
-> On Tue, Jan 17, 2017 at 09:02:58PM +0000, Russell King - ARM Linux wrote:
->> On Tue, Jan 17, 2017 at 07:34:14PM +0000, Russell King - ARM Linux wrote:
->>> Uwe, can you try:
->>>
->>> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
->>> 	0x50.w=0x60
->>>
->>> and see whether it remains alive (you can check by reading the root
->>> register 0x52.w - bit 12 should be set once bit 11 clears again.
->>
->> For reference, this I got wrong...
->>
->> 0xf1041a04 bit 0 indicates link status (0 = link up, 1 = link down).
->>
->>> If that's successful, maybe setting the common clock bit on the PCIe
->>> device is what's causing the problem, in which case:
->>>
->>> setpci -s 02:00.0 0x80.w=0x40
->>> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
->>> 	0x50.w=0x60
->>
->> Having worked with Uwe over IRC, it seems that any request to retrain
->> causes the link to go down, either with or without the common clock bit
->> set:
->>
->> # setpci -s 2.0 0x50.w=0x60
->> # setpci -s 2.0 0x52.w
->> 0011
->> # memtool md 0xf1041a04+4
->> f1041a04: 00010201
->> ... reboot ...
->> # setpci -s 2.0 0x50.w=0x20
->> # memtool md 0xf1041a04+4
->> f1041a04: 00010201
->>
->> which doesn't point towards ASPM itself, but the problem is caused by
->> a side effect of ASPM's setup code which always triggers a retrain.
->>
->> Bit 5 in that register is documented (at least in the Armada 370 docs
->> and Armada XP docs I have) as:
->>
->> 5  RetrnLnk  RW    Retrain Link
->>              0x0   This bit forces the device to initiate link retraining.
->>                    Always returns 0 when read.
->>                    NOTE: If configured as an Endpoint, this field is
->>                    reserved and has no effect.
->>
->> Bjorn, are you aware of similar situations where a request for the PCIe
->> link to be retrained causes it to fail?
+Hi Kishon,
+
+> Hi,
+> 
+> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+> > Some devices (due to e.g. bad PCIe signal integrity) require to run
+> > with forced GEN1 speed on PCIe bus.
+> > 
+> > This patch changes the speed explicitly on dra7 based devices when
+> > proper device tree attribute is defined for the PCIe controller.
+> > 
+> > Signed-off-by: Lukasz Majewski <lukma@denx.de>
+> 
+> Bjorn has already queued a patch to do the same thing
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xx
+
+It seems like Bjorn only modifies CAP registers.
+
+He also needs to change register with 0x080C offset to actually
+( PCIECTRL_PL_WIDTH_SPEED_CTL )
+
+Best regards,
+Łukasz
+
+> 
+> Thanks
+> Kishon
+> 
+> > ---
+> > 
+> > Patch applies on newest origin/master
+> > SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
+> > 
+> > Tested at AM5728
+> > 
+> > ---
+> >  Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
+> >  drivers/pci/host/pci-dra7xx.c                    | 23
+> > +++++++++++++++++++++++
+> > drivers/pci/host/pcie-designware.h               |  1 + 3 files
+> > changed, 25 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> > b/Documentation/devicetree/bindings/pci/ti-pci.txt index
+> > 60e2516..9f97409 100644 ---
+> > a/Documentation/devicetree/bindings/pci/ti-pci.txt +++
+> > b/Documentation/devicetree/bindings/pci/ti-pci.txt @@ -25,6 +25,7
+> > @@ PCIe Designware Controller 
+> >  Optional Property:
+> >   - gpios : Should be added if a gpio line is required to drive
+> > PERST# line
+> > + - to,pcie-is-gen1: Indicates that forced gen1 port operation is
+> > needed. 
+> >  Example:
+> >  axi {
+> > diff --git a/drivers/pci/host/pci-dra7xx.c
+> > b/drivers/pci/host/pci-dra7xx.c index 9595fad..eec5fae 100644
+> > --- a/drivers/pci/host/pci-dra7xx.c
+> > +++
+> > b/drivers/pci/host/pci-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-dra7xxdra7xx.c
+> > @@ -63,6 +63,13 @@ #define
+> > LINK_UP						BIT(16)
+> > #define
+> > DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+> > +#define         PCIECTRL_EP_DBICS_LNK_CAP
+> > 0x007C +#define
+> > MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
+> > +#define         MAX_LINK_SPEEDS_GEN1
+> > BIT(0) + +#define
+> > PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
+> > +#define         CFG_DIRECTED_SPEED_CHANGE
+> > BIT(17) + struct dra7xx_pcie { struct pcie_port	pp;
+> >  	void __iomem		*base;		/* DT
+> > ti_conf */ @@ -270,6 +277,7 @@ static int __init
+> > dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx, struct pcie_port
+> > *pp = &dra7xx->pp; struct device *dev = pp->dev;
+> >  	struct resource *res;
+> > +	u32 val;
+> >  
+> >  	pp->irq = platform_get_irq(pdev, 1);
+> >  	if (pp->irq < 0) {
+> > @@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct
+> > dra7xx_pcie *dra7xx, if (!pp->dbi_base)
+> >  		return -ENOMEM;
+> >  
+> > +	if (pp->is_gen1) {
+> > +		dev_info(dev, "GEN1 forced\n");
+> > +
+> > +		val = readl(pp->dbi_base +
+> > PCIECTRL_EP_DBICS_LNK_CAP);
+> > +		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK,
+> > MAX_LINK_SPEEDS_GEN1);
+> > +		writel(val, pp->dbi_base +
+> > PCIECTRL_EP_DBICS_LNK_CAP); +
+> > +		val = readl(pp->dbi_base +
+> > PCIECTRL_PL_WIDTH_SPEED_CTL);
+> > +		val &= ~CFG_DIRECTED_SPEED_CHANGE;
+> > +		writel(val, pp->dbi_base +
+> > PCIECTRL_PL_WIDTH_SPEED_CTL);
+> > +	}
+> > +
+> >  	ret = dw_pcie_host_init(pp);
+> >  	if (ret) {
+> >  		dev_err(dev, "failed to initialize host\n");
+> > @@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct
+> > platform_device *pdev) goto err_gpio;
+> >  	}
+> >  
+> > +	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
+> > +		pp->is_gen1 = true;
+> > +
+> >  	reg = dra7xx_pcie_readl(dra7xx,
+> > PCIECTRL_DRA7XX_CONF_DEVICE_CMD); reg &= ~LTSSM_EN;
+> >  	dra7xx_pcie_writel(dra7xx,
+> > PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg); diff --git
+> > a/drivers/pci/host/pcie-designware.h
+> > b/drivers/pci/host/pcie-designware.h index a567ea2..2fb0b18 100644
+> > --- a/drivers/pci/host/pcie-designware.h +++
+> > b/drivers/pci/host/pcie-designware.h @@ -50,6 +50,7 @@ struct
+> > pcie_port { struct irq_domain	*irq_domain;
+> >  	unsigned long		msi_data;
+> >  	u8			iatu_unroll_enabled;
+> > +	u8                      is_gen1;
+> >  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> >  };
+> >  
+> > 
 
 
-Link (re)training can fail for several reasons including, but not 
-limited to:
-
-- Poor signal propagation through the chips/packages/boards/connectors, 
-also known as Signal Integrity (SI) problmes.
-
-- Incorrect implementation, in hardware, of link training protocols at 
-either end of the link
-
-Usually, system and PCIe device vendors do a lot of testing and signal 
-analysis across a variety of configurations with the end goal being that 
-PCIe looks like a bullet-proof interconnect to the end consumer.
-
-Unfortunatly, sometimes it doesn't work.  In these cases, the vendors of 
-the devices on each end of the link tend to point fingers at the link 
-partner for being detective in some way.
-
-This patch:
-
->
-> The only one that comes to mind is this patch from David (CC'd) that
-> avoids ASPM-related retrains when we know the link doesn't support ASPM:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e53f9a28bee3
->
-
-Is an attempt to work around the problem from the system (host) end.  If 
-the system vendor knows a priori that a defective PCIe device is present 
-in the system, the PCIe root port can be configured to indicate no ASPM 
-is supported, resulting (with the patch) in no link retraining being 
-attempted.
-
-To me it feels that we need a black list of devices that fail at a high 
-rate in the link retraining, that when encountered would disable ASPM on 
-the link where they reside.
-
-Just my $0.02
-David Daney
 
 
-> Side note: it looks like we don't use the recommended retrain
-> algorithm in the implementation note about avoiding race conditions in
-> PCIe r3.0, sec 7.8.7.
->
+Best regards,
 
+Lukasz Majewski
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--
+
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
