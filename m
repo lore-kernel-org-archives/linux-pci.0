@@ -1,70 +1,253 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Robin Murphy'" <robin.murphy@arm.com>,
- "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
- <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
- <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
- <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
- <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
- <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
- <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
-In-Reply-To: <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
-Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-Date: Fri, 27 Jan 2017 23:30:05 +0530
-Message-ID: <009901d278c7$34fee230$9efca690$@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Jan 2017 12:38:45 +0100
+From: Lukasz Majewski <lukma@denx.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Finger, Robert" <r-finger@ti.com>
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+Message-ID: <20170117123845.5addb519@jawa>
+In-Reply-To: <0bc72557-5110-39bd-89b4-f28307bad71d@synopsys.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+        <587C6A40.8070608@ti.com>
+        <20170116074927.086418f4@jawa>
+        <587C8088.80905@ti.com>
+        <20170116103136.21c899ac@jawa>
+        <587C9CE6.8040001@ti.com>
+        <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
+        <20170116224437.67b5a0c5@jawa>
+        <4b18d08a-c2cc-3c32-35ed-8f4a759ef235@synopsys.com>
+        <0bc72557-5110-39bd-89b4-f28307bad71d@synopsys.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+Hi Joao,
 
-[..]
+Thank you for your reply.
 
->>> +const struct iommu_ops *of_iommu_configure(struct device *dev,
->>> +                       struct device_node *master_np)
->>> +{
->>> +    const struct iommu_ops *ops;
->>> +
->>> +    if (!master_np)
->>> +        return NULL;
->>> +
->>> +    if (dev_is_pci(dev))
->>> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
->>
->> I gave the whole patch set a try on ThunderX. really_probe() is failing
->> on dma_configure()->of_pci_iommu_init() for each PCI device.
->
->When you say "failing", do you mean cleanly, or with a crash? I've
->managed to hit __of_match_node() dereferencing NULL from
->of_iommu_xlate() in a horribly complicated chain of events, which I'm
->trying to figure out now, and I wonder if the two might be related.
+> Às 10:43 AM de 1/17/2017, Joao Pinto escreveu:
+> > 
+> > Hi Lukasz,
+> > 
+> > Às 9:44 PM de 1/16/2017, Lukasz Majewski escreveu:
+> >> Hi Joao,
+> >>
+> >>>
+> >>> Hi,
+> >>>
+> >>> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+> >>>> + Joao, Jingoo
+> >>>>
+> >>>> Hi,
+> >>>>
+> >>>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+> >>>>> Hi Kishon,
+> >>>>>
+> >>>>>> Hi Łukasz,
+> >>>>>>
+> >>>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+> >>>>>>> Hi Kishon,
+> >>>>>>>
+> >>>>>>>> Hi,
+> >>>>>>>>
+> >>>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+> >>>>>>>>> Some devices (due to e.g. bad PCIe signal integrity)
+> >>>>>>>>> require to run with forced GEN1 speed on PCIe bus.
+> >>>>>>>>>
+> >>>>>>>>> This patch changes the speed explicitly on dra7 based
+> >>>>>>>>> devices when proper device tree attribute is defined for
+> >>>>>>>>> the PCIe controller.
+> >>>>>>>>>
+> >>>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+> >>>>>>>>
+> >>>>>>>> Bjorn has already queued a patch to do the same thing
+> >>>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
+> >>>>>>>
+> >>>>>>> It seems like Bjorn only modifies CAP registers.
+> >>>>>>
+> >>>>>> The patch also modifies the LNKCTL2 register.
+> >>>>>>>
+> >>>>>>> He also needs to change register with 0x080C offset to
+> >>>>>>> actually ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+> >>>>>>
+> >>>>>> This bit is used to initiate speed change (after the link is
+> >>>>>> initialized in GEN1). Resetting the bit (like what you have
+> >>>>>> done here) prevents speed change.
+> >>>>>
+> >>>>> This is strange, but e2e advised me to do things as I did in the
+> >>>>> patch to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+> >>>>>
+> >>>>> Link:
+> >>>>> [1]
+> >>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
+> >>>>>
+> >>>>> Both patches modify 0x5180 007C register to set GEN1 capability
+> >>>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
+> >>>>>
+> >>>>> The problem is with second register (in your patch):
+> >>>>>
+> >>>>> From SPRUHZ6G TRM:
+> >>>>>
+> >>>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+> >>>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+> >>>>>   description in TRM
+> >>>>>
+> >>>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same
+> >>>>> as default /reset value.
+> >>>>
+> >>>> The default value is 0x2 (or else none of the cards would have
+> >>>> enumerated in GEN2)
+> >>>>>
+> >>>>>
+> >>>>> Could you clarify which way to _force_ PCIe GEN1 operation is
+> >>>>> correct? Mine shows differences in lspci output (as posted in
+> >>>>> [1]).
+> >>>>
+> >>>> You'll see the difference even with the patch in Bjorn's tree ;-)
+> >>>>
+> >>>> I think these are 2 different approaches to keep the link at
+> >>>> GEN1. Joao or Jingoo, do you have any suggestion here?
+> >>>
+> >>> I studied the Databook,
+> >>
+> >> Could you reveal which databook do you have in mind? Is that the
+> >> TRM for AM5728?
+> > 
+> > I checked the Designware PCIe Databook, since it is based on this
+> > IP.
+> > 
+> >>
+> >>> and both approaches seem to be right,
+> >>> dependently of the Core configuration and setup.
+> >>>
+> >>> The standard manual speed change sequence is:
+> >>> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
+> >>
+> >> Do you mean TRGT_LINK_SPEED @ 0x5180 00A0 ?
+> > 
+> > Correct.
+> > 
+> >>
+> >>> b) Clear "Directed Speed Change"
+> >>
+> >> CFG_DIRECTED_SPEED_CHANGE @ 0x5180 080C 
+> > 
+> > Correct.
+> > 
+> >>
+> >>> c) Set "Directed Speed Change"
+> >>>
+> >>> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is
+> >>> the default value), it will execute LTSSM to initiate speed
+> >>> change to Gen2 or Gen3, after link is started in Gen1, and then
+> >>> the bit is automatically cleared.
+> >>
+> >> Ok, so with default settings (after reset) we do have Gen1 speed
+> >> link and when we enable LTSSM (with LTSSM_EN bit setting) we
+> >> negotiate to Gen2/Gen3.
+> > 
+> > Yes, that's the expected behavior. I submited this direct question
+> > to R&D and will have your doubt answered soon.
+> 
+> According to R&D if you set "Target Link Speed" to Gen1 before
+> setting LTSSM_EN bit, the controller should stay in GEN1.
 
-Sorry that there is crash still. __of_match_node seems to checking
-for NULL arguments , feels like some invalid pointer was passed in.
-Is there any particular sequence to try for this ?
+I assume that this is the "recommended" and most robust possible
+approach?
 
-Regards,
- Sricharan
+And the patch already submitted to ML is 100% correct (so I don't need
+to clear PCIECTRL_PL_WIDTH_SPEED_CTL) ?
+
+Our problem has been described here:
+https://e2e.ti.com/support/arm/sitara_arm/f/791/p/567936/2081573#2081573
+
+Best regards,
+Łukasz Majewski
+
+> 
+> > 
+> >>
+> >>>
+> >>> Lukasz is reseting this bit, in order to avoid the LTSSM to be
+> >>> executed, which is correct. 
+> >>
+> >> So with CFG_DIRECTED_SPEED_CHANGE = 0, when I start LTSSM (with
+> >> LTSSM_EN) the state machine returns immediately and leaves link in
+> >> the Gen1?
+> >>
+> >> The pci-dra7 driver always sets LTSSM_EN bit to start link
+> >> negotiation.
+> >>
+> >>> There is another way to prevent this
+> >>> automatic speed change, which is to set GEN1 speed before link up
+> >>> which might be difficult in some setups, so Kishon's also right.
+> >>>
+> >>> In my opinion Lukasz approach would be the one that might be more
+> >>> universal and more "secure".
+> >>
+> >> The robustness is the key here since there are some devices, which
+> >> on particular HW must only work with Gen1 speed. When we start
+> >> LTSSM state machine and hence start negotiation to Gen2, not
+> >> always the result of LTSSM is correct and device is properly
+> >> recognized.
+> >>
+> >>>
+> >>> Joao
+> >>>
+> >>>
+> >>>>
+> >>>>>
+> >>>>>>
+> >>>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of
+> >>>>>> hacking the IP register.
+> >>>>>
+> >>>>> From the original patch description:
+> >>>>>
+> >>>>> "Add support to force Root Complex to work in GEN1 mode if so
+> >>>>> desired, but don't force GEN1 mode on any board just yet."
+> >>>>>
+> >>>>> Are there any (floating around) patches allowing forcing GEN1
+> >>>>> operation on any board (I would like to reuse/port them to my
+> >>>>> current solution)?
+> >>>>
+> >>>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in
+> >>>> dt with the patch in Bjorn's tree.
+> >>>>
+> >>>> Thanks
+> >>>> Kishon
+> >>>>
+> >>>
+> >>
+> >> Best regards,
+> >>
+> >> Lukasz Majewski
+> >>
+> >> --
+> >>
+> >> DENX Software Engineering GmbH,      Managing Director: Wolfgang
+> >> Denk HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell,
+> >> Germany Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email:
+> >> wd@denx.de
+> >>
+> > 
+> 
 
 
 
 
+Best regards,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lukasz Majewski
+
+--
+
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
