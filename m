@@ -1,131 +1,65 @@
-Return-Path: <SRS0=4ynr=YS=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=4ynr=YS=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Tue, 17 Jan 2017 15:25:49 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Wed, 04 Jan 2017 02:09:45 +0100
-Message-ID: <12091208.zU0uMkOWQ0@aspire.rjw.lan>
-In-Reply-To: <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <16155135.jUckSz7QPL@aspire.rjw.lan> <20170104000557.GA13950@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
+	linux-pci@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+Message-ID: <20170117152548.GB27312@n2100.armlinux.org.uk>
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 03, 2017 06:05:57 PM Bjorn Helgaas wrote:
-> On Wed, Jan 04, 2017 at 12:13:18AM +0100, Rafael J. Wysocki wrote:
-> > On Tuesday, January 03, 2017 04:25:09 PM Bjorn Helgaas wrote:
-> > > On Tue, Jan 03, 2017 at 10:38:24PM +0100, Rafael J. Wysocki wrote:
-> > > > On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
-> > > > > On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
-> > > > > > On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
-> > > > > > > [cc += Dave Airlie:
-> > > > > > > 
-> > > > > > > Dave, we're about to lose support for newer Optimus laptops which use
-> > > > > > > _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
-> > > > > > > a commit on his for-linus branch to remove runtime PM for PCIe ports.
-> > > > > > > This fixes a regression on Kilian Singer's laptop on which locking the
-> > > > > > > screen breaks USB and PS/2 input devices:  Mouse movements are still
-> > > > > > > visible, but button or key presses no longer have any effect.  The GPU
-> > > > > > > is powered down upon locking the screen and the current theory is that
-> > > > > > > this causes the issues.]
-> > > > > > 
-> > > > > > (+cc Alex: this might affect amdgpu/radeon too.]
-> > > > > > 
-> > > > > > Bjorn, please reconsider the rpm patch. Reverting support would
-> > > > > > introduce other regressions (see issues below) and make future
-> > > > > > Thunderbolt work harder (according to Lukas). If Kilian's laptop has
-> > > > > > issues, what about a "temporary" quirk?
-> > > > > 
-> > > > > As I mentioned at the beginning, the outcome I'm hoping for is a patch
-> > > > > that fixes Kilian's laptop while preserving the runtime PM support.
-> > > > > 
-> > > > > As I also mentioned at the beginning, preserving the runtime PM
-> > > > > support at the expense of breaking Kilian's laptop is not one of the
-> > > > > options.
-> > > > 
-> > > > But the revert doesn't really help.
-> > > > 
-> > > > It doesn't fix system suspend/resume on that laptop, which also breaks when
-> > > > PCIe ports PM is enabled on it.
-> > > > 
-> > > > If you really want to use a sledgehammer approach here (which I don't recommend,
-> > > > but that's your call), you can change the initial value of pci_bridge_d3_disable to
-> > > > "true" (and update the pcie_ports_pm= command line to take "on" in case
-> > > > someone wants to enable the feature).  That at least will take care of the
-> > > > regression entirely and not just partly.
-> > > 
-> > > What the heck is the problem here?  I'm not trying to be difficult,
-> > > but I didn't write this code and I'm not really interested in figuring
-> > > out how to fix it, so my only real option is to solicit fixes and, if
-> > > none appear, revert changes that break things.
-> > > 
-> > > As I've said more than once, I hope and expect that there is a better
-> > > solution than reverting the patch.  But *I* am not going to write it.
-> > > As soon as somebody proposes a better patch, I'll use it instead of
-> > > the revert.
-> > > 
-> > > If you want to fix the regression by changing the
-> > > pci_bridge_d3_disable value, all you have to do is post a patch doing
-> > > that.
+On Tue, Jan 17, 2017 at 09:14:44AM -0600, Bjorn Helgaas wrote:
+> On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-König wrote:
+> > Hello,
 > > 
-> > OK, please find appended.
+> > on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
+> > ath10k driver fails to bind to the matching hardware if CONFIG_PCIEASPM
+> > is enabled:
 > > 
-> > > I really don't understand why people are so wrapped around the axle
-> > > about this.  This is just the way Linux works -- we try really hard
-> > > not to cause regressions on platforms that used to work.
+> > # dmesg | grep ath
+> > [    7.207770] ath10k_pci 0000:02:00.0: Refused to change power state, currently in D3
+> > [    7.237955] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+> > [    7.238146] ath10k_pci: probe of 0000:02:00.0 failed with error -110
 > > 
-> > I haven't seen anyone in this thread questioning that.
+> > if however PCIEASPM is off, the driver probes correctly and the ath10k
+> > adapter works fine.
 > > 
-> > IMO the point people are trying to make is that reverting stuff may not really be
-> > the way to go.
-> > 
-> > > I *SAID* in the very first posting of the revert that I assume Mika will have a
-> > > better solution soon.
-> > 
-> > In which case I wouldn't have queued up a revert had I been you.
-> > 
-> > > When a better patch appears, I'll take that and drop the revert.
-> > > What's the problem with that?
-> > 
-> > There are people for whom the commit in question fixed serious issues and the
-> > revert would just take that away from them without any option to make their
-> > systems work.
+> > I wonder if someone has an idea what needs to be done to fix this
+> > problem. (OK, I could disable PCIEASPM, but I'd like to have a solution
+> > for a distribution kernel where I think PCIEASPM=y is sensible in
+> > general.)
 > 
-> I don't *want* to apply the revert.  It's on my for-linus branch as a
-> worst-case scenario change if we can't figure out a better fix.
-> 
-> The patch below is preferable, but I'd rather not take even it,
-> because it takes away functionality and forces people to use a boot
-> parameter to restore it.  I expect that somebody will figure out how
-> to fix the regression Kilian found and also keep the new functionality
-> (without requiring boot parameters) before v4.10.
-> 
-> Of course, if a better fix is far off and the patch below is much
-> better in the interim (avoids memory corruption, fixes problems for
-> more people, etc.), I will replace the revert with it.  I just
-> haven't seen the argument for doing that.
+> Can somebody confirm that this system (Marvell Armada 385-based Turris
+> Omnia) does actually support ASPM in hardware?
 
-That is very simple.
+What sort of "hardware" are you referring to?
 
-If you revert, runtime PM will not work for any PCIe ports no matter what and
-there is no way to enable it whatever.  Therefore, if there's anyone who
-depends on it whatever the reason, they have no way to enable it other than
-patching the kernel and rebuilding it.  There are users who may not be able
-to do that.
+>From my reading of the specs, ASPM doesn't require any external hardware.
+It's all done inside the PCIe root hub and PCIe device.
 
-With this patch, in turn, they at least have a kernel command line option to
-enable the feature if they need it.  To me, this would be a good enough reason
-to apply this patch instead of the revert.
+The PCIe spec specifically prohibits cutting power supplies and clocks to
+PCIe devices during L0s and L1, with the exception that the PCIe clock may
+be stopped in L1 if CLKREQ# is deasserted.  CLKREQ# handling generally
+requires GPIO usage, and as there's no support for that, there's no support
+for stopping the PCIe clock in L1.  We do the correct thing there,
+preventing the PCI_EXP_LNKCTL_CLKREQ_EN bit being set.
 
-> My main point is that Kilian found a pretty serious regression and
-> spent a lot of time bisecting it and testing things, and we need to
-> address it in some way before v4.10.
+That all said, it would probably be a good idea to throw some printk()
+debugging into mvebu_sw_pci_bridge_write() and mvebu_sw_pci_bridge_read()
+so we can see what's going on at that level, and maybe also some debug
+in mvebu_pcie_hw_wr_conf() and mvebu_pcie_hw_rd_conf() so we can see
+what's happening at the PCIe device too.
 
-Let me repeat then that nobody here is questioning the need to address the
-issue.
-
-That said to me, reverting would be almost as bad as leaving it unfixed.
-
-Thanks,
-Rafael
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
