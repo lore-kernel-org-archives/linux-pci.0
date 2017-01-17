@@ -1,86 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 32/37] Documentation: misc-devices: Add Documentation for
- pci-endpoint-test driver
-Date: Thu, 12 Jan 2017 15:56:21 +0530
-Message-ID: <1484216786-17292-33-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56824 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751030AbdAQO4f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jan 2017 09:56:35 -0500
+Date: Tue, 17 Jan 2017 08:56:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kilian.singer@quantumtechnology.info
+Cc: linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+Message-ID: <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation for pci-endpoint-test driver.
+On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
+> Hi Killian,
+> 
+> Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
+> and all the debugging you've done.  Below is a revert of the troublesome
+> commit.  Can you test it and verify that it also fixes the problem?
+> 
+> I assume Mika is looking at this and will have a better solution soon.
+> But if not, I'll queue this up for v4.10.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/misc-devices/pci-endpoint-test.txt |   35 ++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
+Can somebody please summarize the current state of this issue?  I
+assume somebody has already posted a better patch that should replace
+this naive revert, but I haven't been following the whole thread.
 
-diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-new file mode 100644
-index 0000000..4385718
---- /dev/null
-+++ b/Documentation/misc-devices/pci-endpoint-test.txt
-@@ -0,0 +1,35 @@
-+Driver for PCI Endpoint Test Function
-+
-+This driver should be used as a host side driver if the root complex is
-+connected to a configurable pci endpoint running *pci_epf_test* function
-+driver configured according to [1].
-+
-+The "pci_endpoint_test" driver can be used to perform the following tests.
-+
-+The PCI driver for the test device performs the following tests
-+	*) verifying addresses programmed in BAR
-+	*) raise legacy IRQ
-+	*) raise MSI IRQ
-+	*) read data
-+	*) write data
-+	*) copy data
-+
-+This misc driver creates /dev/pci-endpoint-test.<num> for every
-+*pci_epf_test* function connected to the root complex and "ioctls"
-+should be used to perform the above tests.
-+
-+ioctl
-+-----
-+ PCITEST_BAR: Tests the BAR. The number of the BAR that has to be tested
-+	      should be passed as argument.
-+ PCITEST_LEGACY_IRQ: Tests legacy IRQ
-+ PCITEST_MSI: Tests message signalled interrupts. The MSI number that has
-+	      to be tested should be passed as argument.
-+ PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
-+		as argument.
-+ PCITEST_READ: Perform read tests. The size of the buffer should be passed
-+	       as argument.
-+ PCITEST_COPY: Perform read tests. The size of the buffer should be passed
-+	       as argument.
-+
-+[1] -> Documentation/PCI/endpoint/function/binding/pci-test.txt
--- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> commit e648b1ca2b94d207289fedc2538d33c57cdbc4de
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Tue Dec 27 17:27:30 2016 -0600
+> 
+>     Revert "PCI: Add runtime PM support for PCIe ports"
+>     
+>     Revert 006d44e49a25 ("PCI: Add runtime PM support for PCIe ports").
+>     
+>     Killian reported that on a Lenovo W54l with i7-4810MQ, Intel HD Graphics
+>     4600, and NVIDIA Quadro® K1100M, locking the screen kills all keyboard and
+>     mouse interaction.  Reverting 006d44e49a25 fixes the problem.
+>     
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=190861
+>     Reported-by: kilian.singer@quantumtechnology.info
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org	# v4.8+
+>     CC: Mika Westerberg <mika.westerberg@linux.intel.com>
