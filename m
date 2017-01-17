@@ -1,76 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56638 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750793AbdAKVDG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 16:03:06 -0500
-Date: Wed, 11 Jan 2017 15:03:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH] PCI: imx6: Remove redundant message
-Message-ID: <20170111210302.GK14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <1482849643-1861-1-git-send-email-festevam@gmail.com>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:35601 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750817AbdAQKT7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2017 05:19:59 -0500
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lukasz Majewski <lukma@denx.de>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+ <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
+ <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
+ <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
+ <587DAD37.5030201@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <24cff7e5-42d6-66e2-6f10-a6ea4ceb8899@synopsys.com>
+Date: Tue, 17 Jan 2017 10:19:53 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482849643-1861-1-git-send-email-festevam@gmail.com>
+In-Reply-To: <587DAD37.5030201@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 27, 2016 at 12:40:43PM -0200, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> When a PCI card is not connected, the following messages are seen on mx6:
-> 
-> imx6q-pcie 1ffc000.pcie: phy link never came up
-> imx6q-pcie 1ffc000.pcie: Link never came up
-> 
-> The first one comes from the pcie-designware.c core file, so remove
-> the redundant one from the imx6 driver.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 
-Applied to pci/host-imx6 for v4.11 with Lucas' Reviewed-by and the
-following changelog:
+Hi,
 
-    PCI: imx6: Remove redundant "Link never came up" message
-    
-    When a PCI card is not connected, the following messages are seen on mx6:
-    
-      imx6q-pcie 1ffc000.pcie: phy link never came up
-      imx6q-pcie 1ffc000.pcie: Link never came up
-    
-    The first one comes from the pcie-designware.c core file, so remove
-    the redundant one from the imx6 driver.
-    
-    Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Às 5:35 AM de 1/17/2017, Kishon Vijay Abraham I escreveu:
+> Hi Joao,
+> 
+> On Monday 16 January 2017 10:31 PM, Joao Pinto wrote:
+>>
+>> Hi,
+>>
+>> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+>>> + Joao, Jingoo
+>>>
+>>> Hi,
+>>>
+>>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+>>>> Hi Kishon,
+>>>>
+>>>>> Hi Łukasz,
+>>>>>
+>>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+>>>>>> Hi Kishon,
+>>>>>>
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+>>>>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
+>>>>>>>> run with forced GEN1 speed on PCIe bus.
+>>>>>>>>
+>>>>>>>> This patch changes the speed explicitly on dra7 based devices when
+>>>>>>>> proper device tree attribute is defined for the PCIe controller.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+>>>>>>>
+>>>>>>> Bjorn has already queued a patch to do the same thing
+>>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
+>>>>>>
+>>>>>> It seems like Bjorn only modifies CAP registers.
+>>>>>
+>>>>> The patch also modifies the LNKCTL2 register.
+>>>>>>
+>>>>>> He also needs to change register with 0x080C offset to actually
+>>>>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+>>>>>
+>>>>> This bit is used to initiate speed change (after the link is
+>>>>> initialized in GEN1). Resetting the bit (like what you have done
+>>>>> here) prevents speed change.
+>>>>
+>>>> This is strange, but e2e advised me to do things as I did in the patch
+>>>> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+>>>>
+>>>> Link:
+>>>> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
+>>>>
+>>>> Both patches modify 0x5180 007C register to set GEN1 capability
+>>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
+>>>>
+>>>> The problem is with second register (in your patch):
+>>>>
+>>>> From SPRUHZ6G TRM:
+>>>>
+>>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+>>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+>>>>   description in TRM
+>>>>
+>>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
+>>>> default /reset value.
+>>>
+>>> The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
+>>>>
+>>>>
+>>>> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
+>>>> Mine shows differences in lspci output (as posted in [1]).
+>>>
+>>> You'll see the difference even with the patch in Bjorn's tree ;-)
+>>>
+>>> I think these are 2 different approaches to keep the link at GEN1. Joao or
+>>> Jingoo, do you have any suggestion here?
+>>
+>> I studied the Databook, and both approaches seem to be right, dependently of the
+>> Core configuration and setup.
+>>
+>> The standard manual speed change sequence is:
+>> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
+>> b) Clear "Directed Speed Change"
+>> c) Set "Directed Speed Change"
+>>
+>> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the default
+>> value), it will execute LTSSM to initiate speed change to Gen2 or Gen3, after
+>> link is started in Gen1, and then the bit is automatically cleared.
+>>
+>> Lukasz is reseting this bit, in order to avoid the LTSSM to be executed, which
+>> is correct. There is another way to prevent this automatic speed change, which
+>> is to set GEN1 speed before link up which might be difficult in some setups, so
+>> Kishon's also right.
+> 
+> Just for my understanding, why do you think this will be difficult in some setups?
 
-> ---
->  drivers/pci/host/pci-imx6.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+It depends on the way some PCI Cores are configured.
+
+>>
+>> In my opinion Lukasz approach would be the one that might be more universal and
+>> more "secure".
 > 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index c8cefb0..66c3b84 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -502,10 +502,8 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
->  			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
->  
->  	ret = imx6_pcie_wait_for_link(imx6_pcie);
-> -	if (ret) {
-> -		dev_info(dev, "Link never came up\n");
-> +	if (ret)
->  		goto err_reset_phy;
-> -	}
->  
->  	if (imx6_pcie->link_gen == 2) {
->  		/* Allow Gen2 mode after the link is up. */
-> -- 
-> 2.7.4
+> IMHO setting link control in the standard PCIe header space should be more
+> universal. I'm not sure about the secure part though.
+
+When I said secure, I misleaded you, sorry. I meant more robust.
+
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks
+> Kishon
+>>
+>> Joao
+>>
+>>
+>>>
+>>>>
+>>>>>
+>>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
+>>>>> the IP register.
+>>>>
+>>>> From the original patch description:
+>>>>
+>>>> "Add support to force Root Complex to work in GEN1 mode if so desired,
+>>>> but don't force GEN1 mode on any board just yet."
+>>>>
+>>>> Are there any (floating around) patches allowing forcing GEN1 operation
+>>>> on any board (I would like to reuse/port them to my current solution)?
+>>>
+>>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
+>>> patch in Bjorn's tree.
+>>>
+>>> Thanks
+>>> Kishon
+>>>
+>>
+
