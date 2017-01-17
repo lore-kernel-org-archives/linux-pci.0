@@ -1,72 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42898 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751296AbdAYHdT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2017 02:33:19 -0500
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Hanjun Guo'" <hanjun.guo@linaro.org>, <robin.murphy@arm.com>,
-        <will.deacon@arm.com>, <joro@8bytes.org>,
-        <lorenzo.pieralisi@arm.com>, <iommu@lists.linux-foundation.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <dc2a024b-2378-3a67-f098-8f2b42982766@linaro.org>
-In-Reply-To: <dc2a024b-2378-3a67-f098-8f2b42982766@linaro.org>
-Subject: RE: [PATCH V7 00/11] IOMMU probe deferral support
-Date: Wed, 25 Jan 2017 13:03:09 +0530
-Message-ID: <001701d276dd$4bac51c0$e304f540$@codeaurora.org>
+Return-Path: <SRS0=/CHQ=Y7=quantumtechnology.info=kilian.singer@kernel.org>
+Return-Path: <SRS0=/CHQ=Y7=quantumtechnology.info=kilian.singer@kernel.org>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Lukas Wunner <lukas@wunner.de>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Kilian Singer <kilian.singer@quantumtechnology.info>
+Message-ID: <76b3e542-2739-92cb-db8c-1d04863f5995@quantumtechnology.info>
+Date: Tue, 17 Jan 2017 16:49:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hanjun,
+Dear Bjorn,
 
->On 2017/1/24 0:18, Sricharan R wrote:
->> This series calls the dma ops configuration for the devices
->> at a generic place so that it works for all busses.
->> The dma_configure_ops for a device is now called during
->> the device_attach callback just before the probe of the
->> bus/driver is called. Similarly dma_deconfigure is called during
->> device/driver_detach path.
+I got two patches to test but they fail because I need to know the git
+version against which to patch.
+
+Also a manual patch was not possible because the source code differed
+too much.
+
+So currently I am waiting for that info.
+
+Best regards
+
+Kilian
+
+
+On 17-Jan-17 15:56, Bjorn Helgaas wrote:
+> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
+>> Hi Killian,
 >>
->> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
->>        |                         |
->> pci_bus_add_device     (device_add/driver_register)
->>        |                         |
->> device_attach           device_initial_probe
->>        |                         |
->> __device_attach_driver    __device_attach_driver
->>        |
->> driver_probe_device
->>        |
->> really_probe
->>        |
->> dma_configure
+>> Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=3D1=
+90861)
+>> and all the debugging you've done.  Below is a revert of the troubleso=
+me
+>> commit.  Can you test it and verify that it also fixes the problem?
 >>
->> Similarly on the device/driver_unregister path __device_release_driver is
->> called which inturn calls dma_deconfigure.
->>
->> Took the reworked patches [2] from Robin's branch and
->> rebased on top of Lorenzo's ACPI IORT ARM support series [3].
->>
->> * Tested with platform and pci devices for probe deferral
->>   and reprobe on arm64 based platform.
->> * Need help for testing with ACPI.
+>> I assume Mika is looking at this and will have a better solution soon.
+>> But if not, I'll queue this up for v4.10.
+> Can somebody please summarize the current state of this issue?  I
+> assume somebody has already posted a better patch that should replace
+> this naive revert, but I haven't been following the whole thread.
 >
->Cherry picked this patch set with no conflict with my platform
->msi patches, and test it on Hisilicon D03 (ARM64 platform with
->SMMUv3) with ACPI, it boots ok as before and the native NIC and
->SAS (platform devices) are working properly.
->
->for ACPI and the core code changes:
->
->Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-
-Thanks for the testing with ACPI + SMMUV3
-
-Regards,
- Sricharan
-
+>> commit e648b1ca2b94d207289fedc2538d33c57cdbc4de
+>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> Date:   Tue Dec 27 17:27:30 2016 -0600
+>>
+>>     Revert "PCI: Add runtime PM support for PCIe ports"
+>>    =20
+>>     Revert 006d44e49a25 ("PCI: Add runtime PM support for PCIe ports")=
+.
+>>    =20
+>>     Killian reported that on a Lenovo W54l with i7-4810MQ, Intel HD Gr=
+aphics
+>>     4600, and NVIDIA Quadro=AE K1100M, locking the screen kills all ke=
+yboard and
+>>     mouse interaction.  Reverting 006d44e49a25 fixes the problem.
+>>    =20
+>>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D190861
+>>     Reported-by: kilian.singer@quantumtechnology.info
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>     CC: stable@vger.kernel.org	# v4.8+
+>>     CC: Mika Westerberg <mika.westerberg@linux.intel.com>
