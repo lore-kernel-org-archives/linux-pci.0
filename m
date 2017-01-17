@@ -1,86 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54214 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935978AbdACVEP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Jan 2017 16:04:15 -0500
-Date: Tue, 3 Jan 2017 14:53:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan =?iso-8859-1?Q?R=FCth?= <rueth@comsys.rwth-aachen.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/aspm: Fix null pointer dereference during
- re-enumeration of PCI bus in pcie_aspm_init_link_state even though ASPM is
- off
-Message-ID: <20170103205350.GC25398@bhelgaas-glaptop.roam.corp.google.com>
-References: <4cec62c2-218a-672b-8c12-d44e8df56aae@comsys.rwth-aachen.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4cec62c2-218a-672b-8c12-d44e8df56aae@comsys.rwth-aachen.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=d9Qt=Y7=redhat.com=lyude@kernel.org>
+Return-Path: <SRS0=d9Qt=Y7=redhat.com=lyude@kernel.org>
+Message-ID: <1484676366.3866.1.camel@redhat.com>
+Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
+From: Lyude Paul <lyude@redhat.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner
+	 <lukas@wunner.de>
+Cc: Hans de Goede <hdegoede@redhat.com>, David Airlie <airlied@redhat.com>,
+        Peter Jones <pjones@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
+        Kilian
+ Singer <kilian.singer@quantumtechnology.info>,
+        linux-pci
+ <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>
+Date: Tue, 17 Jan 2017 13:06:06 -0500
+In-Reply-To: <20170117155551.GL2023@lahna.fi.intel.com>
+References: <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
+	 <20170105150646.GB21446@wunner.de>
+	 <20170105181322.wnvdytpgddcdk3ry@redhat.com>
+	 <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
+	 <1483974686.28993.3.camel@redhat.com>
+	 <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
+	 <1484167244.25614.1.camel@redhat.com> <1484183615.25614.3.camel@redhat.com>
+	 <1484186688.25614.4.camel@redhat.com> <20170112021235.GA24156@wunner.de>
+	 <20170117155551.GL2023@lahna.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 03, 2017 at 09:04:36AM +0100, Jan R�th wrote:
-> This patch fixes a null pointer dereference during PCI bus enumeration
-> when ASPM is off. On an IBM x3850 8664 this bug causes the kernel to
-> halt, this behavior did not appear in 3.10, so this is a regression.
+Did you not get the e-mails I CC'd you in? I did originally send you
+guys the patches, but I ended up finding out that Daniel Vetter had
+already submitted a fix for this:
+
+https://patchwork.freedesktop.org/patch/132478/
+
+On Tue, 2017-01-17 at 17:55 +0200, Mika Westerberg wrote:
+> On Thu, Jan 12, 2017 at 03:12:35AM +0100, Lukas Wunner wrote:
+> > On Wed, Jan 11, 2017 at 09:04:48PM -0500, Lyude Paul wrote:
+> > > Finally got koji to work :). People having the runtime resume
+> > > problem,
+> > > can you give this kernel RPM a try and tell me if the issue still
+> > > persists?
+> > > 
+> > > https://koji.fedoraproject.org/koji/taskinfo?taskID=17250338
+> > 
+> > Kilian uses Debian but has a git repo with Linus' tree.  Could you
+> > post
+> > the relevant patch(es) based on either the tip of Linus' master
+> > branch
+> > or one of his tags (such as v4.9, v4.10-rc3)?  This would also
+> > allow us
+> > to review/comment on the patches.
 > 
-> pcie_aspm_sanity_check should only be called if ASPM is on.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=187731
-
-> Signed-off-by: Jan Rueth <rueth@comsys.rwth-aachen.de>
-> ---
->  drivers/pci/pcie/aspm.c | +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> Hi Lyude,
 > 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index f981129..e758b56 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -552,11 +552,12 @@ static struct pcie_link_state
-> *alloc_pcie_link_state(struct pci_dev *pdev)
->  void pcie_aspm_init_link_state(struct pci_dev *pdev)
->  {
->         struct pcie_link_state *link;
-> -       int blacklist = !!pcie_aspm_sanity_check(pdev);
-> -
-> +       int blacklist;
->         if (!aspm_support_enabled)
->                 return;
-> 
-> +       blacklist = !!pcie_aspm_sanity_check(pdev);
-> +
->         if (pdev->link_state)
->                 return;
-
-For some reason this doesn't apply for me (complains about a malformed
-patch), but I can apply it by hand easily enough.
-
-However, this path is a little obtuse, and I'd like to understand
-what's going on better.  We currently have:
-
-  pci_scan_slot
-    if (bus->self && nr)
-      pcie_aspm_init_link_state(bus->self)
-        pcie_aspm_sanity_check
-	  list_for_each_entry(child, &pdev->subordinate->devices, ...)
-
-I assume the null pointer is pdev->subordinate, so maybe we're calling
-pcie_aspm_init_link_state() for a bridge where we weren't able to
-create a child bus ("pdev->subordinate")?
-
-I think it's legal to have a bridge device where we haven't set
-pdev->subordinate, but it does seem unusual.
-
-I don't see a log with the actual null pointer dereference in the
-bugzilla.  Do you have any more details about which device blows up
-here and why it's unusual?
-
-Part of the reason I'm curious is that I'd like to identify the commit
-that introduced the problem so we can figure out where the fix might
-need to be backported.  I suspected b7206cbf024d ("PCI ASPM: support
-partial aspm enablement") because it moved the
-pcie_aspm_sanity_check() call before the checks for aspm_disabled, but
-that's been around since 2.6 days, and the problem you're seeing
-didn't happen until after 3.10.
-
-Bjorn
+> Just a reminder. Can you post the patch(es) here so that people can
+> try
+> them out and comment?
