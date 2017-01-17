@@ -1,71 +1,206 @@
-Return-Path: <SRS0=uEmv=YR=lekensteyn.nl=peter@kernel.org>
-Return-Path: <SRS0=uEmv=YR=lekensteyn.nl=peter@kernel.org>
-Date: Tue, 3 Jan 2017 17:31:30 +0100
-From: Peter Wu <peter@lekensteyn.nl>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170103163130.GC9763@al>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170102121019.GA3353@lahna.fi.intel.com>
- <20170102144852.GE3353@lahna.fi.intel.com>
- <1731082.izJCnRoq0n@aspire.rjw.lan>
- <20170103095158.GH3353@lahna.fi.intel.com>
- <20170103151547.GB9763@al>
- <20170103161123.GA20915@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+To: Lukasz Majewski <lukma@denx.de>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+ <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
+ <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
+ <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
+ <20170116224437.67b5a0c5@jawa>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <4b18d08a-c2cc-3c32-35ed-8f4a759ef235@synopsys.com>
+Date: Tue, 17 Jan 2017 10:43:17 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170103161123.GA20915@wunner.de>
+In-Reply-To: <20170116224437.67b5a0c5@jawa>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
-> [cc += Dave Airlie:
+
+Hi Lukasz,
+
+Às 9:44 PM de 1/16/2017, Lukasz Majewski escreveu:
+> Hi Joao,
 > 
-> Dave, we're about to lose support for newer Optimus laptops which use
-> _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
-> a commit on his for-linus branch to remove runtime PM for PCIe ports.
-> This fixes a regression on Kilian Singer's laptop on which locking the
-> screen breaks USB and PS/2 input devices:  Mouse movements are still
-> visible, but button or key presses no longer have any effect.  The GPU
-> is powered down upon locking the screen and the current theory is that
-> this causes the issues.]
-
-(+cc Alex: this might affect amdgpu/radeon too.]
-
-Bjorn, please reconsider the rpm patch. Reverting support would
-introduce other regressions (see issues below) and make future
-Thunderbolt work harder (according to Lukas). If Kilian's laptop has
-issues, what about a "temporary" quirk?
-
-> On Tue, Jan 03, 2017 at 04:15:47PM +0100, Peter Wu wrote:
-> > The acpidump from the bug does not show known issues, it *looks* fine.
-> > There have been other issues related to resuming power on newer Nvidia
-> > hardware (https://bugs.freedesktop.org/show_bug.cgi?id=94725,
-> > https://bugzilla.kernel.org/show_bug.cgi?id=156341) but there is not
-> > much progress here.  (The last time I traced the PCIe register accesses
-> > (via kprobes) and tried to disable some of those, it still did not help
-> > with preventing the power issue.)
+>>
+>> Hi,
+>>
+>> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+>>> + Joao, Jingoo
+>>>
+>>> Hi,
+>>>
+>>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+>>>> Hi Kishon,
+>>>>
+>>>>> Hi Łukasz,
+>>>>>
+>>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+>>>>>> Hi Kishon,
+>>>>>>
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+>>>>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
+>>>>>>>> run with forced GEN1 speed on PCIe bus.
+>>>>>>>>
+>>>>>>>> This patch changes the speed explicitly on dra7 based devices
+>>>>>>>> when proper device tree attribute is defined for the PCIe
+>>>>>>>> controller.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+>>>>>>>
+>>>>>>> Bjorn has already queued a patch to do the same thing
+>>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
+>>>>>>
+>>>>>> It seems like Bjorn only modifies CAP registers.
+>>>>>
+>>>>> The patch also modifies the LNKCTL2 register.
+>>>>>>
+>>>>>> He also needs to change register with 0x080C offset to actually
+>>>>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+>>>>>
+>>>>> This bit is used to initiate speed change (after the link is
+>>>>> initialized in GEN1). Resetting the bit (like what you have done
+>>>>> here) prevents speed change.
+>>>>
+>>>> This is strange, but e2e advised me to do things as I did in the
+>>>> patch to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+>>>>
+>>>> Link:
+>>>> [1]
+>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
+>>>>
+>>>> Both patches modify 0x5180 007C register to set GEN1 capability
+>>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
+>>>>
+>>>> The problem is with second register (in your patch):
+>>>>
+>>>> From SPRUHZ6G TRM:
+>>>>
+>>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+>>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+>>>>   description in TRM
+>>>>
+>>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
+>>>> default /reset value.
+>>>
+>>> The default value is 0x2 (or else none of the cards would have
+>>> enumerated in GEN2)
+>>>>
+>>>>
+>>>> Could you clarify which way to _force_ PCIe GEN1 operation is
+>>>> correct? Mine shows differences in lspci output (as posted in [1]).
+>>>
+>>> You'll see the difference even with the patch in Bjorn's tree ;-)
+>>>
+>>> I think these are 2 different approaches to keep the link at GEN1.
+>>> Joao or Jingoo, do you have any suggestion here?
+>>
+>> I studied the Databook,
 > 
-> It seems that the _DSM method works on Kilian's laptop.  Would it be
-> viable to default to _DSM if it's available, and only use _PR3 if not?
+> Could you reveal which databook do you have in mind? Is that the TRM for
+> AM5728?
 
-DSM should not be preferred when PR3 is available:
+I checked the Designware PCIe Databook, since it is based on this IP.
 
- - After MS introduced D3cold (PR3) support to Win8+, vendors are
-   unlikely to test legacy DSM and the likelihood of breakage increases.
- - On one Lenovo laptop, the DSM method causes memory corruption while
-   PR3 fixes this problem.
- - On some laptops, DSM keeps the fan on while PR3 stopped the noise.
- - On some laptops, DSM does not really power off the GPU and results in
-   increased power consumption during runtime/system sleep. PR3 fully
-   removes the power, as desired.
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+> 
+>> and both approaches seem to be right,
+>> dependently of the Core configuration and setup.
+>>
+>> The standard manual speed change sequence is:
+>> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
+> 
+> Do you mean TRGT_LINK_SPEED @ 0x5180 00A0 ?
+
+Correct.
+
+> 
+>> b) Clear "Directed Speed Change"
+> 
+> CFG_DIRECTED_SPEED_CHANGE @ 0x5180 080C 
+
+Correct.
+
+> 
+>> c) Set "Directed Speed Change"
+>>
+>> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the
+>> default value), it will execute LTSSM to initiate speed change to
+>> Gen2 or Gen3, after link is started in Gen1, and then the bit is
+>> automatically cleared.
+> 
+> Ok, so with default settings (after reset) we do have Gen1 speed link
+> and when we enable LTSSM (with LTSSM_EN bit setting) we negotiate to
+> Gen2/Gen3.
+
+Yes, that's the expected behavior. I submited this direct question to R&D and
+will have your doubt answered soon.
+
+> 
+>>
+>> Lukasz is reseting this bit, in order to avoid the LTSSM to be
+>> executed, which is correct. 
+> 
+> So with CFG_DIRECTED_SPEED_CHANGE = 0, when I start LTSSM (with
+> LTSSM_EN) the state machine returns immediately and leaves link in the
+> Gen1?
+> 
+> The pci-dra7 driver always sets LTSSM_EN bit to start link negotiation.
+> 
+>> There is another way to prevent this
+>> automatic speed change, which is to set GEN1 speed before link up
+>> which might be difficult in some setups, so Kishon's also right.
+>>
+>> In my opinion Lukasz approach would be the one that might be more
+>> universal and more "secure".
+> 
+> The robustness is the key here since there are some devices, which on
+> particular HW must only work with Gen1 speed. When we start LTSSM state
+> machine and hence start negotiation to Gen2, not always the result of
+> LTSSM is correct and device is properly recognized.
+> 
+>>
+>> Joao
+>>
+>>
+>>>
+>>>>
+>>>>>
+>>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of
+>>>>> hacking the IP register.
+>>>>
+>>>> From the original patch description:
+>>>>
+>>>> "Add support to force Root Complex to work in GEN1 mode if so
+>>>> desired, but don't force GEN1 mode on any board just yet."
+>>>>
+>>>> Are there any (floating around) patches allowing forcing GEN1
+>>>> operation on any board (I would like to reuse/port them to my
+>>>> current solution)?
+>>>
+>>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt
+>>> with the patch in Bjorn's tree.
+>>>
+>>> Thanks
+>>> Kishon
+>>>
+>>
+> 
+> Best regards,
+> 
+> Lukasz Majewski
+> 
+> --
+> 
+> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+> 
