@@ -1,194 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4945 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936543AbdADQMh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Jan 2017 11:12:37 -0500
-From: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
- sysfs
-Date: Wed, 4 Jan 2017 16:00:20 +0000
-Message-ID: <87618083B2453E4A8714035B62D67992507430EB@FMSMSX105.amr.corp.intel.com>
-References: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
- <20170104004831.17866.11537.stgit@localhost6.localdomain6>
- <20170104021531.GA567@gwshan>
-In-Reply-To: <20170104021531.GA567@gwshan>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Tue, 17 Jan 2017 19:34:14 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
+	Andrew Lunn <andrew@lunn.ch>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+Message-ID: <20170117193414.GG27312@n2100.armlinux.org.uk>
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117152548.GB27312@n2100.armlinux.org.uk>
+ <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117175115.GD27312@n2100.armlinux.org.uk>
+ <20170117175728.GE27312@n2100.armlinux.org.uk>
+ <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Gavin Shan [mailto:gwshan@linux.vnet.ibm.com]
->Sent: Tuesday, January 03, 2017 6:16 PM
->To: Tantilov, Emil S <emil.s.tantilov@intel.com>
->Cc: linux-pci@vger.kernel.org; intel-wired-lan@lists.osuosl.org; Duyck,
->Alexander H <alexander.h.duyck@intel.com>; netdev@vger.kernel.org; linux-
->kernel@vger.kernel.org
->Subject: Re: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
->sysfs
->
->On Tue, Jan 03, 2017 at 04:48:31PM -0800, Emil Tantilov wrote:
->>Enabling/disabling SRIOV via sysfs by echo-ing multiple values
->>simultaneously:
->>
->>echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
->>echo 63 > /sys/class/net/ethX/device/sriov_numvfs
->>
->>sleep 5
->>
->>echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
->>echo 0 > /sys/class/net/ethX/device/sriov_numvfs
->>
->>Results in the following bug:
->>
->>kernel BUG at drivers/pci/iov.c:495!
->>invalid opcode: 0000 [#1] SMP
->>CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
->>RIP: 0010:[<ffffffff813b1647>]
->>	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>
->>Call Trace:
->> [<ffffffff81391726>] pci_release_dev+0x26/0x70
->> [<ffffffff8155be6e>] device_release+0x3e/0xb0
->> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
->> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
->> [<ffffffff8155bc27>] put_device+0x17/0x20
->> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
->> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
->> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
->> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
->> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
->> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
->> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
->> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
->> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
->> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
->>...
->>RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>
->>Use the existing mutex lock to protect each enable/disable operation.
->>
->>CC: Alexander Duyck <alexander.h.duyck@intel.com>
->>Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
->
->Emil, It's going to change semantics of pci_enable_sriov() and pci_disable_sriov().
->They can be invoked when writing to the sysfs entry, or loading PF's
->driver. With the change applied, the lock (pf->sriov->lock) isn't acquired and released
->in the PF's driver loading path.
+On Tue, Jan 17, 2017 at 12:14:58PM -0600, Bjorn Helgaas wrote:
+> The instrumentation has evolved a bit since then.  Latest is below (could
+> still use improvement, but it does address your suggestions above):
+> 
+> https://bugzilla.kernel.org/attachment.cgi?id=251691 (CONFIG_PCIEASPM=y)
+> https://bugzilla.kernel.org/attachment.cgi?id=251701 (CONFIG_PCIEASPM not set)
 
-The enablement of SRIOV on driver load is done via deprecated module parameter.
-Perhaps we can just remove it, although there are probably still people that use it
-and may not be happy if we get rid of it. 
+Thanks.
 
->I think the reasonable way would be adding a flag in "struct sriov", to
->indicate someone is accessing the IOV capability through sysfs file. With this, the
->code returns with "-EBUSY" immediately for contenders. With it, nothing is going
->to be changed in PF's driver loading path.
+The point at which things die is when we request a link retrain - I've
+augmented the trace with the register names:
 
-Flag is what I initially had in mind, but did not want to add extra locking if we 
-can make use of the existing.
+pci 0000:02:00.0: rd where=0x074 size=4 val=0x8dc1 (hw)         EXP_DEVCAP
 
->Also, there are some minor comments as below and I guess most of them won't
->be applied if you take my suggestion eventually. However, I'm trying to make
->the comments complete.
+pcie_aspm_configure_common_clock():
 
-Thanks a lot for reviewing!
+pci 0000:02:00.0: rd where=0x082 size=2 val=0x1011 (hw)         EXP_LNKSTA
+pci 0000:??:??.?: rd where=0x052 size=2 val=0x1011 (sw)         EXP_LNKSTA
+pci 0000:02:00.0: rd where=0x080 size=2 val=0x0 (hw)            EXP_LNKCTL
+pci 0000:02:00.0: wr where=0x080 size=2 val=0x40 (hw)           EXP_LNKCTL
 
->
->>---
->> drivers/pci/pci-sysfs.c |   24 +++++++++++++++++-------
->> 1 file changed, 17 insertions(+), 7 deletions(-)
->>
->>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>index 0666287..5b54cf5 100644
->>--- a/drivers/pci/pci-sysfs.c
->>+++ b/drivers/pci/pci-sysfs.c
->>@@ -472,7 +472,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->> 				  const char *buf, size_t count)
->> {
->> 	struct pci_dev *pdev = to_pci_dev(dev);
->>+	struct pci_sriov *iov = pdev->sriov;
->> 	int ret;
->>+
->
->Unnecessary change.
->
->> 	u16 num_vfs;
->>
->> 	ret = kstrtou16(buf, 0, &num_vfs);
->>@@ -482,38 +484,46 @@ static ssize_t sriov_numvfs_store(struct device
->*dev,
->> 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->> 		return -ERANGE;
->>
->>+	mutex_lock(&iov->dev->sriov->lock);
->>+
->> 	if (num_vfs == pdev->sriov->num_VFs)
->>-		return count;		/* no change */
->>+		goto exit;
->>
->> 	/* is PF driver loaded w/callback */
->> 	if (!pdev->driver || !pdev->driver->sriov_configure) {
->> 		dev_info(&pdev->dev, "Driver doesn't support SRIOV
->configuration via sysfs\n");
->>-		return -ENOSYS;
->>+		ret = -EINVAL;
->>+		goto exit;
->
->Why we need change the error code here?
+Enables common clock configuration on the device.
 
-checkpatch was complaining about the use of the ENOSYS error code being specific
-and even though it was not my patch introducing it I had to change it to shut it up.
+pci 0000:??:??.?: rd where=0x050 size=2 val=0x40 (sw)           EXP_LNKCTL
+pci 0000:??:??.?: wr where=0x050 size=2 val=0x40 (sw)           EXP_LNKCTL
 
->> 	}
->>
->> 	if (num_vfs == 0) {
->> 		/* disable VFs */
->> 		ret = pdev->driver->sriov_configure(pdev, 0);
->>-		if (ret < 0)
->>-			return ret;
->>-		return count;
->>+		goto exit;
->> 	}
->>
->> 	/* enable VFs */
->> 	if (pdev->sriov->num_VFs) {
->> 		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
->> 			 pdev->sriov->num_VFs, num_vfs);
->>-		return -EBUSY;
->>+		ret = -EBUSY;
->>+		goto exit;
->> 	}
->>
->> 	ret = pdev->driver->sriov_configure(pdev, num_vfs);
->> 	if (ret < 0)
->>-		return ret;
->>+		goto exit;
->>
->> 	if (ret != num_vfs)
->> 		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
->> 			 num_vfs, ret);
->>
->>+exit:
->>+	mutex_unlock(&iov->dev->sriov->lock);
->>+
->>+	if (ret < 0)
->>+		return ret;
->>+
->> 	return count;
->
->The code might be clearer if @ret is returned here. In that case, We need
->set it properly in error paths.
+Common clock configuration is already enabled on the root.
 
-I played with different ways to handle this and this seemed the least intrusive.
+pci 0000:??:??.?: rd where=0x050 size=4 val=0x10110040 (sw)     EXP_LNKCTL
+pci 0000:??:??.?: wr where=0x050 size=2 val=0x60 (sw)           EXP_LNKCTL
 
-Thanks,
-Emil
+Here we request the train, setting bit 5 in the link control
+register.
 
+pci 0000:??:??.?: rd where=0x050 size=4 val=0x110040 (sw)       EXP_LNKCTL
+pci 0000:??:??.?: rd where=0x052 size=2 val=0x811 (sw)          EXP_LNKSTA
+pci 0000:??:??.?: rd where=0x052 size=2 val=0x811 (sw)          EXP_LNKSTA
 
+Waiting for the link training bit to clear...
+
+pci 0000:??:??.?: rd where=0x052 size=2 val=0x11 (sw)           EXP_LNKSTA
+
+and it's cleared here - but note that the link is still down.
+
+pci 0000:??:??.?: rd where=0x04c size=4 val=0x3ac12 (sw)        EXP_LNKCAP
+pci 0000:??:??.?: rd where=0x050 size=2 val=0x40 (sw)           EXP_LNKCTL
+
+pcie_get_aspm_reg() for the root.
+
+pci 0000:02:00.0: rd where=0x07c size=4 val=0xffffffff (no link)
+
+pcie_get_aspm_reg() for the device (fails).
+
+So, I think the question is... why does asking for a retrain cause
+the link to fail and never recover?
+
+Uwe, can you try:
+
+setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
+	0x50.w=0x60
+
+and see whether it remains alive (you can check by reading the root
+register 0x52.w - bit 12 should be set once bit 11 clears again.
+
+If that's successful, maybe setting the common clock bit on the PCIe
+device is what's causing the problem, in which case:
+
+setpci -s 02:00.0 0x80.w=0x40
+setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
+	0x50.w=0x60
+
+I would imagine would cause the link to go down.  So, the question
+this gives us is why the common clock setup is not working on your
+platform.  Maybe we need to source the SLC bit in the link status
+from DT, though I'd like to understand what's going on here more
+first.
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
