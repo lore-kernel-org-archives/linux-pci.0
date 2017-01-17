@@ -1,38 +1,140 @@
-Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=9olq=YQ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 2 Jan 2017 14:22:28 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Kilian Singer <kilian.singer@quantumtechnology.info>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170102122228.GB3353@lahna.fi.intel.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
- <1942778.Cx2ycTbRkQ@aspire.rjw.lan>
- <1129781083.551.1483105037253.JavaMail.zimbra@quantumtechnology.info>
- <1750562.pIYQQN1RjA@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+To: Bjorn Helgaas <helgaas@kernel.org>, Russell King - ARM Linux
+ <linux@armlinux.org.uk>
+References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
+ <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117152548.GB27312@n2100.armlinux.org.uk>
+ <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117175115.GD27312@n2100.armlinux.org.uk>
+ <20170117175728.GE27312@n2100.armlinux.org.uk>
+ <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117193414.GG27312@n2100.armlinux.org.uk>
+ <20170117210258.GH27312@n2100.armlinux.org.uk>
+ <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
+Date: Tue, 17 Jan 2017 15:37:10 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1750562.pIYQQN1RjA@aspire.rjw.lan>
+In-Reply-To: <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>,
+ =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <uwe@kleine-koenig.org>,
+ David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 30, 2016 at 03:47:31PM +0100, Rafael J. Wysocki wrote:
-> On Friday, December 30, 2016 02:37:17 PM Kilian Singer wrote:
-> > Yes,
-> > the pci_port_pm=off
-> > fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
-> > Tested on 4.9
-> 
-> OK, thanks!
-> 
-> Please use that as a manual workaround for the time being.
-> 
-> I looked at the acpidump attached to the BZ entry, but nothing jumped up at me
-> immediately.  I'll let Mika take care of this going forward when he's back.
+On 01/17/2017 02:22 PM, Bjorn Helgaas wrote:
+> [+cc David]
+>
+> On Tue, Jan 17, 2017 at 09:02:58PM +0000, Russell King - ARM Linux wrote:
+>> On Tue, Jan 17, 2017 at 07:34:14PM +0000, Russell King - ARM Linux wrote:
+>>> Uwe, can you try:
+>>>
+>>> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
+>>> 	0x50.w=0x60
+>>>
+>>> and see whether it remains alive (you can check by reading the root
+>>> register 0x52.w - bit 12 should be set once bit 11 clears again.
+>>
+>> For reference, this I got wrong...
+>>
+>> 0xf1041a04 bit 0 indicates link status (0 = link up, 1 = link down).
+>>
+>>> If that's successful, maybe setting the common clock bit on the PCIe
+>>> device is what's causing the problem, in which case:
+>>>
+>>> setpci -s 02:00.0 0x80.w=0x40
+>>> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
+>>> 	0x50.w=0x60
+>>
+>> Having worked with Uwe over IRC, it seems that any request to retrain
+>> causes the link to go down, either with or without the common clock bit
+>> set:
+>>
+>> # setpci -s 2.0 0x50.w=0x60
+>> # setpci -s 2.0 0x52.w
+>> 0011
+>> # memtool md 0xf1041a04+4
+>> f1041a04: 00010201
+>> ... reboot ...
+>> # setpci -s 2.0 0x50.w=0x20
+>> # memtool md 0xf1041a04+4
+>> f1041a04: 00010201
+>>
+>> which doesn't point towards ASPM itself, but the problem is caused by
+>> a side effect of ASPM's setup code which always triggers a retrain.
+>>
+>> Bit 5 in that register is documented (at least in the Armada 370 docs
+>> and Armada XP docs I have) as:
+>>
+>> 5  RetrnLnk  RW    Retrain Link
+>>              0x0   This bit forces the device to initiate link retraining.
+>>                    Always returns 0 when read.
+>>                    NOTE: If configured as an Endpoint, this field is
+>>                    reserved and has no effect.
+>>
+>> Bjorn, are you aware of similar situations where a request for the PCIe
+>> link to be retrained causes it to fail?
 
-Thanks Rafael and Lucas for the help. I'm now back from my vacation so I
-can start investigating this as well.
 
-Kilian, can you attach full output of 'sudo lspci -vv' to the bug? The
-one in the comments is pretty hard to read.
+Link (re)training can fail for several reasons including, but not 
+limited to:
+
+- Poor signal propagation through the chips/packages/boards/connectors, 
+also known as Signal Integrity (SI) problmes.
+
+- Incorrect implementation, in hardware, of link training protocols at 
+either end of the link
+
+Usually, system and PCIe device vendors do a lot of testing and signal 
+analysis across a variety of configurations with the end goal being that 
+PCIe looks like a bullet-proof interconnect to the end consumer.
+
+Unfortunatly, sometimes it doesn't work.  In these cases, the vendors of 
+the devices on each end of the link tend to point fingers at the link 
+partner for being detective in some way.
+
+This patch:
+
+>
+> The only one that comes to mind is this patch from David (CC'd) that
+> avoids ASPM-related retrains when we know the link doesn't support ASPM:
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e53f9a28bee3
+>
+
+Is an attempt to work around the problem from the system (host) end.  If 
+the system vendor knows a priori that a defective PCIe device is present 
+in the system, the PCIe root port can be configured to indicate no ASPM 
+is supported, resulting (with the patch) in no link retraining being 
+attempted.
+
+To me it feels that we need a black list of devices that fail at a high 
+rate in the link retraining, that when encountered would disable ASPM on 
+the link where they reside.
+
+Just my $0.02
+David Daney
+
+
+> Side note: it looks like we don't use the recommended retrain
+> algorithm in the implementation note about avoiding race conditions in
+> PCIe r3.0, sec 7.8.7.
+>
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
