@@ -1,82 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:44360 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751805AbdALK3s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:29:48 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 26/37] PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled independently
-Date: Thu, 12 Jan 2017 15:56:15 +0530
-Message-ID: <1484216786-17292-27-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Jan 2017 08:49:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>, stable@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v2] PCI/MSI: pci-xgene-msi: Fix CPU hotplug registration
+ handling
+Message-ID: <20170117144939.GC22776@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484662916-9549-1-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484662916-9549-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Split dra7xx_pcie_enable_interrupts into
-dra7xx_pcie_enable_wrapper_interrupts and dra7xx_pcie_enable_msi_interrupts
-so that wrapper interrupts and msi interrupts can be enabled independently.
-This is in preparation for adding EP mode support to dra7xx driver since
-EP mode doesn't have to enable msi_interrupts.
+On Tue, Jan 17, 2017 at 02:21:56PM +0000, Marc Zyngier wrote:
+> The conversion to the new hotplug state machine introduced a regression
+> where a successful hotplug registration would be treated as an error,
+> effectively disabling the MSI driver forever.
+> 
+> Fix it by doing the proper check on the return value.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: stable@vger.kernel.org
+> Fixes: 9c248f8896e6 ("PCI/xgene-msi: Convert to hotplug state machine")
+> Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+Applied to for-linus for v4.10, thanks!
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 8a1fccd..eb3a9c6 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -140,18 +140,30 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	return dw_pcie_wait_for_link(pci);
- }
- 
--static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
- {
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
--			   ~INTERRUPTS);
--	dra7xx_pcie_writel(dra7xx,
--			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
- 			   ~LEG_EP_INTERRUPTS & ~MSI);
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
-+
-+	dra7xx_pcie_writel(dra7xx,
-+			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
- 			   MSI | LEG_EP_INTERRUPTS);
- }
- 
-+static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-+			   ~INTERRUPTS);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
-+			   INTERRUPTS);
-+}
-+
-+static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+	dra7xx_pcie_enable_msi_interrupts(dra7xx);
-+}
-+
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--- 
-1.7.9.5
-
+> ---
+> * From v1: added Sebastian's Ack and Duc's Tested-by, cc'ing linux-pci
+> 
+>  drivers/pci/host/pci-xgene-msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> index 1f38d08..f1b633b 100644
+> --- a/drivers/pci/host/pci-xgene-msi.c
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -517,7 +517,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  
+>  	rc = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "pci/xgene:online",
+>  			       xgene_msi_hwirq_alloc, NULL);
+> -	if (rc)
+> +	if (rc < 0)
+>  		goto err_cpuhp;
+>  	pci_xgene_online = rc;
+>  	rc = cpuhp_setup_state(CPUHP_PCI_XGENE_DEAD, "pci/xgene:dead", NULL,
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
