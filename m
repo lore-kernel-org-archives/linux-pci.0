@@ -1,109 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:35791 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751376AbdALBzD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 20:55:03 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3] PCI: rockchip: Add quirk to disable RC's ASPM L0s
-Date: Thu, 12 Jan 2017 09:53:17 +0800
-Message-Id: <1484185997-55685-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lukasz Majewski <lukma@denx.de>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
+ <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
+ <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
+ <587C9CE6.8040001@ti.com> <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <587DAD37.5030201@ti.com>
+Date: Tue, 17 Jan 2017 11:05:51 +0530
+MIME-Version: 1.0
+In-Reply-To: <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rockchip's RC outputs 100MHz reference clock but there are
-two methods for PHY to generate it.
+Hi Joao,
 
-(1)One of them is to use system PLL to generate 100MHz clock and
-the PHY will relock it and filter signal noise then outputs the
-reference clock.
+On Monday 16 January 2017 10:31 PM, Joao Pinto wrote:
+> 
+> Hi,
+> 
+> Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
+>> + Joao, Jingoo
+>>
+>> Hi,
+>>
+>> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
+>>> Hi Kishon,
+>>>
+>>>> Hi Łukasz,
+>>>>
+>>>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
+>>>>> Hi Kishon,
+>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
+>>>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
+>>>>>>> run with forced GEN1 speed on PCIe bus.
+>>>>>>>
+>>>>>>> This patch changes the speed explicitly on dra7 based devices when
+>>>>>>> proper device tree attribute is defined for the PCIe controller.
+>>>>>>>
+>>>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
+>>>>>>
+>>>>>> Bjorn has already queued a patch to do the same thing
+>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
+>>>>>
+>>>>> It seems like Bjorn only modifies CAP registers.
+>>>>
+>>>> The patch also modifies the LNKCTL2 register.
+>>>>>
+>>>>> He also needs to change register with 0x080C offset to actually
+>>>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
+>>>>
+>>>> This bit is used to initiate speed change (after the link is
+>>>> initialized in GEN1). Resetting the bit (like what you have done
+>>>> here) prevents speed change.
+>>>
+>>> This is strange, but e2e advised me to do things as I did in the patch
+>>> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
+>>>
+>>> Link:
+>>> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
+>>>
+>>> Both patches modify 0x5180 007C register to set GEN1 capability
+>>> (PCI_EXP_LNKCAP_SLS_2_5GB)
+>>>
+>>> The problem is with second register (in your patch):
+>>>
+>>> From SPRUHZ6G TRM:
+>>>
+>>> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
+>>> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
+>>>   description in TRM
+>>>
+>>> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
+>>> default /reset value.
+>>
+>> The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
+>>>
+>>>
+>>> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
+>>> Mine shows differences in lspci output (as posted in [1]).
+>>
+>> You'll see the difference even with the patch in Bjorn's tree ;-)
+>>
+>> I think these are 2 different approaches to keep the link at GEN1. Joao or
+>> Jingoo, do you have any suggestion here?
+> 
+> I studied the Databook, and both approaches seem to be right, dependently of the
+> Core configuration and setup.
+> 
+> The standard manual speed change sequence is:
+> a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
+> b) Clear "Directed Speed Change"
+> c) Set "Directed Speed Change"
+> 
+> If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the default
+> value), it will execute LTSSM to initiate speed change to Gen2 or Gen3, after
+> link is started in Gen1, and then the bit is automatically cleared.
+> 
+> Lukasz is reseting this bit, in order to avoid the LTSSM to be executed, which
+> is correct. There is another way to prevent this automatic speed change, which
+> is to set GEN1 speed before link up which might be difficult in some setups, so
+> Kishon's also right.
 
-(2)Another way is to share Soc's 24MHZ crystal oscillator with
-PHY and force PHY's DLL to generate 100MHz internally.
+Just for my understanding, why do you think this will be difficult in some setups?
+> 
+> In my opinion Lukasz approach would be the one that might be more universal and
+> more "secure".
 
-When using case(2), the exit from L0s doesn't work fine occasionally
-due to the broken design of RC receiver's logical circuit. So even if
-we use extended-synch, it still fails for PHY to relock the bits from
-FTS sometimes. This will hang the system.
+IMHO setting link control in the standard PCIe header space should be more
+universal. I'm not sure about the secure part though.
 
-Maybe we could argue that why not use case(1) to avoid it? The reason
-is that as we could see the reference clock is derived from system PLL
-and the path from it to PHY isn't so clean which means there are some
-noise introduced by power-domain and other buses can't be filterd out
-by PHY and we could see noise from the frequency spectrum by
-oscilloscope. This makes the TX compatibility test a little difficult
-to pass the spec. So case(1) and case(2) are both used indeed now. If
-using case(2), we should disable RC's L0s support, and that is why we
-need this property to indicate this quirk.
-
-Also after checking quirk.c, I noticed there is already a quirk for
-disabling L0s unconditionally, quirk_disable_aspm_l0s. But obviously we
-shouldn't do that as mentioned above that case(1) could still works fine
-with L0s.
-
-Reported-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
----
-
-Changes in v3:
-- fix misspelled aspm for the property name
-
-Changes in v2:
-- drop the quirk prefix
-
- Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 2 ++
- drivers/pci/host/pcie-rockchip.c                        | 9 +++++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 71aeda1..1453a73 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -43,6 +43,8 @@ Required properties:
- - interrupt-map-mask and interrupt-map: standard PCI properties
- 
- Optional Property:
-+- aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
-+	using 24MHz OSC for RC's PHY.
- - ep-gpios: contain the entry for pre-reset gpio
- - num-lanes: number of lanes to use
- - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f2dca7b..140cdc7 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -140,6 +140,8 @@
- #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
- #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
- #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-+#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
-+#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
- #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
- #define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
-@@ -653,6 +655,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	status &= ~PCIE_RC_CONFIG_THP_CAP_NEXT_MASK;
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_THP_CAP);
- 
-+	/* Clear L0s from RC's link cap */
-+	if (of_property_read_bool(dev->of_node, "aspm-no-l0s")) {
-+		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LINK_CAP);
-+		status &= ~PCIE_RC_CONFIG_LINK_CAP_L0S;
-+		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
-+	}
-+
- 	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
- 
- 	rockchip_pcie_write(rockchip,
--- 
-1.9.1
-
-
+Thanks
+Kishon
+> 
+> Joao
+> 
+> 
+>>
+>>>
+>>>>
+>>>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
+>>>> the IP register.
+>>>
+>>> From the original patch description:
+>>>
+>>> "Add support to force Root Complex to work in GEN1 mode if so desired,
+>>> but don't force GEN1 mode on any board just yet."
+>>>
+>>> Are there any (floating around) patches allowing forcing GEN1 operation
+>>> on any board (I would like to reuse/port them to my current solution)?
+>>
+>> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
+>> patch in Bjorn's tree.
+>>
+>> Thanks
+>> Kishon
+>>
+> 
