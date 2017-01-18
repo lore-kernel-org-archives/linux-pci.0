@@ -1,109 +1,186 @@
-Return-Path: <SRS0=KVF9=ZF=gmail.com=myron.stowe@kernel.org>
-Return-Path: <SRS0=KVF9=ZF=gmail.com=myron.stowe@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 18 Jan 2017 23:39:11 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Linas Vepstas <linasvepstas@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Sean Hefty <sean.hefty@intel.com>,
+        Hal Rosenstock <hal.rosenstock@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org
+Subject: [PATCH] pci: drop link_reset
+Message-ID: <1484775540-8405-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20151015172305.GC17702@localhost>
-References: <1443051076-27716-1-git-send-email-rbezut@gmail.com> <20151015172305.GC17702@localhost>
-From: Myron Stowe <myron.stowe@gmail.com>
-Date: Mon, 23 Jan 2017 13:57:28 -0700
-Message-ID: <CAL-B5D2zfKg2pzc0M2udS3=tNQ-=RzG8qLdBWAQC3KVh4PRQ0g@mail.gmail.com>
-Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
-To: Bjorn Helgaas <helgaas@kernel.org>, rbezut@gmail.com
-Cc: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Neil Horman <nhorman@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 11:23 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
->> irqbalance uses these attributes to populate its internal database, which is
->> then used to bind the irq on the appropriate NUMA node.
->>
->> On a device accepting multiple MSIs and with interrupt remapping enabled,
->> only the first irq entry is exported to msi_irqs directory.
->> This results in irqbalance having no clue of the NUMA affinity for the extra
->> irqs and starting to bind them on random nodes.
->>
->> This patch exports all MSI interrupts as sysfs attributes when relevant.
->>
->> Signed-off-by: Romain Bezut <rbezut@gmail.com>
->
-> Applied with Thomas' ack to pci/msi for v4.4, thanks, Romain!
+No hardware seems to actually call link_reset, and
+no driver implements it as more than a nop stub.
 
-Internal testing with netperf - network performance between two
-machines with 10Gb Intel NICs running 24 instances of the netperf tool
-in parallel (to utilize all CPU cores) - shows a roughly 20%
-performance degradation.  Bi-section showed the offending commit to be
-this patch: commit a86760664f4 ("PCI/MSI: Export all remapped MSIs to
-sysfs attributes").
+This drops the mentions of the callback from everywhere.
+It's dropped from the documentation as well, but
+the doc really needs to be updated to reflect
+reality better (e.g. on pcie slot reset is the link reset).
 
-  Prior: 9.62 +-0.00 gbits/sec
-  After: 7.77 +-0.17 gbits/sec
+This will be done in a later patch.
 
->> ---
->>  drivers/pci/msi.c | 31 +++++++++++++++++--------------
->>  1 file changed, 17 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index d449714..324a164 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->>       int ret = -ENOMEM;
->>       int num_msi = 0;
->>       int count = 0;
->> +     int i;
->>
->>       /* Determine how many msi entries we have */
->>       for_each_pci_msi_entry(entry, pdev)
->> -             ++num_msi;
->> +             num_msi += entry->nvec_used;
->>       if (!num_msi)
->>               return 0;
->>
->> @@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->>       if (!msi_attrs)
->>               return -ENOMEM;
->>       for_each_pci_msi_entry(entry, pdev) {
->> -             msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
->> -             if (!msi_dev_attr)
->> -                     goto error_attrs;
->> -             msi_attrs[count] = &msi_dev_attr->attr;
->> -
->> -             sysfs_attr_init(&msi_dev_attr->attr);
->> -             msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
->> -                                                 entry->irq);
->> -             if (!msi_dev_attr->attr.name)
->> -                     goto error_attrs;
->> -             msi_dev_attr->attr.mode = S_IRUGO;
->> -             msi_dev_attr->show = msi_mode_show;
->> -             ++count;
->> +             for (i = 0; i < entry->nvec_used; i++) {
->> +                     msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
->> +                     if (!msi_dev_attr)
->> +                             goto error_attrs;
->> +                     msi_attrs[count] = &msi_dev_attr->attr;
->> +
->> +                     sysfs_attr_init(&msi_dev_attr->attr);
->> +                     msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
->> +                                                         entry->irq + i);
->> +                     if (!msi_dev_attr->attr.name)
->> +                             goto error_attrs;
->> +                     msi_dev_attr->attr.mode = S_IRUGO;
->> +                     msi_dev_attr->show = msi_mode_show;
->> +                     ++count;
->> +             }
->>       }
->>
->>       msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
->> --
->> 2.4.9
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ Documentation/PCI/pci-error-recovery.txt | 24 +++---------------------
+ drivers/infiniband/hw/hfi1/pcie.c        | 10 ----------
+ drivers/infiniband/hw/qib/qib_pcie.c     |  8 --------
+ drivers/media/pci/ngene/ngene-cards.c    |  7 -------
+ include/linux/pci.h                      |  3 ---
+ 5 files changed, 3 insertions(+), 49 deletions(-)
+
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index ac26869..da3b217 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -78,7 +78,6 @@ struct pci_error_handlers
+ {
+ 	int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
+ 	int (*mmio_enabled)(struct pci_dev *dev);
+-	int (*link_reset)(struct pci_dev *dev);
+ 	int (*slot_reset)(struct pci_dev *dev);
+ 	void (*resume)(struct pci_dev *dev);
+ };
+@@ -104,8 +103,7 @@ if it implements any, it must implement error_detected(). If a callback
+ is not implemented, the corresponding feature is considered unsupported.
+ For example, if mmio_enabled() and resume() aren't there, then it
+ is assumed that the driver is not doing any direct recovery and requires
+-a slot reset. If link_reset() is not implemented, the card is assumed to
+-not care about link resets. Typically a driver will want to know about
++a slot reset.  Typically a driver will want to know about
+ a slot_reset().
+ 
+ The actual steps taken by a platform to recover from a PCI error
+@@ -232,25 +230,9 @@ proceeds to STEP 4 (Slot Reset)
+ 
+ STEP 3: Link Reset
+ ------------------
+-The platform resets the link, and then calls the link_reset() callback
+-on all affected device drivers.  This is a PCI-Express specific state
++The platform resets the link.  This is a PCI-Express specific step
+ and is done whenever a non-fatal error has been detected that can be
+-"solved" by resetting the link. This call informs the driver of the
+-reset and the driver should check to see if the device appears to be
+-in working condition.
+-
+-The driver is not supposed to restart normal driver I/O operations
+-at this point.  It should limit itself to "probing" the device to
+-check its recoverability status. If all is right, then the platform
+-will call resume() once all drivers have ack'd link_reset().
+-
+-	Result codes:
+-		(identical to STEP 3 (MMIO Enabled)
+-
+-The platform then proceeds to either STEP 4 (Slot Reset) or STEP 5
+-(Resume Operations).
+-
+->>> The current powerpc implementation does not implement this callback.
++"solved" by resetting the link.
+ 
+ STEP 4: Slot Reset
+ ------------------
+diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index 4ac8f33..ebd941f 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -598,15 +598,6 @@ pci_slot_reset(struct pci_dev *pdev)
+ 	return PCI_ERS_RESULT_CAN_RECOVER;
+ }
+ 
+-static pci_ers_result_t
+-pci_link_reset(struct pci_dev *pdev)
+-{
+-	struct hfi1_devdata *dd = pci_get_drvdata(pdev);
+-
+-	dd_dev_info(dd, "HFI1 link_reset function called, ignored\n");
+-	return PCI_ERS_RESULT_CAN_RECOVER;
+-}
+-
+ static void
+ pci_resume(struct pci_dev *pdev)
+ {
+@@ -625,7 +616,6 @@ pci_resume(struct pci_dev *pdev)
+ const struct pci_error_handlers hfi1_pci_err_handler = {
+ 	.error_detected = pci_error_detected,
+ 	.mmio_enabled = pci_mmio_enabled,
+-	.link_reset = pci_link_reset,
+ 	.slot_reset = pci_slot_reset,
+ 	.resume = pci_resume,
+ };
+diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
+index 6abe1c6..c379b83 100644
+--- a/drivers/infiniband/hw/qib/qib_pcie.c
++++ b/drivers/infiniband/hw/qib/qib_pcie.c
+@@ -682,13 +682,6 @@ qib_pci_slot_reset(struct pci_dev *pdev)
+ 	return PCI_ERS_RESULT_CAN_RECOVER;
+ }
+ 
+-static pci_ers_result_t
+-qib_pci_link_reset(struct pci_dev *pdev)
+-{
+-	qib_devinfo(pdev, "QIB link_reset function called, ignored\n");
+-	return PCI_ERS_RESULT_CAN_RECOVER;
+-}
+-
+ static void
+ qib_pci_resume(struct pci_dev *pdev)
+ {
+@@ -707,7 +700,6 @@ qib_pci_resume(struct pci_dev *pdev)
+ const struct pci_error_handlers qib_pci_err_handler = {
+ 	.error_detected = qib_pci_error_detected,
+ 	.mmio_enabled = qib_pci_mmio_enabled,
+-	.link_reset = qib_pci_link_reset,
+ 	.slot_reset = qib_pci_slot_reset,
+ 	.resume = qib_pci_resume,
+ };
+diff --git a/drivers/media/pci/ngene/ngene-cards.c b/drivers/media/pci/ngene/ngene-cards.c
+index 423e8c8..8438c1c 100644
+--- a/drivers/media/pci/ngene/ngene-cards.c
++++ b/drivers/media/pci/ngene/ngene-cards.c
+@@ -781,12 +781,6 @@ static pci_ers_result_t ngene_error_detected(struct pci_dev *dev,
+ 	return PCI_ERS_RESULT_CAN_RECOVER;
+ }
+ 
+-static pci_ers_result_t ngene_link_reset(struct pci_dev *dev)
+-{
+-	printk(KERN_INFO DEVICE_NAME ": link reset\n");
+-	return 0;
+-}
+-
+ static pci_ers_result_t ngene_slot_reset(struct pci_dev *dev)
+ {
+ 	printk(KERN_INFO DEVICE_NAME ": slot reset\n");
+@@ -800,7 +794,6 @@ static void ngene_resume(struct pci_dev *dev)
+ 
+ static const struct pci_error_handlers ngene_errors = {
+ 	.error_detected = ngene_error_detected,
+-	.link_reset = ngene_link_reset,
+ 	.slot_reset = ngene_slot_reset,
+ 	.resume = ngene_resume,
+ };
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 30d6c16..316379c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -661,9 +661,6 @@ struct pci_error_handlers {
+ 	/* MMIO has been re-enabled, but not DMA */
+ 	pci_ers_result_t (*mmio_enabled)(struct pci_dev *dev);
+ 
+-	/* PCI Express link has been reset */
+-	pci_ers_result_t (*link_reset)(struct pci_dev *dev);
+-
+ 	/* PCI slot has been reset */
+ 	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
+ 
+-- 
+MST
