@@ -1,84 +1,111 @@
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Message-Id: <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
-In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 15 Jan 2017 21:03:45 +0100
-Subject: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:38679 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751157AbdARJAw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2017 04:00:52 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: rockchip: improve the training polling code
+Date: Wed, 18 Jan 2017 16:29:15 +0800
+Message-Id: <1484728155-72502-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hotplug ports generally block their parents from suspending to D3hot as
-otherwise their interrupts couldn't be delivered.
+Use the readl_poll_timeout instead of open coding them.
 
-An exception are Thunderbolt host controllers:  They have a separate
-GPIO pin to side-band signal plug events even if the controller is
-powered down or its parent ports are suspended to D3.  They can be told
-apart from Thunderbolt controllers in attached devices by checking if
-they're situated below a non-Thunderbolt device (typically a root port,
-or the downstream port of a PCIe switch in the case of the MacPro6,1).
-
-To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
-of a host controller must not block runtime PM on the upstream bridge as
-power to the chip is only cut once the upstream bridge has suspended.
-Amend the condition in pci_dev_check_d3cold() accordingly.
-
-This change does not impact non-Macs as their Thunderbolt hotplug ports
-are handled by the firmware rather than natively by the OS:  The hotplug
-ports are not allowed to suspend in pci_bridge_d3_possible() and keep
-their parent ports awake all the time.  Consequently it is meaningless
-whether they block runtime PM on their parent ports or not.
-
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/pci.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8ed098db82e1..e7a354cd13ce 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2269,6 +2269,24 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 	return false;
- }
+ drivers/pci/host/pcie-rockchip.c | 52 +++++++++++++---------------------------
+ 1 file changed, 16 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 0d6e8ee..17374a9 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -188,8 +188,11 @@
+ 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+ 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
+ #define PCIE_LINK_IS_L2(x) \
+-		(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
+-		 PCIE_CLIENT_DEBUG_LTSSM_L2)
++	(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == PCIE_CLIENT_DEBUG_LTSSM_L2)
++#define PCIE_LINK_UP(x) \
++	(((x) & PCIE_CLIENT_LINK_STATUS_MASK) == PCIE_CLIENT_LINK_STATUS_UP)
++#define PCIE_LINK_IS_GEN2(x) \
++	(((x) & PCIE_CORE_PL_CONF_SPEED_MASK) == PCIE_CORE_PL_CONF_SPEED_5G)
  
-+static bool pci_hotplug_bridge_may_wakeup(struct pci_dev *dev)
-+{
-+	struct pci_dev *parent, *grandparent;
-+
-+	/*
-+	 * Thunderbolt host controllers have a pin to side-band signal
-+	 * plug events.  Their hotplug ports are recognizable by having
-+	 * a non-Thunderbolt device as grandparent.
-+	 */
-+	if (dev->is_thunderbolt &&
-+	    (parent = pci_upstream_bridge(dev)) &&
-+	    (grandparent = pci_upstream_bridge(parent)) &&
-+	    !grandparent->is_thunderbolt)
-+		return true;
-+
-+	return false;
-+}
-+
- static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- {
- 	bool *d3cold_ok = data;
-@@ -2284,7 +2302,7 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- 	    !pci_power_manageable(dev) ||
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+@@ -463,7 +466,6 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	struct device *dev = rockchip->dev;
+ 	int err;
+ 	u32 status;
+-	unsigned long timeout;
  
- 	    /* Hotplug interrupts cannot be delivered if the link is down. */
--	    dev->is_hotplug_bridge)
-+	    (dev->is_hotplug_bridge && !pci_hotplug_bridge_may_wakeup(dev)))
+ 	gpiod_set_value(rockchip->ep_gpio, 0);
  
- 		*d3cold_ok = false;
+@@ -604,23 +606,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	gpiod_set_value(rockchip->ep_gpio, 1);
  
+ 	/* 500ms timeout value should be enough for Gen1/2 training */
+-	timeout = jiffies + msecs_to_jiffies(500);
+-
+-	for (;;) {
+-		status = rockchip_pcie_read(rockchip,
+-					    PCIE_CLIENT_BASIC_STATUS1);
+-		if ((status & PCIE_CLIENT_LINK_STATUS_MASK) ==
+-		    PCIE_CLIENT_LINK_STATUS_UP) {
+-			dev_dbg(dev, "PCIe link training gen1 pass!\n");
+-			break;
+-		}
+-
+-		if (time_after(jiffies, timeout)) {
+-			dev_err(dev, "PCIe link training gen1 timeout!\n");
+-			return -ETIMEDOUT;
+-		}
+-
+-		msleep(20);
++	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
++				 status, PCIE_LINK_UP(status), 20,
++				 500 * USEC_PER_MSEC);
++	if (err) {
++		dev_err(dev, "PCIe link training gen1 timeout!\n");
++		return -ETIMEDOUT;
+ 	}
+ 
+ 	if (rockchip->link_gen == 2) {
+@@ -632,22 +623,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		status |= PCI_EXP_LNKCTL_RL;
+ 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ 
+-		timeout = jiffies + msecs_to_jiffies(500);
+-		for (;;) {
+-			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+-			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+-			    PCIE_CORE_PL_CONF_SPEED_5G) {
+-				dev_dbg(dev, "PCIe link training gen2 pass!\n");
+-				break;
+-			}
+-
+-			if (time_after(jiffies, timeout)) {
+-				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+-				break;
+-			}
+-
+-			msleep(20);
+-		}
++		err = readl_poll_timeout(rockchip->apb_base + PCIE_CORE_CTRL,
++					 status, PCIE_LINK_IS_GEN2(status), 20,
++					 500 * USEC_PER_MSEC);
++		if (err)
++			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
 -- 
-2.11.0
+1.9.1
+
+
