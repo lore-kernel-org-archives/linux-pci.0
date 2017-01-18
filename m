@@ -1,62 +1,43 @@
-Return-Path: <SRS0=zZaV=ZN=gmail.com=jingoohan1@kernel.org>
-Return-Path: <SRS0=zZaV=ZN=gmail.com=jingoohan1@kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <helgaas@kernel.org>,
-	"'Jaehoon Chung'" <jh80.chung@samsung.com>
-Cc: <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>,
-	<krzk@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<javier@osg.samsung.com>,
-	<kgene@kernel.org>,
-	<linux-samsung-soc@vger.kernel.org>,
-	<cpgs@samsung.com>,
-	"'Pankaj Dubey'" <pankaj.dubey@samsung.com>
-References: <CGME20170116063140epcas5p38fffe5effdcfd2650cad98c25c31335e@epcas5p3.samsung.com> <20170116063138.25805-1-jh80.chung@samsung.com> <20170128212730.GA22283@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170128212730.GA22283@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: [PATCH V3 0/5] PCI: exynos: cleans the minor things
-Date: Tue, 31 Jan 2017 16:16:36 -0500
-Message-ID: <003901d27c07$506c3610$f144a230$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from orbyte.nwl.cc ([151.80.46.58]:41113 "EHLO mail.nwl.cc"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754256AbdARNCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jan 2017 08:02:00 -0500
+From: Phil Sutter <phil@nwl.cc>
+To: David Miller <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [net-next PATCH 0/3] Retrieve number of VFs in a bus-agnostic way
+Date: Wed, 18 Jan 2017 14:04:36 +0100
+Message-Id: <20170118130439.15023-1-phil@nwl.cc>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 28, 2017 4:28 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 16, 2017 at 03:31:33PM +0900, Jaehoon Chung wrote:
-> > Current pci-exynos.c is used for only EXYNOS5440.
-> > It's too complex to support the other Exynos SoCs.
-> > Before supporting the other Exynos SoCs, it needs to clean the codes.
-> >
-> > Changelog on V3:
-> > - Splits "PCI: exynos: replace to one register accessor from each
-> accessors"
-> >
-> > Changelog on V2:
-> > - Changes the all pointer names as "ep" instead of "exynos_pcie"
-> >
-> > Jaehoon Chung (5):
-> >   PCI: exynos: Rename all pointer names from "exynos_pcie" to "ep"
-> >   PCI: exynos: Replace the *_blk/*_phy/*_elb accessors
-> >   PCI: exynos: Remove the unnecessary variables
-> >   PCI: exynos: Use the bitops API to operate the bit shifting
-> >   PCI: exynos: remove the duplicated codes
-> >
-> >  drivers/pci/host/pci-exynos.c | 392 +++++++++++++++++++----------------
-> -------
-> 
-> Waiting for ack from Jingoom, per MAINTAINERS:
-> 
-> Jingoo Han <jingoohan1@gmail.com> (maintainer:PCI DRIVER FOR SAMSUNG
-> EXYNOS)
+Previously, it was assumed that only PCI NICs would be capable of having
+virtual functions - with my proposed enhancement of dummy NIC driver
+implementing (fake) ones for testing purposes, this is no longer true.
 
-It looks good.
+Discussion of said patch has led to the suggestion of implementing a
+bus-agnostic method for VF count retrieval so rtnetlink could work with
+both real VF-capable PCI NICs as well as my dummy modifications without
+introducing ugly hacks.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+The following series tries to achieve just that by introducing a bus
+type callback to retrieve a device's number of VFs, implementing this
+callback for PCI bus and finally adjusting rtnetlink to make use of the
+generalized infrastructure.
 
-Thanks,
-Jingoo
+Phil Sutter (3):
+  device: bus_type: Introduce num_vf callback
+  PCI: implement num_vf bus type callback
+  device: Implement a bus agnostic dev_num_vf routine
 
-> 
-> Pankaj has a follow-on patch that depends on this series:
-> https://patchwork.ozlabs.org/patch/711210/
+ drivers/pci/pci-driver.c |  6 ++++++
+ include/linux/device.h   | 11 +++++++++++
+ include/linux/pci.h      |  2 --
+ net/core/rtnetlink.c     |  3 +--
+ 4 files changed, 18 insertions(+), 4 deletions(-)
+
+-- 
+2.11.0
+
