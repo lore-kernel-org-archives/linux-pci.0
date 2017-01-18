@@ -1,87 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 31 Jan 2017 19:57:54 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
-Message-ID: <20170131185754.GA17684@kroah.com>
-References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
- <1485882204-26947-2-git-send-email-logang@deltatee.com>
- <20170131172630.GB12595@kroah.com>
- <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45834 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751064AbdARXq7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jan 2017 18:46:59 -0500
+Subject: [PATCH] PCI: Avoid possible deadlock on pci_lock and p->pi_lock
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Jan Kiszka <jan.kiszka@siemens.com>, linux-kernel@vger.kernel.org,
+        Matthew Wilcox <mawilcox@microsoft.com>
+Date: Wed, 18 Jan 2017 17:46:12 -0600
+Message-ID: <20170118234612.26157.95913.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 10:35:44AM -0700, Logan Gunthorpe wrote:
-> 
-> 
-> On 31/01/17 10:26 AM, Greg Kroah-Hartman wrote:
-> > That's one big patch to review, would you want to do that?
-> 
-> Sorry, will do.
-> 
-> > Can you break it up into smaller parts?  At least put the documentation
-> > separately, right?
-> 
-> Ha, funny. Last time I sent a patch someone asked for the documentation
-> to be in the same patch. But I can easily split this up.
+pci_lock is an IRQ-safe spinlock that protects all accesses to PCI
+configuration space (see PCI_OP_READ() and PCI_OP_WRITE() in pci/access.c).
 
-Sorry, it was probably me :)
+The pci_cfg_access_unlock() path acquires pci_lock, then p->pi_lock (inside
+wake_up_all()).  According to lockdep, there is a possible path involving
+snbep_uncore_pci_read_counter() that could acquire them in the reverse
+order: acquiring p->pi_lock, then pci_lock, which could result in a
+deadlock.  Lockdep details are in the bugzilla below.
 
-> > And don't dump a .txt file into Documentation/ anymore, people are
-> > working to move to the newer format.
-> 
-> Fair. I wasn't sure where a good place to put it was. Any suggestions?
+Avoid the possible deadlock by dropping pci_lock before waking up any
+config access waiters.
 
-Why do you need this?  Wherever you put it, it should be built as part
-of the online kernel documentation.  Who is the audience for this
-documentation?
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=192901
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/access.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> > Also, please rebase against Linus's tree at the least, we can't go back
-> > in time and apply this to the 4.9 kernel tree.
-> 
-> Will do.
-> 
-> > Why a .h file for a single .c file?
-> 
-> I wanted to keep the hardware defining structs and macros in a separate
-> file for future expansion. This hardware is also capable of some NTB
-> functions which may find it's way into the kernel in the future.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index db239547fefd..68bd7201d8bc 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -684,8 +684,9 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
+ 	WARN_ON(!dev->block_cfg_access);
+ 
+ 	dev->block_cfg_access = 0;
+-	wake_up_all(&pci_cfg_wait);
+ 	raw_spin_unlock_irqrestore(&pci_lock, flags);
++
++	wake_up_all(&pci_cfg_wait);
+ }
+ EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
+ 
 
-Do future stuff in the future, no need for that now, right?
-
-Simple is best.
-
-> > Also, why a whole new directory?
-> 
-> We didn't feel it fit in the pci director which was for standard pci
-> stuff. We're more than open to other suggestions as to where this code
-> belongs.
-
-I'll leave that up to the PCI maintainer, but just a single .c file in a
-subdir seems odd to me.
-
-thanks,
-
-greg k-h
