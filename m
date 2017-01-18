@@ -1,124 +1,172 @@
-Return-Path: <SRS0=AzQR=YZ=redhat.com=hdegoede@kernel.org>
-Return-Path: <SRS0=AzQR=YZ=redhat.com=hdegoede@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Peter Jones <pjones@redhat.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <bd9af400-6b8e-d852-8cf0-b437dffc507c@redhat.com>
-Date: Wed, 11 Jan 2017 12:04:13 +0100
+Return-Path: <SRS0=A/eM=ZA=intel.com=vaibhav.shankar@kernel.org>
+Return-Path: <SRS0=A/eM=ZA=intel.com=vaibhav.shankar@kernel.org>
+From: "Shankar, Vaibhav" <vaibhav.shankar@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "Patel, Mayurkumar"
+	<mayurkumar.patel@intel.com>, "Busch, Keith" <keith.busch@intel.com>,
+	"lukas@wunner.de" <lukas@wunner.de>, "yinghai@kernel.org"
+	<yinghai@kernel.org>, "yhlu.kernel@gmail.com" <yhlu.kernel@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Vinjamuri,
+ Venkateswarlu V" <venkateswarlu.v.vinjamuri@intel.com>, "Pandruvada,
+ Srinivas" <srinivas.pandruvada@intel.com>
+Subject: RE: [PATCH v2] PCI: pciehp: Optimize PCIe root resume time
+Date: Wed, 18 Jan 2017 01:32:13 +0000
+Message-ID: <98A68070CD83F8438B54ECF5FBADF9360132B14A@ORSMSX107.amr.corp.intel.com>
+References: <20161211011908.GA10954@linux-siqj.site>
+ <1481589145-22109-1-git-send-email-vaibhav.shankar@intel.com>
+ <20170111183726.GE14532@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170111183726.GE14532@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170105150646.GB21446@wunner.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-HI,
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Wednesday, January 11, 2017 10:37 AM
+> To: Shankar, Vaibhav <vaibhav.shankar@intel.com>
+> Cc: bhelgaas@google.com; Patel, Mayurkumar
+> <mayurkumar.patel@intel.com>; Busch, Keith <keith.busch@intel.com>;
+> lukas@wunner.de; yinghai@kernel.org; yhlu.kernel@gmail.com; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH v2] PCI: pciehp: Optimize PCIe root resume time
+>=20
+> Hi Vaibhav,
+>=20
+> On Mon, Dec 12, 2016 at 04:32:25PM -0800, Vaibhav Shankar wrote:
+> > On Apollolake platforms, PCIe rootport takes a long time to resume
+> > from S3. With 100ms delay before read pci conf, rootport takes ~200ms
+> > during resume.
+> >
+> > commit 2f5d8e4ff947 ("PCI: pciehp: replace unconditional sleep with
+> > config space access check") is the one that added the 100ms delay
+> > before reading pci conf.
+> >
+> > This patch includes a condition check for 100ms dealy before reading
+> > PCIe conf. This delay in included only when PCIe max_bus_speed > 5.0
+> > GT/s. Root port takes ~16ms during resume.
+>=20
+> This patch reduces the delay by 100ms for devices that don't support
+> 5.0 GT/s.  Please include references to the specs about the necessary del=
+ays
+> and explain why we don't need this 100ms delay.
+>=20
+> Presumably there's something in the spec about needing extra delay when
+> supporting 5.0 GT/s.
+>=20
+> This is generic code, so we can't make changes based on specific devices =
+like
+> Apollolake.  We have to make the code follow the spec so it works for
+> everybody.
+>=20
+> > With 100ms delay:
+> > [  155.102713] calling  0000:00:14.0+ @ 70, parent: pci0000:00, cb:
+> > pci_pm_resume_noirq [  155.119337] call 0000:00:14.0+ returned 0 after
+> > 16231 usecs [  155.119467] calling  0000:01:00.0+ @ 5845, parent:
+> > 0000:00:14.0, cb: pci_pm_resume_noirq [  155.321670] call
+> > 0000:00:14.0+ returned 0 after 185327 usecs [  155.321743] calling
+> > 0000:01:00.0+ @ 5849, parent: 0000:00:14.0, cb: pci_pm_resume
+> >
+> > With Condition check:
+> > [   36.624709] calling 0000:00:14.0+ @ 4434, parent: pci0000:00, cb:
+> pci_pm_resume_noirq
+> > [   36.641367] call 0000:00:14.0+ returned 0 after 16263 usecs
+> > [   36.652458] calling 0000:00:14.0+ @ 4443, parent: pci0000:00, cb:
+> pci_pm_resume
+> > [   36.652673] call 0000:00:14.0+ returned 0 after 208 usecs
+> > [   36.652863] calling  0000:01:00.0+ @ 4442, parent: 0000:00:14.0, cb:
+> pci_pm_resume
+> >
+> > Signed-off-by: Vaibhav Shankar <vaibhav.shankar@intel.com>
+> > ---
+> > changes in v2:
+> >         - Modify patch description.
+> >         - Add condition check for 100ms delay before read pci conf as
+> >           suggested by Yinghai.
+> >
+> >  drivers/pci/hotplug/pciehp_hpc.c |   11 +++++++++--
+> >  1 file changed, 9 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+> > b/drivers/pci/hotplug/pciehp_hpc.c
+> > index b57fc6d..2b10e5f 100644
+> > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > @@ -311,8 +311,15 @@ int pciehp_check_link_status(struct controller
+> *ctrl)
+> >  	else
+> >  		msleep(1000);
+> >
+> > -	/* wait 100ms before read pci conf, and try in 1s */
+> > -	msleep(100);
+> > +	/*
+> > +	 * If the port supports Link speeds greater than 5.0 GT/s, we
+> > +	 * must wait for 100 ms after Link training completes before
+> > +	 * sending configuration request.
+> > +	 */
+> > +	if (ctrl->pcie->port->subordinate->max_bus_speed >
+> PCIE_SPEED_5_0GT)
+> > +		msleep(100);
+> > +
+> > +	/* try in 1s */
+> >  	found =3D pci_bus_check_dev(ctrl->pcie->port->subordinate,
+> >  					PCI_DEVFN(0, 0));
+> >
+> > --
+> > 1.7.9.5
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
 
-On 05-01-17 16:06, Lukas Wunner wrote:
-> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
->>> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
->>>> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
->>>>> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
->>>>>> I don't *want* to apply the revert.  It's on my for-linus branch as a
->>>>>> worst-case scenario change if we can't figure out a better fix.
->>>>>>
->>>>>> The patch below is preferable, but I'd rather not take even it,
->>>>>> because it takes away functionality and forces people to use a boot
->>>>>> parameter to restore it.  I expect that somebody will figure out how
->>>>>> to fix the regression Kilian found and also keep the new functionality
->>>>>> (without requiring boot parameters) before v4.10.
->>>>>
->>>>> The issue is constrained to hybrid graphics laptops with Nvidia discrete
->>>>> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
->>>>> PCI core.
->>>>
->>>> The problem is not necessarily in the nouveau driver, the same problem
->>>> occurs when you enable RPM without loading nouveau. The issue is limited
->>>> though to some newer hybrid graphics laptops with Nvidia GPUs. While a
->>>> quirk can be added to nouveau, I think that a (temporary) quirk in core
->>>> would also be reasonable (since it also occurs without nouveau).
->>>>
->>>>> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
->>>>> when and how to call an ACPI method versus using PR3.)
->>>>>
->>>>> (Neither are laptops using the Nvidia proprietary driver as it doesn't
->>>>> runtime suspend the card.  But battery life will be terrible then.)
->>>>>
->>>>> We're at rc2 so the time frame for coming up with a fix is probably
->>>>> 4 weeks.  Peter and others have tried for months to reverse-engineer
->>>>> how to handle runtime PM on newer Nvidia cards.  It seems likely that
->>>>> we'll not find the ultimate solution to the problem within 4 weeks.
->>>>
->>>> Yep, a quick proper fix seems unlikely.
->>>> [ Help/ideas are welcome, I suspect that these failures to restore power
->>>> on laptops designed for Win8+ all have the same cause, related to some
->>>> unknown interaction between ACPI and PCI. Some links:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=190861
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
->>>>
->>>>> The way it is now, i.e. defaulting to PR3 when available, regresses
->>>>> certain laptops such as Kilian's.  If on the other hand we default to
->>>>> DSM when available, we'll regress certain other laptops, as Peter has
->>>>> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
->>>>> approach either, ideally we'd want to use PR3 as Windows does.
->>>>>
->>>>> As said, the only short-term solution I see is to add an "optimus"
->>>>> module_param to nouveau to allow users to select which method to use.
->>>>> So in Kilian's case an additional command line parameter would be
->>>>> necessary to fix the issue.
->>>>>
->>>>> Does anyone see a better solution or can we agree on this one?  If so
->>>>> I can come up with a patch.  This could go in via Dave Airlie's tree.
->>>>
->>>> As pcie_port_pm=off already reverts to DSM, I do not think that an
->>>> additional (temporary) nouveau module parameter is going to help. I
->>>> instead propose a (hopefully temporary) quirk in pci core that disables
->>>> D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
->>>> pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
->>>> to test possible solutions in the future.
->>>
->>> I would rather add a quirk to the ACPI core to prevent the power resources in
->>> question from being enumerated.  Or even to prevent ACPI PM from being
->>> used for the port in question.
->>
->> I do have a W541 in a cupboard in the office somewhere, but I won't be close to
->> it for a couple of weeks. The W541 was the first place I tested the pm patches
->> so I'm kinda wondering whether it's all W541's or just some specific model/bios
->> combo.
->>
->> However I'm pretty much unavailable to do anything much until late Jan on this.
->
-> Is there anyone else at Red Hat who might be able to look into this?
->
-> ISTR that Hans de Goede is working on improving laptop support in Fedora,
-> and Peter Jones recently got a patch merged for the W541 with the exact
-> same firmware Kilian is using to work around a botched EFI memory map.
-> Adding them to cc: in the hope that they may be able to help.
->
-> @Peter, have you noticed issues with the discrete Nvidia GPU on your W541
-> related to runtime suspend and system sleep?
+Hi Bjorn,
 
-I've tried to reproduce this problem on my W541, which has the exact
-same CPU + GPU combo as the reporter of:
+Please find the details from regarding delays from PCIe spec 3.0:=20
 
-https://bugzilla.kernel.org/show_bug.cgi?id=190861
+1)  With a Downstream Port that does not support Link speeds greater than 5=
+.0 GT/s, software
+ must wait a minimum of 100 ms before sending a Configuration Request to th=
+e device
+immediately below that Port.
 
-But no luck, I started out with BIOS-2.27 and when I could not reproduce
-I updated to 2.29 (should have tried 2.28 which is what the reporter
-has first in retrospect) and still no luck in reproducing this.
+2)  With a Downstream Port that supports Link speeds greater than 5.0 GT/s,=
+ software must
+wait a minimum of 100 ms after Link training completes before sending a Con=
+figuration
+Request to the device immediately below that Port. Software can determine w=
+hen Link
+training completes by polling the Data Link Layer Link Active bit or by set=
+ting up an
+associated interrupt (see Section 6.7.3.3).
 
-I'll attach acpidumps of the 2 Bios versions I've tried to the bug.
+3) A system must guarantee that all components intended to be software visi=
+ble at boot time
+are ready to receive Configuration Requests within the applicable minimum p=
+eriod based on
+the end of Conventional Reset at the Root Complex - how this is done is bey=
+ond the scope
+of this specification.
 
-Regards,
+4)  Note: Software should use 100 ms wait periods only if software enables =
+CRS Software
+Visibility. Otherwise, Completion timeouts, platform timeouts, or lengthy p=
+rocessor
+instruction stalls may result. See the Configuration Request Retry Status I=
+mplementation
+Note in Section 2.3.1.
 
-Hans
+The spec says we have to wait for 100ms before sending configuration reques=
+t to the device.=20
+On older platforms like Skylake, PCIe was never suspended during S3 because=
+ Pcie was not on Vnn rail. Hence this delay never impacted S3 resume.
+
+On newer platforms like Apollolake ,  PCIe IP is on Vnn rail. When PCIe roo=
+t ports are suspended during S3,  100ms is in the critical path during PCIe=
+ root port resume . This delay impacts S3 kernel resume time by ~60ms.
+
+Could you please provide your  suggestions on how to address this issue fro=
+m PCIe Spec perspective?
+
+Thanks and regards,
+vaibhav=20
