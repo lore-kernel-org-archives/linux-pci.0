@@ -1,80 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 03/37] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-Date: Thu, 12 Jan 2017 15:55:52 +0530
-Message-ID: <1484216786-17292-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=/N/E=ZA=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=/N/E=ZA=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Wed, 18 Jan 2017 17:55:20 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
+	David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
+Message-ID: <20170118175520.GN27312@n2100.armlinux.org.uk>
+References: <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117175115.GD27312@n2100.armlinux.org.uk>
+ <20170117175728.GE27312@n2100.armlinux.org.uk>
+ <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
+ <20170117193414.GG27312@n2100.armlinux.org.uk>
+ <20170117210258.GH27312@n2100.armlinux.org.uk>
+ <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
+ <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
+ <20170118142250.GB6534@bhelgaas-glaptop.roam.corp.google.com>
+ <1137f732-f31e-8162-af8f-6a7f577a9648@caviumnetworks.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1137f732-f31e-8162-af8f-6a7f577a9648@caviumnetworks.com>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-Populate cpu_addr_fixup ops to extract the least 28 bits of the
-corresponding cpu address.
+On Wed, Jan 18, 2017 at 09:36:55AM -0800, David Daney wrote:
+> On 01/18/2017 06:22 AM, Bjorn Helgaas wrote:
+> The tricky thing here is assigning the blame for failure in link training.
+> In the case in question we spent many months analysing the analog properties
+> of the bus and examining/decoding  analog scope captures of the failures
+> before credibly assigning blame to the other guy.  Usually what happens is
+> the device vendor accurately claims that their device works flawlessly in
+> conjunction with certain Intel root ports, so the problem must be fixed in
+> the root port of the failing system.  If you have a black list, you may be
+> disabling ASPM in systems where it can work without failures.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+So what we need is not a table of just devices, but a combination of
+devices... iow, "when root A and endpoint B are combined, retrains
+need to be avoided."
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index fb37e09..2073d46 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
-+static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+{
-+	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
-+}
-+
- static int dra7xx_pcie_link_up(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-@@ -151,11 +156,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
- 
--	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
--
- 	dw_pcie_setup_rc(pp);
- 
- 	dra7xx_pcie_establish_link(dra7xx);
-@@ -164,6 +164,7 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- }
- 
- static struct pcie_host_ops dra7xx_pcie_host_ops = {
-+	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
- 	.link_up = dra7xx_pcie_link_up,
- 	.host_init = dra7xx_pcie_host_init,
- };
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
