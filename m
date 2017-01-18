@@ -1,109 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 11 Jan 2017 15:37:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, xuwei5@hisilicon.com,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ACPI/PCI: Fix bus range comparation in pci_mcfg_lookup
-Message-ID: <20170111213727.GO14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <1483513206-113046-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Jan 2017 15:46:03 -0600
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 30/37] dt-bindings: PCI: dra7xx: Add dt bindings to
+ enable legacy mode
+Message-ID: <20170118214603.qnewy3sm6sgw7lbg@rob-hp-laptop>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-31-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1483513206-113046-1-git-send-email-wangzhou1@hisilicon.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1484216786-17292-31-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 04, 2017 at 03:00:06PM +0800, Zhou Wang wrote:
-> The configuration data provided by an MCFG region (ie PCI segment and
-> bus range) may span multiple host bridges.
+On Thu, Jan 12, 2017 at 03:56:19PM +0530, Kishon Vijay Abraham I wrote:
+> Update device tree binding documentation of TI's dra7xx PCI
+> controller to include property for enabling legacy mode.
 > 
-> Current code in pci_mcfg_lookup() carries out an exact match of host
-> bridge bus range start value against the MCFG region(s) bus range start
-> value which would cause configurations like the following:
-> 
-> MCFG region:
-> 	bus range: 0x00~0xff.
-> 	segment: 0.
-> 
-> PCI host bridges configuration (segment numbers and bus ranges):
-> 	host bridge 1:
-> 		bus range: 0x00~0x1f.
-> 		segment: 0.
-> 	host bridge 2:
-> 		bus range: 0x20~0x4f.
-> 		segment: 0.
-> 
-> to fail, in that the bus range start value for host bridge 2 does
-> not match the bus range start value of the respective MCFG region.
-> 
-> Relax the bus range check in pci_mcfg_lookup() to cater for
-> PCI configurations with multiple host bridges sharing the same
-> MCFG region.
-> 
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-Applied to pci/enumeration for v4.11 with the following changelog:
-
-    PCI/ACPI: Fix bus range comparison in pci_mcfg_lookup()
-    
-    The configuration data provided by an MCFG entry, i.e., PCI segment and bus
-    range, may span multiple host bridges.
-    
-    pci_mcfg_lookup() previously required an exact match of the host bridge
-    starting bus and the MCFG starting bus, which made the following
-    configuration fail:
-    
-      MCFG region:
-        segment: 0
-        bus range: 0x00-0xff
-    
-      host bridge
-        segment: 0
-        bus range: 0x20-0x4f
-    
-    Relax the bus range check in pci_mcfg_lookup() so we can use any MCFG entry
-    that contains the required bus range, as we do in pci_mmconfig_lookup().
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
-    Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  drivers/acpi/pci_mcfg.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index a6a4cea..2944353 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -195,11 +195,10 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
->  		goto skip_lookup;
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 62f5f59..ed85e8e 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -39,6 +39,10 @@ DEVICE MODE
+>   - interrupts : one interrupt entries must be specified for main interrupt.
+>   - num-ib-windows : number of inbound address translation windows
+>   - num-ob-windows : number of outbound address translation windows
+> + - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
+> +		       contain the register offset within syscon and the 2nd
+> +		       argument should contain the bit field for setting the
+> +		       legacy mode
+
+What's legacy mode?
+
 >  
->  	/*
-> -	 * We expect exact match, unless MCFG entry end bus covers more than
-> -	 * specified by caller.
-> +	 * We expect the range in bus_res in the coverage of MCFG bus range.
->  	 */
->  	list_for_each_entry(e, &pci_mcfg_list, list) {
-> -		if (e->segment == seg && e->bus_start == bus_res->start &&
-> +		if (e->segment == seg && e->bus_start <= bus_res->start &&
->  		    e->bus_end >= bus_res->end) {
->  			root->mcfg_addr = e->addr;
->  		}
+>  Optional Property:
+>   - gpios : Should be added if a gpio line is required to drive PERST# line
 > -- 
-> 1.9.1
+> 1.7.9.5
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
