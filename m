@@ -1,175 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:24705 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965366AbdAKMHW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2017 07:07:22 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 5/5] PCI: dwc: dra7xx: Group phy API invocations
-Date: Wed, 11 Jan 2017 17:36:55 +0530
-Message-ID: <1484136415-20798-6-git-send-email-kishon@ti.com>
-In-Reply-To: <1484136415-20798-1-git-send-email-kishon@ti.com>
-References: <1484136415-20798-1-git-send-email-kishon@ti.com>
+Received: from mga01.intel.com ([192.55.52.88]:35189 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752994AbdARShp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jan 2017 13:37:45 -0500
+Date: Wed, 18 Jan 2017 13:47:11 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: "Raj, Ashok" <ashok.raj@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
+Message-ID: <20170118184711.GC27274@localhost.localdomain>
+References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+ <20170117191539.GA155748@otc-nc-03>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170117191539.GA155748@otc-nc-03>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Phy APIs like phy_init/phy_power_on is
-being invoked from multiple places. Group all the phy APIs in
-dra7xx_pcie_enable_phy() and dra7xx_pcie_disable_phy() and use
-these functions for enabling or disabling the phy.
+Hi Bjorn,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   92 +++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 41 deletions(-)
+This fix looks good to me as well now. Any other concerns before staging
+this one for inclusion?
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index af330d7..ec5617a 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -324,6 +324,45 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	return 0;
- }
- 
-+static void dra7xx_pcie_disable_phy(struct dra7xx_pcie *dra7xx)
-+{
-+	int phy_count = dra7xx->phy_count;
-+
-+	while (phy_count--) {
-+		phy_power_off(dra7xx->phy[phy_count]);
-+		phy_exit(dra7xx->phy[phy_count]);
-+	}
-+}
-+
-+static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
-+{
-+	int phy_count = dra7xx->phy_count;
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		ret = phy_init(dra7xx->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(dra7xx->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(dra7xx->phy[i]);
-+			goto err_phy;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(dra7xx->phy[i]);
-+		phy_exit(dra7xx->phy[i]);
-+	}
-+
-+	return ret;
-+}
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -382,22 +421,18 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		phy[i] = devm_phy_get(dev, name);
- 		if (IS_ERR(phy[i]))
- 			return PTR_ERR(phy[i]);
--
--		ret = phy_init(phy[i]);
--		if (ret < 0)
--			goto err_phy;
--
--		ret = phy_power_on(phy[i]);
--		if (ret < 0) {
--			phy_exit(phy[i]);
--			goto err_phy;
--		}
- 	}
- 
- 	dra7xx->base = base;
- 	dra7xx->phy = phy;
- 	dra7xx->phy_count = phy_count;
- 
-+	ret = dra7xx_pcie_enable_phy(dra7xx);
-+	if (ret) {
-+		dev_err(dev, "failed to enable phy\n");
-+		return ret;
-+	}
-+
- 	pm_runtime_enable(dev);
- 	ret = pm_runtime_get_sync(dev);
- 	if (ret < 0) {
-@@ -432,12 +467,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 
- err_get_sync:
- 	pm_runtime_disable(dev);
--
--err_phy:
--	while (--i >= 0) {
--		phy_power_off(phy[i]);
--		phy_exit(phy[i]);
--	}
-+	dra7xx_pcie_disable_phy(dra7xx);
- 
- 	return ret;
- }
-@@ -474,12 +504,8 @@ static int dra7xx_pcie_resume(struct device *dev)
- static int dra7xx_pcie_suspend_noirq(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
--	int count = dra7xx->phy_count;
- 
--	while (count--) {
--		phy_power_off(dra7xx->phy[count]);
--		phy_exit(dra7xx->phy[count]);
--	}
-+	dra7xx_pcie_disable_phy(dra7xx);
- 
- 	return 0;
- }
-@@ -487,31 +513,15 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
- static int dra7xx_pcie_resume_noirq(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
--	int phy_count = dra7xx->phy_count;
- 	int ret;
--	int i;
--
--	for (i = 0; i < phy_count; i++) {
--		ret = phy_init(dra7xx->phy[i]);
--		if (ret < 0)
--			goto err_phy;
- 
--		ret = phy_power_on(dra7xx->phy[i]);
--		if (ret < 0) {
--			phy_exit(dra7xx->phy[i]);
--			goto err_phy;
--		}
-+	ret = dra7xx_pcie_enable_phy(dra7xx);
-+	if (ret) {
-+		dev_err(dev, "failed to enable phy\n");
-+		return ret;
- 	}
- 
- 	return 0;
--
--err_phy:
--	while (--i >= 0) {
--		phy_power_off(dra7xx->phy[i]);
--		phy_exit(dra7xx->phy[i]);
--	}
--
--	return ret;
- }
- #endif
- 
--- 
-1.7.9.5
+Thanks,
+Keith
 
+On Tue, Jan 17, 2017 at 11:15:40AM -0800, Raj, Ashok wrote:
+> Hi Bjorn
+> 
+> Sorry to bug you, didn't hear from you after i added the lock for consistency
+> to address the feedback.
+> 
+> Let me know if there is anymore changes you like to see.
+> 
+> Cheers,
+> Ashok
+> 
+> On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
+> > Changes from v1:
+> > 	Address comments from Bjorn:
+> > 		Added p_slot->lock mutex around changes to p_slot->state
+> > 		Updated commit message to call out mutex names
+> > 
+> > A surprise link down may retrain very quickly, causing the same slot to
+> > generate a link up event before handling the link down completes.
+> > 
+> > Since the link is active, the power off work queued from the first link
+> > down will cause a second down event when the power is disabled. The second
+> > down event should be ignored because the slot is already powering off;
+> > however, the "link up" event sets the slot state to POWERON before the
+> > event to handle this is enqueued, making the second down event believe
+> > it needs to do something. This creates a constant link up and down
+> > event cycle.
+> > 
+> > This patch fixes that by setting the p_slot->state only when the work to
+> > handle the power event is executing, protected by the p_slot->hotplug_lock.
+> > 
+> > To: Bjorn Helgass <bhelgaas@google.com>
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: Keith Busch <keith.busch@intel.com>
+> > 
+> > Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+> > Reviewed-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
+> >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> > index ec0b4c1..4cf4772 100644
+> > --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> > @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
+> >  	switch (info->req) {
+> >  	case DISABLE_REQ:
+> >  		mutex_lock(&p_slot->hotplug_lock);
+> > +		mutex_lock(&p_slot->lock);
+> > +		p_slot->state = POWEROFF_STATE;
+> > +		mutex_unlock(&p_slot->lock);
+> >  		pciehp_disable_slot(p_slot);
+> >  		mutex_unlock(&p_slot->hotplug_lock);
+> >  		mutex_lock(&p_slot->lock);
+> > @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
+> >  		break;
+> >  	case ENABLE_REQ:
+> >  		mutex_lock(&p_slot->hotplug_lock);
+> > +		mutex_lock(&p_slot->lock);
+> > +		p_slot->state = POWERON_STATE;
+> > +		mutex_unlock(&p_slot->lock);
+> >  		ret = pciehp_enable_slot(p_slot);
+> >  		mutex_unlock(&p_slot->hotplug_lock);
+> >  		if (ret)
+> > @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+> >  {
+> >  	struct power_work_info *info;
+> >  
+> > -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
+> > -
+> >  	info = kmalloc(sizeof(*info), GFP_KERNEL);
+> >  	if (!info) {
+> >  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+> > -- 
+> > 2.7.4
