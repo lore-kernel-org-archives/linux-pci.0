@@ -1,144 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/2] PCI: introduce locked pci_add/remove_virtfn
-From: Emil Tantilov <emil.s.tantilov@intel.com>
-To: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org
-Cc: alexander.h.duyck@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Tue, 03 Jan 2017 16:48:26 -0800
-Message-ID: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Jan 2017 15:45:05 -0600
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 28/37] dt-bindings: PCI: dra7xx: Add dt bindings for pci
+ dra7xx EP mode
+Message-ID: <20170118214505.5kcoowi4ooy7eepg@rob-hp-laptop>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-29-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1484216786-17292-29-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is to allow moving the mutex lock outside of
-pci_iov_add/rem_virtfn() for enabling/disabling SRIOV, while
-still making it possible to call the _locked version like it is
-the case for PPC's eeh_driver.
+On Thu, Jan 12, 2017 at 03:56:17PM +0530, Kishon Vijay Abraham I wrote:
+> Add device tree binding documentation for pci dra7xx EP mode.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |   37 ++++++++++++++++++----
+>  1 file changed, 30 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 60e2516..62f5f59 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -1,17 +1,22 @@
+>  TI PCI Controllers
+>  
+>  PCIe Designware Controller
+> - - compatible: Should be "ti,dra7-pcie""
+> - - reg : Two register ranges as listed in the reg-names property
+> - - reg-names : The first entry must be "ti-conf" for the TI specific registers
+> -	       The second entry must be "rc-dbics" for the designware pcie
+> -	       registers
+> -	       The third entry must be "config" for the PCIe configuration space
+> + - compatible: Should be "ti,dra7-pcie" for RC
+> +	       Should be "ti,dra7-pcie-ep" for EP
+>   - phys : list of PHY specifiers (used by generic PHY framework)
+>   - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+>  	       number of PHYs as specified in *phys* property.
+>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+>  	       where <X> is the instance number of the pcie from the HW spec.
+> + - num-lanes as specified in ../designware-pcie.txt
+> +
+> +HOST MODE
+> +=========
+> + - reg : Two register ranges as listed in the reg-names property
+> + - reg-names : The first entry must be "ti-conf" for the TI specific registers
+> +	       The second entry must be "rc-dbics" for the designware pcie
+> +	       registers
+> +	       The third entry must be "config" for the PCIe configuration space
+>   - interrupts : Two interrupt entries must be specified. The first one is for
+>  		main interrupt line and the second for MSI interrupt line.
+>   - #address-cells,
+> @@ -19,13 +24,31 @@ PCIe Designware Controller
+>     #interrupt-cells,
+>     device_type,
+>     ranges,
+> -   num-lanes,
+>     interrupt-map-mask,
+>     interrupt-map : as specified in ../designware-pcie.txt
+>  
+> +DEVICE MODE
+> +===========
+> + - reg : Four register ranges as listed in the reg-names property
+> + - reg-names : "ti-conf" for the TI specific registers
+> +	       "ep_dbics" for the standard configuration registers as
+> +		they are locally accessed within the DIF CS space
+> +	       "ep_dbics2" for the standard configuration registers as
+> +		they are locally accessed within the DIF CS2 space
+> +	       "addr_space" used to map remote RC address space
+> + - interrupts : one interrupt entries must be specified for main interrupt.
+> + - num-ib-windows : number of inbound address translation windows
+> + - num-ob-windows : number of outbound address translation windows
+> +
+>  Optional Property:
+>   - gpios : Should be added if a gpio line is required to drive PERST# line
+>  
+> +NOTE: Two dt nodes should be added for each PCI controller; one for host
 
-CC: Alexander Duyck <alexander.h.duyck@intel.com>
-Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
----
- arch/powerpc/kernel/eeh_driver.c |    4 ++--
- drivers/pci/iov.c                |   31 ++++++++++++++++++++++++-------
- include/linux/pci.h              |    4 ++--
- 3 files changed, 28 insertions(+), 11 deletions(-)
+s/should/may/
 
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index d88573b..81aaea7 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -441,7 +441,7 @@ static void *eeh_add_virt_device(void *data, void *userdata)
- 	}
- 
- #ifdef CONFIG_PPC_POWERNV
--	pci_iov_add_virtfn(edev->physfn, pdn->vf_index, 0);
-+	pci_iov_add_virtfn_locked(edev->physfn, pdn->vf_index, 0);
- #endif
- 	return NULL;
- }
-@@ -499,7 +499,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- #ifdef CONFIG_PPC_POWERNV
- 		struct pci_dn *pdn = eeh_dev_to_pdn(edev);
- 
--		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index, 0);
-+		pci_iov_remove_virtfn_locked(edev->physfn, pdn->vf_index, 0);
- 		edev->pdev = NULL;
- 
- 		/*
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4722782..fea322db 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -113,7 +113,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
-+static int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 	struct pci_bus *bus;
- 
--	mutex_lock(&iov->dev->sriov->lock);
- 	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
-@@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- 		__pci_reset_function(virtfn);
- 
- 	pci_device_add(virtfn, virtfn->bus);
--	mutex_unlock(&iov->dev->sriov->lock);
- 
- 	pci_bus_add_device(virtfn);
- 	sprintf(buf, "virtfn%u", id);
-@@ -191,11 +189,22 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- 	return rc;
- }
- 
--void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
-+int pci_iov_add_virtfn_locked(struct pci_dev *dev, int id, int reset)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+	int rc;
-+
-+	mutex_lock(&iov->dev->sriov->lock);
-+	rc = pci_iov_add_virtfn(dev, id, reset);
-+	mutex_unlock(&iov->dev->sriov->lock);
-+
-+	return rc;
-+}
-+
-+static void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
--	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
- 					     pci_iov_virtfn_bus(dev, id),
-@@ -218,16 +227,24 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
- 	if (virtfn->dev.kobj.sd)
- 		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
- 
--	mutex_lock(&iov->dev->sriov->lock);
- 	pci_stop_and_remove_bus_device(virtfn);
- 	virtfn_remove_bus(dev->bus, virtfn->bus);
--	mutex_unlock(&iov->dev->sriov->lock);
- 
- 	/* balance pci_get_domain_bus_and_slot() */
- 	pci_dev_put(virtfn);
- 	pci_dev_put(dev);
- }
- 
-+void pci_iov_remove_virtfn_locked(struct pci_dev *dev, int id, int reset)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	mutex_lock(&iov->dev->sriov->lock);
-+	pci_iov_remove_virtfn(dev, id, reset);
-+	mutex_unlock(&iov->dev->sriov->lock);
-+}
-+
-+
- int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- {
- 	return 0;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..4351ceb7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1872,8 +1872,8 @@ static inline void pci_mmcfg_late_init(void) { }
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
--int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
--void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
-+int pci_iov_add_virtfn_locked(struct pci_dev *dev, int id, int reset);
-+void pci_iov_remove_virtfn_locked(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+Don't define dts source structure here. You could also have 2 files with 
+each config and just include the right one for each board.
+
+We don't want overlapping memory regions defined in DT and this kind of 
+violates that, but I guess status is sufficient.
+
+With that,
+
+Acked-by: Rob Herring <robh@kernel.org>
+
+> +mode and another for device mode. So in order for PCI to
+> +work in host mode, EP mode dt node should be disabled and in order to PCI to
+> +work in EP mode, host mode dt node should be disabled. And host mode and EP
+> +mode are mutually exclusive.
+> +
+>  Example:
+>  axi {
+>  	compatible = "simple-bus";
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
