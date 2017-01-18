@@ -1,70 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:33852 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751152AbdAWPCy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2017 10:02:54 -0500
+Return-Path: <SRS0=1wwC=ZA=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=1wwC=ZA=codeaurora.org=okaya@kernel.org>
+Subject: Re: How to improve PCI bug tracking?
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+References: <20170118225332.GA22960@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <88c6fcac-78d7-e2fd-e08f-62149b34e996@codeaurora.org>
+Date: Wed, 18 Jan 2017 18:29:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170123145204.5lablvhf7m2hf3na@rob-hp-laptop>
-References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
- <20170119163631.10668-4-andrew.smirnov@gmail.com> <20170123145204.5lablvhf7m2hf3na@rob-hp-laptop>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Mon, 23 Jan 2017 07:02:52 -0800
-Message-ID: <CAHQ1cqEFS-XEfm7=QP6hCLARan3eQ5VT6Ucq3HPsCzYoodHqtA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: imx6: Add code to support i.MX7D
-To: Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, Andrey Yurovsky <yurovsky@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170118225332.GA22960@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2017 at 6:52 AM, Rob Herring <robh@kernel.org> wrote:
-> On Thu, Jan 19, 2017 at 08:36:31AM -0800, Andrey Smirnov wrote:
->> Add various bits of code needed to support i.MX7D variant of the IP.
->>
->> Cc: yurovsky@gmail.com
->> Cc: Richard Zhu <hongxing.zhu@nxp.com>
->> Cc: Lucas Stach <l.stach@pengutronix.de>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Fabio Estevam <festevam@gmail.com>
->> Cc: Shawn Guo <shawnguo@kernel.org>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Lee Jones <lee.jones@linaro.org>
->> Cc: linux-arm-kernel@lists.infradead.org
->> Cc: devicetree@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->> ---
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
->>  drivers/pci/host/pci-imx6.c                        | 188 ++++++++++++++++++---
->>  include/linux/mfd/syscon/imx7-gpc.h                |  18 ++
->>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->>  include/linux/mfd/syscon/imx7-src.h                |  18 ++
->>  5 files changed, 208 insertions(+), 26 deletions(-)
->>  create mode 100644 include/linux/mfd/syscon/imx7-gpc.h
->>  create mode 100644 include/linux/mfd/syscon/imx7-src.h
->>
->> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> index 83aeb1f..20b9382 100644
->> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->>  and thus inherits all the common properties defined in designware-pcie.txt.
->>
->>  Required properties:
->> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
->> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie",
->> +           "fsl,imx6qp-pcie", "fsl,imx7d-pcie"
->
-> Please reformat to one valid combination per line.
+On 1/18/2017 5:53 PM, Bjorn Helgaas wrote:
+> I want to improve PCI bug tracking.  It feels like our bugs don't get
+> the attention they need, and I'm soliciting ideas for how to improve
+> this.
+> 
+> Current situation:
+> 
+>   - People often report bugs via email to linux-pci.  I think this
+>     is good because everybody can see it.
+> 
+>   - Even after an email report, I often request a bugzilla because
+>     (1) it helps keep things from being forgotten, (2) it's a
+>     convenient place to store bulky data, and (3) I like to have a
+>     bugzilla URL to include in the changelog of a patch that fixes the
+>     bug.
+> 
+>   - Sometimes people open a bugzilla directly.  I get email about
+>     these (along with one or two other people), but this is sort of a
+>     problem because linux-pci never sees it, sometimes I miss it, and
+>     things tend to languish.
+> 
+>   - Discussion on a bugzilla is only seen by people listed in the
+>     bugzilla, not on linux-pci.
+> 
+> I'm contemplating changing this so the bugzilla mail would also go to
+> linux-pci.
 
-Noted for v2, thanks.
+I have seen this happening on linux-scsi.
+
+http://www.spinics.net/lists/linux-scsi/msg103272.html
+
+I'd say, why not?
+
+> 
+> Any objections or alternate suggestions?
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
