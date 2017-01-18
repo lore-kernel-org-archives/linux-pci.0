@@ -1,64 +1,151 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Robin Murphy'" <robin.murphy@arm.com>,
-        "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
-        <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
-        <iommu@lists.linux-foundation.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <1485188293-20263-2-git-send-email-sricharan@codeaurora.org> <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com> <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com> <009901d278c7$34fee230$9efca690$@codeaurora.org> <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
-In-Reply-To: <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
-Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for error handling
-Date: Mon, 30 Jan 2017 12:30:11 +0530
-Message-ID: <003601d27ac6$84866840$8d9338c0$@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:58029 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752306AbdARUw6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2017 15:52:58 -0500
+To: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Help request
+Message-ID: <6c47f48a-ec0e-e0ff-bfd6-ae7adf4df828@synopsys.com>
+Date: Wed, 18 Jan 2017 20:46:33 +0000
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+Hi,
 
->> [..]
->>
->>>>> +const struct iommu_ops *of_iommu_configure(struct device *dev,
->>>>> +                       struct device_node *master_np)
->>>>> +{
->>>>> +    const struct iommu_ops *ops;
->>>>> +
->>>>> +    if (!master_np)
->>>>> +        return NULL;
->>>>> +
->>>>> +    if (dev_is_pci(dev))
->>>>> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
->>>>
->>>> I gave the whole patch set a try on ThunderX. really_probe() is failing
->>>> on dma_configure()->of_pci_iommu_init() for each PCI device.
->>>
->>> When you say "failing", do you mean cleanly, or with a crash? I've
->>> managed to hit __of_match_node() dereferencing NULL from
->>> of_iommu_xlate() in a horribly complicated chain of events, which I'm
->>> trying to figure out now, and I wonder if the two might be related.
->>
->> Sorry that there is crash still. __of_match_node seems to checking
->> for NULL arguments , feels like some invalid pointer was passed in.
->> Is there any particular sequence to try for this ?
->
->Ah, I did figure it out - it wasn't actually a NULL dereference, but an
->unmapped address. Turns out __iommu_of_table is in initdata, so any
->driver probing after init, connected to an unprobed IOMMU (in this case
->disabled in DT), trips over trying to match the now-freed table. I'm
->working on the fix - technically the bug's in my patch (#2) anyway ;)
->
+I am testing my 4.80 Root Complex Reference design (PCIe Core 4.80 with iATU
+Unroll) and I am facing an issue in kernel v4.9.
 
-Ok, thanks for bringing this out. There is also an issue that
-Sinan has mentioned while testing the ACPI hotplug path, probably
-its related to the above, not sure. I will try to check more on that
-in the meanwhile. Then, taking your fix and fixing the hotplug case
-i will do one more repost.
+My setup is:
+ARC Board --- AXI --- HAPS (RC refrence Design) --- Backplane --- USB 3.0 Endpoint
 
-Regards,
- Sricharan
+If I use 4.9-rc7 the USB Endpoint gets configured correctly, but when using
+4.9-rc8 it does not. I have checked and no changes were made to USB between rc7
+and rc8, so there's something in the PCI.
+
+The PCI initialization log seems with more info in 4.9-rc8, so maybe some
+operation that causing some confusion in my setup. Could you please give me your
+opinion?
+
+Bellow I added the logs for 4.9-rc7 and 4.9-rc8. Thank you for your help!
+
+Joao
+
+
+***** LOGS for 4.9-rc7:
+
+OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
+OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
+OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
+OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
+dw-pcie dfc00000.pcie: link up
+dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
+pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
+pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
+pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
+pci 0000:00:00.0: PCI bridge to [bus 01]
+pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
+pci 0000:01:00.0: enabling device (0000 -> 0002)
+(...)
+xhci_hcd 0000:01:00.0: xHCI Host Controller
+xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
+xhci_hcd 0000:01:00.0: hcc params 0x014042cb hci version 0x96 quirks 0x00000004
+hub 3-0:1.0: USB hub found
+hub 3-0:1.0: 2 ports detected
+xhci_hcd 0000:01:00.0: xHCI Host Controller
+xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 4
+
+# lspci -v
+00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0, IRQ 45
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        Memory behind bridge: d0400000-d04fffff
+        [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [70] Express Root Port (Slot-), MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [148] #19
+        Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
+        Kernel driver in use: pcieport
+
+01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
+03) (prog-if 30 [XHCI])
+        Flags: bus master, fast devsel, latency 0, IRQ 46
+        Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [50] Power Management version 3
+        Capabilities: [70] MSI: Enable+ Count=1/8 Maskable- 64bit+
+        Capabilities: [90] MSI-X: Enable- Count=8 Masked-
+        Capabilities: [a0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
+        Capabilities: [150] Latency Tolerance Reporting
+        Kernel driver in use: xhci_hcd
+
+****** LOGS for 4.9-rc8:
+
+OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
+OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
+OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
+OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
+dw-pcie dfc00000.pcie: link up
+dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
+pci 0000:00:00.0: [16c3:eddc] type 01 class 0x060400
+pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+pci 0000:00:00.0: supports D1
+pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+pci 0000:01:00.0: [1033:0194] type 00 class 0x0c0330
+pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
+pci 0000:01:00.0: PME# supported from D0 D3hot
+pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
+pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
+pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
+pci 0000:00:00.0: PCI bridge to [bus 01]
+pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
+aer 0000:00:00.0:pcie002: service driver aer loaded
+pci 0000:01:00.0: enabling device (0000 -> 0002)
+(...)
+xhci_hcd 0000:01:00.0: xHCI Host Controller
+xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
+xhci_hcd 0000:01:00.0: can't setup: -110
+xhci_hcd 0000:01:00.0: USB bus 3 deregistered
+xhci_hcd 0000:01:00.0: init 0000:01:00.0 fail, -110
+xhci_hcd: probe of 0000:01:00.0 failed with error -110
+
+# lspci -v
+00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0, IRQ 45
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        Memory behind bridge: d0400000-d04fffff
+        [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [70] Express Root Port (Slot-), MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [148] #19
+        Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
+        Kernel driver in use: pcieport
+
+01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
+03) (prog-if 30 [XHCI])
+        Flags: fast devsel
+        Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [50] Power Management version 3
+        Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
+        Capabilities: [90] MSI-X: Enable- Count=8 Masked-
+        Capabilities: [a0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
+        Capabilities: [150] Latency Tolerance Reporting
+
 
