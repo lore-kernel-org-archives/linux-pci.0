@@ -1,57 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0088.outbound.protection.outlook.com ([104.47.40.88]:55952
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753168AbdAKQqw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 11:46:52 -0500
-Subject: Re: [PATCH 2/3] xgbe: switch to pci_irq_alloc_vectors
-To: Christoph Hellwig <hch@lst.de>
-References: <1483994260-19797-1-git-send-email-hch@lst.de>
- <1483994260-19797-3-git-send-email-hch@lst.de>
- <11ed330c-84e9-79e9-7945-ca17a497359c@amd.com> <20170111090357.GB7350@lst.de>
-CC: <linux-pci@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@s-opensource.com>,
-        <netdev@vger.kernel.org>, <linux-media@vger.kernel.org>
-From: Tom Lendacky <thomas.lendacky@amd.com>
-Message-ID: <c3f96e57-0a22-99dd-ca48-b0b84913e4df@amd.com>
-Date: Wed, 11 Jan 2017 10:46:45 -0600
+Received: from mga05.intel.com ([192.55.52.43]:28898 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753246AbdARWGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jan 2017 17:06:34 -0500
+Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
+ device
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Doug Ledford <dledford@redhat.com>
+References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
+ <20170111181042.GC22783@obsidianresearch.com>
+ <1484773260.2406.58.camel@redhat.com>
+ <20170118210831.GA7590@obsidianresearch.com>
+Cc: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        dennis.dalessandro@intel.com, ira.weiny@intel.com
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Message-ID: <934eb6c4-fbba-28d0-d6bb-f036cc9ced5c@intel.com>
+Date: Wed, 18 Jan 2017 14:03:57 -0800
 MIME-Version: 1.0
-In-Reply-To: <20170111090357.GB7350@lst.de>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20170118210831.GA7590@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/11/2017 3:03 AM, Christoph Hellwig wrote:
-> On Tue, Jan 10, 2017 at 12:40:10PM -0600, Tom Lendacky wrote:
->> On 1/9/2017 2:37 PM, Christoph Hellwig wrote:
->>> The newly added xgbe drivers uses the deprecated pci_enable_msi_exact
->>> and pci_enable_msix_range interfaces.  Switch it to use
->>> pci_irq_alloc_vectors instead.
->>
->> I was just working on switching over to this API with some additional
->> changes / simplification.  I'm ok with using this patch so that you get
->> the API removal accomplished.  Going through the PCI tree just means
->> it will probably be easier for me to hold off on the additional changes
->> I wanted to make until later.
-> 
-> Hi Tom,
+On 01/18/2017 01:08 PM, Jason Gunthorpe wrote:
+> EPROBE_DEFER is intended when waiting on other components the driver
+> may need, not for setting stable names.
 
-Hi Christoph,
-
-> 
-> if you have a better patch I'd be more than happy to use that one instead,
-> this one was intended as a stupid search and replace.  The important
-> part for me is to get the two conversions and the interface removal
-> in together.
-
-That sounds good, I'll send the patch to you in a separate email for use
-in your series.
-
+Also EPROBE_DEFER only works during boot time.
+After boot when a module gets rmmod/insmod EPROBE_DEFER has no effect.
 Thanks,
-Tom
-
-> 
-> E.g. I've alreayd wondered why the driver requires the exact vector
-> number for MSI and a variable one for MSI-X, and there certainly is
-> all kinds of opportunity for cosmetic cleanup.
-> 
+-- 
+Tadeusz
