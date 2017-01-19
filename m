@@ -1,82 +1,226 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41713 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751403AbdATJLR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 04:11:17 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0K7d9DI130973
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:06 -0500
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 283c3svuad-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:06 -0500
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Fri, 20 Jan 2017 00:42:05 -0700
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v8 3/3] PCI: Add a macro to set default alignment for all PCI devices
-Date: Fri, 20 Jan 2017 15:41:53 +0800
-In-Reply-To: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1484898113-24939-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=D1hB=ZB=intel.com=vaibhav.shankar@kernel.org>
+Return-Path: <SRS0=D1hB=ZB=intel.com=vaibhav.shankar@kernel.org>
+From: "Shankar, Vaibhav" <vaibhav.shankar@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "Patel, Mayurkumar"
+	<mayurkumar.patel@intel.com>, "Busch, Keith" <keith.busch@intel.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>, "yhlu.kernel@gmail.com"
+	<yhlu.kernel@gmail.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "Vinjamuri, Venkateswarlu V"
+	<venkateswarlu.v.vinjamuri@intel.com>, "Pandruvada, Srinivas"
+	<srinivas.pandruvada@intel.com>
+Subject: RE: [PATCH v2] PCI: pciehp: Optimize PCIe root resume time
+Date: Thu, 19 Jan 2017 02:57:26 +0000
+Message-ID: <98A68070CD83F8438B54ECF5FBADF9360132B962@ORSMSX107.amr.corp.intel.com>
+References: <20161211011908.GA10954@linux-siqj.site>
+ <1481589145-22109-1-git-send-email-vaibhav.shankar@intel.com>
+ <20170111183726.GE14532@bhelgaas-glaptop.roam.corp.google.com>
+ <98A68070CD83F8438B54ECF5FBADF9360132B14A@ORSMSX107.amr.corp.intel.com>
+ <20170118051347.GB25685@wunner.de>
+In-Reply-To: <20170118051347.GB25685@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthroughs a PCI device of which MMIO BARs are
-smaller than PAGE_SIZE, guest will not handle the mmio
-accesses to the BARs which leads to mmio emulations in host.
+> -----Original Message-----
+> From: Lukas Wunner [mailto:lukas@wunner.de]
+> Sent: Tuesday, January 17, 2017 9:14 PM
+> To: Shankar, Vaibhav <vaibhav.shankar@intel.com>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>; Patel, Mayurkumar
+> <mayurkumar.patel@intel.com>; Busch, Keith <keith.busch@intel.com>;
+> yinghai@kernel.org; yhlu.kernel@gmail.com; linux-pci@vger.kernel.org;
+> linux-kernel@vger.kernel.org; Vinjamuri, Venkateswarlu V
+> <venkateswarlu.v.vinjamuri@intel.com>; Pandruvada, Srinivas
+> <srinivas.pandruvada@intel.com>
+> Subject: Re: [PATCH v2] PCI: pciehp: Optimize PCIe root resume time
+>=20
+> On Wed, Jan 18, 2017 at 01:32:13AM +0000, Shankar, Vaibhav wrote:
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > Sent: Wednesday, January 11, 2017 10:37 AM On Mon, Dec 12, 2016 at
+> > > 04:32:25PM -0800, Vaibhav Shankar wrote:
+> > > > On Apollolake platforms, PCIe rootport takes a long time to resume
+> > > > from S3. With 100ms delay before read pci conf, rootport takes
+> > > > ~200ms during resume.
+> > > >
+> > > > commit 2f5d8e4ff947 ("PCI: pciehp: replace unconditional sleep
+> > > > with config space access check") is the one that added the 100ms
+> > > > delay before reading pci conf.
+> > > >
+> > > > This patch includes a condition check for 100ms dealy before
+> > > > reading PCIe conf. This delay in included only when PCIe
+> > > > max_bus_speed > 5.0 GT/s. Root port takes ~16ms during resume.
+> > >
+> > > This patch reduces the delay by 100ms for devices that don't support
+> > > 5.0 GT/s.  Please include references to the specs about the
+> > > necessary delays and explain why we don't need this 100ms delay.
+> > >
+> > > Presumably there's something in the spec about needing extra delay
+> > > when supporting 5.0 GT/s.
+> > >
+> > > This is generic code, so we can't make changes based on specific
+> > > devices like Apollolake.  We have to make the code follow the spec
+> > > so it works for everybody.
+> > >
+> > > > With 100ms delay:
+> > > > [  155.102713] calling  0000:00:14.0+ @ 70, parent: pci0000:00, cb:
+> > > > pci_pm_resume_noirq [  155.119337] call 0000:00:14.0+ returned 0
+> > > > after
+> > > > 16231 usecs [  155.119467] calling  0000:01:00.0+ @ 5845, parent:
+> > > > 0000:00:14.0, cb: pci_pm_resume_noirq [  155.321670] call
+> > > > 0000:00:14.0+ returned 0 after 185327 usecs [  155.321743] calling
+> > > > 0000:01:00.0+ @ 5849, parent: 0000:00:14.0, cb: pci_pm_resume
+> > > >
+> > > > With Condition check:
+> > > > [   36.624709] calling 0000:00:14.0+ @ 4434, parent: pci0000:00, cb=
+:
+> > > pci_pm_resume_noirq
+> > > > [   36.641367] call 0000:00:14.0+ returned 0 after 16263 usecs
+> > > > [   36.652458] calling 0000:00:14.0+ @ 4443, parent: pci0000:00, cb=
+:
+> > > pci_pm_resume
+> > > > [   36.652673] call 0000:00:14.0+ returned 0 after 208 usecs
+> > > > [   36.652863] calling  0000:01:00.0+ @ 4442, parent: 0000:00:14.0,=
+ cb:
+> > > pci_pm_resume
+> > > >
+> > > > Signed-off-by: Vaibhav Shankar <vaibhav.shankar@intel.com>
+> > > > ---
+> > > > changes in v2:
+> > > >         - Modify patch description.
+> > > >         - Add condition check for 100ms delay before read pci conf =
+as
+> > > >           suggested by Yinghai.
+> > > >
+> > > >  drivers/pci/hotplug/pciehp_hpc.c |   11 +++++++++--
+> > > >  1 file changed, 9 insertions(+), 2 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+> > > > b/drivers/pci/hotplug/pciehp_hpc.c
+> > > > index b57fc6d..2b10e5f 100644
+> > > > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > > > @@ -311,8 +311,15 @@ int pciehp_check_link_status(struct
+> > > > controller
+> > > *ctrl)
+> > > >  	else
+> > > >  		msleep(1000);
+> > > >
+> > > > -	/* wait 100ms before read pci conf, and try in 1s */
+> > > > -	msleep(100);
+> > > > +	/*
+> > > > +	 * If the port supports Link speeds greater than 5.0 GT/s, we
+> > > > +	 * must wait for 100 ms after Link training completes before
+> > > > +	 * sending configuration request.
+> > > > +	 */
+> > > > +	if (ctrl->pcie->port->subordinate->max_bus_speed >
+> > > PCIE_SPEED_5_0GT)
+> > > > +		msleep(100);
+> > > > +
+> > > > +	/* try in 1s */
+> > > >  	found =3D pci_bus_check_dev(ctrl->pcie->port->subordinate,
+> > > >  					PCI_DEVFN(0, 0));
+> > > >
+> >
+> > Please find the details from regarding delays from PCIe spec 3.0:
+> >
+> > 1)  With a Downstream Port that does not support Link speeds greater
+> > than 5.0 GT/s, software  must wait a minimum of 100 ms before sending
+> > a Configuration Request to the device immediately below that Port.
+> >
+> > 2)  With a Downstream Port that supports Link speeds greater than 5.0
+> > GT/s, software must wait a minimum of 100 ms after Link training
+> > completes before sending a Configuration Request to the device
+> > immediately below that Port. Software can determine when Link training
+> > completes by polling the Data Link Layer Link Active bit or by setting =
+up an
+> associated interrupt (see Section 6.7.3.3).
+> >
+> > 3) A system must guarantee that all components intended to be software
+> > visible at boot time are ready to receive Configuration Requests
+> > within the applicable minimum period based on the end of Conventional
+> > Reset at the Root Complex - how this is done is beyond the scope of thi=
+s
+> specification.
+> >
+> > 4)  Note: Software should use 100 ms wait periods only if software
+> > enables CRS Software Visibility. Otherwise, Completion timeouts,
+> > platform timeouts, or lengthy processor instruction stalls may result.
+> > See the Configuration Request Retry Status Implementation Note in
+> Section 2.3.1.
+> >
+> > The spec says we have to wait for 100ms before sending configuration
+> request to the device.
+> > On older platforms like Skylake, PCIe was never suspended during S3
+> because Pcie was not on Vnn rail. Hence this delay never impacted S3
+> resume.
+> >
+> > On newer platforms like Apollolake ,  PCIe IP is on Vnn rail. When PCIe=
+ root
+> ports are suspended during S3,  100ms is in the critical path during PCIe=
+ root
+> port resume . This delay impacts S3 kernel resume time by ~60ms.
+>=20
+>=20
+> You did not provide the section number in the spec for the paragraphs you
+> quoted.  The section number is 6.6.
+>=20
+> In the paragraphs you quoted, it says that a minimum of 100 ms is require=
+d
+> both for link speeds < 5 GT/s and > 5 GT/s, so why remove it for the < 5 =
+GT/s
+> case?
+>=20
+> pciehp_check_link_status() is only executed when a new device is
+> hotplugged to a running system, yet you claim that your patch solves an
+> issue during resume.  However when coming out of resume, we walk down
+> the hierarchy in:
+>=20
+> pci_pm_resume_noirq
+>   pci_pm_default_resume_early
+>     pci_power_up
+>       pci_raw_set_power_state
+>       pci_update_current_state
+>     pci_restore_state
+>=20
+> AFAICS we're not performing the required delays and link active polling
+> there.  In fact I'm often seeing issues on my Light Ridge thunderbolt
+> controller where devices fail to come out of D3 because we apparently don=
+'t
+> wait long enough for the link to go up before writing to their PMCSR.
+>=20
+> Thanks,
+>=20
+> Lukas
 
-This is because vfio will not allow to passthrough one BAR's
-mmio page which may be shared with other BARs. Otherwise,
-there will be a backdoor that guest can use to access BARs
-of other guest.
+Hi Lukas,
 
-This patch adds a macro to set default alignment for all
-PCI devices. Then we could solve this issue on some platforms
-which would easily hit this issue because of their 64K page
-such as PowerNV platform by defining this macro as PAGE_SIZE.
+>From Analyze suspend logs I see the following functions calls during S3 res=
+ume.=20
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci.h |    4 ++++
- drivers/pci/pci.c              |    3 +++
- 2 files changed, 7 insertions(+)
+During root port "resume"
+   pci_pm_resume
+	pcie_port_device_resume
+		pciehp_resume
+			pcie_enable_slot
+				pciehp_check_link_status
+					msleep(100) --> delay before read_pcie conf
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index e9bd6cf..5e31bc2 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -28,6 +28,10 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
-+#ifdef CONFIG_PPC_POWERNV
-+#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-+#endif
-+
- struct pci_dev;
- 
- /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 04f2100..c2da41b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align = 0;
- 	char *p;
- 
-+#ifdef PCIBIOS_DEFAULT_ALIGNMENT
-+	align = PCIBIOS_DEFAULT_ALIGNMENT;
-+#endif
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
- 	if (!*p)
--- 
-1.7.9.5
+The dmesg logs also show that by removing msleep dealy we are able to impro=
+ve pcie root port resume time from ~185ms to ~16ms.
 
+I understand that this delay is part of the spec. When we suspend root port=
+s using these patches - (http://www.spinics.net/lists/linux-pci/msg49313.ht=
+ml) , we see that it adds considerable delay during pcie root port resume.
+
+1)  Could you please suggest if there is an alternate way how we can reduce=
+ root port resume time?
+
+2) If it not possible to remove this delay. Could you please suggest if we =
+can make this change local to our kernel? Our devices are able to come out =
+of D3 and we see no issues.=20
+
+Thanks and regards,
+vaibhav
+
+ 			=09
