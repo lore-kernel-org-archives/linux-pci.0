@@ -1,135 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 09/37] PCI: dwc: designware: Parse *num-lanes* property in
- dw_pcie_setup_rc
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
- <jingoohan1@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-10-git-send-email-kishon@ti.com>
- <c3c55af3-29d1-dc59-3ae4-9a4132c99092@synopsys.com> <587C57FD.7050601@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <3f9d931f-a57f-2ea7-b821-ea9846ad0aa4@synopsys.com>
-Date: Mon, 16 Jan 2017 10:23:10 +0000
+Return-Path: <SRS0=PfZj=ZB=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=PfZj=ZB=linuxfoundation.org=gregkh@kernel.org>
+Date: Thu, 19 Jan 2017 11:38:30 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-kernel@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Tomeu Vizoso <tomeu.vizoso@collabora.com>,
+	Chen Yu <yu.c.chen@intel.com>, Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v5 0/8] Runtime PM for Thunderbolt on Macs
+Message-ID: <20170119103830.GB19476@kroah.com>
+References: <cover.1484486499.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <587C57FD.7050601@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi,
-
-=C0s 5:19 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
-> Hi,
-> =
-
-> On Friday 13 January 2017 10:43 PM, Joao Pinto wrote:
->> Hi,
->>
->> =C0s 10:25 AM de 1/12/2017, Kishon Vijay Abraham I escreveu:
->>> *num-lanes* dt property is parsed in dw_pcie_host_init. However
->>> *num-lanes* property is applicable to both root complex mode and
->>> endpoint mode. As a first step, move the parsing of this property
->>> outside dw_pcie_host_init. This is in preparation for splitting
->>> pcie-designware.c to pcie-designware.c and pcie-designware-host.c
->>>
->>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>> ---
->>>  drivers/pci/dwc/pcie-designware.c |   18 +++++++++++-------
->>>  drivers/pci/dwc/pcie-designware.h |    1 -
->>>  2 files changed, 11 insertions(+), 8 deletions(-)
->>>
->>> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-d=
-esignware.c
->>> index 00a0fdc..89cdb6b 100644
->>> --- a/drivers/pci/dwc/pcie-designware.c
->>> +++ b/drivers/pci/dwc/pcie-designware.c
->>> @@ -551,10 +551,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>  		}
->>>  	}
->>>  =
-
->>> -	ret =3D of_property_read_u32(np, "num-lanes", &pci->lanes);
->>> -	if (ret)
->>> -		pci->lanes =3D 0;
->>> -
->>>  	ret =3D of_property_read_u32(np, "num-viewport", &pci->num_viewport);
->>>  	if (ret)
->>>  		pci->num_viewport =3D 2;
->>> @@ -751,18 +747,26 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u=
-32 devfn,
->>>  =
-
->>>  void dw_pcie_setup_rc(struct pcie_port *pp)
->>>  {
->>> +	int ret;
->>> +	u32 lanes;
->>>  	u32 val;
->>>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
->>> +	struct device *dev =3D pci->dev;
->>> +	struct device_node *np =3D dev->of_node;
->>>  =
-
->>>  	/* get iATU unroll support */
->>>  	pci->iatu_unroll_enabled =3D dw_pcie_iatu_unroll_enabled(pci);
->>>  	dev_dbg(pci->dev, "iATU unroll: %s\n",
->>>  		pci->iatu_unroll_enabled ? "enabled" : "disabled");
->>>  =
-
->>> +	ret =3D of_property_read_u32(np, "num-lanes", &lanes);
->>> +	if (ret)
->>> +		lanes =3D 0;
->>
->> You moved from host_init to root complex setup function, which in my opi=
-nion did
->> not improve (in this scope).
->>
->> I suggest that instead of making so much intermediary patches, which is =
-nice to
->> understand your development sequence, but hard to review. Wouldn't be be=
-tter to
->> condense some of the patches? We would have a cloear vision of the final=
- product :)
-> =
-
-> I thought the other way. If squashing patches is easier to review, I'll d=
-o it.
-
-I understand. To break it in small pieces is good to understand clearly wha=
-t is
-done and how was done, but I would break too much. That's a personal opinio=
-n of
-course, lets see what others say :).
-
-Thanks,
-Joao
-
-> =
-
-> Btw, thanks for reviewing.
-> =
-
-> Cheers
-> Kishon
-> =
+On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> Power down Thunderbolt controllers on Macs when nothing is plugged in
+> to save around 2W per controller.
+> 
+> For background info please see the cover letter of v3:
+> https://lkml.org/lkml/2016/12/17/56
+> 
+> 
+> Patches [1/8] to [3/8] need an ack from Bjorn and/or Rafael.
+> Patches [4/8] to [6/8] need an ack from Rafael.
+> Patches [7/8] to [8/8] need an ack from Andreas.
+> 
+> 
+> Changes since v4:
+> 
+> - Patch [2/8] has been reviewed by Mika. (Thanks!)
+> 
+> - Patch [3/8] now uses a separate helper function instead of stuffing
+>   its code into pci_dev_check_d3cold(), as requested by Mika.
+> 
+> As usual the patches can be reviewed/fetched on GitHub:
+> https://github.com/l1k/linux/commits/thunderbolt_runpm_v5
+> 
+> Thanks,
+> 
+> Lukas
 
 
+Due to all of the PCI changes, these should probably go through the PCI
+tree, so:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+Unless Bjorn wants me to take them?  If so, I need his ack for them.
+
+thanks,
+
+greg k-h
