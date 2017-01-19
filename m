@@ -1,71 +1,67 @@
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=aNbu=YW=wunner.de=lukas@kernel.org>
-Message-Id: <89e0512762e0062ad1f1884ebfaaf71e3b731237.1483806825.git.lukas@wunner.de>
-In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
-References: <cover.1483806825.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 8 Jan 2017 09:41:45 +0100
-Subject: [PATCH v4 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Chen Yu <yu.c.chen@intel.com>, Tomas Winkler <tomas.winkler@intel.com>, Amir Levy <amir.jer.levy@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36918 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753297AbdASOld (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Jan 2017 09:41:33 -0500
+Date: Thu, 19 Jan 2017 08:27:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Blake Moore <blake.moore@men.de>,
+        Martin Burnicki <martin.burnicki@meinberg.de>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [GIT PULL] PCI fixes for v4.10
+Message-ID: <20170119142711.GA11328@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hotplug ports generally block their parents from suspending to D3hot as
-otherwise their interrupts couldn't be delivered.
+PCI fixes:
 
-An exception are Thunderbolt host controllers:  They have a separate
-GPIO pin to side-band signal plug events even if the controller is
-powered down or its parent ports are suspended to D3.  They can be told
-apart from Thunderbolt controllers in attached devices by checking if
-they're situated below a non-Thunderbolt device (typically a root port,
-or the downstream port of a PCIe switch in the case of the MacPro6,1).
+  - recognize that a PCI-to-PCIe bridge originates a PCIe hierarchy, so we
+    enumerate that hierarchy correctly
 
-To enable runtime PM for Thunderbolt on the Mac, the downstream bridges
-of a host controller must not block runtime PM on the upstream bridge as
-power to the chip is only cut once the upstream bridge has suspended.
-Amend the condition in pci_dev_check_d3cold() accordingly.
+  - X-Gene: fix a change merged for v4.10 that broke MSI
 
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+  - Keystone: avoid reading undefined registers, which can cause
+    asynchronous external aborts
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8ed098d..0b03fe7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2271,6 +2271,7 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 
- static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- {
-+	struct pci_dev *parent, *grandparent;
- 	bool *d3cold_ok = data;
- 
- 	if (/* The device needs to be allowed to go D3cold ... */
-@@ -2284,7 +2285,17 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- 	    !pci_power_manageable(dev) ||
- 
- 	    /* Hotplug interrupts cannot be delivered if the link is down. */
--	    dev->is_hotplug_bridge)
-+	    (dev->is_hotplug_bridge &&
-+
-+		/*
-+		 * Exception:  Thunderbolt host controllers have a pin to
-+		 * side-band signal plug events.  Their hotplug ports are
-+		 * recognizable by having a non-Thunderbolt device as
-+		 * grandparent.
-+		 */
-+		!(dev->is_thunderbolt && (parent = pci_upstream_bridge(dev)) &&
-+				 (grandparent = pci_upstream_bridge(parent)) &&
-+						!grandparent->is_thunderbolt)))
- 
- 		*d3cold_ok = false;
- 
--- 
-2.11.0
+  - Supermicro X8DTH-i/6/iF/6F: ignore broken _CRS that caused us to change
+    (and break) existing I/O port assignments
+
+The following changes since commit 7ce7d89f48834cefece7804d38fc5d85382edf77:
+
+  Linux 4.10-rc1 (2016-12-25 16:13:08 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.10-fixes-1
+
+for you to fetch changes up to 4d191b1b63c209e37bf27938ef365244d3c41084:
+
+  PCI/MSI: pci-xgene-msi: Fix CPU hotplug registration handling (2017-01-17 08:41:51 -0600)
+
+----------------------------------------------------------------
+pci-v4.10-fixes-1
+
+----------------------------------------------------------------
+Bjorn Helgaas (2):
+      x86/PCI: Ignore _CRS on Supermicro X8DTH-i/6/iF/6F
+      PCI: Enumerate switches below PCI-to-PCIe bridges
+
+Marc Zyngier (1):
+      PCI/MSI: pci-xgene-msi: Fix CPU hotplug registration handling
+
+Murali Karicheri (1):
+      PCI: designware: Check for iATU unroll only on platforms that use ATU
+
+ arch/x86/pci/acpi.c                | 10 ++++++++++
+ drivers/pci/host/pci-xgene-msi.c   |  2 +-
+ drivers/pci/host/pcie-designware.c | 10 +++++-----
+ drivers/pci/probe.c                | 12 +++++++-----
+ 4 files changed, 23 insertions(+), 11 deletions(-)
