@@ -1,111 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0065.outbound.protection.outlook.com ([104.47.42.65]:51153
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750761AbdAXKTg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Jan 2017 05:19:36 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: [PATCH 2/4] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-Date: Tue, 24 Jan 2017 10:19:26 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263CCFB4@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1484997072-19276-1-git-send-email-bharatku@xilinx.com>
- <1484997072-19276-2-git-send-email-bharatku@xilinx.com>
- <1ac7a4bb-26b6-7a4b-9bf1-030d87e6f8e6@arm.com>
-In-Reply-To: <1ac7a4bb-26b6-7a4b-9bf1-030d87e6f8e6@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 19 Jan 2017 08:34:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: "Raj, Ashok" <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
+Message-ID: <20170119143441.GA12124@bhelgaas-glaptop.roam.corp.google.com>
+References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+ <20170117191539.GA155748@otc-nc-03>
+ <20170118184711.GC27274@localhost.localdomain>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170118184711.GC27274@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- > On 21/01/17 11:11, Bharat Kumar Gogada wrote:
-> > - Few wifi end points which only support legacy interrupts,
-> > performs hardware reset functionalities after disabling interrupts
-> > by invoking disable_irq and then re-enable using enable_irq, they
-> > enable hardware interrupts first and then virtual irq line later.
-> > - The legacy irq line goes low only after DEASSERT_INTx is
-> > received.As the legacy irq line is high immediately after hardware
-> > interrupts are enabled but virq of EP is still in disabled state
-> > and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-> > irq chip is used, interrutps are not masked and system is
-> > hanging with CPU stall.
-> > - Adding irq chip functions instead of dummy irq chip for legacy
-> > interrupts.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > ---
-> >  drivers/pci/host/pcie-xilinx-nwl.c |   36
-> +++++++++++++++++++++++++++++++++++-
-> >  1 files changed, 35 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie=
--xilinx-
-> nwl.c
-> > index c8b5a33..e1809f9 100644
-> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> > @@ -396,10 +396,44 @@ static void nwl_pcie_msi_handler_low(struct
-> irq_desc *desc)
-> >  	chained_irq_exit(chip, desc);
-> >  }
-> >
-> > +static void nwl_mask_leg_irq(struct irq_data *data)
-> > +{
-> > +	struct irq_desc *desc =3D irq_to_desc(data->irq);
-> > +	struct nwl_pcie *pcie;
-> > +	unsigned int mask =3D 0;
->=20
-> No need for this initialization. And if the function you're passing that
-> to takes a u32, why isn't that a u32 too?
->=20
-> > +
-> > +	pcie =3D irq_desc_get_chip_data(desc);
-> > +	mask =3D 1 << (data->hwirq - 1);
-> > +	nwl_bridge_writel(pcie, ((u32)MSGF_LEG_SR_MASKALL & (~mask)),
-> > +			  MSGF_LEG_MASK);
->=20
-> Erm. This looks completely bogus. Let's say I mask INTA:
->=20
-> 	mask =3D 1 << 0;
-> 	nwl_bridge_writel(pcie, INTD|INTC|INTB, ...);
->=20
-> Now, in a separate context, I decide to mask INTB:
->=20
-> 	mask =3D 1 << 1;
-> 	nwl_bridge_writel(pcie, INTD|INTC|INTA, ...);
->=20
-> unmasking INTA in the process. Probably not what you intended.
->=20
-Agreed, will do it in next patch.
-> > +
-> > +}
-> > +
-> > +static void nwl_unmask_leg_irq(struct irq_data *data)
-> > +{
-> > +	struct irq_desc *desc =3D irq_to_desc(data->irq);
-> > +	struct nwl_pcie *pcie;
-> > +	unsigned int mask =3D 0;
-> > +
-> > +	pcie =3D irq_desc_get_chip_data(desc);
-> > +	mask =3D 1 << (data->hwirq - 1);
-> > +	nwl_bridge_writel(pcie, ((u32)MSGF_LEG_SR_MASKALL | mask),
-> > +			  MSGF_LEG_MASK);
->=20
-> Same issue.
->=20
-Agreed, will do it in next patch.
+Sorry for the delay, I'm just trying to clear out some of our defects from
+bugzilla and have gotten really behind on the list, so I just haven't
+gotten to this yet.
 
-Thanks & Regards,
-Bharat
+On Wed, Jan 18, 2017 at 01:47:11PM -0500, Keith Busch wrote:
+> Hi Bjorn,
+> 
+> This fix looks good to me as well now. Any other concerns before staging
+> this one for inclusion?
+> 
+> Thanks,
+> Keith
+> 
+> On Tue, Jan 17, 2017 at 11:15:40AM -0800, Raj, Ashok wrote:
+> > Hi Bjorn
+> > 
+> > Sorry to bug you, didn't hear from you after i added the lock for consistency
+> > to address the feedback.
+> > 
+> > Let me know if there is anymore changes you like to see.
+> > 
+> > Cheers,
+> > Ashok
+> > 
+> > On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
+> > > Changes from v1:
+> > > 	Address comments from Bjorn:
+> > > 		Added p_slot->lock mutex around changes to p_slot->state
+> > > 		Updated commit message to call out mutex names
+> > > 
+> > > A surprise link down may retrain very quickly, causing the same slot to
+> > > generate a link up event before handling the link down completes.
+> > > 
+> > > Since the link is active, the power off work queued from the first link
+> > > down will cause a second down event when the power is disabled. The second
+> > > down event should be ignored because the slot is already powering off;
+> > > however, the "link up" event sets the slot state to POWERON before the
+> > > event to handle this is enqueued, making the second down event believe
+> > > it needs to do something. This creates a constant link up and down
+> > > event cycle.
+> > > 
+> > > This patch fixes that by setting the p_slot->state only when the work to
+> > > handle the power event is executing, protected by the p_slot->hotplug_lock.
+> > > 
+> > > To: Bjorn Helgass <bhelgaas@google.com>
+> > > Cc: linux-kernel@vger.kernel.org
+> > > Cc: Keith Busch <keith.busch@intel.com>
+> > > 
+> > > Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+> > > Reviewed-by: Keith Busch <keith.busch@intel.com>
+> > > ---
+> > >  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
+> > >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> > > index ec0b4c1..4cf4772 100644
+> > > --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> > > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> > > @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
+> > >  	switch (info->req) {
+> > >  	case DISABLE_REQ:
+> > >  		mutex_lock(&p_slot->hotplug_lock);
+> > > +		mutex_lock(&p_slot->lock);
+> > > +		p_slot->state = POWEROFF_STATE;
+> > > +		mutex_unlock(&p_slot->lock);
+> > >  		pciehp_disable_slot(p_slot);
+> > >  		mutex_unlock(&p_slot->hotplug_lock);
+> > >  		mutex_lock(&p_slot->lock);
+> > > @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
+> > >  		break;
+> > >  	case ENABLE_REQ:
+> > >  		mutex_lock(&p_slot->hotplug_lock);
+> > > +		mutex_lock(&p_slot->lock);
+> > > +		p_slot->state = POWERON_STATE;
+> > > +		mutex_unlock(&p_slot->lock);
+> > >  		ret = pciehp_enable_slot(p_slot);
+> > >  		mutex_unlock(&p_slot->hotplug_lock);
+> > >  		if (ret)
+> > > @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+> > >  {
+> > >  	struct power_work_info *info;
+> > >  
+> > > -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
+> > > -
+> > >  	info = kmalloc(sizeof(*info), GFP_KERNEL);
+> > >  	if (!info) {
+> > >  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+> > > -- 
+> > > 2.7.4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
