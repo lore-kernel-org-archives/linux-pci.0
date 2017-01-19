@@ -1,22 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Jan 2017 08:22:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170118142250.GB6534@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
- <20170117175728.GE27312@n2100.armlinux.org.uk>
- <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117193414.GG27312@n2100.armlinux.org.uk>
- <20170117210258.GH27312@n2100.armlinux.org.uk>
- <20170117222229.GA6534@bhelgaas-glaptop.roam.corp.google.com>
- <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
-MIME-Version: 1.0
-In-Reply-To: <e0ccb7a0-9cc7-c595-7f06-e63c0927f36d@caviumnetworks.com>
+Message-ID: <1484844267.24339.44.camel@pengutronix.de>
+Subject: Re: [PATCH 2/3] PCI: imx6: Allow probe deferal by reset GPIO
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Thu, 19 Jan 2017 17:44:27 +0100
+In-Reply-To: <20170119163631.10668-3-andrew.smirnov@gmail.com>
+References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
+ <20170119163631.10668-3-andrew.smirnov@gmail.com>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -24,120 +16,70 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>,
- Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
- David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- linux-arm-kernel@lists.infradead.org
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, yurovsky@gmail.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 03:37:10PM -0800, David Daney wrote:
-> On 01/17/2017 02:22 PM, Bjorn Helgaas wrote:
-> >[+cc David]
-> >
-> >On Tue, Jan 17, 2017 at 09:02:58PM +0000, Russell King - ARM Linux wrote:
-> >>On Tue, Jan 17, 2017 at 07:34:14PM +0000, Russell King - ARM Linux wrote:
-> >>>Uwe, can you try:
-> >>>
-> >>>setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> >>>	0x50.w=0x60
-> >>>
-> >>>and see whether it remains alive (you can check by reading the root
-> >>>register 0x52.w - bit 12 should be set once bit 11 clears again.
-> >>
-> >>For reference, this I got wrong...
-> >>
-> >>0xf1041a04 bit 0 indicates link status (0 = link up, 1 = link down).
-> >>
-> >>>If that's successful, maybe setting the common clock bit on the PCIe
-> >>>device is what's causing the problem, in which case:
-> >>>
-> >>>setpci -s 02:00.0 0x80.w=0x40
-> >>>setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> >>>	0x50.w=0x60
-> >>
-> >>Having worked with Uwe over IRC, it seems that any request to retrain
-> >>causes the link to go down, either with or without the common clock bit
-> >>set:
-> >>
-> >># setpci -s 2.0 0x50.w=0x60
-> >># setpci -s 2.0 0x52.w
-> >>0011
-> >># memtool md 0xf1041a04+4
-> >>f1041a04: 00010201
-> >>... reboot ...
-> >># setpci -s 2.0 0x50.w=0x20
-> >># memtool md 0xf1041a04+4
-> >>f1041a04: 00010201
-> >>
-> >>which doesn't point towards ASPM itself, but the problem is caused by
-> >>a side effect of ASPM's setup code which always triggers a retrain.
-> >>
-> >>Bit 5 in that register is documented (at least in the Armada 370 docs
-> >>and Armada XP docs I have) as:
-> >>
-> >>5  RetrnLnk  RW    Retrain Link
-> >>             0x0   This bit forces the device to initiate link retraining.
-> >>                   Always returns 0 when read.
-> >>                   NOTE: If configured as an Endpoint, this field is
-> >>                   reserved and has no effect.
-> >>
-> >>Bjorn, are you aware of similar situations where a request for the PCIe
-> >>link to be retrained causes it to fail?
+Am Donnerstag, den 19.01.2017, 08:36 -0800 schrieb Andrey Smirnov:
+> Some designs implement reset GPIO via a GPIO expander connected to a
+> peripheral bus. One such example would be i.MX7 Sabre board where said
+> GPIO is provided by SPI shift register connected to a bitbanged SPI
+> bus. In order to support such designs allow reset GPIO request to defer
+> probing of the driver.
 > 
+> Cc: yurovsky@gmail.com
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Fabio Estevam <festevam@gmail.com>
+> Cc: Shawn Guo <shawnguo@kernel.org>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
-> Link (re)training can fail for several reasons including, but not
-> limited to:
-> 
-> - Poor signal propagation through the
-> chips/packages/boards/connectors, also known as Signal Integrity
-> (SI) problmes.
-> 
-> - Incorrect implementation, in hardware, of link training protocols
-> at either end of the link
-> 
-> Usually, system and PCIe device vendors do a lot of testing and
-> signal analysis across a variety of configurations with the end goal
-> being that PCIe looks like a bullet-proof interconnect to the end
-> consumer.
-> 
-> Unfortunatly, sometimes it doesn't work.  In these cases, the
-> vendors of the devices on each end of the link tend to point fingers
-> at the link partner for being detective in some way.
-> 
-> This patch:
-> 
-> >
-> >The only one that comes to mind is this patch from David (CC'd) that
-> >avoids ASPM-related retrains when we know the link doesn't support ASPM:
-> >http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e53f9a28bee3
-> >
-> 
-> Is an attempt to work around the problem from the system (host) end.
-> If the system vendor knows a priori that a defective PCIe device is
-> present in the system, the PCIe root port can be configured to
-> indicate no ASPM is supported, resulting (with the patch) in no link
-> retraining being attempted.
-> 
-> To me it feels that we need a black list of devices that fail at a
-> high rate in the link retraining, that when encountered would
-> disable ASPM on the link where they reside.
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 50a1291..574f026 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -653,6 +653,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  			dev_err(dev, "unable to get reset gpio\n");
+>  			return ret;
+>  		}
+> +	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
+> +		dev_info(dev, "probe is defered by reset GPIO\n");
 
-I should have asked you for details about the defective devices
-related to e53f9a28bee3 :)  If we had included that in the changelog,
-we would have something to seed a blacklist with.
+No, please no messages for probe deferrals, as those might happen quite
+often until the required driver is there and then just spams the logs.
+Otherwise looks good.
 
-There are several situations other than ASPM where link retraining is
-required per spec (rate change, error handling, etc), and I guess we'd
-have to avoid all of them.   So I suppose e53f9a28bee3 avoids the most
-obvious failures, but maybe we could still see issues in those other
-cases.
+> +		return imx6_pcie->reset_gpio;
+>  	}
+>  
+>  	/* Fetch clocks */
+> @@ -746,11 +749,12 @@ static struct platform_driver imx6_pcie_driver = {
+>  		.name	= "imx6q-pcie",
+>  		.of_match_table = imx6_pcie_of_match,
+>  	},
+> +	.probe    = imx6_pcie_probe,
+>  	.shutdown = imx6_pcie_shutdown,
+>  };
+>  
+>  static int __init imx6_pcie_init(void)
+>  {
+> -	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
+> +	return platform_driver_register(&imx6_pcie_driver);
+>  }
+>  device_initcall(imx6_pcie_init);
 
-Bjorn
+
 
 _______________________________________________
 linux-arm-kernel mailing list
