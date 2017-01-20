@@ -1,45 +1,76 @@
-Return-Path: <SRS0=VJo1=YS=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=VJo1=YS=arm.com=marc.zyngier@kernel.org>
-Subject: Re: Need clarity on MSI handling in RC driver
-To: valmiki <valmikibow@gmail.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <2fea5a0c-7410-97fd-91d1-ae6a06ab1a52@gmail.com>
- <307e8512-7e14-39a2-c225-6db44e443aea@gmail.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, mark.rutland@arm.com
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <060e94a4-00a2-bdb7-caf3-72785b333c83@arm.com>
-Date: Wed, 4 Jan 2017 17:46:19 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: okaya@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V2] PCI: enable extended tags support for PCIe devices
+Date: Fri, 20 Jan 2017 09:16:51 -0500
+Message-Id: <1484921814-8511-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <307e8512-7e14-39a2-c225-6db44e443aea@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/01/17 17:39, valmiki wrote:
-> Hi All,
-> 
-> I have a doubt, the MSI domains are handled differently in different RC 
-> drivers.
-> 
-> Some drivers use irq_domain_add_linear alone, and some use 
-> pci_msi_create_irq_domain also to handle MSI.
-> 
-> In most of the 32-bit architectures only irq_domain_add_linear is used 
-> and in 64 bit drivers both pci_msi_create_irq_domain and 
-> irq_domain_add_linear are used.
-> 
-> So is this because of architecture difference between ARM and ARM64 ?
+Each PCIe device can issue up to 32 transactions at a time by default.
+This limitation is historically coming from PCI. Each transaction is
+tracked by a tag number on the bus. 2.2.6.2. Transaction Descriptor
+– Transaction ID Field section of the PCIe 3.1 specification describes
+extended tags.
 
-Neither. This is purely a software construct. Newer drivers use the
-generic MSI infrastructure (which also allows things like non-PCI MSI),
-while older drivers use some ad-hoc infrastructure which is more or less
-specific to PCI.
+PCI supports 32 outstanding non-posted requests at a given time. This
+number has been extended to 256 on PCI Express. According to the
+specification, all PCIe devices are required to support receiving
+8-bit Tags (Tag completer). The PCIe-PCI bridges handle the translation
+of 8-bit tags to 5-bit tags.
 
-The former is the way to go, and the latter is being phased out.
+However, the generation of 8-bit tags is left optional to a particular HW
+implementation. The code needs to check HW support before attempting
+to enable extended tags producer capability.
 
-I'll let Mark draw some shiny ASCII art.
+32 outstanding transactions is not enough for some performance critical
+applications especially when a lot of small sized frames are transmitted.
 
-Thanks,
+Extended tags support increases this number to 256. Devices not
+supporting extended tags tie-off this field to 0. According to ECN, it
+is safe to enable this feature for all PCIe devices.
 
-	M.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/probe.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e164b5c..1192475 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1650,12 +1650,28 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	 */
+ }
+ 
++static void pci_configure_extended_tags(struct pci_dev *pdev)
++{
++	u32 dev_cap;
++	int ret;
++
++	ret = pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP, &dev_cap);
++
++	if (ret)
++		return;
++
++	if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
++		pcie_capability_set_word(pdev, PCI_EXP_DEVCTL,
++					 PCI_EXP_DEVCTL_EXT_TAG);
++}
++
+ static void pci_configure_device(struct pci_dev *dev)
+ {
+ 	struct hotplug_params hpp;
+ 	int ret;
+ 
+ 	pci_configure_mps(dev);
++	pci_configure_extended_tags(dev);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
 -- 
-Jazz is not dead. It just smells funny...
+1.9.1
