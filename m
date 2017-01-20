@@ -1,55 +1,40 @@
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Tue, 17 Jan 2017 17:57:28 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
-	Andrew Lunn <andrew@lunn.ch>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170117175728.GE27312@n2100.armlinux.org.uk>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170117175115.GD27312@n2100.armlinux.org.uk>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:33076 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752780AbdATQns (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 11:43:48 -0500
+Date: Fri, 20 Jan 2017 11:43:46 -0500 (EST)
+Message-Id: <20170120.114346.786441265338417344.davem@davemloft.net>
+To: phil@nwl.cc
+Cc: bhelgaas@google.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [net-next PATCH 0/3] Retrieve number of VFs in a bus-agnostic
+ way
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170118130439.15023-1-phil@nwl.cc>
+References: <20170118130439.15023-1-phil@nwl.cc>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 05:51:16PM +0000, Russell King - ARM Linux wrote:
-> On Tue, Jan 17, 2017 at 11:46:49AM -0600, Bjorn Helgaas wrote:
-> > Uwe has already done that; the dmesg logs including this
-> > instrumentation are at
-> > https://bugzilla.kernel.org/show_bug.cgi?id=192441
+From: Phil Sutter <phil@nwl.cc>
+Date: Wed, 18 Jan 2017 14:04:36 +0100
+
+> Previously, it was assumed that only PCI NICs would be capable of having
+> virtual functions - with my proposed enhancement of dummy NIC driver
+> implementing (fake) ones for testing purposes, this is no longer true.
 > 
-> Grr, <swears about SSL incompatibilities>... wget's the URL and then
-> uses elinks on it...
+> Discussion of said patch has led to the suggestion of implementing a
+> bus-agnostic method for VF count retrieval so rtnetlink could work with
+> both real VF-capable PCI NICs as well as my dummy modifications without
+> introducing ugly hacks.
 > 
-> Umm, not quite.  He's done mvebu_pcie_hw_wr_conf() and mvebu_pcie_hw_rd_conf()
-> but not the bridge from the descriptions given on the attachments.
-> Obviously, it's going to be a lot of work to manufacture the links to
-> look at each attachment to thoroughly check, so I'm not going to do
-> that given quite how broken SSL crap is today.
-> 
-> (Try installing elinks and pointing it at the above URL.)
+> The following series tries to achieve just that by introducing a bus
+> type callback to retrieve a device's number of VFs, implementing this
+> callback for PCI bus and finally adjusting rtnetlink to make use of the
+> generalized infrastructure.
 
-Oh, and looking at some of the debug that's been added:
+This is really nice and clean, compare it to your original approach :-)
 
-[    3.646322] mvebu_pcie_rd_conf(where=16, size=4, val=3892314116) => 0
-[    3.646325] mvebu_pcie_wr_conf(where=16, size=4, val=4294967295)
-[    3.646329] mvebu_pcie_rd_conf(where=16, size=4, val=4292870148) => 0
-[    3.646332] mvebu_pcie_wr_conf(where=16, size=4, val=3892314116)
-
-Please print register values in HEX, not decimal.  Same for register
-addresses.  Hex is the normal base to print this information, which
-the human brain can easily comprehend and translate to bits in a
-register.  Decimal values are useless and might as well be encrypted.
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Series applied, thanks!
