@@ -1,189 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa8.dell-outbound.iphmx.com ([68.232.149.218]:21334 "EHLO
-        esa8.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751011AbdAYAus (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2017 19:50:48 -0500
-From: <Austin.Bolen@dell.com>
-To: <keith.busch@intel.com>, <gregkh@linuxfoundation.org>
-CC: <lukas@wunner.de>, <linux-pci@vger.kernel.org>,
-        <bhelgaas@google.com>, <wzhang@fb.com>
-Subject: RE: [PATCHv4 next 0/3] Limiting pci access
-Date: Wed, 25 Jan 2017 00:44:34 +0000
-Message-ID: <35db59dfeccf4c83b5cb0eb3a1cf00b1@AUSX13MPC131.AMER.DELL.COM>
-References: <20161208175432.GA28827@bhelgaas-glaptop.roam.corp.google.com>
- <20161208193253.GK25959@localhost.localdomain>
- <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
- <20161213005547.GA12844@localhost.localdomain>
- <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
- <20161213231840.GD12113@localhost.localdomain>
- <B58D82457FDA0744A320A2FC5AC253B93D82F37D@fmsmsx104.amr.corp.intel.com>
- <20170120213550.GA16618@localhost.localdomain>
- <20170121073140.GA26396@wunner.de> <20170121084243.GA24706@kroah.com>
- <20170123160452.GA10771@localhost.localdomain>
-In-Reply-To: <20170123160452.GA10771@localhost.localdomain>
-Content-Type: text/plain; charset="us-ascii"
+Received: from orbyte.nwl.cc ([151.80.46.58]:56757 "EHLO mail.nwl.cc"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752522AbdATQ7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Jan 2017 11:59:16 -0500
+Date: Fri, 20 Jan 2017 17:59:14 +0100
+From: Phil Sutter <phil@nwl.cc>
+To: David Miller <davem@davemloft.net>
+Cc: bhelgaas@google.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [net-next PATCH 0/3] Retrieve number of VFs in a bus-agnostic way
+Message-ID: <20170120165914.GF5197@orbyte.nwl.cc>
+References: <20170118130439.15023-1-phil@nwl.cc>
+ <20170120.114346.786441265338417344.davem@davemloft.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170120.114346.786441265338417344.davem@davemloft.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To add to what Keith sent, I wanted to throw in my 2 cents on this issue.  =
-Full disclosure - I'm not a Linux developer and so my thoughts on this are =
-more from the PCIe Base Specification point of view and specifically, harde=
-ning the spec to better support PCIe hot-plug for storage use cases (NVMe) =
-and providing better guidance in the PCIe spec on how system software can i=
-nteract with the PCIe subsystem to better determine/handle the sort of erro=
-rs that arise in PCIe removal scenarios.
+On Fri, Jan 20, 2017 at 11:43:46AM -0500, David Miller wrote:
+> From: Phil Sutter <phil@nwl.cc>
+> Date: Wed, 18 Jan 2017 14:04:36 +0100
+> 
+> > Previously, it was assumed that only PCI NICs would be capable of having
+> > virtual functions - with my proposed enhancement of dummy NIC driver
+> > implementing (fake) ones for testing purposes, this is no longer true.
+> > 
+> > Discussion of said patch has led to the suggestion of implementing a
+> > bus-agnostic method for VF count retrieval so rtnetlink could work with
+> > both real VF-capable PCI NICs as well as my dummy modifications without
+> > introducing ugly hacks.
+> > 
+> > The following series tries to achieve just that by introducing a bus
+> > type callback to retrieve a device's number of VFs, implementing this
+> > callback for PCI bus and finally adjusting rtnetlink to make use of the
+> > generalized infrastructure.
+> 
+> This is really nice and clean, compare it to your original approach :-)
 
->From Dell EMC side, we would definitely like to see the config read routine=
-s in all operating environments return an error status code any time data i=
-s synthesized by the root port - but especially for failures due to device =
-removal.  Today, if bad data is synthesized by a root port due to a failed =
-config read, the config read routines in various operating environments do =
-not return an error.  We, and others, have found cases where the caller of =
-these config routines will consume the bad data since the API did not retur=
-n an error due to this type of failure.  Most folks have been patching up e=
-very caller to check if data is synthesized after every config read.  This =
-is not very efficient as there are many entities that read config space (de=
-vice driver, bus driver, systems management software, diagnostic software, =
-etc.).   This patch, or similar, is very beneficial because it localizes th=
-e error checking for synthesized data to a single location in the core conf=
-ig read APIs rather than distributing this code to every caller.  The calle=
-rs benefit by only requiring a simple check of the return status code from =
-the API (which many are already doing).
+Yes, indeed! Thanks a lot for pointing me into the right direction. :)
 
-Having the check for a removed device before reading config space will resu=
-lt in correctly returning an error for most failures of this nature.  There=
- is a race condition even with this patch, however.  If the device is prese=
-nt when the check occurs, but is removed just after that and before the con=
-fig read goes out, the config routine can still return bad data without an =
-error status return code.  To eliminate this race condition where bad data =
-is returned, I think that config read routines will need to have a check *a=
-fter* reading the data in addition to the check *before* reading.  The chec=
-k after reading would need to determine if the data was synthesized and ret=
-urn and error status if so.
-
-I'm interested in hearing what others think on returning an error for this =
-case in the core config read APIs or any alternative ways to more gracefull=
-y handle these types of errors.
-
-Thanks,
-Austin
-
-
------Original Message-----
-From: Keith Busch [mailto:keith.busch@intel.com]=20
-Sent: Monday, January 23, 2017 10:05 AM
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Lukas Wunner <lukas@wunner.de>; linux-pci@vger.kernel.org; Bjorn Helgaa=
-s <bhelgaas@google.com>; Wei Zhang <wzhang@fb.com>; Bolen, Austin <Austin_B=
-olen@Dell.com>
-Subject: Re: [PATCHv4 next 0/3] Limiting pci access
-
-On Sat, Jan 21, 2017 at 09:42:43AM +0100, Greg Kroah-Hartman wrote:
-> On Sat, Jan 21, 2017 at 08:31:40AM +0100, Lukas Wunner wrote:
-> > @Greg KH:
-> > Would you entertain a patch adding a bit to struct device which=20
-> > indicates the device was surprise removed?  The PCIe Hotplug and=20
-> > PCIe Downstream Port Containment drivers are both able to recognize=20
-> > surprise removal and can set the bit.
-> >=20
-> > When removing the device we currently perform numerous accesses to=20
-> > config space in the PCI core.  Additionally the driver for the=20
-> > removed device (e.g. network driver, GPU driver) performs mmio=20
-> > accesses to orderly shut down the device.  E.g. when unplugging the=20
-> > Apple Thunderbolt Ethernet adapter the kernel currently locks up as=20
-> > the tg3 driver tries to shutdown the removed device.  If we had a=20
-> > bit to indicate surprise removal we could handle this properly in the P=
-CI core and device driver ->remove hooks.
-> >=20
-> > For comparison, this is what macOS recommends to driver developers:
-> >=20
-> >        "PCI device drivers are typically developed with the expectation
-> > 	that the device will not be removed from the PCI bus during its
-> > 	operation. However, Thunderbolt technology allows PCI data to be
-> > 	tunneled through a Thunderbolt connection, and the Thunderbolt
-> > 	cables may be unplugged from the host or device at any time.
-> > 	Therefore, the system must be able to cope with the removal of
-> > 	PCI devices by the user at any time.
-> >=20
-> > 	The PCI device drivers used with Thunderbolt devices may need to
-> > 	be updated in order to handle surprise or unplanned removal.
-> > 	In particular, MMIO cycles and PCI Configuration accesses require
-> > 	special attention. [...] As a basic guideline, developers should
-> > 	modify their drivers to handle a return value of 0xFFFFFFFF.
-> > 	If any thread, callback, interrupt filter, or code path in a
-> > 	driver receives 0xFFFFFFFF indicating the device has been
-> > 	unplugged, then all threads, callbacks, interrupt filters,
-> > 	interrupt handlers, and other code paths in that driver must
-> > 	cease MMIO reads and writes immediately and prepare for
-> > 	termination. [...]
-> >=20
-> > 	Once it has been determined that a device is no longer connected,
-> > 	do not try to clean up or reset the hardware as attempts to
-> > 	communicate with the hardware may lead to further delays. [...]
-> > 	A typical way for a developer to solve this problem is to provide
-> > 	a single bottleneck routine for all MMIO reads and have that
-> > 	routine check the status of the device before beginning the actual
-> > 	transaction."
-> >=20
-> > 	Source:=20
-> > https://developer.apple.com/library/content/documentation/HardwareDr
-> > ivers/Conceptual/ThunderboltDevGuide/Basics02/Basics02.html
-> >=20
-> > We lack a comparable functionality and the question is whether to=20
-> > support it only in the PCI core or in a more general fashion in the=20
-> > driver core.  Other buses (such as USB) have to support surprise=20
-> > removal as well.
->=20
-> PCI devices have _ALWAYS_ had to handle supprise removal, and the=20
-> MacOS guidelines are the exact same thing that we have been telling=20
-> Linux kernel developers for years.
->=20
-> So no, a supprise removal flag should not be needed, your driver=20
-> should already be handling this problem today (if it isn't, it needs=20
-> to be
-> fixed.)
->=20
-> Don't try to rely on some out-of-band notification that your device is=20
-> removed, just do what you write above and handle it that way in your=20
-> driver.  There are lots of examples of this in the kernel today, are=20
-> you concerned about any specific driver that does not do this properly?
-
-The generic pci bus driver is what we're concerned about. This is not inten=
-ded to target a device specific driver.
-
-Handling a removal has the generic pci driver generate many hundreds of con=
-fig and MMIO access to the device we know is removed, so we know those will=
- fail. The flag is only so the pci bus driver knows that it doesn't need to=
- send requests since we should already know the outcome.
-
-The concern is that hardware from many vendors handle these as slower error=
- cases, and we are very closely approaching the completion timeouts defined=
- in the 10s of millisecond range. We occasionally observe exceeding the tim=
-eout, creating MCE, but that's not really our justification for the patches=
-.
-
-When the pci bus driver issues hundreds of such requests, it significantly =
-slows down device tear down time. We want to handle removal of switches wit=
-h potentially many devices below it, and pci bus scanning being serialized,=
- the proposed change gets such scenarios to complete removal in microsecond=
-s where we currently take many seconds.
-
-We are currently so slow that a user can easily swap a device such that the=
- linux pci driver is still trying to unbind from the old device with unnece=
-ssary config access to potentially undefined results when those requests re=
-ach the new device that linux doesn't know about yet.
-
-> And really, all busses need to handle their device being removed at=20
-> any point in time anyway, so the reliance on a "supprise" flag would=20
-> not help much, as usually that is only known _after_ the fact and the=20
-> device would have already started to report other types of errors.
->=20
-> So what "benifit" would a supprise removal flag provide?  Other than=20
-> some PCI busses could set this, and many others could not, so a driver=20
-> would have to be changed to now support both types of detection,=20
-> _adding_ work to drivers, not making it easier by any means :(
-
-The flag is not intended for a device specific driver to use. The intention=
- is for the pci bus driver to use it, so no additional work for other drive=
-rs.
+Cheers, Phil
