@@ -1,65 +1,31 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 1/3] ARM64 LPC: Indirect ISA port IO introduced
-Date: Fri, 06 Jan 2017 12:43:32 +0100
-Message-ID: <4069640.PHLdmY3C6P@wuerfel>
-In-Reply-To: <CACVXFVNS9n9_ty8y3CyqfRaLitqDKdk1mMOrQHM-enOgJtUBeQ@mail.gmail.com>
-References: <1478576829-112707-1-git-send-email-yuanzhichang@hisilicon.com>
- <1478576829-112707-2-git-send-email-yuanzhichang@hisilicon.com>
- <CACVXFVNS9n9_ty8y3CyqfRaLitqDKdk1mMOrQHM-enOgJtUBeQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38396 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752029AbdATOjJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 09:39:09 -0500
+Subject: Re: [PATCH V2] PCI: enable extended tags support for PCIe devices
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1484921814-8511-1-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <1214d229-0f0c-d9fd-3d25-39a6e257a36b@codeaurora.org>
+Date: Fri, 20 Jan 2017 09:36:45 -0500
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>, gabriele.paoloni@huawei.com,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- linuxarm@huawei.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Ming Lei <tom.leiming@gmail.com>, xuwei5@hisilicon.com,
- linux-serial@vger.kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, minyard@acm.org,
- Liviu Dudau <liviu.dudau@arm.com>, john.garry@huawei.com,
- Olof Johansson <olof@lixom.net>, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, kantyzc@163.com,
- zhichang.yuan02@gmail.com,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, zourongrong@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1484921814-8511-1-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 22, 2016 4:15:57 PM CET Ming Lei wrote:
-> ERROR: "inb" [drivers/watchdog/wdt_pci.ko] undefined!
-> ERROR: "outb" [drivers/watchdog/wdt_pci.ko] undefined!
-> ERROR: "outb" [drivers/watchdog/pcwd_pci.ko] undefined!
-> ERROR: "inb" [drivers/watchdog/pcwd_pci.ko] undefined!
-> ERROR: "outw" [drivers/video/vgastate.ko] undefined!
-> ERROR: "outb" [drivers/video/vgastate.ko] undefined!
-> ERROR: "inb" [drivers/video/vgastate.ko] undefined!
-> ERROR: "outw" [drivers/video/fbdev/vt8623fb.ko] undefined!
-> ERROR: "inb" [drivers/video/fbdev/vt8623fb.ko] undefined!
-> ERROR: "outb" [drivers/video/fbdev/vt8623fb.ko] undefined!
-> ERROR: "outw" [drivers/video/fbdev/tridentfb.ko] undefined!
-> ERROR: "inb" [drivers/video/fbdev/tridentfb.ko] undefined!
-> ERROR: "outb" [drivers/video/fbdev/tridentfb.ko] undefined!
-> ERROR: "inb" [drivers/video/fbdev/tdfxfb.ko] undefined!
+On 1/20/2017 9:16 AM, Sinan Kaya wrote:
+> Each PCIe device can issue up to 32 transactions at a time by default.
+> This limitation is historically coming from PCI. Each transaction is
+> tracked by a tag number on the bus. 2.2.6.2. Transaction Descriptor
+> – Transaction ID Field section of the PCIe 3.1 specification describes
+> extended tags.
 > 
 
-In case you haven't figured it out by now, the new code is simply
-missing a few "EXPORT_SYMBOL" lines.
-
-	Arnd
+Apologies for the spam, no idea what happened. I need to review my publish scripts.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
