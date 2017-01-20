@@ -1,61 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50596 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750740AbdAaPLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 10:11:03 -0500
-Subject: [PATCH] PCI: rcar: Check for OF device match early
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Simon Horman <horms@verge.net.au>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Tue, 31 Jan 2017 09:10:44 -0600
-Message-ID: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: rockchip: mark PM functions as __maybe_unused
+Date: Fri, 20 Jan 2017 17:24:30 +0100
+Message-Id: <20170120162450.3690225-1-arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Brian Norris <briannorris@chromium.org>,
+ linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A match in the rcar_pcie_of_match[] table is required, so check that first,
-before we start setting up things that need to be undone if it fails.  No
-functional change intended.
+When CONFIG_PM_SLEEP is disabled, we get harmless build warnings:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+host/pcie-rockchip.c:1267:12: error: 'rockchip_pcie_resume_noirq' defined but not used [-Werror=unused-function]
+host/pcie-rockchip.c:1240:12: error: 'rockchip_pcie_suspend_noirq' defined but not used [-Werror=unused-function]
+
+Marking both functions as __maybe_unused avoids the warning without
+the need for #ifdef around them.
+
+Fixes: 013dd3d5e183 ("PCI: rockchip: Add system PM support")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/host/pcie-rcar.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/host/pcie-rockchip.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 0d9b96c3c49d..c91ff0b91be8 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 0d6e8ee5b017..b975116d2b03 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1237,7 +1237,7 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+ 	return 0;
+ }
+ 
+-static int rockchip_pcie_suspend_noirq(struct device *dev)
++static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+ 	int ret;
+@@ -1264,7 +1264,7 @@ static int rockchip_pcie_suspend_noirq(struct device *dev)
+ 	return ret;
+ }
+ 
+-static int rockchip_pcie_resume_noirq(struct device *dev)
++static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
  	int err;
- 	int (*hw_init_fn)(struct rcar_pcie *);
- 
-+	of_id = of_match_device(rcar_pcie_of_match, dev);
-+	if (!of_id || !of_id->data)
-+		return -EINVAL;
-+
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
-@@ -1149,11 +1153,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	of_id = of_match_device(rcar_pcie_of_match, dev);
--	if (!of_id || !of_id->data)
--		return -EINVAL;
--	hw_init_fn = of_id->data;
--
- 	pm_runtime_enable(dev);
- 	err = pm_runtime_get_sync(dev);
- 	if (err < 0) {
-@@ -1162,6 +1161,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Failure to get a link might just be that no cards are inserted */
-+	hw_init_fn = of_id->data;
- 	err = hw_init_fn(pcie);
- 	if (err) {
- 		dev_info(dev, "PCIe link down\n");
+-- 
+2.9.0
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
