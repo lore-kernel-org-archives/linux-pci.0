@@ -1,15 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Jan 2017 15:36:31 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 25/37] dt-bindings: PCI: Add dt bindings for pci
- designware EP mode
-Message-ID: <20170118213631.vvdjc4g3gt6zy2c5@rob-hp-laptop>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-26-git-send-email-kishon@ti.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org,
+	cov@codeaurora.org
+Subject: [PATCH V2] PCI: enable extended tags support for PCIe devices
+Date: Fri, 20 Jan 2017 09:20:50 -0500
+Message-Id: <1484922050-9139-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1484216786-17292-26-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,29 +15,48 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 03:56:14PM +0530, Kishon Vijay Abraham I wrote:
-> Add device tree binding documentation for pci designware EP mode.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++++++++++++++------
->  1 file changed, 18 insertions(+), 8 deletions(-)
-
-Acked-by: Rob Herring <robh@kernel.org>
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RWFjaCBQQ0llIGRldmljZSBjYW4gaXNzdWUgdXAgdG8gMzIgdHJhbnNhY3Rpb25zIGF0IGEgdGlt
+ZSBieSBkZWZhdWx0LgpFYWNoIHRyYW5zYWN0aW9uIGlzIHRyYWNrZWQgYnkgYSB0YWcgbnVtYmVy
+IG9uIHRoZSBidXMuIDIuMi42LjIuClRyYW5zYWN0aW9uIERlc2NyaXB0b3Ig4oCTIFRyYW5zYWN0
+aW9uIElEIEZpZWxkIHNlY3Rpb24gb2YgdGhlIFBDSWUgMy4xCnNwZWNpZmljYXRpb24gZGVzY3Jp
+YmVzIGV4dGVuZGVkIHRhZ3MuCgozMiB0cmFuc2FjdGlvbiBsaW1pdCBoYXMgYmVlbiBleHRlbmRl
+ZCB0byAyNTYgb24gUENJIEV4cHJlc3MuIEFjY29yZGluZwp0byB0aGUgc3BlY2lmaWNhdGlvbiwg
+YWxsIFBDSWUgZGV2aWNlcyBhcmUgcmVxdWlyZWQgdG8gc3VwcG9ydCByZWNlaXZpbmcKOC1iaXQg
+VGFncyAoVGFnIGNvbXBsZXRlcikuIFRoZSBQQ0llLVBDSSBicmlkZ2VzIGhhbmRsZSB0aGUgdHJh
+bnNsYXRpb24Kb2YgOC1iaXQgdGFncyB0byA1LWJpdCB0YWdzLgoKSG93ZXZlciwgdGhlIGdlbmVy
+YXRpb24gb2YgOC1iaXQgdGFncyBpcyBsZWZ0IG9wdGlvbmFsIHRvIGEgcGFydGljdWxhciBIVwpp
+bXBsZW1lbnRhdGlvbi4gVGhlIGNvZGUgbmVlZHMgdG8gY2hlY2sgSFcgc3VwcG9ydCBiZWZvcmUg
+YXR0ZW1wdGluZwp0byBlbmFibGUgZXh0ZW5kZWQgdGFncyBwcm9kdWNlciBjYXBhYmlsaXR5LgoK
+MzIgb3V0c3RhbmRpbmcgdHJhbnNhY3Rpb25zIGlzIG5vdCBlbm91Z2ggZm9yIHNvbWUgcGVyZm9y
+bWFuY2UgY3JpdGljYWwKYXBwbGljYXRpb25zIGVzcGVjaWFsbHkgd2hlbiBhIGxvdCBvZiBzbWFs
+bCBzaXplZCBmcmFtZXMgYXJlIHRyYW5zbWl0dGVkLgoKRXh0ZW5kZWQgdGFncyBzdXBwb3J0IGlu
+Y3JlYXNlcyB0aGlzIG51bWJlciB0byAyNTYuIERldmljZXMgbm90CnN1cHBvcnRpbmcgZXh0ZW5k
+ZWQgdGFncyB0aWUtb2ZmIHRoaXMgZmllbGQgdG8gMC4gQWNjb3JkaW5nIHRvIEVDTiwgaXQKaXMg
+c2FmZSB0byBlbmFibGUgdGhpcyBmZWF0dXJlIGZvciBhbGwgUENJZSBkZXZpY2VzLgoKU2lnbmVk
+LW9mZi1ieTogU2luYW4gS2F5YSA8b2theWFAY29kZWF1cm9yYS5vcmc+Ci0tLQogZHJpdmVycy9w
+Y2kvcHJvYmUuYyB8IDE2ICsrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAxNiBpbnNl
+cnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZlcnMvcGNp
+L3Byb2JlLmMKaW5kZXggZTE2NGI1Yy4uMTE5MjQ3NSAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kv
+cHJvYmUuYworKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCkBAIC0xNjUwLDEyICsxNjUwLDI4IEBA
+IHN0YXRpYyB2b2lkIHByb2dyYW1faHBwX3R5cGUyKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHN0cnVj
+dCBocHBfdHlwZTIgKmhwcCkKIAkgKi8KIH0KIAorc3RhdGljIHZvaWQgcGNpX2NvbmZpZ3VyZV9l
+eHRlbmRlZF90YWdzKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQoreworCXUzMiBkZXZfY2FwOworCWlu
+dCByZXQ7CisKKwlyZXQgPSBwY2llX2NhcGFiaWxpdHlfcmVhZF9kd29yZChwZGV2LCBQQ0lfRVhQ
+X0RFVkNBUCwgJmRldl9jYXApOworCisJaWYgKHJldCkKKwkJcmV0dXJuOworCisJaWYgKGRldl9j
+YXAgJiBQQ0lfRVhQX0RFVkNBUF9FWFRfVEFHKQorCQlwY2llX2NhcGFiaWxpdHlfc2V0X3dvcmQo
+cGRldiwgUENJX0VYUF9ERVZDVEwsCisJCQkJCSBQQ0lfRVhQX0RFVkNUTF9FWFRfVEFHKTsKK30K
+Kwogc3RhdGljIHZvaWQgcGNpX2NvbmZpZ3VyZV9kZXZpY2Uoc3RydWN0IHBjaV9kZXYgKmRldikK
+IHsKIAlzdHJ1Y3QgaG90cGx1Z19wYXJhbXMgaHBwOwogCWludCByZXQ7CiAKIAlwY2lfY29uZmln
+dXJlX21wcyhkZXYpOworCXBjaV9jb25maWd1cmVfZXh0ZW5kZWRfdGFncyhkZXYpOwogCiAJbWVt
+c2V0KCZocHAsIDAsIHNpemVvZihocHApKTsKIAlyZXQgPSBwY2lfZ2V0X2hwX3BhcmFtcyhkZXYs
+ICZocHApOwotLSAKMS45LjEKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
