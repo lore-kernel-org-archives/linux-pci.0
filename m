@@ -1,342 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:39936 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750811AbdAXGdv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2017 01:33:51 -0500
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V5 5/5] LPC: Add the ACPI LPC support
-Date: Tue, 24 Jan 2017 15:05:25 +0800
-Message-ID: <1485241525-201782-6-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45124 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751686AbdATKnG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 05:43:06 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0K7dHdO098771
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:00 -0500
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2836xsehdb-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:00 -0500
+Received: from localhost
+        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Fri, 20 Jan 2017 00:41:59 -0700
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v8 0/3] PCI: Introduce a way to enforce all MMIO BARs not to share PAGE_SIZE
+Date: Fri, 20 Jan 2017 15:41:50 +0800
+Message-Id: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch update the _CRS of LPC children with the system logical I/O resource
-after the translation from LPC-local I/O. Then the ACPI platform device
-enumeration for LPC can apply the right I/O resource to request the system I/O
-space.
+This series introduces a way for PCI resource allocator to force
+MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
+driver. Because current VFIO implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
+with other BARs for security reasons. Thus, we have to handle mmio
+access to these BARs in QEMU emulation rather than in guest which
+will cause some performance loss.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
----
- drivers/bus/hisi_lpc.c |  26 ++++++
- include/linux/extio.h  |   4 +
- lib/extio.c            | 228 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 258 insertions(+)
+In our solution, we try to make use of the existing code path of
+resource_alignment kernel parameter and add a macro to set default
+alignment for it. Thus we can define this macro by default on some
+archs which may easily hit the performance issue because of their
+64K page.
 
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-index a96e384..8d52666 100644
---- a/drivers/bus/hisi_lpc.c
-+++ b/drivers/bus/hisi_lpc.c
-@@ -583,6 +583,32 @@ static int hisilpc_bus_platform_notify(struct notifier_block *nb,
- 	/* register the linux virtual IO range node to list. */
- 	register_extio(io_node);
- 
-+	/*
-+	 * For ACPI children, translate the bus-local I/O range to logical
-+	 * I/O range and set it as the current resource before the children
-+	 * are enumerated.
-+	 */
-+	if (has_acpi_companion(dev)) {
-+		struct acpi_device *root, *child;
-+
-+		root = to_acpi_device_node(dev->fwnode);
-+		/* For hisilpc, only care about the sons of host. */
-+		list_for_each_entry(child, &root->children, node) {
-+			ret = acpi_set_extio_resource(child, root);
-+			if (ret) {
-+				dev_err(dev, "set resource failed..\n");
-+				break;
-+			}
-+		}
-+
-+		if (ret) {
-+			list_del(&io_node->list);
-+			kfree(io_node);
-+			dev_err(dev, "notify handling failed..\n");
-+			return NOTIFY_DONE;
-+		}
-+	}
-+
- 	return NOTIFY_OK;
- }
- 
-diff --git a/include/linux/extio.h b/include/linux/extio.h
-index 2ca7eab..c07607e 100644
---- a/include/linux/extio.h
-+++ b/include/linux/extio.h
-@@ -20,6 +20,7 @@
- 
- #ifdef __KERNEL__
- 
-+#include <linux/acpi.h>
- #include <linux/fwnode.h>
- 
- struct extio_ops {
-@@ -81,5 +82,8 @@ static inline struct extio_node *extio_find_node(struct fwnode_handle *node)
- #endif
- extern void register_extio(struct extio_node *node);
- 
-+extern int acpi_set_extio_resource(struct acpi_device *adev,
-+		struct acpi_device *host);
-+
- #endif /* __KERNEL__ */
- #endif /* __LINUX_EXTIO_H */
-diff --git a/lib/extio.c b/lib/extio.c
-index 46228de..47f5913 100644
---- a/lib/extio.c
-+++ b/lib/extio.c
-@@ -75,6 +75,234 @@ unsigned long extio_translate(struct fwnode_handle *node,
- 	return port_id;
- }
- 
-+static inline bool acpi_extio_supported_resource(struct acpi_resource *res)
-+{
-+	switch (res->type) {
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+		return true;
-+	}
-+	return false;
-+}
-+
-+static acpi_status acpi_count_extiores(struct acpi_resource *res,
-+					   void *data)
-+{
-+	int *res_cnt = data;
-+
-+	if (acpi_extio_supported_resource(res) &&
-+		!acpi_dev_filter_resource_type(res, IORESOURCE_IO))
-+		(*res_cnt)++;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpi_read_one_extiores(struct acpi_resource *res,
-+		void *data)
-+{
-+	struct acpi_resource **resource = data;
-+
-+	if (acpi_extio_supported_resource(res) &&
-+		!acpi_dev_filter_resource_type(res, IORESOURCE_IO)) {
-+		memcpy((*resource), res, sizeof(struct acpi_resource));
-+		(*resource)->length = sizeof(struct acpi_resource);
-+		(*resource)->type = res->type;
-+		(*resource)++;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status
-+acpi_build_extiores_template(struct acpi_device *adev,
-+			struct acpi_buffer *buffer)
-+{
-+	acpi_handle handle = adev->handle;
-+	struct acpi_resource *resource;
-+	acpi_status status;
-+	int res_cnt = 0;
-+
-+	status = acpi_walk_resources(handle, METHOD_NAME__PRS,
-+				     acpi_count_extiores, &res_cnt);
-+	if (ACPI_FAILURE(status) || !res_cnt) {
-+		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
-+		return -EINVAL;
-+	}
-+
-+	buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1) + 1;
-+	buffer->pointer = kzalloc(buffer->length - 1, GFP_KERNEL);
-+	if (!buffer->pointer)
-+		return -ENOMEM;
-+
-+	resource = (struct acpi_resource *)buffer->pointer;
-+	status = acpi_walk_resources(handle, METHOD_NAME__PRS,
-+				     acpi_read_one_extiores, &resource);
-+	if (ACPI_FAILURE(status)) {
-+		kfree(buffer->pointer);
-+		dev_err(&adev->dev, "can't evaluate _PRS: %d\n", status);
-+		return -EINVAL;
-+	}
-+
-+	resource->type = ACPI_RESOURCE_TYPE_END_TAG;
-+	resource->length = sizeof(struct acpi_resource);
-+
-+	return 0;
-+}
-+
-+static int acpi_translate_extiores(struct acpi_device *adev,
-+		struct acpi_device *host, struct acpi_buffer *buffer)
-+{
-+	int res_cnt = (buffer->length - 1) / sizeof(struct acpi_resource) - 1;
-+	struct acpi_resource *resource = buffer->pointer;
-+	struct acpi_resource_address64 addr;
-+	unsigned long sys_port;
-+	struct device *dev = &adev->dev;
-+
-+	/* only one I/O resource now */
-+	if (res_cnt != 1) {
-+		dev_err(dev, "encode %d resources whose type is(%d)!\n",
-+			res_cnt, resource->type);
-+		return -EINVAL;
-+	}
-+
-+	if (ACPI_FAILURE(acpi_resource_to_address64(resource, &addr))) {
-+		dev_err(dev, "convert acpi resource(%d) as addr64 FAIL!\n",
-+			resource->type);
-+		return -EFAULT;
-+	}
-+
-+	/* For indirect-IO, addr length must be fixed. (>0, 0, 0) */
-+	if (!addr.address.address_length || addr.min_address_fixed ||
-+		addr.max_address_fixed) {
-+		dev_warn(dev, "variable I/O resource is invalid!\n");
-+		return -EINVAL;
-+	}
-+
-+	sys_port = extio_translate(&host->fwnode, addr.address.minimum);
-+	if (sys_port == -1) {
-+		dev_err(dev, "translate bus-addr(0x%llx) fail!\n",
-+			addr.address.minimum);
-+		return -EFAULT;
-+	}
-+
-+	switch (resource->type) {
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	{
-+		struct acpi_resource_address16 *out_res;
-+
-+		out_res = &resource->data.address16;
-+		out_res->address.minimum = sys_port;
-+		out_res->address.maximum = sys_port +
-+			addr.address.address_length - 1;
-+
-+		dev_info(dev, "_SRS 16IO: [0x%x - 0x%x]\n",
-+			out_res->address.minimum,
-+			out_res->address.maximum);
-+
-+		break;
-+	}
-+
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	{
-+		struct acpi_resource_address32 *out_res;
-+
-+		out_res = &resource->data.address32;
-+		out_res->address.minimum = sys_port;
-+		out_res->address.maximum = sys_port +
-+			addr.address.address_length - 1;
-+
-+		dev_info(dev, "_SRS 32IO: [0x%x - 0x%x]\n",
-+			out_res->address.minimum,
-+			out_res->address.maximum);
-+
-+		break;
-+	}
-+
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+	{
-+		struct acpi_resource_address64 *out_res;
-+
-+		out_res = &resource->data.address64;
-+		out_res->address.minimum = sys_port;
-+		out_res->address.maximum = sys_port +
-+			addr.address.address_length - 1;
-+
-+		dev_info(dev, "_SRS 64IO: [0x%llx - 0x%llx]\n",
-+			out_res->address.minimum,
-+			out_res->address.maximum);
-+
-+		break;
-+	}
-+
-+	default:
-+		return -EINVAL;
-+
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * update/set the current I/O resource of the designated device node.
-+ * after this calling, the enumeration can be started as the I/O resource
-+ * had been translated to logicial I/O from bus-local I/O.
-+ *
-+ * @adev: the device node to be updated the I/O resource;
-+ * @host: the device node where 'adev' is attached, which can be not
-+ *	the parent of 'adev';
-+ *
-+ * return 0 when successful, negative is for failure.
-+ */
-+int acpi_set_extio_resource(struct acpi_device *adev,
-+		struct acpi_device *host)
-+{
-+	struct device *dev = &adev->dev;
-+	struct acpi_buffer buffer;
-+	acpi_status status;
-+	int ret;
-+
-+	if (!host)
-+		return -EINVAL;
-+
-+	/* check the device state */
-+	if (!adev->status.present) {
-+		dev_info(dev, "ACPI: device is not present!\n");
-+		return 0;
-+	}
-+	/* whether the child had been enumerated? */
-+	if (acpi_device_enumerated(adev)) {
-+		dev_info(dev, "ACPI: had been enumerated!\n");
-+		return 0;
-+	}
-+
-+	/* read the _PRS and convert as acpi_buffer */
-+	status = acpi_build_extiores_template(adev, &buffer);
-+	if (ACPI_FAILURE(status)) {
-+		dev_warn(dev, "Failure evaluating %s\n",
-+				METHOD_NAME__PRS);
-+		return -ENODEV;
-+	}
-+
-+	/* translate the I/O resources */
-+	ret = acpi_translate_extiores(adev, host, &buffer);
-+	if (ret) {
-+		kfree(buffer.pointer);
-+		dev_err(dev, "Translate I/O range FAIL!\n");
-+		return ret;
-+	}
-+
-+	/* set current resource... */
-+	status = acpi_set_current_resources(adev->handle, &buffer);
-+	kfree(buffer.pointer);
-+	if (ACPI_FAILURE(status)) {
-+		dev_err(dev, "Error evaluating _SRS (0x%x)\n", status);
-+		ret = -EIO;
-+	}
-+
-+	return ret;
-+}
-+
- #ifdef PCI_IOBASE
- 
- #define BUILD_EXTIO(bw, type)						\
+In this series, patch 1,2 fixed bugs of using resource_alignment;
+patch 3 adds a macro to set the default alignment of all MMIO BARs.
+
+Changelog v8:
+- Rebased against v4.10-rc4
+- Rework the patch 2
+- Change the commit log of patch 1
+
+Changelog v7:
+- Rebased against v4.9-rc2
+- Drop two merged patches
+- Rework the patch which fix a bug that resources's size is changed when
+  using resource_alignment
+- Add a patch that fix a bug for IOV BARs when using resource_alignment
+
+Changelog v6:
+- Remove the option "noresize@" of resource_alignment
+
+Changelog v5:
+- Rebased against v4.8-rc6
+- Drop the patch that forbidding disable memory decoding in
+  pci_reassigndev_resource_alignment()
+
+Changelog v4:
+- Rebased against v4.8-rc1
+- Drop one irrelevant patch
+- Drop the patch that adding wildcard to resource_alignment to enforce
+  the alignment of all MMIO BARs to be at least PAGE_SIZE
+- Change the format of option "noresize" of resource_alignment
+- Code style improvements
+
+Changelog v3:
+- Ignore enforced alignment to fixed BARs
+- Fix issue that disabling memory decoding when reassigning the alignment
+- Only enable default alignment on PowerNV platform
+
+Changelog v2:
+- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+
+Yongji Xie (3):
+  PCI: Ignore requested alignment for IOV BARs
+  PCI: Make sure the driver could get correct BAR size from pci_resource_len()
+  PCI: Add a macro to set default alignment for all PCI devices
+
+ arch/powerpc/include/asm/pci.h |    4 ++++
+ drivers/pci/pci.c              |    6 +++++-
+ include/linux/pci.h            |    6 +++++-
+ 3 files changed, 14 insertions(+), 2 deletions(-)
+
 -- 
-1.9.1
+1.7.9.5
 
