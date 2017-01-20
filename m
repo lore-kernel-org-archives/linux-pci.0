@@ -1,116 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39092 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752506AbdARVKE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 16:10:04 -0500
-Message-ID: <1484773260.2406.58.camel@redhat.com>
-Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
- device
-From: Doug Ledford <dledford@redhat.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dennis.dalessandro@intel.com, ira.weiny@intel.com
-Date: Wed, 18 Jan 2017 16:01:00 -0500
-In-Reply-To: <20170111181042.GC22783@obsidianresearch.com>
-References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
-         <20170111181042.GC22783@obsidianresearch.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-fFVYHJP4g9dqu3U5jx+y"
-Mime-Version: 1.0
+Received: from mail-yb0-f196.google.com ([209.85.213.196]:35989 "EHLO
+        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752193AbdATOYY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 09:24:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <1484844727.24339.50.camel@pengutronix.de>
+References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
+ <20170119163631.10668-4-andrew.smirnov@gmail.com> <1484844727.24339.50.camel@pengutronix.de>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Fri, 20 Jan 2017 06:24:03 -0800
+Message-ID: <CAHQ1cqEX82VMLtxToYeg3S6dc=tu2KhuS5u-1RCKBBArtRZSxw@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: imx6: Add code to support i.MX7D
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-pci@vger.kernel.org, Andrey Yurovsky <yurovsky@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jan 19, 2017 at 8:52 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Donnerstag, den 19.01.2017, 08:36 -0800 schrieb Andrey Smirnov:
+>> Add various bits of code needed to support i.MX7D variant of the IP.
+>>
+>> Cc: yurovsky@gmail.com
+>> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Fabio Estevam <festevam@gmail.com>
+>> Cc: Shawn Guo <shawnguo@kernel.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Mark Rutland <mark.rutland@arm.com>
+>> Cc: Lee Jones <lee.jones@linaro.org>
+>> Cc: linux-arm-kernel@lists.infradead.org
+>> Cc: devicetree@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+>> ---
+>>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
+>>  drivers/pci/host/pci-imx6.c                        | 188 ++++++++++++++++++---
+>>  include/linux/mfd/syscon/imx7-gpc.h                |  18 ++
+>>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+>>  include/linux/mfd/syscon/imx7-src.h                |  18 ++
+>>  5 files changed, 208 insertions(+), 26 deletions(-)
+>>  create mode 100644 include/linux/mfd/syscon/imx7-gpc.h
+>>  create mode 100644 include/linux/mfd/syscon/imx7-src.h
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> index 83aeb1f..20b9382 100644
+>> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>
+>>  Required properties:
+>> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
+>> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie",
+>> +           "fsl,imx6qp-pcie", "fsl,imx7d-pcie"
+>>  - reg: base address and length of the PCIe controller
+>>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>>    entry for each entry in the interrupt-names property.
+>> @@ -34,6 +35,9 @@ Additional required properties for imx6sx-pcie:
+>>  - clock names: Must include the following additional entries:
+>>       - "pcie_inbound_axi"
+>>
+>> +Additional required properties for imx7d-pcie:
+>> +- pcie-phy-supply: Should specify the regulator supplying PCIe PHY
+>> +
+> This isn't a PHY regulator, but a regulator powering the GPC domain
+> where the PHY is located. This should not be handled in the PCIe driver.
+> See the previous discussion with i.MX6SX, that is in the same boat.
+>
 
---=-fFVYHJP4g9dqu3U5jx+y
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Good to know, thanks for clarification.
 
-On Wed, 2017-01-11 at 11:10 -0700, Jason Gunthorpe wrote:
-> On Tue, Jan 10, 2017 at 03:57:52PM -0800, Tadeusz Struk wrote:
-> >=20
-> > We can fix this by enforcing the correct port order at module load
-> > time.
-> > To reorder the ports to match the numbering labels on the back of
-> > the
-> > device we need to delay registering devices with the ib_core until
-> > we
->=20
-> Sorry, no way - this is horrifying.
+> [...]
+>>  static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+>>  {
+>> -     if (imx6_pcie->variant == IMX6SX)
+>> +     switch (imx6_pcie->variant) {
+>> +     case IMX7D: {
+>> +             int ret;
+>> +             unsigned int reg, mapping;
+>> +             struct pcie_port *pp = &imx6_pcie->pp;
+>> +             struct device *dev = pp->dev;
+>> +
+>> +             regulator_set_voltage(imx6_pcie->pcie_phy_regulator,
+>> +                                   1000000, 1000000);
+>> +             ret = regulator_enable(imx6_pcie->pcie_phy_regulator);
+>> +             if (ret) {
+>> +                     dev_err(dev, "failed to enable pcie regulator.\n");
+>> +                     return;
+>> +             }
+>> +
+>> +             /*
+>> +              * Now that PHY regulator is enabled, do sofware
+>> +              * power-up request by mapping PHY in A7 domain and
+>> +              * setting power-up request bit
+>> +              */
+>> +             regmap_read(imx6_pcie->gpc, GPC_PGC_CPU_MAPPING, &mapping);
+>> +             regmap_write(imx6_pcie->gpc, GPC_PGC_CPU_MAPPING,
+>> +                          mapping | IMX7D_PCIE_PHY_A7_DOMAIN);
+>> +
+>> +             regmap_update_bits(imx6_pcie->gpc, GPC_PU_PGC_SW_PUP_REQ,
+>> +                                IMX7D_PCIE_PHY_SW_PUP_REQ,
+>> +                                IMX7D_PCIE_PHY_SW_PUP_REQ);
+>> +             /*
+>> +              * As per "5.5.9.4 Example Code 4" in IMX7DRM.pdf wait
+>> +              * for PUP_REQ bit to be cleared
+>> +              */
+>> +             while (!regmap_read(imx6_pcie->gpc,
+>> +                                 GPC_PU_PGC_SW_PUP_REQ, &reg) &&
+>> +                    reg & IMX7D_PCIE_PHY_SW_PUP_REQ)
+>> +                     ;
+>> +             regmap_write(imx6_pcie->gpc, GPC_PGC_CPU_MAPPING, mapping);
+>
+> I won't allow code touching the GPC registers to sneak into the PCIe
+> driver. I know this is the downstream solution, but this really needs a
+> proper GPC power domain driver, instead of this hack.
+>
 
-Agree.
+OK, will change in v2.
 
-> If you need stable names for RDMA devices then you need to add proper
-> infrastructure to the kernel to rename RDMA devices from user space
-> via udev. ala netdev.
-
-This has its own problems in this particular case, namely having to
-ship files that know which parts are effected and then modify the
-names. =C2=A0Or requiring that users create all of the rename rules when
-they really shouldn't be bothered with anything. =C2=A0Although, the module
-option to turn this fix off for existing clusters that have been wired
-up wrong is just as bad as creating persistent naming rules...
-
-> or change the ib_core to allow your driver to specify the full name
-> and manage things in your driver.
->=20
-> No way on this insane block probe approach.
-
-Isn't there already code in the code device layer to handle this kind
-of thing? =C2=A0I seem to recall backporting it from upstream to a rhel
-kernel many years ago. =C2=A0Lemme go look...
-
-OK, sure, as far as the reordering stuff is concerned, all you need to
-do is to make use of the EPROBE_DEFER return option to your PCI probe
-routine. =C2=A0That way, when you get the probe for the out of order port,
-the first time you pass EPROBE_DEFER as your return, then you get the
-second port, your register it with the IB layer which will make it
-appear as the first port (optionally, and as I haven't tried this I
-don't know if it will work or if it's necessary, you can save the
-pointer to the first port's device struct off, and when you get the
-second one, you can tell the driver layer to splice the second port in
-front of the first port in the device child list on the parent device,
-but I think this is optional and really has no lasting effect on the
-outcome), then later the first port gets retried and ends up being the
-second port.
-
-So, scrap all of this hand done junk and use the provided
-infrastructure as it was intended to be used. =C2=A0I *really* don't want t=
-o
-do a kernel module option for this either. =C2=A0Do you know for a fact tha=
-t
-this is wired up wrong in the field and the people can't just swap
-hfi1_0<->hfi1_1 in their config files and have it all work without
-being recabled?
-
---=20
-Doug Ledford <dledford@redhat.com>
-=C2=A0 =C2=A0 GPG KeyID: B826A3330E572FDD
-=C2=A0 =C2=A0
-Key fingerprint =3D AE6B 1BDA 122B 23B4 265B =C2=A01274 B826 A333 0E57 2FDD
-
---=-fFVYHJP4g9dqu3U5jx+y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJYf9eMAAoJELgmozMOVy/dy+EQAJF8flPmpj6wF+aOIEU5gEf+
-jbrfD45+3o55fEKSnW8yNbHJKhDBbLQOP/7A5TzeTTY64kjjV8q6jb/vaDJrIOml
-8ClobWyYONE46YUTaepIJW7mFb0iuwZRwZbHd3L6fTgPxwll7zFf3nBBmr32kgxx
-jkLhEH87OCG4XtH9EVB8b9Y4TJXvVYbNN+9rd40s5WtbOpK8TiWshMcOGu5SI1J0
-eChzYDbPWJzp9fa3Mbz+3WGtr47nsxuhNwViP7V84bbdABeqZJMDXdiazO7hWurO
-uV7N7aSX5+HRIh6ORbi7fbgpI7xUklrAUCTnpc2ATsS5xJWfYA9v+0LrhF3QoCqN
-Cp8lAHAn7caW4lXITgXUC6AaG+kLtzUowRN98MGiQaOz/pQHoO+xR9d3oZnUw8u3
-zUsnFt0uTb7VJiMxj20ygiLYu/tSzEWijGUg/qdfmPJFuf6cPLBmTEGbe0O+A+IN
-ZEvaqqPhw8YNJK+0fWkPpwEdhQKg5UasbcBuk0IQQRcPvp4Hbw0/sBG6LTryfLpF
-VIMg9l/AipyLPOASTmMaRFG67/W9rwa/6aLeaciCGqT29QNkpHgax6FyZDU2JBcj
-4ucfi0boVP0Mzck7XCUstqXEuO6scQD10H5e2spzQXKIJ340bZ2EBzEIY55B2li7
-naPRHjJyRTul5VNr0ZKt
-=dwjE
------END PGP SIGNATURE-----
-
---=-fFVYHJP4g9dqu3U5jx+y--
-
+> Regards,
+> Lucas
+>
