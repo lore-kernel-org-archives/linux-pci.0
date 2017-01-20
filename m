@@ -1,70 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH] ACPI/PCI: Fix bus range comparation in
- pci_mcfg_lookup
-To: Zhou Wang <wangzhou1@hisilicon.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>
-References: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
-Cc: liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <b3d00da9-cd88-cd43-370c-b10d93944024@semihalf.com>
-Date: Tue, 3 Jan 2017 07:39:33 +0100
-MIME-Version: 1.0
-In-Reply-To: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41713 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751403AbdATJLR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2017 04:11:17 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0K7d9DI130973
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:06 -0500
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 283c3svuad-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2017 02:42:06 -0500
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Fri, 20 Jan 2017 00:42:05 -0700
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v8 3/3] PCI: Add a macro to set default alignment for all PCI devices
+Date: Fri, 20 Jan 2017 15:41:53 +0800
+In-Reply-To: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1484898113-24939-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1484898113-24939-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22.12.2016 10:07, Zhou Wang wrote:
-> Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
-> host bridge should be in the coverage of bus range of related PCIe segment.
->
-> This patch will support this kind of scenario:
->
-> MCFG:
-> 	bus range: 0x00~0xff.
-> 	segment: 0.
-> DSDT:
-> 	host bridge 1:
-> 		bus range: 0x00~0x1f.
-> 		segment: 0.
-> 	host bridge 2:
-> 		bus range: 0x20~0x4f.
-> 		segment: 0.
->
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/acpi/pci_mcfg.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index b5b376e..46a3e32 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->  	struct mcfg_entry *e;
->
->  	/*
-> -	 * We expect exact match, unless MCFG entry end bus covers more than
-> -	 * specified by caller.
-> +	 * We expect the range in bus_res in the coverage of MCFG bus range.
->  	 */
->  	list_for_each_entry(e, &pci_mcfg_list, list) {
-> -		if (e->segment == seg && e->bus_start == bus_res->start &&
-> +		if (e->segment == seg && e->bus_start <= bus_res->start &&
->  		    e->bus_end >= bus_res->end)
->  			return e->addr;
->  	}
->
+When vfio passthroughs a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-Looks good to me.
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
 
-Reviewed-by: Tomasz Nowicki <tn@semihalf.com>
+This patch adds a macro to set default alignment for all
+PCI devices. Then we could solve this issue on some platforms
+which would easily hit this issue because of their 64K page
+such as PowerNV platform by defining this macro as PAGE_SIZE.
 
-Thanks,
-Tomasz
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci.h |    4 ++++
+ drivers/pci/pci.c              |    3 +++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index e9bd6cf..5e31bc2 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -28,6 +28,10 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
++#ifdef CONFIG_PPC_POWERNV
++#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
++#endif
++
+ struct pci_dev;
+ 
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 04f2100..c2da41b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align = 0;
+ 	char *p;
+ 
++#ifdef PCIBIOS_DEFAULT_ALIGNMENT
++	align = PCIBIOS_DEFAULT_ALIGNMENT;
++#endif
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	if (!*p)
+-- 
+1.7.9.5
+
