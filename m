@@ -1,50 +1,83 @@
-Return-Path: <SRS0=Orsw=ZM=codeaurora.org=sricharan@kernel.org>
-Return-Path: <SRS0=Orsw=ZM=codeaurora.org=sricharan@kernel.org>
-From: "Sricharan" <sricharan@codeaurora.org>
-To: "'Bjorn Helgaas'" <helgaas@kernel.org>
-Cc: <robin.murphy@arm.com>,
-	<will.deacon@arm.com>,
-	<joro@8bytes.org>,
-	<lorenzo.pieralisi@arm.com>,
-	<iommu@lists.linux-foundation.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>,
-	<m.szyprowski@samsung.com>,
-	<bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <1485188293-20263-10-git-send-email-sricharan@codeaurora.org> <20170128210611.GF20550@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170128210611.GF20550@bhelgaas-glaptop.roam.corp.google.com>
-Subject: RE: [PATCH V7 09/11] arm64: dma-mapping: Remove the notifier trick to handle early setting of dma_ops
-Date: Mon, 30 Jan 2017 13:34:18 +0530
-Message-ID: <005201d27acf$7924a7b0$6b6df710$@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: rockchip: mark PM functions as __maybe_unused
+To: Arnd Bergmann <arnd@arndb.de>
+References: <20170120162450.3690225-1-arnd@arndb.de>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <41135715-6f07-9c85-0b78-c66a37607b92@rock-chips.com>
+Date: Sun, 22 Jan 2017 15:38:47 +0800
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+In-Reply-To: <20170120162450.3690225-1-arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ Brian Norris <briannorris@chromium.org>, linux-kernel@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> With arch_setup_dma_ops now being called late during device's probe after
->> the device's iommu is probed, the notifier trick required to handle the
->> early setup of dma_ops before the iommu group gets created is not
->> required. So removing the notifier's here.
->
->s/notifier's/notifiers/
->
-ok, will change.
+Hi Arnd,
 
->Personally I'd capitalize "IOMMU" in the English text above, too.
+On 2017/1/21 0:24, Arnd Bergmann wrote:
+> When CONFIG_PM_SLEEP is disabled, we get harmless build warnings:
 >
-ok, will change this too.
-
-Regards,
- Sricharan
-
->> Acked-by: Will Deacon <will.deacon@arm.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> [rm: clean up even more]
->> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
->> ---
->>  arch/arm64/mm/dma-mapping.c | 132 ++++----------------------------------------
->>  1 file changed, 12 insertions(+), 120 deletions(-)
+> host/pcie-rockchip.c:1267:12: error: 'rockchip_pcie_resume_noirq' defined but not used [-Werror=unused-function]
+> host/pcie-rockchip.c:1240:12: error: 'rockchip_pcie_suspend_noirq' defined but not used [-Werror=unused-function]
 >
->Nice :)
+> Marking both functions as __maybe_unused avoids the warning without
+> the need for #ifdef around them.
+
+Sorry for introducing this warning, and thanks for fixing it.
+
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+>
+> Fixes: 013dd3d5e183 ("PCI: rockchip: Add system PM support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 0d6e8ee5b017..b975116d2b03 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1237,7 +1237,7 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+>  	return 0;
+>  }
+>
+> -static int rockchip_pcie_suspend_noirq(struct device *dev)
+> +static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+>  {
+>  	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>  	int ret;
+> @@ -1264,7 +1264,7 @@ static int rockchip_pcie_suspend_noirq(struct device *dev)
+>  	return ret;
+>  }
+>
+> -static int rockchip_pcie_resume_noirq(struct device *dev)
+> +static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+>  {
+>  	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>  	int err;
+>
+
+
+-- 
+Best Regards
+Shawn Lin
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
