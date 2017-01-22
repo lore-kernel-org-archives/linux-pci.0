@@ -1,57 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53828 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751621AbdA3MPy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2017 07:15:54 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: bhelgaas@google.com
-Cc: bart.vanassche@sandisk.com, tglx@linutronix.de,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] PCI/MSI: don't apply affinity if there aren't enough vectors left
-Date: Mon, 30 Jan 2017 13:15:41 +0100
-Message-Id: <1485778541-28994-1-git-send-email-hch@lst.de>
+Return-Path: <SRS0=nTun=ZE=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=nTun=ZE=codeaurora.org=okaya@kernel.org>
+Subject: Re: ASPM after Hotplug Question
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <7fea039c-5921-0c12-c7b4-991b4c27778f@codeaurora.org>
+ <20170122144810.GD6619@bhelgaas-glaptop.roam.corp.google.com>
+ <13ae3a56-76d5-e069-1c6c-67092c586029@codeaurora.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <8dd6d5da-bab0-8f77-11b6-9982b02134ed@codeaurora.org>
+Date: Sun, 22 Jan 2017 14:08:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <13ae3a56-76d5-e069-1c6c-67092c586029@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Bart reported a problem wіth an out of bounds access in the low-level
-IRQ affinity code, which we root caused to the qla2xxx driver assigning
-all it's MSI-X vectors to the pre and post vectors, and not having any
-left for the actually spread IRQs.
+[snip]
 
-This fixes this issue by not asking for affinity assignment when there
-are not vectors to assign left.
+>>
+>> Bjorn
+>>
+> 
+> / # lspci
+> 03:00:00.0 Class 0604: 17cb:0401
+> 03:01:00.0 Class 0200: 8086:1572
+> 03:01:00.1 Class 0200: 8086:1572
+> 
+> 
+> It looks like ASPM is only getting configured for the root port following
+> insertion.
+> 
+> Removal:
+> [   32.142474] pci 0003:01:00.1: pcie_aspm_exit_link_state:662
+> [   34.142378] pci 0003:01:00.0: pcie_aspm_exit_link_state:659
+> 
+> Insertion:
+> [   35.910342] pcieport 0003:00:00.0: pcie_aspm_init_link_state:565
+> [   35.931227] pcieport 0003:00:00.0: pcie_aspm_init_link_state:617
+> 
+> 551 void pcie_aspm_init_link_state(struct pci_dev *pdev)
+> 552 {
+> 553         struct pcie_link_state *link;
+> 554         int blacklist = !!pcie_aspm_sanity_check(pdev);
+> 555
+> 556         if (!aspm_support_enabled) {
+> 557                 dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+> 558                 return;
+> 559         }
+> 560
+> 561         if (pdev->link_state) {
+> 562                 dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+> 563                 return;
+> 564         }
+> 565         dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+> 
+> 
+> 551 void pcie_aspm_init_link_state(struct pci_dev *pdev)
+> 552 {
+> ...
+> 
+> 607          * At this stage drivers haven't had an opportunity to change the
+> 608          * link policy setting. Enabling ASPM on broken hardware can cripple
+> 609          * it even before the driver has had a chance to disable ASPM, so
+> 610          * default to a safe level right now. If we're enabling ASPM beyond
+> 611          * the BIOS's expectation, we'll do so once pci_enable_device() is
+> 612          * called.
+> 613          */
+> 614         if (aspm_policy != POLICY_POWERSAVE) {
+> 615                 pcie_config_aspm_path(link);
+> 616                 pcie_set_clkpm(link, policy_to_clkpm_state(link));
+> 617                 dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+> 618         } else {
+> 619                 dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+> 620         }
+> 
+> 
+> 
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Fixes: 402723ad ("PCI/MSI: Provide pci_alloc_irq_vectors_affinity()")
-Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Tested-by: Bart Van Assche <bart.vanassche@sandisk.com>
----
- drivers/pci/msi.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Here is the exit path:
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003..7f73bac 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1206,6 +1206,16 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
- 			affd = &msi_default_affd;
-+
-+		if (affd->pre_vectors + affd->post_vectors > min_vecs)
-+			return -EINVAL;
-+
-+		/*
-+		 * If there aren't any vectors left after applying the pre/post
-+		 * vectors don't bother with assigning affinity.
-+		 */
-+		if (affd->pre_vectors + affd->post_vectors == min_vecs)
-+			affd = NULL;
- 	} else {
- 		if (WARN_ON(affd))
- 			affd = NULL;
+652 /* @pdev: the endpoint device */
+653 void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+654 {
+655         struct pci_dev *parent = pdev->bus->self;
+656         struct pcie_link_state *link, *root, *parent_link;
+657
+658         if (!parent || !parent->link_state) {
+659                 dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+660                 return;
+661         }
+662         dev_info(&pdev->dev, "%s:%d\n", __func__, __LINE__);
+
+
 -- 
-2.1.4
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
