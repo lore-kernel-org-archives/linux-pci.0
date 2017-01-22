@@ -1,67 +1,76 @@
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Return-Path: <SRS0=hWXb=YR=quantumtechnology.info=kilian.singer@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170103163130.GC9763@al>
- <20170103181221.GB25398@bhelgaas-glaptop.roam.corp.google.com>
- <3913750.OA6IItgEjC@aspire.rjw.lan>
-Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-From: Kilian Singer <kilian.singer@quantumtechnology.info>
-Message-ID: <3ce9e85d-381c-1c5d-b01d-65b8cf64e1ae@quantumtechnology.info>
-Date: Tue, 3 Jan 2017 22:52:48 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750912AbdAVIQm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 22 Jan 2017 03:16:42 -0500
+Date: Sun, 22 Jan 2017 10:16:40 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Doug Ledford <dledford@redhat.com>,
+        Tadeusz Struk <tadeusz.struk@intel.com>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        dennis.dalessandro@intel.com, ira.weiny@intel.com
+Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
+ device
+Message-ID: <20170122081640.GG28570@mtr-leonro.local>
+References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
+ <20170111181042.GC22783@obsidianresearch.com>
+ <1484773260.2406.58.camel@redhat.com>
+ <20170118210831.GA7590@obsidianresearch.com>
+ <1484784989.2406.67.camel@redhat.com>
+ <20170119175802.GB8109@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <3913750.OA6IItgEjC@aspire.rjw.lan>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="B8ONY/mu/bqBak9m"
+In-Reply-To: <20170119175802.GB8109@obsidianresearch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I have not checked if suspend/resume broken.
-Which patch should I check suspend resume for.
-When I wrote about firefox and lockscreen issue resolved
-I forgot to check about the suspend/resume.
 
+--B8ONY/mu/bqBak9m
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 03-Jan-17 22:38, Rafael J. Wysocki wrote:
-> On Tuesday, January 03, 2017 12:12:21 PM Bjorn Helgaas wrote:
->> On Tue, Jan 03, 2017 at 05:31:30PM +0100, Peter Wu wrote:
->>> On Tue, Jan 03, 2017 at 05:11:23PM +0100, Lukas Wunner wrote:
->>>> [cc += Dave Airlie:
->>>>
->>>> Dave, we're about to lose support for newer Optimus laptops which use
->>>> _PR3 to cut power to the discrete GPU because Bjorn Helgaas has queued
->>>> a commit on his for-linus branch to remove runtime PM for PCIe ports.
->>>> This fixes a regression on Kilian Singer's laptop on which locking the
->>>> screen breaks USB and PS/2 input devices:  Mouse movements are still
->>>> visible, but button or key presses no longer have any effect.  The GPU
->>>> is powered down upon locking the screen and the current theory is that
->>>> this causes the issues.]
->>> (+cc Alex: this might affect amdgpu/radeon too.]
->>>
->>> Bjorn, please reconsider the rpm patch. Reverting support would
->>> introduce other regressions (see issues below) and make future
->>> Thunderbolt work harder (according to Lukas). If Kilian's laptop has
->>> issues, what about a "temporary" quirk?
->> As I mentioned at the beginning, the outcome I'm hoping for is a patch
->> that fixes Kilian's laptop while preserving the runtime PM support.
->>
->> As I also mentioned at the beginning, preserving the runtime PM
->> support at the expense of breaking Kilian's laptop is not one of the
->> options.
-> But the revert doesn't really help.
+On Thu, Jan 19, 2017 at 10:58:02AM -0700, Jason Gunthorpe wrote:
+> On Wed, Jan 18, 2017 at 07:16:29PM -0500, Doug Ledford wrote:
 >
-> It doesn't fix system suspend/resume on that laptop, which also breaks when
-> PCIe ports PM is enabled on it.
 >
-> If you really want to use a sledgehammer approach here (which I don't recommend,
-> but that's your call), you can change the initial value of pci_bridge_d3_disable to
-> "true" (and update the pcie_ports_pm= command line to take "on" in case
-> someone wants to enable the feature).  That at least will take care of the
-> regression entirely and not just partly.
+> > No, mlx5 could have easily hit this too as their ports are separate
+> > PCI functions.
 >
-> Thanks,
-> Rafael
+> Sound like intel and mellanox should collaborate on getting udev
+> stable naming working right for RDMA... They are eventually going to
+> get burned.
+
+Send patches and we will be happy to review and test them.
+
+Thanks
+
 >
+> Jason
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--B8ONY/mu/bqBak9m
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAliEamgACgkQ5GN7iDZy
+WKc1PQ/+PH/GxdzdZ5OIW2P0T4qjRcoK/8cyyN4l/+kmM/ozINdNv4ue5HxsZlyx
+y0q7/I+rza83FVEl/9m8C+9ezTZyVf28pRRpqqbAOagb+9JS9ErLKV6oUJ8hHRl9
+WJLxJFlT/JviAWBO67YPfuJwGIKybPr1fjOrumHYN+yrBeLn0Iu/YPFOmpeOWtJN
+1PVjYLXUPOXL/T/YecKjAk7OyCZ4lgPbyMhvRK144LoYeEfD8QIRHfcx2Ii4AxEH
+bFqICb/XxNiuE71RHjRbFu2Q/e5mdbQOH9caRH4cox+AUPWpA0zGtxp+kHeo4MTA
+VuRUtnZYiTYd+Z6nkBkqZrXkbCafZlUsJlSK+YDFnO6u9G/duaWKIDHLB+LP2zUj
+8SiwcT5Jstax8R/mGfhh0oNwotIClvAjhw0V0D/OC8nWX5x/1cHuaQ1fn0idhU+j
+JqxPS+BvK4vEH3wde7G7P2CcTf7EweDgt2J3nFchdHwKaAal01JkE46nMF65vVhT
+xvbOGiJGy0M8L0Mv1lEbXK7Xf+lpyTBzLhb1LaOS12+FLNWI6+1TGK5TsoNQBh7U
+kWPomf+Vplw6d/NCyQfHcG1giuLF7AIVNYkWJXQUEboyUYyBc7qynCfPsa6qwdnG
+DvpIowXYcOvIWT/+XmSm9au2hvo9drK7EcTJlJ9xwz9Rdvjy5MI=
+=crFK
+-----END PGP SIGNATURE-----
+
+--B8ONY/mu/bqBak9m--
