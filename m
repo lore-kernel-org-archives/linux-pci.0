@@ -1,60 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Abylay Ospan <aospan@netup.ru>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
-Date: Fri, 13 Jan 2017 03:20:17 +0300
-Message-Id: <1484266817-6725-1-git-send-email-aospan@netup.ru>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Abylay Ospan <aospan@netup.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 03/11] of: dma: Move range size workaround to of_dma_get_range()
+Date: Mon, 23 Jan 2017 21:48:05 +0530
+Message-Id: <1485188293-20263-4-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie->dev->of_node not always defined (NULL) and can cause crash:
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-[   19.053195] Unable to handle kernel NULL pointer dereference at
-virtual address 00000020
-[<c0b0370c>] (of_n_addr_cells) from [<c06599c4>]
-(iproc_pcie_setup+0x30c/0xce0)
+Invalid dma-ranges values should be worked around when retrieving the
+DMA range in of_dma_get_range(), not by all callers of the function.
+This isn't much of a problem now that we have a single caller, but that
+situation will change when moving DMA configuration to device probe
+time.
 
-this patch adds sanity check to prevent crash.
-
-Signed-off-by: Abylay Ospan <aospan@netup.ru>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 ---
- drivers/pci/host/pcie-iproc.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/of/address.c | 20 ++++++++++++++++++--
+ drivers/of/device.c  | 15 ---------------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 3ebc025..f2836a9 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
- 	const int na = 3, ns = 2;
- 	int rlen;
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..6aeb816 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
+  *	CPU addr (phys_addr_t)	: pna cells
+  *	size			: nsize cells
+  *
+- * It returns -ENODEV if "dma-ranges" property was not found
+- * for this device in DT.
++ * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
++ * this device in DT, or -EINVAL if the CPU address or size is invalid.
+  */
+ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
+ {
+@@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+ 	*dma_addr = dmaaddr;
  
-+	if (!node)
-+		return -ENOENT;
+ 	*size = of_read_number(ranges + naddr + pna, nsize);
++	/*
++	 * DT nodes sometimes incorrectly set the size as a mask. Work around
++	 * those incorrect DT by computing the size as mask + 1.
++	 */
++	if (*size & 1) {
++		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
++			__func__, *size, np->full_name);
++		*size = *size + 1;
++	}
 +
- 	parser->node = node;
- 	parser->pna = of_n_addr_cells(node);
- 	parser->np = parser->pna + na + ns;
++	if (!*size) {
++		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
++		       __func__, np->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
+ 
+ 	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+ 		 *dma_addr, *paddr, *size);
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index fd5cfad..d9898d9 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 		size = dev->coherent_dma_mask + 1;
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
+-
+-		/*
+-		 * Add a work around to treat the size as mask + 1 in case
+-		 * it is defined in DT as a mask.
+-		 */
+-		if (size & 1) {
+-			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+-				 size);
+-			size = size + 1;
+-		}
+-
+-		if (!size) {
+-			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+-			return;
+-		}
+ 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+ 	}
+ 
 -- 
-2.7.4
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
