@@ -1,70 +1,156 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH] ACPI/PCI: Fix bus range comparation in
- pci_mcfg_lookup
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        jorn Helgaas <bhelgaas@google.com>
-References: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
-CC: <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <586AFE53.6000602@hisilicon.com>
-Date: Tue, 3 Jan 2017 09:28:51 +0800
-MIME-Version: 1.0
-In-Reply-To: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="windows-1252"
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 00/11] IOMMU probe deferral support
+Date: Mon, 23 Jan 2017 21:48:02 +0530
+Message-Id: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/12/22 17:07, Zhou Wang wrote:
-> Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
-> host bridge should be in the coverage of bus range of related PCIe segment.
-> 
-> This patch will support this kind of scenario:
-> 
-> MCFG:
-> 	bus range: 0x00~0xff.
-> 	segment: 0.
-> DSDT:
-> 	host bridge 1:
-> 		bus range: 0x00~0x1f.
-> 		segment: 0.
-> 	host bridge 2:
-> 		bus range: 0x20~0x4f.
-> 		segment: 0.
-> 
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/acpi/pci_mcfg.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index b5b376e..46a3e32 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->  	struct mcfg_entry *e;
->  
->  	/*
-> -	 * We expect exact match, unless MCFG entry end bus covers more than
-> -	 * specified by caller.
-> +	 * We expect the range in bus_res in the coverage of MCFG bus range.
->  	 */
->  	list_for_each_entry(e, &pci_mcfg_list, list) {
-> -		if (e->segment == seg && e->bus_start == bus_res->start &&
-> +		if (e->segment == seg && e->bus_start <= bus_res->start &&
->  		    e->bus_end >= bus_res->end)
->  			return e->addr;
->  	}
-> 
+This series calls the dma ops configuration for the devices
+at a generic place so that it works for all busses.
+The dma_configure_ops for a device is now called during
+the device_attach callback just before the probe of the
+bus/driver is called. Similarly dma_deconfigure is called during
+device/driver_detach path.
 
-Any idea about this RFC patch?
+pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+       |                         |
+pci_bus_add_device     (device_add/driver_register)
+       |                         |
+device_attach           device_initial_probe
+       |                         |
+__device_attach_driver    __device_attach_driver
+       |
+driver_probe_device
+       |
+really_probe
+       |
+dma_configure
 
-Thanks,
-Zhou
+Similarly on the device/driver_unregister path __device_release_driver is
+called which inturn calls dma_deconfigure.
 
-.
+Took the reworked patches [2] from Robin's branch and
+rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+
+* Tested with platform and pci devices for probe deferral
+  and reprobe on arm64 based platform.
+* Need help for testing with ACPI.
+
+Previous post of this series [6]. 
+
+ [V7]
+     * Updated the subject and commit log for patch #6 as per
+       comments from Lorenzo. No functional changes.
+
+ [V6]
+     * Fixed a bug in dma_configure function pointed out by
+       Robin.
+     * Reordered the patches as per comments from Robin and
+       Lorenzo.
+     * Added Tags.
+
+ [V5]
+     * Reworked the pci configuration code hanging outside and
+       pushed it to dma_configure as in PATCH#5,6,7.
+       Also added a couple of patches that Lorenzo provided for
+       correcting the Probe deferring mechanism in case of
+       ACPI devices from here [5].
+
+ [V4]
+     * Took the reworked patches [2] from Robin's branch and
+       rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+
+     * Added the patches for moving the dma ops configuration of
+       acpi based devices to probe time as well.
+ [V3]
+     * Removed the patch to split dma_masks/dma_ops configuration
+       separately based on review comments that both masks and ops are
+       required only during the device probe time.
+
+     * Reworked the series based on Generic DT bindings series.
+
+     * Added call to iommu's remove_device in the cleanup path for arm and
+       arm64.
+
+     * Removed the notifier trick in arm64 to handle early device
+       registration.
+
+     * Added reset of dma_ops in cleanup path for arm based on comments.
+
+     * Fixed the pci_iommu_configure path and tested with PCI device as
+       well.
+ 
+     * Fixed a bug to return the correct iommu_ops from patch 7 [4] in
+       last post.
+
+     * Fixed few other cosmetic comments.
+  
+ [V2]
+     * Updated the Initial post to call dma_configure/deconfigure from
+       generic code
+ 
+     * Added iommu add_device callback from of_iommu_configure path
+
+ [V1]
+     * Initial post from Laurent Pinchart [1]
+
+[1] http://lists.linuxfoundation.org/pipermail/iommu/2015-May/013016.html
+[2] http://www.linux-arm.org/git?p=linux-rm.git;a=shortlog;h=refs/heads/iommu/defer
+[3] https://lkml.org/lkml/2016/11/21/141
+[4] https://www.mail-archive.com/iommu@lists.linux-foundation.org/msg13940.html
+[5] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git iommu/probe-deferral
+[6] https://www.spinics.net/lists/arm-kernel/msg556546.html
+
+Laurent Pinchart (3):
+  of: dma: Move range size workaround to of_dma_get_range()
+  of: dma: Make of_dma_deconfigure() public
+  iommu: of: Handle IOMMU lookup failure with deferred probing or error
+
+Lorenzo Pieralisi (2):
+  ACPI/IORT: Add function to check SMMUs drivers presence
+  ACPI/IORT: Remove linker section for IORT entries probing
+
+Robin Murphy (3):
+  iommu/of: Refactor of_iommu_configure() for error handling
+  iommu/of: Prepare for deferred IOMMU configuration
+  iommu/arm-smmu: Clean up early-probing workarounds
+
+Sricharan R (3):
+  of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices
+  drivers: acpi: Handle IOMMU lookup failure with deferred probing or
+    error
+  arm64: dma-mapping: Remove the notifier trick to handle early setting
+    of dma_ops
+
+ arch/arm64/mm/dma-mapping.c       | 132 ++++----------------------------------
+ drivers/acpi/arm64/iort.c         |  40 +++++++++++-
+ drivers/acpi/glue.c               |   5 --
+ drivers/acpi/scan.c               |   7 +-
+ drivers/base/dd.c                 |   9 +++
+ drivers/base/dma-mapping.c        |  41 ++++++++++++
+ drivers/iommu/arm-smmu-v3.c       |  46 +------------
+ drivers/iommu/arm-smmu.c          |  58 +++--------------
+ drivers/iommu/of_iommu.c          | 114 +++++++++++++++++++++++---------
+ drivers/of/address.c              |  20 +++++-
+ drivers/of/device.c               |  36 ++++++-----
+ drivers/of/platform.c             |  10 +--
+ drivers/pci/probe.c               |  28 --------
+ include/acpi/acpi_bus.h           |   2 +-
+ include/asm-generic/vmlinux.lds.h |   1 -
+ include/linux/acpi.h              |   7 +-
+ include/linux/acpi_iort.h         |   3 -
+ include/linux/dma-mapping.h       |   3 +
+ include/linux/of_device.h         |  10 ++-
+ 19 files changed, 252 insertions(+), 320 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
