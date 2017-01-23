@@ -1,142 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 27 Jan 2017 11:07:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI/ASPM: reconfigure ASPM following hotplug
-Message-ID: <20170127170755.GB17251@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485471092-16906-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=KVF9=ZF=gmail.com=myron.stowe@kernel.org>
+Return-Path: <SRS0=KVF9=ZF=gmail.com=myron.stowe@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1485471092-16906-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, cov@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20151015172305.GC17702@localhost>
+References: <1443051076-27716-1-git-send-email-rbezut@gmail.com> <20151015172305.GC17702@localhost>
+From: Myron Stowe <myron.stowe@gmail.com>
+Date: Mon, 23 Jan 2017 13:57:28 -0700
+Message-ID: <CAL-B5D2zfKg2pzc0M2udS3=tNQ-=RzG8qLdBWAQC3KVh4PRQ0g@mail.gmail.com>
+Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
+To: Bjorn Helgaas <helgaas@kernel.org>, rbezut@gmail.com
+Cc: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Neil Horman <nhorman@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+On Thu, Oct 15, 2015 at 11:23 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
+>> irqbalance uses these attributes to populate its internal database, which is
+>> then used to bind the irq on the appropriate NUMA node.
+>>
+>> On a device accepting multiple MSIs and with interrupt remapping enabled,
+>> only the first irq entry is exported to msi_irqs directory.
+>> This results in irqbalance having no clue of the NUMA affinity for the extra
+>> irqs and starting to bind them on random nodes.
+>>
+>> This patch exports all MSI interrupts as sysfs attributes when relevant.
+>>
+>> Signed-off-by: Romain Bezut <rbezut@gmail.com>
+>
+> Applied with Thomas' ack to pci/msi for v4.4, thanks, Romain!
 
-On Thu, Jan 26, 2017 at 05:51:32PM -0500, Sinan Kaya wrote:
-> When the operating system is booted with the default ASPM policy,
-> the current code is determining the ASPM policy by querying the
-> enable/disable states from ASPM registers.
-> 
-> In the case of hotplug removal, the ASPM registers get cleared by
-> calling the exit function.
+Internal testing with netperf - network performance between two
+machines with 10Gb Intel NICs running 24 instances of the netperf tool
+in parallel (to utilize all CPU cores) - shows a roughly 20%
+performance degradation.  Bi-section showed the offending commit to be
+this patch: commit a86760664f4 ("PCI/MSI: Export all remapped MSIs to
+sysfs attributes").
 
-I assume you mean pcie_aspm_exit_link_state().  It'd be easier if you
-were specific about that.
+  Prior: 9.62 +-0.00 gbits/sec
+  After: 7.77 +-0.17 gbits/sec
 
-But I don't know whether this is relevant anyway.  In a surprise
-removal we won't call pcie_aspm_exit_link_state(), will we?
-
-> An insertion following remove reads incorrect policy as disabled
-> even though ASPM was enabled during boot.
-> 
-> Adding a flag to the struct pci_dev and saving the power up policy
-> in the bridge to be reused during hotplug insertion. Bridge's enable
-> counter is used as a switch to determine when to use saved value.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pcie/aspm.c | 13 ++++++++++---
->  include/linux/pci.h     |  1 +
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 17ac1dc..32b8a86 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -338,7 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
->  	}
->  }
->  
-> -static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
-> +static
-> +void pcie_aspm_cap_init(struct pci_dev *pdev, struct pcie_link_state *link,
-> +			int blacklist)
->  {
->  	struct pci_dev *child, *parent = link->pdev;
->  	struct pci_bus *linkbus = parent->subordinate;
-> @@ -398,7 +400,12 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
->  
->  	/* Save default state */
-> -	link->aspm_default = link->aspm_enabled;
-> +	if (!atomic_read(&pdev->enable_cnt)) {
-> +		link->aspm_default = link->aspm_enabled;
-> +		pdev->aspm_default = link->aspm_default;
-> +	} else {
-> +		link->aspm_default = pdev->aspm_default;
-> +	}
-
-This connection with enable_cnt is too obtuse.  There's no obvious
-connection between enabling the device and computing the default ASPM
-state.
-
-We're working on the bridge (the upstream end of a link).  If I
-understand correctly, the case of interest here is where the bridge
-stays put and an endpoint below the bridge is removed and re-added.
-Why can't we figure out the policy the same way as when we first
-enumerated the bridge?
-
-In POLICY_PERFORMANCE and POLICY_POWERSAVE, I assume the original BIOS
-configuration doesn't matter.  Maybe the point here is to remember the
-original BIOS configuration for POLICY_DEFAULT?  If so, the patch
-should mention POLICY_DEFAULT somehow to help the reader connect the
-dots.
-
->  	/* Setup initial capable state. Will be updated later */
->  	link->aspm_capable = link->aspm_support;
-> @@ -599,7 +606,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->  	 * upstream links also because capable state of them can be
->  	 * update through pcie_aspm_cap_init().
->  	 */
-> -	pcie_aspm_cap_init(link, blacklist);
-> +	pcie_aspm_cap_init(pdev, link, blacklist);
-
-I think "link" is always "pdev->link_state", so we should be able to
-pass only "pdev" here, and pcie_aspm_cap_init() could use
-pdev->link_state internally.
-
->  	/* Setup initial Clock PM state */
->  	pcie_clkpm_cap_init(link, blacklist);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e2d1a12..d0ecde6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -316,6 +316,7 @@ struct pci_dev {
->  	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
->  						      controlled exclusively by
->  						      user sysfs */
-> +	unsigned int	aspm_default;	/* aspm policy set by BIOS */
-
-We already have an #ifdef CONFIG_PCIEASPM above, and this should go
-under that.  "aspm" in English text is an acronym and should be
-capitalized, just like "BIOS".
-
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> ---
+>>  drivers/pci/msi.c | 31 +++++++++++++++++--------------
+>>  1 file changed, 17 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index d449714..324a164 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>>       int ret = -ENOMEM;
+>>       int num_msi = 0;
+>>       int count = 0;
+>> +     int i;
+>>
+>>       /* Determine how many msi entries we have */
+>>       for_each_pci_msi_entry(entry, pdev)
+>> -             ++num_msi;
+>> +             num_msi += entry->nvec_used;
+>>       if (!num_msi)
+>>               return 0;
+>>
+>> @@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>>       if (!msi_attrs)
+>>               return -ENOMEM;
+>>       for_each_pci_msi_entry(entry, pdev) {
+>> -             msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+>> -             if (!msi_dev_attr)
+>> -                     goto error_attrs;
+>> -             msi_attrs[count] = &msi_dev_attr->attr;
+>> -
+>> -             sysfs_attr_init(&msi_dev_attr->attr);
+>> -             msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
+>> -                                                 entry->irq);
+>> -             if (!msi_dev_attr->attr.name)
+>> -                     goto error_attrs;
+>> -             msi_dev_attr->attr.mode = S_IRUGO;
+>> -             msi_dev_attr->show = msi_mode_show;
+>> -             ++count;
+>> +             for (i = 0; i < entry->nvec_used; i++) {
+>> +                     msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+>> +                     if (!msi_dev_attr)
+>> +                             goto error_attrs;
+>> +                     msi_attrs[count] = &msi_dev_attr->attr;
+>> +
+>> +                     sysfs_attr_init(&msi_dev_attr->attr);
+>> +                     msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
+>> +                                                         entry->irq + i);
+>> +                     if (!msi_dev_attr->attr.name)
+>> +                             goto error_attrs;
+>> +                     msi_dev_attr->attr.mode = S_IRUGO;
+>> +                     msi_dev_attr->show = msi_mode_show;
+>> +                     ++count;
+>> +             }
+>>       }
+>>
+>>       msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
+>> --
+>> 2.4.9
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
