@@ -1,97 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 25/37] dt-bindings: PCI: Add dt bindings for pci designware EP
- mode
-Date: Thu, 12 Jan 2017 15:56:14 +0530
-Message-ID: <1484216786-17292-26-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34480 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbdAWQS5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2017 11:18:57 -0500
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 05/11] ACPI/IORT: Add function to check SMMUs drivers presence
+Date: Mon, 23 Jan 2017 21:48:07 +0530
+Message-Id: <1485188293-20263-6-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for pci designware EP mode.
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+The IOMMU probe deferral implementation requires a mechanism to detect
+if drivers for SMMU components are built-in in the kernel to detect
+whether IOMMU configuration for a given device should be deferred (ie
+SMMU drivers present but still not probed) or not (drivers not present).
+
+Add a simple function to IORT to detect if SMMU drivers for SMMU
+components managed by IORT are built-in in the kernel.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Sricharan R <sricharan@codeaurora.org>
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++++++++++++++------
- 1 file changed, 18 insertions(+), 8 deletions(-)
+ drivers/acpi/arm64/iort.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 1392c70..b2480dd 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -6,30 +6,40 @@ Required properties:
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-     is deprecated and should be avoided.)
-+- num-lanes: number of lanes to use
-+RC mode:
- - #address-cells: set to <3>
- - #size-cells: set to <2>
- - device_type: set to "pci"
- - ranges: ranges for the PCI memory and I/O regions
- - #interrupt-cells: set to <1>
--- interrupt-map-mask and interrupt-map: standard PCI properties
--	to define the mapping of the PCIe interface to interrupt
-+- interrupt-map-mask and interrupt-map: standard PCI
-+	properties to define the mapping of the PCIe interface to interrupt
- 	numbers.
--- num-lanes: number of lanes to use
-+EP mode:
-+- num-ib-windows: number of inbound address translation
-+        windows
-+- num-ob-windows: number of outbound address translation
-+        windows
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index e0d2e6e..bf0ed09 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
+ 	return ret;
+ }
  
- Optional properties:
--- num-viewport: number of view ports configured in hardware.  If a platform
--  does not specify it, the driver assumes 2.
- - num-lanes: number of lanes to use (this property should be specified unless
-   the link is brought already up in BIOS)
- - reset-gpio: gpio pin number of power good signal
--- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
--  specify this property, to keep backwards compatibility a range of 0x00-0xff
--  is assumed if not present)
- - clocks: Must contain an entry for each entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
- 	- "pcie"
- 	- "pcie_bus"
-+RC mode:
-+- num-viewport: number of view ports configured in
-+  hardware. If a platform does not specify it, the driver assumes 2.
-+- bus-range: PCI bus numbers covered (it is recommended
-+  for new devicetrees to specify this property, to keep backwards
-+  compatibility a range of 0x00-0xff is assumed if not present)
-+EP mode:
-+- max-functions: maximum number of functions that can be
-+  configured
- 
- Example configuration:
- 
++static inline bool iort_iommu_driver_enabled(u8 type)
++{
++	switch (type) {
++	case ACPI_IORT_NODE_SMMU_V3:
++		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
++	case ACPI_IORT_NODE_SMMU:
++		return IS_BUILTIN(CONFIG_ARM_SMMU);
++	default:
++		pr_warn("IORT node type %u does not describe an SMMU\n", type);
++		return false;
++	}
++}
++
+ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 					struct acpi_iort_node *node,
+ 					u32 streamid)
 -- 
-1.7.9.5
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
