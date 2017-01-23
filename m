@@ -1,69 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:55980 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751232AbdAaRtV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 12:49:21 -0500
-Date: Tue, 31 Jan 2017 10:49:16 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
-Message-ID: <20170131104916.0f187309@lwn.net>
-In-Reply-To: <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
-References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
-        <1485882204-26947-2-git-send-email-logang@deltatee.com>
-        <20170131172630.GB12595@kroah.com>
-        <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 11/11] ACPI/IORT: Remove linker section for IORT entries probing
+Date: Mon, 23 Jan 2017 21:48:13 +0530
+Message-Id: <1485188293-20263-12-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 31 Jan 2017 10:35:44 -0700
-Logan Gunthorpe <logang@deltatee.com> wrote:
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> > And don't dump a .txt file into Documentation/ anymore, people are
-> > working to move to the newer format.  
-> 
-> Fair. I wasn't sure where a good place to put it was. Any suggestions?
+The IORT linker section introduced by commit 34ceea275f62
+("ACPI/IORT: Introduce linker section for IORT entries probing")
+was needed to make sure SMMU drivers are registered (and therefore
+probed) in the kernel before devices using the SMMU have a chance
+to probe in turn.
 
-We're working toward a rational document hierarchy using the sphinx system:
+Through the introduction of deferred IOMMU configuration the linker
+section based IORT probing infrastructure is not needed any longer, in
+that device/SMMU probe dependencies are managed through the probe
+deferral mechanism, making the IORT linker section infrastructure
+unused, so that it can be removed.
 
-	https://lwn.net/Articles/692704/
-	https://lwn.net/Articles/692704/
-	https://static.lwn.net/kerneldoc/doc-guide/index.html
+Remove the unused IORT linker section probing infrastructure
+from the kernel to complete the ACPI IORT IOMMU configure probe
+deferral mechanism implementation.
 
-The good news is that your switchtec.txt file is already 99% in the RST
-format, so there is little or nothing to do there.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/acpi/arm64/iort.c         | 2 --
+ include/asm-generic/vmlinux.lds.h | 1 -
+ include/linux/acpi_iort.h         | 3 ---
+ 3 files changed, 6 deletions(-)
 
-The bad news is that we don't quite have a place for it yet.  This is
-really user-space developer documentation, and we don't have a sub-book
-for that.  I expect that to change pretty soon, and I might even toss
-together a bare beginning for 4.11, but that hasn't happened yet.
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index d01bae8..ac45623 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -992,6 +992,4 @@ void __init acpi_iort_init(void)
+ 	}
+ 
+ 	iort_init_platform_devices();
+-
+-	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 0968d13..9faa26c 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -566,7 +566,6 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
+-	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index 77e0809..f167e1d04 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -52,7 +52,4 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ { return NULL; }
+ #endif
+ 
+-#define IORT_ACPI_DECLARE(name, table_id, fn)		\
+-	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
+-
+ #endif /* __ACPI_IORT_H__ */
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-If you would like to learn the ropes and make one, that would be more than
-great :)  Alternatively, I'd suggest just leaving the document as-is, and
-I'll put it toward the top of the list of things to move into place once I
-get that book started.
-
-Thanks,
-
-jon
