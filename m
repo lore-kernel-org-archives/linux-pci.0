@@ -1,74 +1,161 @@
-Return-Path: <SRS0=HwEz=YT=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=HwEz=YT=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Thu, 05 Jan 2017 15:23:26 +0100
-Message-ID: <6977375.R7lptGkx4O@aspire.rjw.lan>
-In-Reply-To: <20170105142029.GF3353@lahna.fi.intel.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170105104940.GA3353@lahna.fi.intel.com> <20170105142029.GF3353@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 10/11] iommu/arm-smmu: Clean up early-probing workarounds
+Date: Mon, 23 Jan 2017 21:48:12 +0530
+Message-Id: <1485188293-20263-11-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 05, 2017 04:20:29 PM Mika Westerberg wrote:
-> On Thu, Jan 05, 2017 at 12:49:40PM +0200, Mika Westerberg wrote:
-> > On Wed, Jan 04, 2017 at 10:58:10PM +0100, Rafael J. Wysocki wrote:
-> > > I would rather add a quirk to the ACPI core to prevent the power resources in
-> > > question from being enumerated.  Or even to prevent ACPI PM from being
-> > > used for the port in question.
-> > 
-> > If we are going to add a quirk, I agree that it should be put to the
-> > ACPI core.
-> > 
-> > However, Windows seems to be able to use _PR3 just fine. So there is
-> > something that we are missing or do not implement properly which causes
-> > all the troubles. IMHO we should try to find out what that difference is
-> > and fix that if possible.
-> 
-> Here is one idea. The _OSC method is used as a handshake between OS and
-> the BIOS to enable/disable certain features. One of those features is
-> _PR3 support (ACPI specification 6.1 p.328):
-> 
->   This bit is set if OSPM supports reading _PR3and using power
->   resources to switch power. Note this handshake translates to an
->   operating model that the platform and OSPM supports both the power
->   model containing both D3hot and D3.
+From: Robin Murphy <robin.murphy@arm.com>
 
-Ah, good catch!
+Now that the appropriate ordering is enforced via profe-deferral of
+masters in core code, rip it all out and bask in the simplicity.
 
-I forgot about this one and we definitely should do this handshake.
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+[Sricharan: Rebased on top of ACPI IORT SMMU series]
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 46 ++---------------------------------
+ drivers/iommu/arm-smmu.c    | 58 +++++++--------------------------------------
+ 2 files changed, 10 insertions(+), 94 deletions(-)
 
-> Some of our development platforms has BIOS option "RTD3 enable" which
-> is used to enable/disable this flag (among other things). The BIOS
-> should return acked caps when _OSC returns but we never check those in
-> Linux.
-> 
-> Kilian, can you try the below patch and send back dmesg when the system
-> has been booted? It should show if the BIOS acks _PR3 or not.
-> 
-> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-> index 95855cb9d6fb..463eb2d69271 100644
-> --- a/drivers/acpi/bus.c
-> +++ b/drivers/acpi/bus.c
-> @@ -345,8 +345,15 @@ static void acpi_bus_osc_support(void)
->  		capbuf[OSC_SUPPORT_DWORD] |= OSC_SB_APEI_SUPPORT;
->  	if (ACPI_FAILURE(acpi_get_handle(NULL, "\\_SB", &handle)))
->  		return;
-> +
-> +	acpi_handle_info(handle, "Supported caps: 0x%08x\n", capbuf[1]);
-> +
->  	if (ACPI_SUCCESS(acpi_run_osc(handle, &context))) {
->  		u32 *capbuf_ret = context.ret.pointer;
-> +
-> +		acpi_handle_info(handle, "Acked caps: 0x%08x (_PR3: %s)\n", capbuf_ret[1],
-> +				 capbuf_ret[1] & OSC_SB_PR3_SUPPORT ? "on" : "off");
-> +
->  		if (context.ret.length > OSC_SUPPORT_DWORD) {
->  			osc_sb_apei_support_acked =
->  				capbuf_ret[OSC_SUPPORT_DWORD] & OSC_SB_APEI_SUPPORT;
-> --
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 4d6ec44..632b541 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2729,51 +2729,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
++module_platform_driver(arm_smmu_driver);
+ 
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
+-#endif
++IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index a60cded..93f77bb 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -2134,56 +2134,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+-
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
+-#endif
++module_platform_driver(arm_smmu_driver);
++
++IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
++IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
++IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
++IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
++IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
++IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-Thanks,
-Rafael
