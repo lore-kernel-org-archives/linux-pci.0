@@ -1,67 +1,173 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>, <tn@semihalf.com>,
- <David.Daney@cavium.com>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com>
-References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <e92355e7-634f-dc91-4716-da73a23b406c@caviumnetworks.com>
-Date: Mon, 30 Jan 2017 09:39:30 -0800
-MIME-Version: 1.0
-In-Reply-To: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with deferred probing or error
+Date: Mon, 23 Jan 2017 21:48:10 +0530
+Message-Id: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/30/2017 08:25 AM, Vadim Lomovtsev wrote:
-> This patch is to address PEM initialization issue
-> which causes network issues.
->
-> It is necessary to search for _HID:PNP0A08 while requesting
-> PEM resources via ACPI instead of "THRX0002".
+This is an equivalent to the DT's handling of the iommu master's probe
+with deferred probing when the corrsponding iommu is not probed yet.
+The lack of a registered IOMMU can be caused by the lack of a driver for
+the IOMMU, the IOMMU device probe not having been performed yet, having
+been deferred, or having failed.
 
-Since this is fixing new code, there should be no chance to break 
-previously working systems.
+The first case occurs when the firmware describes the bus master and
+IOMMU topology correctly but no device driver exists for the IOMMU yet
+or the device driver has not been compiled in. Return NULL, the caller
+will configure the device without an IOMMU.
 
-Bjorn: If possible, this should be merged for v4.10
+The second and third cases are handled by deferring the probe of the bus
+master device which will eventually get reprobed after the IOMMU.
 
->
-> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+The last case is currently handled by deferring the probe of the bus
+master device as well. A mechanism to either configure the bus master
+device without an IOMMU or to fail the bus master device probe depending
+on whether the IOMMU is optional or mandatory would be a good
+enhancement.
 
-Acked-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
+ drivers/acpi/scan.c        |  7 +++++--
+ drivers/base/dma-mapping.c |  2 +-
+ include/acpi/acpi_bus.h    |  2 +-
+ include/linux/acpi.h       |  7 +++++--
+ 5 files changed, 36 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index bf0ed09..d01bae8 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 			return NULL;
+ 
+ 		ops = iommu_get_instance(iort_fwnode);
++		/*
++		 * If the ops look-up fails, this means that either
++		 * the SMMU drivers have not been probed yet or that
++		 * the SMMU drivers are not built in the kernel;
++		 * Depending on whether the SMMU drivers are built-in
++		 * in the kernel or not, defer the IOMMU configuration
++		 * or just abort it.
++		 */
+ 		if (!ops)
+-			return NULL;
++			return iort_iommu_driver_enabled(node->type) ?
++			       ERR_PTR(-EPROBE_DEFER) : NULL;
+ 
+ 		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
+ 	}
+@@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 
+ 		while (parent) {
+ 			ops = iort_iommu_xlate(dev, parent, streamid);
++			if (IS_ERR_OR_NULL(ops))
++				return ops;
+ 
+ 			parent = iort_node_get_id(node, &streamid,
+ 						  IORT_IOMMU_TYPE, i++);
+ 		}
+ 	}
+ 
++	/*
++	 * If we have reason to believe the IOMMU driver missed the initial
++	 * add_device callback for dev, replay it to get things in order.
++	 */
++	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
++	    dev->bus && !dev->iommu_group) {
++		int err = ops->add_device(dev);
++
++		if (err)
++			ops = ERR_PTR(err);
++	}
++
+ 	return ops;
+ }
+ 
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1926918..823b005 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1373,20 +1373,23 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+  * @dev: The pointer to the device
+  * @attr: device dma attributes
+  */
+-void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
++int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
+ 	const struct iommu_ops *iommu;
+ 
+ 	iort_set_dma_mask(dev);
+ 
+ 	iommu = iort_iommu_configure(dev);
+-
++	if (IS_ERR(iommu))
++		return PTR_ERR(iommu);
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+ 	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ 			   attr == DEV_DMA_COHERENT);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(acpi_dma_configure);
+ 
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 82bd45c..755a2b5 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
+ 	} else if (has_acpi_companion(dma_dev)) {
+ 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
+ 		if (attr != DEV_DMA_NOT_SUPPORTED)
+-			acpi_dma_configure(dev, attr);
++			ret = acpi_dma_configure(dev, attr);
+ 	}
+ 
+ 	if (bridge)
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 4242c31..9aa762fe 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -573,7 +573,7 @@ struct acpi_pci_root {
+ 
+ bool acpi_dma_supported(struct acpi_device *adev);
+ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
+-void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
++int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+ void acpi_dma_deconfigure(struct device *dev);
+ 
+ struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 5b36974..8b958b6 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -764,8 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 	return DEV_DMA_NOT_SUPPORTED;
+ }
+ 
+-static inline void acpi_dma_configure(struct device *dev,
+-				      enum dev_dma_attr attr) { }
++static inline int acpi_dma_configure(struct device *dev,
++				     enum dev_dma_attr attr)
++{
++	return 0;
++}
+ 
+ static inline void acpi_dma_deconfigure(struct device *dev) { }
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-> ---
->  drivers/pci/host/pci-thunder-pem.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index af722eb..aec30b8 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -331,7 +331,7 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
->  	if (!res_pem)
->  		return -ENOMEM;
->
-> -	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
-> +	ret = acpi_get_rc_resources(dev, "PNP0A08", root->segment, res_pem);
->  	if (ret) {
->  		dev_err(dev, "can't get rc base address\n");
->  		return ret;
->
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
