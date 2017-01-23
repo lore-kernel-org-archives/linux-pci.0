@@ -1,136 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:39937 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbdAXGdu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2017 01:33:50 -0500
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V6 0/5] LPC: legacy ISA I/O support
-Date: Tue, 24 Jan 2017 15:05:20 +0800
-Message-ID: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:33852 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751152AbdAWPCy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2017 10:02:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170123145204.5lablvhf7m2hf3na@rob-hp-laptop>
+References: <20170119163631.10668-1-andrew.smirnov@gmail.com>
+ <20170119163631.10668-4-andrew.smirnov@gmail.com> <20170123145204.5lablvhf7m2hf3na@rob-hp-laptop>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Mon, 23 Jan 2017 07:02:52 -0800
+Message-ID: <CAHQ1cqEFS-XEfm7=QP6hCLARan3eQ5VT6Ucq3HPsCzYoodHqtA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: imx6: Add code to support i.MX7D
+To: Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, Andrey Yurovsky <yurovsky@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch supports the IPMI-bt device attached to the Low-Pin-Count interface
-implemented on Hisilicon Hip06/Hip07 SoC.
-	                -----------
-			| LPC host|
-	                |         |
-	                -----------
-	                     |
- 	        _____________V_______________LPC
-                  |			  |
-                  V	                  V
-			             ------------
-			             |  BT(ipmi)|
-			             ------------
+On Mon, Jan 23, 2017 at 6:52 AM, Rob Herring <robh@kernel.org> wrote:
+> On Thu, Jan 19, 2017 at 08:36:31AM -0800, Andrey Smirnov wrote:
+>> Add various bits of code needed to support i.MX7D variant of the IP.
+>>
+>> Cc: yurovsky@gmail.com
+>> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Fabio Estevam <festevam@gmail.com>
+>> Cc: Shawn Guo <shawnguo@kernel.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Mark Rutland <mark.rutland@arm.com>
+>> Cc: Lee Jones <lee.jones@linaro.org>
+>> Cc: linux-arm-kernel@lists.infradead.org
+>> Cc: devicetree@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+>> ---
+>>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
+>>  drivers/pci/host/pci-imx6.c                        | 188 ++++++++++++++++++---
+>>  include/linux/mfd/syscon/imx7-gpc.h                |  18 ++
+>>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+>>  include/linux/mfd/syscon/imx7-src.h                |  18 ++
+>>  5 files changed, 208 insertions(+), 26 deletions(-)
+>>  create mode 100644 include/linux/mfd/syscon/imx7-gpc.h
+>>  create mode 100644 include/linux/mfd/syscon/imx7-src.h
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> index 83aeb1f..20b9382 100644
+>> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>
+>>  Required properties:
+>> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
+>> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie",
+>> +           "fsl,imx6qp-pcie", "fsl,imx7d-pcie"
+>
+> Please reformat to one valid combination per line.
 
-When master accesses those peripherals beneath the Hip06 LPC, a specific LPC
-driver is needed to make LPC host generate the standard LPC I/O cycles with
-the target peripherals'I/O port addresses. But on curent arm64 world, there is
-no real I/O accesses. All the I/O operations through in/out pair are based on
-MMIO which is not satisfied the I/O mechanism on Hip06 LPC.
-To solve this issue and keep the relevant existing peripherals' driver
-untouched, this patch set redefines the in/out() pair to support both the IO
-operations for Hip06 LPC and the original MMIO. The way specific to Hip06 is
-named as indirect-IO in this patchset.
-
-Changes from V5:
-  - Made the extio driver more generic and locate in lib/;
-  - Supported multiple indirect-IO bus instances;
-  - Extended the pci_register_io_range() to support indirect-IO, then dropped
-  the I/O reservation used in previous patchset;
-  - Reimplemented the ACPI LPC support;
-  - Fixed some bugs, including the compile error on other archs, the module
-  building failure found by Ming Lei, etc;
-
-Changes from V4:
-  - Some revises based on the comments from Bjorn, Rob on V4;
-  - Fixed the compile error on some platforms, such as openrisc;
-
-Changes from V3:
-  - UART support deferred to a separate patchset; This patchset only support
-  ipmi device under LPC;
-  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
-  from PCI/PCIE PIO space;
-  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
-  added a new fixup function, of_isa_indirect_io(), to get the I/O address
-  directly from LPC dts configurations;
-  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
-  - Decouple the header file dependency on the gerenic io.h by defining in/out
-  as normal functions in c file;
-  - removed unused macro definitions in the LPC driver;
-
-Changes from V2:
-  - Support the PIO retrieval from the linux PIO generated by
-  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
-  - Support the flat-tree earlycon;
-  - Some revises based on Arnd's remarks;
-  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
-  from non-ZERO;
-
-Changes from V1:
-  - Support the ACPI LPC device;
-  - Optimize the dts LPC driver in ISA compatible mode;
-  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
-  IO ranges;
-  - Support the LPC uart and relevant earlycon;
-
-
-v5 thread here: https://lkml.org/lkml/2016/11/7/955
-v4 thread here: https://lkml.org/lkml/2016/10/20/149
-v3 thread here: https://lkml.org/lkml/2016/9/14/326
-v2 thread here: https://lkml.org/lkml/2016/9/7/356
-v1 thread here: https://lkml.org/lkml/2015/12/29/154
-
-
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-zhichang.yuan (5):
-  LIB: Indirect ISA/LPC port IO introduced
-  PCI: Adapt pci_register_io_range() for indirect-IO and PCI I/O
-    translation
-  OF: Add missing I/O range exception for indirect-IO devices
-  LPC: Support the device-tree LPC host on Hip06/Hip07
-  LPC: Add the ACPI LPC support
-
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
- MAINTAINERS                                        |   9 +
- arch/arm64/boot/dts/hisilicon/hip06-d03.dts        |   4 +
- arch/arm64/boot/dts/hisilicon/hip06.dtsi           |  14 +
- drivers/acpi/pci_root.c                            |  12 +-
- drivers/bus/Kconfig                                |   8 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 625 +++++++++++++++++++++
- drivers/of/address.c                               |  95 +++-
- drivers/pci/pci.c                                  |  44 +-
- include/asm-generic/io.h                           |  50 ++
- include/linux/extio.h                              |  89 +++
- include/linux/io.h                                 |   1 +
- include/linux/pci.h                                |   7 +-
- lib/Kconfig                                        |   8 +
- lib/Makefile                                       |   2 +
- lib/extio.c                                        | 375 +++++++++++++
- 17 files changed, 1342 insertions(+), 35 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 drivers/bus/hisi_lpc.c
- create mode 100644 include/linux/extio.h
- create mode 100644 lib/extio.c
-
--- 
-1.9.1
-
+Noted for v2, thanks.
