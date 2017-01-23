@@ -1,50 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:55582 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967894AbdAEGQD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2017 01:16:03 -0500
-Subject: Re: [PATCH V2 2/5] phy: phy-exynos-pcie: Add support for Exynos PCIe
- phy
-To: Jaehoon Chung <jh80.chung@samsung.com>, linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, alim.akhtar@samsung.com,
-        cpgs@samsung.com
-From: "pankaj.dubey" <pankaj.dubey@samsung.com>
-Message-id: <d1db94b0-a758-cd9a-2fc6-2db64e0fd741@samsung.com>
-Date: Thu, 05 Jan 2017 11:48:25 +0530
-MIME-version: 1.0
-In-reply-to: <20170104123435.30740-3-jh80.chung@samsung.com>
-Content-type: text/plain; charset=windows-1252
-References: <20170104123435.30740-1-jh80.chung@samsung.com>
- <CGME20170104123436epcas1p1a729583c3c2307d8539a186f1050ea98@epcas1p1.samsung.com>
- <20170104123435.30740-3-jh80.chung@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 02/11] iommu/of: Prepare for deferred IOMMU configuration
+Date: Mon, 23 Jan 2017 21:48:04 +0530
+Message-Id: <1485188293-20263-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+From: Robin Murphy <robin.murphy@arm.com>
 
-On Wednesday 04 January 2017 06:04 PM, Jaehoon Chung wrote:
-> This patch supports to use Generic Phy framework for Exynos PCIe phy.
-> When Exynos that supported the pcie want to use the PCIe,
-> it needs to control the phy resgister.
-> But it should be more complex to control in their own PCIe device drivers.
-> 
-> Currently, there is an exynos5440 case to support the pcie.
-> So this driver is based on Exynos5440 PCIe.
-> In future, will support the Other exynos SoCs likes exynos5433, exynos7.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
-> Changelog on V2:
-> - Not include the codes relevant to pci-exynos.
-> - Remove the getting child node.
-> 
+IOMMU configuration represents unchanging properties of the hardware,
+and as such should only need happen once in a device's lifetime, but
+the necessary interaction with the IOMMU device and driver complicates
+exactly when that point should be.
 
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Since the only reasonable tool available for handling the inter-device
+dependency is probe deferral, we need to prepare of_iommu_configure()
+to run later than it is currently called (i.e. at driver probe rather
+than device creation), to handle being retried, and to tell whether a
+not-yet present IOMMU should be waited for or skipped (by virtue of
+having declared a built-in driver or not).
 
-Thanks,
-Pankaj Dubey
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/of_iommu.c | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index ee49081..349bd1d 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -104,12 +104,20 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ 	int err;
+ 
+ 	ops = iommu_get_instance(fwnode);
+-	if (!ops || !ops->of_xlate)
++	if ((ops && !ops->of_xlate) ||
++	    (!ops && !of_match_node(&__iommu_of_table, iommu_spec->np)))
+ 		return NULL;
+ 
+ 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
+ 	if (err)
+ 		return ERR_PTR(err);
++	/*
++	 * The otherwise-empty fwspec handily serves to indicate the specific
++	 * IOMMU device we're waiting for, which will be useful if we ever get
++	 * a proper probe-ordering dependency mechanism in future.
++	 */
++	if (!ops)
++		return ERR_PTR(-EPROBE_DEFER);
+ 
+ 	err = ops->of_xlate(dev, iommu_spec);
+ 	if (err)
+@@ -186,14 +194,34 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
+ {
+ 	const struct iommu_ops *ops;
++	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+ 
+ 	if (!master_np)
+ 		return NULL;
+ 
++	if (fwspec) {
++		if (fwspec->ops)
++			return fwspec->ops;
++
++		/* In the deferred case, start again from scratch */
++		iommu_fwspec_free(dev);
++	}
++
+ 	if (dev_is_pci(dev))
+ 		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+ 	else
+ 		ops = of_platform_iommu_init(dev, master_np);
++	/*
++	 * If we have reason to believe the IOMMU driver missed the initial
++	 * add_device callback for dev, replay it to get things in order.
++	 */
++	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
++	    dev->bus && !dev->iommu_group) {
++		int err = ops->add_device(dev);
++
++		if (err)
++			ops = ERR_PTR(err);
++	}
+ 
+ 	return IS_ERR(ops) ? NULL : ops;
+ }
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
