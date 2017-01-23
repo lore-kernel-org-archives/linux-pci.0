@@ -1,71 +1,94 @@
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Message-Id: <14d64f19bc1b1ea67371b8336dca618edddc0b52.1484486499.git.lukas@wunner.de>
-In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 15 Jan 2017 21:03:45 +0100
-Subject: [PATCH v5 2/8] PCI: Allow runtime PM on Thunderbolt ports
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V7 04/11] of: dma: Make of_dma_deconfigure() public
+Date: Mon, 23 Jan 2017 21:48:06 +0530
+Message-Id: <1485188293-20263-5-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently PCIe ports are only allowed to go to D3 if the BIOS is dated
-2015 or newer to avoid potential issues with old chipsets.  However for
-Thunderbolt we know that even the oldest controller, Light Ridge (2010),
-is able to suspend its ports to D3 just fine.
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-released two EFI security updates in 2015 which encompass all machines
-with Thunderbolt, but the achieved power saving should be made available
-to users even if they haven't updated their BIOS.  To this end,
-special-case Thunderbolt in pci_bridge_d3_possible().
+As part of moving DMA initializing to probe time the
+of_dma_deconfigure() function will need to be called from different
+source files. Make it public and move it to drivers/of/device.c where
+the of_dma_configure() function is.
 
-This allows the Thunderbolt controller to power down but the root port
-to which the Thunderbolt controller is attached remains in D0 unless
-the EFI update is installed.  Users can pass pcie_port_pm=force on the
-kernel command line if they cannot install the EFI update but still want
-to benefit from the additional power saving of putting the root port
-into D3.  In practice, root ports can be suspended to D3 without issues
-at least on 2012 Ivy Bridge machines.
-
-If the BIOS cut-off date is ever lowered to 2010, the Thunderbolt
-special case can be removed.
-
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 ---
- drivers/pci/pci.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/of/device.c       | 12 ++++++++++++
+ drivers/of/platform.c     |  5 -----
+ include/linux/of_device.h |  3 +++
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d3d2e8..8ed098db82e1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  * @bridge: Bridge to check
-  *
-  * This function checks if it is possible to move the bridge to D3.
-- * Currently we only allow D3 for recent enough PCIe ports.
-+ * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
-  */
- bool pci_bridge_d3_possible(struct pci_dev *bridge)
- {
-@@ -2258,6 +2258,11 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		    year >= 2015) {
- 			return true;
- 		}
-+
-+		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-+		if (bridge->is_thunderbolt)
-+			return true;
-+
- 		break;
- 	}
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index d9898d9..1c843e2 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -136,6 +136,18 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ }
+ EXPORT_SYMBOL_GPL(of_dma_configure);
  
++/**
++ * of_dma_deconfigure - Clean up DMA configuration
++ * @dev:	Device for which to clean up DMA configuration
++ *
++ * Clean up all configuration performed by of_dma_configure_ops() and free all
++ * resources that have been allocated.
++ */
++void of_dma_deconfigure(struct device *dev)
++{
++	arch_teardown_dma_ops(dev);
++}
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index b8064bc..57418f7 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -158,11 +158,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
+ 
+-static void of_dma_deconfigure(struct device *dev)
+-{
+-	arch_teardown_dma_ops(dev);
+-}
+-
+ /**
+  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
+  * @np: pointer to node to create device for
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index cc7dd687..d20a31a 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -56,6 +56,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ 
+ void of_dma_configure(struct device *dev, struct device_node *np);
++void of_dma_deconfigure(struct device *dev);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -100,6 +101,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ static inline void of_dma_configure(struct device *dev, struct device_node *np)
+ {}
++static inline void of_dma_deconfigure(struct device *dev)
++{}
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
