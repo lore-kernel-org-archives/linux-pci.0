@@ -1,93 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52238 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750891AbdAaPTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 10:19:55 -0500
-Date: Tue, 31 Jan 2017 09:09:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shailendra Verma <shailendra.v@samsung.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, p.shailesh@samsung.com,
-        ashish.kalra@samsung.com,
-        Shailendra Verma <shailendra.capricorn@gmail.com>
-Subject: Re: [PATCH] Pci: host - Fix possible NULL derefrence.
-Message-ID: <20170131150900.GB9942@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20170130044942epcas2p4c3e879675c189ff46c27b5f35bbc350f@epcas2p4.samsung.com>
- <1485751775-29126-1-git-send-email-shailendra.v@samsung.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 24 Jan 2017 12:37:12 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Cc: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Hanjun Guo <hanjun.guo@linaro.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+Message-ID: <20170124123711.GA11996@red-moon>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485751775-29126-1-git-send-email-shailendra.v@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shailendra,
+[+hanjun, tomasz, sinan]
 
-On Mon, Jan 30, 2017 at 10:19:35AM +0530, Shailendra Verma wrote:
-> of_match_device could return NULL, and so can cause a NULL
-> pointer dereference later.
+It is quite a key patchset, I would be glad if they can test on their
+respective platforms with IORT.
+
+On Mon, Jan 23, 2017 at 09:48:10PM +0530, Sricharan R wrote:
+> This is an equivalent to the DT's handling of the iommu master's probe
+> with deferred probing when the corrsponding iommu is not probed yet.
+> The lack of a registered IOMMU can be caused by the lack of a driver for
+> the IOMMU, the IOMMU device probe not having been performed yet, having
+> been deferred, or having failed.
 > 
-> Signed-off-by: Shailendra Verma <shailendra.v@samsung.com>
+> The first case occurs when the firmware describes the bus master and
+> IOMMU topology correctly but no device driver exists for the IOMMU yet
+> or the device driver has not been compiled in. Return NULL, the caller
+> will configure the device without an IOMMU.
+> 
+> The second and third cases are handled by deferring the probe of the bus
+> master device which will eventually get reprobed after the IOMMU.
+> 
+> The last case is currently handled by deferring the probe of the bus
+> master device as well. A mechanism to either configure the bus master
+> device without an IOMMU or to fail the bus master device probe depending
+> on whether the IOMMU is optional or mandatory would be a good
+> enhancement.
+> 
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 > ---
->  drivers/pci/host/pcie-hisi.c |    4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
+>  drivers/acpi/scan.c        |  7 +++++--
+>  drivers/base/dma-mapping.c |  2 +-
+>  include/acpi/acpi_bus.h    |  2 +-
+>  include/linux/acpi.h       |  7 +++++--
+>  5 files changed, 36 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 56154c2..3256f8f 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -174,6 +174,10 @@ static int hisi_pcie_probe(struct platform_device *pdev)
->  	driver = dev->driver;
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index bf0ed09..d01bae8 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>  			return NULL;
 >  
->  	match = of_match_device(driver->of_match_table, dev);
-> +	if (!match) {
-> +		dev_err(dev, "Error: No device match found\n");
-> +		return -ENODEV;
+>  		ops = iommu_get_instance(iort_fwnode);
+> +		/*
+> +		 * If the ops look-up fails, this means that either
+> +		 * the SMMU drivers have not been probed yet or that
+> +		 * the SMMU drivers are not built in the kernel;
+> +		 * Depending on whether the SMMU drivers are built-in
+> +		 * in the kernel or not, defer the IOMMU configuration
+> +		 * or just abort it.
+> +		 */
+>  		if (!ops)
+> -			return NULL;
+> +			return iort_iommu_driver_enabled(node->type) ?
+> +			       ERR_PTR(-EPROBE_DEFER) : NULL;
+>  
+>  		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
+>  	}
+> @@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>  
+>  		while (parent) {
+>  			ops = iort_iommu_xlate(dev, parent, streamid);
+> +			if (IS_ERR_OR_NULL(ops))
+> +				return ops;
+>  
+>  			parent = iort_node_get_id(node, &streamid,
+>  						  IORT_IOMMU_TYPE, i++);
+>  		}
+>  	}
+>  
+> +	/*
+> +	 * If we have reason to believe the IOMMU driver missed the initial
+> +	 * add_device callback for dev, replay it to get things in order.
+> +	 */
+> +	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
+> +	    dev->bus && !dev->iommu_group) {
+> +		int err = ops->add_device(dev);
+> +
+> +		if (err)
+> +			ops = ERR_PTR(err);
 > +	}
->  	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
+
+I think there is nothing ACPI specific in this add_device() replay
+path, so there is room for further DT/ACPI consolidation here.
+
+Without any further ado:
+
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+> +
+>  	return ops;
+>  }
 >  
->  	hisi_pcie->subctrl =
-
-I like this patch and I think it's correct.  I'd like an ack from Zhou
-and/or Gabriele, and I'd propose the following tweak, which just moves the
-check earlier, before we start allocating this:
-
-
-commit 0bd4137b946cab412d612ae155f3b268f2f0a856
-Author: Shailendra Verma <shailendra.v@samsung.com>
-Date:   Mon Jan 30 10:19:35 2017 +0530
-
-    PCI: hisi: Check of_match_device() return value
-    
-    of_match_device() could return NULL, and so can cause a NULL pointer
-    dereference later.  Check the result first, before we start setting up
-    things that need to be undone if it fails.
-    
-    [bhelgaas: check earlier, changelog]
-    Signed-off-by: Shailendra Verma <shailendra.v@samsung.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index a301a7187b30..0f0521169a3c 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -264,6 +264,10 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	struct device_driver *driver;
- 	int ret;
- 
-+	match = of_match_device(driver->of_match_table, dev);
-+	if (!match)
-+		return -ENODEV;
-+
- 	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
- 	if (!hisi_pcie)
- 		return -ENOMEM;
-@@ -272,7 +276,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	pp->dev = dev;
- 	driver = dev->driver;
- 
--	match = of_match_device(driver->of_match_table, dev);
- 	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
- 
- 	hisi_pcie->subctrl =
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 1926918..823b005 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1373,20 +1373,23 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>   * @dev: The pointer to the device
+>   * @attr: device dma attributes
+>   */
+> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>  {
+>  	const struct iommu_ops *iommu;
+>  
+>  	iort_set_dma_mask(dev);
+>  
+>  	iommu = iort_iommu_configure(dev);
+> -
+> +	if (IS_ERR(iommu))
+> +		return PTR_ERR(iommu);
+>  	/*
+>  	 * Assume dma valid range starts at 0 and covers the whole
+>  	 * coherent_dma_mask.
+>  	 */
+>  	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+>  			   attr == DEV_DMA_COHERENT);
+> +
+> +	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_dma_configure);
+>  
+> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+> index 82bd45c..755a2b5 100644
+> --- a/drivers/base/dma-mapping.c
+> +++ b/drivers/base/dma-mapping.c
+> @@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
+>  	} else if (has_acpi_companion(dma_dev)) {
+>  		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
+>  		if (attr != DEV_DMA_NOT_SUPPORTED)
+> -			acpi_dma_configure(dev, attr);
+> +			ret = acpi_dma_configure(dev, attr);
+>  	}
+>  
+>  	if (bridge)
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 4242c31..9aa762fe 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -573,7 +573,7 @@ struct acpi_pci_root {
+>  
+>  bool acpi_dma_supported(struct acpi_device *adev);
+>  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
+> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+>  void acpi_dma_deconfigure(struct device *dev);
+>  
+>  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 5b36974..8b958b6 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -764,8 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>  	return DEV_DMA_NOT_SUPPORTED;
+>  }
+>  
+> -static inline void acpi_dma_configure(struct device *dev,
+> -				      enum dev_dma_attr attr) { }
+> +static inline int acpi_dma_configure(struct device *dev,
+> +				     enum dev_dma_attr attr)
+> +{
+> +	return 0;
+> +}
+>  
+>  static inline void acpi_dma_deconfigure(struct device *dev) { }
+>  
+> -- 
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> 
