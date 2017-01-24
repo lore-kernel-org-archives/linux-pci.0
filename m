@@ -1,626 +1,342 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-To: linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: exynos: refactor exynos pcie driver
-Date: Thu, 05 Jan 2017 09:23:38 +0530
-Message-id: <1483588418-2551-1-git-send-email-pankaj.dubey@samsung.com>
-References: <CGME20170105035104epcas1p2de6c52e577dd78a4f3539fb32d1f0dfe@epcas1p2.samsung.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jingoohan1@gmail.com, Niyas Ahmed S T <niyas.ahmed@samsung.com>,
- krzk@kernel.org, jh80.chung@samsung.com, kgene@kernel.org,
- alim.akhtar@samsung.com, Pankaj Dubey <pankaj.dubey@samsung.com>,
- bhelgaas@google.com, sanath@samsung.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:39936 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbdAXGdv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2017 01:33:51 -0500
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
+        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V5 5/5] LPC: Add the ACPI LPC support
+Date: Tue, 24 Jan 2017 15:05:25 +0800
+Message-ID: <1485241525-201782-6-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+The patch update the _CRS of LPC children with the system logical I/O resource
+after the translation from LPC-local I/O. Then the ACPI platform device
+enumeration for LPC can apply the right I/O resource to request the system I/O
+space.
 
-Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
-This patch does refactoring of Exynos PCIe driver to extend support
-for other Exynos SoC.
-
-Following are the main changes done via this patch:
-
-1) It adds separate structs for memory, clock resources.
-
-Reason behind this change is, moving ahead various Exynos SoC will
-have different hardware resources such as iomem, clocks, regmap handles
-etc. for PCIe controller, so keeping these resources in separate struct
-will help us in intiailizing them via per SoC ops, and will avoid too
-many of_machine_is_compatible in code, and help us simplifying
-exynos_pcie struct.
-
-2) It add exynos_pcie_ops struct which will allow us to support the
-differences in resources in different Exynos SoC.
-
-No functional change intended.
-
-Signed-off-by: Niyas Ahmed S T <niyas.ahmed@samsung.com>
-Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
 ---
-This patch set is prepared on top of Krzysztof's for-next and
-PCIe driver cleanup patch [1] by Jaehoon Chung.
+ drivers/bus/hisi_lpc.c |  26 ++++++
+ include/linux/extio.h  |   4 +
+ lib/extio.c            | 228 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 258 insertions(+)
 
-[1]: https://lkml.org/lkml/2016/12/19/44
-
-Changes from v1:
- - Addressed review comments from Krzysztof and Jingoo Han.
-
- drivers/pci/host/pci-exynos.c | 348 ++++++++++++++++++++++++++----------------
- 1 file changed, 219 insertions(+), 129 deletions(-)
-
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 33562cf..d91751b 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -17,6 +17,7 @@
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-@@ -28,16 +29,6 @@
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+index a96e384..8d52666 100644
+--- a/drivers/bus/hisi_lpc.c
++++ b/drivers/bus/hisi_lpc.c
+@@ -583,6 +583,32 @@ static int hisilpc_bus_platform_notify(struct notifier_block *nb,
+ 	/* register the linux virtual IO range node to list. */
+ 	register_extio(io_node);
  
- #define to_exynos_pcie(x)	container_of(x, struct exynos_pcie, pp)
++	/*
++	 * For ACPI children, translate the bus-local I/O range to logical
++	 * I/O range and set it as the current resource before the children
++	 * are enumerated.
++	 */
++	if (has_acpi_companion(dev)) {
++		struct acpi_device *root, *child;
++
++		root = to_acpi_device_node(dev->fwnode);
++		/* For hisilpc, only care about the sons of host. */
++		list_for_each_entry(child, &root->children, node) {
++			ret = acpi_set_extio_resource(child, root);
++			if (ret) {
++				dev_err(dev, "set resource failed..\n");
++				break;
++			}
++		}
++
++		if (ret) {
++			list_del(&io_node->list);
++			kfree(io_node);
++			dev_err(dev, "notify handling failed..\n");
++			return NOTIFY_DONE;
++		}
++	}
++
+ 	return NOTIFY_OK;
+ }
  
--struct exynos_pcie {
--	struct pcie_port	pp;
--	void __iomem		*elbi_base;	/* DT 0th resource */
--	void __iomem		*phy_base;	/* DT 1st resource */
--	void __iomem		*block_base;	/* DT 2nd resource */
--	int			reset_gpio;
--	struct clk		*clk;
--	struct clk		*bus_clk;
--};
--
- /* PCIe ELBI registers */
- #define PCIE_IRQ_PULSE			0x000
- #define IRQ_INTA_ASSERT			BIT(0)
-@@ -102,6 +93,122 @@ struct exynos_pcie {
- #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
- #define PCIE_PHY_TRSV3_LVCC		0x31c
+diff --git a/include/linux/extio.h b/include/linux/extio.h
+index 2ca7eab..c07607e 100644
+--- a/include/linux/extio.h
++++ b/include/linux/extio.h
+@@ -20,6 +20,7 @@
  
-+struct exynos_pcie_mem_res {
-+	void __iomem *elbi_base; /* DT 0th resource: PCIE CTRL */
-+	void __iomem *phy_base; /* DT 1st resource: PHY CTRL */
-+	void __iomem *block_base; /* DT 2nd resource: PHY ADDITIONAL CTRL */
-+};
+ #ifdef __KERNEL__
+ 
++#include <linux/acpi.h>
+ #include <linux/fwnode.h>
+ 
+ struct extio_ops {
+@@ -81,5 +82,8 @@ static inline struct extio_node *extio_find_node(struct fwnode_handle *node)
+ #endif
+ extern void register_extio(struct extio_node *node);
+ 
++extern int acpi_set_extio_resource(struct acpi_device *adev,
++		struct acpi_device *host);
 +
-+struct exynos_pcie_clk_res {
-+	struct clk *clk;
-+	struct clk *bus_clk;
-+};
-+
-+struct exynos_pcie {
-+	struct pcie_port		pp;
-+	struct exynos_pcie_mem_res	*mem_res;
-+	struct exynos_pcie_clk_res	*clk_res;
-+	const struct exynos_pcie_ops	*ops;
-+	int				reset_gpio;
-+};
-+
-+struct exynos_pcie_ops {
-+	int (*get_mem_resources)(struct platform_device *pdev,
-+			struct exynos_pcie *ep);
-+	int (*get_clk_resources)(struct exynos_pcie *ep);
-+	int (*init_clk_resources)(struct exynos_pcie *ep);
-+	void (*deinit_clk_resources)(struct exynos_pcie *ep);
-+};
-+
-+static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
-+						struct exynos_pcie *ep)
+ #endif /* __KERNEL__ */
+ #endif /* __LINUX_EXTIO_H */
+diff --git a/lib/extio.c b/lib/extio.c
+index 46228de..47f5913 100644
+--- a/lib/extio.c
++++ b/lib/extio.c
+@@ -75,6 +75,234 @@ unsigned long extio_translate(struct fwnode_handle *node,
+ 	return port_id;
+ }
+ 
++static inline bool acpi_extio_supported_resource(struct acpi_resource *res)
 +{
-+	struct resource *res;
-+	struct device *dev = ep->pp.dev;
++	switch (res->type) {
++	case ACPI_RESOURCE_TYPE_ADDRESS16:
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++	case ACPI_RESOURCE_TYPE_ADDRESS64:
++		return true;
++	}
++	return false;
++}
 +
-+	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
-+	if (!ep->mem_res)
++static acpi_status acpi_count_extiores(struct acpi_resource *res,
++					   void *data)
++{
++	int *res_cnt = data;
++
++	if (acpi_extio_supported_resource(res) &&
++		!acpi_dev_filter_resource_type(res, IORESOURCE_IO))
++		(*res_cnt)++;
++
++	return AE_OK;
++}
++
++static acpi_status acpi_read_one_extiores(struct acpi_resource *res,
++		void *data)
++{
++	struct acpi_resource **resource = data;
++
++	if (acpi_extio_supported_resource(res) &&
++		!acpi_dev_filter_resource_type(res, IORESOURCE_IO)) {
++		memcpy((*resource), res, sizeof(struct acpi_resource));
++		(*resource)->length = sizeof(struct acpi_resource);
++		(*resource)->type = res->type;
++		(*resource)++;
++	}
++
++	return AE_OK;
++}
++
++static acpi_status
++acpi_build_extiores_template(struct acpi_device *adev,
++			struct acpi_buffer *buffer)
++{
++	acpi_handle handle = adev->handle;
++	struct acpi_resource *resource;
++	acpi_status status;
++	int res_cnt = 0;
++
++	status = acpi_walk_resources(handle, METHOD_NAME__PRS,
++				     acpi_count_extiores, &res_cnt);
++	if (ACPI_FAILURE(status) || !res_cnt) {
++		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
++		return -EINVAL;
++	}
++
++	buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1) + 1;
++	buffer->pointer = kzalloc(buffer->length - 1, GFP_KERNEL);
++	if (!buffer->pointer)
 +		return -ENOMEM;
 +
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	ep->mem_res->elbi_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ep->mem_res->elbi_base))
-+		return PTR_ERR(ep->mem_res->elbi_base);
++	resource = (struct acpi_resource *)buffer->pointer;
++	status = acpi_walk_resources(handle, METHOD_NAME__PRS,
++				     acpi_read_one_extiores, &resource);
++	if (ACPI_FAILURE(status)) {
++		kfree(buffer->pointer);
++		dev_err(&adev->dev, "can't evaluate _PRS: %d\n", status);
++		return -EINVAL;
++	}
 +
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ep->mem_res->phy_base))
-+		return PTR_ERR(ep->mem_res->phy_base);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-+	ep->mem_res->block_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ep->mem_res->block_base))
-+		return PTR_ERR(ep->mem_res->block_base);
++	resource->type = ACPI_RESOURCE_TYPE_END_TAG;
++	resource->length = sizeof(struct acpi_resource);
 +
 +	return 0;
 +}
 +
-+static int exynos5440_pcie_get_clk_resources(struct exynos_pcie *ep)
++static int acpi_translate_extiores(struct acpi_device *adev,
++		struct acpi_device *host, struct acpi_buffer *buffer)
 +{
-+	struct device *dev = ep->pp.dev;
++	int res_cnt = (buffer->length - 1) / sizeof(struct acpi_resource) - 1;
++	struct acpi_resource *resource = buffer->pointer;
++	struct acpi_resource_address64 addr;
++	unsigned long sys_port;
++	struct device *dev = &adev->dev;
 +
-+	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
-+	if (!ep->clk_res)
-+		return -ENOMEM;
-+
-+	ep->clk_res->clk = devm_clk_get(dev, "pcie");
-+	if (IS_ERR(ep->clk_res->clk)) {
-+		dev_err(dev, "Failed to get pcie rc clock\n");
-+		return PTR_ERR(ep->clk_res->clk);
++	/* only one I/O resource now */
++	if (res_cnt != 1) {
++		dev_err(dev, "encode %d resources whose type is(%d)!\n",
++			res_cnt, resource->type);
++		return -EINVAL;
 +	}
 +
-+	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
-+	if (IS_ERR(ep->clk_res->bus_clk)) {
-+		dev_err(dev, "Failed to get pcie bus clock\n");
-+		return PTR_ERR(ep->clk_res->bus_clk);
++	if (ACPI_FAILURE(acpi_resource_to_address64(resource, &addr))) {
++		dev_err(dev, "convert acpi resource(%d) as addr64 FAIL!\n",
++			resource->type);
++		return -EFAULT;
++	}
++
++	/* For indirect-IO, addr length must be fixed. (>0, 0, 0) */
++	if (!addr.address.address_length || addr.min_address_fixed ||
++		addr.max_address_fixed) {
++		dev_warn(dev, "variable I/O resource is invalid!\n");
++		return -EINVAL;
++	}
++
++	sys_port = extio_translate(&host->fwnode, addr.address.minimum);
++	if (sys_port == -1) {
++		dev_err(dev, "translate bus-addr(0x%llx) fail!\n",
++			addr.address.minimum);
++		return -EFAULT;
++	}
++
++	switch (resource->type) {
++	case ACPI_RESOURCE_TYPE_ADDRESS16:
++	{
++		struct acpi_resource_address16 *out_res;
++
++		out_res = &resource->data.address16;
++		out_res->address.minimum = sys_port;
++		out_res->address.maximum = sys_port +
++			addr.address.address_length - 1;
++
++		dev_info(dev, "_SRS 16IO: [0x%x - 0x%x]\n",
++			out_res->address.minimum,
++			out_res->address.maximum);
++
++		break;
++	}
++
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++	{
++		struct acpi_resource_address32 *out_res;
++
++		out_res = &resource->data.address32;
++		out_res->address.minimum = sys_port;
++		out_res->address.maximum = sys_port +
++			addr.address.address_length - 1;
++
++		dev_info(dev, "_SRS 32IO: [0x%x - 0x%x]\n",
++			out_res->address.minimum,
++			out_res->address.maximum);
++
++		break;
++	}
++
++	case ACPI_RESOURCE_TYPE_ADDRESS64:
++	{
++		struct acpi_resource_address64 *out_res;
++
++		out_res = &resource->data.address64;
++		out_res->address.minimum = sys_port;
++		out_res->address.maximum = sys_port +
++			addr.address.address_length - 1;
++
++		dev_info(dev, "_SRS 64IO: [0x%llx - 0x%llx]\n",
++			out_res->address.minimum,
++			out_res->address.maximum);
++
++		break;
++	}
++
++	default:
++		return -EINVAL;
++
 +	}
 +
 +	return 0;
 +}
 +
-+static int exynos5440_pcie_init_clk_resources(struct exynos_pcie *ep)
++/*
++ * update/set the current I/O resource of the designated device node.
++ * after this calling, the enumeration can be started as the I/O resource
++ * had been translated to logicial I/O from bus-local I/O.
++ *
++ * @adev: the device node to be updated the I/O resource;
++ * @host: the device node where 'adev' is attached, which can be not
++ *	the parent of 'adev';
++ *
++ * return 0 when successful, negative is for failure.
++ */
++int acpi_set_extio_resource(struct acpi_device *adev,
++		struct acpi_device *host)
 +{
-+	struct device *dev = ep->pp.dev;
++	struct device *dev = &adev->dev;
++	struct acpi_buffer buffer;
++	acpi_status status;
 +	int ret;
 +
-+	ret = clk_prepare_enable(ep->clk_res->clk);
++	if (!host)
++		return -EINVAL;
++
++	/* check the device state */
++	if (!adev->status.present) {
++		dev_info(dev, "ACPI: device is not present!\n");
++		return 0;
++	}
++	/* whether the child had been enumerated? */
++	if (acpi_device_enumerated(adev)) {
++		dev_info(dev, "ACPI: had been enumerated!\n");
++		return 0;
++	}
++
++	/* read the _PRS and convert as acpi_buffer */
++	status = acpi_build_extiores_template(adev, &buffer);
++	if (ACPI_FAILURE(status)) {
++		dev_warn(dev, "Failure evaluating %s\n",
++				METHOD_NAME__PRS);
++		return -ENODEV;
++	}
++
++	/* translate the I/O resources */
++	ret = acpi_translate_extiores(adev, host, &buffer);
 +	if (ret) {
-+		dev_err(dev, "cannot enable pcie rc clock");
++		kfree(buffer.pointer);
++		dev_err(dev, "Translate I/O range FAIL!\n");
 +		return ret;
 +	}
 +
-+	ret = clk_prepare_enable(ep->clk_res->bus_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot enable pcie bus clock");
-+		goto err_bus_clk;
++	/* set current resource... */
++	status = acpi_set_current_resources(adev->handle, &buffer);
++	kfree(buffer.pointer);
++	if (ACPI_FAILURE(status)) {
++		dev_err(dev, "Error evaluating _SRS (0x%x)\n", status);
++		ret = -EIO;
 +	}
-+
-+	return 0;
-+
-+err_bus_clk:
-+	clk_disable_unprepare(ep->clk_res->clk);
 +
 +	return ret;
 +}
 +
-+static void exynos5440_pcie_deinit_clk_resources(struct exynos_pcie *ep)
-+{
-+	clk_disable_unprepare(ep->clk_res->bus_clk);
-+	clk_disable_unprepare(ep->clk_res->clk);
-+}
-+
-+static const struct exynos_pcie_ops exynos5440_pcie_ops = {
-+	.get_mem_resources	= exynos5440_pcie_get_mem_resources,
-+	.get_clk_resources	= exynos5440_pcie_get_clk_resources,
-+	.init_clk_resources	= exynos5440_pcie_init_clk_resources,
-+	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
-+};
-+
- static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
- {
- 	writel(val, base + reg);
-@@ -116,155 +223,155 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
+ #ifdef PCI_IOBASE
  
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_AWMISC);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_ELBI_SLV_AWMISC);
- 	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_ELBI_SLV_AWMISC);
- }
- 
- static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *ep, bool on)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_ELBI_SLV_ARMISC);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_ELBI_SLV_ARMISC);
- 	if (on)
- 		val |= PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_ELBI_SLV_ARMISC);
- }
- 
- static void exynos_pcie_assert_core_reset(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_CORE_RESET);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_CORE_RESET);
- 	val &= ~PCIE_CORE_RESET_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_CORE_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, PCIE_PWR_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, PCIE_STICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, PCIE_NONSTICKY_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_CORE_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_PWR_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_STICKY_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_NONSTICKY_RESET);
- }
- 
- static void exynos_pcie_deassert_core_reset(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_CORE_RESET);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_CORE_RESET);
- 	val |= PCIE_CORE_RESET_ENABLE;
- 
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_CORE_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, PCIE_STICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, PCIE_NONSTICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, PCIE_APP_INIT_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, PCIE_APP_INIT_RESET);
--	exynos_pcie_writel(ep->block_base, 1, PCIE_PHY_MAC_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_CORE_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_STICKY_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_NONSTICKY_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_APP_INIT_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_APP_INIT_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_MAC_RESET);
- }
- 
- static void exynos_pcie_assert_phy_reset(struct exynos_pcie *ep)
- {
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_MAC_RESET);
--	exynos_pcie_writel(ep->block_base, 1, PCIE_PHY_GLOBAL_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_MAC_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_GLOBAL_RESET);
- }
- 
- static void exynos_pcie_deassert_phy_reset(struct exynos_pcie *ep)
- {
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_GLOBAL_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, PCIE_PWR_RESET);
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_COMMON_RESET);
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_CMN_REG);
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_TRSVREG_RESET);
--	exynos_pcie_writel(ep->block_base, 0, PCIE_PHY_TRSV_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_GLOBAL_RESET);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_PWR_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_COMMON_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_CMN_REG);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_TRSVREG_RESET);
-+	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_TRSV_RESET);
- }
- 
- static void exynos_pcie_power_on_phy(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_COMMON_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_COMMON_POWER);
- 	val &= ~PCIE_PHY_COMMON_PD_CMN;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_COMMON_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_COMMON_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV0_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV0_POWER);
- 	val &= ~PCIE_PHY_TRSV0_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV0_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV0_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV1_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV1_POWER);
- 	val &= ~PCIE_PHY_TRSV1_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV1_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV1_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV2_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV2_POWER);
- 	val &= ~PCIE_PHY_TRSV2_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV2_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV2_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV3_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV3_POWER);
- 	val &= ~PCIE_PHY_TRSV3_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV3_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV3_POWER);
- }
- 
- static void exynos_pcie_power_off_phy(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_COMMON_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_COMMON_POWER);
- 	val |= PCIE_PHY_COMMON_PD_CMN;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_COMMON_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_COMMON_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV0_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV0_POWER);
- 	val |= PCIE_PHY_TRSV0_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV0_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV0_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV1_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV1_POWER);
- 	val |= PCIE_PHY_TRSV1_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV1_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV1_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV2_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV2_POWER);
- 	val |= PCIE_PHY_TRSV2_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV2_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV2_POWER);
- 
--	val = exynos_pcie_readl(ep->phy_base, PCIE_PHY_TRSV3_POWER);
-+	val = exynos_pcie_readl(ep->mem_res->phy_base, PCIE_PHY_TRSV3_POWER);
- 	val |= PCIE_PHY_TRSV3_PD_TSV;
--	exynos_pcie_writel(ep->phy_base, val, PCIE_PHY_TRSV3_POWER);
-+	exynos_pcie_writel(ep->mem_res->phy_base, val, PCIE_PHY_TRSV3_POWER);
- }
- 
- static void exynos_pcie_init_phy(struct exynos_pcie *ep)
- {
- 	/* DCC feedback control off */
--	exynos_pcie_writel(ep->phy_base, 0x29, PCIE_PHY_DCC_FEEDBACK);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x29, PCIE_PHY_DCC_FEEDBACK);
- 
- 	/* set TX/RX impedance */
--	exynos_pcie_writel(ep->phy_base, 0xd5, PCIE_PHY_IMPEDANCE);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0xd5, PCIE_PHY_IMPEDANCE);
- 
- 	/* set 50Mhz PHY clock */
--	exynos_pcie_writel(ep->phy_base, 0x14, PCIE_PHY_PLL_DIV_0);
--	exynos_pcie_writel(ep->phy_base, 0x12, PCIE_PHY_PLL_DIV_1);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x14, PCIE_PHY_PLL_DIV_0);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x12, PCIE_PHY_PLL_DIV_1);
- 
- 	/* set TX Differential output for lane 0 */
--	exynos_pcie_writel(ep->phy_base, 0x7f, PCIE_PHY_TRSV0_DRV_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x7f, PCIE_PHY_TRSV0_DRV_LVL);
- 
- 	/* set TX Pre-emphasis Level Control for lane 0 to minimum */
--	exynos_pcie_writel(ep->phy_base, 0x0, PCIE_PHY_TRSV0_EMP_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x0, PCIE_PHY_TRSV0_EMP_LVL);
- 
- 	/* set RX clock and data recovery bandwidth */
--	exynos_pcie_writel(ep->phy_base, 0xe7, PCIE_PHY_PLL_BIAS);
--	exynos_pcie_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV0_RXCDR);
--	exynos_pcie_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV1_RXCDR);
--	exynos_pcie_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV2_RXCDR);
--	exynos_pcie_writel(ep->phy_base, 0x82, PCIE_PHY_TRSV3_RXCDR);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0xe7, PCIE_PHY_PLL_BIAS);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x82, PCIE_PHY_TRSV0_RXCDR);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x82, PCIE_PHY_TRSV1_RXCDR);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x82, PCIE_PHY_TRSV2_RXCDR);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x82, PCIE_PHY_TRSV3_RXCDR);
- 
- 	/* change TX Pre-emphasis Level Control for lanes */
--	exynos_pcie_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV0_EMP_LVL);
--	exynos_pcie_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV1_EMP_LVL);
--	exynos_pcie_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV2_EMP_LVL);
--	exynos_pcie_writel(ep->phy_base, 0x39, PCIE_PHY_TRSV3_EMP_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x39, PCIE_PHY_TRSV0_EMP_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x39, PCIE_PHY_TRSV1_EMP_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x39, PCIE_PHY_TRSV2_EMP_LVL);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x39, PCIE_PHY_TRSV3_EMP_LVL);
- 
- 	/* set LVCC */
--	exynos_pcie_writel(ep->phy_base, 0x20, PCIE_PHY_TRSV0_LVCC);
--	exynos_pcie_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV1_LVCC);
--	exynos_pcie_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV2_LVCC);
--	exynos_pcie_writel(ep->phy_base, 0xa0, PCIE_PHY_TRSV3_LVCC);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0x20, PCIE_PHY_TRSV0_LVCC);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0, PCIE_PHY_TRSV1_LVCC);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0, PCIE_PHY_TRSV2_LVCC);
-+	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0, PCIE_PHY_TRSV3_LVCC);
- }
- 
- static void exynos_pcie_assert_reset(struct exynos_pcie *exynos_pcie)
-@@ -295,25 +402,27 @@ static int exynos_pcie_establish_link(struct exynos_pcie *exynos_pcie)
- 	exynos_pcie_init_phy(exynos_pcie);
- 
- 	/* pulse for common reset */
--	exynos_pcie_writel(exynos_pcie->block_base, 1, PCIE_PHY_COMMON_RESET);
-+	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
-+				PCIE_PHY_COMMON_RESET);
- 	udelay(500);
--	exynos_pcie_writel(exynos_pcie->block_base, 0, PCIE_PHY_COMMON_RESET);
-+	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
-+				PCIE_PHY_COMMON_RESET);
- 
- 	exynos_pcie_deassert_core_reset(exynos_pcie);
- 	dw_pcie_setup_rc(pp);
- 	exynos_pcie_assert_reset(exynos_pcie);
- 
- 	/* assert LTSSM enable */
--	exynos_pcie_writel(exynos_pcie->elbi_base, PCIE_ELBI_LTSSM_ENABLE,
--			  PCIE_APP_LTSSM_ENABLE);
-+	exynos_pcie_writel(exynos_pcie->mem_res->elbi_base,
-+			PCIE_ELBI_LTSSM_ENABLE, PCIE_APP_LTSSM_ENABLE);
- 
- 	/* check if the link is up or not */
- 	if (!dw_pcie_wait_for_link(pp))
- 		return 0;
- 
--	while (exynos_pcie_readl(exynos_pcie->phy_base,
-+	while (exynos_pcie_readl(exynos_pcie->mem_res->phy_base,
- 				PCIE_PHY_PLL_LOCKED) == 0) {
--		val = exynos_pcie_readl(exynos_pcie->block_base,
-+		val = exynos_pcie_readl(exynos_pcie->mem_res->block_base,
- 				PCIE_PHY_PLL_LOCKED);
- 		dev_info(dev, "PLL Locked: 0x%x\n", val);
- 	}
-@@ -325,8 +434,8 @@ static void exynos_pcie_clear_irq_pulse(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_IRQ_PULSE);
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_IRQ_PULSE);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_IRQ_PULSE);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_PULSE);
- }
- 
- static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
-@@ -336,7 +445,7 @@ static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
- 	/* enable INTX interrupt */
- 	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
- 		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_IRQ_EN_PULSE);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_PULSE);
- }
- 
- static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
-@@ -363,9 +472,9 @@ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
- 	dw_pcie_msi_init(pp);
- 
- 	/* enable MSI interrupt */
--	val = exynos_pcie_readl(ep->elbi_base, PCIE_IRQ_EN_LEVEL);
-+	val = exynos_pcie_readl(ep->mem_res->elbi_base, PCIE_IRQ_EN_LEVEL);
- 	val |= IRQ_MSI_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, PCIE_IRQ_EN_LEVEL);
-+	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_LEVEL);
- }
- 
- static void exynos_pcie_enable_interrupts(struct exynos_pcie *exynos_pcie)
-@@ -425,7 +534,8 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
- 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
- 	u32 val;
- 
--	val = exynos_pcie_readl(exynos_pcie->elbi_base, PCIE_ELBI_RDLH_LINKUP);
-+	val = exynos_pcie_readl(exynos_pcie->mem_res->elbi_base,
-+					PCIE_ELBI_RDLH_LINKUP);
- 	if (val == PCIE_ELBI_LTSSM_ENABLE)
- 		return 1;
- 
-@@ -503,7 +613,6 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 	struct exynos_pcie *exynos_pcie;
- 	struct pcie_port *pp;
- 	struct device_node *np = dev->of_node;
--	struct resource *res;
- 	int ret;
- 
- 	exynos_pcie = devm_kzalloc(dev, sizeof(*exynos_pcie), GFP_KERNEL);
-@@ -513,59 +622,37 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 	pp = &exynos_pcie->pp;
- 	pp->dev = dev;
- 
--	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
--
--	exynos_pcie->clk = devm_clk_get(dev, "pcie");
--	if (IS_ERR(exynos_pcie->clk)) {
--		dev_err(dev, "Failed to get pcie rc clock\n");
--		return PTR_ERR(exynos_pcie->clk);
--	}
--	ret = clk_prepare_enable(exynos_pcie->clk);
--	if (ret)
--		return ret;
-+	exynos_pcie->ops = (const struct exynos_pcie_ops *)
-+				of_device_get_match_data(dev);
- 
--	exynos_pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
--	if (IS_ERR(exynos_pcie->bus_clk)) {
--		dev_err(dev, "Failed to get pcie bus clock\n");
--		ret = PTR_ERR(exynos_pcie->bus_clk);
--		goto fail_clk;
--	}
--	ret = clk_prepare_enable(exynos_pcie->bus_clk);
--	if (ret)
--		goto fail_clk;
-+	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	exynos_pcie->elbi_base = devm_ioremap_resource(dev, res);
--	if (IS_ERR(exynos_pcie->elbi_base)) {
--		ret = PTR_ERR(exynos_pcie->elbi_base);
--		goto fail_bus_clk;
-+	if (exynos_pcie->ops && exynos_pcie->ops->get_mem_resources) {
-+		ret = exynos_pcie->ops->get_mem_resources(pdev, exynos_pcie);
-+		if (ret)
-+			return ret;
- 	}
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	exynos_pcie->phy_base = devm_ioremap_resource(dev, res);
--	if (IS_ERR(exynos_pcie->phy_base)) {
--		ret = PTR_ERR(exynos_pcie->phy_base);
--		goto fail_bus_clk;
--	}
-+	if (exynos_pcie->ops && exynos_pcie->ops->get_clk_resources) {
-+		ret = exynos_pcie->ops->get_clk_resources(exynos_pcie);
-+		if (ret)
-+			return ret;
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
--	exynos_pcie->block_base = devm_ioremap_resource(dev, res);
--	if (IS_ERR(exynos_pcie->block_base)) {
--		ret = PTR_ERR(exynos_pcie->block_base);
--		goto fail_bus_clk;
-+		ret = exynos_pcie->ops->init_clk_resources(exynos_pcie);
-+		if (ret)
-+			return ret;
- 	}
- 
- 	ret = exynos_add_pcie_port(exynos_pcie, pdev);
- 	if (ret < 0)
--		goto fail_bus_clk;
-+		goto fail_probe;
- 
- 	platform_set_drvdata(pdev, exynos_pcie);
- 	return 0;
- 
--fail_bus_clk:
--	clk_disable_unprepare(exynos_pcie->bus_clk);
--fail_clk:
--	clk_disable_unprepare(exynos_pcie->clk);
-+fail_probe:
-+	if (exynos_pcie->ops && exynos_pcie->ops->deinit_clk_resources)
-+		exynos_pcie->ops->deinit_clk_resources(exynos_pcie);
- 	return ret;
- }
- 
-@@ -573,14 +660,17 @@ static int __exit exynos_pcie_remove(struct platform_device *pdev)
- {
- 	struct exynos_pcie *exynos_pcie = platform_get_drvdata(pdev);
- 
--	clk_disable_unprepare(exynos_pcie->bus_clk);
--	clk_disable_unprepare(exynos_pcie->clk);
-+	if (exynos_pcie->ops && exynos_pcie->ops->deinit_clk_resources)
-+		exynos_pcie->ops->deinit_clk_resources(exynos_pcie);
- 
- 	return 0;
- }
- 
- static const struct of_device_id exynos_pcie_of_match[] = {
--	{ .compatible = "samsung,exynos5440-pcie", },
-+	{
-+		.compatible = "samsung,exynos5440-pcie",
-+		.data = &exynos5440_pcie_ops
-+	},
- 	{},
- };
- 
+ #define BUILD_EXTIO(bw, type)						\
 -- 
-2.7.4
+1.9.1
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
