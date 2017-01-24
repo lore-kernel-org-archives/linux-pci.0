@@ -1,101 +1,78 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 31 Jan 2017 18:26:30 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
-Message-ID: <20170131172630.GB12595@kroah.com>
-References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
- <1485882204-26947-2-git-send-email-logang@deltatee.com>
+Subject: [PATCH] PCI/ASPM: Allow drivers to disable ASPM even without OS
+ ASPM control
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Mathias Koehrer <mathias.koehrer@etas.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Sebastian Andrzej Siewior <sebastian.siewior@linutronix.de>,
+        Julia Cartwright <julia@ni.com>,
+        Joe Lawrence <joe.lawrence@stratus.com>,
+        linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@coreos.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Myron Stowe <myron.stowe@redhat.com>
+Date: Tue, 24 Jan 2017 14:23:01 -0600
+Message-ID: <20170124202301.20248.7452.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485882204-26947-2-git-send-email-logang@deltatee.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 10:03:24AM -0700, Logan Gunthorpe wrote:
-> Microsemi's "Switchtec" line of PCI switch devices is already well
-> supported by the kernel with standard PCI switch drivers. However, the
-> Switchtec device advertises a special management endpoint with a separate
-> PCI function address and class code. This endpoint enables some additional
-> functionality which includes:
-> 
->  * Packet and Byte Counters
->  * Switch Firmware Upgrades
->  * Event and Error logs
->  * Querying port link status
->  * Custom user firmware commands
-> 
-> This patch introduces the switchtec kernel module which provides
-> PCI driver that exposes a char device. The char device provides
-> userspace access to this interface through read, write and (optionally)
-> poll calls. A couple of special IOCTLs are provided to:
-> 
-> * Inform userspace of firmware partition locations
-> * Pass event counts and allow userspace to wait on events
-> 
-> A short text file is provided which documents the switchtec driver,
-> outlines the semantics of using the char device and describes the
-> IOCTLs.
-> 
-> The device also exposes a few read-only sysfs attributes which provide
-> some device information component names and versions which is provided
-> by the hardware. These are documented in
-> Documentation/ABI/testing/sysfs-class-switchtec
-> 
-> A userspace tool and library which utilizes this interface is available
-> at [1]. This tool takes inspiration (and borrows some code) from
-> nvme-cli [2]. The tool is largely complete at this time but additional
-> features may be added in the future.
-> 
-> [1] https://github.com/sbates130272/switchtec-user
-> [2] https://github.com/linux-nvme/nvme-cli
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
-> ---
->  Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
->  Documentation/ioctl/ioctl-number.txt            |    1 +
->  Documentation/switchtec.txt                     |   80 ++
->  MAINTAINERS                                     |   11 +
->  drivers/pci/Kconfig                             |    1 +
->  drivers/pci/Makefile                            |    1 +
->  drivers/pci/switch/Kconfig                      |   13 +
->  drivers/pci/switch/Makefile                     |    1 +
->  drivers/pci/switch/switchtec.c                  | 1320 +++++++++++++++++++++++
->  drivers/pci/switch/switchtec.h                  |  266 +++++
->  include/uapi/linux/switchtec_ioctl.h            |  129 +++
->  11 files changed, 1919 insertions(+)
+The ACPI FADT has a "PCIe ASPM Controls" bit (ACPI 5.0, sec 5.2.9.3), which
+means "If set, indicates to OSPM that it must not enable ASPM control on
+this platform."  We have historically interpreted that to mean that the OS
+should not touch ASPM configuration at all: we leave it as the firmware
+configured it.
 
-That's one big patch to review, would you want to do that?
+However, a driver may know that its device has issues with ASPM and should
+not have it enabled.  The platform firmware, which cannot be expected to
+know this, may have enabled ASPM.  The driver should be able to use
+pci_disable_link_state() to disable ASPM for its device, even if the
+firmware set the ACPI_FADT_NO_ASPM bit.
 
-Can you break it up into smaller parts?  At least put the documentation
-separately, right?
+Remove the check that prevents pci_disable_link_state() from disabling ASPM
+for a device.
 
-And don't dump a .txt file into Documentation/ anymore, people are
-working to move to the newer format.
+In cases where we previously emitted a message like this and did nothing:
 
-Also, please rebase against Linus's tree at the least, we can't go back
-in time and apply this to the 4.9 kernel tree.
+  e1000e 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
 
-thanks,
+we'll instead actually disable ASPM on the device.
 
-greg k-h
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=189951
+Reported-by: Mathias Koehrer <mathias.koehrer@etas.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Matthew Garrett <mjg59@coreos.com>
+CC: stable@vger.kernel.org
+---
+ drivers/pci/pcie/aspm.c |   16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 17ac1dce3286..9253ae48d777 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -736,18 +736,10 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 	if (!parent || !parent->link_state)
+ 		return;
+ 
+-	/*
+-	 * A driver requested that ASPM be disabled on this device, but
+-	 * if we don't have permission to manage ASPM (e.g., on ACPI
+-	 * systems we have to observe the FADT ACPI_FADT_NO_ASPM bit and
+-	 * the _OSC method), we can't honor that request.  Windows has
+-	 * a similar mechanism using "PciASPMOptOut", which is also
+-	 * ignored in this situation.
+-	 */
+-	if (aspm_disabled) {
+-		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
+-		return;
+-	}
++	dev_info(&pdev->dev, "disabling %sASPM%s%s\n",
++		 (state & PCIE_LINK_STATE_CLKPM) ? "Clock PM " : "",
++		 (state & PCIE_LINK_STATE_L0S) ? " L0s" : "",
++		 (state & PCIE_LINK_STATE_L1) ? " L1" : "");
+ 
+ 	if (sem)
+ 		down_read(&pci_bus_sem);
