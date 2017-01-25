@@ -1,94 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34324 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938973AbdAJNtr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2017 08:49:47 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org,
-        Gabriel Krisman Bertazi <gabriel@krisman.be>,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 4.9 136/206] genirq/affinity: Fix node generation from cpumask
-Date: Tue, 10 Jan 2017 14:36:59 +0100
-Message-Id: <20170110131508.995530540@linuxfoundation.org>
-In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
-References: <20170110131502.767555407@linuxfoundation.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 2/2] PCI: Xilinx NWL: Fix, proc interrupts for legacy
+ virtual irq shown as edge
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ bhelgaas@google.com, paul.gortmaker@windriver.com, robh@kernel.org,
+ colin.king@canonical.com, linux-pci@vger.kernel.org
+References: <1485334353-26815-1-git-send-email-bharatku@xilinx.com>
+ <1485334353-26815-2-git-send-email-bharatku@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <0833bdec-b05e-57c0-c740-ac7735036450@arm.com>
+Date: Wed, 25 Jan 2017 09:24:14 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1485334353-26815-2-git-send-email-bharatku@xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
+ Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On 25/01/17 08:52, Bharat Kumar Gogada wrote:
+> - Legacy interrupts are level triggered, virtual irq line of End
+> Point shows as edge in /proc/interrupts.
+> - Setting irq flags of virtual irq line of EP to level triggered
+> at the time of mapping.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> ---
+>  drivers/pci/host/pcie-xilinx-nwl.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+> index 6ac3e1d..1cddd1f 100644
+> --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> @@ -434,6 +434,7 @@ static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_level_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> +	irq_set_status_flags(irq, IRQ_LEVEL);
+>  
+>  	return 0;
+>  }
+> 
 
-------------------
+As said in my previous review [1], this should be folded in the previous
+patch, as it doesn't make much sense on its own.
 
-From: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+Thanks,
 
-commit c0af52437254fda8b0cdbaae5a9b6d9327f1fcd5 upstream.
+	M.
 
-Commit 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading
-infrastructure") introduced a better IRQ spreading mechanism, taking
-account of the available NUMA nodes in the machine.
+[1] http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1316912.html
+-- 
+Jazz is not dead. It just smells funny...
 
-Problem is that the algorithm of retrieving the nodemask iterates
-"linearly" based on the number of online nodes - some architectures
-present non-linear node distribution among the nodemask, like PowerPC.
-If this is the case, the algorithm lead to a wrong node count number
-and therefore to a bad/incomplete IRQ affinity distribution.
-
-For example, this problem were found in a machine with 128 CPUs and two
-nodes, namely nodes 0 and 8 (instead of 0 and 1, if it was linearly
-distributed). This led to a wrong affinity distribution which then led to
-a bad mq allocation for nvme driver.
-
-Finally, we take the opportunity to fix a comment regarding the affinity
-distribution when we have _more_ nodes than vectors.
-
-Fixes: 34c3d9819fda ("genirq/affinity: Provide smarter irq spreading infrastructure")
-Reported-by: Gabriel Krisman Bertazi <gabriel@krisman.be>
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Gabriel Krisman Bertazi <gabriel@krisman.be>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: hch@lst.de
-Link: http://lkml.kernel.org/r/1481738472-2671-1-git-send-email-gpiccoli@linux.vnet.ibm.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- kernel/irq/affinity.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -37,10 +37,10 @@ static void irq_spread_init_one(struct c
- 
- static int get_nodes_in_cpumask(const struct cpumask *mask, nodemask_t *nodemsk)
- {
--	int n, nodes;
-+	int n, nodes = 0;
- 
- 	/* Calculate the number of nodes in the supplied affinity mask */
--	for (n = 0, nodes = 0; n < num_online_nodes(); n++) {
-+	for_each_online_node(n) {
- 		if (cpumask_intersects(mask, cpumask_of_node(n))) {
- 			node_set(n, *nodemsk);
- 			nodes++;
-@@ -81,7 +81,7 @@ struct cpumask *irq_create_affinity_mask
- 	nodes = get_nodes_in_cpumask(affinity, &nodemsk);
- 
- 	/*
--	 * If the number of nodes in the mask is less than or equal the
-+	 * If the number of nodes in the mask is greater than or equal the
- 	 * number of vectors we just spread the vectors across the nodes.
- 	 */
- 	if (nvec <= nodes) {
-
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
