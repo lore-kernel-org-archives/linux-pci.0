@@ -1,628 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:27178 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751897AbdAaKK2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 05:10:28 -0500
-Subject: Re: [PATCH V6 4/5] LPC: Support the device-tree LPC host on
- Hip06/Hip07
-To: Alexander Graf <agraf@suse.de>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
- <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <55916a03-2710-c8bc-0894-5a58daf6da68@huawei.com>
-Date: Tue, 31 Jan 2017 10:07:08 +0000
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47472 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751355AbdAYLqu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2017 06:46:50 -0500
+Date: Wed, 25 Jan 2017 12:47:02 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Message-ID: <20170125114702.GA13999@kroah.com>
+References: <20161208193253.GK25959@localhost.localdomain>
+ <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213005547.GA12844@localhost.localdomain>
+ <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213231840.GD12113@localhost.localdomain>
+ <B58D82457FDA0744A320A2FC5AC253B93D82F37D@fmsmsx104.amr.corp.intel.com>
+ <20170120213550.GA16618@localhost.localdomain>
+ <20170121073140.GA26396@wunner.de>
+ <20170121084243.GA24706@kroah.com>
+ <20170121142229.GA26476@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170121142229.GA26476@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/01/2017 20:08, Alexander Graf wrote:
->
+On Sat, Jan 21, 2017 at 03:22:29PM +0100, Lukas Wunner wrote:
+> On Sat, Jan 21, 2017 at 09:42:43AM +0100, Greg Kroah-Hartman wrote:
+> > On Sat, Jan 21, 2017 at 08:31:40AM +0100, Lukas Wunner wrote:
+> > > On Fri, Jan 20, 2017 at 04:35:50PM -0500, Keith Busch wrote:
+> > > > On Tue, Dec 13, 2016 at 04:19:32PM -0500, Keith Busch wrote:
+> > > > > On Tue, Dec 13, 2016 at 02:50:12PM -0600, Bjorn Helgaas wrote:
+> > > > > > And we're apparently still doing a lot of these accesses?  I'm still
+> > > > > > curious about exactly what these are, because it may be that we're
+> > > > > > doing more than necessary.
+> > > > > 
+> > > > > It's the MSI-x masking that's our next highest contributor. Masking
+> > > > > vectors still requires non-posted commands, and since they're not going
+> > > > > through managed API accessors like config space uses, the removed flag
+> > > > > is needed for checking before doing significant MMIO.
+> > > > 
+> > > > Hi Bjorn,
+> > > > 
+> > > > Just wanted to do another check with you on this. We'd still like to fence
+> > > > off all config access with appropriate error codes, and short cut the most
+> > > > significant MMIO access to improve surprise removal. There may still be
+> > > > other offenders, but these are the most important ones we've identified.
+> > > > 
+> > > > I've updated the series to make the new flag an atomic accessor as
+> > > > requested, and improved the change logs with more information compelling
+> > > > the change. Otherwise it's much the same as before. I know you weren't
+> > > > keen on capturing all the access under the umbrella of improving device
+> > > > unbinding time, but the general concensus among device makers is that
+> > > > it's a good thing to have software return an error early rather than
+> > > > send a command we know will fail. Any other thoughts I should consider
+> > > > before posting v5?
+> > > 
+> > > I think Bjorn was pondering whether a flag to indicate surprise removal
+> > > should be put in struct device rather than struct pci_dev, so as to
+> > > cover other buses capable of surprise removal.  There's already an
+> > > "offline" flag in struct device which is set when user space initiates
+> > > a safe hot removal via sysfs.
+> > > 
+> > > Bjorn cc'ed his e-mails of Dec 13 to Greg KH and Alan Stern but got no
+> > > replies.
+> > 
+> > Sorry, I don't recall seeing those :(
+> > 
+> > > @Greg KH:
+> > > Would you entertain a patch adding a bit to struct device which indicates
+> > > the device was surprise removed?  The PCIe Hotplug and PCIe Downstream
+> > > Port Containment drivers are both able to recognize surprise removal and
+> > > can set the bit.
+> > > 
+> > > When removing the device we currently perform numerous accesses to config
+> > > space in the PCI core.  Additionally the driver for the removed device
+> > > (e.g. network driver, GPU driver) performs mmio accesses to orderly shut
+> > > down the device.  E.g. when unplugging the Apple Thunderbolt Ethernet
+> > > adapter the kernel currently locks up as the tg3 driver tries to shutdown
+> > > the removed device.  If we had a bit to indicate surprise removal we could
+> > > handle this properly in the PCI core and device driver ->remove hooks.
+> > > 
+> > > For comparison, this is what macOS recommends to driver developers:
+> > > 
+> > >        "PCI device drivers are typically developed with the expectation
+> > > 	that the device will not be removed from the PCI bus during its
+> > > 	operation. However, Thunderbolt technology allows PCI data to be
+> > > 	tunneled through a Thunderbolt connection, and the Thunderbolt
+> > > 	cables may be unplugged from the host or device at any time.
+> > > 	Therefore, the system must be able to cope with the removal of
+> > > 	PCI devices by the user at any time.
+> > > 
+> > > 	The PCI device drivers used with Thunderbolt devices may need to
+> > > 	be updated in order to handle surprise or unplanned removal.
+> > > 	In particular, MMIO cycles and PCI Configuration accesses require
+> > > 	special attention. [...] As a basic guideline, developers should
+> > > 	modify their drivers to handle a return value of 0xFFFFFFFF.
+> > > 	If any thread, callback, interrupt filter, or code path in a
+> > > 	driver receives 0xFFFFFFFF indicating the device has been
+> > > 	unplugged, then all threads, callbacks, interrupt filters,
+> > > 	interrupt handlers, and other code paths in that driver must
+> > > 	cease MMIO reads and writes immediately and prepare for
+> > > 	termination. [...]
+> > > 
+> > > 	Once it has been determined that a device is no longer connected,
+> > > 	do not try to clean up or reset the hardware as attempts to
+> > > 	communicate with the hardware may lead to further delays. [...]
+> > > 	A typical way for a developer to solve this problem is to provide
+> > > 	a single bottleneck routine for all MMIO reads and have that
+> > > 	routine check the status of the device before beginning the actual
+> > > 	transaction."
+> > > 
+> > > 	Source: https://developer.apple.com/library/content/documentation/HardwareDrivers/Conceptual/ThunderboltDevGuide/Basics02/Basics02.html
+> > > 
+> > > We lack a comparable functionality and the question is whether to
+> > > support it only in the PCI core or in a more general fashion in the
+> > > driver core.  Other buses (such as USB) have to support surprise
+> > > removal as well.
+> > 
+> > PCI devices have _ALWAYS_ had to handle supprise removal, and the MacOS
+> > guidelines are the exact same thing that we have been telling Linux
+> > kernel developers for years.
+> > 
+> > So no, a supprise removal flag should not be needed, your driver should
+> > already be handling this problem today (if it isn't, it needs to be
+> > fixed.)
+> > 
+> > Don't try to rely on some out-of-band notification that your device is
+> > removed,
+> 
+> This isn't about notification, it's about caching.
+> 
+> Once it is known that the device is gone, that status should be cached.
+> This obviates the need to do any further checks for presence and allows
+> skipping all following config space and mmio accesses, thereby greatly
+> speeding up device removal and avoiding lockups.
 
-Alex,
+How is device removal "slow" today?  What is locking up?
 
-Thanks for checking.
+> Since the device is accessed both in the pci_bus_type's ->remove hook
+> as well as in ->remove hooks of individual PCI drivers, it makes sense
+> to cache the status in struct pci_dev so that it can be checked in the
+> PCI core as well as in PCI drivers.
 
->
-> On 24/01/2017 08:05, zhichang.yuan wrote:
->> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the
->> peripherals in
->> I/O port addresses. This patch implements the LPC host controller
->> driver which
->> perform the I/O operations on the underlying hardware.
->> We don't want to touch those existing peripherals' driver, such as
->> ipmi-bt. So
->> this driver applies the indirect-IO introduced in the previous patch
->> after
->> registering an indirect-IO node to the indirect-IO devices list which
->> will be
->> searched in the I/O accessors.
->> As the I/O translations for LPC children depend on the host I/O
->> registration,
->> we should ensure the host I/O registration is finished before all the LPC
->> children scanning. That is why an arch_init() hook was added in this
->> patch.
->>
->> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> ---
->>  .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
->>  MAINTAINERS                                        |   9 +
->>  arch/arm64/boot/dts/hisilicon/hip06-d03.dts        |   4 +
->>  arch/arm64/boot/dts/hisilicon/hip06.dtsi           |  14 +
->>  drivers/bus/Kconfig                                |   8 +
->>  drivers/bus/Makefile                               |   1 +
->>  drivers/bus/hisi_lpc.c                             | 599
->> +++++++++++++++++++++
->>  7 files changed, 668 insertions(+)
->>  create mode 100644
->> Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
->>
->>  create mode 100644 drivers/bus/hisi_lpc.c
->>
->> diff --git
->> a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
->> b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
->>
->> new file mode 100644
->> index 0000000..213181f
->> --- /dev/null
->> +++
->> b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
->>
->> @@ -0,0 +1,33 @@
->> +Hisilicon Hip06 low-pin-count device
->> +  Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
->> +  provides I/O access to some legacy ISA devices.
->> +  Hip06 is based on arm64 architecture where there is no I/O space.
->> So, the
->> +  I/O ports here are not cpu addresses, and there is no 'ranges'
->> property in
->> +  LPC device node.
->> +
->> +Required properties:
->> +- compatible:  value should be as follows:
->> +    (a) "hisilicon,hip06-lpc"
->> +    (b) "hisilicon,hip07-lpc"
->> +- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
->> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
->> +- reg: base memory range where the LPC register set is mapped.
->> +
->> +Note:
->> +  The node name before '@' must be "isa" to represent the binding
->> stick to the
->> +  ISA/EISA binding specification.
->> +
->> +Example:
->> +
->> +isa@a01b0000 {
->> +    compatible = "hisilicon,hip06-lpc";
->> +    #address-cells = <2>;
->> +    #size-cells = <1>;
->> +    reg = <0x0 0xa01b0000 0x0 0x1000>;
->> +
->> +    ipmi0: bt@e4 {
->> +        compatible = "ipmi-bt";
->> +        device_type = "ipmi";
->> +        reg = <0x01 0xe4 0x04>;
->> +    };
->> +};
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 26edd83..0153707 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -5855,6 +5855,15 @@ F:    include/uapi/linux/if_hippi.h
->>  F:    net/802/hippi.c
->>  F:    drivers/net/hippi/
->>
->> +HISILICON LPC BUS DRIVER
->> +M:    Zhichang Yuan <yuanzhichang@hisilicon.com>
->> +L:    linux-arm-kernel@lists.infradead.org
->> +W:    http://www.hisilicon.com
->> +S:    Maintained
->> +F:    drivers/bus/hisi_lpc.c
->> +F:    lib/extio.c
->> +F:
->> Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
->>
->> +
->>  HISILICON NETWORK SUBSYSTEM DRIVER
->>  M:    Yisen Zhuang <yisen.zhuang@huawei.com>
->>  M:    Salil Mehta <salil.mehta@huawei.com>
->> diff --git a/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
->> b/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
->> index 7c4114a..75b2b5c 100644
->> --- a/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
->> +++ b/arch/arm64/boot/dts/hisilicon/hip06-d03.dts
->> @@ -52,3 +52,7 @@
->>  &usb_ehci {
->>      status = "ok";
->>  };
->> +
->> +&ipmi0 {
->> +    status = "ok";
->> +};
->> diff --git a/arch/arm64/boot/dts/hisilicon/hip06.dtsi
->> b/arch/arm64/boot/dts/hisilicon/hip06.dtsi
->> index a049b64..c450f8d 100644
->> --- a/arch/arm64/boot/dts/hisilicon/hip06.dtsi
->> +++ b/arch/arm64/boot/dts/hisilicon/hip06.dtsi
->> @@ -318,6 +318,20 @@
->>          #size-cells = <2>;
->>          ranges;
->>
->> +        isa@a01b0000 {
->> +            compatible = "hisilicon,hip06-lpc";
->> +            #size-cells = <1>;
->> +            #address-cells = <2>;
->> +            reg = <0x0 0xa01b0000 0x0 0x1000>;
->> +
->> +            ipmi0: bt@e4 {
->> +                compatible = "ipmi-bt";
->> +                device_type = "ipmi";
->> +                reg = <0x01 0xe4 0x04>;
->> +                status = "disabled";
->> +            };
->> +        };
->> +
->>          refclk: refclk {
->>              compatible = "fixed-clock";
->>              clock-frequency = <50000000>;
->> diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
->> index b9e8cfc..58cee84 100644
->> --- a/drivers/bus/Kconfig
->> +++ b/drivers/bus/Kconfig
->> @@ -64,6 +64,14 @@ config BRCMSTB_GISB_ARB
->>        arbiter. This driver provides timeout and target abort error
->> handling
->>        and internal bus master decoding.
->>
->> +config HISILICON_LPC
->> +    bool "Workaround for nonstandard ISA I/O space on Hisilicon Hip0X"
->
-> It's not a workaround, it's support. Better word it like
->
->   "Support for ISA I/O space on Hisilicon HIP0X"
->
+But what can you do with it?  You can't rely on it being valid (i.e. it
+might change right after you look at it), so how would you actually use
+it?
 
-Agreed
+> Bjorn's question, AFAIU, was if caching in struct device would make more
+> sense, to let other buses benefit from the knowledge that the device is
+> gone.  Keith's patch recursively sets the is_removed flag on all PCI
+> devices below the one that was removed.  (Think of a chain of Thunderbolt
+> devices that is surprise removed.)  If instead the flag was in struct
+> device, it could be set on any type of child device.  (Think of a USB hub
+> in a Thunderbolt dock that is surprise removed.)
+> 
+> How does the USB bus type currently handle surprise removal?
 
->> +    depends on (ARM64 && ARCH_HISI && PCI) || COMPILE_TEST
->> +    select INDIRECT_PIO
->> +    help
->> +      Driver needed for some legacy ISA devices attached to
->> Low-Pin-Count
->> +      on Hisilicon Hip0X SoC.
->> +
->>  config IMX_WEIM
->>      bool "Freescale EIM DRIVER"
->>      depends on ARCH_MXC
->> diff --git a/drivers/bus/Makefile b/drivers/bus/Makefile
->> index cc6364b..28e3862 100644
->> --- a/drivers/bus/Makefile
->> +++ b/drivers/bus/Makefile
->> @@ -7,6 +7,7 @@ obj-$(CONFIG_ARM_CCI)        += arm-cci.o
->>  obj-$(CONFIG_ARM_CCN)        += arm-ccn.o
->>
->>  obj-$(CONFIG_BRCMSTB_GISB_ARB)    += brcmstb_gisb.o
->> +obj-$(CONFIG_HISILICON_LPC)    += hisi_lpc.o
->>  obj-$(CONFIG_IMX_WEIM)        += imx-weim.o
->>  obj-$(CONFIG_MIPS_CDMM)        += mips_cdmm.o
->>  obj-$(CONFIG_MVEBU_MBUS)     += mvebu-mbus.o
->> diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
->> new file mode 100644
->> index 0000000..a96e384
->> --- /dev/null
->> +++ b/drivers/bus/hisi_lpc.c
->> @@ -0,0 +1,599 @@
->> +/*
->> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
->> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
->> + * Author: Zou Rongrong <zourongrong@huawei.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License
->> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
->> + */
->> +
->> +#include <linux/acpi.h>
->> +#include <linux/console.h>
->> +#include <linux/delay.h>
->> +#include <linux/io.h>
->> +#include <linux/module.h>
->> +#include <linux/of.h>
->> +#include <linux/of_address.h>
->> +#include <linux/of_platform.h>
->> +#include <linux/pci.h>
->> +#include <linux/serial_8250.h>
->> +#include <linux/slab.h>
->> +
->> +/*
->> + * Setting this bit means each IO operation will target to a
->> + * different port address:
->> + * 0 means repeatedly IO operations will stick on the same port,
->> + * such as BT;
->> + */
->> +#define FG_INCRADDR_LPC        0x02
->> +
->> +struct lpc_cycle_para {
->> +    unsigned int opflags;
->> +    unsigned int csize; /* the data length of each operation */
->> +};
->> +
->> +struct hisilpc_dev {
->> +    spinlock_t cycle_lock;
->> +    void __iomem  *membase;
->> +    struct extio_node *extio;
->> +};
->> +
->> +/* bounds of the LPC bus address range */
->> +#define LPC_MIN_BUS_RANGE    0x0
->> +
->> +/*
->> + * The maximal IO size for each leagcy bus.
->
-> legacy?
->
-> I don't really understand why this bus is legacy though. It looks like a
-> simple MMIO-to-LPC bridge to me.
->
+We just cancel all pending transactions on the device and don't allow
+any new ones to succeed.  Nothing special, as there is no need for any
+magic "is the device here or not" type of logic.
 
-I think that he means legacy ISA.
+> > just do what you write above and handle it that way in your
+> > driver.  There are lots of examples of this in the kernel today, are you
+> > concerned about any specific driver that does not do this properly?
+> 
+> As I've written above, an example is drivers/net/ethernet/broadcom/tg3.c
+> which is the driver used for Apple Thunderbolt Ethernet adapters.
+> Surprise removal of those currently results in:
 
->> + * The port size of legacy I/O devices is normally less than 0x400.
->> + * Defining the I/O range size as 0x400 here should be sufficient for
->> + * all peripherals under one bus.
->> + */
->
-> This comment doesn't make a lot of sense. What is the limit? Is there a
-> hardware limit?
->
-> We don't dynamically allocate devices on the lpc bus, so why imply a
-> limit at all?
->
+<oops snipped>
 
-IIRC from previously asking Zhichang this before, this is the upper 
-range we can address devices on the LPC bus. But the value was 0x1000 then.
+Looks like you need to fix the driver :)
 
->> +#define LPC_BUS_IO_SIZE        0x400
->> +
->> +/* The maximum continuous operations */
->> +#define LPC_MAX_OPCNT    16
->> +/* only support IO data unit length is four at maximum */
->> +#define LPC_MAX_DULEN    4
->> +#if LPC_MAX_DULEN > LPC_MAX_OPCNT
->> +#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
->> +#endif
->> +
->> +#define LPC_REG_START        0x00 /* start a new LPC cycle */
->> +#define LPC_REG_OP_STATUS    0x04 /* the current LPC status */
->> +#define LPC_REG_IRQ_ST        0x08 /* interrupt enable&status */
->> +#define LPC_REG_OP_LEN        0x10 /* how many LPC cycles each start */
->> +#define LPC_REG_CMD        0x14 /* command for the required LPC cycle */
->> +#define LPC_REG_ADDR        0x20 /* LPC target address */
->> +#define LPC_REG_WDATA        0x24 /* data to be written */
->> +#define LPC_REG_RDATA        0x28 /* data coming from peer */
->> +
->> +
->> +/* The command register fields */
->> +#define LPC_CMD_SAMEADDR    0x08
->> +#define LPC_CMD_TYPE_IO        0x00
->> +#define LPC_CMD_WRITE        0x01
->> +#define LPC_CMD_READ        0x00
->> +/* the bit attribute is W1C. 1 represents OK. */
->> +#define LPC_STAT_BYIRQ        0x02
->> +
->> +#define LPC_STATUS_IDLE        0x01
->> +#define LPC_OP_FINISHED        0x02
->> +
->> +#define START_WORK        0x01
->> +
->> +/*
->> + * The minimal waiting interval... Suggest it is not less than 10.
->> + * Bigger value probably will lower the performance.
->
-> Are you sure you want this comment to be upstream? :)
->
+Again, this is something that we have been doing for well over a decade,
+it shouldn't be a mystery.  If you all want to put this in the pci
+device, ok, but be sure to tie it into all PCI bus types (remember
+expresscard?)
 
-We will remove or refine
+How would knowing if the device is present or not prevent this specific
+driver oops?
 
->> + */
->> +#define LPC_NSEC_PERWAIT    100
->> +/*
->> + * The maximum waiting time is about 128us.
->> + * The fastest IO cycle time is about 390ns, but the worst case will
->> wait
->> + * for extra 256 lpc clocks, so (256 + 13) * 30ns = 8 us. The maximum
->> + * burst cycles is 16. So, the maximum waiting time is about 128us under
->> + * worst case.
->> + * choose 1300 as the maximum.
->> + */
->> +#define LPC_MAX_WAITCNT        1300
->> +/* About 10us. This is specific for single IO operation, such as inb. */
->> +#define LPC_PEROP_WAITCNT    100
->> +
->> +
->> +static inline int wait_lpc_idle(unsigned char *mbase,
->
-> No need to specify inline.
->
+> The driver is already littered with calls to pci_channel_offline()
+> and pci_device_is_present() but still causes a lockup.
 
-Agreed
+Then your new flag would not have done anything new, right?
 
->> +                unsigned int waitcnt) {
->> +    u32 opstatus;
->> +
->> +    while (waitcnt--) {
->> +        ndelay(LPC_NSEC_PERWAIT);
->> +        opstatus = readl(mbase + LPC_REG_OP_STATUS);
->> +        if (opstatus & LPC_STATUS_IDLE)
->> +            return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
->
-> It's a shame we have to busy loop, but I guess no calling code outside
-> is prepared for rescheduling at this point.
->
->> +    }
->> +    return -ETIME;
->> +}
->> +
->> +/*
->> + * hisilpc_target_in - trigger a series of lpc cycles to read
->> required data
->> + *               from target peripheral.
->> + * @pdev: pointer to hisi lpc device
->> + * @para: some parameters used to control the lpc I/O operations
->> + * @ptaddr: the lpc I/O target port address
->> + * @buf: where the read back data is stored
->> + * @opcnt: how many I/O operations required in this calling
->> + *
->> + * Only one byte data is read each I/O operation.
->> + *
->> + * Returns 0 on success, non-zero on fail.
->> + *
->> + */
->> +static int
->> +hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para
->> *para,
->> +          unsigned long ptaddr, unsigned char *buf,
->> +          unsigned long opcnt)
->> +{
->> +    unsigned long cnt_per_trans;
->> +    unsigned int cmd_word;
->> +    unsigned int waitcnt;
->> +    int ret;
->> +
->> +    if (!buf || !opcnt || !para || !para->csize || !lpcdev)
->> +        return -EINVAL;
->> +
->> +    if (opcnt  > LPC_MAX_OPCNT)
->> +        return -EINVAL;
->> +
->> +    cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
->> +    waitcnt = LPC_PEROP_WAITCNT;
->> +    if (!(para->opflags & FG_INCRADDR_LPC)) {
->> +        cmd_word |= LPC_CMD_SAMEADDR;
->> +        waitcnt = LPC_MAX_WAITCNT;
->> +    }
->> +
->> +    ret = 0;
->> +    cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
->> +    for (; opcnt && !ret; cnt_per_trans = para->csize) {
->> +        unsigned long flags;
->> +
->> +        /* whole operation must be atomic */
->> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
->
-> Ouch. This is going to kill your RT jitter. Is there no better way?
->
+> I've found that the issue goes away with Keith's patch to cache
+> surprise removal plus this minor change to pci_channel_offline():
+> http://www.spinics.net/lists/linux-pci/msg55601.html
 
-Obviously the bus register driving is non-atomic, so we need some way to 
-lock out.
+Odd that this fixes the above oops, perhaps the logic of "offline" isn't
+all that correct?
 
-I think that it is not so critical for low-speed/infrequent-access bus.
+Anyway, I don't see a real need for this in 'struct device' at the
+moment, let's see how you all handle it in the pci core first :)
 
-If we were going to use virtual UART in the BMC on the LPC bus then we 
-could consider more.
+good luck!
 
->> +
->> +        writel(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
->> +
->> +        writel(cmd_word, lpcdev->membase + LPC_REG_CMD);
->> +
->> +        writel(ptaddr, lpcdev->membase + LPC_REG_ADDR);
->> +
->> +        writel(START_WORK, lpcdev->membase + LPC_REG_START);
->> +
->> +        /* whether the operation is finished */
->> +        ret = wait_lpc_idle(lpcdev->membase, waitcnt);
->> +        if (!ret) {
->> +            opcnt -= cnt_per_trans;
->> +            for (; cnt_per_trans--; buf++)
->> +                *buf = readl(lpcdev->membase + LPC_REG_RDATA);
->> +        }
->> +
->> +        spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
->> +    }
->> +
->> +    return ret;
->> +}
->> +
->> +/**
->> + * hisilpc_target_out - trigger a series of lpc cycles to write required
->> + *            data to target peripheral.
->> + * @pdev: pointer to hisi lpc device
->> + * @para: some parameters used to control the lpc I/O operations
->> + * @ptaddr: the lpc I/O target port address
->> + * @buf: where the data to be written is stored
->> + * @opcnt: how many I/O operations required
->> + *
->> + * Only one byte data is read each I/O operation.
->> + *
->> + * Returns 0 on success, non-zero on fail.
->> + *
->> + */
->> +static int
->> +hisilpc_target_out(struct hisilpc_dev *lpcdev, struct lpc_cycle_para
->> *para,
->> +           unsigned long ptaddr, const unsigned char *buf,
->> +           unsigned long opcnt)
->> +{
->> +    unsigned long cnt_per_trans;
->> +    unsigned int cmd_word;
->> +    unsigned int waitcnt;
->> +    int ret;
->> +
->> +    if (!buf || !opcnt || !para || !lpcdev)
->> +        return -EINVAL;
->> +
->> +    if (opcnt > LPC_MAX_OPCNT)
->> +        return -EINVAL;
->> +    /* default is increasing address */
->> +    cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_WRITE;
->> +    waitcnt = LPC_PEROP_WAITCNT;
->> +    if (!(para->opflags & FG_INCRADDR_LPC)) {
->> +        cmd_word |= LPC_CMD_SAMEADDR;
->> +        waitcnt = LPC_MAX_WAITCNT;
->> +    }
->> +
->> +    ret = 0;
->> +    cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
->> +    for (; opcnt && !ret; cnt_per_trans = para->csize) {
->> +        unsigned long flags;
->> +
->> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
->
-> Same thing here
->
-
-As above
-
->> +
->> +        writel(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
->> +        opcnt -= cnt_per_trans;
->> +        for (; cnt_per_trans--; buf++)
->> +            writel(*buf, lpcdev->membase + LPC_REG_WDATA);
->> +
->> +        writel(cmd_word, lpcdev->membase + LPC_REG_CMD);
->> +
->> +        writel(ptaddr, lpcdev->membase + LPC_REG_ADDR);
->> +
->> +        writel(START_WORK, lpcdev->membase + LPC_REG_START);
->> +
->> +        /* whether the operation is finished */
->> +        ret = wait_lpc_idle(lpcdev->membase, waitcnt);
->> +
->> +        spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
->> +    }
->> +
->> +    return ret;
->> +}
->> +
->> +static inline unsigned long
->
-> Don't explicitly mention inline, the compiler will figure that out for you.
->
-
-Sure
-
->> +hisi_lpc_pio_to_addr(struct hisilpc_dev *lpcdev, unsigned long pio)
->> +{
->> +    return pio - lpcdev->extio->io_start + lpcdev->extio->bus_start;
->> +}
->> +
->> +
->> +/**
->> + * hisilpc_comm_in - read/input the data from the I/O peripheral
->> + *             through LPC.
->> + * @devobj: pointer to the device information relevant to LPC
->> controller.
->> + * @pio: the target I/O port address.
->> + * @dlen: the data length required to read from the target I/O port.
->> + *
->> + * when succeed, the data read back is stored in buffer pointed by
->> inbuf.
->> + * For inb, return the data read from I/O or -1 when error occur.
->> + */
->> +static u64 hisilpc_comm_in(void *devobj, unsigned long pio, size_t dlen)
->> +{
->> +    struct hisilpc_dev *lpcdev = devobj;
->> +    struct lpc_cycle_para iopara;
->> +    u32 rd_data;
->
-> rd_data needs to be initialized to 0. Otherwise it may contain stale
-> stack contents and corrupt non-32bit dlen returns.
->
-
-I think so, since we read into this value byte-by-byte. We also seem to 
-return a 32b value but should return 64b value according to the prototype.
-
->> +    unsigned char *newbuf;
->> +    int ret = 0;
->> +    unsigned long ptaddr;
->> +
->> +    if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN ||    (dlen & (dlen
->> - 1)))
->> +        return -1;
->
-> Isn't this -EINVAL?
-
-Not sure. This value is returned directly to the inb/outb caller, which 
-would not check this value for error.
-
-It could be argued that the checking is paranoia. If not, we should 
-treat the failure as a more severe event.
-
->
->> +
->> +    /* the local buffer must be enough for one data unit */
->> +    if (sizeof(rd_data) < dlen)
->> +        return -1;
->
-> Same here.
->
-> Also, the above seems a very convoluted way of saying
->
->   switch (dlen) {
->   case 1:
->   case 2:
->   case 4:
-
-It's better
-
->     break;
->   default:
->     return -EINVAL;
->   }
->
-> But I guess the way you write it doesn't hurt ;)
->
->
-> Alex
->
-> .
->
-
-
+greg k-h
