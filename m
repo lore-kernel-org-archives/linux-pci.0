@@ -1,167 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:36411 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdAOUHD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2017 15:07:03 -0500
-Message-Id: <2422ada28df350e51b025884b9c6cd7f4242a1cd.1484486499.git.lukas@wunner.de>
-In-Reply-To: <cover.1484486499.git.lukas@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 15 Jan 2017 21:03:45 +0100
-Subject: [PATCH v5 8/8] thunderbolt: Runtime suspend NHI when idle
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=/1wB=ZH=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=/1wB=ZH=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
+ <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
+ <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
+ <34f2e149-3bb1-6af2-a9f5-fbe5a050fe31@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
+ vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <84d599dc-e371-7273-4bda-feb9c9eb8014@codeaurora.org>
+Date: Wed, 25 Jan 2017 13:33:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <34f2e149-3bb1-6af2-a9f5-fbe5a050fe31@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Runtime suspend the NHI when no Thunderbolt devices have been plugged in
-for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
+On 1/25/2017 12:49 PM, Sinan Kaya wrote:
+> Hi Bjorn,
+> 
+> On 11/11/2016 3:58 PM, Bjorn Helgaas wrote:
+>>> Is there any other feedback?
+>> If this were completely safe to enable for every device that supported
+>> it, why would there be an enable bit in Device Control?
+>>
+>> I don't know anything about extended tags, but it worries me a little
+>> when there's a "go-fast" switch and no explanation about when and why
+>> we might need to go slow.
+>>
 
-The NHI is not able to detect plug events while suspended, it relies on
-the GPE handler to resume it on hotplug.
+I tried to answer your question in the new commit message. All PCIe completers
+are required to support 8 bit tags. 
 
-After the NHI resumes, it takes about 700 ms until a hotplug event
-appears on the RX ring.  In case autosuspend_delay_ms has been reduced
-to 0 by the user, we need to wait in tb_resume() to avoid going back to
-sleep before we had a chance to detect a hotplugged device.  A runtime
-pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
-awake while the hotplug event is processed.
+Generation of 8 bit tags is optional. That's why, there is a supported and an
+enable/disable bit.
 
-Apart from that we acquire a runtime pm ref for each newly allocated
-switch (except for the root switch) and drop one when a switch is freed,
-thereby ensuring the NHI stays active as long as devices are plugged in.
-This behaviour is identical to the macOS driver.
+> 
+> I have v2 posted. Do you feel like applying to linux-next to get some testing
+> exposure or do you want to tie it to some DMI so that we enable it only on
+> recent HW?
+> 
+> Sinan
+> 
 
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/thunderbolt/nhi.c    |  2 ++
- drivers/thunderbolt/power.c  |  9 +++++++++
- drivers/thunderbolt/switch.c |  9 +++++++++
- drivers/thunderbolt/tb.c     | 13 +++++++++++++
- 4 files changed, 33 insertions(+)
 
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index 88fb2fb8cf4e..319ed81422c5 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -632,6 +632,8 @@ static const struct dev_pm_ops nhi_pm_ops = {
- 					    * pci-tunnels stay alive.
- 					    */
- 	.restore_noirq = nhi_resume_noirq,
-+	.runtime_suspend = nhi_suspend_noirq,
-+	.runtime_resume = nhi_resume_noirq,
- };
- 
- static struct pci_device_id nhi_ids[] = {
-diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
-index 6e7ef07f4aa9..06f535c932e0 100644
---- a/drivers/thunderbolt/power.c
-+++ b/drivers/thunderbolt/power.c
-@@ -319,6 +319,12 @@ void thunderbolt_power_init(struct tb *tb)
- 
- 	tb->power = power;
- 
-+	pm_runtime_allow(nhi_dev);
-+	pm_runtime_set_autosuspend_delay(nhi_dev, 10000);
-+	pm_runtime_use_autosuspend(nhi_dev);
-+	pm_runtime_mark_last_busy(nhi_dev);
-+	pm_runtime_put_autosuspend(nhi_dev);
-+
- 	return;
- 
- err_free:
-@@ -335,6 +341,9 @@ void thunderbolt_power_fini(struct tb *tb)
- 	if (!power)
- 		return; /* thunderbolt_power_init() failed */
- 
-+	pm_runtime_get(nhi_dev);
-+	pm_runtime_forbid(nhi_dev);
-+
- 	tb->power = NULL;
- 	dev_pm_domain_set(upstream_dev, NULL);
- 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index c6f30b1695a9..422fe6e96f09 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include <linux/delay.h>
-+#include <linux/pm_runtime.h>
- #include <linux/slab.h>
- 
- #include "tb.h"
-@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
- 	if (!sw->is_unplugged)
- 		tb_plug_events_active(sw, false);
- 
-+	if (sw != sw->tb->root_switch) {
-+		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
-+		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
-+	}
-+
- 	kfree(sw->ports);
- 	kfree(sw->drom);
- 	kfree(sw);
-@@ -420,6 +426,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 	if (tb_plug_events_active(sw, true))
- 		goto err;
- 
-+	if (tb->root_switch)
-+		pm_runtime_get(&tb->nhi->pdev->dev);
-+
- 	return sw;
- err:
- 	kfree(sw->ports);
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 24b6d30c3c86..a3fedf90e545 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -7,6 +7,7 @@
- #include <linux/slab.h>
- #include <linux/errno.h>
- #include <linux/delay.h>
-+#include <linux/pm_runtime.h>
- 
- #include "tb.h"
- #include "tb_regs.h"
-@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
- {
- 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
- 	struct tb *tb = ev->tb;
-+	struct device *dev = &tb->nhi->pdev->dev;
- 	struct tb_switch *sw;
- 	struct tb_port *port;
-+
-+	pm_runtime_get(dev);
- 	mutex_lock(&tb->lock);
- 	if (!tb->hotplug_active)
- 		goto out; /* during init, suspend or shutdown */
-@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
- out:
- 	mutex_unlock(&tb->lock);
- 	kfree(ev);
-+	pm_runtime_mark_last_busy(dev);
-+	pm_runtime_put_autosuspend(dev);
- }
- 
- /**
-@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
- 	tb_info(tb, "resume finished\n");
-+
-+	/*
-+	 * If runtime resuming due to a hotplug event (rather than resuming
-+	 * from system sleep), wait for it to arrive. May take about 700 ms.
-+	 */
-+	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
-+		msleep(1000);
- }
 -- 
-2.11.0
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
