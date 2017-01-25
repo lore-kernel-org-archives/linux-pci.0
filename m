@@ -1,50 +1,137 @@
-Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=sAiH=YR=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Tue, 03 Jan 2017 23:07:31 +0100
-Message-ID: <2944797.fnVvnXZV6t@aspire.rjw.lan>
-In-Reply-To: <3ce9e85d-381c-1c5d-b01d-65b8cf64e1ae@quantumtechnology.info>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <3913750.OA6IItgEjC@aspire.rjw.lan> <3ce9e85d-381c-1c5d-b01d-65b8cf64e1ae@quantumtechnology.info>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+In-Reply-To: <20170124123711.GA11996@red-moon>
+Subject: RE: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+Date: Wed, 25 Jan 2017 13:01:47 +0530
+Message-ID: <001501d276dd$1b395d80$51ac1880$@codeaurora.org>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
+ 'Sinan Kaya' <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ iommu@lists.linux-foundation.org, 'Hanjun Guo' <hanjun.guo@linaro.org>,
+ linux-pci@vger.kernel.org, bhelgaas@google.com,
+ 'Tomasz Nowicki' <tn@semihalf.com>, robin.murphy@arm.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
 Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 03, 2017 10:52:48 PM Kilian Singer wrote:
-> I have not checked if suspend/resume broken.
-> Which patch should I check suspend resume for.
-> When I wrote about firefox and lockscreen issue resolved
-> I forgot to check about the suspend/resume.
+Hi Lorenzo,
 
-Well, here:
+>[+hanjun, tomasz, sinan]
+>
+>It is quite a key patchset, I would be glad if they can test on their
+>respective platforms with IORT.
+>
+>On Mon, Jan 23, 2017 at 09:48:10PM +0530, Sricharan R wrote:
+>> This is an equivalent to the DT's handling of the iommu master's probe
+>> with deferred probing when the corrsponding iommu is not probed yet.
+>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>> been deferred, or having failed.
+>>
+>> The first case occurs when the firmware describes the bus master and
+>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>> or the device driver has not been compiled in. Return NULL, the caller
+>> will configure the device without an IOMMU.
+>>
+>> The second and third cases are handled by deferring the probe of the bus
+>> master device which will eventually get reprobed after the IOMMU.
+>>
+>> The last case is currently handled by deferring the probe of the bus
+>> master device as well. A mechanism to either configure the bus master
+>> device without an IOMMU or to fail the bus master device probe depending
+>> on whether the IOMMU is optional or mandatory would be a good
+>> enhancement.
+>>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
+>>  drivers/acpi/scan.c        |  7 +++++--
+>>  drivers/base/dma-mapping.c |  2 +-
+>>  include/acpi/acpi_bus.h    |  2 +-
+>>  include/linux/acpi.h       |  7 +++++--
+>>  5 files changed, 36 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index bf0ed09..d01bae8 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>>  			return NULL;
+>>
+>>  		ops = iommu_get_instance(iort_fwnode);
+>> +		/*
+>> +		 * If the ops look-up fails, this means that either
+>> +		 * the SMMU drivers have not been probed yet or that
+>> +		 * the SMMU drivers are not built in the kernel;
+>> +		 * Depending on whether the SMMU drivers are built-in
+>> +		 * in the kernel or not, defer the IOMMU configuration
+>> +		 * or just abort it.
+>> +		 */
+>>  		if (!ops)
+>> -			return NULL;
+>> +			return iort_iommu_driver_enabled(node->type) ?
+>> +			       ERR_PTR(-EPROBE_DEFER) : NULL;
+>>
+>>  		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
+>>  	}
+>> @@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>>
+>>  		while (parent) {
+>>  			ops = iort_iommu_xlate(dev, parent, streamid);
+>> +			if (IS_ERR_OR_NULL(ops))
+>> +				return ops;
+>>
+>>  			parent = iort_node_get_id(node, &streamid,
+>>  						  IORT_IOMMU_TYPE, i++);
+>>  		}
+>>  	}
+>>
+>> +	/*
+>> +	 * If we have reason to believe the IOMMU driver missed the initial
+>> +	 * add_device callback for dev, replay it to get things in order.
+>> +	 */
+>> +	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
+>> +	    dev->bus && !dev->iommu_group) {
+>> +		int err = ops->add_device(dev);
+>> +
+>> +		if (err)
+>> +			ops = ERR_PTR(err);
+>> +	}
+>
+>I think there is nothing ACPI specific in this add_device() replay
+>path, so there is room for further DT/ACPI consolidation here.
+>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c26
+ok, the only way is keep this in a function and call it for both DT and ACPI
+cases.
 
-you said:
+>Without any further ado:
+>
+>Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-"Shutdown and suspend/resume work on 4.7.0-1 but fail on 4.8. and 4.9."
+Thanks for that.
 
-and here:
+Regards,
+ Sricharan
 
-https://bugzilla.kernel.org/show_bug.cgi?id=190861#c29
 
-you said:
 
-"the pci_port_pm=off
-fixes both the firefox issue and the lock screen issue. Also suspend/resume work.
-Tested on 4.9"
-
-which to me means that suspend/resume is also broken for you
-due to the PCIe ports PM support enabled (the command line option
-should be pcie_port_pm=off, BTW, but I'm assuming that this is what you
-actually used).
-
-Now, it may be broken due to the runtime PM breakage triggering after system
-resume (which may be verified by checking if the revert actually fixes system
-suspend-resume too on your machine), but even then I wouldn't revert that
-particular commit.
-
-Thanks,
-Rafael
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
