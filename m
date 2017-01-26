@@ -1,46 +1,82 @@
-Return-Path: <SRS0=+39a=Y7=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=+39a=Y7=linux.intel.com=mika.westerberg@kernel.org>
-Date: Tue, 17 Jan 2017 17:55:51 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Lyude Paul <lyude@redhat.com>, Hans de Goede <hdegoede@redhat.com>,
-	David Airlie <airlied@redhat.com>, Peter Jones <pjones@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170117155551.GL2023@lahna.fi.intel.com>
-References: <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
- <20170105181322.wnvdytpgddcdk3ry@redhat.com>
- <1931628154.8613274.1483644995907.JavaMail.zimbra@redhat.com>
- <1483974686.28993.3.camel@redhat.com>
- <e16ce603-1d40-9aef-c755-5e2e0322668a@redhat.com>
- <1484167244.25614.1.camel@redhat.com>
- <1484183615.25614.3.camel@redhat.com>
- <1484186688.25614.4.camel@redhat.com>
- <20170112021235.GA24156@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170112021235.GA24156@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:34307 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751788AbdAZN1P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2017 08:27:15 -0500
+Received: by mail-lf0-f43.google.com with SMTP id v186so145450185lfa.1
+        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2017 05:27:14 -0800 (PST)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH] pci: host: dra7xx: use GPIO descriptor
+Date: Thu, 26 Jan 2017 14:27:07 +0100
+Message-Id: <20170126132707.23249-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 03:12:35AM +0100, Lukas Wunner wrote:
-> On Wed, Jan 11, 2017 at 09:04:48PM -0500, Lyude Paul wrote:
-> > Finally got koji to work :). People having the runtime resume problem,
-> > can you give this kernel RPM a try and tell me if the issue still
-> > persists?
-> > 
-> > https://koji.fedoraproject.org/koji/taskinfo?taskID=17250338
-> 
-> Kilian uses Debian but has a git repo with Linus' tree.  Could you post
-> the relevant patch(es) based on either the tip of Linus' master branch
-> or one of his tags (such as v4.9, v4.10-rc3)?  This would also allow us
-> to review/comment on the patches.
+Instead of parsing around in the device tree and determine
+polarity for the GPIO line and whatnot: utilize the GPIO
+library's intrinsic handling of OF GPIOs and polarity.
 
-Hi Lyude,
+If the line is flagged active low, gpiolib will deal with
+this.
 
-Just a reminder. Can you post the patch(es) here so that people can try
-them out and comment?
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+Would be nice if someone with the hardware could test this
+and see if it works.
+---
+ drivers/pci/host/pci-dra7xx.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 9595fad63f6f..85ac2856c80f 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -16,7 +16,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+-#include <linux/of_gpio.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+@@ -320,9 +320,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	char name[10];
+-	int gpio_sel;
+-	enum of_gpio_flags flags;
+-	unsigned long gpio_flags;
++	struct gpio_desc *gpiod;
+ 
+ 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -388,19 +386,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		goto err_get_sync;
+ 	}
+ 
+-	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
+-	if (gpio_is_valid(gpio_sel)) {
+-		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
+-				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
+-		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
+-					    "pcie_reset");
+-		if (ret) {
+-			dev_err(dev, "gpio%d request failed, ret %d\n",
+-				gpio_sel, ret);
+-			goto err_gpio;
+-		}
+-	} else if (gpio_sel == -EPROBE_DEFER) {
+-		ret = -EPROBE_DEFER;
++	gpiod = devm_gpiod_get(dev, "pcie_reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(gpiod)) {
++		ret = PTR_ERR(gpiod);
+ 		goto err_gpio;
+ 	}
+ 
+-- 
+2.9.3
+
