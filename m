@@ -1,139 +1,196 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lukasz Majewski <lukma@denx.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-References: <1484486354-4585-1-git-send-email-lukma@denx.de>
- <587C6A40.8070608@ti.com> <20170116074927.086418f4@jawa>
- <587C8088.80905@ti.com> <20170116103136.21c899ac@jawa>
- <587C9CE6.8040001@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <76d18446-78c9-87f2-22ad-f7ea38771285@synopsys.com>
-Date: Mon, 16 Jan 2017 17:01:54 +0000
+Return-Path: <SRS0=B9Eb=ZJ=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=B9Eb=ZJ=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH] PCI/ASPM: reconfigure ASPM following hotplug
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1485471092-16906-1-git-send-email-okaya@codeaurora.org>
+ <20170127170755.GB17251@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <307c5f0f-122d-fc56-8cbf-363a727af75c@codeaurora.org>
+Date: Fri, 27 Jan 2017 14:30:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <587C9CE6.8040001@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170127170755.GB17251@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn,
+Thanks for the review. Other feedback below.
 
-Hi,
-
-Às 10:13 AM de 1/16/2017, Kishon Vijay Abraham I escreveu:
-> + Joao, Jingoo
+On 1/27/2017 12:07 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
 > 
-> Hi,
+> On Thu, Jan 26, 2017 at 05:51:32PM -0500, Sinan Kaya wrote:
+>> When the operating system is booted with the default ASPM policy,
+>> the current code is determining the ASPM policy by querying the
+>> enable/disable states from ASPM registers.
+>>
+>> In the case of hotplug removal, the ASPM registers get cleared by
+>> calling the exit function.
 > 
-> On Monday 16 January 2017 03:01 PM, Lukasz Majewski wrote:
->> Hi Kishon,
->>
->>> Hi Łukasz,
->>>
->>> On Monday 16 January 2017 12:19 PM, Lukasz Majewski wrote:
->>>> Hi Kishon,
->>>>
->>>>> Hi,
->>>>>
->>>>> On Sunday 15 January 2017 06:49 PM, Lukasz Majewski wrote:
->>>>>> Some devices (due to e.g. bad PCIe signal integrity) require to
->>>>>> run with forced GEN1 speed on PCIe bus.
->>>>>>
->>>>>> This patch changes the speed explicitly on dra7 based devices when
->>>>>> proper device tree attribute is defined for the PCIe controller.
->>>>>>
->>>>>> Signed-off-by: Lukasz Majewski <lukma@denx.de>
->>>>>
->>>>> Bjorn has already queued a patch to do the same thing
->>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_cgit_linux_kernel_git_helgaas_pci.git_log_-3Fh-3Dpci_host-2Ddra7xx&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=E8zk1CbKxGH-f3fw_WpXxFU-A8BLkgA8NusCaxk1SvA&e= 
->>>>
->>>> It seems like Bjorn only modifies CAP registers.
->>>
->>> The patch also modifies the LNKCTL2 register.
->>>>
->>>> He also needs to change register with 0x080C offset to actually
->>>> ( PCIECTRL_PL_WIDTH_SPEED_CTL )
->>>
->>> This bit is used to initiate speed change (after the link is
->>> initialized in GEN1). Resetting the bit (like what you have done
->>> here) prevents speed change.
->>
->> This is strange, but e2e advised me to do things as I did in the patch
->> to _force_ GEN1 operation on PCIe2 port [1] (AM5728)
->>
->> Link:
->> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__e2e.ti.com_support_arm_sitara-5Farm_f_791_t_566421&d=DwIDaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=zD82T5n4WcL7Ga-NSY2NI7KE75xQ99hN-mW2yX46wQk&s=uXLwglyRYqKpwp1JSxkOWmKpQ2wjfhgofpm8DCfquNw&e= 
->>
->> Both patches modify 0x5180 007C register to set GEN1 capability
->> (PCI_EXP_LNKCAP_SLS_2_5GB)
->>
->> The problem is with second register (in your patch):
->>
->> From SPRUHZ6G TRM:
->>
->> PCIECTRL_EP_DBICS_LNK_CAS_2 (0x5180 00A0)
->> - TRGT_LINK_SPEED (Reset 0x1) - "Target Link Speed" - no more
->>   description in TRM
->>
->> It is set to PCI_EXP_LNKCAP_SLS_2_5GB = 0x1, which is the same as
->> default /reset value.
+> I assume you mean pcie_aspm_exit_link_state().  It'd be easier if you
+> were specific about that.
+
+Sure, I can do that. 
+
 > 
-> The default value is 0x2 (or else none of the cards would have enumerated in GEN2)
->>
->>
->> Could you clarify which way to _force_ PCIe GEN1 operation is correct?
->> Mine shows differences in lspci output (as posted in [1]).
-> 
-> You'll see the difference even with the patch in Bjorn's tree ;-)
-> 
-> I think these are 2 different approaches to keep the link at GEN1. Joao or
-> Jingoo, do you have any suggestion here?
+> But I don't know whether this is relevant anyway.  In a surprise
+> removal we won't call pcie_aspm_exit_link_state(), will we?
 
-I studied the Databook, and both approaches seem to be right, dependently of the
-Core configuration and setup.
+Let me check. I have tested surprise removal before but
+I'm not sure about the ASPM following insertion to a surprise removal. 
 
-The standard manual speed change sequence is:
-a) Write to PCIE_CAP_TARGET_LINK_SPEED (indicating desired speed)
-b) Clear "Directed Speed Change"
-c) Set "Directed Speed Change"
+According to the specification, a hotplug capable OS needs to handle
+surprise removal and uninstall drivers. I have seen this happen before.
+I expect to end up in pcie_aspm_exit_link_state again. See the data
+link layer interrupt registered in the HPE. It is waiting for link
+down and up events regardless of attention button or not.
 
-If "Directed Speed Change" is set (DEFAULT_GEN2_SPEED_CHANGE is the default
-value), it will execute LTSSM to initiate speed change to Gen2 or Gen3, after
-link is started in Gen1, and then the bit is automatically cleared.
+I'm about to confirm....
 
-Lukasz is reseting this bit, in order to avoid the LTSSM to be executed, which
-is correct. There is another way to prevent this automatic speed change, which
-is to set GEN1 speed before link up which might be difficult in some setups, so
-Kishon's also right.
+pciehp 0000:00:00.0:pcie004:_slot(1):_Link_Down_event
+e1000e 0000:01:00.0: Disabling ASPM  L1
+e1000e 0000:01:00.0: Refused to change power state, currently in D3
+pci 0000:01:00.0: pcie_aspm_exit_link_state:649
+pcieport 0000:00:00.0: AER: Device recovery successful
 
-In my opinion Lukasz approach would be the one that might be more universal and
-more "secure".
-
-Joao
+yes, exit gets called.
 
 
 > 
+>> An insertion following remove reads incorrect policy as disabled
+>> even though ASPM was enabled during boot.
 >>
->>>
->>> IMO the better way is to set the LNKCTL2 to GEN1 instead of hacking
->>> the IP register.
+>> Adding a flag to the struct pci_dev and saving the power up policy
+>> in the bridge to be reused during hotplug insertion. Bridge's enable
+>> counter is used as a switch to determine when to use saved value.
 >>
->> From the original patch description:
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pcie/aspm.c | 13 ++++++++++---
+>>  include/linux/pci.h     |  1 +
+>>  2 files changed, 11 insertions(+), 3 deletions(-)
 >>
->> "Add support to force Root Complex to work in GEN1 mode if so desired,
->> but don't force GEN1 mode on any board just yet."
->>
->> Are there any (floating around) patches allowing forcing GEN1 operation
->> on any board (I would like to reuse/port them to my current solution)?
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index 17ac1dc..32b8a86 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -338,7 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>>  	}
+>>  }
+>>  
+>> -static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>> +static
+>> +void pcie_aspm_cap_init(struct pci_dev *pdev, struct pcie_link_state *link,
+>> +			int blacklist)
+>>  {
+>>  	struct pci_dev *child, *parent = link->pdev;
+>>  	struct pci_bus *linkbus = parent->subordinate;
+>> @@ -398,7 +400,12 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>>  	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
+>>  
+>>  	/* Save default state */
+>> -	link->aspm_default = link->aspm_enabled;
+>> +	if (!atomic_read(&pdev->enable_cnt)) {
+>> +		link->aspm_default = link->aspm_enabled;
+>> +		pdev->aspm_default = link->aspm_default;
+>> +	} else {
+>> +		link->aspm_default = pdev->aspm_default;
+>> +	}
 > 
-> For setting to GEN1 mode, "max-link-speed" should be set to 1 in dt with the
-> patch in Bjorn's tree.
+> This connection with enable_cnt is too obtuse.  There's no obvious
+> connection between enabling the device and computing the default ASPM
+> state.
+
+I was looking for a way to figure out if this is the first time boot
+or insertion. I'm open to suggestions on what a good flag is.
+
 > 
-> Thanks
-> Kishon
+> We're working on the bridge (the upstream end of a link).  If I
+> understand correctly, the case of interest here is where the bridge
+> stays put and an endpoint below the bridge is removed and re-added.
+
+Correct, the bridge remains in the PCI bus, it is just the endpoint
+is getting removed and inserted back. However bridge's ASPM registers
+also got cleared while disabling ASPM on the endpoint.
+
+
+> Why can't we figure out the policy the same way as when we first
+> enumerated the bridge?
+
+The difference on first time enumeration and new enumeration is on the
+first time, ASPM is setup by the firmware before OS boot. 
+
+In the new enumeration following hotplug insertion, ASPM is disabled
+and there is no firmware to set it up.
+
 > 
+> In POLICY_PERFORMANCE and POLICY_POWERSAVE, I assume the original BIOS
+> configuration doesn't matter.  Maybe the point here is to remember the
+> original BIOS configuration for POLICY_DEFAULT?  If so, the patch
+> should mention POLICY_DEFAULT somehow to help the reader connect the
+> dots.
+
+Right, we want to know the policy set up by BIOS only when POLICY_DEFAULT
+is specified. 
+
+POLICY_POWERSAVE option does set things up regardless of what the BIOS says. 
+Similarly, POLICY_PERFORMANCE is going to disable ASPM for obvious reasons.
+
+I can add a few words to the commit message. 
+
+> 
+>>  	/* Setup initial capable state. Will be updated later */
+>>  	link->aspm_capable = link->aspm_support;
+>> @@ -599,7 +606,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>>  	 * upstream links also because capable state of them can be
+>>  	 * update through pcie_aspm_cap_init().
+>>  	 */
+>> -	pcie_aspm_cap_init(link, blacklist);
+>> +	pcie_aspm_cap_init(pdev, link, blacklist);
+> 
+> I think "link" is always "pdev->link_state", so we should be able to
+> pass only "pdev" here, and pcie_aspm_cap_init() could use
+> pdev->link_state internally.
+
+I can do that.
+
+> 
+>>  	/* Setup initial Clock PM state */
+>>  	pcie_clkpm_cap_init(link, blacklist);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e2d1a12..d0ecde6 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -316,6 +316,7 @@ struct pci_dev {
+>>  	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
+>>  						      controlled exclusively by
+>>  						      user sysfs */
+>> +	unsigned int	aspm_default;	/* aspm policy set by BIOS */
+> 
+> We already have an #ifdef CONFIG_PCIEASPM above, and this should go
+> under that.  "aspm" in English text is an acronym and should be
+> capitalized, just like "BIOS".
+
+OK
+
+> 
+>>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>>  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+>>  
+>> -- 
+>> 1.9.1
+>>
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
