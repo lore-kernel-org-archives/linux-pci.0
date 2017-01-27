@@ -1,54 +1,70 @@
-Return-Path: <SRS0=SCap=Y2=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=SCap=Y2=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
-Subject: [PATCH 2/3] PCI: Set pdev->no_msi=1 for HiSilicon Hip06/Hip07 host controllers
-Date: Thu, 12 Jan 2017 14:28:23 +0800
-Message-ID: <1484202504-96686-3-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
-References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Robin Murphy'" <robin.murphy@arm.com>,
+ "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
+ <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
+ <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
+ <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
+ <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
+In-Reply-To: <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
+Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
+ error handling
+Date: Fri, 27 Jan 2017 23:30:05 +0530
+Message-ID: <009901d278c7$34fee230$9efca690$@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe root port in Hip06/Hip07 SoCs does not support MSI/MSI-X,
-it can only transfer MSI/MSI-X from EP, so we add the quirk to
-set root port pdev->no_msi = 1.
+Hi Robin,
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/quirks.c    | 1 +
- include/linux/pci_ids.h | 3 +++
- 2 files changed, 4 insertions(+)
+[..]
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 1800bef..20cbdae 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1634,6 +1634,7 @@ static void quirk_pcie_mch(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7320_MCH,	quirk_pcie_mch);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quirk_pcie_mch);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI,	PCI_DEVICE_ID_HISILICON_1610,	quirk_pcie_mch);
- 
- 
- /*
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 73dda0e..9cc4720 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -3054,4 +3054,7 @@
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_HUAWEI         	0x19e5
-+#define PCI_DEVICE_ID_HISILICON_1610 	0x1610
-+
- #endif /* _LINUX_PCI_IDS_H */
--- 
-1.9.1
+>>> +const struct iommu_ops *of_iommu_configure(struct device *dev,
+>>> +                       struct device_node *master_np)
+>>> +{
+>>> +    const struct iommu_ops *ops;
+>>> +
+>>> +    if (!master_np)
+>>> +        return NULL;
+>>> +
+>>> +    if (dev_is_pci(dev))
+>>> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+>>
+>> I gave the whole patch set a try on ThunderX. really_probe() is failing
+>> on dma_configure()->of_pci_iommu_init() for each PCI device.
+>
+>When you say "failing", do you mean cleanly, or with a crash? I've
+>managed to hit __of_match_node() dereferencing NULL from
+>of_iommu_xlate() in a horribly complicated chain of events, which I'm
+>trying to figure out now, and I wonder if the two might be related.
+
+Sorry that there is crash still. __of_match_node seems to checking
+for NULL arguments , feels like some invalid pointer was passed in.
+Is there any particular sequence to try for this ?
+
+Regards,
+ Sricharan
+
+
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
