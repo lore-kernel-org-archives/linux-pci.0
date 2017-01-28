@@ -1,104 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: Re: [PATCH v3] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-In-Reply-To: <1485853152-31819-1-git-send-email-bharatku@xilinx.com> (Bharat
- Kumar Gogada's message of "Tue, 31 Jan 2017 14:29:12 +0530")
-References: <1485853152-31819-1-git-send-email-bharatku@xilinx.com>
-Date: Tue, 31 Jan 2017 09:19:20 +0000
-Message-ID: <868tpr8u3r.fsf@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:58798 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750937AbdA1Jta (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jan 2017 04:49:30 -0500
+Date: Fri, 27 Jan 2017 23:36:05 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>
+Subject: Re: [PATCHv4 next 0/3] Limiting pci access
+Message-ID: <20170128073605.GA20114@infradead.org>
+References: <20161208193253.GK25959@localhost.localdomain>
+ <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213005547.GA12844@localhost.localdomain>
+ <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
+ <20161213231840.GD12113@localhost.localdomain>
+ <B58D82457FDA0744A320A2FC5AC253B93D82F37D@fmsmsx104.amr.corp.intel.com>
+ <20170120213550.GA16618@localhost.localdomain>
+ <20170121073140.GA26396@wunner.de>
+ <20170121084243.GA24706@kroah.com>
+ <20170123160452.GA10771@localhost.localdomain>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: robh@kernel.org, arnd@arndb.de, linux-pci@vger.kernel.org,
- michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
- Bharat Kumar Gogada <bharatku@xilinx.com>, paul.gortmaker@windriver.com,
- rgummal@xilinx.com, bhelgaas@google.com, colin.king@canonical.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170123160452.GA10771@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31 2017 at 08:59:12 AM, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
-> - Adding mutex lock for protecting legacy mask register
-> - Few wifi end points which only support legacy interrupts,
-> performs hardware reset functionalities after disabling interrupts
-> by invoking disable_irq and then re-enable using enable_irq, they
-> enable hardware interrupts first and then virtual irq line later.
-> - The legacy irq line goes low only after DEASSERT_INTx is
-> received.As the legacy irq line is high immediately after hardware
-> interrupts are enabled but virq of EP is still in disabled state
-> and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-> irq chip is used, interrutps are not masked and system is
-> hanging with CPU stall.
-> - Adding irq chip functions instead of dummy irq chip for legacy
-> interrupts.
-> - Legacy interrupts are level sensitive, so using handle_level_irq
-> is more appropriate as it is masks interrupts until End point handles
-> interrupts and unmasks interrutps after End point handler is executed.
-> - Legacy interrupts are level triggered, virtual irq line of End
-> Point shows as edge in /proc/interrupts.
-> - Setting irq flags of virtual irq line of EP to level triggered
-> at the time of mapping.
->
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> ---
->  drivers/pci/host/pcie-xilinx-nwl.c |   43 +++++++++++++++++++++++++++++++++++-
->  1 files changed, 42 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-> index 43eaa4a..76dd094 100644
-> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> @@ -184,6 +184,7 @@ struct nwl_pcie {
->  	u8 root_busno;
->  	struct nwl_msi msi;
->  	struct irq_domain *legacy_irq_domain;
-> +	struct mutex leg_mask_lock;
->  };
->  
->  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
-> @@ -395,11 +396,50 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
->  	chained_irq_exit(chip, desc);
->  }
->  
-> +static void nwl_mask_leg_irq(struct irq_data *data)
-> +{
-> +	struct irq_desc *desc = irq_to_desc(data->irq);
-> +	struct nwl_pcie *pcie;
-> +	u32 mask;
-> +	u32 val;
-> +
-> +	pcie = irq_desc_get_chip_data(desc);
-> +	mask = 1 << (data->hwirq - 1);
-> +	mutex_lock(&pcie->leg_mask_lock);
-> +	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
-> +	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
-> +	mutex_unlock(&pcie->leg_mask_lock);
+Or to put it the other way around - why even start an operation
+that will fail?
 
-Have you looked at which context this is called in? In a number of
-cases, the mask/unmask methods are called whilst you're in an interrupt
-context. If you sleep there (which is what happens with a contended
-mutex), you die horribly.
+We have a pretty similar issue in file system land: A file system
+must handle failure from the storage device at any time to provide
+data integrity.  But that doesn't mean we can't optimize for the
+case where a device is toast (host removed, fails any I/O, etc).
+In that case we mark the file system as shutdown and stop submitting
+more I/O, potentially avoiding up to hours of recovery time.
 
-Given these constraints, you should use raw_spin_lock_irqsave and co,
-since this can be called from both interrupt and non-interrupt contexts.
-
-Thanks,
-
-        M.
--- 
-Jazz is not dead. It just smells funny.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It would be helpful for everyone up and down the stack to do these
+don't do anyting stupid if you can avoid it starting from the lowest
+layers.
