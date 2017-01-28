@@ -1,72 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:44363 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967778AbdAEESW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 23:18:22 -0500
-Subject: Re: [PATCH V2 1/5] Documetation: samsung-phy: add the exynos-pcie-phy
- binding
-To: Jaehoon Chung <jh80.chung@samsung.com>, linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
-        cpgs@samsung.com
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Message-id: <4110cfa2-bbe8-337e-5f2c-13d82cd23713@samsung.com>
-Date: Thu, 05 Jan 2017 09:46:13 +0530
-MIME-version: 1.0
-In-reply-to: <20170104123435.30740-2-jh80.chung@samsung.com>
-Content-type: text/plain; charset=windows-1252; format=flowed
-References: <20170104123435.30740-1-jh80.chung@samsung.com>
- <CGME20170104123436epcas1p1d3d840e4ade396a60ce690b09d486990@epcas1p1.samsung.com>
- <20170104123435.30740-2-jh80.chung@samsung.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33620 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751289AbdA1Q1r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 28 Jan 2017 11:27:47 -0500
+Date: Sat, 28 Jan 2017 08:05:10 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Kevin Wilson <wkevils@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Virtual functions numbering (SRIOV) - why odd numbers are not
+ used ?
+Message-ID: <20170128080510.436f0cb7@t450s.home>
+In-Reply-To: <CAGXs5wVy0CPQB_NCsM+sSny4wj61p-gRAsTVbdSi_6drmz6TGg@mail.gmail.com>
+References: <CAGXs5wVy0CPQB_NCsM+sSny4wj61p-gRAsTVbdSi_6drmz6TGg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+On Sat, 28 Jan 2017 13:28:25 +0200
+Kevin Wilson <wkevils@gmail.com> wrote:
 
-On 01/04/2017 06:04 PM, Jaehoon Chung wrote:
-> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
-> This is for using generic PHY framework.
->
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
-> Changelog on V2:
-> - Remove the child node.
-> - Add 2nd address to the parent reg prop.
->
->  Documentation/devicetree/bindings/phy/samsung-phy.txt | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> index 9872ba8..ab80bfe 100644
-> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> @@ -191,3 +191,20 @@ Example:
->  		usbdrdphy0 = &usb3_phy0;
->  		usbdrdphy1 = &usb3_phy1;
->  	};
-> +
-> +Samsung Exynos SoC series PCIe PHY controller
-> +--------------------------------------------------
-> +Required properties:
-> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
-> +- #phy-cells : Must be zero
-> +- reg : a register used by phy driver.
-> +	- First is for phy register, second is for block register.
-> +- reg-names : Must be set to "phy" and "block".
-> +
-In general PHY uses a "reference clock" to work, if that is true for 
-5440 also, will you consider adding an (may be) optional clock 
-properties as well?
+> Hello,
+> I had noticed that whenever I create virtual function on Nic devices,
+> the numbering scheme is the same:
+> the the last digit of first VF is .0, of the second one is .2, the
+> third is .4, and so on; and no odd number are used.
+> 
+> For example, with Intel IXGBE nic, we have:
+> 
+> 
+> echo 4 > /sys/bus/pci/devices/0000:06:00.0/sriov_numvfs
+> 
+> lspci | grep "Virtual Function"
+> 06:10.0 Ethernet controller: Intel Corporation 82599 Ethernet
+> Controller Virtual Function (rev 01)
+> 06:10.2 Ethernet controller: Intel Corporation 82599 Ethernet
+> Controller Virtual Function (rev 01)
+> 06:10.4 Ethernet controller: Intel Corporation 82599 Ethernet
+> Controller Virtual Function (rev 01)
+> 06:10.6 Ethernet controller: Intel Corporation 82599 Ethernet
+> Controller Virtual Function (rev 01)
+> 
+> Does anybody know what is the reason that odd numbers are not used ?
+> are they kept for something else ?
+> For example, why don't we get : 06:10.0,06:10.1,06:10.2,06:10.3 in this case ?
 
-otherwise this binding looks ok to me.
-> +Example:
-> +	pcie_phy0: pcie-phy@270000 {
-> +		#phy-cells = <0>;
-> +		compatible = "samsung,exynos5440-pcie-phy";
-> +		reg = <0x270000 0x1000>, <0x271000 0x40>;
-> +		reg-names = "phy", "block";
-> +	};
->
+The SR-IOV capability defines the offset and stride for VFs.  On Intel
+devices the stride is typically 2, so you get this even number VF
+layout, but only on the even numbered PF.  The odd numbered PF
+typically fills in the gaps, creating only odd numbered VFs.  In any
+case, it's the card vendor that defines the VF layout via the SR-IOV
+capability parameters.  Thanks,
+
+Alex
