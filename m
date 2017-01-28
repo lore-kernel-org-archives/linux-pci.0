@@ -1,43 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from orbyte.nwl.cc ([151.80.46.58]:41113 "EHLO mail.nwl.cc"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754256AbdARNCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 08:02:00 -0500
-From: Phil Sutter <phil@nwl.cc>
-To: David Miller <davem@davemloft.net>,
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:35792 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751974AbdA1Ute (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jan 2017 15:49:34 -0500
+Received: by mail-lf0-f53.google.com with SMTP id n124so177285530lfd.2
+        for <linux-pci@vger.kernel.org>; Sat, 28 Jan 2017 12:49:06 -0800 (PST)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [net-next PATCH 0/3] Retrieve number of VFs in a bus-agnostic way
-Date: Wed, 18 Jan 2017 14:04:36 +0100
-Message-Id: <20170118130439.15023-1-phil@nwl.cc>
+Cc: Janos Laube <janos.dev@gmail.com>,
+        Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+        openwrt-devel@openwrt.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH 3/4] ARM: gemini: select MIGHT_HAVE_PCI
+Date: Sat, 28 Jan 2017 21:48:38 +0100
+Message-Id: <20170128204839.18330-3-linus.walleij@linaro.org>
+In-Reply-To: <20170128204839.18330-1-linus.walleij@linaro.org>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, it was assumed that only PCI NICs would be capable of having
-virtual functions - with my proposed enhancement of dummy NIC driver
-implementing (fake) ones for testing purposes, this is no longer true.
+As we have a PCI driver for the Gemini, we should select
+MIGHT_HAVE_PCI.
 
-Discussion of said patch has led to the suggestion of implementing a
-bus-agnostic method for VF count retrieval so rtnetlink could work with
-both real VF-capable PCI NICs as well as my dummy modifications without
-introducing ugly hacks.
+Cc: Janos Laube <janos.dev@gmail.com>
+Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+PCI maintainers: this is FYI only, I will funnel this to the ARM
+SoC tree once we are done with the PCI driver.
+---
+ arch/arm/mach-gemini/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-The following series tries to achieve just that by introducing a bus
-type callback to retrieve a device's number of VFs, implementing this
-callback for PCI bus and finally adjusting rtnetlink to make use of the
-generalized infrastructure.
-
-Phil Sutter (3):
-  device: bus_type: Introduce num_vf callback
-  PCI: implement num_vf bus type callback
-  device: Implement a bus agnostic dev_num_vf routine
-
- drivers/pci/pci-driver.c |  6 ++++++
- include/linux/device.h   | 11 +++++++++++
- include/linux/pci.h      |  2 --
- net/core/rtnetlink.c     |  3 +--
- 4 files changed, 18 insertions(+), 4 deletions(-)
-
+diff --git a/arch/arm/mach-gemini/Kconfig b/arch/arm/mach-gemini/Kconfig
+index 798abb16bb88..91ea52ccf13c 100644
+--- a/arch/arm/mach-gemini/Kconfig
++++ b/arch/arm/mach-gemini/Kconfig
+@@ -5,6 +5,7 @@ menuconfig ARCH_GEMINI
+ 	select GEMINI_TIMER
+ 	select GPIO_GEMINI
+ 	select GPIOLIB
++	select MIGHT_HAVE_PCI
+ 	select POWER_RESET
+ 	select POWER_RESET_SYSCON
+ 	select SERIAL_OF_PLATFORM
 -- 
-2.11.0
+2.9.3
 
