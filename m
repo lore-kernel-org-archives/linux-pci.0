@@ -1,190 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V7 09/11] arm64: dma-mapping: Remove the notifier trick to handle early setting of dma_ops
-Date: Mon, 23 Jan 2017 21:48:11 +0530
-Message-Id: <1485188293-20263-10-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 28 Jan 2017 15:29:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Subject: Re: [PATCH v2] PCI: exynos: refactor exynos pcie driver
+Message-ID: <20170128212912.GK20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20170105035104epcas1p2de6c52e577dd78a4f3539fb32d1f0dfe@epcas1p2.samsung.com>
+ <1483588418-2551-1-git-send-email-pankaj.dubey@samsung.com>
+MIME-Version: 1.0
+In-Reply-To: <1483588418-2551-1-git-send-email-pankaj.dubey@samsung.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Niyas Ahmed S T <niyas.ahmed@samsung.com>, linux-kernel@vger.kernel.org,
+ krzk@kernel.org, jh80.chung@samsung.com, kgene@kernel.org,
+ alim.akhtar@samsung.com, jingoohan1@gmail.com, bhelgaas@google.com,
+ sanath@samsung.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With arch_setup_dma_ops now being called late during device's probe after
-the device's iommu is probed, the notifier trick required to handle the
-early setup of dma_ops before the iommu group gets created is not
-required. So removing the notifier's here.
+On Thu, Jan 05, 2017 at 09:23:38AM +0530, Pankaj Dubey wrote:
+> From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+> 
+> Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
+> This patch does refactoring of Exynos PCIe driver to extend support
+> for other Exynos SoC.
+> 
+> Following are the main changes done via this patch:
+> 
+> 1) It adds separate structs for memory, clock resources.
+> 
+> Reason behind this change is, moving ahead various Exynos SoC will
+> have different hardware resources such as iomem, clocks, regmap handles
+> etc. for PCIe controller, so keeping these resources in separate struct
+> will help us in intiailizing them via per SoC ops, and will avoid too
+> many of_machine_is_compatible in code, and help us simplifying
+> exynos_pcie struct.
+> 
+> 2) It add exynos_pcie_ops struct which will allow us to support the
+> differences in resources in different Exynos SoC.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Niyas Ahmed S T <niyas.ahmed@samsung.com>
+> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> ---
+> This patch set is prepared on top of Krzysztof's for-next and
+> PCIe driver cleanup patch [1] by Jaehoon Chung.
+> 
+> [1]: https://lkml.org/lkml/2016/12/19/44
 
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-[rm: clean up even more]
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- arch/arm64/mm/dma-mapping.c | 132 ++++----------------------------------------
- 1 file changed, 12 insertions(+), 120 deletions(-)
+Jaehoon has posted an updated version since you posted this patch, so
+I assume this will need to be rebased on that.  I'll drop this version and
+wait for your rebased version.
 
-diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-index e040827..5845b13 100644
---- a/arch/arm64/mm/dma-mapping.c
-+++ b/arch/arm64/mm/dma-mapping.c
-@@ -803,140 +803,32 @@ static void __iommu_unmap_sg_attrs(struct device *dev,
- 	.mapping_error = iommu_dma_mapping_error,
- };
- 
--/*
-- * TODO: Right now __iommu_setup_dma_ops() gets called too early to do
-- * everything it needs to - the device is only partially created and the
-- * IOMMU driver hasn't seen it yet, so it can't have a group. Thus we
-- * need this delayed attachment dance. Once IOMMU probe ordering is sorted
-- * to move the arch_setup_dma_ops() call later, all the notifier bits below
-- * become unnecessary, and will go away.
-- */
--struct iommu_dma_notifier_data {
--	struct list_head list;
--	struct device *dev;
--	const struct iommu_ops *ops;
--	u64 dma_base;
--	u64 size;
--};
--static LIST_HEAD(iommu_dma_masters);
--static DEFINE_MUTEX(iommu_dma_notifier_lock);
--
--static bool do_iommu_attach(struct device *dev, const struct iommu_ops *ops,
--			   u64 dma_base, u64 size)
--{
--	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
--
--	/*
--	 * If the IOMMU driver has the DMA domain support that we require,
--	 * then the IOMMU core will have already configured a group for this
--	 * device, and allocated the default domain for that group.
--	 */
--	if (!domain || iommu_dma_init_domain(domain, dma_base, size, dev)) {
--		pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
--			dev_name(dev));
--		return false;
--	}
--
--	dev->archdata.dma_ops = &iommu_dma_ops;
--	return true;
--}
--
--static void queue_iommu_attach(struct device *dev, const struct iommu_ops *ops,
--			      u64 dma_base, u64 size)
--{
--	struct iommu_dma_notifier_data *iommudata;
--
--	iommudata = kzalloc(sizeof(*iommudata), GFP_KERNEL);
--	if (!iommudata)
--		return;
--
--	iommudata->dev = dev;
--	iommudata->ops = ops;
--	iommudata->dma_base = dma_base;
--	iommudata->size = size;
--
--	mutex_lock(&iommu_dma_notifier_lock);
--	list_add(&iommudata->list, &iommu_dma_masters);
--	mutex_unlock(&iommu_dma_notifier_lock);
--}
--
--static int __iommu_attach_notifier(struct notifier_block *nb,
--				   unsigned long action, void *data)
--{
--	struct iommu_dma_notifier_data *master, *tmp;
--
--	if (action != BUS_NOTIFY_BIND_DRIVER)
--		return 0;
--
--	mutex_lock(&iommu_dma_notifier_lock);
--	list_for_each_entry_safe(master, tmp, &iommu_dma_masters, list) {
--		if (data == master->dev && do_iommu_attach(master->dev,
--				master->ops, master->dma_base, master->size)) {
--			list_del(&master->list);
--			kfree(master);
--			break;
--		}
--	}
--	mutex_unlock(&iommu_dma_notifier_lock);
--	return 0;
--}
--
--static int __init register_iommu_dma_ops_notifier(struct bus_type *bus)
--{
--	struct notifier_block *nb = kzalloc(sizeof(*nb), GFP_KERNEL);
--	int ret;
--
--	if (!nb)
--		return -ENOMEM;
--
--	nb->notifier_call = __iommu_attach_notifier;
--
--	ret = bus_register_notifier(bus, nb);
--	if (ret) {
--		pr_warn("Failed to register DMA domain notifier; IOMMU DMA ops unavailable on bus '%s'\n",
--			bus->name);
--		kfree(nb);
--	}
--	return ret;
--}
--
- static int __init __iommu_dma_init(void)
- {
--	int ret;
--
--	ret = iommu_dma_init();
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&platform_bus_type);
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&amba_bustype);
--#ifdef CONFIG_PCI
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&pci_bus_type);
--#endif
--	return ret;
-+	return iommu_dma_init();
- }
- arch_initcall(__iommu_dma_init);
- 
- static void __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
- 				  const struct iommu_ops *ops)
- {
--	struct iommu_group *group;
-+	struct iommu_domain *domain;
- 
- 	if (!ops)
- 		return;
-+
- 	/*
--	 * TODO: As a concession to the future, we're ready to handle being
--	 * called both early and late (i.e. after bus_add_device). Once all
--	 * the platform bus code is reworked to call us late and the notifier
--	 * junk above goes away, move the body of do_iommu_attach here.
-+	 * The IOMMU core code allocates the default DMA domain, which the
-+	 * underlying IOMMU driver needs to support via the dma-iommu layer.
- 	 */
--	group = iommu_group_get(dev);
--	if (group) {
--		do_iommu_attach(dev, ops, dma_base, size);
--		iommu_group_put(group);
--	} else {
--		queue_iommu_attach(dev, ops, dma_base, size);
-+	domain = iommu_get_domain_for_dev(dev);
-+	if (!domain || iommu_dma_init_domain(domain, dma_base, size, dev)) {
-+		pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
-+			dev_name(dev));
-+		return;
- 	}
-+
-+	dev->archdata.dma_ops = &iommu_dma_ops;
- }
- 
- void arch_teardown_dma_ops(struct device *dev)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
