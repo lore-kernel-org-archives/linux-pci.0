@@ -1,180 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34951 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753508AbdADT4S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 14:56:18 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jaehoon Chung'" <jh80.chung@samsung.com>,
-        <linux-pci@vger.kernel.org>
-Cc: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-samsung-soc@vger.kernel.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>, <kgene@kernel.org>,
-        <krzk@kernel.org>, <kishon@ti.com>, <vivek.gautam@codeaurora.org>,
-        <pankaj.dubey@samsung.com>, <alim.akhtar@samsung.com>,
-        <cpgs@samsung.com>
-References: <20170104123435.30740-1-jh80.chung@samsung.com> <CGME20170104123436epcas1p1651443c5fe13f67006864aed2f70fa9d@epcas1p1.samsung.com> <20170104123435.30740-5-jh80.chung@samsung.com>
-In-Reply-To: <20170104123435.30740-5-jh80.chung@samsung.com>
-Subject: Re: [PATCH V2 4/5] PCI: exynos: support the using PHY generic framework
-Date: Wed, 4 Jan 2017 14:56:15 -0500
-Message-ID: <000201d266c4$9bed0270$d3c70750$@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 28 Jan 2017 14:54:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukasz Majewski <lukma@denx.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pcie: ti: Provide patch to force GEN1 PCIe operation
+Message-ID: <20170128205459.GD20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484486354-4585-1-git-send-email-lukma@denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484486354-4585-1-git-send-email-lukma@denx.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 4, 2017 7:35 AM, Jaehoon Chung wrote:
+On Sun, Jan 15, 2017 at 02:19:14PM +0100, Lukasz Majewski wrote:
+> Some devices (due to e.g. bad PCIe signal integrity) require to run
+> with forced GEN1 speed on PCIe bus.
 > 
-> This patch is for using PHY generic framework.
-> To maintain backward compatibility, check whether phy is supported or
-> not with 'using_phy'.
+> This patch changes the speed explicitly on dra7 based devices when
+> proper device tree attribute is defined for the PCIe controller.
 > 
-> And if someone use the old dt-file, display the "deprecated" message.
-> But it's still working fine with it.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> Signed-off-by: Lukasz Majewski <lukma@denx.de>
 
-It looks good!
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
+Hi Lukasz, there was a lot of discussion after this, so I'm going to
+drop this version and wait for a new one (if one is still needed).
+I think I saw a URL with more scenario details; please include that if
+appropriate (ideally the details would be in a permanent public place
+like the kernel.org bugzilla).
 
 > ---
-> Changelog on V2:
-> - This patch is split from previous PATCH[1/4]
-> - Maintain the backward compatibility
-> - Adds 'using_phy' for cheching whether phy framework is used or not
-> - Adds 'DEPRECATED' message for old dt-binding way
 > 
->  drivers/pci/host/pci-exynos.c | 61 +++++++++++++++++++++++++++++++++++---
-> -----
->  1 file changed, 50 insertions(+), 11 deletions(-)
+> Patch applies on newest origin/master
+> SHA1: f4d3935e4f4884ba80561db5549394afb8eef8f7
 > 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index feed0fd..34f2eed 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -21,6 +21,7 @@
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/phy/phy.h>
->  #include <linux/resource.h>
->  #include <linux/signal.h>
->  #include <linux/types.h>
-> @@ -110,6 +111,10 @@ struct exynos_pcie {
->  	struct exynos_pcie_clk_res	*clk_res;
->  	const struct exynos_pcie_ops	*ops;
->  	int				reset_gpio;
+> Tested at AM5728
+> 
+> ---
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |  1 +
+>  drivers/pci/host/pci-dra7xx.c                    | 23 +++++++++++++++++++++++
+>  drivers/pci/host/pcie-designware.h               |  1 +
+>  3 files changed, 25 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 60e2516..9f97409 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -25,6 +25,7 @@ PCIe Designware Controller
+>  
+>  Optional Property:
+>   - gpios : Should be added if a gpio line is required to drive PERST# line
+> + - to,pcie-is-gen1: Indicates that forced gen1 port operation is needed.
+>  
+>  Example:
+>  axi {
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 9595fad..eec5fae 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -63,6 +63,13 @@
+>  #define	LINK_UP						BIT(16)
+>  #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+>  
+> +#define         PCIECTRL_EP_DBICS_LNK_CAP                       0x007C
+> +#define         MAX_LINK_SPEEDS_MASK				GENMASK(3, 0)
+> +#define         MAX_LINK_SPEEDS_GEN1                            BIT(0)
 > +
-> +	/* For Generic PHY Framework */
-> +	bool				using_phy;
-> +	struct phy			*phy;
->  };
-> 
->  struct exynos_pcie_ops {
-> @@ -135,6 +140,10 @@ static int exynos5440_pcie_get_mem_resources(struct
-> platform_device *pdev,
->  	if (IS_ERR(ep->mem_res->elbi_base))
->  		return PTR_ERR(ep->mem_res->elbi_base);
-> 
-> +	/* If using the PHY framework, doesn't need to get other resource
-> */
-> +	if (ep->using_phy)
-> +		return 0;
+> +#define         PCIECTRL_PL_WIDTH_SPEED_CTL                     0x080C
+> +#define         CFG_DIRECTED_SPEED_CHANGE                       BIT(17)
 > +
->  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->  	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(ep->mem_res->phy_base))
-> @@ -396,17 +405,28 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *exynos_pcie)
+>  struct dra7xx_pcie {
+>  	struct pcie_port	pp;
+>  	void __iomem		*base;		/* DT ti_conf */
+> @@ -270,6 +277,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  	struct pcie_port *pp = &dra7xx->pp;
+>  	struct device *dev = pp->dev;
+>  	struct resource *res;
+> +	u32 val;
+>  
+>  	pp->irq = platform_get_irq(pdev, 1);
+>  	if (pp->irq < 0) {
+> @@ -296,6 +304,18 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  	if (!pp->dbi_base)
+>  		return -ENOMEM;
+>  
+> +	if (pp->is_gen1) {
+> +		dev_info(dev, "GEN1 forced\n");
+> +
+> +		val = readl(pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
+> +		set_mask_bits(&val, MAX_LINK_SPEEDS_MASK, MAX_LINK_SPEEDS_GEN1);
+> +		writel(val, pp->dbi_base + PCIECTRL_EP_DBICS_LNK_CAP);
+> +
+> +		val = readl(pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
+> +		val &= ~CFG_DIRECTED_SPEED_CHANGE;
+> +		writel(val, pp->dbi_base + PCIECTRL_PL_WIDTH_SPEED_CTL);
+> +	}
+> +
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+>  		dev_err(dev, "failed to initialize host\n");
+> @@ -404,6 +424,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  		goto err_gpio;
 >  	}
+>  
+> +	if (of_property_read_bool(np, "ti,pcie-is-gen1"))
+> +		pp->is_gen1 = true;
+> +
+>  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+>  	reg &= ~LTSSM_EN;
+>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index a567ea2..2fb0b18 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -50,6 +50,7 @@ struct pcie_port {
+>  	struct irq_domain	*irq_domain;
+>  	unsigned long		msi_data;
+>  	u8			iatu_unroll_enabled;
+> +	u8                      is_gen1;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>  };
+>  
+> -- 
+> 2.1.4
 > 
->  	exynos_pcie_assert_core_reset(exynos_pcie);
-> -	exynos_pcie_assert_phy_reset(exynos_pcie);
-> -	exynos_pcie_deassert_phy_reset(exynos_pcie);
-> -	exynos_pcie_power_on_phy(exynos_pcie);
-> -	exynos_pcie_init_phy(exynos_pcie);
-> -
-> -	/* pulse for common reset */
-> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
-> -				PCIE_PHY_COMMON_RESET);
-> -	udelay(500);
-> -	exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
-> -				PCIE_PHY_COMMON_RESET);
-> +
-> +	if (exynos_pcie->using_phy) {
-> +		phy_reset(exynos_pcie->phy);
-> +
-> +		exynos_pcie_writel(exynos_pcie->mem_res->elbi_base, 1,
-> +				PCIE_PWR_RESET);
-> +
-> +		phy_power_on(exynos_pcie->phy);
-> +		phy_init(exynos_pcie->phy);
-> +	} else {
-> +		exynos_pcie_assert_phy_reset(exynos_pcie);
-> +		exynos_pcie_deassert_phy_reset(exynos_pcie);
-> +		exynos_pcie_power_on_phy(exynos_pcie);
-> +		exynos_pcie_init_phy(exynos_pcie);
-> +
-> +		/* pulse for common reset */
-> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 1,
-> +					PCIE_PHY_COMMON_RESET);
-> +		udelay(500);
-> +		exynos_pcie_writel(exynos_pcie->mem_res->block_base, 0,
-> +					PCIE_PHY_COMMON_RESET);
-> +	}
-> 
->  	exynos_pcie_deassert_core_reset(exynos_pcie);
->  	dw_pcie_setup_rc(pp);
-> @@ -420,6 +440,11 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *exynos_pcie)
->  	if (!dw_pcie_wait_for_link(pp))
->  		return 0;
-> 
-> +	if (exynos_pcie->using_phy) {
-> +		phy_power_off(exynos_pcie->phy);
-> +		return -ETIMEDOUT;
-> +	}
-> +
->  	while (exynos_pcie_readl(exynos_pcie->mem_res->phy_base,
->  				PCIE_PHY_PLL_LOCKED) == 0) {
->  		val = exynos_pcie_readl(exynos_pcie->mem_res->block_base,
-> @@ -633,6 +658,17 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
-> 
->  	exynos_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> 
-> +	/* Assume that controller doesn't use the PHY framework */
-> +	exynos_pcie->using_phy = false;
-> +
-> +	exynos_pcie->phy = devm_of_phy_get(dev, np, NULL);
-> +	if (IS_ERR(exynos_pcie->phy)) {
-> +		if (PTR_ERR(exynos_pcie->phy) == -EPROBE_DEFER)
-> +			return PTR_ERR(exynos_pcie->phy);
-> +		dev_warn(dev, "Use the 'phy' property. Current DT of pci-
-> exynos was deprecated!!\n");
-> +	} else
-> +		exynos_pcie->using_phy = true;
-> +
->  	if (exynos_pcie->ops && exynos_pcie->ops->get_mem_resources) {
->  		ret = exynos_pcie->ops->get_mem_resources(pdev, exynos_pcie);
->  		if (ret)
-> @@ -657,6 +693,9 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
->  	return 0;
-> 
->  fail_probe:
-> +	if (exynos_pcie->using_phy)
-> +		phy_exit(exynos_pcie->phy);
-> +
->  	if (exynos_pcie->ops && exynos_pcie->ops->deinit_clk_resources)
->  		exynos_pcie->ops->deinit_clk_resources(exynos_pcie);
->  	return ret;
 > --
-> 2.10.2
-
-
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
