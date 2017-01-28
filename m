@@ -1,93 +1,156 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Jan 2017 14:47:40 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41466 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752114AbdA1V7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 28 Jan 2017 16:59:45 -0500
+Date: Sat, 28 Jan 2017 15:52:08 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH] PCI: mvebu: change delay after reset to the PCIe spec
- mandated 100ms
-Message-ID: <20170130204740.GT20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170116111142.6866-1-l.stach@pengutronix.de>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org,
+        Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170116111142.6866-1-l.stach@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- patchwork-lst@pengutronix.de, kernel@pengutronix.de,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 16, 2017 at 12:11:42PM +0100, Lucas Stach wrote:
-> The current default of 20ms cause some devices, which are slow to initialize,
-> to not show up during the bus scanning. Change this to the PCIe spec mandated
-> 100ms and document this in the DT binding.
+On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> We're about to allow runtime PM on Thunderbolt ports in
+> pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
+> hotplug ports in pci_dev_check_d3cold().  In both cases we need to
+> uniquely identify if a PCI device belongs to a Thunderbolt controller.
+
+Sounds like "a device belongs to a Thunderbolt controller" means the
+device is part of a Thunderbolt controller or part of the hierarchy
+below it?
+
+> We also have the need to detect presence of a Thunderbolt controller in
+> drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros cannot
+> switch external DP/HDMI ports between GPUs if they have Thunderbolt.
+
+This series doesn't touch apple-gmux.c, and I don't know anything
+about this MacBook Pro topology, so I can't tell why Thunderbolt is
+relevant here.
+
+> Furthermore, in multiple places in the DRM subsystem we need to detect
+> whether a GPU is on-board or attached with Thunderbolt.  As an example,
+> Thunderbolt-attached GPUs shall not be registered with vga_switcheroo.
+
+Why?  The connection between vga_switcheroo and Thunderbolt is not
+obvious, at least to this non-GPU person.
+
+> Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234
+> on devices belonging to a Thunderbolt controller which allows us to
+> recognize them.
 > 
-> From PCIe base spec rev 3.0, chapter "6.6.1. Conventional Reset":
+> Detect presence of this VSEC on device probe and cache it in a newly
+> added is_thunderbolt bit in struct pci_dev which can then be queried by
+> pci_bridge_d3_possible(), pci_dev_check_d3cold(), apple-gmux and others.
 > 
-> "To allow components to perform internal initialization, system software must
-> wait a specified minimum period following the end of a Conventional Reset of
-> one or more devices before it is permitted to issue Configuration Requests to
-> those devices.
-> 
-> With a Downstream Port that does not support Link speeds greater than
-> 5.0 GT/s, software must wait a minimum of 100 ms before sending a
-> Configuration Request to the device immediately below that Port."
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Andreas Noever <andreas.noever@gmail.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Cc: Amir Levy <amir.jer.levy@intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 > ---
->  Documentation/devicetree/bindings/pci/mvebu-pci.txt | 3 ++-
->  drivers/pci/host/pci-mvebu.c                        | 2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
+>  drivers/pci/pci.h   |  2 ++
+>  drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  3 files changed, 37 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> index 08c716b2c6b6..2de6f65ecfb1 100644
-> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> @@ -78,7 +78,8 @@ and the following optional properties:
->    multiple lanes. If this property is not found, we assume that the
->    value is 0.
->  - reset-gpios: optional gpio to PERST#
-> -- reset-delay-us: delay in us to wait after reset de-assertion
-> +- reset-delay-us: delay in us to wait after reset de-assertion, if not
-> +  specified will default to 100ms, as required by the PCIe specification.
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index cb17db242f30..45c2b8144911 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -3,6 +3,8 @@
 >  
->  Example:
+>  #define PCI_FIND_CAP_TTL	48
 >  
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 45a89d969700..0c9dd47ce74d 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -1162,7 +1162,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
->  		return ret;
+> +#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+> +
+>  extern const unsigned char pcie_link_speed[];
 >  
->  	if (port->reset_gpio) {
-> -		u32 reset_udelay = 20000;
-> +		u32 reset_udelay = 100000;
+>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e164b5c9f0f0..891a8fa1f9f6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+>  		pdev->is_hotplug_bridge = 1;
+>  }
+>  
+> +static void set_pcie_vendor_specific(struct pci_dev *dev)
 
-Can we use "PCI_PM_D3COLD_WAIT * 1000" for the initial value to connect it
-with other similar cases?
+This is very specific to Thunderbolt, so let's name it something that
+conveys that information.  The fact that we use a vendor-specific
+capability to figure it out isn't really relevant in the caller.
 
+> +{
+> +	int vsec = 0;
+> +	u32 header;
+> +
+> +	while ((vsec = pci_find_next_ext_capability(dev, vsec,
+> +						    PCI_EXT_CAP_ID_VNDR))) {
+> +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
+> +
+> +		/* Is the device part of a Thunderbolt controller? */
+> +		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
+> +		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT)
+> +			dev->is_thunderbolt = 1;
+
+			return;
+
+> +	}
+> +
+> +	/*
+> +	 * Is the device attached with Thunderbolt?  Walk upwards and check for
+> +	 * each encountered bridge if it's part of a Thunderbolt controller.
+> +	 * Reaching the host bridge means dev is soldered to the mainboard.
+> +	 */
+> +	if (!dev->is_thunderbolt) {
+
+The "if" is unnecessary if you return above.
+
+> +		struct pci_dev *parent = dev;
+> +
+> +		while ((parent = pci_upstream_bridge(parent)))
+> +			if (parent->is_thunderbolt) {
+> +				dev->is_thunderbolt = 1;
+> +				break;
+> +			}
+> +	}
+> +}
+> +
+>  /**
+>   * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
+>   * @dev: PCI device
+> @@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
+>  	/* need to have dev->class ready */
+>  	dev->cfg_size = pci_cfg_space_size(dev);
 >  
->  		of_property_read_u32(port->dn, "reset-delay-us",
->  				     &reset_udelay);
+> +	/* need to have dev->cfg_size ready */
+> +	set_pcie_vendor_specific(dev);
+> +
+>  	/* "Unknown power state" */
+>  	dev->current_state = PCI_UNKNOWN;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e2d1a124216a..3c775e8498f1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -358,6 +358,7 @@ struct pci_dev {
+>  	unsigned int	is_virtfn:1;
+>  	unsigned int	reset_fn:1;
+>  	unsigned int    is_hotplug_bridge:1;
+> +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
+>  	unsigned int    __aer_firmware_first_valid:1;
+>  	unsigned int	__aer_firmware_first:1;
+>  	unsigned int	broken_intx_masking:1;
 > -- 
 > 2.11.0
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
