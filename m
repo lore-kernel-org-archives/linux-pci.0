@@ -1,73 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:44346 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751743AbdALK31 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:29:27 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 20/37] Documentation: PCI: Add binding documentation for pci-test endpoint function
-Date: Thu, 12 Jan 2017 15:56:09 +0530
-Message-ID: <1484216786-17292-21-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Sricharan R <sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+Date: Sun, 29 Jan 2017 12:53:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170124123711.GA11996@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>, robin.murphy@arm.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add binding documentation for pci-test endpoint function that helps in
-adding and configuring pci-test endpoint function.
+On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+> [+hanjun, tomasz, sinan]
+> 
+> It is quite a key patchset, I would be glad if they can test on their
+> respective platforms with IORT.
+> 
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                         |    2 ++
- .../PCI/endpoint/function/binding/pci-test.txt     |   17 +++++++++++++++++
- 2 files changed, 19 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
+Tested on top of 4.10-rc5.
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 4e5a283..53717b7 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -18,3 +18,5 @@ endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
- endpoint/pci-test-function.txt
- 	- specification of *pci test* function device.
-+endpoint/function/binding/
-+	- binding documentation for pci endpoint function
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-new file mode 100644
-index 0000000..7358240
---- /dev/null
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -0,0 +1,17 @@
-+PCI TEST ENDPOINT FUNCTION
-+
-+name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-+
-+Configurable Fields:
-+vendorid	 : should be 0x104c
-+deviceid	 : should be 0xffff
-+revid		 : dont't care
-+progif_code	 : don't care
-+subclass_code	 : don't care
-+baseclass_code	 : should be 0xff
-+cache_line_size	 : don't care
-+subsys_vendor_id : don't care
-+subsys_id	 : don't care
-+interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
-+msi_interrupts	 : Should be 1 to 32 depending on the number of msi interrupts
-+		   to test
+1.	Platform Hidma device passed dmatest
+2.	Seeing some USB stalls on a platform USB device.
+3.	PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+4. 	NVMe driver didn't probe following a hotplug insertion and received an
+SMMU error event during the insertion.
+
+/sys/bus/pci/slots/4 #
+/sys/bus/pci/slots/4 # dmesg | grep nvme
+[   14.041357] nvme nvme0: pci function 0003:01:00.0
+[  198.399521] nvme nvme0: pci function 0003:01:00.0
+[__198.416232]_nvme_0003:01:00.0:_enabling_device_(0000_->_0002)
+[  264.402216] nvme nvme0: I/O 228 QID 0 timeout, disable controller
+[  264.402313] nvme nvme0: Identify Controller failed (-4)
+[  264.421270] nvme nvme0: Removing after probe failure status: -5
+/sys/bus/pci/slots/4 #
+
+
+
 -- 
-1.7.9.5
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
