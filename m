@@ -1,110 +1,184 @@
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Tue, 17 Jan 2017 21:02:58 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
+Return-Path: <SRS0=QVVl=ZL=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=QVVl=ZL=wunner.de=lukas@kernel.org>
+Date: Sun, 29 Jan 2017 01:26:16 +0100
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
-	linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170117210258.GH27312@n2100.armlinux.org.uk>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117175115.GD27312@n2100.armlinux.org.uk>
- <20170117175728.GE27312@n2100.armlinux.org.uk>
- <20170117181458.GB11063@bhelgaas-glaptop.roam.corp.google.com>
- <20170117193414.GG27312@n2100.armlinux.org.uk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170129002616.GA28225@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
+ <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170117193414.GG27312@n2100.armlinux.org.uk>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 07:34:14PM +0000, Russell King - ARM Linux wrote:
-> Uwe, can you try:
+On Sat, Jan 28, 2017 at 03:52:08PM -0600, Bjorn Helgaas wrote:
+> On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> > We're about to allow runtime PM on Thunderbolt ports in
+> > pci_bridge_d3_possible() and unblock runtime PM for Thunderbolt host
+> > hotplug ports in pci_dev_check_d3cold().  In both cases we need to
+> > uniquely identify if a PCI device belongs to a Thunderbolt controller.
 > 
-> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> 	0x50.w=0x60
+> Sounds like "a device belongs to a Thunderbolt controller" means the
+> device is part of a Thunderbolt controller or part of the hierarchy
+> below it?
+
+The above paragraph and the following two in the commit message are
+intended to explain the need for this additional bit in struct pci_dev.
+
+Yes, the bit is set on all PCI devices that are part of the Thunderbolt
+controller (upstream bridge, downstream bridges, NHI and on Thunderbolt 3
+there's also an XHCI) as well as on all PCI devices below it.
+
+That's why it says /* part of Thunderbolt daisy chain */ in the line
+added to pci.h at the bottom of this patch.
+
+
+> > We also have the need to detect presence of a Thunderbolt controller in
+> > drivers/platform/x86/apple-gmux.c because dual GPU MacBook Pros cannot
+> > switch external DP/HDMI ports between GPUs if they have Thunderbolt.
 > 
-> and see whether it remains alive (you can check by reading the root
-> register 0x52.w - bit 12 should be set once bit 11 clears again.
+> This series doesn't touch apple-gmux.c, and I don't know anything
+> about this MacBook Pro topology, so I can't tell why Thunderbolt is
+> relevant here.
 
-For reference, this I got wrong...
+It's just another example why this bit in struct pci_dev is needed:
 
-0xf1041a04 bit 0 indicates link status (0 = link up, 1 = link down).
+Dual GPU MacBook Pros introduced before 2011 are able to switch the
+external DisplayPort between GPUs.  All newer models lost this ability
+and the external port can only be driven by the discrete GPU.  That's
+because the port is no longer just used for DisplayPort, it's become a
+combined DP/Thunderbolt port.  I guess the wiring would have been too
+complicated to keep the external port switchable between GPUs and also
+use it for Thunderbolt.  They already had to go to great lengths and
+put various redrivers on the logic board to support the combined
+DP/thunderbolt port.
 
-> If that's successful, maybe setting the common clock bit on the PCIe
-> device is what's causing the problem, in which case:
+We need to recognize if the model has Thunderbolt and in that case keep
+the external port switched to the discrete GPU.  I have a patch for this
+in the pipeline but this one needs to go in first.
+
+
+> > Furthermore, in multiple places in the DRM subsystem we need to detect
+> > whether a GPU is on-board or attached with Thunderbolt.  As an example,
+> > Thunderbolt-attached GPUs shall not be registered with vga_switcheroo.
 > 
-> setpci -s 02:00.0 0x80.w=0x40
-> setpci -s <whatever-the-id-of-the-root-is-it's-blanked-out-in-the-above> \
-> 	0x50.w=0x60
+> Why?  The connection between vga_switcheroo and Thunderbolt is not
+> obvious, at least to this non-GPU person.
 
-Having worked with Uwe over IRC, it seems that any request to retrain
-causes the link to go down, either with or without the common clock bit
-set:
+nouveau, radeon and amdgpu register any GPU they find with vga_switcheroo,
+but vga_switcheroo only becomes enabled if the system has Optimus, AMD
+PowerXpress or an apple-gmux controller.
 
-# setpci -s 2.0 0x50.w=0x60
-# setpci -s 2.0 0x52.w
-0011
-# memtool md 0xf1041a04+4
-f1041a04: 00010201
-... reboot ...
-# setpci -s 2.0 0x50.w=0x20
-# memtool md 0xf1041a04+4
-f1041a04: 00010201
+If the user connects an external GPU to a dual GPU laptop, that external
+GPU will be registered with vga_switcheroo as well.  When that external
+GPU runtime suspends, vga_switcheroo will invoke the callback to cut
+power to the internal discrete GPU and obviously things go south at that
+point.
 
-which doesn't point towards ASPM itself, but the problem is caused by
-a side effect of ASPM's setup code which always triggers a retrain.
+The solution is to not register external GPUs with vga_switcheroo at all.
+For this I need the is_thunderbolt bit.
 
-Bit 5 in that register is documented (at least in the Armada 370 docs
-and Armada XP docs I have) as:
 
-5  RetrnLnk  RW    Retrain Link
-             0x0   This bit forces the device to initiate link retraining.
-                   Always returns 0 when read.
-                   NOTE: If configured as an Endpoint, this field is
-                   reserved and has no effect.
+[snip]
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+> >  		pdev->is_hotplug_bridge = 1;
+> >  }
+> >  
+> > +static void set_pcie_vendor_specific(struct pci_dev *dev)
+> 
+> This is very specific to Thunderbolt, so let's name it something that
+> conveys that information.  The fact that we use a vendor-specific
+> capability to figure it out isn't really relevant in the caller.
 
-Bjorn, are you aware of similar situations where a request for the PCIe
-link to be retrained causes it to fail?
+I thought that we may have the necessity in the future to parse other
+VSECs on device probe, so I gave the function this generic name.
 
-Here, on my Armada 388, I can request a link retrain with or without the
-common clock bit set and everything's happy (this is with an ASM1062 SATA
-mini-PCIe card):
+Think about it, every VSEC that needs to be parsed needs the while loop
+below.  It's more efficient to have only a single while loop that handles
+*all* VSECs at once.
 
-root@clearfog21:~# setpci -s 2.0 0x50.w=0x60
-root@clearfog21:~# setpci -s 2.0 0x52.w
-0012
-root@clearfog21:~# /shared/bin/devmem2 0xf1041a04
-Value at address 0xf1041a04: 0x00010100
-root@clearfog21:~# setpci -s 2.0 0x50.w=0x20
-root@clearfog21:~# setpci -s 2.0 0x52.w
-0012
-root@clearfog21:~# /shared/bin/devmem2 0xf1041a04
-Value at address 0xf1041a04: 0x00010100
+If someone needs to parse another VSEC, they just add it to this function.
+So IMO the way I've solved it is preferable to just adding a Thunderbolt-
+specific function.
 
-One curious observation I have noticed on Armada 388 is this behaviour:
+Are you sure you want this renamed? (y/n)
 
-root@clearfog21:~# setpci -s 2.0 0x50.l=0xffff0040 0x50.l 0x50.l=0x0fff0040 0x50.l
-10120040
-00120040
 
-bit 28 is writable, which goes against the 370/XP docs:
+> > +{
+> > +	int vsec = 0;
+> > +	u32 header;
+> > +
+> > +	while ((vsec = pci_find_next_ext_capability(dev, vsec,
+> > +						    PCI_EXT_CAP_ID_VNDR))) {
+> > +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
+> > +
+> > +		/* Is the device part of a Thunderbolt controller? */
+> > +		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
+> > +		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT)
+> > +			dev->is_thunderbolt = 1;
+> 
+> 			return;
 
-28 SltClkCfg  RO  Slot Clock Configuration
-              0x1 0 = Independent: The device uses an independent clock,
-                      irrespective of the presence of a reference clock
-                      on the connector.
-                  1 = Reference: The device uses the reference clock that
-                      the platform provides.
+Well, see above.  I don't want to return here to allow parsing other VSECs.
 
-It seems that this bit is _not_ read-only.
+Thanks,
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Lukas
+
+> > +	}
+> > +
+> > +	/*
+> > +	 * Is the device attached with Thunderbolt?  Walk upwards and check for
+> > +	 * each encountered bridge if it's part of a Thunderbolt controller.
+> > +	 * Reaching the host bridge means dev is soldered to the mainboard.
+> > +	 */
+> > +	if (!dev->is_thunderbolt) {
+> 
+> The "if" is unnecessary if you return above.
+> 
+> > +		struct pci_dev *parent = dev;
+> > +
+> > +		while ((parent = pci_upstream_bridge(parent)))
+> > +			if (parent->is_thunderbolt) {
+> > +				dev->is_thunderbolt = 1;
+> > +				break;
+> > +			}
+> > +	}
+> > +}
+> > +
+> >  /**
+> >   * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
+> >   * @dev: PCI device
+> > @@ -1358,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
+> >  	/* need to have dev->class ready */
+> >  	dev->cfg_size = pci_cfg_space_size(dev);
+> >  
+> > +	/* need to have dev->cfg_size ready */
+> > +	set_pcie_vendor_specific(dev);
+> > +
+> >  	/* "Unknown power state" */
+> >  	dev->current_state = PCI_UNKNOWN;
+> >  
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index e2d1a124216a..3c775e8498f1 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -358,6 +358,7 @@ struct pci_dev {
+> >  	unsigned int	is_virtfn:1;
+> >  	unsigned int	reset_fn:1;
+> >  	unsigned int    is_hotplug_bridge:1;
+> > +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
+> >  	unsigned int    __aer_firmware_first_valid:1;
+> >  	unsigned int	__aer_firmware_first:1;
+> >  	unsigned int	broken_intx_masking:1;
+> > -- 
+> > 2.11.0
+> > 
