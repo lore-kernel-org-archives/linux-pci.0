@@ -1,89 +1,121 @@
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=dMGe=Y7=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Tue, 17 Jan 2017 17:51:16 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
-	linux-pci@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>
-Subject: Re: CONFIG_PCIEASPM breaks PCIe on Marvell Armada 385 machine
-Message-ID: <20170117175115.GD27312@n2100.armlinux.org.uk>
-References: <20170111194942.q5rdma2es6hkmxfe@perseus.defre.kleine-koenig.org>
- <20170117151444.GE22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170117152548.GB27312@n2100.armlinux.org.uk>
- <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+ <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+ <20170130143851.GJ16461@arm.com>
+ <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
+ <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
+ <20170130165124.GA11712@red-moon>
+Cc: Nate Watterson <nwatters@codeaurora.org>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Sricharan R <sricharan@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+        linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
+Date: Mon, 30 Jan 2017 15:03:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170117174649.GA11063@bhelgaas-glaptop.roam.corp.google.com>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <20170130165124.GA11712@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 11:46:49AM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 17, 2017 at 03:25:49PM +0000, Russell King - ARM Linux wrote:
-> > On Tue, Jan 17, 2017 at 09:14:44AM -0600, Bjorn Helgaas wrote:
-> > > On Wed, Jan 11, 2017 at 08:49:46PM +0100, Uwe Kleine-König wrote:
-> > > > Hello,
-> > > > 
-> > > > on an Marvell Armada 385 based machine (Turris Omnia) with 4.9 the
-> > > > ath10k driver fails to bind to the matching hardware if CONFIG_PCIEASPM
-> > > > is enabled:
-> > > > 
-> > > > # dmesg | grep ath
-> > > > [    7.207770] ath10k_pci 0000:02:00.0: Refused to change power state, currently in D3
-> > > > [    7.237955] ath10k_pci 0000:02:00.0: failed to wake up device : -110
-> > > > [    7.238146] ath10k_pci: probe of 0000:02:00.0 failed with error -110
-> > > > 
-> > > > if however PCIEASPM is off, the driver probes correctly and the ath10k
-> > > > adapter works fine.
-> > > > 
-> > > > I wonder if someone has an idea what needs to be done to fix this
-> > > > problem. (OK, I could disable PCIEASPM, but I'd like to have a solution
-> > > > for a distribution kernel where I think PCIEASPM=y is sensible in
-> > > > general.)
-> > > 
-> > > Can somebody confirm that this system (Marvell Armada 385-based Turris
-> > > Omnia) does actually support ASPM in hardware?
-> > 
-> > What sort of "hardware" are you referring to?
-> > 
-> > From my reading of the specs, ASPM doesn't require any external hardware.
-> > It's all done inside the PCIe root hub and PCIe device.
+On 1/30/2017 11:51 AM, Lorenzo Pieralisi wrote:
+> On Mon, Jan 30, 2017 at 10:46:39AM -0500, Sinan Kaya wrote:
+>> On 1/30/2017 9:54 AM, Nate Watterson wrote:
+>>> On 2017-01-30 09:38, Will Deacon wrote:
+>>>> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
+>>>>> On 1/30/2017 9:23 AM, Nate Watterson wrote:
+>>>>>> On 2017-01-30 08:59, Sinan Kaya wrote:
+>>>>>>> On 1/30/2017 7:22 AM, Robin Murphy wrote:
+>>>>>>>> On 29/01/17 17:53, Sinan Kaya wrote:
+>>>>>>>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>>>>>>>>>> [+hanjun, tomasz, sinan]
+>>>>>>>>>>
+>>>>>>>>>> It is quite a key patchset, I would be glad if they can test on their
+>>>>>>>>>> respective platforms with IORT.
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> Tested on top of 4.10-rc5.
+>>>>>>>>>
+>>>>>>>>> 1.    Platform Hidma device passed dmatest
+>>>>>>>>> 2.    Seeing some USB stalls on a platform USB device.
+>>>>>>>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+>>>>>>>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
+>>>>>>>>> SMMU error event during the insertion.
+>>>>>>>>
+>>>>>>>> What was the SMMU error - a translation/permission fault (implying the
+>>>>>>>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+>>>>>>>> the SMMU about the device at all)?
+>>>>>>>>
+>>>>>>>
+>>>>>>> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+>>>>>>>
+>>>>>>> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+>>>>>>> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+>>>>>>> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
+>>>>>>> ignored; already powering off
+>>>>>>>
+>>>>>>> root@ubuntu:/sys/bus/pci/slots/4#
+>>>>>>>
+>>>>>>> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+>>>>>>> [  254.820599] nvme nvme0: pci function 0003:01:00.0
+>>>>>>> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+>>>>>>> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+>>>>>>> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+>>>>>>> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>>>>>>> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>>>>>>> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>>>>>
+>>>>>> Looks like C_BAD_CD. Can you please try with:
+>>>>>> iommu/arm-smmu-v3: Clear prior settings when updating STEs
+>>>>>
+>>>>> This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
+>>>>> this issue again.
+>>>>
+>>>> I already sent the pull request to Joerg for 4.11. Do you see this problem
+>>>> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need to
+>>>> send the patch to stable after -rc1.
+>>> Using vanilla mainline, I see it most commonly when directly assigning
+>>> a device to a guest machine. I think I've also seen it after removing then
+>>> re-adding a PCI device. Basically anytime an STE's CTX pointer is changed
+>>> from a non-NULL value and STE[CFG] indicates translation will be performed.
+>>>
+>>
+>> I was not able to reproduce the issue with Vanilla kernel. I only
+>> tested hotplug.
 > 
-> Right.  My question is just whether we know that the Marvell PCIe root
-> hub hardware works correctly with respect to ASPM.  The PCI core isn't
-> doing anything special for Marvell, so problems here are likely to be
-> either in the Marvell hardware or in the pci-mvebu.c driver.
+> I would like to get the complete code path leading to this issue, it is
+> not clear to me why the probe deferral code triggers it and why we are
+> not able to trigger it with vanilla mainline, we must understand that first
+> before applying any fix to this series.
 > 
-> > The PCIe spec specifically prohibits cutting power supplies and clocks to
-> > PCIe devices during L0s and L1, with the exception that the PCIe clock may
-> > be stopped in L1 if CLKREQ# is deasserted.  CLKREQ# handling generally
-> > requires GPIO usage, and as there's no support for that, there's no support
-> > for stopping the PCIe clock in L1.  We do the correct thing there,
-> > preventing the PCI_EXP_LNKCTL_CLKREQ_EN bit being set.
-> > 
-> > That all said, it would probably be a good idea to throw some printk()
-> > debugging into mvebu_sw_pci_bridge_write() and mvebu_sw_pci_bridge_read()
-> > so we can see what's going on at that level, and maybe also some debug
-> > in mvebu_pcie_hw_wr_conf() and mvebu_pcie_hw_rd_conf() so we can see
-> > what's happening at the PCIe device too.
+> I do not have a platform to reproduce this issue I will send you a patch
+> to trace what's going on here please help us debug it.
+
+Sure, send it to both Nate and me.
+
 > 
-> Uwe has already done that; the dmesg logs including this
-> instrumentation are at
-> https://bugzilla.kernel.org/show_bug.cgi?id=192441
+> Thanks,
+> Lorenzo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Grr, <swears about SSL incompatibilities>... wget's the URL and then
-uses elinks on it...
-
-Umm, not quite.  He's done mvebu_pcie_hw_wr_conf() and mvebu_pcie_hw_rd_conf()
-but not the bridge from the descriptions given on the attachments.
-Obviously, it's going to be a lot of work to manufacture the links to
-look at each attachment to thoroughly check, so I'm not going to do
-that given quite how broken SSL crap is today.
-
-(Try installing elinks and pointing it at the above URL.)
 
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
