@@ -1,13 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Abylay Ospan <aospan@netup.ru>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: iproc: fix resource allocation for BCMA PCIe
-Date: Fri, 13 Jan 2017 02:58:41 +0300
-Message-Id: <1484265521-13497-1-git-send-email-aospan@netup.ru>
+Date: Mon, 30 Jan 2017 17:02:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: remove LTSSM disable workaround
+Message-ID: <20170130230215.GZ20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170120155837.2874-1-l.stach@pengutronix.de>
+MIME-Version: 1.0
+In-Reply-To: <20170120155837.2874-1-l.stach@pengutronix.de>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,86 +15,92 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Abylay Ospan <aospan@netup.ru>
-MIME-Version: 1.0
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+ patchwork-lst@pengutronix.de, Fabio Estevam <fabio.estevam@nxp.com>,
+ kernel@pengutronix.de, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Resource allocated on stack was saved by 'devm_request_resource' to
-global 'iomem_resource' but become invalid after 'iproc_pcie_bcma_probe' exit.
-So the global 'iomem_resource' was poisoned. This may cause kernel crash
-or second PCIe bridge registration failure.
+On Fri, Jan 20, 2017 at 04:58:37PM +0100, Lucas Stach wrote:
+> This causes CPU hangs when the system is reset by the watchdog, as
+> the GPRs aren't cleared, but the clocks are back to disabled state.
+> 
+> If the bootloader uses PCIe, it must take care to bring it down
+> into a safe state, before passing control to the Linux kernel.
+> This is the only way to get a properly operating system at all
+> times and circumstances.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-Tested on Broadcom NorthStar machine ('Edgecore ECW7220-L') with two PCIe wifi
-adapters (b43 BCM4331 and ath10k QCA988X).
+Applied to pci/host-imx6 for v4.11, thanks!
 
-Signed-off-by: Abylay Ospan <aospan@netup.ru>
----
- drivers/pci/host/pcie-iproc-bcma.c | 18 ++++++++----------
- drivers/pci/host/pcie-iproc.h      |  2 ++
- 2 files changed, 10 insertions(+), 10 deletions(-)
+I don't really like the idea that we depend on a particular state from the
+bootloader, but if there's no way around it, maybe this is the best we can
+do.
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index bd4c9ec..28f9b89 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -44,8 +44,6 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- {
- 	struct device *dev = &bdev->dev;
- 	struct iproc_pcie *pcie;
--	LIST_HEAD(res);
--	struct resource res_mem;
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -62,21 +60,21 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 	}
- 
- 	pcie->base_addr = bdev->addr;
-+	INIT_LIST_HEAD(&pcie->resources);
- 
--	res_mem.start = bdev->addr_s[0];
--	res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
--	res_mem.name = "PCIe MEM space";
--	res_mem.flags = IORESOURCE_MEM;
--	pci_add_resource(&res, &res_mem);
-+	pcie->res_mem.start = bdev->addr_s[0];
-+	pcie->res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
-+	pcie->res_mem.name = "PCIe MEM space";
-+	pcie->res_mem.flags = IORESOURCE_MEM;
-+	pcie->res_mem.child = NULL;
-+	pci_add_resource(&pcie->resources, &pcie->res_mem);
- 
- 	pcie->map_irq = iproc_pcie_bcma_map_irq;
- 
--	ret = iproc_pcie_setup(pcie, &res);
-+	ret = iproc_pcie_setup(pcie, &pcie->resources);
- 	if (ret)
- 		dev_err(dev, "PCIe controller setup failed\n");
- 
--	pci_free_resource_list(&res);
--
- 	bcma_set_drvdata(bdev, pcie);
- 	return ret;
- }
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 04fed8e..866d649 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -105,6 +105,8 @@ struct iproc_pcie {
- 
- 	bool need_msi_steer;
- 	struct iproc_msi *msi;
-+	struct resource res_mem;
-+	struct list_head resources;
- };
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
--- 
-2.7.4
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 30 ------------------------------
+>  1 file changed, 30 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c8cefb078218..42c1987ffb3d 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -247,9 +247,6 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+>  
+>  static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+>  {
+> -	struct pcie_port *pp = &imx6_pcie->pp;
+> -	u32 val, gpr1, gpr12;
+> -
+>  	switch (imx6_pcie->variant) {
+>  	case IMX6SX:
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> @@ -266,33 +263,6 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+>  				   IMX6Q_GPR1_PCIE_SW_RST);
+>  		break;
+>  	case IMX6Q:
+> -		/*
+> -		 * If the bootloader already enabled the link we need some
+> -		 * special handling to get the core back into a state where
+> -		 * it is safe to touch it for configuration.  As there is
+> -		 * no dedicated reset signal wired up for MX6QDL, we need
+> -		 * to manually force LTSSM into "detect" state before
+> -		 * completely disabling LTSSM, which is a prerequisite for
+> -		 * core configuration.
+> -		 *
+> -		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we
+> -		 * have a strong indication that the bootloader activated
+> -		 * the link.
+> -		 */
+> -		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+> -		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+> -
+> -		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+> -		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+> -			val = dw_pcie_readl_rc(pp, PCIE_PL_PFLR);
+> -			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+> -			val |= PCIE_PL_PFLR_FORCE_LINK;
+> -			dw_pcie_writel_rc(pp, PCIE_PL_PFLR, val);
+> -
+> -			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> -					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+> -		}
+> -
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+>  				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -- 
+> 2.11.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
 _______________________________________________
 linux-arm-kernel mailing list
