@@ -1,34 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mailbox.org ([80.241.60.215]:46616 "EHLO mx2.mailbox.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751740AbdARKxr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jan 2017 05:53:47 -0500
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [80.241.60.240])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx2.mailbox.org (Postfix) with ESMTPS id 0932643F1C
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2017 11:43:08 +0100 (CET)
-Received: from smtp1.mailbox.org ([80.241.60.240])
-        by hefe.heinlein-support.de (hefe.heinlein-support.de [91.198.250.172]) (amavisd-new, port 10030)
-        with ESMTP id uyEKu8aKVoor for <linux-pci@vger.kernel.org>;
-        Wed, 18 Jan 2017 11:43:06 +0100 (CET)
-To: linux-pci@vger.kernel.org
-From: Stefan Roese <stefan.roese@mailbox.org>
-Subject: PCIe card supporting multiple MSI vectors
-Message-ID: <a6eb25e3-effc-39a4-88c1-8309d601d7b9@mailbox.org>
-Date: Wed, 18 Jan 2017 11:43:06 +0100
+Return-Path: <SRS0=RICp=ZM=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=RICp=ZM=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Mon, 30 Jan 2017 09:51:46 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory CLEMENT <gregory.clement@free-electrons.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
+ enabled
+Message-ID: <20170130165146.GA29502@obsidianresearch.com>
+References: <20161212183020.GA30274@obsidianresearch.com>
+ <20170130154136.GR20550@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170130154136.GR20550@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Jan 30, 2017 at 09:41:36AM -0600, Bjorn Helgaas wrote:
+> On Mon, Dec 12, 2016 at 11:30:20AM -0700, Jason Gunthorpe wrote:
+> > The PCI core will write to the bridge window config multiple times
+> > while they are enabled. This can lead to mbus failures like:
+> > 
+> >  mvebu_mbus: cannot add window '4:e8', conflicts with another window
+> >  mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
+> > 
+> > For me this is happening during a hotplug cycle. The PCI core is
+> > not changing the values, just writing them twice while active.
+> > 
+> > The patch addresses the general case of any change to an active window,
+> > but not atomically. The code is slightly refactored so io and mem
+> > can share more of the window logic.
+> > 
+> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> 
+> Applied with Jason C's ack to pci/host-mvebu for v4.11, thanks!
 
-for some test with MSI related tests I would like to test
-with a desktop PCIe card that supports multiple MSI vectors.
-Could somebody please make a suggestion for such a card
-(not too expansive if possible) with a Linux driver that
-also support multiple MSI vectors?
+Thank you for keeping on top of this Bjorn!
 
-Thanks,
-Stefan
+Jason
