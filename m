@@ -1,76 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:35257 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761540AbdAFWKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Jan 2017 17:10:47 -0500
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Jerome Glisse <jglisse@redhat.com>
-References: <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
- <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
- <20170106015831.GA2226@gmail.com>
- <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
- <20170106173722.GB3804@redhat.com>
- <20170106182625.GB5724@obsidianresearch.com>
-Cc: david1.zhou@amd.com, qiang.yu@amd.com,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>, hch@infradead.org,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        Jerome Glisse <j.glisse@gmail.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
-Date: Fri, 6 Jan 2017 15:10:32 -0700
+Return-Path: <SRS0=AshV=ZM=apm.com=tinamdar@kernel.org>
+Return-Path: <SRS0=AshV=ZM=apm.com=tinamdar@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170106182625.GB5724@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170130230322.GA20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170121044949.GB15269@mwanda> <20170130230322.GA20550@bhelgaas-glaptop.roam.corp.google.com>
+From: Tanmay Inamdar <tinamdar@apm.com>
+Date: Mon, 30 Jan 2017 15:17:22 -0800
+Message-ID: <CACoXjckjK9EE9g0H6GaWzGcm9ALwJd5sg5Xnik-tu47wLmCCkw@mail.gmail.com>
+Subject: Re: [patch] PCI: xgene: double free on init error
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Duc Dang <dhdang@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
+On Mon, Jan 30, 2017 at 3:03 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Sat, Jan 21, 2017 at 07:49:49AM +0300, Dan Carpenter wrote:
+> > The "port" variable was allocated with devm_kzalloc() so if we free it
+> > with kfree() it will be freed twice.  Also I changed it to propogate the
+> > error from devm_ioremap_resource() instead of returning -ENOMEM.
+> >
+> > Fixes: c5d460396100 ("PCI: Add MCFG quirks for X-Gene host controller")
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> Waiting for Tanmay's ack, ping :)
+>
+> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> > index 7c3b54b..142a166 100644
+> > --- a/drivers/pci/host/pci-xgene.c
+> > +++ b/drivers/pci/host/pci-xgene.c
+> > @@ -246,14 +246,11 @@ static int xgene_pcie_ecam_init(struct pci_config_window *cfg, u32 ipversion)
+> >       ret = xgene_get_csr_resource(adev, &csr);
+> >       if (ret) {
+> >               dev_err(dev, "can't get CSR resource\n");
+> > -             kfree(port);
+> >               return ret;
+> >       }
+> >       port->csr_base = devm_ioremap_resource(dev, &csr);
+> > -     if (IS_ERR(port->csr_base)) {
+> > -             kfree(port);
+> > -             return -ENOMEM;
+> > -     }
+> > +     if (IS_ERR(port->csr_base))
+> > +             return PTR_ERR(port->csr_base);
+> >
+> >       port->cfg_base = cfg->win;
+> >       port->version = ipversion;
 
-On 06/01/17 11:26 AM, Jason Gunthorpe wrote:
+Sorry for delay. Patch looks good to me. Thanks.
 
-> Make a generic API for all of this and you'd have my vote..
-> 
-> IMHO, you must support basic pinning semantics - that is necessary to
-> support generic short lived DMA (eg filesystem, etc). That hardware
-> can clearly do that if it can support ODP.
+Acked-by: Tanmay Inamdar <tinamdar@apm.com>
 
-I agree completely.
-
-What we want is for RDMA, O_DIRECT, etc to just work with special VMAs
-(ie. at least those backed with ZONE_DEVICE memory). Then
-GPU/NVME/DAX/whatever drivers can just hand these VMAs to userspace
-(using whatever interface is most appropriate) and userspace can do what
-it pleases with them. This makes _so_ much sense and actually largely
-already works today (as demonstrated by iopmem).
-
-Though, of course, there are many aspects that could still be improved
-like denying CPU access to special VMAs and having get_user_pages avoid
-pinning device memory, etc, etc. But all this would just be enhancements
-to how VMAs work and not be effected by the basic design described above.
-
-We experimented with GPU Direct and the peer memory patchset for IB and
-they were broken by design. They were just a very specific hack into the
-IB core and thus didn't help to support O_DIRECT or any other possible
-DMA user. And the invalidation thing was completely nuts. We had to pray
-an invalidation would never occur because, if it did, our application
-would just break.
-
-Logan
-
+Thanks,
+Tanmay
