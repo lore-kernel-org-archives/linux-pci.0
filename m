@@ -1,72 +1,64 @@
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Ark7=Y5=wunner.de=lukas@kernel.org>
-Message-Id: <cover.1484486499.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 15 Jan 2017 21:03:45 +0100
-Subject: [PATCH v5 0/8] Runtime PM for Thunderbolt on Macs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Tomeu Vizoso <tomeu.vizoso@collabora.com>, Chen Yu <yu.c.chen@intel.com>, Lee Jones <lee.jones@linaro.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Robin Murphy'" <robin.murphy@arm.com>,
+        "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
+        <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
+        <iommu@lists.linux-foundation.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <1485188293-20263-2-git-send-email-sricharan@codeaurora.org> <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com> <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com> <009901d278c7$34fee230$9efca690$@codeaurora.org> <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
+In-Reply-To: <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
+Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for error handling
+Date: Mon, 30 Jan 2017 12:30:11 +0530
+Message-ID: <003601d27ac6$84866840$8d9338c0$@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Power down Thunderbolt controllers on Macs when nothing is plugged in
-to save around 2W per controller.
+Hi Robin,
 
-For background info please see the cover letter of v3:
-https://lkml.org/lkml/2016/12/17/56
+>> [..]
+>>
+>>>>> +const struct iommu_ops *of_iommu_configure(struct device *dev,
+>>>>> +                       struct device_node *master_np)
+>>>>> +{
+>>>>> +    const struct iommu_ops *ops;
+>>>>> +
+>>>>> +    if (!master_np)
+>>>>> +        return NULL;
+>>>>> +
+>>>>> +    if (dev_is_pci(dev))
+>>>>> +        ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+>>>>
+>>>> I gave the whole patch set a try on ThunderX. really_probe() is failing
+>>>> on dma_configure()->of_pci_iommu_init() for each PCI device.
+>>>
+>>> When you say "failing", do you mean cleanly, or with a crash? I've
+>>> managed to hit __of_match_node() dereferencing NULL from
+>>> of_iommu_xlate() in a horribly complicated chain of events, which I'm
+>>> trying to figure out now, and I wonder if the two might be related.
+>>
+>> Sorry that there is crash still. __of_match_node seems to checking
+>> for NULL arguments , feels like some invalid pointer was passed in.
+>> Is there any particular sequence to try for this ?
+>
+>Ah, I did figure it out - it wasn't actually a NULL dereference, but an
+>unmapped address. Turns out __iommu_of_table is in initdata, so any
+>driver probing after init, connected to an unprobed IOMMU (in this case
+>disabled in DT), trips over trying to match the now-freed table. I'm
+>working on the fix - technically the bug's in my patch (#2) anyway ;)
+>
 
+Ok, thanks for bringing this out. There is also an issue that
+Sinan has mentioned while testing the ACPI hotplug path, probably
+its related to the above, not sure. I will try to check more on that
+in the meanwhile. Then, taking your fix and fixing the hotplug case
+i will do one more repost.
 
-Patches [1/8] to [3/8] need an ack from Bjorn and/or Rafael.
-Patches [4/8] to [6/8] need an ack from Rafael.
-Patches [7/8] to [8/8] need an ack from Andreas.
+Regards,
+ Sricharan
 
-
-Changes since v4:
-
-- Patch [2/8] has been reviewed by Mika. (Thanks!)
-
-- Patch [3/8] now uses a separate helper function instead of stuffing
-  its code into pci_dev_check_d3cold(), as requested by Mika.
-
-As usual the patches can be reviewed/fetched on GitHub:
-https://github.com/l1k/linux/commits/thunderbolt_runpm_v5
-
-Thanks,
-
-Lukas
-
-
-Chen Yu (1):
-  PM / sleep: Define constant for direct_complete
-
-Lukas Wunner (7):
-  PCI: Recognize Thunderbolt devices
-  PCI: Allow runtime PM on Thunderbolt ports
-  PCI: Don't block runtime PM for Thunderbolt host hotplug ports
-  Revert "PM / Runtime: Remove the exported function
-    pm_children_suspended()"
-  PM: Make requirements of dev_pm_domain_set() more precise
-  thunderbolt: Power down controller when idle
-  thunderbolt: Runtime suspend NHI when idle
-
- drivers/base/power/common.c  |  15 +-
- drivers/base/power/runtime.c |   3 +-
- drivers/pci/pci.c            |  27 +++-
- drivers/pci/pci.h            |   2 +
- drivers/pci/probe.c          |  34 +++++
- drivers/thunderbolt/Kconfig  |   3 +-
- drivers/thunderbolt/Makefile |   4 +-
- drivers/thunderbolt/nhi.c    |   5 +
- drivers/thunderbolt/power.c  | 355 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/power.h  |  37 +++++
- drivers/thunderbolt/switch.c |   9 ++
- drivers/thunderbolt/tb.c     |  13 ++
- drivers/thunderbolt/tb.h     |   2 +
- include/linux/pci.h          |   1 +
- include/linux/pm.h           |   7 +
- include/linux/pm_runtime.h   |   7 +
- 16 files changed, 513 insertions(+), 11 deletions(-)
- create mode 100644 drivers/thunderbolt/power.c
- create mode 100644 drivers/thunderbolt/power.h
-
--- 
-2.11.0
