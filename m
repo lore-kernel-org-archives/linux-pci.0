@@ -1,26 +1,20 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Alexander Graf <agraf@suse.de>, John Garry <john.garry@huawei.com>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, "catalin.marinas@arm.com"
- <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
- <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "rafael@kernel.org" <rafael@kernel.org>, "mark.rutland@arm.com"
- <mark.rutland@arm.com>, "brian.starkey@arm.com" <brian.starkey@arm.com>,
- "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH V6 4/5] LPC: Support the device-tree LPC host on
- Hip06/Hip07
-Date: Tue, 31 Jan 2017 11:51:44 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F98F3@lhreml507-mbx>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
- <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
- <55916a03-2710-c8bc-0894-5a58daf6da68@huawei.com>
- <2890e438-6149-c8f0-8ec7-9036a8d5cca5@suse.de>
-In-Reply-To: <2890e438-6149-c8f0-8ec7-9036a8d5cca5@suse.de>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Nate Watterson <nwatters@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+Date: Mon, 30 Jan 2017 09:33:50 -0500
 MIME-Version: 1.0
+In-Reply-To: <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -28,159 +22,92 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "minyard@acm.org" <minyard@acm.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "kantyzc@163.com" <kantyzc@163.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, will.deacon@arm.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ linux-arm-msm@vger.kernel.org, bhelgaas@google.com,
+ Tomasz Nowicki <tn@semihalf.com>, Sricharan R <sricharan@codeaurora.org>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex thanks for reviewing
+On 1/30/2017 9:23 AM, Nate Watterson wrote:
+> On 2017-01-30 08:59, Sinan Kaya wrote:
+>> On 1/30/2017 7:22 AM, Robin Murphy wrote:
+>>> On 29/01/17 17:53, Sinan Kaya wrote:
+>>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>>>>> [+hanjun, tomasz, sinan]
+>>>>>
+>>>>> It is quite a key patchset, I would be glad if they can test on their
+>>>>> respective platforms with IORT.
+>>>>>
+>>>>
+>>>> Tested on top of 4.10-rc5.
+>>>>
+>>>> 1.    Platform Hidma device passed dmatest
+>>>> 2.    Seeing some USB stalls on a platform USB device.
+>>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+>>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
+>>>> SMMU error event during the insertion.
+>>>
+>>> What was the SMMU error - a translation/permission fault (implying the
+>>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+>>> the SMMU about the device at all)?
+>>>
+>>
+>> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+>>
+>> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+>> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+>> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
+>> ignored; already powering off
+>>
+>> root@ubuntu:/sys/bus/pci/slots/4#
+>>
+>> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+>> [  254.820599] nvme nvme0: pci function 0003:01:00.0
+>> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+>> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+>> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+>> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
 
-[...]
+> Looks like C_BAD_CD. Can you please try with:
+> iommu/arm-smmu-v3: Clear prior settings when updating STEs
 
-> >
-> >>> + * The port size of legacy I/O devices is normally less than
-> 0x400.
-> >>> + * Defining the I/O range size as 0x400 here should be sufficient
-> for
-> >>> + * all peripherals under one bus.
-> >>> + */
-> >>
-> >> This comment doesn't make a lot of sense. What is the limit? Is
-> there a
-> >> hardware limit?
-> >>
-> >> We don't dynamically allocate devices on the lpc bus, so why imply a
-> >> limit at all?
-> >>
-> >
-> > IIRC from previously asking Zhichang this before, this is the upper
-> > range we can address devices on the LPC bus. But the value was 0x1000
-> then.
-> 
-> Well, all devices that we want to address are defined by firmware (via
-> device tree or dsdt). So I'm not quite sure what this arbitrary limit
-> buys us.
+This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
+this issue again.
 
-Following a previous discussion with Arnd:
-<< We know that the ISA/LPC bus can only have up to 65536 ports,
-so you can register all of those, or possibly limit it further to
-1024 or 4096 ports, whichever matches the bus implementation. >>
-(https://lkml.org/lkml/2016/11/10/95)
+root@ubuntu:/sys/bus/pci/slots# cd 4
+root@ubuntu:/sys/bus/pci/slots/4# ls
+adapter  address  attention  cur_bus_speed  latch  max_bus_speed  module  power
+root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+root@ubuntu:/sys/bus/pci/slots/4# echo 1 > power
+root@ubuntu:/sys/bus/pci/slots/4# dmesg |tail -n 10
+[   44.136028] pci 0003:01:00.0: BAR 0: assigned [mem 0xc0100110000-0xc0100113fff 64bit]
+[   44.136044] pcieport 0003:00:00.0: PCI bridge to [bus 01]
+[   44.136046] pcieport 0003:00:00.0:   bridge window [io  0x10000-0x10fff]
+[   44.136048] pcieport 0003:00:00.0:   bridge window [mem 0xc0100100000-0xc01002fffff]
+[   44.136050] pcieport 0003:00:00.0:   bridge window [mem 0xc0400000000-0xc04001fffff 64bit pref]
+[   44.136059] pcieport 0003:00:00.0: Max Payload Size set to  256/ 512 (was  256), Max Read Rq  512
+[   44.136073] pci 0003:01:00.0: Max Payload Size set to  256/ 256 (was  128), Max Read Rq  512
+[   44.136124] iommu: Adding device 0003:01:00.0 to group 8
+[   44.136275] nvme nvme0: pci function 0003:01:00.0
+[   44.136292] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+root@ubuntu:/sys/bus/pci/slots/4# ls /dev/nvme*
+/dev/nvme0  /dev/nvme0n1
+root@ubuntu:/sys/bus/pci/slots/4#
 
-We decided to register a fixed IO range for our LPC.
-About the specific reason for choosing 0x400 I think Zhichang can
-clarify once he's back (he's OOO now)   
+I'll look at the USB stalls next.
 
-> 
 
-[...]
-
-> >>> +
-> >>> +        /* whole operation must be atomic */
-> >>> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-> >>
-> >> Ouch. This is going to kill your RT jitter. Is there no better way?
-> >>
-> >
-> > Obviously the bus register driving is non-atomic, so we need some way
-> to
-> > lock out.
-> >
-> > I think that it is not so critical for low-speed/infrequent-access
-> bus.
-> >
-> > If we were going to use virtual UART in the BMC on the LPC bus then
-> we
-> > could consider more.
-> 
-> Well, it basically means that an arbitrary daemon running in user space
-> that checks your temperature readings via the ipmi interface could
-> create a lot of jitter. That could be very critical if you want to use
-> this hardware for real time critical applications, such as telecom.
-> 
-> I bet that if you leave it like that and postpone the decision to fix
-> it
-> to "later", in 1 or 2 years you will cause someone weeks of debugging
-> to
-> track down why their voip gateway loses packets from time to time.
-
-Thanks for the heads-up. We'll discuss internally after Chinese holidays
-to understand if this implementation is compatible with the intended
-deployment scenarions 
-
-> 
-> >
-
-[...]
-
-> >>> +static u64 hisilpc_comm_in(void *devobj, unsigned long pio, size_t
-> >>> dlen)
-> >>> +{
-> >>> +    struct hisilpc_dev *lpcdev = devobj;
-> >>> +    struct lpc_cycle_para iopara;
-> >>> +    u32 rd_data;
-> >>
-> >> rd_data needs to be initialized to 0. Otherwise it may contain stale
-> >> stack contents and corrupt non-32bit dlen returns.
-> >>
-> >
-> > I think so, since we read into this value byte-by-byte. We also seem
-> to
-> > return a 32b value but should return 64b value according to the
-> prototype.
-> 
-> IIRC LPC (well, PIO) doesn't support bigger requests than 32bit. At
-> least I can't think of an x86 instruction that would allow bigger
-> transactions. So there's no need to make it 64bit. However, the
-> question
-> is why the prototype is 64bit then. Hm. :)
-> 
-> Maybe the prototype should be only 32bit.
-
-Maybe you're right :)
-
-Looking at extio.c we never return a 64b value.
-I'll double check with Zhichang once he's back...
-
-> 
-> >
-> >>> +    unsigned char *newbuf;
-> >>> +    int ret = 0;
-> >>> +    unsigned long ptaddr;
-> >>> +
-> >>> +    if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN ||    (dlen &
-> (dlen
-> >>> - 1)))
-> >>> +        return -1;
-> >>
-> >> Isn't this -EINVAL?
-> >
-> > Not sure. This value is returned directly to the inb/outb caller,
-> which
-> > would not check this value for error.
-> >
-> > It could be argued that the checking is paranoia. If not, we should
-> > treat the failure as a more severe event.
-> 
-> Oh, I see. In that case -1 makes a lot of sense since it's the default
-> read value on x86 for unallocated space.
-> 
-> This probably deserves a comment (and/or maybe a #define)
-> 
-> 
-> Alex
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
