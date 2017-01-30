@@ -1,90 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 5 Jan 2017 15:19:36 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jerome Glisse <j.glisse@gmail.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>, hch@infradead.org,
-        david1.zhou@amd.com, qiang.yu@amd.com
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Message-ID: <20170105201935.GC2166@redhat.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <20170105183927.GA5324@gmail.com>
- <20170105190113.GA12587@obsidianresearch.com>
- <20170105195424.GB2166@redhat.com>
- <20170105200719.GB31047@obsidianresearch.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 30 Jan 2017 16:51:24 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+Message-ID: <20170130165124.GA11712@red-moon>
+References: <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+ <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+ <20170130143851.GJ16461@arm.com>
+ <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
+ <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170105200719.GB31047@obsidianresearch.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, Sricharan R <sricharan@codeaurora.org>,
+ Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>,
+ Tomasz Nowicki <tn@semihalf.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 01:07:19PM -0700, Jason Gunthorpe wrote:
-> On Thu, Jan 05, 2017 at 02:54:24PM -0500, Jerome Glisse wrote:
-> 
-> > Mellanox and NVidia support peer to peer with what they market a
-> > GPUDirect. It only works without IOMMU. It is probably not upstream :
+On Mon, Jan 30, 2017 at 10:46:39AM -0500, Sinan Kaya wrote:
+> On 1/30/2017 9:54 AM, Nate Watterson wrote:
+> > On 2017-01-30 09:38, Will Deacon wrote:
+> >> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
+> >>> On 1/30/2017 9:23 AM, Nate Watterson wrote:
+> >>> > On 2017-01-30 08:59, Sinan Kaya wrote:
+> >>> >> On 1/30/2017 7:22 AM, Robin Murphy wrote:
+> >>> >>> On 29/01/17 17:53, Sinan Kaya wrote:
+> >>> >>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+> >>> >>>>> [+hanjun, tomasz, sinan]
+> >>> >>>>>
+> >>> >>>>> It is quite a key patchset, I would be glad if they can test on their
+> >>> >>>>> respective platforms with IORT.
+> >>> >>>>>
+> >>> >>>>
+> >>> >>>> Tested on top of 4.10-rc5.
+> >>> >>>>
+> >>> >>>> 1.    Platform Hidma device passed dmatest
+> >>> >>>> 2.    Seeing some USB stalls on a platform USB device.
+> >>> >>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+> >>> >>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
+> >>> >>>> SMMU error event during the insertion.
+> >>> >>>
+> >>> >>> What was the SMMU error - a translation/permission fault (implying the
+> >>> >>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+> >>> >>> the SMMU about the device at all)?
+> >>> >>>
+> >>> >>
+> >>> >> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+> >>> >>
+> >>> >> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+> >>> >> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+> >>> >> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
+> >>> >> ignored; already powering off
+> >>> >>
+> >>> >> root@ubuntu:/sys/bus/pci/slots/4#
+> >>> >>
+> >>> >> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+> >>> >> [  254.820599] nvme nvme0: pci function 0003:01:00.0
+> >>> >> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+> >>> >> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+> >>> >> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+> >>> >> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+> >>> >> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+> >>> >> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+> >>>
+> >>> > Looks like C_BAD_CD. Can you please try with:
+> >>> > iommu/arm-smmu-v3: Clear prior settings when updating STEs
+> >>>
+> >>> This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
+> >>> this issue again.
+> >>
+> >> I already sent the pull request to Joerg for 4.11. Do you see this problem
+> >> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need to
+> >> send the patch to stable after -rc1.
+> > Using vanilla mainline, I see it most commonly when directly assigning
+> > a device to a guest machine. I think I've also seen it after removing then
+> > re-adding a PCI device. Basically anytime an STE's CTX pointer is changed
+> > from a non-NULL value and STE[CFG] indicates translation will be performed.
 > > 
-> > https://www.mail-archive.com/linux-rdma@vger.kernel.org/msg21402.html
-> > 
-> > I thought it was but it seems it require an out of tree driver to work.
 > 
-> Right, it is out of tree and not under consideration for mainline.
-> 
-> > Wether there is a vma or not isn't important to the issue anyway. If
-> > you want to enforce VMA rule for RDMA it is an RDMA specific discussion
-> > in which i don't want to be involve, it is not my turf :)
-> 
-> Always having a VMA changes the discussion - the question is how to
-> create a VMA that reprensents IO device memory, and how do DMA
-> consumers extract the correct information from that VMA to pass to the
-> kernel DMA API so it can setup peer-peer DMA.
+> I was not able to reproduce the issue with Vanilla kernel. I only
+> tested hotplug.
 
-Well my point is that it can't be. In HMM case inside a single VMA you
-can have one page inside GPU memory at address A but next page inside
-regular memory at A+4k. So handling this at the VMA level does not make
-sense. So in this case you would get the device from the struct page
-and you would query through common API to determine if you can do peer
-to peer. If not it would trigger migration back to regular memory.
-If yes then you still have to solve the IOMMU issue and hence the DMA
-API changes that were propose.
+I would like to get the complete code path leading to this issue, it is
+not clear to me why the probe deferral code triggers it and why we are
+not able to trigger it with vanilla mainline, we must understand that first
+before applying any fix to this series.
 
-In the GPUDirect case the idea is that you have a specific device vma
-that you map for peer to peer. Here thing can be at vma level and not at
-a page level. Expectation here is that the GPU userspace expose a special
-API to allow RDMA to directly happen on GPU object allocated through
-GPU specific API (ie it is not regular memory and it is not accessible
-by CPU).
+I do not have a platform to reproduce this issue I will send you a patch
+to trace what's going on here please help us debug it.
 
+Thanks,
+Lorenzo
 
-Both case are disjoint. Both case need to solve the IOMMU issue which
-seems to be best solve at the DMA API level.
-
-
-> > What matter is the back channel API between peer-to-peer device. Like
-> > the above patchset points out for GPU we need to be able to invalidate
-> > a mapping at any point in time. Pining is not something we want to
-> > live with.
-> 
-> We have MMU notifiers to handle this today in RDMA. Async RDMA MR
-> Invalidate like you see in the above out of tree patches is totally
-> crazy and shouldn't be in mainline. Use ODP capable RDMA hardware.
-
-Well there is still a large base of hardware that do not have such
-feature and some people would like to be able to keep using those.
-I believe allowing direct access to GPU object that are otherwise
-hidden from regular kernel memory management is still meaningfull.
-
-Cheers,
-Jérôme
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
