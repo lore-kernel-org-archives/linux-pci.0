@@ -1,82 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58880 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751082AbdAWUdk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Jan 2017 15:33:40 -0500
-Date: Mon, 23 Jan 2017 14:33:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kilian.singer@quantumtechnology.info
-Cc: linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170123203335.GA4707@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
- <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 2/2] drm/radeon: make MacBook Pro d3_delay quirk more
+ generic
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Deucher <alexander.deucher@amd.com>,
+        Christian =?utf-8?b?S8O2bmln?= <christian.koenig@amd.com>
+Cc: linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        amd-gfx@lists.freedesktop.org,
+        Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date: Mon, 30 Jan 2017 14:41:06 -0600
+Message-ID: <20170130204106.31891.59164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170130203822.31891.22461.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170130203822.31891.22461.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 08:56:28AM -0600, Bjorn Helgaas wrote:
-> On Tue, Dec 27, 2016 at 05:57:37PM -0600, Bjorn Helgaas wrote:
-> > Hi Killian,
-> > 
-> > Thanks for the report (https://bugzilla.kernel.org/show_bug.cgi?id=190861)
-> > and all the debugging you've done.  Below is a revert of the troublesome
-> > commit.  Can you test it and verify that it also fixes the problem?
-> > 
-> > I assume Mika is looking at this and will have a better solution soon.
-> > But if not, I'll queue this up for v4.10.
-> 
-> Can somebody please summarize the current state of this issue?  I
-> assume somebody has already posted a better patch that should replace
-> this naive revert, but I haven't been following the whole thread.
+The PCI Power Management Spec, r1.2, sec 5.6.1, requires a 10 millisecond
+delay when powering on a device, i.e., transitioning from state D3hot to
+D0.
 
-This is somewhat frustrating.  Is there a better patch than the revert
-mentioned below?  There was a lot of hullabaloo when I first posted
-it, but I haven't seen a good alternative yet.  I intended the revert
-as a worst-case scenario fix, with the expectation that somebody would
-fix the problem or at least avoid it without having to do the revert.
-Maybe somebody posted that better fix and I just missed it?
+Apparently some devices require more time, and d1f9809ed131 ("drm/radeon:
+add quirk for d3 delay during switcheroo poweron for apple macbooks") added
+an additional delay for the Radeon device in a MacBook Pro.  4807c5a8a0c8
+("drm/radeon: add a PX quirk list") made the affected device more explicit.
 
->From my perspective (and I have not followed the whole 100 message
-thread), the bare bones of the situation are that 006d44e49a25 ("PCI:
-Add runtime PM support for PCIe ports") probably reduced power
-consumption on some machines.  But it also made Kilian's system
-unresponsive when locking the screen.
+Add a generic PCI quirk to increase the d3_delay.  This means we will use
+the additional delay for *all* wakeups from D3, not just those initiated by
+radeon_switcheroo_set_state().
 
-Given only those assumptions, a revert seems like a reasonable
-approach.  I understand and agree that we want to save power, but
-not at the expense of making systems unresponsive.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+---
+ drivers/gpu/drm/radeon/radeon_device.c |   12 ------------
+ drivers/pci/quirks.c                   |   13 +++++++++++++
+ 2 files changed, 13 insertions(+), 12 deletions(-)
 
-Maybe 006d44e49a25 actually fixed a functional problem in addition to
-saving power?  I don't think the changelog mentions anything like
-that, but if that's the case, we should certainly consider that.
-
-We're at -rc5 already, so if we want something other than a revert,
-now is the time to propose it.
-
-> > commit e648b1ca2b94d207289fedc2538d33c57cdbc4de
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Tue Dec 27 17:27:30 2016 -0600
-> > 
-> >     Revert "PCI: Add runtime PM support for PCIe ports"
-> >     
-> >     Revert 006d44e49a25 ("PCI: Add runtime PM support for PCIe ports").
-> >     
-> >     Killian reported that on a Lenovo W54l with i7-4810MQ, Intel HD Graphics
-> >     4600, and NVIDIA Quadro® K1100M, locking the screen kills all keyboard and
-> >     mouse interaction.  Reverting 006d44e49a25 fixes the problem.
-> >     
-> >     Link: https://bugzilla.kernel.org/show_bug.cgi?id=190861
-> >     Reported-by: kilian.singer@quantumtechnology.info
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >     CC: stable@vger.kernel.org	# v4.8+
-> >     CC: Mika Westerberg <mika.westerberg@linux.intel.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
+index 8a1df2a1afbd..8b8fd981cae5 100644
+--- a/drivers/gpu/drm/radeon/radeon_device.c
++++ b/drivers/gpu/drm/radeon/radeon_device.c
+@@ -113,7 +113,6 @@ static inline bool radeon_is_atpx_hybrid(void) { return false; }
+ #endif
+ 
+ #define RADEON_PX_QUIRK_DISABLE_PX  (1 << 0)
+-#define RADEON_PX_QUIRK_LONG_WAKEUP (1 << 1)
+ 
+ struct radeon_px_quirk {
+ 	u32 chip_vendor;
+@@ -136,9 +135,6 @@ static struct radeon_px_quirk radeon_px_quirk_list[] = {
+ 	 * https://bugzilla.kernel.org/show_bug.cgi?id=51381
+ 	 */
+ 	{ PCI_VENDOR_ID_ATI, 0x6840, 0x1043, 0x2122, RADEON_PX_QUIRK_DISABLE_PX },
+-	/* macbook pro 8.2 */
+-	{ PCI_VENDOR_ID_ATI, 0x6741, PCI_VENDOR_ID_APPLE, 0x00e2, RADEON_PX_QUIRK_LONG_WAKEUP },
+-	{ 0, 0, 0, 0, 0 },
+ };
+ 
+ bool radeon_is_px(struct drm_device *dev)
+@@ -1241,25 +1237,17 @@ static void radeon_check_arguments(struct radeon_device *rdev)
+ static void radeon_switcheroo_set_state(struct pci_dev *pdev, enum vga_switcheroo_state state)
+ {
+ 	struct drm_device *dev = pci_get_drvdata(pdev);
+-	struct radeon_device *rdev = dev->dev_private;
+ 
+ 	if (radeon_is_px(dev) && state == VGA_SWITCHEROO_OFF)
+ 		return;
+ 
+ 	if (state == VGA_SWITCHEROO_ON) {
+-		unsigned d3_delay = dev->pdev->d3_delay;
+-
+ 		printk(KERN_INFO "radeon: switched on\n");
+ 		/* don't suspend or resume card normally */
+ 		dev->switch_power_state = DRM_SWITCH_POWER_CHANGING;
+ 
+-		if (d3_delay < 20 && (rdev->px_quirk_flags & RADEON_PX_QUIRK_LONG_WAKEUP))
+-			dev->pdev->d3_delay = 20;
+-
+ 		radeon_resume_kms(dev, true, true);
+ 
+-		dev->pdev->d3_delay = d3_delay;
+-
+ 		dev->switch_power_state = DRM_SWITCH_POWER_ON;
+ 		drm_kms_helper_poll_enable(dev);
+ 	} else {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1800befa8b8b..512d7a875d62 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1683,6 +1683,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x2609, quirk_intel_pcie_pm);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260a, quirk_intel_pcie_pm);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260b, quirk_intel_pcie_pm);
+ 
++static void quirk_radeon_pm(struct pci_dev *dev)
++{
++	if (dev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
++	    dev->subsystem_device == 0x00e2) {
++		if (dev->d3_delay < 20) {
++			dev->d3_delay = 20;
++			dev_info(&dev->dev, "extending delay after power-on from D3 to %d msec\n",
++				 dev->d3_delay);
++		}
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
++
+ #ifdef CONFIG_X86_IO_APIC
+ /*
+  * Boot interrupts on some chipsets cannot be turned off. For these chipsets,
