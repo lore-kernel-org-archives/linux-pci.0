@@ -1,73 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 28 Jan 2017 14:44:58 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59332 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752578AbdA3W6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jan 2017 17:58:02 -0500
+Date: Mon, 30 Jan 2017 16:57:58 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Abylay Ospan <aospan@netup.ru>
-Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
-Message-ID: <20170128204458.GB20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Remove res_to_dev_res() debug message
+Message-ID: <20170130225758.GY20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170119145806.13731.64428.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1484266817-6725-1-git-send-email-aospan@netup.ru>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170119145806.13731.64428.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 13, 2017 at 03:20:17AM +0300, Abylay Ospan wrote:
-> pcie->dev->of_node not always defined (NULL) and can cause crash:
+On Thu, Jan 19, 2017 at 08:58:06AM -0600, Bjorn Helgaas wrote:
+> Remove res_to_dev_res() debug message.  This is printed from a lookup
+> function.  If the message is important, it should be printed from the
+> caller with more context.
 > 
-> [   19.053195] Unable to handle kernel NULL pointer dereference at
-> virtual address 00000020
-> [<c0b0370c>] (of_n_addr_cells) from [<c06599c4>]
-> (iproc_pcie_setup+0x30c/0xce0)
-> 
-> this patch adds sanity check to prevent crash.
-> 
-> Signed-off-by: Abylay Ospan <aospan@netup.ru>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Hi Abylay, this didn't look quite fully baked yet, so I'm dropping it for
-now.  Please repost if everything's been worked out and the patch is still
-necessary.
+Applied to pci/resource for v4.11.
 
 > ---
->  drivers/pci/host/pcie-iproc.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/pci/setup-bus.c |    8 --------
+>  1 file changed, 8 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index 3ebc025..f2836a9 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
->  	const int na = 3, ns = 2;
->  	int rlen;
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index f30ca75b5b6c..1ca8870245f4 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -106,14 +106,6 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
 >  
-> +	if (!node)
-> +		return -ENOENT;
-> +
->  	parser->node = node;
->  	parser->pna = of_n_addr_cells(node);
->  	parser->np = parser->pna + na + ns;
-> -- 
-> 2.7.4
+>  	list_for_each_entry(dev_res, head, list) {
+>  		if (dev_res->res == res) {
+> -			int idx = res - &dev_res->dev->resource[0];
+> -
+> -			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+> -				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+> -				 idx, dev_res->res,
+> -				 (unsigned long long)dev_res->add_size,
+> -				 (unsigned long long)dev_res->min_align);
+> -
+>  			return dev_res;
+>  		}
+>  	}
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
