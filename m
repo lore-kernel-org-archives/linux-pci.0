@@ -1,151 +1,104 @@
-Return-Path: <SRS0=OzsA=YY=ti.com=m-karicheri2@kernel.org>
-Return-Path: <SRS0=OzsA=YY=ti.com=m-karicheri2@kernel.org>
-Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
- keystone PCIe h/w
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
- <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
-CC: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <58751765.8090908@ti.com>
-Date: Tue, 10 Jan 2017 12:18:29 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "paul.gortmaker@windriver.com"
+ <paul.gortmaker@windriver.com>, "robh@kernel.org" <robh@kernel.org>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 1/2] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+Date: Mon, 30 Jan 2017 05:56:43 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263DC7B2@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <1485334353-26815-1-git-send-email-bharatku@xilinx.com>
+ <a5ec5158-a8ac-26a9-37f2-91307a2320ba@arm.com>
+In-Reply-To: <a5ec5158-a8ac-26a9-37f2-91307a2320ba@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "arnd@arndb.de" <arnd@arndb.de>, Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/2017 10:12 AM, Bjorn Helgaas wrote:
-> Hi Murali,
+> The subject line is not very descriptive. How about "Enforce level
+> triggering for legacy interrupts"?
 > 
-> On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
->> Recent fixes for iATU unroll support introduced a bug that causes
->> asynchronous external abort in Keystone PCIe h/w which doesn't have
->> ATU port and the corresponding register. So the check should be moved
->> below where dw_pcie_prog_outbound_atu() is called to avoid that
->> being called on keystine PCIe h/w.
->>
->> Here is the backtrace
->>
->> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
->> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
->> [    0.785548] pgd = c0003000
->> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
->> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
->> [    0.799197] Modules linked in:
->> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
->> [    0.810130] Hardware name: Keystone
->> [    0.813717] task: eb878000 task.stack: eb866000
->> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
->> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
->>
->> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
+> On 25/01/17 08:52, Bharat Kumar Gogada wrote:
+> > - Few wifi end points which only support legacy interrupts,
+> > performs hardware reset functionalities after disabling interrupts
+> > by invoking disable_irq and then re-enable using enable_irq, they
+> > enable hardware interrupts first and then virtual irq line later.
+> > - The legacy irq line goes low only after DEASSERT_INTx is
+> > received.As the legacy irq line is high immediately after hardware
+> > interrupts are enabled but virq of EP is still in disabled state
+> > and EP handler is never executed resulting no DEASSERT_INTx.If dummy
+> > irq chip is used, interrutps are not masked and system is
 > 
-> I tentatively applied this to for-linus for v4.10, with a stable tag
-> for v4.9+.
+>                     interrupts
 > 
-
-Ok  Thanks!
-
-> The patch itself mostly makes sense in terms of the code: we only use
-> iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
-> when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
+> > hanging with CPU stall.
+> > - Adding irq chip functions instead of dummy irq chip for legacy
+> > interrupts.
+> > - Legacy interrupts are level sensitive, so using handle_level_irq
+> > is more appropriate as it is masks interrupts until End point handles
+> > interrupts and unmasks interrutps after End point handler is executed.
 > 
-> So it makes sense that we only need to initialize iatu_unroll_enabled
-> in those cases.  But the current patch only initializes it if
-> "!pp->ops->rd_other_conf".
+>                          interrupts
 > 
-
-I think the code before also should have checked for both 
-if ((!pp->ops->rd_other_conf) && (!pp->ops->wr_other_conf))
-
-The assumption was if rd_other_conf is Null, the platform provides 
-both rd_other_conf and wr_other_conf. I see I have added this API 
-to support Keystone and the above assumption is true so far. 
-It make sense to fix it if you agree.
-
-> If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
-> would use iatu_unroll_enabled uninitialized in the
-> dw_pcie_wr_other_conf() path.  I suppose that's an invalid
-
-Yes. So we need to fix the above to make the code correct instead
-of leaving it exposed.
-
-> configuration, but it'd be better if we didn't have to rely on the
-> host drivers to avoid that configuration.
-
-You mean to introduce the check in the designware core code above 
-right?
-
-Murali
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > ---
+> >  drivers/pci/host/pcie-xilinx-nwl.c | 36
+> +++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 35 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-
+> nwl.c
+> > index 43eaa4a..6ac3e1d 100644
+> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> > @@ -395,10 +395,44 @@ static void nwl_pcie_msi_handler_low(struct
+> irq_desc *desc)
+> >  	chained_irq_exit(chip, desc);
+> >  }
+> >
+> > +static void nwl_mask_leg_irq(struct irq_data *data)
+> > +{
+> > +	struct irq_desc *desc = irq_to_desc(data->irq);
+> > +	struct nwl_pcie *pcie;
+> > +	u32 mask;
+> > +	u32 val;
+> > +
+> > +	pcie = irq_desc_get_chip_data(desc);
+> > +	mask = 1 << (data->hwirq - 1);
+> > +	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
+> > +	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
 > 
-> It's not obvious how this is connected to 416379f9ebde, though.  It
-> *looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
-> before and after that commit, so it seems like the external abort
-> should have happened even before it.
+> Oh please! Think of the following:
 > 
+> 	cpu0	cpu1
+> 	read
+> 		read
+> 		write
+> 	write
+> 
+> How can you make this reliable if you don't have any form of mutual
+> exclusion that spans both mask and unmask, and ensures the atomicity of
+> the RMW sequence?
+> 
+Agreed, will send with locks.
 
-You are right. The problem was introduced by 
-
-commit a0601a47053714eecec726aea5ebcd829f817497
-Author: Joao Pinto <Joao.Pinto@synopsys.com>
-Date:   Wed Aug 10 11:02:39 2016 +0100
-
-    PCI: designware: Add iATU Unroll feature
-
-which is fixed by commit 416379f9ebde and is again fixed by my 
-commit. So probably I should have added both commits in
-my description. 
-
-Murali
-
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  - Applies to pci/master
->>  - Bug was introduced in v4.9
->>  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
->>
->>  drivers/pci/host/pcie-designware.c | 10 +++++-----
->>  1 file changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index bed1999..af8f6e9 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>  {
->>  	u32 val;
->>  
->> -	/* get iATU unroll support */
->> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
->> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
->> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
->> -
->>  	/* set the number of lanes */
->>  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->>  	val &= ~PORT_LINK_MODE_MASK;
->> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>  	 * we should not program the ATU here.
->>  	 */
->>  	if (!pp->ops->rd_other_conf) {
->> +		/* get iATU unroll support */
->> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
->> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
->> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
->> +
->>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->>  					  pp->mem_bus_addr, pp->mem_size);
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
