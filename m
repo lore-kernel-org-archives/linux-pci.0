@@ -1,107 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH] ACPI/PCI: Fix bus range comparation in
- pci_mcfg_lookup
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1482397663-98715-1-git-send-email-wangzhou1@hisilicon.com>
- <20170103120021.GC7145@red-moon>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        jorn Helgaas <bhelgaas@google.com>, <liudongdong3@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <linux-acpi@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <586C8BCC.7020006@hisilicon.com>
-Date: Wed, 4 Jan 2017 13:44:44 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Sinan Kaya'" <okaya@codeaurora.org>, <robin.murphy@arm.com>,
+ <will.deacon@arm.com>, <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
+ <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-8-git-send-email-sricharan@codeaurora.org>
+ <34a703f0-3b37-88f0-46fa-b56ab6717a42@codeaurora.org>
+In-Reply-To: <34a703f0-3b37-88f0-46fa-b56ab6717a42@codeaurora.org>
+Subject: RE: [PATCH V7 07/11] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+Date: Mon, 30 Jan 2017 17:30:58 +0530
+Message-ID: <008f01d27af0$88e897d0$9ab9c770$@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20170103120021.GC7145@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/1/3 20:00, Lorenzo Pieralisi wrote:
-> On Thu, Dec 22, 2016 at 05:07:43PM +0800, Zhou Wang wrote:
->> Multiple PCIe host bridges may exists in one PCIe segment. So bus range for each
->> host bridge should be in the coverage of bus range of related PCIe segment.
->>
->> This patch will support this kind of scenario:
->>
->> MCFG:
->> 	bus range: 0x00~0xff.
->> 	segment: 0.
->> DSDT:
->> 	host bridge 1:
->> 		bus range: 0x00~0x1f.
->> 		segment: 0.
->> 	host bridge 2:
->> 		bus range: 0x20~0x4f.
->> 		segment: 0.
-> 
-> "The configuration data provided by an MCFG region (ie PCI segment and
-> bus range) may span multiple host bridges.
-> 
-> Current code in pci_mcfg_lookup() carries out an exact match of host
-> bridge bus range start value against the MCFG region(s) bus range start
-> value which would cause configurations like the following:
-> 
-> MCFG region:
-> 	bus range: 0x00~0xff.
-> 	segment: 0.
-> 
-> PCI host bridges configuration (segment numbers and bus ranges):
-> 	host bridge 1:
-> 		bus range: 0x00~0x1f.
-> 		segment: 0.
-> 	host bridge 2:
-> 		bus range: 0x20~0x4f.
-> 		segment: 0.
-> 
-> to fail, in that the bus range start value for host bridge 2 does
-> not match the bus range start value of the respective MCFG region.
-> 
-> Relax the bus range check in pci_mcfg_lookup() to cater for
-> PCI configurations with multiple host bridges sharing the same
-> MCFG region."
-> 
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Hi,
 
-Hi Lorenzo,
+>-----Original Message-----
+>From: linux-arm-kernel [mailto:linux-arm-kernel-bounces@lists.infradead.org] On Behalf Of Sinan Kaya
+>Sent: Sunday, January 29, 2017 10:06 PM
+>To: Sricharan R <sricharan@codeaurora.org>; robin.murphy@arm.com; will.deacon@arm.com; joro@8bytes.org;
+>lorenzo.pieralisi@arm.com; iommu@lists.linux-foundation.org; linux-arm-kernel@lists.infradead.org; linux-arm-
+>msm@vger.kernel.org; m.szyprowski@samsung.com; bhelgaas@google.com; linux-pci@vger.kernel.org; linux-acpi@vger.kernel.org
+>Subject: Re: [PATCH V7 07/11] iommu: of: Handle IOMMU lookup failure with deferred probing or error
+>
+>On 1/23/2017 11:18 AM, Sricharan R wrote:
+>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>  	if (ret < 0) {
+>>  		dma_addr = offset = 0;
+>> -		size = dev->coherent_dma_mask + 1;
+>> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>>  	} else {
+>
+>what's happening here?
 
-Thanks for your view.
-
-I will modify the commit message and post a new version patch.
+Sorry, not relevant. Will remove this. Has come in because of some rebase mistake.
 
 Regards,
-Zhou
+ Sricharan
 
-> 
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/acpi/pci_mcfg.c | 5 ++---
->>  1 file changed, 2 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index b5b376e..46a3e32 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -40,11 +40,10 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->>  	struct mcfg_entry *e;
->>  
->>  	/*
->> -	 * We expect exact match, unless MCFG entry end bus covers more than
->> -	 * specified by caller.
->> +	 * We expect the range in bus_res in the coverage of MCFG bus range.
->>  	 */
->>  	list_for_each_entry(e, &pci_mcfg_list, list) {
->> -		if (e->segment == seg && e->bus_start == bus_res->start &&
->> +		if (e->segment == seg && e->bus_start <= bus_res->start &&
->>  		    e->bus_end >= bus_res->end)
->>  			return e->addr;
->>  	}
->> -- 
->> 1.9.1
->>
-> 
-> .
-> 
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
