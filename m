@@ -1,47 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 23/37] PCI: dwc: Add *ops* to start and stop pcie link
-Date: Thu, 12 Jan 2017 15:56:12 +0530
-Message-ID: <1484216786-17292-24-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Mon, 30 Jan 2017 09:54:46 -0500
+From: Nate Watterson <nwatters@codeaurora.org>
+To: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+In-Reply-To: <20170130143851.GJ16461@arm.com>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+ <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+ <20170130143851.GJ16461@arm.com>
+Message-ID: <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ iommu@lists.linux-foundation.org, linux-arm-msm@vger.kernel.org,
+ bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+ Sricharan R <sricharan@codeaurora.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add start_link and stop_link ops in dw_pcie_ops to start or stop
-the link. This will be used by endpoint functions to start the
-link once the setup has been done.
+On 2017-01-30 09:38, Will Deacon wrote:
+> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
+>> On 1/30/2017 9:23 AM, Nate Watterson wrote:
+>> > On 2017-01-30 08:59, Sinan Kaya wrote:
+>> >> On 1/30/2017 7:22 AM, Robin Murphy wrote:
+>> >>> On 29/01/17 17:53, Sinan Kaya wrote:
+>> >>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>> >>>>> [+hanjun, tomasz, sinan]
+>> >>>>>
+>> >>>>> It is quite a key patchset, I would be glad if they can test on their
+>> >>>>> respective platforms with IORT.
+>> >>>>>
+>> >>>>
+>> >>>> Tested on top of 4.10-rc5.
+>> >>>>
+>> >>>> 1.    Platform Hidma device passed dmatest
+>> >>>> 2.    Seeing some USB stalls on a platform USB device.
+>> >>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+>> >>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
+>> >>>> SMMU error event during the insertion.
+>> >>>
+>> >>> What was the SMMU error - a translation/permission fault (implying the
+>> >>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+>> >>> the SMMU about the device at all)?
+>> >>>
+>> >>
+>> >> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+>> >>
+>> >> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+>> >> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+>> >> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
+>> >> ignored; already powering off
+>> >>
+>> >> root@ubuntu:/sys/bus/pci/slots/4#
+>> >>
+>> >> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+>> >> [  254.820599] nvme nvme0: pci function 0003:01:00.0
+>> >> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+>> >> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+>> >> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+>> >> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> >> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> >> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+>> 
+>> > Looks like C_BAD_CD. Can you please try with:
+>> > iommu/arm-smmu-v3: Clear prior settings when updating STEs
+>> 
+>> This resolved the issue. Can we pull Nate's patch to 4.10 so that I 
+>> don't see
+>> this issue again.
+> 
+> I already sent the pull request to Joerg for 4.11. Do you see this 
+> problem
+> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need 
+> to
+> send the patch to stable after -rc1.
+Using vanilla mainline, I see it most commonly when directly assigning
+a device to a guest machine. I think I've also seen it after removing 
+then
+re-adding a PCI device. Basically anytime an STE's CTX pointer is 
+changed
+from a non-NULL value and STE[CFG] indicates translation will be 
+performed.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pcie-designware.h |    2 ++
- 1 file changed, 2 insertions(+)
+Nate
+> 
+> Will
 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 0ef6ae7..25b3b8b 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -149,6 +149,8 @@ struct dw_pcie_ops {
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			     int size, u32 val);
- 	int	(*link_up)(struct dw_pcie *pcie);
-+	int	(*start_link)(struct dw_pcie *pcie);
-+	void	(*stop_link)(struct dw_pcie *pcie);
- };
- 
- struct dw_pcie {
 -- 
-1.7.9.5
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+Linux
+Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
