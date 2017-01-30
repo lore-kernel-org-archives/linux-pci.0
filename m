@@ -1,41 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mailbox.org ([80.241.60.215]:35317 "EHLO mx2.mailbox.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751902AbdASNrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jan 2017 08:47:20 -0500
-Subject: Re: PCIe card supporting multiple MSI vectors
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-References: <a6eb25e3-effc-39a4-88c1-8309d601d7b9@mailbox.org>
- <5880B828.3000302@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-From: Stefan Roese <stefan.roese@mailbox.org>
-Message-ID: <3e58ca8c-1cba-b1b7-e58c-6f5554e9fffa@mailbox.org>
-Date: Thu, 19 Jan 2017 14:47:16 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Sinan Kaya <okaya@codeaurora.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Sricharan R <sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+Date: Mon, 30 Jan 2017 12:22:11 +0000
 MIME-Version: 1.0
-In-Reply-To: <5880B828.3000302@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19.01.2017 13:59, Guilherme G. Piccoli wrote:
-> On 01/18/2017 08:43 AM, Stefan Roese wrote:
->> Hi,
+On 29/01/17 17:53, Sinan Kaya wrote:
+> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>> [+hanjun, tomasz, sinan]
 >>
->> for some test with MSI related tests I would like to test
->> with a desktop PCIe card that supports multiple MSI vectors.
->> Could somebody please make a suggestion for such a card
->> (not too expansive if possible) with a Linux driver that
->> also support multiple MSI vectors?
->
-> I'd suggest NVMe PCI card. Some of them support up to 128 MSI-X
-> interrupts at same time.
->
-> The problem is in "not too expansive if possible" heheh
-> Those cards could be a little bit expensive currently...but worth to
-> take a look, maybe works for you. Also, nvme driver is pretty good.
+>> It is quite a key patchset, I would be glad if they can test on their
+>> respective platforms with IORT.
+>>
+> 
+> Tested on top of 4.10-rc5.
+> 
+> 1.	Platform Hidma device passed dmatest
+> 2.	Seeing some USB stalls on a platform USB device.
+> 3.	PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+> 4. 	NVMe driver didn't probe following a hotplug insertion and received an
+> SMMU error event during the insertion.
 
-Thanks, this is a good idea. But I'm actually not looking for
-MSI-X but for "plain" MSI-multi cards.
+What was the SMMU error - a translation/permission fault (implying the
+wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+the SMMU about the device at all)?
 
-Thanks,
-Stefan
+Robin.
+
+> 
+> /sys/bus/pci/slots/4 #
+> /sys/bus/pci/slots/4 # dmesg | grep nvme
+> [   14.041357] nvme nvme0: pci function 0003:01:00.0
+> [  198.399521] nvme nvme0: pci function 0003:01:00.0
+> [__198.416232]_nvme_0003:01:00.0:_enabling_device_(0000_->_0002)
+> [  264.402216] nvme nvme0: I/O 228 QID 0 timeout, disable controller
+> [  264.402313] nvme nvme0: Identify Controller failed (-4)
+> [  264.421270] nvme nvme0: Removing after probe failure status: -5
+> /sys/bus/pci/slots/4 #
+> 
+> 
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
