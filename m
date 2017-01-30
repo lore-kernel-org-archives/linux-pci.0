@@ -1,91 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:60651 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751659AbdADIT2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 03:19:28 -0500
-Subject: Re: [PATCH 2/4] Documetation: samsung-phy: add the exynos-pcie-phy
- binding
-To: Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        bhelgaas@google.com, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
-        alim.akhtar@samsung.com, cpgs@samsung.com
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <a3b613a7-70e4-a14a-d5b8-f1cff325aefd@samsung.com>
-Date: Wed, 04 Jan 2017 17:18:56 +0900
-MIME-version: 1.0
-In-reply-to: <20170103180507.b7otjrfo4ye3yx42@rob-hp-laptop>
-Content-type: text/plain; charset=windows-1252
-References: <20161228103454.26467-1-jh80.chung@samsung.com>
- <CGME20161228103455epcas5p2acc54945d70ac45b2ce2cd4f6ad4b875@epcas5p2.samsung.com>
- <20161228103454.26467-3-jh80.chung@samsung.com>
- <20170103180507.b7otjrfo4ye3yx42@rob-hp-laptop>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 30 Jan 2017 14:34:18 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI: mvebu: Handle changes to the bridge windows while
+ enabled
+Message-ID: <20170130143418.GB25924@io.lakedaemon.net>
+References: <20161212183020.GA30274@obsidianresearch.com>
+ <20170111183055.GD14532@bhelgaas-glaptop.roam.corp.google.com>
+ <20170128211728.GJ20550@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+In-Reply-To: <20170128211728.GJ20550@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Gregory CLEMENT <gregory.clement@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/04/2017 03:05 AM, Rob Herring wrote:
-> On Wed, Dec 28, 2016 at 07:34:52PM +0900, Jaehoon Chung wrote:
->> Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
->> This is for using generic PHY framework.
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  .../devicetree/bindings/phy/samsung-phy.txt        | 23 ++++++++++++++++++++++
->>  1 file changed, 23 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> index 9872ba8..1cbc15f 100644
->> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> @@ -191,3 +191,26 @@ Example:
->>  		usbdrdphy0 = &usb3_phy0;
->>  		usbdrdphy1 = &usb3_phy1;
->>  	};
->> +
->> +Samsung Exynos SoC series PCIe PHY controller
->> +--------------------------------------------------
->> +Required properties:
->> +- compatible : Should be set to "samsung,exynos5440-pcie-phy"
->> +- #phy-cells : Must be zero
->> +- reg : a register used by phy driver.
->> +
->> +Required properies for child node:
->> +- reg : a block register used by phy driver.
-> 
-> There's no need for this. Either just make the length 0x1040 or add a 
-> 2nd address to the parent reg prop.
+Hi Bjorn,
 
-Will use the 2nd address to the parent reg prop.
-Because there are two pcie-phy for Exynos5440.
-one block register is started from 0x271000, the other is started from 0x271040.
+On Sat, Jan 28, 2017 at 03:17:28PM -0600, Bjorn Helgaas wrote:
+> On Wed, Jan 11, 2017 at 12:30:55PM -0600, Bjorn Helgaas wrote:
+> > On Mon, Dec 12, 2016 at 11:30:20AM -0700, Jason Gunthorpe wrote:
+> > > The PCI core will write to the bridge window config multiple times
+> > > while they are enabled. This can lead to mbus failures like:
+> > > 
+> > >  mvebu_mbus: cannot add window '4:e8', conflicts with another window
+> > >  mvebu-pcie mbus:pex@e0000000: Could not create MBus window at [mem 0xe0000000-0xe00fffff]: -22
+> > > 
+> > > For me this is happening during a hotplug cycle. The PCI core is
+> > > not changing the values, just writing them twice while active.
+> > > 
+> > > The patch addresses the general case of any change to an active window,
+> > > but not atomically. The code is slightly refactored so io and mem
+> > > can share more of the window logic.
+> > 
+> > Looks good to me, but I'm waiting for an ack from Thomas or Jason (listed
+> > as maintainers and already cc'd).
+> 
+> Ping, Thomas, Jason C?
+> 
+> > > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > > ---
+> > >  drivers/pci/host/pci-mvebu.c | 101 +++++++++++++++++++++++++------------------
+> > >  1 file changed, 60 insertions(+), 41 deletions(-)
 
-Best Regards,
-Jaehoon Chung
+Sorry, been on travel and I think Thomas is on holiday.
 
-> 
->> +
->> +Example:
->> +	pcie_phy0: pcie-phy@270000 {
->> +		#phy-cells = <0>;
->> +		compatible = "samsung,exynos5440-pcie-phy";
->> +		reg = <0x270000 0x1000>;
->> +		#address-cells = <1>;
->> +		#size-cells = <1>;
->> +		ranges;
->> +		block@271000 {
->> +			reg = <0x271000 0x40>;
->> +		};
->> +	};
->> -- 
->> 2.10.2
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
+Acked-by: Jason Cooper <jason@lakedaemon.net>
 
+thx,
+
+Jason.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
