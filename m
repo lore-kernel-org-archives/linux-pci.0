@@ -1,92 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:56605 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755106AbdAKTFo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 14:05:44 -0500
-Date: Wed, 11 Jan 2017 11:04:42 -0800
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        ashok.raj@intel.com
-Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
-Message-ID: <20170111190442.GA74162@otc-nc-03>
-References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Mon, 30 Jan 2017 09:23:29 -0500
+From: Nate Watterson <nwatters@codeaurora.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+In-Reply-To: <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+Message-ID: <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, will.deacon@arm.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ linux-arm-msm@vger.kernel.org, bhelgaas@google.com,
+ Tomasz Nowicki <tn@semihalf.com>, Sricharan R <sricharan@codeaurora.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith
+On 2017-01-30 08:59, Sinan Kaya wrote:
+> On 1/30/2017 7:22 AM, Robin Murphy wrote:
+>> On 29/01/17 17:53, Sinan Kaya wrote:
+>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>>>> [+hanjun, tomasz, sinan]
+>>>> 
+>>>> It is quite a key patchset, I would be glad if they can test on 
+>>>> their
+>>>> respective platforms with IORT.
+>>>> 
+>>> 
+>>> Tested on top of 4.10-rc5.
+>>> 
+>>> 1.	Platform Hidma device passed dmatest
+>>> 2.	Seeing some USB stalls on a platform USB device.
+>>> 3.	PCIe NVME drive probed and worked fine with MSI interrupts after 
+>>> boot.
+>>> 4. 	NVMe driver didn't probe following a hotplug insertion and 
+>>> received an
+>>> SMMU error event during the insertion.
+>> 
+>> What was the SMMU error - a translation/permission fault (implying the
+>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+>> the SMMU about the device at all)?
+>> 
+> 
+> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
+> 
+> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
+> ignored; already powering off
+> 
+> root@ubuntu:/sys/bus/pci/slots/4#
+> 
+> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+> [  254.820599] nvme nvme0: pci function 0003:01:00.0
+> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+Looks like C_BAD_CD. Can you please try with:
+iommu/arm-smmu-v3: Clear prior settings when updating STEs
 
-did you have a chance to look at this?
+> root@ubuntu:/sys/bus/pci/slots/4#
+> 
+> root@ubuntu:/sys/bus/pci/slots/4#ls /dev/nvme*
+> /dev/nvme0
+> 
+> I should have seen /dev/nvme0n1 partition here.
+> 
+>> Robin.
+>> 
+>>> 
+>>> /sys/bus/pci/slots/4 #
+>>> /sys/bus/pci/slots/4 # dmesg | grep nvme
+>>> [   14.041357] nvme nvme0: pci function 0003:01:00.0
+>>> [  198.399521] nvme nvme0: pci function 0003:01:00.0
+>>> [__198.416232]_nvme_0003:01:00.0:_enabling_device_(0000_->_0002)
+>>> [  264.402216] nvme nvme0: I/O 228 QID 0 timeout, disable controller
+>>> [  264.402313] nvme nvme0: Identify Controller failed (-4)
+>>> [  264.421270] nvme nvme0: Removing after probe failure status: -5
+>>> /sys/bus/pci/slots/4 #
+>>> 
+>>> 
+>>> 
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
 
-Cheers,
-Ashok
+-- 
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+Linux
+Foundation Collaborative Project.
 
-On Fri, Dec 09, 2016 at 01:06:04PM -0800, Ashok Raj wrote:
-> Changes from v1:
-> 	Address comments from Bjorn:
-> 		Added p_slot->lock mutex around changes to p_slot->state
-> 		Updated commit message to call out mutex names
-> 
-> A surprise link down may retrain very quickly, causing the same slot to
-> generate a link up event before handling the link down completes.
-> 
-> Since the link is active, the power off work queued from the first link
-> down will cause a second down event when the power is disabled. The second
-> down event should be ignored because the slot is already powering off;
-> however, the "link up" event sets the slot state to POWERON before the
-> event to handle this is enqueued, making the second down event believe
-> it needs to do something. This creates a constant link up and down
-> event cycle.
-> 
-> This patch fixes that by setting the p_slot->state only when the work to
-> handle the power event is executing, protected by the p_slot->hotplug_lock.
-> 
-> To: Bjorn Helgass <bhelgaas@google.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: Keith Busch <keith.busch@intel.com>
-> 
-> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> Reviewed-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index ec0b4c1..4cf4772 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -182,6 +182,9 @@ static void pciehp_power_thread(struct work_struct *work)
->  	switch (info->req) {
->  	case DISABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
-> +		mutex_lock(&p_slot->lock);
-> +		p_slot->state = POWEROFF_STATE;
-> +		mutex_unlock(&p_slot->lock);
->  		pciehp_disable_slot(p_slot);
->  		mutex_unlock(&p_slot->hotplug_lock);
->  		mutex_lock(&p_slot->lock);
-> @@ -190,6 +193,9 @@ static void pciehp_power_thread(struct work_struct *work)
->  		break;
->  	case ENABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
-> +		mutex_lock(&p_slot->lock);
-> +		p_slot->state = POWERON_STATE;
-> +		mutex_unlock(&p_slot->lock);
->  		ret = pciehp_enable_slot(p_slot);
->  		mutex_unlock(&p_slot->hotplug_lock);
->  		if (ret)
-> @@ -209,8 +215,6 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
->  {
->  	struct power_work_info *info;
->  
-> -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
-> -
->  	info = kmalloc(sizeof(*info), GFP_KERNEL);
->  	if (!info) {
->  		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
-> -- 
-> 2.7.4
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
