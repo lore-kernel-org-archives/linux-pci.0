@@ -1,40 +1,67 @@
-Return-Path: <SRS0=/1wB=ZH=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=/1wB=ZH=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI: enable extended tags support for PCIe endpoints
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1474769434-5756-1-git-send-email-okaya@codeaurora.org>
- <420a9a23-79f8-41d8-c44f-b53f5000c957@codeaurora.org>
- <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <34f2e149-3bb1-6af2-a9f5-fbe5a050fe31@codeaurora.org>
-Date: Wed, 25 Jan 2017 12:49:17 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>, <tn@semihalf.com>,
+ <David.Daney@cavium.com>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ <stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <e92355e7-634f-dc91-4716-da73a23b406c@caviumnetworks.com>
+Date: Mon, 30 Jan 2017 09:39:30 -0800
 MIME-Version: 1.0
-In-Reply-To: <20161111205801.GC9868@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 01/30/2017 08:25 AM, Vadim Lomovtsev wrote:
+> This patch is to address PEM initialization issue
+> which causes network issues.
+>
+> It is necessary to search for _HID:PNP0A08 while requesting
+> PEM resources via ACPI instead of "THRX0002".
 
-On 11/11/2016 3:58 PM, Bjorn Helgaas wrote:
->> Is there any other feedback?
-> If this were completely safe to enable for every device that supported
-> it, why would there be an enable bit in Device Control?
-> 
-> I don't know anything about extended tags, but it worries me a little
-> when there's a "go-fast" switch and no explanation about when and why
-> we might need to go slow.
-> 
+Since this is fixing new code, there should be no chance to break 
+previously working systems.
 
-I have v2 posted. Do you feel like applying to linux-next to get some testing
-exposure or do you want to tie it to some DMI so that we enable it only on
-recent HW?
+Bjorn: If possible, this should be merged for v4.10
 
-Sinan
+>
+> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Acked-by: David Daney <david.daney@cavium.com>
+
+
+> ---
+>  drivers/pci/host/pci-thunder-pem.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> index af722eb..aec30b8 100644
+> --- a/drivers/pci/host/pci-thunder-pem.c
+> +++ b/drivers/pci/host/pci-thunder-pem.c
+> @@ -331,7 +331,7 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+>  	if (!res_pem)
+>  		return -ENOMEM;
+>
+> -	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
+> +	ret = acpi_get_rc_resources(dev, "PNP0A08", root->segment, res_pem);
+>  	if (ret) {
+>  		dev_err(dev, "can't get rc base address\n");
+>  		return ret;
+>
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
