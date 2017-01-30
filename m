@@ -1,111 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:38679 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751157AbdARJAw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2017 04:00:52 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: improve the training polling code
-Date: Wed, 18 Jan 2017 16:29:15 +0800
-Message-Id: <1484728155-72502-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Sricharan R <sricharan@codeaurora.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-9-git-send-email-sricharan@codeaurora.org>
+ <20170124123711.GA11996@red-moon>
+ <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+Date: Mon, 30 Jan 2017 08:59:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the readl_poll_timeout instead of open coding them.
+On 1/30/2017 7:22 AM, Robin Murphy wrote:
+> On 29/01/17 17:53, Sinan Kaya wrote:
+>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
+>>> [+hanjun, tomasz, sinan]
+>>>
+>>> It is quite a key patchset, I would be glad if they can test on their
+>>> respective platforms with IORT.
+>>>
+>>
+>> Tested on top of 4.10-rc5.
+>>
+>> 1.	Platform Hidma device passed dmatest
+>> 2.	Seeing some USB stalls on a platform USB device.
+>> 3.	PCIe NVME drive probed and worked fine with MSI interrupts after boot.
+>> 4. 	NVMe driver didn't probe following a hotplug insertion and received an
+>> SMMU error event during the insertion.
+> 
+> What was the SMMU error - a translation/permission fault (implying the
+> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
+> the SMMU about the device at all)?
+> 
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
 
- drivers/pci/host/pcie-rockchip.c | 52 +++++++++++++---------------------------
- 1 file changed, 16 insertions(+), 36 deletions(-)
+[__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
+[  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
+[  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event ignored; already powering off
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 0d6e8ee..17374a9 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -188,8 +188,11 @@
- 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
- 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
- #define PCIE_LINK_IS_L2(x) \
--		(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == \
--		 PCIE_CLIENT_DEBUG_LTSSM_L2)
-+	(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == PCIE_CLIENT_DEBUG_LTSSM_L2)
-+#define PCIE_LINK_UP(x) \
-+	(((x) & PCIE_CLIENT_LINK_STATUS_MASK) == PCIE_CLIENT_LINK_STATUS_UP)
-+#define PCIE_LINK_IS_GEN2(x) \
-+	(((x) & PCIE_CORE_PL_CONF_SPEED_MASK) == PCIE_CORE_PL_CONF_SPEED_5G)
- 
- #define RC_REGION_0_ADDR_TRANS_H		0x00000000
- #define RC_REGION_0_ADDR_TRANS_L		0x00000000
-@@ -463,7 +466,6 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	struct device *dev = rockchip->dev;
- 	int err;
- 	u32 status;
--	unsigned long timeout;
- 
- 	gpiod_set_value(rockchip->ep_gpio, 0);
- 
-@@ -604,23 +606,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	gpiod_set_value(rockchip->ep_gpio, 1);
- 
- 	/* 500ms timeout value should be enough for Gen1/2 training */
--	timeout = jiffies + msecs_to_jiffies(500);
--
--	for (;;) {
--		status = rockchip_pcie_read(rockchip,
--					    PCIE_CLIENT_BASIC_STATUS1);
--		if ((status & PCIE_CLIENT_LINK_STATUS_MASK) ==
--		    PCIE_CLIENT_LINK_STATUS_UP) {
--			dev_dbg(dev, "PCIe link training gen1 pass!\n");
--			break;
--		}
--
--		if (time_after(jiffies, timeout)) {
--			dev_err(dev, "PCIe link training gen1 timeout!\n");
--			return -ETIMEDOUT;
--		}
--
--		msleep(20);
-+	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
-+				 status, PCIE_LINK_UP(status), 20,
-+				 500 * USEC_PER_MSEC);
-+	if (err) {
-+		dev_err(dev, "PCIe link training gen1 timeout!\n");
-+		return -ETIMEDOUT;
- 	}
- 
- 	if (rockchip->link_gen == 2) {
-@@ -632,22 +623,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		status |= PCI_EXP_LNKCTL_RL;
- 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
--		timeout = jiffies + msecs_to_jiffies(500);
--		for (;;) {
--			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
--			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
--			    PCIE_CORE_PL_CONF_SPEED_5G) {
--				dev_dbg(dev, "PCIe link training gen2 pass!\n");
--				break;
--			}
--
--			if (time_after(jiffies, timeout)) {
--				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
--				break;
--			}
--
--			msleep(20);
--		}
-+		err = readl_poll_timeout(rockchip->apb_base + PCIE_CORE_CTRL,
-+					 status, PCIE_LINK_IS_GEN2(status), 20,
-+					 500 * USEC_PER_MSEC);
-+		if (err)
-+			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
- 	}
- 
- 	/* Check the final link width from negotiated lane counter from MGMT */
+root@ubuntu:/sys/bus/pci/slots/4#
+
+[__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
+[  254.820599] nvme nvme0: pci function 0003:01:00.0
+[  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
+[  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
+[  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
+[  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+[  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+[  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
+root@ubuntu:/sys/bus/pci/slots/4#
+
+root@ubuntu:/sys/bus/pci/slots/4#ls /dev/nvme*
+/dev/nvme0
+
+I should have seen /dev/nvme0n1 partition here. 
+
+> Robin.
+> 
+>>
+>> /sys/bus/pci/slots/4 #
+>> /sys/bus/pci/slots/4 # dmesg | grep nvme
+>> [   14.041357] nvme nvme0: pci function 0003:01:00.0
+>> [  198.399521] nvme nvme0: pci function 0003:01:00.0
+>> [__198.416232]_nvme_0003:01:00.0:_enabling_device_(0000_->_0002)
+>> [  264.402216] nvme nvme0: I/O 228 QID 0 timeout, disable controller
+>> [  264.402313] nvme nvme0: Identify Controller failed (-4)
+>> [  264.421270] nvme nvme0: Removing after probe failure status: -5
+>> /sys/bus/pci/slots/4 #
+>>
+>>
+>>
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
