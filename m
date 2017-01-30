@@ -1,149 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:44407 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752034AbdALKa6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:30:58 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH 37/37] ARM: dts: DRA7: Add pcie1 dt node for EP mode
-Date: Thu, 12 Jan 2017 15:56:26 +0530
-Message-ID: <1484216786-17292-38-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=Orsw=ZM=codeaurora.org=sricharan@kernel.org>
+Return-Path: <SRS0=Orsw=ZM=codeaurora.org=sricharan@kernel.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Bjorn Helgaas'" <helgaas@kernel.org>
+Cc: <robin.murphy@arm.com>,
+	<will.deacon@arm.com>,
+	<joro@8bytes.org>,
+	<lorenzo.pieralisi@arm.com>,
+	<iommu@lists.linux-foundation.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-arm-msm@vger.kernel.org>,
+	<m.szyprowski@samsung.com>,
+	<bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <1485188293-20263-8-git-send-email-sricharan@codeaurora.org> <20170128210359.GE20550@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170128210359.GE20550@bhelgaas-glaptop.roam.corp.google.com>
+Subject: RE: [PATCH V7 07/11] iommu: of: Handle IOMMU lookup failure with deferred probing or error
+Date: Mon, 30 Jan 2017 13:31:52 +0530
+Message-ID: <005001d27acf$21c47db0$654d7910$@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie1 dt node in order for the controller to operate in
-endpoint mode. However since none of the dra7 based boards have
-slots configured to operate in endpoint mode, keep EP mode
-disabled.
+Hi Bjorn,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/am572x-idk.dts                |    7 ++++++-
- arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi |    7 ++++++-
- arch/arm/boot/dts/dra7-evm.dts                  |    4 ++++
- arch/arm/boot/dts/dra7.dtsi                     |   22 +++++++++++++++++++++-
- arch/arm/boot/dts/dra72-evm-common.dtsi         |    4 ++++
- 5 files changed, 41 insertions(+), 3 deletions(-)
+>-----Original Message-----
+>From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+>Sent: Sunday, January 29, 2017 2:34 AM
+>To: Sricharan R <sricharan@codeaurora.org>
+>Cc: robin.murphy@arm.com; will.deacon@arm.com; joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-foundation.org;
+>linux-arm-kernel@lists.infradead.org; linux-arm-msm@vger.kernel.org; m.szyprowski@samsung.com; bhelgaas@google.com; linux-
+>pci@vger.kernel.org; linux-acpi@vger.kernel.org
+>Subject: Re: [PATCH V7 07/11] iommu: of: Handle IOMMU lookup failure with deferred probing or error
+>
+>On Mon, Jan 23, 2017 at 09:48:09PM +0530, Sricharan R wrote:
+>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+>>
+>> Failures to look up an IOMMU when parsing the DT iommus property need to
+>> be handled separately from the .of_xlate() failures to support deferred
+>> probing.
+>>
+>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>> been deferred, or having failed.
+>>
+>> The first case occurs when the device tree describes the bus master and
+>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>> or the device driver has not been compiled in. Return NULL, the caller
+>> will configure the device without an IOMMU.
+>>
+>> The second and third cases are handled by deferring the probe of the bus
+>> master device which will eventually get reprobed after the IOMMU.
+>>
+>> The last case is currently handled by deferring the probe of the bus
+>> master device as well. A mechanism to either configure the bus master
+>> device without an IOMMU or to fail the bus master device probe depending
+>> on whether the IOMMU is optional or mandatory would be a good
+>> enhancement.
+>>
+>> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ...
+>
+>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> index 349bd1d..9529d6c 100644
+>> --- a/drivers/iommu/of_iommu.c
+>> +++ b/drivers/iommu/of_iommu.c
+>> @@ -23,6 +23,7 @@
+>>  #include <linux/of.h>
+>>  #include <linux/of_iommu.h>
+>>  #include <linux/of_pci.h>
+>> +#include <linux/pci.h>
+>
+>Why do we need this?
 
-diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
-index 1540f7a..2ca2839 100644
---- a/arch/arm/boot/dts/am572x-idk.dts
-+++ b/arch/arm/boot/dts/am572x-idk.dts
-@@ -88,6 +88,11 @@
- 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
- };
- 
--&pcie1 {
-+&pcie1_rc {
-+	status = "okay";
-+	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
-+};
-+
-+&pcie1_ep {
- 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
- };
-diff --git a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-index 78bee26..079a7e1 100644
---- a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-+++ b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-@@ -556,7 +556,12 @@
- 	};
- };
- 
--&pcie1 {
-+&pcie1_rc {
-+	status = "ok";
-+	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
-+};
-+
-+&pcie1_ep {
- 	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
- };
- 
-diff --git a/arch/arm/boot/dts/dra7-evm.dts b/arch/arm/boot/dts/dra7-evm.dts
-index 132f2be..fd0aa3a 100644
---- a/arch/arm/boot/dts/dra7-evm.dts
-+++ b/arch/arm/boot/dts/dra7-evm.dts
-@@ -937,3 +937,7 @@
- 		status = "okay";
- 	};
- };
-+
-+&pcie1_rc {
-+	status = "okay";
-+};
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index addb753..bf9c668 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -272,7 +272,11 @@
- 			#address-cells = <1>;
- 			ranges = <0x51000000 0x51000000 0x3000
- 				  0x0	     0x20000000 0x10000000>;
--			pcie1: pcie@51000000 {
-+			/**
-+			 * To enable PCI endpoint mode, disable the pcie1_rc
-+			 * node and enable pcie1_ep mode.
-+			 */
-+			pcie1_rc: pcie@51000000 {
- 				compatible = "ti,dra7-pcie";
- 				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
- 				reg-names = "rc_dbics", "ti_conf", "config";
-@@ -293,12 +297,28 @@
- 						<0 0 0 2 &pcie1_intc 2>,
- 						<0 0 0 3 &pcie1_intc 3>,
- 						<0 0 0 4 &pcie1_intc 4>;
-+				status = "disabled";
- 				pcie1_intc: interrupt-controller {
- 					interrupt-controller;
- 					#address-cells = <0>;
- 					#interrupt-cells = <1>;
- 				};
- 			};
-+
-+			pcie1_ep: pcie_ep@51000000 {
-+				compatible = "ti,dra7-pcie-ep";
-+				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
-+				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
-+				interrupts = <0 232 0x4>;
-+				num-lanes = <1>;
-+				num-ib-windows = <4>;
-+				num-ob-windows = <16>;
-+				ti,hwmods = "pcie1";
-+				phys = <&pcie1_phy>;
-+				phy-names = "pcie-phy0";
-+				syscon-legacy-mode = <&scm_conf1 0x14 2>;
-+				status = "disabled";
-+			};
- 		};
- 
- 		axi@1 {
-diff --git a/arch/arm/boot/dts/dra72-evm-common.dtsi b/arch/arm/boot/dts/dra72-evm-common.dtsi
-index e50fbee..5d9762c 100644
---- a/arch/arm/boot/dts/dra72-evm-common.dtsi
-+++ b/arch/arm/boot/dts/dra72-evm-common.dtsi
-@@ -545,3 +545,7 @@
- 		status = "okay";
- 	};
- };
-+
-+&pcie1_rc {
-+	status = "okay";
-+};
--- 
-1.7.9.5
+Right, will remove it.
 
+Regards,
+ Sricharan
