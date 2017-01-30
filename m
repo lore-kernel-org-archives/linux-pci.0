@@ -1,61 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34534 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752187AbdA3HJU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2017 02:09:20 -0500
+Received: from mga11.intel.com ([192.55.52.93]:45795 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753632AbdA3QGZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jan 2017 11:06:25 -0500
+Date: Mon, 30 Jan 2017 11:14:53 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        zhangjukuo <zhangjukuo@huawei.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: Re: Question: PCIe DPC not allowing for link retraining and bus
+ re-scan
+Message-ID: <20170130161453.GC11699@localhost.localdomain>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
 MIME-Version: 1.0
-In-Reply-To: <1485188293-20263-7-git-send-email-sricharan@codeaurora.org>
-References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org> <1485188293-20263-7-git-send-email-sricharan@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 30 Jan 2017 08:09:18 +0100
-Message-ID: <CAJZ5v0jv-q_EeNhJ4F11yPS85aeD7YFQMcpH+fctTFL12Mk4XQ@mail.gmail.com>
-Subject: Re: [PATCH V7 06/11] of/acpi: Configure dma operations at probe time
- for platform/amba/pci bus devices
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        linux-arm-msm@vger.kernel.org,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2017 at 5:18 PM, Sricharan R <sricharan@codeaurora.org> wrote:
-> Configuring DMA ops at probe time will allow deferring device probe when
-> the IOMMU isn't available yet. The dma_configure for the device is
-> now called from the generic device_attach callback just before the
-> bus/driver probe is called. This way, configuring the DMA ops for the
-> device would be called at the same place for all bus_types, hence the
-> deferred probing mechanism should work for all buses as well.
->
-> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
->        |                         |
-> pci_bus_add_device     (device_add/driver_register)
->        |                         |
-> device_attach           device_initial_probe
->        |                         |
-> __device_attach_driver    __device_attach_driver
->        |
-> driver_probe_device
->        |
-> really_probe
->        |
-> dma_configure
->
-> Similarly on the device/driver_unregister path __device_release_driver is
-> called which inturn calls dma_deconfigure.
->
-> This patch changes the dma ops configuration to probe time for
-> both OF and ACPI based platform/amba/pci bus devices.
->
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+On Mon, Jan 30, 2017 at 11:56:23AM +0000, Gabriele Paoloni wrote:
+> Hi Keith
+> 
+> I am looking at the current DPC implementation in:
+> http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-dpc.c
+> 
+> 
+> If my understanding is correct upon an incoming DPC event
+> the DPC IRQ handler will:
+> 1) stop and remove all the devices in the hierarchy under the
+> downstream port that raised the event
+> 2) wait for the data link to be inactive
+> 3) keep the downstream port status in DPC (in fact we set the DPC
+>    trigger status again here:
+>    http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-dpc.c#L55)
+> 
+> Now looking at the specs we have (section 6.2.10):
+> "After software releases the Downstream Port from DPC, the associated Link
+> will normally attempt to retrain. Software can use Data Link Layer State
+> Changed interrupts, DL_Active ERR_COR signaling, or both, to signal when 
+> the Link reaches the DL_Active state again"
+> 
+> So if my understanding is correct in the current Linux implementation
+> It is not possible to recover a PCIe hierarchy from a DPC event, is it correct?
+> If this is correct, shouldn't we change the current implementation to release
+> the port from DPC and re-scan the secondary bus after the conditions described
+> in "PCIe 3.1 section 6.2.10" are met (I.e. <<Data Link Layer Link Active bit in
+> the 15 Link Status register reads 0b>> and if it is a root port also <<until
+> the DPC RP Busy bit reads 0b>>) ?
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+That sounds reasonable. In all testing I've done, DPC events were
+triggered as part of a hot-plug event, so the secondary bus rescan would
+automatically happen when a device is hot inserted. The DPC driver didn't
+need to initiate the rescan in that case.
+
+But surprise removal is certainly not the only condition DPC can contain a
+port, so I agree with you that we may require pcie-dpc initiate a rescan
+after releasing the port from containment. I also agree on needing to
+poll RP busy for root ports.
+
+Do you want to send patches for these? I could also write them up,
+but I don't have a DPC capable root port to test that part.
+
+Thanks,
+Keith
