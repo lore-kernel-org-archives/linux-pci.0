@@ -1,36 +1,90 @@
-Return-Path: <SRS0=DDPm=ZH=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=DDPm=ZH=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 25 Jan 2017 18:31:59 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Kilian Singer <kilian.singer@quantumtechnology.info>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170125163159.GZ17297@lahna.fi.intel.com>
-References: <20161227235737.GB24366@bhelgaas-glaptop.roam.corp.google.com>
- <20170117145628.GD22776@bhelgaas-glaptop.roam.corp.google.com>
- <20170123203335.GA4707@bhelgaas-glaptop.roam.corp.google.com>
- <20170123211247.GB17297@lahna.fi.intel.com>
- <20170124200103.GA14743@bhelgaas-glaptop.roam.corp.google.com>
- <20170125094831.GP17297@lahna.fi.intel.com>
- <1006923122.16.1485360329865.JavaMail.zimbra@quantumtechnology.info>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60936 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932446AbdA3QX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jan 2017 11:23:58 -0500
+Date: Mon, 30 Jan 2017 10:23:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Apply _HPX settings only to relevant devices
+Message-ID: <20170130162337.GS20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170112203204.17379.9783.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1006923122.16.1485360329865.JavaMail.zimbra@quantumtechnology.info>
+In-Reply-To: <20170112203204.17379.9783.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 25, 2017 at 05:05:29PM +0100, Kilian Singer wrote:
-> Dear Mika,
-> just came back from my lecture. Booted into the new kernel runtime suspend works!
-> Thanks for all the support. I really enjoyed working with you all.
-> It was very interesting to see how bugs are fixed :)
+On Thu, Jan 12, 2017 at 02:32:04PM -0600, Bjorn Helgaas wrote:
+> Previously we didn't check the type of device before trying to apply Type 1
+> (PCI-X) or Type 2 (PCIe) Setting Records from _HPX.
+> 
+> We don't support PCI-X Setting Records, so this was harmless, but the
+> warning was useless.
+> 
+> We do support PCIe Setting Records, and we didn't check whether a device
+> was PCIe before applying settings.  I don't think anything bad happened on
+> non-PCIe devices because pcie_capability_clear_and_set_word(),
+> pcie_cap_has_lnkctl(), etc., would fail before doing any harm.  But it's
+> ugly to depend on those internals.
+> 
+> Check the device type before attempting to apply Type 1 and Type 2 Setting
+> Records (Type 0 records are applicable to PCI, PCI-X, and PCIe devices).
+> 
+> A side benefit is that this prevents useless "not supported" warnings when
+> a BIOS supplies a Type 1 (PCI-X) Setting Record and we try to apply it to
+> every single device:
+> 
+>   pci 0000:00:00.0: PCI-X settings not supported
+> 
+> After this patch, we'll get the warning only when a BIOS supplies a Type 1
+> record and we have a PCI-X device to which it should be applied.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=187731
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-OK, thanks a lot for your patience :)
+Applied to pci/enumeration for v4.11.
 
-So it was 3846fd9b8600 ("drm/probe-helpers: Drop locking from
-poll_enable") that actually fixed the issue for Kilian. I hope we do not
-need to revert the runtime PM patch anymore ;-)
-
-Thanks for everyone who participated in this.
+> ---
+>  drivers/pci/probe.c |   15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e164b5c9f0f0..aca5b2466adb 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1554,8 +1554,16 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+>  
+>  static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+>  {
+> -	if (hpp)
+> -		dev_warn(&dev->dev, "PCI-X settings not supported\n");
+> +	int pos;
+> +
+> +	if (!hpp)
+> +		return;
+> +
+> +	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+> +	if (!pos)
+> +		return;
+> +
+> +	dev_warn(&dev->dev, "PCI-X settings not supported\n");
+>  }
+>  
+>  static bool pcie_root_rcb_set(struct pci_dev *dev)
+> @@ -1581,6 +1589,9 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>  	if (!hpp)
+>  		return;
+>  
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+>  	if (hpp->revision > 1) {
+>  		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
+>  			 hpp->revision);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
