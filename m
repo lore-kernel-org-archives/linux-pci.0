@@ -1,52 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46318 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750996AbdAaPrz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jan 2017 10:47:55 -0500
-Date: Tue, 31 Jan 2017 10:53:36 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from lhrrgout.huawei.com ([194.213.3.17]:8420 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753193AbdA3L4q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2017 06:56:46 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "keith.busch@intel.com" <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Linuxarm <linuxarm@huawei.com>,
         "liudongdong (C)" <liudongdong3@huawei.com>,
         zhangjukuo <zhangjukuo@huawei.com>,
         "Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: Re: Question: PCIe DPC not allowing for link retraining and bus
- re-scan
-Message-ID: <20170131155336.GA24601@localhost.localdomain>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
- <20170130161453.GC11699@localhost.localdomain>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
+Subject: Question: PCIe DPC not allowing for link retraining and bus re-scan
+Date: Mon, 30 Jan 2017 11:56:23 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 09:35:58AM +0000, Gabriele Paoloni wrote:
-> I don't mind writing the patches but currently I also do not have a
-> platform to test on.
-> 
-> Do you know if there is any Intel Server/Desktop with full support of
-> DPC on the RP including "Software Triggering of DPC" (maybe some
-> machines that are out on the market but you do not have there with you)?
+Hi Keith
 
-Currently available Intel offerings do not have eDPC capable root ports.
-I use switches from Microsemi and PLX with these capabilities on their
-downstream ports so I'm limited to non-root port testing at the moment.
+I am looking at the current DPC implementation in:
+http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-dpc.c
 
-> As an alternative I am thinking that maybe I can find a switch with
-> full DPC support including "Software Triggering of DPC". In this case
-> we test anything except the RP Busy bit...
-> 
-> The idea is to have a sort of DPC SW Injection module to test DPC.
 
-I think you can s/w inject from userspace with setpci:
+If my understanding is correct upon an incoming DPC event
+the DPC IRQ handler will:
+1) stop and remove all the devices in the hierarchy under the
+downstream port that raised the event
+2) wait for the data link to be inactive
+3) keep the downstream port status in DPC (in fact we set the DPC
+   trigger status again here:
+   http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-dpc.c#L55)
 
-  # setpci -s <B:D.f> ECAP_DPC+6.w=40:40
+Now looking at the specs we have (section 6.2.10):
+"After software releases the Downstream Port from DPC, the associated Link
+will normally attempt to retrain. Software can use Data Link Layer State
+Changed interrupts, DL_Active ERR_COR signaling, or both, to signal when 
+the Link reaches the DL_Active state again"
 
-The port has to have a software trigger capability. I can get such a
-switch, but don't have one immediately available.
+So if my understanding is correct in the current Linux implementation
+It is not possible to recover a PCIe hierarchy from a DPC event, is it correct?
+If this is correct, shouldn't we change the current implementation to release
+the port from DPC and re-scan the secondary bus after the conditions described
+in "PCIe 3.1 section 6.2.10" are met (I.e. <<Data Link Layer Link Active bit in
+the 15 Link Status register reads 0b>> and if it is a root port also <<until
+the DPC RP Busy bit reads 0b>>) ?  
 
-Anyway, I'll write a couple patches and post them when I can get
-validation. Thank you for pointing out the current gaps.
+
+Many Thanks
+
+Gab
+
+ 
