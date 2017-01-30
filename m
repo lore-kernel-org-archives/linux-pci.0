@@ -1,53 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:35792 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751974AbdA1Ute (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jan 2017 15:49:34 -0500
-Received: by mail-lf0-f53.google.com with SMTP id n124so177285530lfd.2
-        for <linux-pci@vger.kernel.org>; Sat, 28 Jan 2017 12:49:06 -0800 (PST)
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Janos Laube <janos.dev@gmail.com>,
-        Paulius Zaleckas <paulius.zaleckas@gmail.com>,
-        openwrt-devel@openwrt.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 3/4] ARM: gemini: select MIGHT_HAVE_PCI
-Date: Sat, 28 Jan 2017 21:48:38 +0100
-Message-Id: <20170128204839.18330-3-linus.walleij@linaro.org>
-In-Reply-To: <20170128204839.18330-1-linus.walleij@linaro.org>
-References: <20170128204839.18330-1-linus.walleij@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:59140 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753302AbdA3W4i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jan 2017 17:56:38 -0500
+Date: Mon, 30 Jan 2017 16:56:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jan Kiszka <jan.kiszka@siemens.com>,
+        linux-kernel@vger.kernel.org,
+        Matthew Wilcox <mawilcox@microsoft.com>
+Subject: Re: [PATCH] PCI: Avoid possible deadlock on pci_lock and p->pi_lock
+Message-ID: <20170130225628.GX20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170118234612.26157.95913.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170118234612.26157.95913.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As we have a PCI driver for the Gemini, we should select
-MIGHT_HAVE_PCI.
+On Wed, Jan 18, 2017 at 05:46:12PM -0600, Bjorn Helgaas wrote:
+> pci_lock is an IRQ-safe spinlock that protects all accesses to PCI
+> configuration space (see PCI_OP_READ() and PCI_OP_WRITE() in pci/access.c).
+> 
+> The pci_cfg_access_unlock() path acquires pci_lock, then p->pi_lock (inside
+> wake_up_all()).  According to lockdep, there is a possible path involving
+> snbep_uncore_pci_read_counter() that could acquire them in the reverse
+> order: acquiring p->pi_lock, then pci_lock, which could result in a
+> deadlock.  Lockdep details are in the bugzilla below.
+> 
+> Avoid the possible deadlock by dropping pci_lock before waking up any
+> config access waiters.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=192901
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Cc: Janos Laube <janos.dev@gmail.com>
-Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
----
-PCI maintainers: this is FYI only, I will funnel this to the ARM
-SoC tree once we are done with the PCI driver.
----
- arch/arm/mach-gemini/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Applied to pci/enumeration for v4.11.
 
-diff --git a/arch/arm/mach-gemini/Kconfig b/arch/arm/mach-gemini/Kconfig
-index 798abb16bb88..91ea52ccf13c 100644
---- a/arch/arm/mach-gemini/Kconfig
-+++ b/arch/arm/mach-gemini/Kconfig
-@@ -5,6 +5,7 @@ menuconfig ARCH_GEMINI
- 	select GEMINI_TIMER
- 	select GPIO_GEMINI
- 	select GPIOLIB
-+	select MIGHT_HAVE_PCI
- 	select POWER_RESET
- 	select POWER_RESET_SYSCON
- 	select SERIAL_OF_PLATFORM
--- 
-2.9.3
-
+> ---
+>  drivers/pci/access.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index db239547fefd..68bd7201d8bc 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -684,8 +684,9 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
+>  	WARN_ON(!dev->block_cfg_access);
+>  
+>  	dev->block_cfg_access = 0;
+> -	wake_up_all(&pci_cfg_wait);
+>  	raw_spin_unlock_irqrestore(&pci_lock, flags);
+> +
+> +	wake_up_all(&pci_cfg_wait);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
