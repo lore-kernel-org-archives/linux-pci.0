@@ -1,49 +1,37 @@
-Return-Path: <SRS0=1VDW=YZ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=1VDW=YZ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 11 Jan 2017 11:54:50 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Chen Yu <yu.c.chen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Amir Levy <amir.jer.levy@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v4 2/8] PCI: Allow runtime PM on Thunderbolt ports
-Message-ID: <20170111095450.GK2330@lahna.fi.intel.com>
-References: <cover.1483806825.git.lukas@wunner.de>
- <7ddaaa371101208db7b8bc4dcc2f44c056645923.1483806825.git.lukas@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751082AbdA3Ukz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jan 2017 15:40:55 -0500
+Subject: [PATCH v1 0/2] drm amdgpu/radeon: clean up d3_delay usage
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Deucher <alexander.deucher@amd.com>,
+        Christian =?utf-8?b?S8O2bmln?= <christian.koenig@amd.com>
+Cc: linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        amd-gfx@lists.freedesktop.org,
+        Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date: Mon, 30 Jan 2017 14:40:51 -0600
+Message-ID: <20170130203822.31891.22461.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7ddaaa371101208db7b8bc4dcc2f44c056645923.1483806825.git.lukas@wunner.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 08, 2017 at 09:41:45AM +0100, Lukas Wunner wrote:
-> Currently PCIe ports are only allowed to go to D3 if the BIOS is dated
-> 2015 or newer to avoid potential issues with old chipsets.  However for
-> Thunderbolt we know that even the oldest controller, Light Ridge (2010),
-> is able to suspend its ports to D3 just fine.
-> 
-> We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-> released two EFI security updates in 2015 which encompass all machines
-> with Thunderbolt, but the achieved power saving should be made available
-> to users even if they haven't updated their BIOS.  To this end,
-> special-case Thunderbolt in pci_bridge_d3_possible().
-> 
-> This allows the Thunderbolt controller to power down but the root port
-> to which the Thunderbolt controller is attached remains in D0 unless
-> the EFI update is installed.  Users can pass pcie_port_pm=force on the
-> kernel command line if they cannot install the EFI update but still want
-> to benefit from the additional power saving of putting the root port
-> into D3.  In practice, root ports can be suspended to D3 without issues
-> at least on 2012 Ivy Bridge machines.
-> 
-> If the BIOS cut-off date is ever lowered to 2010, the Thunderbolt
-> special case can be removed.
-> 
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+amdgpu doesn't need to touch pdev->d3_delay at all.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+radeon has a d3_delay quirk for MacBook Pro, but it only affects
+radeon_switcheroo_set_state().  I think it should affect wakeups done by
+the PCI core as well.
+
+---
+
+Bjorn Helgaas (2):
+      drm/amdgpu: remove unnecessary save/restore of pdev->d3_delay
+      drm/radeon: make MacBook Pro d3_delay quirk more generic
+
+
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |    4 ----
+ drivers/gpu/drm/radeon/radeon_device.c     |   12 ------------
+ drivers/pci/quirks.c                       |   13 +++++++++++++
+ 3 files changed, 13 insertions(+), 16 deletions(-)
