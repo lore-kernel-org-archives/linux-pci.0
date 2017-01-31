@@ -1,111 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com>
+ <20170131172630.GB12595@kroah.com>
+ <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
+ <20170131185754.GA17684@kroah.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <e4802fb9-2b24-0c12-ca02-d33bd3ccb5dc@deltatee.com>
+Date: Tue, 31 Jan 2017 12:04:27 -0700
 MIME-Version: 1.0
-In-Reply-To: <6cfba8af-1e9b-cb43-4898-61d6fb8f12ca@broadcom.com>
-References: <1484266817-6725-1-git-send-email-aospan@netup.ru>
- <6891f43f-25e7-1411-800e-97e6788f2f27@gmail.com>
- <e5301de6-9a6c-7deb-4ff7-ccd462c4381e@broadcom.com>
- <6cfba8af-1e9b-cb43-4898-61d6fb8f12ca@broadcom.com>
-From: Abylay Ospan <aospan@netup.ru>
-Date: Thu, 12 Jan 2017 23:55:23 -0500
-Message-ID: <CAK3bHNVQ9Rbuwf1i54h7uLLdkUvyGibmfJpD6zRjt1gYiQD7Hw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: iproc: fix kernel crash if dev->of_node not defined
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
- Ray Jui <ray.jui@broadcom.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170131185754.GA17684@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Florian,
-
-> Still, upstream Linux support for Northstar is Device Tree, and BCMA bus
-> should fill in of_nodes accordingly, if not, that's a bug that must be
-> fixed at the BCMA layer.
-
-yes, this is a source of the problem. Devices allocated in
-'bcma_bus_scan' but of_node doesn't assigned.
-Is some code missing in drivers/bcma/ which should assign of_node ?
-
-I can suggest following "hacky" patch for this (works for me):
-
-Author: Abylay Ospan <aospan@netup.ru>
-Date:   Fri Jan 13 07:24:13 2017 +0300
-
-    bcma: force assign 'of_node' for devices on the bus
-
-    prevent other code to fail if no 'of_node' defined
-
-    Signed-off-by: Abylay Ospan <aospan@netup.ru>
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 2c1798e..4fe1c92 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -301,6 +301,11 @@ void bcma_init_bus(struct bcma_bus *bus)
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
-        int err;
-+       struct device * dev;
-+
-+       dev = bcma_bus_get_host_dev(bus);
-+       if (dev && !core->dev.of_node)
-+               core->dev.of_node = dev->of_node;
 
 
-if it's ok I will send this patch in separate email.
+On 31/01/17 11:57 AM, Greg Kroah-Hartman wrote:
+> Sorry, it was probably me :)
 
->
->>
->>>
->>>>
->>>> Signed-off-by: Abylay Ospan <aospan@netup.ru>
->>>> ---
->>>>  drivers/pci/host/pcie-iproc.c | 3 +++
->>>>  1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->>>> index 3ebc025..f2836a9 100644
->>>> --- a/drivers/pci/host/pcie-iproc.c
->>>> +++ b/drivers/pci/host/pcie-iproc.c
->>>> @@ -952,6 +952,9 @@ static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
->>>>     const int na = 3, ns = 2;
->>>>     int rlen;
->>>>
->>>> +   if (!node)
->>>> +           return -ENOENT;
->>>> +
->>>>     parser->node = node;
->>>>     parser->pna = of_n_addr_cells(node);
->>>>     parser->np = parser->pna + na + ns;
->>>>
->>>
->>>
->
->
-> --
-> Florian
+Nope, it was Christoph Hellwig. I don't mind changing it. It's just hard
+to know what's expected all the time.
 
+> Why do you need this?  Wherever you put it, it should be built as part
+> of the online kernel documentation.  Who is the audience for this
+> documentation?
 
+Well usually documenting how to use the device is a good thing. Is it
+not? The audience would be people wanting to make use of the userspace
+interface. Though in fairness, the vast majority of people should use
+our library. I also thought it would be useful to reviewers to more
+quickly understand the interface we are creating. If maintainers want us
+to leave it out, we can, but that seems like an odd request.
 
--- 
-Abylay Ospan,
-NetUP Inc.
-http://www.netup.tv
+> Do future stuff in the future, no need for that now, right?
+> 
+> Simple is best.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ok, I can push it all into the C file for v2.
+
+> I'll leave that up to the PCI maintainer, but just a single .c file in a
+> subdir seems odd to me.
+
+Thanks,
+
+Logan
