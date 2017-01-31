@@ -1,81 +1,143 @@
-Return-Path: <SRS0=4ynr=YS=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=4ynr=YS=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Kilian Singer <kilian.singer@quantumtechnology.info>, linux-pci <linux-pci@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Date: Wed, 04 Jan 2017 22:58:10 +0100
-Message-ID: <59349185.1aqio7kYFn@aspire.rjw.lan>
-In-Reply-To: <20170104210954.GA11946@al>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com> <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 30 Jan 2017 18:31:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 1/4] PCI: add DT bindings for Cortina Gemini PCI Host
+ Bridge
+Message-ID: <20170131003137.GE20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
+In-Reply-To: <20170128204839.18330-1-linus.walleij@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
-> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
-> > On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
-> > > I don't *want* to apply the revert.  It's on my for-linus branch as a
-> > > worst-case scenario change if we can't figure out a better fix.
-> > > 
-> > > The patch below is preferable, but I'd rather not take even it,
-> > > because it takes away functionality and forces people to use a boot
-> > > parameter to restore it.  I expect that somebody will figure out how
-> > > to fix the regression Kilian found and also keep the new functionality
-> > > (without requiring boot parameters) before v4.10.
-> > 
-> > The issue is constrained to hybrid graphics laptops with Nvidia discrete
-> > GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
-> > PCI core.
-> 
-> The problem is not necessarily in the nouveau driver, the same problem
-> occurs when you enable RPM without loading nouveau. The issue is limited
-> though to some newer hybrid graphics laptops with Nvidia GPUs. While a
-> quirk can be added to nouveau, I think that a (temporary) quirk in core
-> would also be reasonable (since it also occurs without nouveau).
-> 
-> > (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
-> > when and how to call an ACPI method versus using PR3.)
-> > 
-> > (Neither are laptops using the Nvidia proprietary driver as it doesn't
-> > runtime suspend the card.  But battery life will be terrible then.)
-> > 
-> > We're at rc2 so the time frame for coming up with a fix is probably
-> > 4 weeks.  Peter and others have tried for months to reverse-engineer
-> > how to handle runtime PM on newer Nvidia cards.  It seems likely that
-> > we'll not find the ultimate solution to the problem within 4 weeks.
-> 
-> Yep, a quick proper fix seems unlikely.
-> [ Help/ideas are welcome, I suspect that these failures to restore power
-> on laptops designed for Win8+ all have the same cause, related to some
-> unknown interaction between ACPI and PCI. Some links:
-> https://bugzilla.kernel.org/show_bug.cgi?id=190861
-> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
-> 
-> > The way it is now, i.e. defaulting to PR3 when available, regresses
-> > certain laptops such as Kilian's.  If on the other hand we default to
-> > DSM when available, we'll regress certain other laptops, as Peter has
-> > pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
-> > approach either, ideally we'd want to use PR3 as Windows does.
-> > 
-> > As said, the only short-term solution I see is to add an "optimus"
-> > module_param to nouveau to allow users to select which method to use.
-> > So in Kilian's case an additional command line parameter would be
-> > necessary to fix the issue.
-> > 
-> > Does anyone see a better solution or can we agree on this one?  If so
-> > I can come up with a patch.  This could go in via Dave Airlie's tree.
-> 
-> As pcie_port_pm=off already reverts to DSM, I do not think that an
-> additional (temporary) nouveau module parameter is going to help. I
-> instead propose a (hopefully temporary) quirk in pci core that disables
-> D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
-> pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
-> to test possible solutions in the future.
+Hi Linus,
 
-I would rather add a quirk to the ACPI core to prevent the power resources in
-question from being enumerated.  Or even to prevent ACPI PM from being
-used for the port in question.
+On Sat, Jan 28, 2017 at 09:48:36PM +0100, Linus Walleij wrote:
+> This adds device tree bindings for the Cortina Systems Gemini PCI
+> Host Bridge.
+> 
+> Cc: Janos Laube <janos.dev@gmail.com>
+> Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+> Cc: Florian Fainelli <f.fainelli@gmail.com>
+> Cc: devicetree@vger.kernel.org
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
-Thanks,
-Rafael
+I'm hoping one of the DT folks will take a quick look at this.
+
+> ---
+> This can be merged to the PCI tree whenever it is considered
+> fine for inclusion.
+> ---
+>  .../devicetree/bindings/pci/cortina,gemini-pci.txt | 64 ++++++++++++++++++++++
+>  1 file changed, 64 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt b/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
+> new file mode 100644
+> index 000000000000..e3090d995e1e
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/cortina,gemini-pci.txt
+> @@ -0,0 +1,64 @@
+> +* Cortina Systems Gemini PCI Host Bridge
+> +
+> +Mandatory properties:
+> +
+> +- compatible: should be "cortina,gemini-pci"
+> +- reg: memory base and size for the host bridge
+> +- interrupts: the four PCI interrupts
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- #interrupt-cells: set to <1>
+> +- bus-range: set to <0x00 0x00> (only root bus)
+
+Why is this limited to bus 0?  Is everything completely soldered down
+with no possibility of adding or replacing PCI devices?  The interrupt-map
+below suggests slots, though.  If there's a slot, we could plug in a card
+with a bridge, which would mean more than just bus 0.
+
+> +- device_type, set to "pci"
+> +- ranges: see pci.txt
+> +- interrupt-map-mask: see pci.txt
+> +- interrupt-map: see pci.txt
+> +
+> +Mandatory subnodes:
+> +- One node reprenting the interrupt-controller inside the host bridge
+
+s/reprenting/representing/
+
+> +  with the following mandatory properties:
+> +  - interrupt-controller: see interrupt-controller/interrupts.txt
+> +  - #address-cells: set to <0>
+> +  - #interrupt-cells: set to <1>
+> +
+> +Example:
+> +
+> +pci@50000000 {
+> +	compatible = "cortina,gemini-pci";
+> +	reg = <0x50000000 0x100>;
+> +	interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
+> +			<26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
+> +			<27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
+> +			<28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	#interrupt-cells = <1>;
+> +
+> +	bus-range = <0x00 0x00>; /* Only root bus */
+> +	ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
+> +		 <0x01000000 0 0          0x50000000 0 0x00100000>,
+> +		 /* 128MiB non-prefetchable memory 0x58000000-0x5fffffff */
+> +		 <0x02000000 0 0x58000000 0x58000000 0 0x08000000>;
+> +	interrupt-map-mask = <0xff00 0 0 7>;
+> +	interrupt-map = <0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
+> +			<0x4900 0 0 2 &pci_intc 1>,
+> +			<0x4a00 0 0 3 &pci_intc 2>,
+> +			<0x4b00 0 0 4 &pci_intc 3>,
+> +			<0x5000 0 0 1 &pci_intc 0>, /* Slot 10 */
+> +			<0x5100 0 0 2 &pci_intc 1>,
+> +			<0x5200 0 0 3 &pci_intc 2>,
+> +			<0x5300 0 0 4 &pci_intc 3>,
+> +			<0x5800 0 0 1 &pci_intc 0>, /* Slot 11 */
+> +			<0x5900 0 0 2 &pci_intc 1>,
+> +			<0x5a00 0 0 3 &pci_intc 2>,
+> +			<0x5b00 0 0 4 &pci_intc 3>,
+> +			<0x6000 0 0 1 &pci_intc 0>, /* Slot 12 */
+> +			<0x6100 0 0 2 &pci_intc 1>,
+> +			<0x6200 0 0 3 &pci_intc 2>,
+> +			<0x6300 0 0 4 &pci_intc 3>;
+> +	pci_intc: interrupt-controller {
+> +		interrupt-controller;
+> +		#address-cells = <0>;
+> +		#interrupt-cells = <1>;
+> +	};
+> +};
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
