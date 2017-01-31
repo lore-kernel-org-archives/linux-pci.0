@@ -1,100 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:52827 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966247AbdADMf3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 07:35:29 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kgene@kernel.org,
-        krzk@kernel.org, kishon@ti.com, jingoohan1@gmail.com,
-        vivek.gautam@codeaurora.org, pankaj.dubey@samsung.com,
-        alim.akhtar@samsung.com, cpgs@samsung.com,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V2 3/5] Documetation: binding: modify the exynos5440 pcie
- binding
-Date: Wed, 04 Jan 2017 21:34:33 +0900
-Message-id: <20170104123435.30740-4-jh80.chung@samsung.com>
-In-reply-to: <20170104123435.30740-1-jh80.chung@samsung.com>
-References: <20170104123435.30740-1-jh80.chung@samsung.com>
- <CGME20170104123436epcas1p1040f1e074748fabe58af52eb0b833713@epcas1p1.samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 31 Jan 2017 02:28:30 -0800
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <tn@semihalf.com>, <David.Daney@cavium.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+Message-ID: <20170131102830.GA13854@localhost.localdomain>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to using PHY framework, updates the exynos5440-pcie binding.
-For maintaining backward compatibility, leaves the current dt-binding.
-(It should be deprecated.)
+Hi Bjorn,
 
-Recommends to use the Phy Framework and "config" property to follow
-the designware-pcie binding.
-If you use the old way, can see "mssing *config* reg space" message.
-Because the getting configuration space address from range is old way.
+On Mon, Jan 30, 2017 at 03:12:37PM -0600, Bjorn Helgaas wrote:
+> Hi Vadim,
+> 
+> On Mon, Jan 30, 2017 at 08:25:52AM -0800, Vadim Lomovtsev wrote:
+> > This patch is to address PEM initialization issue
+> > which causes network issues.
+> > 
+> > It is necessary to search for _HID:PNP0A08 while requesting
+> > PEM resources via ACPI instead of "THRX0002".
+> > 
+> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > ---
+> >  drivers/pci/host/pci-thunder-pem.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> > index af722eb..aec30b8 100644
+> > --- a/drivers/pci/host/pci-thunder-pem.c
+> > +++ b/drivers/pci/host/pci-thunder-pem.c
+> > @@ -331,7 +331,7 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+> >  	if (!res_pem)
+> >  		return -ENOMEM;
+> >  
+> > -	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
+> > +	ret = acpi_get_rc_resources(dev, "PNP0A08", root->segment, res_pem);
+> 
+> This doesn't smell right: PNP0A08 is the generic ACPI ID.  There's no
+> guarantee that if we find a PNP0A08 device, it is a ThunderX device.
+> 
+> I think the only way to call thunder_pem_acpi_init() is via an MCFG
+> quirk that mentions thunder_pem_ecam_ops, which means we only call it
+> if we find an MCFG with "CAVIUM" "THUNDERX" OEM and table IDs, so it's
+> probably safe in that sense.
 
-NOTE: When use the "config" property, first name of 'reg-names' must be
-set to "elbi". Otherwise driver can't maintain the backward capability.
+Agree, it is not the best solution.
+We will implement such approach and send for review. 
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
----
-Changelog on V2:
-- Describes more commit message
-- Fixes the typos
-- Adds the new example for using PHY framework
-- Deprecated the old dt-binding description
-- Removes 'phy-names'
+> 
+> But it's an abuse of the ACPI _HID model.  If you match a device using
+> PNP0A08, all you can assume about it is that it uses the generic
+> PNP0A08 programming model, and I don't think that includes "the first
+> memory resource in _CRS contains ECAM space and MSI-X tables."
+> 
+> I expect this is a teething issue because you have firmware in the
+> field that uses PNP0A08 and it's not feasible to update it.  If that's
+> the case, the changelog should have details about it and we should
+> have a comment in the code, because I don't think this is the model we
+> want to end up with in future releases.
 
- .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 ++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+It could become so. However, for now I didn't get any reports on that,
+(may be I miss something) except some internal emailings.
+At my testing HW I was able to see some issues related to acpi-PEM stuff.
 
-diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-index 4f9d23d..1d0af0e 100644
---- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-@@ -7,8 +7,19 @@ Required properties:
- - compatible: "samsung,exynos5440-pcie"
- - reg: base addresses and lengths of the pcie controller,
- 	the phy controller, additional register for the phy controller.
-+	(Registers for the phy controller are DEPRECATED.
-+	 Use the PHY framework.)
-+- reg-names : First name should be set to "elbi".
-+	And use the "config" instead of getting the confgiruation address space
-+	from "ranges".
-+	NOTE: When use the "config" property, reg-names must be set.
- - interrupts: A list of interrupt outputs for level interrupt,
- 	pulse interrupt, special interrupt.
-+- phys: From PHY binding. Phandle for the Generic PHY.
-+	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
-+
-+Other common properties refer to
-+	Documentation/devicetree/binding/pci/designware-pcie.txt
- 
- Example:
- 
-@@ -54,6 +65,24 @@ SoC specific DT Entry:
- 		num-lanes = <4>;
- 	};
- 
-+With using PHY framework:
-+	pcie_phy0: pcie-phy@270000 {
-+		...
-+		reg = <0x270000 0x1000>, <0x271000 0x40>;
-+		regn-names = "phy", "block";
-+		...
-+	};
-+
-+	pcie@290000 {
-+		...
-+		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
-+		reg-names = "elbi", "config";
-+		phys = <&pcie_phy0>;
-+		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
-+			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
-+		...
-+	};
-+
- Board specific DT Entry:
- 
- 	pcie@290000 {
--- 
-2.10.2
+Thanks for feed-back, we will prepare another patch or patchset
+implementing approach you've highlighted.
 
+> >  	if (ret) {
+> >  		dev_err(dev, "can't get rc base address\n");
+> >  		return ret;
+> > -- 
+> > 2.4.11
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
