@@ -1,70 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57790 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756926AbdAKVKX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 16:10:23 -0500
-Date: Wed, 11 Jan 2017 15:10:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Fix typo in MAINTAINERS file
-Message-ID: <20170111211018.GL14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
+Return-Path: <SRS0=f+hc=ZN=cavium.com=Jayachandran.Nair@kernel.org>
+Return-Path: <SRS0=f+hc=ZN=cavium.com=Jayachandran.Nair@kernel.org>
+Date: Tue, 31 Jan 2017 21:49:29 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI/ASPM: Skip parent link state check for PCI-to-PCIe
+ bridges
+Message-ID: <20170131214929.GA1819@localhost>
+References: <1485895501-1780-1-git-send-email-jnair@caviumnetworks.com>
+ <20170131211323.GB14127@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <80fa36488fb77bda9822a3f8583fb08ff66b428c.1482940922.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20170131211323.GB14127@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
-
-On Wed, Dec 28, 2016 at 04:05:11PM +0000, Joao Pinto wrote:
-> This patch fixes a typo in MAINTAINERS file.
+On Tue, Jan 31, 2017 at 03:13:23PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 31, 2017 at 08:45:01PM +0000, Jayachandran C wrote:
+> > Commit 51ebfc92b72b4f7dac1ab45683bf56741e454b8c ("PCI: Enumerate
+> > switches below PCI-to-PCIe bridges") sets the has_secondary_link
+> > value for device type PCI_EXP_TYPE_PCIE_BRIDGE. With this change
+> > the function alloc_pcie_link_state() can be called with devices
+> > of this type as well.
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> You mean like this:
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=672980c62c684a625fe3a688ca8c6214062d712b
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index cfff2c9..1056392 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9512,7 +9512,7 @@ L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
->  S:	Maintained
->  F:	drivers/pci/host/pci-exynos.c
->  
-> -PCI DRIVER FOR SYNOPSIS DESIGNWARE
-> +PCI DRIVER FOR SYNOPSYS DESIGNWARE
-
-"git grep -i synopsis" finds several other occurrences in the tree.
-
-Most of them are the English word "synopsis", and those are correct.
-But several look like similar typos for the "Synopsys" company name:
-
-  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
-  Documentation/devicetree/bindings/pci/pci-armada8k.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
-  Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt:This PCIe host controller is based on the Synopsis Designware PCIe IP
-  Documentation/devicetree/bindings/pci/spear13xx-pcie.txt:SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
-  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:DWC3 PHY nodes are defined to describe on-chip Synopsis Physical layer
-  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-hs-usb-phy" for High Speed Synopsis PHY controller
-  Documentation/devicetree/bindings/phy/qcom-dwc3-usb-phy.txt:    - "qcom,dwc3-ss-usb-phy" for Super Speed Synopsis PHY controller
-  arch/x86/include/asm/apb_timer.h: * apb_timer.h: Driver for Langwell APB timer based on Synopsis DesignWare
-  drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware AHB Audio interface"
-  drivers/gpu/drm/bridge/Kconfig:   Support the AHB Audio interface which is part of the Synopsis
-  drivers/gpu/drm/bridge/Kconfig: tristate "Synopsis Designware I2S Audio interface"
-  drivers/gpu/drm/bridge/Kconfig:   Support the I2S Audio interface which is part of the Synopsis
-  drivers/gpu/drm/bridge/dw-hdmi-ahb-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI AHB ALSA interface");
-  drivers/gpu/drm/bridge/dw-hdmi-i2s-audio.c:MODULE_DESCRIPTION("Synopsis Designware HDMI I2S ALSA SoC interface");
-  drivers/usb/phy/phy-msm-usb.c: * SNPS_28NM_INTEGRATED_PHY       Synopsis 28nm integrated PHY
-
-Can you take a look at those and fix any others that are typos at the
-same time?
-
->  M:	Jingoo Han <jingoohan1@gmail.com>
->  M:	Joao Pinto <Joao.Pinto@synopsys.com>
->  L:	linux-pci@vger.kernel.org
-> -- 
-> 2.9.3
+> Practically identical to yours :)
 > 
+
+I should have checked the list before sending out the patch...
+Anyway, your fix works for me. So,
+
+Tested-by: Jayachandran C. <jnair@caviumnetworks.com>
+
+Thanks,
+JC.
