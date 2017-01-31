@@ -1,57 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in pci
- device msi msg data
-To: Dan Streetman <ddstreet@ieee.org>,
-        Stefano Stabellini <sstabellini@kernel.org>
-References: <20170105192856.25559-1-dan.streetman@canonical.com>
- <20170107010651.GV16608@char.us.oracle.com>
- <42d912c2-596e-29f6-8385-dc82a891895c@oracle.com>
- <CALZtONBNhh9WKPV16+cod-P1Fp2YudTkVzHQZMq81_NEne67pA@mail.gmail.com>
- <20170109155929.GA10991@char.us.oracle.com>
- <alpine.DEB.2.10.1701091049130.2866@sstabellini-ThinkPad-X260>
- <CALZtONDSD6SF9cd2uftGWsXARF-QiNaBA5zPdnjwQ7j0Z-C76g@mail.gmail.com>
- <CALZtONBJ=kjsKiKtLORxBq3Xn6=SV7+33GAkSi+3cqjs9wVW2g@mail.gmail.com>
- <alpine.DEB.2.10.1701101046270.8205@sstabellini-ThinkPad-X260>
- <CALZtONAuMvFP-GX801k1Cy=ja_65PDWO2ZXfSof-1mGfhV=Pew@mail.gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <d2715827-2146-2de3-cd1b-186a4b67ca05@oracle.com>
-Date: Tue, 10 Jan 2017 18:28:26 -0500
+Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
+Return-Path: <SRS0=h6uj=ZN=huawei.com=john.garry@kernel.org>
+Subject: Re: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        "zhichang.yuan"
+	<yuanzhichang@hisilicon.com>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
+ <20170131000914.GA11331@bhelgaas-glaptop.roam.corp.google.com>
+CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
+        <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
+        <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
+        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
+        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
+        <kantyzc@163.com>, <xuwei5@hisilicon.com>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <fec21b66-4ba7-3855-af53-a0e2856754a4@huawei.com>
+Date: Tue, 31 Jan 2017 13:34:24 +0000
 MIME-Version: 1.0
-In-Reply-To: <CALZtONAuMvFP-GX801k1Cy=ja_65PDWO2ZXfSof-1mGfhV=Pew@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170131000914.GA11331@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-
->> In the Xen code I can still see:
+On 31/01/2017 00:09, Bjorn Helgaas wrote:
+> On Tue, Jan 24, 2017 at 03:05:21PM +0800, zhichang.yuan wrote:
+>> Low-pin-count interface is integrated into some SoCs. The accesses to those
+>> peripherals under LPC make use of I/O ports rather than the memory mapped I/O.
 >>
->>     case ECS_PIRQ: {
->>         struct pirq *pirq = pirq_info(d1, chn1->u.pirq.irq);
->>
->>         if ( !pirq )
->>             break;
->>         if ( !is_hvm_domain(d1) )
->>             pirq_guest_unbind(d1, pirq);
->>
->> which means that pirq_guest_unbind should only be called on evtchn_close
->> if the guest is not an HVM guest.
+>> To drive these devices, this patch introduces a method named indirect-IO.
+>
+> It's slightly confusing to call this "indirect I/O" and then use
+> "extio" for the filename and function prefix.  It'd be nice to use
+> related names.
 
-A few lines further down we have:
+We will consider something more consistent.
 
-        pirq->evtchn = 0;
-        pirq_cleanup_check(pirq, d1);
-        unlink_pirq_port(chn1, d1->vcpu[chn1->notify_vcpu_id]);
-#ifdef CONFIG_X86
-        if ( is_hvm_domain(d1) && domain_pirq_to_irq(d1, pirq->pirq) > 0 )
-            unmap_domain_pirq_emuirq(d1, pirq->pirq);
-#endif
+>
+>> +struct extio_node {
+>> +	unsigned long bus_start;	/* bus start address */
+>> +	unsigned long io_start;	/* io port token corresponding to bus_start */
+>> +	size_t range_size;	/* size of the extio node operating range */
+>> +	struct fwnode_handle *fwnode;
+>> +	struct list_head list;
+>> +	struct extio_ops *ops;	/* ops operating on this node */
+>> +	void *devpara;	/* private parameter of the host device */
+>> +};
+>
+> I wish we didn't have both struct io_range and struct extio_node.  It
+> seems like they're both sort of trying to do the same thing.  Maybe
+> this is the same as what Alex is saying.
+>
 
-which is where we free up the pirq.
+I think so. I have just replied to Alex regarding this.
 
--boris
+> Bjorn
+>
+
+Thanks,
+John
+
+> .
+>
