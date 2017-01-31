@@ -1,43 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58798 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750937AbdA1Jta (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jan 2017 04:49:30 -0500
-Date: Fri, 27 Jan 2017 23:36:05 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Keith Busch <keith.busch@intel.com>
+Received: from ms.lwn.net ([45.79.88.28]:55980 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751232AbdAaRtV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jan 2017 12:49:21 -0500
+Date: Tue, 31 Jan 2017 10:49:16 -0700
+From: Jonathan Corbet <corbet@lwn.net>
+To: Logan Gunthorpe <logang@deltatee.com>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>
-Subject: Re: [PATCHv4 next 0/3] Limiting pci access
-Message-ID: <20170128073605.GA20114@infradead.org>
-References: <20161208193253.GK25959@localhost.localdomain>
- <20161212234226.GA7973@bhelgaas-glaptop.roam.corp.google.com>
- <20161213005547.GA12844@localhost.localdomain>
- <20161213205012.GA29950@bhelgaas-glaptop.roam.corp.google.com>
- <20161213231840.GD12113@localhost.localdomain>
- <B58D82457FDA0744A320A2FC5AC253B93D82F37D@fmsmsx104.amr.corp.intel.com>
- <20170120213550.GA16618@localhost.localdomain>
- <20170121073140.GA26396@wunner.de>
- <20170121084243.GA24706@kroah.com>
- <20170123160452.GA10771@localhost.localdomain>
+        Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+Message-ID: <20170131104916.0f187309@lwn.net>
+In-Reply-To: <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+        <1485882204-26947-2-git-send-email-logang@deltatee.com>
+        <20170131172630.GB12595@kroah.com>
+        <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170123160452.GA10771@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Or to put it the other way around - why even start an operation
-that will fail?
+On Tue, 31 Jan 2017 10:35:44 -0700
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-We have a pretty similar issue in file system land: A file system
-must handle failure from the storage device at any time to provide
-data integrity.  But that doesn't mean we can't optimize for the
-case where a device is toast (host removed, fails any I/O, etc).
-In that case we mark the file system as shutdown and stop submitting
-more I/O, potentially avoiding up to hours of recovery time.
+> > And don't dump a .txt file into Documentation/ anymore, people are
+> > working to move to the newer format.  
+> 
+> Fair. I wasn't sure where a good place to put it was. Any suggestions?
 
-It would be helpful for everyone up and down the stack to do these
-don't do anyting stupid if you can avoid it starting from the lowest
-layers.
+We're working toward a rational document hierarchy using the sphinx system:
+
+	https://lwn.net/Articles/692704/
+	https://lwn.net/Articles/692704/
+	https://static.lwn.net/kerneldoc/doc-guide/index.html
+
+The good news is that your switchtec.txt file is already 99% in the RST
+format, so there is little or nothing to do there.
+
+The bad news is that we don't quite have a place for it yet.  This is
+really user-space developer documentation, and we don't have a sub-book
+for that.  I expect that to change pretty soon, and I might even toss
+together a bare beginning for 4.11, but that hasn't happened yet.
+
+If you would like to learn the ropes and make one, that would be more than
+great :)  Alternatively, I'd suggest just leaving the document as-is, and
+I'll put it toward the top of the list of things to move into place once I
+get that book started.
+
+Thanks,
+
+jon
