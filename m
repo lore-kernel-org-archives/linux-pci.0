@@ -1,82 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@linaro.org>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-Date: Tue, 10 Jan 2017 11:47:42 +0100
-Message-ID: <1988852.3nyUoruEjG@wuerfel>
-In-Reply-To: <20170109205746.GA6274@lst.de>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <b50e25af-3936-d22d-2e9b-5bf6be19c800@cogentembedded.com>
- <20170109205746.GA6274@lst.de>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Jens Axboe <axboe@fb.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=AzH2=ZN=pengutronix.de=l.stach@kernel.org>
+Return-Path: <SRS0=AzH2=ZN=pengutronix.de=l.stach@kernel.org>
+Message-ID: <1485858425.21479.31.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: mvebu: change delay after reset to the PCIe spec
+ mandated 100ms
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Petazzoni
+ <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>,
+  linux-pci@vger.kernel.org, kernel@pengutronix.de,
+ linux-arm-kernel@lists.infradead.org, patchwork-lst@pengutronix.de
+Date: Tue, 31 Jan 2017 11:27:05 +0100
+In-Reply-To: <20170130204740.GT20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170116111142.6866-1-l.stach@pengutronix.de>
+	 <20170130204740.GT20550@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 9, 2017 9:57:46 PM CET Christoph Hellwig wrote:
-> > - architecture should stop breaking 64-bit DMA when driver attempts to
-> > set 64-bit dma mask,
+Am Montag, den 30.01.2017, 14:47 -0600 schrieb Bjorn Helgaas:
+> On Mon, Jan 16, 2017 at 12:11:42PM +0100, Lucas Stach wrote:
+> > The current default of 20ms cause some devices, which are slow to initialize,
+> > to not show up during the bus scanning. Change this to the PCIe spec mandated
+> > 100ms and document this in the DT binding.
 > > 
-> > - NVMe should issue proper blk_queue_bounce_limit() call based on what
-> > is actually set mask,
+> > From PCIe base spec rev 3.0, chapter "6.6.1. Conventional Reset":
+> > 
+> > "To allow components to perform internal initialization, system software must
+> > wait a specified minimum period following the end of a Conventional Reset of
+> > one or more devices before it is permitted to issue Configuration Requests to
+> > those devices.
+> > 
+> > With a Downstream Port that does not support Link speeds greater than
+> > 5.0 GT/s, software must wait a minimum of 100 ms before sending a
+> > Configuration Request to the device immediately below that Port."
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  Documentation/devicetree/bindings/pci/mvebu-pci.txt | 3 ++-
+> >  drivers/pci/host/pci-mvebu.c                        | 2 +-
+> >  2 files changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> > index 08c716b2c6b6..2de6f65ecfb1 100644
+> > --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> > +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+> > @@ -78,7 +78,8 @@ and the following optional properties:
+> >    multiple lanes. If this property is not found, we assume that the
+> >    value is 0.
+> >  - reset-gpios: optional gpio to PERST#
+> > -- reset-delay-us: delay in us to wait after reset de-assertion
+> > +- reset-delay-us: delay in us to wait after reset de-assertion, if not
+> > +  specified will default to 100ms, as required by the PCIe specification.
+> >  
+> >  Example:
+> >  
+> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > index 45a89d969700..0c9dd47ce74d 100644
+> > --- a/drivers/pci/host/pci-mvebu.c
+> > +++ b/drivers/pci/host/pci-mvebu.c
+> > @@ -1162,7 +1162,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
+> >  		return ret;
+> >  
+> >  	if (port->reset_gpio) {
+> > -		u32 reset_udelay = 20000;
+> > +		u32 reset_udelay = 100000;
 > 
-> Or even better remove the call to dma_set_mask_and_coherent with
-> DMA_BIT_MASK(32).  NVMe is designed around having proper 64-bit DMA
-> addressing, there is not point in trying to pretent it works without that
+> Can we use "PCI_PM_D3COLD_WAIT * 1000" for the initial value to connect it
+> with other similar cases?
 
-Agreed, let's just fail the probe() if DMA_BIT_MASK(64) fails, and
-have swiotlb work around machines that for some reason need bounce
-buffers.
+Sure, I didn't know there is a define for this. Will send an updated
+patch.
 
-> > - and blk_queue_bounce_limit() should also be fixed to actually set
-> > 0xffffffff limit, instead of replacing it with (max_low_pfn <<
-> > PAGE_SHIFT) as it does now.
-> 
-> We need to kill off BLK_BOUNCE_HIGH, it just doesn't make sense to
-> mix the highmem aspect with the addressing limits.  In fact the whole
-> block bouncing scheme doesn't make much sense at all these days, we
-> should rely on swiotlb instead.
-
-If we do this, we should probably have another look at the respective
-NETIF_F_HIGHDMA support in the network stack, which does the same thing
-and mixes up highmem on 32-bit architectures with the DMA address limit.
-(side note: there are actually cases in which you have a 31-bit DMA
-mask but 3 GB of lowmem using CONFIG_VMSPLIT_1G, so BLK_BOUNCE_HIGH
-and !NETIF_F_HIGHDMA are both missing the limit, causing data corruption
-without swiotlb).
-
-Before we rely too much on swiotlb, we may also need to consider which
-architectures today rely on bouncing in blk and network.
-
-I see that we have CONFIG_ARCH_PHYS_ADDR_T_64BIT on a couple of
-32-bit architectures without swiotlb (arc, arm, some mips32), and
-there are several 64-bit architectures that do not have swiotlb
-(alpha, parisc, s390, sparc). I believe that alpha, s390 and sparc
-always use some form of IOMMU, but the other four apparently don't,
-so we would need to add swiotlb support there to remove all the
-bounce buffering in network and block layers.
-
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Lucas
