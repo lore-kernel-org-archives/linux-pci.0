@@ -1,230 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54310 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S966680AbdADXLq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2017 18:11:46 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v04N9Bg5071538
-        for <linux-pci@vger.kernel.org>; Wed, 4 Jan 2017 18:11:46 -0500
-Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 27s5bg40ar-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 04 Jan 2017 18:11:45 -0500
-Received: from localhost
-        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Thu, 5 Jan 2017 09:11:43 +1000
-Date: Thu, 5 Jan 2017 10:11:39 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: lock each enable/disable num_vfs operation in
- sysfs
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20170104004826.17866.77074.stgit@localhost6.localdomain6>
- <20170104004831.17866.11537.stgit@localhost6.localdomain6>
- <20170104021531.GA567@gwshan>
- <87618083B2453E4A8714035B62D67992507430EB@FMSMSX105.amr.corp.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Emil Velikov <emil.l.velikov@gmail.com>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com>
+ <CACvgo50ruxTOfhGF=bV+xWVq+5UZ_xWeoTqxA+SzSwFNCVaS8g@mail.gmail.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <35aab5e1-c86d-efbb-f0c8-288469aeb52f@deltatee.com>
+Date: Tue, 31 Jan 2017 16:13:50 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87618083B2453E4A8714035B62D67992507430EB@FMSMSX105.amr.corp.intel.com>
-Message-Id: <20170104231139.GA3726@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CACvgo50ruxTOfhGF=bV+xWVq+5UZ_xWeoTqxA+SzSwFNCVaS8g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 04, 2017 at 04:00:20PM +0000, Tantilov, Emil S wrote:
->>On Tue, Jan 03, 2017 at 04:48:31PM -0800, Emil Tantilov wrote:
->>>Enabling/disabling SRIOV via sysfs by echo-ing multiple values
->>>simultaneously:
->>>
->>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
->>>echo 63 > /sys/class/net/ethX/device/sriov_numvfs
->>>
->>>sleep 5
->>>
->>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
->>>echo 0 > /sys/class/net/ethX/device/sriov_numvfs
->>>
->>>Results in the following bug:
->>>
->>>kernel BUG at drivers/pci/iov.c:495!
->>>invalid opcode: 0000 [#1] SMP
->>>CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
->>>RIP: 0010:[<ffffffff813b1647>]
->>>	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>>
->>>Call Trace:
->>> [<ffffffff81391726>] pci_release_dev+0x26/0x70
->>> [<ffffffff8155be6e>] device_release+0x3e/0xb0
->>> [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
->>> [<ffffffff81365d9d>] kobject_put+0x2d/0x60
->>> [<ffffffff8155bc27>] put_device+0x17/0x20
->>> [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
->>> [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
->>> [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
->>> [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
->>> [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
->>> [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
->>> [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
->>> [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
->>> [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
->>> [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
->>>...
->>>RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
->>>
->>>Use the existing mutex lock to protect each enable/disable operation.
->>>
->>>CC: Alexander Duyck <alexander.h.duyck@intel.com>
->>>Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
->>
->>Emil, It's going to change semantics of pci_enable_sriov() and pci_disable_sriov().
->>They can be invoked when writing to the sysfs entry, or loading PF's
->>driver. With the change applied, the lock (pf->sriov->lock) isn't acquired and released
->>in the PF's driver loading path.
->
->The enablement of SRIOV on driver load is done via deprecated module parameter.
->Perhaps we can just remove it, although there are probably still people that use it
->and may not be happy if we get rid of it. 
->
+Hi Emil,
 
-Yeah, some drivers are still using the interface. So we cannot affect it until
-it can be droped.
+Thanks for the feedback.
 
->>I think the reasonable way would be adding a flag in "struct sriov", to
->>indicate someone is accessing the IOV capability through sysfs file. With this, the
->>code returns with "-EBUSY" immediately for contenders. With it, nothing is going
->>to be changed in PF's driver loading path.
->
->Flag is what I initially had in mind, but did not want to add extra locking if we 
->can make use of the existing.
->
+On 31/01/17 01:48 PM, Emil Velikov wrote:
+>> +struct switchtec_ioctl_fw_info {
+>> +       __u32 flash_length;
+>> +
+>> +       struct {
+>> +               __u32 address;
+>> +               __u32 length;
+>> +               __u32 active;
+> Something to keep in mind, not sure how likely it is here:
+> If you embed structs (partition in this case), you will not be able to
+> extend it [the embedded one] it in the future without the risk of ABI
+> breakage.
 
-The problem is sriov->lock wasn't introduced to protect the whole IOV capability.
-Instead, it protects the allocation of virtual bus (if needed). In your patch,
-it will be used to protect the whole IOV capability, ensure accessing the IOV
-capability exclusively. So the usage of this lock is changed. 
+Based on this feedback, I'll rework the fw_info IOCTL so the user only
+requests one partition at a time. This will get rid of the embedded
+struct and any concerns about size changes. I was originally trying to
+make the ioctl RO to make it simpler but that maybe isn't the case.
 
-     code extracted from pci.h:
+>> +       } partition[SWITCHTEC_IOCTL_NUM_PARTITIONS];
+>> +};
+>> +
+> Afaict this and most/all other structs [in this patch] are in
+> violation of Prerequisites#2 and/or #3.
+> Personally I find pahole quite useful - reference all the UABI structs
+> in a dummy userspace app, compile with gcc -g -O0 and observe the
+> output across 32 and 64bit builds. Members _must_ be at the same
+> offset, otherwise things will be broken with 64bit kernel on a 32bit
+> userspace. Something which people will eventually end up trying/using,
+> even if you don't plan to support it.
 
-     struct pci_sriov {
-            :
-            struct mutex lock;      /* lock for VF bus */
-            :
-     }
+I've made some changes to the padding and sizes to accommodate this.
+I'll also do some testing with pahole before v2.
 
-The lock was introduced by commit d1b054da8 ("PCI: initialize and release SR-IOV
-capability"). If I'm correct enough, I don't think this lock is needed when
-pci_enable_sriov() or pci_disable_sriov() are called in driver because of module
-parameters. I don't see the usage case calling pci_disable_sriov() while previous
-pci_enable_sriov() isn't finished yet. Also, it's not needed in EEH subsystem.
-So I think the lock can be dropped, then it can be used to protect sysfs path. 
 
->>Also, there are some minor comments as below and I guess most of them won't
->>be applied if you take my suggestion eventually. However, I'm trying to make
->>the comments complete.
->
->Thanks a lot for reviewing!
->
->>
->>>---
->>> drivers/pci/pci-sysfs.c |   24 +++++++++++++++++-------
->>> 1 file changed, 17 insertions(+), 7 deletions(-)
->>>
->>>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>>index 0666287..5b54cf5 100644
->>>--- a/drivers/pci/pci-sysfs.c
->>>+++ b/drivers/pci/pci-sysfs.c
->>>@@ -472,7 +472,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->>> 				  const char *buf, size_t count)
->>> {
->>> 	struct pci_dev *pdev = to_pci_dev(dev);
->>>+	struct pci_sriov *iov = pdev->sriov;
->>> 	int ret;
->>>+
->>
->>Unnecessary change.
->>
->>> 	u16 num_vfs;
->>>
->>> 	ret = kstrtou16(buf, 0, &num_vfs);
->>>@@ -482,38 +484,46 @@ static ssize_t sriov_numvfs_store(struct device
->>*dev,
->>> 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->>> 		return -ERANGE;
->>>
->>>+	mutex_lock(&iov->dev->sriov->lock);
->>>+
->>> 	if (num_vfs == pdev->sriov->num_VFs)
->>>-		return count;		/* no change */
->>>+		goto exit;
->>>
->>> 	/* is PF driver loaded w/callback */
->>> 	if (!pdev->driver || !pdev->driver->sriov_configure) {
->>> 		dev_info(&pdev->dev, "Driver doesn't support SRIOV
->>configuration via sysfs\n");
->>>-		return -ENOSYS;
->>>+		ret = -EINVAL;
->>>+		goto exit;
->>
->>Why we need change the error code here?
->
->checkpatch was complaining about the use of the ENOSYS error code being specific
->and even though it was not my patch introducing it I had to change it to shut it up.
->
+> Please check that Basics (#2 and #5 in particular) are also covered.
 
-Right, it's reserved for attempt to call nonexisting syscall, but I think ENOENT
-might be more indicative than EINVAL in this specific case?
+> then you need a driver feature flag or revision number somewhere.
 
->>> 	}
->>>
->>> 	if (num_vfs == 0) {
->>> 		/* disable VFs */
->>> 		ret = pdev->driver->sriov_configure(pdev, 0);
->>>-		if (ret < 0)
->>>-			return ret;
->>>-		return count;
->>>+		goto exit;
->>> 	}
->>>
->>> 	/* enable VFs */
->>> 	if (pdev->sriov->num_VFs) {
->>> 		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
->>> 			 pdev->sriov->num_VFs, num_vfs);
->>>-		return -EBUSY;
->>>+		ret = -EBUSY;
->>>+		goto exit;
->>> 	}
->>>
->>> 	ret = pdev->driver->sriov_configure(pdev, num_vfs);
->>> 	if (ret < 0)
->>>-		return ret;
->>>+		goto exit;
->>>
->>> 	if (ret != num_vfs)
->>> 		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
->>> 			 num_vfs, ret);
->>>
->>>+exit:
->>>+	mutex_unlock(&iov->dev->sriov->lock);
->>>+
->>>+	if (ret < 0)
->>>+		return ret;
->>>+
->>> 	return count;
->>
->>The code might be clearer if @ret is returned here. In that case, We need
->>set it properly in error paths.
->
->I played with different ways to handle this and this seemed the least intrusive.
->
+We don't have this specifically. A new version ioctl could be added
+later when and if changes occur; or the userspace code could easily read
+the module version through sysfs and we could increment that with ioctl
+changes.
 
-Ok, both should be fine.
+> A couple more generic suggestions, which I may have noticed while
+> skimming through:
+>  - please ensure that all the input is properly sanitised, before,
+> going into the actual implementation
+> Afaict having the separate step/separation helps clarity and reduces
+> chances of you/others getting it wrong down the line.
 
-Thanks,
-Gavin
+The inputs are indeed properly checked in the code. Most of the ioctls
+that take inputs are so simple it's hard to separate the two steps. ie.
+Verifying that the input is right pretty much gives you the answer you
+need to send back to userspace.
 
+>  - user provided storage must not be changed when the ioctl fails.
+
+This should already be true.
+
+> Additionally you want to provide a reference to open-source userspace
+> [alongside acknowledgement of the maintainers/co-developers about the
+> design] which makes use of said IOCTL(s). But please, do _not_ merge
+> userspace code before the kernel work has landed.
+
+I'm having trouble understanding what you're asking here. We provided a
+reference to the userspace code in the commit message. Currently the
+userspace code is completely useless without the kernel module and it is
+entirely independent of other projects. I'm also the only committer so
+far on the userspace code. So I assume this only applies if we were
+merging changes to other existing code?
+
+> Hope that provided you with sufficient good points wrt IOCTL design.
+
+Thanks, this was very helpful.
+
+Logan
