@@ -1,66 +1,188 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:53873 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935449AbdAHIoF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2017 03:44:05 -0500
-Message-Id: <bc77efb7da66b7c81c751a4b07f3b306e6dcba8f.1483806825.git.lukas@wunner.de>
-In-Reply-To: <cover.1483806825.git.lukas@wunner.de>
-References: <cover.1483806825.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 8 Jan 2017 09:41:45 +0100
-Subject: [PATCH v4 6/8] PM / sleep: Define constant for direct_complete
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Chen Yu <yu.c.chen@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Lee Jones <lee.jones@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Alexander Graf <agraf@suse.de>, John Garry <john.garry@huawei.com>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, "catalin.marinas@arm.com"
+ <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
+ <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "rafael@kernel.org" <rafael@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "brian.starkey@arm.com" <brian.starkey@arm.com>,
+ "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V6 4/5] LPC: Support the device-tree LPC host on
+ Hip06/Hip07
+Date: Tue, 31 Jan 2017 11:51:44 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F98F3@lhreml507-mbx>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
+ <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
+ <55916a03-2710-c8bc-0894-5a58daf6da68@huawei.com>
+ <2890e438-6149-c8f0-8ec7-9036a8d5cca5@suse.de>
+In-Reply-To: <2890e438-6149-c8f0-8ec7-9036a8d5cca5@suse.de>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "kantyzc@163.com" <kantyzc@163.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Chen Yu <yu.c.chen@intel.com>
+Hi Alex thanks for reviewing
 
-The PM core introduced the ability to keep devices runtime suspended
-during the entire system sleep process with commit aae4518b3124
-("PM / sleep: Mechanism to avoid resuming runtime-suspended devices
-unnecessarily").
+[...]
 
-Drivers opt in to this so-called "direct_complete" mechanism by
-returning a positive value from their ->prepare hook.  Usually this is
-achieved with a "return 1;" statement, which looks somewhat cryptic to
-readers not intimately familiar with the PM core.
+> >
+> >>> + * The port size of legacy I/O devices is normally less than
+> 0x400.
+> >>> + * Defining the I/O range size as 0x400 here should be sufficient
+> for
+> >>> + * all peripherals under one bus.
+> >>> + */
+> >>
+> >> This comment doesn't make a lot of sense. What is the limit? Is
+> there a
+> >> hardware limit?
+> >>
+> >> We don't dynamically allocate devices on the lpc bus, so why imply a
+> >> limit at all?
+> >>
+> >
+> > IIRC from previously asking Zhichang this before, this is the upper
+> > range we can address devices on the LPC bus. But the value was 0x1000
+> then.
+> 
+> Well, all devices that we want to address are defined by firmware (via
+> device tree or dsdt). So I'm not quite sure what this arbitrary limit
+> buys us.
 
-Improve clarity by defining a DPM_DIRECT_COMPLETE constant which drivers
-may use instead.
+Following a previous discussion with Arnd:
+<< We know that the ISA/LPC bus can only have up to 65536 ports,
+so you can register all of those, or possibly limit it further to
+1024 or 4096 ports, whichever matches the bus implementation. >>
+(https://lkml.org/lkml/2016/11/10/95)
 
-Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Lee Jones <lee.jones@linaro.org>
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-[LW: separate this hunk out of mfd patch, add commit message]
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- include/linux/pm.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+We decided to register a fixed IO range for our LPC.
+About the specific reason for choosing 0x400 I think Zhichang can
+clarify once he's back (he's OOO now)   
 
-diff --git a/include/linux/pm.h b/include/linux/pm.h
-index f926af4..2d651a3 100644
---- a/include/linux/pm.h
-+++ b/include/linux/pm.h
-@@ -788,4 +788,11 @@ enum dpm_order {
- 	DPM_ORDER_DEV_LAST,
- };
- 
-+/*
-+ * Return this from system suspend/hibernation ->prepare() callback to
-+ * request the core to leave the device runtime-suspended during system
-+ * suspend if possible.
-+ */
-+#define DPM_DIRECT_COMPLETE 1
-+
- #endif /* _LINUX_PM_H */
--- 
-2.11.0
+> 
 
+[...]
+
+> >>> +
+> >>> +        /* whole operation must be atomic */
+> >>> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+> >>
+> >> Ouch. This is going to kill your RT jitter. Is there no better way?
+> >>
+> >
+> > Obviously the bus register driving is non-atomic, so we need some way
+> to
+> > lock out.
+> >
+> > I think that it is not so critical for low-speed/infrequent-access
+> bus.
+> >
+> > If we were going to use virtual UART in the BMC on the LPC bus then
+> we
+> > could consider more.
+> 
+> Well, it basically means that an arbitrary daemon running in user space
+> that checks your temperature readings via the ipmi interface could
+> create a lot of jitter. That could be very critical if you want to use
+> this hardware for real time critical applications, such as telecom.
+> 
+> I bet that if you leave it like that and postpone the decision to fix
+> it
+> to "later", in 1 or 2 years you will cause someone weeks of debugging
+> to
+> track down why their voip gateway loses packets from time to time.
+
+Thanks for the heads-up. We'll discuss internally after Chinese holidays
+to understand if this implementation is compatible with the intended
+deployment scenarions 
+
+> 
+> >
+
+[...]
+
+> >>> +static u64 hisilpc_comm_in(void *devobj, unsigned long pio, size_t
+> >>> dlen)
+> >>> +{
+> >>> +    struct hisilpc_dev *lpcdev = devobj;
+> >>> +    struct lpc_cycle_para iopara;
+> >>> +    u32 rd_data;
+> >>
+> >> rd_data needs to be initialized to 0. Otherwise it may contain stale
+> >> stack contents and corrupt non-32bit dlen returns.
+> >>
+> >
+> > I think so, since we read into this value byte-by-byte. We also seem
+> to
+> > return a 32b value but should return 64b value according to the
+> prototype.
+> 
+> IIRC LPC (well, PIO) doesn't support bigger requests than 32bit. At
+> least I can't think of an x86 instruction that would allow bigger
+> transactions. So there's no need to make it 64bit. However, the
+> question
+> is why the prototype is 64bit then. Hm. :)
+> 
+> Maybe the prototype should be only 32bit.
+
+Maybe you're right :)
+
+Looking at extio.c we never return a 64b value.
+I'll double check with Zhichang once he's back...
+
+> 
+> >
+> >>> +    unsigned char *newbuf;
+> >>> +    int ret = 0;
+> >>> +    unsigned long ptaddr;
+> >>> +
+> >>> +    if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN ||    (dlen &
+> (dlen
+> >>> - 1)))
+> >>> +        return -1;
+> >>
+> >> Isn't this -EINVAL?
+> >
+> > Not sure. This value is returned directly to the inb/outb caller,
+> which
+> > would not check this value for error.
+> >
+> > It could be argued that the checking is paranoia. If not, we should
+> > treat the failure as a more severe event.
+> 
+> Oh, I see. In that case -1 makes a lot of sense since it's the default
+> read value on x86 for unallocated space.
+> 
+> This probably deserves a comment (and/or maybe a #define)
+> 
+> 
+> Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
