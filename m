@@ -1,14 +1,26 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 16/37] PCI: endpoint: Introduce configfs entry for configuring
- EP functions
-Date: Thu, 12 Jan 2017 15:56:05 +0530
-Message-ID: <1484216786-17292-17-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Robin Murphy'" <robin.murphy@arm.com>,
+ "'Tomasz Nowicki'" <tn@semihalf.com>, <will.deacon@arm.com>,
+ <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
+ <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>
+References: <1485188293-20263-1-git-send-email-sricharan@codeaurora.org>
+ <1485188293-20263-2-git-send-email-sricharan@codeaurora.org>
+ <4388779a-0e83-fadc-83f4-98c46c88d42e@semihalf.com>
+ <c7bad124-d9f2-0ddf-168f-0b1950d3e1ed@arm.com>
+ <009901d278c7$34fee230$9efca690$@codeaurora.org>
+ <d27f04da-7d34-9640-1639-790d0732ed93@arm.com>
+ <003601d27ac6$84866840$8d9338c0$@codeaurora.org>
+ <8387d057-15bd-500c-134e-0e731ff837d6@arm.com>
+In-Reply-To: <8387d057-15bd-500c-134e-0e731ff837d6@arm.com>
+Subject: RE: [PATCH V7 01/11] iommu/of: Refactor of_iommu_configure() for
+ error handling
+Date: Tue, 31 Jan 2017 18:41:44 +0530
+Message-ID: <006001d27bc3$96156770$c2403650$@codeaurora.org>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -17,488 +29,93 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com, kishon@ti.com,
- linux-arm-msm@vger.kernel.org, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new configfs entry to configure the EP function (like
-configuring the standard configuration header entries) and to
-bind the EP function with EP controller.
+Hi Robin,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/Kconfig      |    4 +-
- drivers/pci/endpoint/Makefile     |    2 +-
- drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 431 insertions(+), 2 deletions(-)
- create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+>>>>>> I gave the whole patch set a try on ThunderX. really_probe() is failing
+>>>>>> on dma_configure()->of_pci_iommu_init() for each PCI device.
+>>>>>
+>>>>> When you say "failing", do you mean cleanly, or with a crash? I've
+>>>>> managed to hit __of_match_node() dereferencing NULL from
+>>>>> of_iommu_xlate() in a horribly complicated chain of events, which I'm
+>>>>> trying to figure out now, and I wonder if the two might be related.
+>>>>
+>>>> Sorry that there is crash still. __of_match_node seems to checking
+>>>> for NULL arguments , feels like some invalid pointer was passed in.
+>>>> Is there any particular sequence to try for this ?
+>>>
+>>> Ah, I did figure it out - it wasn't actually a NULL dereference, but an
+>>> unmapped address. Turns out __iommu_of_table is in initdata, so any
+>>> driver probing after init, connected to an unprobed IOMMU (in this case
+>>> disabled in DT), trips over trying to match the now-freed table. I'm
+>>> working on the fix - technically the bug's in my patch (#2) anyway ;)
+>>>
+>>
+>> Ok, thanks for bringing this out. There is also an issue that
+>> Sinan has mentioned while testing the ACPI hotplug path, probably
+>> its related to the above, not sure. I will try to check more on that
+>> in the meanwhile. Then, taking your fix and fixing the hotplug case
+>> i will do one more repost.
+>
+>OK, I've finally settled on the below fixup for patch #2 - I have some
+>follow-on ideas for eventually getting of the magic table altogether,
+>but they can wait until we've got the baseline functionality sorted.
+>Updated full patch here:
+>
+>http://www.linux-arm.org/git?p=linux-rm.git;a=commitdiff;h=5616af885f7c5c24f7239d5c689583b2b583c407
 
-diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-index 7eb1c79..930e87a 100644
---- a/drivers/pci/endpoint/Kconfig
-+++ b/drivers/pci/endpoint/Kconfig
-@@ -14,7 +14,9 @@ config PCI_ENDPOINT
- 
- 	   Enabling this option will build the endpoint library, which
- 	   includes endpoint controller library and endpoint function
--	   library.
-+	   library. This will also enable the configfs entry required to
-+	   configure the endpoint function and used to bind the
-+	   function with a endpoint controller.
- 
- 	   If in doubt, say "N" to disable Endpoint support.
- 
-diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
-index eeef1b7..a599c18 100644
---- a/drivers/pci/endpoint/Makefile
-+++ b/drivers/pci/endpoint/Makefile
-@@ -3,4 +3,4 @@
- #
- 
- obj-$(CONFIG_PCI_ENDPOINT)		:= pci-epc-core.o pci-epf-core.o\
--					   pci-epc-mem.o
-+					   pci-epc-mem.o pci-ep-cfs.o
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-new file mode 100644
-index 0000000..ed0f8c2
---- /dev/null
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -0,0 +1,427 @@
-+/**
-+ * configfs to configure the PCI endpoint
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/configfs.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+
-+struct pci_epf_info {
-+	struct config_group group;
-+	struct list_head list;
-+	struct pci_epf *epf;
-+};
-+
-+struct pci_ep_info {
-+	struct config_group group;
-+	struct config_group pci_epf_group;
-+	/* mutex to protect pci_epf list */
-+	struct mutex lock;
-+	struct list_head pci_epf;
-+	const char *epc_name;
-+	struct pci_epc *epc;
-+};
-+
-+static inline struct pci_epf_info *to_pci_epf_info(struct config_item *item)
-+{
-+	return container_of(to_config_group(item), struct pci_epf_info, group);
-+}
-+
-+static inline struct pci_ep_info *to_pci_ep_info(struct config_item *item)
-+{
-+	return container_of(to_config_group(item), struct pci_ep_info, group);
-+}
-+
-+#define PCI_EPF_HEADER_R(_name)						       \
-+static ssize_t pci_epf_##_name##_show(struct config_item *item,	char *page)    \
-+{									       \
-+	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
-+	if (!epf->header) {						       \
-+		WARN_ON_ONCE("epf device not bound to function driver\n");     \
-+		return 0;						       \
-+	}								       \
-+	return sprintf(page, "0x%04x\n", epf->header->_name);		       \
-+}
-+
-+#define PCI_EPF_HEADER_W_u32(_name)					       \
-+static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
-+				       const char *page, size_t len)	       \
-+{									       \
-+	u32 val;							       \
-+	int ret;							       \
-+	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
-+	if (!epf->header) {						       \
-+		WARN_ON_ONCE("epf device not bound to function driver\n");     \
-+		return 0;						       \
-+	}								       \
-+	ret = kstrtou32(page, 0, &val);					       \
-+	if (ret)							       \
-+		return ret;						       \
-+	epf->header->_name = val;					       \
-+	return len;							       \
-+}
-+
-+#define PCI_EPF_HEADER_W_u16(_name)					       \
-+static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
-+				       const char *page, size_t len)	       \
-+{									       \
-+	u16 val;							       \
-+	int ret;							       \
-+	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
-+	if (!epf->header) {						       \
-+		WARN_ON_ONCE("epf device not bound to function driver\n");     \
-+		return 0;						       \
-+	}								       \
-+	ret = kstrtou16(page, 0, &val);					       \
-+	if (ret)							       \
-+		return ret;						       \
-+	epf->header->_name = val;					       \
-+	return len;							       \
-+}
-+
-+#define PCI_EPF_HEADER_W_u8(_name)					       \
-+static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
-+				       const char *page, size_t len)	       \
-+{									       \
-+	u8 val;								       \
-+	int ret;							       \
-+	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
-+	if (!epf->header) {						       \
-+		WARN_ON_ONCE("epf device not bound to function driver\n");     \
-+		return 0;						       \
-+	}								       \
-+	ret = kstrtou8(page, 0, &val);					       \
-+	if (ret)							       \
-+		return ret;						       \
-+	epf->header->_name = val;					       \
-+	return len;							       \
-+}
-+
-+static ssize_t pci_epf_msi_interrupts_store(struct config_item *item,
-+					    const char *page, size_t len)
-+{
-+	u8 val;
-+	int ret;
-+
-+	ret = kstrtou8(page, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	to_pci_epf_info(item)->epf->msi_interrupts = val;
-+
-+	return len;
-+}
-+
-+static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
-+					   char *page)
-+{
-+	return sprintf(page, "%d\n",
-+		       to_pci_epf_info(item)->epf->msi_interrupts);
-+}
-+
-+static ssize_t pci_epf_function_show(struct config_item *item,
-+				     char *page)
-+{
-+	return sprintf(page, "%s\n",
-+		       to_pci_epf_info(item)->epf->name);
-+}
-+
-+PCI_EPF_HEADER_R(vendorid)
-+PCI_EPF_HEADER_W_u16(vendorid)
-+
-+PCI_EPF_HEADER_R(deviceid)
-+PCI_EPF_HEADER_W_u16(deviceid)
-+
-+PCI_EPF_HEADER_R(revid)
-+PCI_EPF_HEADER_W_u8(revid)
-+
-+PCI_EPF_HEADER_R(progif_code)
-+PCI_EPF_HEADER_W_u8(progif_code)
-+
-+PCI_EPF_HEADER_R(subclass_code)
-+PCI_EPF_HEADER_W_u8(subclass_code)
-+
-+PCI_EPF_HEADER_R(baseclass_code)
-+PCI_EPF_HEADER_W_u8(baseclass_code)
-+
-+PCI_EPF_HEADER_R(cache_line_size)
-+PCI_EPF_HEADER_W_u8(cache_line_size)
-+
-+PCI_EPF_HEADER_R(subsys_vendor_id)
-+PCI_EPF_HEADER_W_u16(subsys_vendor_id)
-+
-+PCI_EPF_HEADER_R(subsys_id)
-+PCI_EPF_HEADER_W_u16(subsys_id)
-+
-+PCI_EPF_HEADER_R(interrupt_pin)
-+PCI_EPF_HEADER_W_u8(interrupt_pin)
-+
-+CONFIGFS_ATTR(pci_epf_, vendorid);
-+CONFIGFS_ATTR(pci_epf_, deviceid);
-+CONFIGFS_ATTR(pci_epf_, revid);
-+CONFIGFS_ATTR(pci_epf_, progif_code);
-+CONFIGFS_ATTR(pci_epf_, subclass_code);
-+CONFIGFS_ATTR(pci_epf_, baseclass_code);
-+CONFIGFS_ATTR(pci_epf_, cache_line_size);
-+CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
-+CONFIGFS_ATTR(pci_epf_, subsys_id);
-+CONFIGFS_ATTR(pci_epf_, interrupt_pin);
-+CONFIGFS_ATTR(pci_epf_, msi_interrupts);
-+CONFIGFS_ATTR_RO(pci_epf_, function);
-+
-+static struct configfs_attribute *pci_epf_attrs[] = {
-+	&pci_epf_attr_vendorid,
-+	&pci_epf_attr_deviceid,
-+	&pci_epf_attr_revid,
-+	&pci_epf_attr_progif_code,
-+	&pci_epf_attr_subclass_code,
-+	&pci_epf_attr_baseclass_code,
-+	&pci_epf_attr_cache_line_size,
-+	&pci_epf_attr_subsys_vendor_id,
-+	&pci_epf_attr_subsys_id,
-+	&pci_epf_attr_interrupt_pin,
-+	&pci_epf_attr_msi_interrupts,
-+	&pci_epf_attr_function,
-+	NULL,
-+};
-+
-+static void pci_epf_release(struct config_item *item)
-+{
-+	struct pci_epf_info *epf_info = to_pci_epf_info(item);
-+
-+	pci_epf_destroy(epf_info->epf);
-+	kfree(epf_info);
-+}
-+
-+static struct configfs_item_operations pci_epf_ops = {
-+	.release		= pci_epf_release,
-+};
-+
-+static struct config_item_type pci_epf_type = {
-+	.ct_item_ops	= &pci_epf_ops,
-+	.ct_attrs	= pci_epf_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct config_group *pci_epf_make(struct config_group *group,
-+					 const char *name)
-+{
-+	struct pci_epf_info *epf_info;
-+	struct pci_ep_info *ep_info;
-+	struct pci_epf *epf;
-+
-+	epf_info = kzalloc(sizeof(*epf_info), GFP_KERNEL);
-+	if (!epf_info)
-+		return ERR_PTR(-ENOMEM);
-+
-+	config_group_init_type_name(&epf_info->group, name, &pci_epf_type);
-+
-+	epf = pci_epf_create(name);
-+	if (IS_ERR(epf)) {
-+		pr_err("failed to create endpoint function device\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	epf_info->epf = epf;
-+	ep_info = container_of(group, struct pci_ep_info, pci_epf_group);
-+
-+	mutex_lock(&ep_info->lock);
-+	list_add_tail(&epf_info->list, &ep_info->pci_epf);
-+	mutex_unlock(&ep_info->lock);
-+
-+	return &epf_info->group;
-+}
-+
-+static void pci_epf_drop(struct config_group *group, struct config_item *item)
-+{
-+	struct pci_ep_info *ep_info;
-+	struct pci_epf_info *epf_info = to_pci_epf_info(item);
-+
-+	ep_info = container_of(group, struct pci_ep_info, pci_epf_group);
-+
-+	pci_epf_unbind(epf_info->epf);
-+	pci_epc_remove_epf(ep_info->epc, epf_info->epf);
-+
-+	mutex_lock(&ep_info->lock);
-+	list_del(&epf_info->list);
-+	mutex_unlock(&ep_info->lock);
-+
-+	config_item_put(item);
-+}
-+
-+static struct configfs_group_operations pci_epfs_ops = {
-+	.make_group	= &pci_epf_make,
-+	.drop_item	= &pci_epf_drop,
-+};
-+
-+static struct config_item_type pci_epfs_type = {
-+	.ct_group_ops	= &pci_epfs_ops,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static ssize_t pci_ep_epc_store(struct config_item *item, const char *page,
-+				size_t len)
-+{
-+	int ret;
-+	u8 func_no = 0;
-+	char *epc_name;
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+	struct pci_epf_info *epf_info;
-+	struct pci_ep_info *ep_info = to_pci_ep_info(item);
-+
-+	epc_name = kstrdup(page, GFP_KERNEL);
-+	if (!epc_name)
-+		return -ENOMEM;
-+	if (epc_name[len - 1] == '\n')
-+		epc_name[len - 1] = '\0';
-+
-+	if (ep_info->epc) {
-+		ret = -EBUSY;
-+		goto err;
-+	}
-+
-+	epc = pci_epc_get(epc_name);
-+	if (IS_ERR(epc)) {
-+		ret = PTR_ERR(epc);
-+		goto err;
-+	}
-+
-+	ep_info->epc = epc;
-+	ep_info->epc_name = epc_name;
-+
-+	list_for_each_entry(epf_info, &ep_info->pci_epf, list) {
-+		epf = epf_info->epf;
-+		epf->func_no = func_no;
-+		epf->epc = epc;
-+		pci_epc_add_epf(epc, epf);
-+		pci_epf_bind(epf);
-+		func_no++;
-+	}
-+
-+	return len;
-+
-+err:
-+	kfree(epc_name);
-+	return ret;
-+}
-+
-+static ssize_t pci_ep_epc_show(struct config_item *item, char *page)
-+{
-+	return sprintf(page, "%s\n",
-+		       to_pci_ep_info(item)->epc_name);
-+}
-+
-+CONFIGFS_ATTR(pci_ep_, epc);
-+
-+static struct configfs_attribute *pci_ep_attrs[] = {
-+	&pci_ep_attr_epc,
-+	NULL,
-+};
-+
-+static void pci_ep_attr_release(struct config_item *item)
-+{
-+	struct pci_ep_info *ep_info = to_pci_ep_info(item);
-+
-+	pci_epc_put(ep_info->epc);
-+	kfree(ep_info->epc_name);
-+	kfree(ep_info);
-+}
-+
-+static struct configfs_item_operations pci_ep_device_ops = {
-+	.release	= pci_ep_attr_release,
-+};
-+
-+static struct config_item_type pci_ep_device_type = {
-+	.ct_item_ops	= &pci_ep_device_ops,
-+	.ct_attrs	= pci_ep_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct config_group *pci_ep_make(struct config_group *group,
-+					const char *name)
-+{
-+	struct pci_ep_info *ep_info;
-+
-+	ep_info = kzalloc(sizeof(*ep_info), GFP_KERNEL);
-+	if (!ep_info)
-+		return ERR_PTR(-ENOMEM);
-+
-+	config_group_init_type_name(&ep_info->group, name, &pci_ep_device_type);
-+	config_group_init_type_name(&ep_info->pci_epf_group,
-+				    "epf", &pci_epfs_type);
-+	configfs_add_default_group(&ep_info->pci_epf_group, &ep_info->group);
-+
-+	mutex_init(&ep_info->lock);
-+	INIT_LIST_HEAD(&ep_info->pci_epf);
-+
-+	return &ep_info->group;
-+}
-+
-+static void pci_ep_drop(struct config_group *group, struct config_item *item)
-+{
-+	config_item_put(item);
-+}
-+
-+static struct configfs_group_operations pci_ep_ops = {
-+	.make_group	= &pci_ep_make,
-+	.drop_item	= &pci_ep_drop,
-+};
-+
-+static struct config_item_type pci_ep_type = {
-+	.ct_group_ops	= &pci_ep_ops,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct configfs_subsystem pci_ep_cfs_subsys = {
-+	.su_group = {
-+		.cg_item = {
-+			.ci_namebuf = "pci_ep",
-+			.ci_type = &pci_ep_type,
-+		},
-+	},
-+	.su_mutex = __MUTEX_INITIALIZER(pci_ep_cfs_subsys.su_mutex),
-+};
-+
-+static int __init pci_ep_cfs_init(void)
-+{
-+	int ret;
-+
-+	config_group_init(&pci_ep_cfs_subsys.su_group);
-+
-+	ret = configfs_register_subsystem(&pci_ep_cfs_subsys);
-+	if (ret)
-+		pr_err("Error %d while registering subsystem %s\n",
-+		       ret, pci_ep_cfs_subsys.su_group.cg_item.ci_namebuf);
-+
-+	return ret;
-+}
-+module_init(pci_ep_cfs_init);
-+
-+static void __exit pci_ep_cfs_exit(void)
-+{
-+	configfs_unregister_subsystem(&pci_ep_cfs_subsys);
-+}
-+module_exit(pci_ep_cfs_exit);
-+
-+MODULE_DESCRIPTION("PCI EP CONFIGFS");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
--- 
-1.7.9.5
+Thanks, will use this. Yes, the magic iommu_of_table makes little
+use with probe deferral in place, except that we are using it at the
+moment. And the other hotplug issue is not related this though.
+
+Regards,
+ Sricharan
+
+
+>-----8<-----
+>
+>diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>index 349bd1d01612..1f92d98237d5 100644
+>--- a/drivers/iommu/of_iommu.c
+>+++ b/drivers/iommu/of_iommu.c
+>@@ -96,6 +96,19 @@ int of_get_dma_window(struct device_node *dn, const
+>char *prefix, int index,
+> }
+> EXPORT_SYMBOL_GPL(of_get_dma_window);
+>
+>+static bool of_iommu_driver_present(struct device_node *np)
+>+{
+>+	/*
+>+	 * If the IOMMU still isn't ready by the time we reach init, assume
+>+	 * it never will be. We don't want to defer indefinitely, nor attempt
+>+	 * to dereference __iommu_of_table after it's been freed.
+>+	 */
+>+	if (system_state > SYSTEM_BOOTING)
+>+		return false;
+>+
+>+	return of_match_node(&__iommu_of_table, np);
+>+}
+>+
+> static const struct iommu_ops
+> *of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
+> {
+>@@ -105,7 +118,7 @@ static const struct iommu_ops
+>
+> 	ops = iommu_get_instance(fwnode);
+> 	if ((ops && !ops->of_xlate) ||
+>-	    (!ops && !of_match_node(&__iommu_of_table, iommu_spec->np)))
+>+	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+> 		return NULL;
+>
+> 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 _______________________________________________
