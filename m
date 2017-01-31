@@ -1,247 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:20106 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751472AbdALKbS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2017 05:31:18 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
-        <linux-arm-msm@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH 05/37] PCI: dwc: Add platform_set_drvdata
-Date: Thu, 12 Jan 2017 15:55:54 +0530
-Message-ID: <1484216786-17292-6-git-send-email-kishon@ti.com>
-In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Subject: RE: [PATCH v3] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+Date: Tue, 31 Jan 2017 12:03:39 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263DDF98@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <1485853152-31819-1-git-send-email-bharatku@xilinx.com>
+ <868tpr8u3r.fsf@arm.com>
+ <8520D5D51A55D047800579B094147198263DDD4D@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <86r33j7cjy.fsf@arm.com>
+In-Reply-To: <86r33j7cjy.fsf@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add platform_set_drvdata in all designware based drivers to store the
-private data structure of the driver so that dev_set_drvdata can be
-used to get back private data pointer in add_pcie_port/host_init.
-This is in preparation for splitting struct pcie_port into core and
-host only structures. After the split pcie_port will not be part of
-the driver's private data structure and *container_of* used now
-to get the private data pointer cannot be used.
+> Subject: Re: [PATCH v3] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
+>
+> On Tue, Jan 31 2017 at 09:34:43 AM, Bharat Kumar Gogada
+> <bharat.kumar.gogada@xilinx.com> wrote:
+> >  > On Tue, Jan 31 2017 at 08:59:12 AM, Bharat Kumar Gogada
+> >> <bharat.kumar.gogada@xilinx.com> wrote:
+> >> > - Adding mutex lock for protecting legacy mask register
+> >> > - Few wifi end points which only support legacy interrupts,
+> >> > performs hardware reset functionalities after disabling interrupts
+> >> > by invoking disable_irq and then re-enable using enable_irq, they
+> >> > enable hardware interrupts first and then virtual irq line later.
+> >> > - The legacy irq line goes low only after DEASSERT_INTx is
+> >> > received.As the legacy irq line is high immediately after hardware
+> >> > interrupts are enabled but virq of EP is still in disabled state
+> >> > and EP handler is never executed resulting no DEASSERT_INTx.If
+> >> > dummy irq chip is used, interrutps are not masked and system is hanging
+> with CPU stall.
+> >> > - Adding irq chip functions instead of dummy irq chip for legacy
+> >> > interrupts.
+> >> > - Legacy interrupts are level sensitive, so using handle_level_irq
+> >> > is more appropriate as it is masks interrupts until End point
+> >> > handles interrupts and unmasks interrutps after End point handler is
+> executed.
+> >> > - Legacy interrupts are level triggered, virtual irq line of End
+> >> > Point shows as edge in /proc/interrupts.
+> >> > - Setting irq flags of virtual irq line of EP to level triggered at
+> >> > the time of mapping.
+> >> >
+> >> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> >> > ---
+> >> >  drivers/pci/host/pcie-xilinx-nwl.c |   43
+> >> +++++++++++++++++++++++++++++++++++-
+> >> >  1 files changed, 42 insertions(+), 1 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
+> >> > b/drivers/pci/host/pcie-xilinx-nwl.c
+> >> > index 43eaa4a..76dd094 100644
+> >> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> >> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> >> > @@ -184,6 +184,7 @@ struct nwl_pcie {
+> >> >          u8 root_busno;
+> >> >          struct nwl_msi msi;
+> >> >          struct irq_domain *legacy_irq_domain;
+> >> > +        struct mutex leg_mask_lock;
+> >> >  };
+> >> >
+> >> >  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
+> >> > @@
+> >> > -395,11 +396,50 @@ static void nwl_pcie_msi_handler_low(struct
+> >> > irq_desc
+> >> *desc)
+> >> >          chained_irq_exit(chip, desc);
+> >> >  }
+> >> >
+> >> > +static void nwl_mask_leg_irq(struct irq_data *data) {
+> >> > +        struct irq_desc *desc = irq_to_desc(data->irq);
+> >> > +        struct nwl_pcie *pcie;
+> >> > +        u32 mask;
+> >> > +        u32 val;
+> >> > +
+> >> > +        pcie = irq_desc_get_chip_data(desc);
+> >> > +        mask = 1 << (data->hwirq - 1);
+> >> > +        mutex_lock(&pcie->leg_mask_lock);
+> >> > +        val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
+> >> > +        nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
+> >> > +        mutex_unlock(&pcie->leg_mask_lock);
+> >>
+> >> Have you looked at which context this is called in? In a number of
+> >> cases, the mask/unmask methods are called whilst you're in an
+> >> interrupt context. If you sleep there (which is what happens with a contended
+> mutex), you die horribly.
+> >>
+> >> Given these constraints, you should use raw_spin_lock_irqsave and co,
+> >> since this can be called from both interrupt and non-interrupt
+> >> contexts.
+> >>
+> > I have seen very few wifi drivers calling these in MAC flow,
+>
+> Very few is already too many. But I'm afraid you're missing the point
+> entirely: This patch is about using handle_level_irq as the flow handler. The first
+> thing handle_level_irq does is to mask the interrupt. If you have a competing
+> mask or unmask operation in progress on another CPU (or in the middle of one
+> on the same CPU when the interrupt fired), your system explodes.
+>
+> Please have a look at Documentation/DocBook/kernel-locking.tmpl.
+>
+> > raw_spin_lock_irqsave
+> > looks more safe, will do it.
+>
+Yeah, understood, thanks for the details.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c           |    3 ++-
- drivers/pci/dwc/pci-exynos.c           |    3 ++-
- drivers/pci/dwc/pci-imx6.c             |    3 ++-
- drivers/pci/dwc/pci-keystone.c         |    2 ++
- drivers/pci/dwc/pci-layerscape.c       |    2 ++
- drivers/pci/dwc/pcie-armada8k.c        |    2 ++
- drivers/pci/dwc/pcie-artpec6.c         |    2 ++
- drivers/pci/dwc/pcie-designware-plat.c |    2 ++
- drivers/pci/dwc/pcie-hisi.c            |    2 ++
- drivers/pci/dwc/pcie-qcom.c            |    2 ++
- drivers/pci/dwc/pcie-spear13xx.c       |    3 ++-
- 11 files changed, 22 insertions(+), 4 deletions(-)
+Thanks & Regards,
+Bharat
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 2073d46..aeeab74 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -433,6 +433,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
-+	platform_set_drvdata(pdev, dra7xx);
-+
- 	pm_runtime_enable(dev);
- 	ret = pm_runtime_get_sync(dev);
- 	if (ret < 0) {
-@@ -459,7 +461,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		goto err_gpio;
- 
--	platform_set_drvdata(pdev, dra7xx);
- 	return 0;
- 
- err_gpio:
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index f1c544b..c179e7a 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -583,11 +583,12 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 		goto fail_bus_clk;
- 	}
- 
-+	platform_set_drvdata(pdev, exynos_pcie);
-+
- 	ret = exynos_add_pcie_port(exynos_pcie, pdev);
- 	if (ret < 0)
- 		goto fail_bus_clk;
- 
--	platform_set_drvdata(pdev, exynos_pcie);
- 	return 0;
- 
- fail_bus_clk:
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index c8cefb0..6e5d06f 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -719,11 +719,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		imx6_pcie->link_gen = 1;
- 
-+	platform_set_drvdata(pdev, imx6_pcie);
-+
- 	ret = imx6_add_pcie_port(imx6_pcie, pdev);
- 	if (ret < 0)
- 		return ret;
- 
--	platform_set_drvdata(pdev, imx6_pcie);
- 	return 0;
- }
- 
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index 043c19a..4c7ba35 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -422,6 +422,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	platform_set_drvdata(pdev, ks_pcie);
-+
- 	ret = ks_add_pcie_port(ks_pcie, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index ea78913..89e8817 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -268,6 +268,8 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (!ls_pcie_is_bridge(pcie))
- 		return -ENODEV;
- 
-+	platform_set_drvdata(pdev, pcie);
-+
- 	ret = ls_add_pcie_port(pcie);
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index 0ac0f18..5a28dcb 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -226,6 +226,8 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 		goto fail;
- 	}
- 
-+	platform_set_drvdata(pdev, pcie);
-+
- 	ret = armada8k_add_pcie_port(pcie, pdev);
- 	if (ret)
- 		goto fail;
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 212786b..187a98d 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -261,6 +261,8 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(artpec6_pcie->regmap))
- 		return PTR_ERR(artpec6_pcie->regmap);
- 
-+	platform_set_drvdata(pdev, artpec6_pcie);
-+
- 	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 1a02038..bb58540 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -104,6 +104,8 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(pp->dbi_base))
- 		return PTR_ERR(pp->dbi_base);
- 
-+	platform_set_drvdata(pdev, dw_plat_pcie);
-+
- 	ret = dw_plat_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-index a301a71..ecc1b08 100644
---- a/drivers/pci/dwc/pcie-hisi.c
-+++ b/drivers/pci/dwc/pcie-hisi.c
-@@ -287,6 +287,8 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(pp->dbi_base))
- 		return PTR_ERR(pp->dbi_base);
- 
-+	platform_set_drvdata(pdev, hisi_pcie);
-+
- 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 734ba0d..2c24c45 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -725,6 +725,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	platform_set_drvdata(pdev, pcie);
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index dafe8b8..5970566 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -270,11 +270,12 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
- 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
- 		spear13xx_pcie->is_gen1 = true;
- 
-+	platform_set_drvdata(pdev, spear13xx_pcie);
-+
- 	ret = spear13xx_add_pcie_port(spear13xx_pcie, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
- 
--	platform_set_drvdata(pdev, spear13xx_pcie);
- 	return 0;
- 
- fail_clk:
--- 
-1.7.9.5
 
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
