@@ -1,131 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0040.outbound.protection.outlook.com ([104.47.41.40]:44773
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751475AbdAMNEy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jan 2017 08:04:54 -0500
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: Jerome Glisse <jglisse@redhat.com>,
-        Stephen Bates <sbates@raithlin.com>
-References: <20170105201935.GC2166@redhat.com>
- <20170105224215.GA3855@obsidianresearch.com>
- <20170105232352.GB6426@redhat.com>
- <20170106003034.GB4670@obsidianresearch.com>
- <20170106015831.GA2226@gmail.com>
- <f07700d5-211f-d091-2b0b-fbaf03c4a959@amd.com>
- <20170106173722.GB3804@redhat.com>
- <20170106182625.GB5724@obsidianresearch.com>
- <2a148b6e-86bc-4c4d-2f22-d733e2cc94cc@deltatee.com>
- <d5a72e1e5f6d606697dc0027f073fd87.squirrel@webmail.raithlin.com>
- <20170112151129.GA10942@redhat.com>
-CC: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        <david1.zhou@amd.com>, <qiang.yu@amd.com>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@ml01.01.org>,
-        "Kuehling, Felix" <felix.kuehling@amd.com>,
-        Serguei Sagalovitch <serguei.sagalovitch@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        <hch@infradead.org>,
-        "Deucher, Alexander" <alexander.deucher@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        Jerome Glisse <j.glisse@gmail.com>,
-        "Blinzer, Paul" <paul.blinzer@amd.com>,
-        "'Linux-media@vger.kernel.org'" <linux-media@vger.kernel.org>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <0733efde-1a6e-5237-0868-e9fb31f237c7@amd.com>
-Date: Fri, 13 Jan 2017 14:04:30 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 30 Jan 2017 18:10:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: Re: [PATCH V6 2/5] PCI: Adapt pci_register_io_range() for
+ indirect-IO and  PCI I/O translation
+Message-ID: <20170131001030.GB20550@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170112151129.GA10942@redhat.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, benh@kernel.crashing.org, gabriele.paoloni@huawei.com,
+ rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ linuxarm@huawei.com, frowand.list@gmail.com, lorenzo.pieralisi@arm.com,
+ arnd@arndb.de, xuwei5@hisilicon.com, linux-serial@vger.kernel.org,
+ catalin.marinas@arm.com, devicetree@vger.kernel.org, minyard@acm.org,
+ liviu.dudau@arm.com, john.garry@huawei.com, zourongrong@gmail.com,
+ robh+dt@kernel.org, bhelgaas@google.com, kantyzc@163.com,
+ zhichang.yuan02@gmail.com, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, olof@lixom.net, brian.starkey@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 12.01.2017 um 16:11 schrieb Jerome Glisse:
-> On Wed, Jan 11, 2017 at 10:54:39PM -0600, Stephen Bates wrote:
->> On Fri, January 6, 2017 4:10 pm, Logan Gunthorpe wrote:
->>>
->>> On 06/01/17 11:26 AM, Jason Gunthorpe wrote:
->>>
->>>
->>>> Make a generic API for all of this and you'd have my vote..
->>>>
->>>>
->>>> IMHO, you must support basic pinning semantics - that is necessary to
->>>> support generic short lived DMA (eg filesystem, etc). That hardware can
->>>> clearly do that if it can support ODP.
->>> I agree completely.
->>>
->>>
->>> What we want is for RDMA, O_DIRECT, etc to just work with special VMAs
->>> (ie. at least those backed with ZONE_DEVICE memory). Then
->>> GPU/NVME/DAX/whatever drivers can just hand these VMAs to userspace
->>> (using whatever interface is most appropriate) and userspace can do what
->>> it pleases with them. This makes _so_ much sense and actually largely
->>> already works today (as demonstrated by iopmem).
->> +1 for iopmem ;-)
->>
->> I feel like we are going around and around on this topic. I would like to
->> see something that is upstream that enables P2P even if it is only the
->> minimum viable useful functionality to begin. I think aiming for the moon
->> (which is what HMM and things like it are) are simply going to take more
->> time if they ever get there.
->>
->> There is a use case for in-kernel P2P PCIe transfers between two NVMe
->> devices and between an NVMe device and an RDMA NIC (using NVMe CMBs or
->> BARs on the NIC). I am even seeing users who now want to move data P2P
->> between FPGAs and NVMe SSDs and the upstream kernel should be able to
->> support these users or they will look elsewhere.
->>
->> The iopmem patchset addressed all the use cases above and while it is not
->> an in kernel API it could have been modified to be one reasonably easily.
->> As Logan states the driver can then choose to pass the VMAs to user-space
->> in a manner that makes sense.
->>
->> Earlier in the thread someone mentioned LSF/MM. There is already a
->> proposal to discuss this topic so if you are interested please respond to
->> the email letting the committee know this topic is of interest to you [1].
->>
->> Also earlier in the thread someone discussed the issues around the IOMMU.
->> Given the known issues around P2P transfers in certain CPU root complexes
->> [2] it might just be a case of only allowing P2P when a PCIe switch
->> connects the two EPs. Another option is just to use CONFIG_EXPERT and make
->> sure people are aware of the pitfalls if they invoke the P2P option.
->
-> iopmem is not applicable to GPU what i propose is to split the issue in 2
-> so that everyone can reuse the part that needs to be common namely the DMA
-> API part where you have to create IOMMU mapping for one device to point
-> to the other device memory.
->
-> We can have a DMA API that is agnostic to how the device memory is manage
-> (so does not matter if device memory have struct page or not). This what
-> i have been arguing in this thread. To make progress on this issue we need
-> to stop conflicting different use case.
->
-> So i say let solve the IOMMU issue first and let everyone use it in their
-> own way with their device. I do not think we can share much more than
-> that.
+On Tue, Jan 24, 2017 at 03:05:22PM +0800, zhichang.yuan wrote:
+> After indirect-IO is introduced, system must can assigned indirect-IO devices
+> with logical I/O ranges which are different from those for PCI I/O devices.
+> Otherwise, I/O accessors can't identify whether the I/O port is for memory
+> mapped I/O or indirect-IO.
 
-Yeah, exactly what I said from the very beginning as well. Just hacking 
-together quick solutions doesn't really solve the problem in the long term.
+Maybe:
 
-What we need is proper adjusting of the DMA API towards handling of P2P 
-and then build solutions for the different use cases on top of that.
+  We must assign logical I/O port space for indirect I/O such that the
+  I/O accessors can tell whether a logical I/O port refers to memory-
+  mapped I/O space or indirect I/O space.
 
-We should also avoid falling into the trap of trying to just handle the 
-existing get_user_pages and co interfaces so that the existing code 
-doesn't need to change. P2P needs to be validated for each use case 
-individually and not implemented in workarounds with fingers crossed and 
-hoped for the best.
+> As current helper, pci_register_io_range(), is used for PCI I/O ranges
+> registration and translation, indirect-IO devices should also apply these
+> helpers to manage the I/O ranges. It will be easy to ensure the assigned
+> logical I/O ranges unique.
+> But for indirect-IO devices, there is no cpu address. The current
+> pci_register_io_range() can not work for this case.
+> 
+> This patch makes some changes on the pci_register_io_range() to support the
+> I/O range registration with device's fwnode also. After this, the indirect-IO
+> devices can register the device-local I/O range to system logical I/O and
+> easily perform the translation between device-local I/O range and sytem
+> logical I/O range.
 
-Regards,
-Christian.
+> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +int __weak pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
+> +				 resource_size_t size, unsigned long *port)
 
->
-> Cheers,
-> Jérôme
+Why is this __weak?  It looks like it's been __weak since its
+introduction by 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+pci_pio_to_address()"), but I don't see any other implementations of
+it.
 
+Can you add a patch that does nothing but make this non-weak?
 
+> +#else
+> +	/*
+> +	 * powerpc and microblaze have their own registration,
+> +	 * just look up the value here
+
+Can you include a pointer to the powerpc and microblaze registration
+code here?  It's conceivable that somebody could generalize this
+enough to support powerpc and microblaze as well.
+
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -34,6 +34,9 @@
+>  
+>  #include <linux/pci_ids.h>
+>  
+> +/* the macro below flags an invalid cpu address
+> + * and is used by IO special hosts              */
+
+s/cpu/CPU/
+
+Use conventional multi-line comment style:
+
+/*
+ * IO_RANGE_IOEXT flags an invalid CPU address ...
+ */
+
+> +#define IO_RANGE_IOEXT (resource_size_t)(-1ull)
+
+And put this close to related things, e.g., pci_register_io_range(),
+instead of just dropping it in at the top of the file.
+
+>  /*
+>   * The PCI interface treats multi-function devices as independent
+>   * devices.  The slot/function address of each device is encoded
+> @@ -1197,8 +1200,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+>  						  resource_size_t),
+>  			void *alignf_data);
+>  
+> -
+> -int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+> +int pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
+> +			  resource_size_t size, unsigned long *port);
+>  unsigned long pci_address_to_pio(phys_addr_t addr);
+>  phys_addr_t pci_pio_to_address(unsigned long pio);
+>  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+> -- 
+> 1.9.1
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
