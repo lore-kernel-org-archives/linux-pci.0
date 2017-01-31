@@ -1,151 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:58029 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752306AbdARUw6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2017 15:52:58 -0500
-To: <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Help request
-Message-ID: <6c47f48a-ec0e-e0ff-bfd6-ae7adf4df828@synopsys.com>
-Date: Wed, 18 Jan 2017 20:46:33 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <paul.gortmaker@windriver.com>, <robh@kernel.org>,
+ <colin.king@canonical.com>, <linux-pci@vger.kernel.org>,
+ <marc.zyngier@arm.com>
+Subject: [PATCH v3] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
+Date: Tue, 31 Jan 2017 14:29:12 +0530
+Message-ID: <1485853152-31819-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: arnd@arndb.de, michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
+ Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+- Adding mutex lock for protecting legacy mask register
+- Few wifi end points which only support legacy interrupts,
+performs hardware reset functionalities after disabling interrupts
+by invoking disable_irq and then re-enable using enable_irq, they
+enable hardware interrupts first and then virtual irq line later.
+- The legacy irq line goes low only after DEASSERT_INTx is
+received.As the legacy irq line is high immediately after hardware
+interrupts are enabled but virq of EP is still in disabled state
+and EP handler is never executed resulting no DEASSERT_INTx.If dummy
+irq chip is used, interrutps are not masked and system is
+hanging with CPU stall.
+- Adding irq chip functions instead of dummy irq chip for legacy
+interrupts.
+- Legacy interrupts are level sensitive, so using handle_level_irq
+is more appropriate as it is masks interrupts until End point handles
+interrupts and unmasks interrutps after End point handler is executed.
+- Legacy interrupts are level triggered, virtual irq line of End
+Point shows as edge in /proc/interrupts.
+- Setting irq flags of virtual irq line of EP to level triggered
+at the time of mapping.
 
-I am testing my 4.80 Root Complex Reference design (PCIe Core 4.80 with iATU
-Unroll) and I am facing an issue in kernel v4.9.
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c |   43 +++++++++++++++++++++++++++++++++++-
+ 1 files changed, 42 insertions(+), 1 deletions(-)
 
-My setup is:
-ARC Board --- AXI --- HAPS (RC refrence Design) --- Backplane --- USB 3.0 Endpoint
-
-If I use 4.9-rc7 the USB Endpoint gets configured correctly, but when using
-4.9-rc8 it does not. I have checked and no changes were made to USB between rc7
-and rc8, so there's something in the PCI.
-
-The PCI initialization log seems with more info in 4.9-rc8, so maybe some
-operation that causing some confusion in my setup. Could you please give me your
-opinion?
-
-Bellow I added the logs for 4.9-rc7 and 4.9-rc8. Thank you for your help!
-
-Joao
-
-
-***** LOGS for 4.9-rc7:
-
-OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
-OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
-OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
-OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
-dw-pcie dfc00000.pcie: link up
-dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
-pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
-pci 0000:01:00.0: enabling device (0000 -> 0002)
-(...)
-xhci_hcd 0000:01:00.0: xHCI Host Controller
-xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
-xhci_hcd 0000:01:00.0: hcc params 0x014042cb hci version 0x96 quirks 0x00000004
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: 2 ports detected
-xhci_hcd 0000:01:00.0: xHCI Host Controller
-xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 4
-
-# lspci -v
-00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
-        Flags: bus master, fast devsel, latency 0, IRQ 45
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        Memory behind bridge: d0400000-d04fffff
-        [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-        Capabilities: [70] Express Root Port (Slot-), MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [148] #19
-        Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-        Kernel driver in use: pcieport
-
-01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
-03) (prog-if 30 [XHCI])
-        Flags: bus master, fast devsel, latency 0, IRQ 46
-        Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [50] Power Management version 3
-        Capabilities: [70] MSI: Enable+ Count=1/8 Maskable- 64bit+
-        Capabilities: [90] MSI-X: Enable- Count=8 Masked-
-        Capabilities: [a0] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
-        Capabilities: [150] Latency Tolerance Reporting
-        Kernel driver in use: xhci_hcd
-
-****** LOGS for 4.9-rc8:
-
-OF: PCI: host bridge /haps_tunnel/pcie@0xdfc00000 ranges:
-OF: PCI:   No bus range found for /haps_tunnel/pcie@0xdfc00000, using [bus 00-ff]
-OF: PCI:    IO 0xde000000..0xde00ffff -> 0x00000000
-OF: PCI:   MEM 0xd0400000..0xdd3fffff -> 0xd0400000
-dw-pcie dfc00000.pcie: link up
-dw-pcie dfc00000.pcie: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0xd0400000-0xdd3fffff]
-pci 0000:00:00.0: [16c3:eddc] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-pci 0000:01:00.0: [1033:0194] type 00 class 0x0c0330
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
-pci 0000:01:00.0: PME# supported from D0 D3hot
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci 0000:00:00.0: BAR 8: assigned [mem 0xd0400000-0xd04fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0xd0500000-0xd050ffff pref]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xd0400000-0xd0401fff 64bit]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0xd0400000-0xd04fffff]
-aer 0000:00:00.0:pcie002: service driver aer loaded
-pci 0000:01:00.0: enabling device (0000 -> 0002)
-(...)
-xhci_hcd 0000:01:00.0: xHCI Host Controller
-xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 3
-xhci_hcd 0000:01:00.0: can't setup: -110
-xhci_hcd 0000:01:00.0: USB bus 3 deregistered
-xhci_hcd 0000:01:00.0: init 0000:01:00.0 fail, -110
-xhci_hcd: probe of 0000:01:00.0 failed with error -110
-
-# lspci -v
-00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
-        Flags: bus master, fast devsel, latency 0, IRQ 45
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        Memory behind bridge: d0400000-d04fffff
-        [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-        Capabilities: [70] Express Root Port (Slot-), MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [148] #19
-        Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-        Kernel driver in use: pcieport
-
-01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev
-03) (prog-if 30 [XHCI])
-        Flags: fast devsel
-        Memory at d0400000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [50] Power Management version 3
-        Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
-        Capabilities: [90] MSI-X: Enable- Count=8 Masked-
-        Capabilities: [a0] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
-        Capabilities: [150] Latency Tolerance Reporting
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 43eaa4a..76dd094 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -184,6 +184,7 @@ struct nwl_pcie {
+ 	u8 root_busno;
+ 	struct nwl_msi msi;
+ 	struct irq_domain *legacy_irq_domain;
++	struct mutex leg_mask_lock;
+ };
+ 
+ static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
+@@ -395,11 +396,50 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
+ 
++static void nwl_mask_leg_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct nwl_pcie *pcie;
++	u32 mask;
++	u32 val;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << (data->hwirq - 1);
++	mutex_lock(&pcie->leg_mask_lock);
++	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
++	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
++	mutex_unlock(&pcie->leg_mask_lock);
++}
++
++static void nwl_unmask_leg_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct nwl_pcie *pcie;
++	u32 mask;
++	u32 val;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << (data->hwirq - 1);
++	mutex_lock(&pcie->leg_mask_lock);
++	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
++	nwl_bridge_writel(pcie, (val | mask), MSGF_LEG_MASK);
++	mutex_unlock(&pcie->leg_mask_lock);
++}
++
++static struct irq_chip nwl_leg_irq_chip = {
++	.name = "nwl_pcie:legacy",
++	.irq_enable = nwl_unmask_leg_irq,
++	.irq_disable = nwl_mask_leg_irq,
++	.irq_mask = nwl_mask_leg_irq,
++	.irq_unmask = nwl_unmask_leg_irq,
++};
++
+ static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
+ 			  irq_hw_number_t hwirq)
+ {
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_level_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
++	irq_set_status_flags(irq, IRQ_LEVEL);
+ 
+ 	return 0;
+ }
+@@ -538,6 +578,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+ 		return -ENOMEM;
+ 	}
+ 
++	mutex_init(&pcie->leg_mask_lock);
+ 	nwl_pcie_init_msi_irq_domain(pcie);
+ 	return 0;
+ }
+-- 
+1.7.1
 
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
