@@ -1,36 +1,73 @@
-Return-Path: <SRS0=iz4c=Y2=lst.de=hch@kernel.org>
-Return-Path: <SRS0=iz4c=Y2=lst.de=hch@kernel.org>
-Date: Thu, 12 Jan 2017 14:42:18 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dennis Chen <dennis.chen@arm.com>, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Steve Capper <steve.capper@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Tom Long Nguyen <tom.l.nguyen@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>, nd@arm.com,
-	Christoph Hellwig <hch@lst.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
-	enough
-Message-ID: <20170112134218.GA15178@lst.de>
-References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com> <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751193AbdAaUUs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jan 2017 15:20:48 -0500
+Subject: [PATCH 1 3/4] PCI: layerscape: Use of_device_get_match_data() to
+ simplify probe
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Scott Branden <sbranden@broadcom.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-renesas-soc@vger.kernel.org,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-arm-kernel@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shailendra Verma <shailendra.v@samsung.com>
+Date: Tue, 31 Jan 2017 14:20:13 -0600
+Message-ID: <20170131202013.27605.44566.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 12:18:53PM -0600, Bjorn Helgaas wrote:
-> Unless Christoph objects, I'll apply this, but I don't understand the
-> situation with 17a51f12cfbd.  That commit doesn't check for EINVAL or
-> ENOSPC so I don't know what the connection with this patch is.
+The only way to call ls_pcie_probe() is to match an entry in
+ls_pcie_of_match[], so match cannot be NULL.
 
-I don't think that commit is the culprit.
+Use of_device_get_match_data() to retrieve the drvdata pointer.  No
+functional change intended.
 
-> I know Christoph said he changed something in ahci to treat all errors
-> the same, but I don't know where that is, either.
+Based-on-suggestion-from: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-layerscape.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-"ahci: always fall back to single-MSI mode"
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index ea789138531b..c1f06f8f05fd 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -239,23 +239,18 @@ static int __init ls_add_pcie_port(struct ls_pcie *pcie)
+ static int __init ls_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+-	const struct of_device_id *match;
+ 	struct ls_pcie *pcie;
+ 	struct pcie_port *pp;
+ 	struct resource *dbi_base;
+ 	int ret;
+ 
+-	match = of_match_device(ls_pcie_of_match, dev);
+-	if (!match)
+-		return -ENODEV;
+-
+ 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
+ 	pp = &pcie->pp;
+ 	pp->dev = dev;
+-	pcie->drvdata = match->data;
++	pcie->drvdata = of_device_get_match_data(dev);
+ 	pp->ops = pcie->drvdata->ops;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+
