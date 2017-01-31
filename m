@@ -1,127 +1,65 @@
-Return-Path: <SRS0=fKwQ=YV=redhat.com=hdegoede@kernel.org>
-Return-Path: <SRS0=fKwQ=YV=redhat.com=hdegoede@kernel.org>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-To: Lukas Wunner <lukas@wunner.de>, David Airlie <airlied@redhat.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104081639.GA21076@wunner.de> <20170104210954.GA11946@al>
- <59349185.1aqio7kYFn@aspire.rjw.lan>
- <1456065516.8360056.1483572074197.JavaMail.zimbra@redhat.com>
- <20170105150646.GB21446@wunner.de>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Peter Wu <peter@lekensteyn.nl>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kilian Singer <kilian.singer@quantumtechnology.info>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Peter Jones <pjones@redhat.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <2562d75e-a770-3b9d-da3b-57c12896cd11@redhat.com>
-Date: Sat, 7 Jan 2017 12:45:35 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:58015 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751414AbdAaSzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jan 2017 13:55:22 -0500
+To: Jonathan Corbet <corbet@lwn.net>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com>
+ <20170131172630.GB12595@kroah.com>
+ <57658098-b24a-cb25-b2e3-ccf8fcbf8fe5@deltatee.com>
+ <20170131104916.0f187309@lwn.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <cb0beb92-3f7e-e661-d6c4-430ba1a09b78@deltatee.com>
+Date: Tue, 31 Jan 2017 11:32:24 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170105150646.GB21446@wunner.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20170131104916.0f187309@lwn.net>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-On 05-01-17 16:06, Lukas Wunner wrote:
-> On Wed, Jan 04, 2017 at 06:21:14PM -0500, David Airlie wrote:
->>> On Wednesday, January 04, 2017 10:09:54 PM Peter Wu wrote:
->>>> On Wed, Jan 04, 2017 at 09:16:39AM +0100, Lukas Wunner wrote:
->>>>> On Tue, Jan 03, 2017 at 06:05:57PM -0600, Bjorn Helgaas wrote:
->>>>>> I don't *want* to apply the revert.  It's on my for-linus branch as a
->>>>>> worst-case scenario change if we can't figure out a better fix.
->>>>>>
->>>>>> The patch below is preferable, but I'd rather not take even it,
->>>>>> because it takes away functionality and forces people to use a boot
->>>>>> parameter to restore it.  I expect that somebody will figure out how
->>>>>> to fix the regression Kilian found and also keep the new functionality
->>>>>> (without requiring boot parameters) before v4.10.
->>>>>
->>>>> The issue is constrained to hybrid graphics laptops with Nvidia discrete
->>>>> GPU using nouveau.  Hence it needs to be fixed in nouveau, not in the
->>>>> PCI core.
->>>>
->>>> The problem is not necessarily in the nouveau driver, the same problem
->>>> occurs when you enable RPM without loading nouveau. The issue is limited
->>>> though to some newer hybrid graphics laptops with Nvidia GPUs. While a
->>>> quirk can be added to nouveau, I think that a (temporary) quirk in core
->>>> would also be reasonable (since it also occurs without nouveau).
->>>>
->>>>> (AFAIUI, laptops with AMD discrete GPU are not affected as it is known
->>>>> when and how to call an ACPI method versus using PR3.)
->>>>>
->>>>> (Neither are laptops using the Nvidia proprietary driver as it doesn't
->>>>> runtime suspend the card.  But battery life will be terrible then.)
->>>>>
->>>>> We're at rc2 so the time frame for coming up with a fix is probably
->>>>> 4 weeks.  Peter and others have tried for months to reverse-engineer
->>>>> how to handle runtime PM on newer Nvidia cards.  It seems likely that
->>>>> we'll not find the ultimate solution to the problem within 4 weeks.
->>>>
->>>> Yep, a quick proper fix seems unlikely.
->>>> [ Help/ideas are welcome, I suspect that these failures to restore power
->>>> on laptops designed for Win8+ all have the same cause, related to some
->>>> unknown interaction between ACPI and PCI. Some links:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=190861
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
->>>>
->>>>> The way it is now, i.e. defaulting to PR3 when available, regresses
->>>>> certain laptops such as Kilian's.  If on the other hand we default to
->>>>> DSM when available, we'll regress certain other laptops, as Peter has
->>>>> pointed out.  Whitelisting or blacklisting laptops doesn't seem a good
->>>>> approach either, ideally we'd want to use PR3 as Windows does.
->>>>>
->>>>> As said, the only short-term solution I see is to add an "optimus"
->>>>> module_param to nouveau to allow users to select which method to use.
->>>>> So in Kilian's case an additional command line parameter would be
->>>>> necessary to fix the issue.
->>>>>
->>>>> Does anyone see a better solution or can we agree on this one?  If so
->>>>> I can come up with a patch.  This could go in via Dave Airlie's tree.
->>>>
->>>> As pcie_port_pm=off already reverts to DSM, I do not think that an
->>>> additional (temporary) nouveau module parameter is going to help. I
->>>> instead propose a (hopefully temporary) quirk in pci core that disables
->>>> D3cold RPM for just Kilians Lenovo laptop (basically defaulting to
->>>> pcie_port_pm=off). Then the option pcie_port_pm=force can still be used
->>>> to test possible solutions in the future.
->>>
->>> I would rather add a quirk to the ACPI core to prevent the power resources in
->>> question from being enumerated.  Or even to prevent ACPI PM from being
->>> used for the port in question.
->>
->> I do have a W541 in a cupboard in the office somewhere, but I won't be close to
->> it for a couple of weeks. The W541 was the first place I tested the pm patches
->> so I'm kinda wondering whether it's all W541's or just some specific model/bios
->> combo.
->>
->> However I'm pretty much unavailable to do anything much until late Jan on this.
->
-> Is there anyone else at Red Hat who might be able to look into this?
->
-> ISTR that Hans de Goede is working on improving laptop support in Fedora,
-> and Peter Jones recently got a patch merged for the W541 with the exact
-> same firmware Kilian is using to work around a botched EFI memory map.
-> Adding them to cc: in the hope that they may be able to help.
->
-> @Peter, have you noticed issues with the discrete Nvidia GPU on your W541
-> related to runtime suspend and system sleep?
 
-I've a W541 sitting in my home office at well. I will take it through
-some gpu runtime suspend/resume testing. Which kernel introduces the
-problem I'm looking for ?
+On 31/01/17 10:49 AM, Jonathan Corbet wrote:
+> The good news is that your switchtec.txt file is already 99% in the RST
+> format, so there is little or nothing to do there.
+> 
+> The bad news is that we don't quite have a place for it yet.  This is
+> really user-space developer documentation, and we don't have a sub-book
+> for that.  I expect that to change pretty soon, and I might even toss
+> together a bare beginning for 4.11, but that hasn't happened yet.
+> 
+> If you would like to learn the ropes and make one, that would be more than
+> great :)  Alternatively, I'd suggest just leaving the document as-is, and
+> I'll put it toward the top of the list of things to move into place once I
+> get that book started.
 
-I believe mine has the old BIOS / EFI which is less troublesome so I
-will first see if I can reproduce the problem with that and then upgrade
-to see if that introduces the problem.
+Thanks Jon. I took a look at the documentation and it doesn't look too
+difficult. But I don't really feel qualified to make some of the
+decisions necessary to create the new book. (ie names, locations, etc.)
+And I don't really want that churn in this patchset. So we'll leave it
+where it is for now.
 
-Peter IIRC you said that after upgrading the firmware I need a new enough
-kernel to be able to even boot, from which kernel onwards will the machine
-boot with the new firmware ?
+I have cleaned up some of the RST format for v2 though.
 
-Also is it possible to downgrade the EFI again ? ...
-
-Regards,
-
-Hans
+Logan
