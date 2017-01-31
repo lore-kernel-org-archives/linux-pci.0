@@ -1,78 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:44327 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754114AbdASSYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jan 2017 13:24:54 -0500
-Date: Thu, 19 Jan 2017 10:58:02 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Doug Ledford <dledford@redhat.com>
-Cc: Tadeusz Struk <tadeusz.struk@intel.com>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dennis.dalessandro@intel.com, ira.weiny@intel.com
-Subject: Re: [PATCH] [RFC] IB/hfi1: Fix port ordering issue in a multiport
- device
-Message-ID: <20170119175802.GB8109@obsidianresearch.com>
-References: <148409267200.13402.16060755922068447437.stgit@tstruk-mobl1.ra.intel.com>
- <20170111181042.GC22783@obsidianresearch.com>
- <1484773260.2406.58.camel@redhat.com>
- <20170118210831.GA7590@obsidianresearch.com>
- <1484784989.2406.67.camel@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 31 Jan 2017 18:26:30 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+Message-ID: <20170131172630.GB12595@kroah.com>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1484784989.2406.67.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1485882204-26947-2-git-send-email-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2017 at 07:16:29PM -0500, Doug Ledford wrote:
-
-> > This is a 'stable device naming' problem, which we have never
-> > tried to solve in RDMA.
+On Tue, Jan 31, 2017 at 10:03:24AM -0700, Logan Gunthorpe wrote:
+> Microsemi's "Switchtec" line of PCI switch devices is already well
+> supported by the kernel with standard PCI switch drivers. However, the
+> Switchtec device advertises a special management endpoint with a separate
+> PCI function address and class code. This endpoint enables some additional
+> functionality which includes:
 > 
-> No, that would imply they must be hfi1_0 and hfi1_1, when this is not
-> the case.  If you had two cards in this system, both dual port, then
-> you may be wanting to rename hfi_3 to hfi1_2 and vice versa.  It is a
-> relative name problem, not a stable name problem.  We need only reverse
-> the order that the ports are probed in, their names are whatever they
-> end up being once reversed.
-
-Eh? If *users* expect RDMA names to be meaningful/stable then it *IS*
-the stable naming problem. We have never guarenteed stable device
-names in RDMA, but it does happen to work out by luck in many cases.
-
-Linux does have a guarentee of PCI driver bind order. For instance
-the parallel probe patch series randomizes driver bind order, so any
-driver relying on this for 'stable names' is broken.
-
-> > udev is the expected kernel way to solve this. Trying to hack stable
-> > names by forcing device bind order is horrible.
+>  * Packet and Byte Counters
+>  * Switch Firmware Upgrades
+>  * Event and Error logs
+>  * Querying port link status
+>  * Custom user firmware commands
 > 
-> This is a manufacturing defect.  Something I'm sure Intel wants to
-> resolve without requiring users to go in and manually name their ports.
->  I have no doubt that they would prefer that the user remain blissfully
-> unaware of the issue, all except for the ones that probably reported it
-> and already have their system cabled up wrong as a result.
+> This patch introduces the switchtec kernel module which provides
+> PCI driver that exposes a char device. The char device provides
+> userspace access to this interface through read, write and (optionally)
+> poll calls. A couple of special IOCTLs are provided to:
+> 
+> * Inform userspace of firmware partition locations
+> * Pass event counts and allow userspace to wait on events
+> 
+> A short text file is provided which documents the switchtec driver,
+> outlines the semantics of using the char device and describes the
+> IOCTLs.
+> 
+> The device also exposes a few read-only sysfs attributes which provide
+> some device information component names and versions which is provided
+> by the hardware. These are documented in
+> Documentation/ABI/testing/sysfs-class-switchtec
+> 
+> A userspace tool and library which utilizes this interface is available
+> at [1]. This tool takes inspiration (and borrows some code) from
+> nvme-cli [2]. The tool is largely complete at this time but additional
+> features may be added in the future.
+> 
+> [1] https://github.com/sbates130272/switchtec-user
+> [2] https://github.com/linux-nvme/nvme-cli
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+> ---
+>  Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+>  Documentation/ioctl/ioctl-number.txt            |    1 +
+>  Documentation/switchtec.txt                     |   80 ++
+>  MAINTAINERS                                     |   11 +
+>  drivers/pci/Kconfig                             |    1 +
+>  drivers/pci/Makefile                            |    1 +
+>  drivers/pci/switch/Kconfig                      |   13 +
+>  drivers/pci/switch/Makefile                     |    1 +
+>  drivers/pci/switch/switchtec.c                  | 1320 +++++++++++++++++++++++
+>  drivers/pci/switch/switchtec.h                  |  266 +++++
+>  include/uapi/linux/switchtec_ioctl.h            |  129 +++
+>  11 files changed, 1919 insertions(+)
 
-Modern udev models do not require manual naming by users, look at what
-netdev is doing to solve this problem these days.
+That's one big patch to review, would you want to do that?
 
-hif_slot#_port# can be generated automatically by udev based on
-information from the driver and the BIOS. This is what is being done
-for netdev.
+Can you break it up into smaller parts?  At least put the documentation
+separately, right?
 
-That is where we really need to go as well.
+And don't dump a .txt file into Documentation/ anymore, people are
+working to move to the newer format.
 
-As you say, this is a oops on Intels part, so that may be too long
-term - so they should solve this temporarily and imperfectly *in their
-driver* by assinging RDMA device names manually, eg make it so that
-hfiX has X be even for port 0 and X be odd for port 1.
+Also, please rebase against Linus's tree at the least, we can't go back
+in time and apply this to the 4.9 kernel tree.
 
-Never any need for any kind of defered binding approach.
+thanks,
 
-> No, mlx5 could have easily hit this too as their ports are separate
-> PCI functions.
-
-Sound like intel and mellanox should collaborate on getting udev
-stable naming working right for RDMA... They are eventually going to
-get burned.
-
-Jason
+greg k-h
