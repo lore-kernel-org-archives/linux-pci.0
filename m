@@ -1,65 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@linaro.org>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: NVMe vs DMA addressing limitations
-Date: Tue, 10 Jan 2017 16:02:28 +0100
-Message-ID: <9020459.Ga31IGQ4TP@wuerfel>
-In-Reply-To: <20170110144839.GB27156@lst.de>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
- <4137257.d2v87kqLLv@wuerfel> <20170110144839.GB27156@lst.de>
+Return-Path: <SRS0=t7Pu=ZN=gmail.com=geert.uytterhoeven@kernel.org>
+Return-Path: <SRS0=t7Pu=ZN=gmail.com=geert.uytterhoeven@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
- Jens Axboe <axboe@fb.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-pci@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Keith Busch <keith.busch@intel.com>,
- Simon Horman <horms@verge.net.au>, linux-renesas-soc@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, artemi.ivanov@cogentembedded.com,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: geert.uytterhoeven@gmail.com
+In-Reply-To: <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com> <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 31 Jan 2017 22:43:39 +0100
+Message-ID: <CAMuHMdUKVsxAHtLBC70EOY5uTcSkMm1qLBUf6mLck6YA=1qaBg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rcar: Check for OF device match early
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Simon Horman <horms@verge.net.au>,
+	Linux-Renesas <linux-renesas-soc@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 10, 2017 3:48:39 PM CET Christoph Hellwig wrote:
-> On Tue, Jan 10, 2017 at 12:01:05PM +0100, Arnd Bergmann wrote:
-> > Another workaround me might need is to limit amount of concurrent DMA
-> > in the NVMe driver based on some platform quirk. The way that NVMe works,
-> > it can have very large amounts of data that is concurrently mapped into
-> > the device.
-> 
-> That's not really just NVMe - other storage and network controllers also
-> can DMA map giant amounts of memory.  There are a couple aspects to it:
-> 
->  - dma coherent memoery - right now NVMe doesn't use too much of it,
->    but upcoming low-end NVMe controllers will soon start to require
->    fairl large amounts of it for the host memory buffer feature that
->    allows for DRAM-less controller designs.  As an interesting quirk
->    that is memory only used by the PCIe devices, and never accessed
->    by the Linux host at all.
+Hi Bjorn,
 
-Right, that is going to become interesting, as some platforms are
-very limited with their coherent allocations.
+On Tue, Jan 31, 2017 at 7:09 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, Jan 31, 2017 at 04:33:15PM +0100, Geert Uytterhoeven wrote:
+>> On Tue, Jan 31, 2017 at 4:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > A match in the rcar_pcie_of_match[] table is required, so check that first,
+>> > before we start setting up things that need to be undone if it fails.  No
+>> > functional change intended.
+>> >
+>> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> > ---
+>> >  drivers/pci/host/pcie-rcar.c |   10 +++++-----
+>> >  1 file changed, 5 insertions(+), 5 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>> > index 0d9b96c3c49d..c91ff0b91be8 100644
+>> > --- a/drivers/pci/host/pcie-rcar.c
+>> > +++ b/drivers/pci/host/pcie-rcar.c
+>> > @@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>> >         int err;
+>> >         int (*hw_init_fn)(struct rcar_pcie *);
+>> >
+>> > +       of_id = of_match_device(rcar_pcie_of_match, dev);
+>> > +       if (!of_id || !of_id->data)
+>> > +               return -EINVAL;
+>> > +
+>>
+>> As this driver is DT-only, none of the above can fail, and you could just do
+>>
+>>        hw_init_fn = of_device_get_match_data(dev);
+>>
+>> instead, getting rid of of_id completely.
+>
+> Oh, I really like that, thanks for pointing that out!
+>
+> I was about to say that I personally would not check of_id->data for NULL,
+> because it is only NULL if somebody adds an entry to rcar_pcie_of_match
+> without a .data member.  In that case, I'd rather take the NULL pointer
+> dereference than return -EINVAL because it's too easy to ignore the
+> -EINVAL.
+>
+> What do you think about the following?
 
->  - size vs number of the dynamic mapping.  We probably want the dma_ops
->    specify a maximum mapping size for a given device.  As long as we
->    can make progress with a few mappings swiotlb / the iommu can just
->    fail mapping and the driver will propagate that to the block layer
->    that throttles I/O.
+Thanks, looks fine!
 
-Good idea.
+> commit 25bd3aa972ee32f04590aa68b2b785dce36b036a
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Tue Jan 31 08:45:49 2017 -0600
+>
+>     PCI: rcar: Use of_device_get_match_data() to simplify probe
+>
+>     This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
+>     match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
+>
+>     Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
+>     has a NULL .data member.  That's a driver defect, and we don't want to
+>     return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
+>     dereference so we notice the problem and fix it.
+>
+>     Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
+>     functional change intended.
+>
+>     Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-	Arnd
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
