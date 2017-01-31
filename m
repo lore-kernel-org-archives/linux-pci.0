@@ -1,111 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34368 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761358AbdAJPM7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Jan 2017 10:12:59 -0500
-Date: Tue, 10 Jan 2017 09:12:54 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: jingoohan1@gmail.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: designware: fix asynchronous external abort in
- keystone PCIe h/w
-Message-ID: <20170110151254.GA29965@bhelgaas-glaptop.roam.corp.google.com>
-References: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:8508 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751104AbdAaJi0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 04:38:26 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        zhangjukuo <zhangjukuo@huawei.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: RE: Question: PCIe DPC not allowing for link retraining and bus
+ re-scan
+Date: Tue, 31 Jan 2017 09:35:58 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
+ <20170130161453.GC11699@localhost.localdomain>
+In-Reply-To: <20170130161453.GC11699@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1483558350-8169-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Murali,
+Hi Keith many thanks for coming back on this
 
-On Wed, Jan 04, 2017 at 02:32:30PM -0500, Murali Karicheri wrote:
-> Recent fixes for iATU unroll support introduced a bug that causes
-> asynchronous external abort in Keystone PCIe h/w which doesn't have
-> ATU port and the corresponding register. So the check should be moved
-> below where dw_pcie_prog_outbound_atu() is called to avoid that
-> being called on keystine PCIe h/w.
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Keith Busch
+> Sent: 30 January 2017 16:15
+> To: Gabriele Paoloni
+> Cc: linux-pci@vger.kernel.org; Linuxarm; liudongdong (C); zhangjukuo;
+> Wangzhou (B)
+> Subject: Re: Question: PCIe DPC not allowing for link retraining and
+> bus re-scan
 > 
-> Here is the backtrace
+> On Mon, Jan 30, 2017 at 11:56:23AM +0000, Gabriele Paoloni wrote:
+> > Hi Keith
+> >
+> > I am looking at the current DPC implementation in:
+> > http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-dpc.c
+> >
+> >
+> > If my understanding is correct upon an incoming DPC event
+> > the DPC IRQ handler will:
+> > 1) stop and remove all the devices in the hierarchy under the
+> > downstream port that raised the event
+> > 2) wait for the data link to be inactive
+> > 3) keep the downstream port status in DPC (in fact we set the DPC
+> >    trigger status again here:
+> >    http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-
+> dpc.c#L55)
+> >
+> > Now looking at the specs we have (section 6.2.10):
+> > "After software releases the Downstream Port from DPC, the associated
+> Link
+> > will normally attempt to retrain. Software can use Data Link Layer
+> State
+> > Changed interrupts, DL_Active ERR_COR signaling, or both, to signal
+> when
+> > the Link reaches the DL_Active state again"
+> >
+> > So if my understanding is correct in the current Linux implementation
+> > It is not possible to recover a PCIe hierarchy from a DPC event, is
+> it correct?
+> > If this is correct, shouldn't we change the current implementation to
+> release
+> > the port from DPC and re-scan the secondary bus after the conditions
+> described
+> > in "PCIe 3.1 section 6.2.10" are met (I.e. <<Data Link Layer Link
+> Active bit in
+> > the 15 Link Status register reads 0b>> and if it is a root port also
+> <<until
+> > the DPC RP Busy bit reads 0b>>) ?
 > 
-> [    0.771174] OF: PCI:   MEM 0x60000000..0x6fffffff -> 0x60000000
-> [    0.778118] Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
-> [    0.785548] pgd = c0003000
-> [    0.788347] [00000000] *pgd=80000800004003, *pmd=00000000
-> [    0.793864] Internal error: : 1211 [#1] PREEMPT SMP ARM
-> [    0.799197] Modules linked in:
-> [    0.802351] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-00009-g6ff59d2-dirty #7
-> [    0.810130] Hardware name: Keystone
-> [    0.813717] task: eb878000 task.stack: eb866000
-> [    0.818356] PC is at dw_pcie_setup_rc+0x24/0x380
-> [    0.823083] LR is at ks_pcie_host_init+0x10/0x170
+> That sounds reasonable. In all testing I've done, DPC events were
+> triggered as part of a hot-plug event, so the secondary bus rescan
+> would
+> automatically happen when a device is hot inserted. The DPC driver
+> didn't
+> need to initiate the rescan in that case.
 > 
-> Fixes: 416379f9ebde ("PCI: designware: Check for iATU unroll support after initializing host")
-
-I tentatively applied this to for-linus for v4.10, with a stable tag
-for v4.9+.
-
-The patch itself mostly makes sense in terms of the code: we only use
-iatu_unroll_enabled in dw_pcie_prog_outbound_atu().  We only call that
-when "!pp->ops->rd_other_conf" or "!pp->ops->wr_other_conf".
-
-So it makes sense that we only need to initialize iatu_unroll_enabled
-in those cases.  But the current patch only initializes it if
-"!pp->ops->rd_other_conf".
-
-If we had "pp->ops->rd_other_conf && !pp->ops->wr_other_conf", we
-would use iatu_unroll_enabled uninitialized in the
-dw_pcie_wr_other_conf() path.  I suppose that's an invalid
-configuration, but it'd be better if we didn't have to rely on the
-host drivers to avoid that configuration.
-
-It's not obvious how this is connected to 416379f9ebde, though.  It
-*looks* like we call dw_pcie_iatu_unroll_enabled() on Keystone both
-before and after that commit, so it seems like the external abort
-should have happened even before it.
-
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  - Applies to pci/master
->  - Bug was introduced in v4.9
->  - Tested on K2E EVM with SATA and DRA7-EVM with an intel PCI ethernet card
+> But surprise removal is certainly not the only condition DPC can
+> contain a
+> port, so I agree with you that we may require pcie-dpc initiate a
+> rescan
+> after releasing the port from containment. I also agree on needing to
+> poll RP busy for root ports.
 > 
->  drivers/pci/host/pcie-designware.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+> Do you want to send patches for these? I could also write them up,
+> but I don't have a DPC capable root port to test that part.
+
+I don't mind writing the patches but currently I also do not have a
+platform to test on.
+
+Do you know if there is any Intel Server/Desktop with full support of
+DPC on the RP including "Software Triggering of DPC" (maybe some
+machines that are out on the market but you do not have there with you)?
+
+As an alternative I am thinking that maybe I can find a switch with
+full DPC support including "Software Triggering of DPC". In this case
+we test anything except the RP Busy bit...
+
+The idea is to have a sort of DPC SW Injection module to test DPC.
+
+Cheers
+Gab
+
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index bed1999..af8f6e9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -807,11 +807,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
->  
-> -	/* get iATU unroll support */
-> -	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> -	dev_dbg(pp->dev, "iATU unroll: %s\n",
-> -		pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> -
->  	/* set the number of lanes */
->  	val = dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL);
->  	val &= ~PORT_LINK_MODE_MASK;
-> @@ -882,6 +877,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	 * we should not program the ATU here.
->  	 */
->  	if (!pp->ops->rd_other_conf) {
-> +		/* get iATU unroll support */
-> +		pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
-> +		dev_dbg(pp->dev, "iATU unroll: %s\n",
-> +			pp->iatu_unroll_enabled ? "enabled" : "disabled");
-> +
->  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->  					  pp->mem_bus_addr, pp->mem_size);
-> -- 
-> 1.9.1
-> 
+> Thanks,
+> Keith
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
