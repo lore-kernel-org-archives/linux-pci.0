@@ -1,69 +1,133 @@
-Return-Path: <SRS0=nVb9=YV=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=nVb9=YV=linux.intel.com=mika.westerberg@kernel.org>
-Date: Sat, 7 Jan 2017 08:50:53 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lukas Wunner <lukas@wunner.de>, Peter Wu <peter@lekensteyn.nl>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Kilian Singer <kilian.singer@quantumtechnology.info>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>
-Subject: Re: PCI: Revert "PCI: Add runtime PM support for PCIe ports"
-Message-ID: <20170107065053.GL3353@lahna.fi.intel.com>
-References: <20161228161816.GA19653@bhelgaas-glaptop.roam.corp.google.com>
- <20170104210954.GA11946@al>
- <20170105144220.GA21446@wunner.de>
- <2634193.tHuT6mNBBA@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 31 Jan 2017 08:25:25 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+Message-ID: <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131102830.GA13854@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2634193.tHuT6mNBBA@aspire.rjw.lan>
+In-Reply-To: <20170131102830.GA13854@localhost.localdomain>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, tn@semihalf.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 06, 2017 at 02:21:11AM +0100, Rafael J. Wysocki wrote:
-> On Thursday, January 05, 2017 03:42:20 PM Lukas Wunner wrote:
-> > On Wed, Jan 04, 2017 at 10:09:54PM +0100, Peter Wu wrote:
-> > > [ Help/ideas are welcome, I suspect that these failures to restore power
-> > > on laptops designed for Win8+ all have the same cause, related to some
-> > > unknown interaction between ACPI and PCI. Some links:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=190861
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=156341 ]
-> > 
-> > Looking at Kilian's acpidump again I notice that the methods to power
-> > the GPU on or off (GPON / GPOF) are called from two places:
-> > 
-> > - From the _PS0 and _PS3 methods of the GPU and
-> > - from the _PR3 power resource of the root port above the GPU.
-> > 
-> > In the former case they're called for pre Windows 2013 or if VDAD is true.
-> > In the latter case they're called unconditionally but GPOF becomes a no-op
-> > in the pre Windows 2013 case.
-> > 
-> > This means that GPOF would be executed *twice* on Windows 2013+ if VDAD
-> > is true.  I could imagine this to cause issues.
+On Tue, Jan 31, 2017 at 02:28:30AM -0800, Vadim Lomovtsev wrote:
+> Hi Bjorn,
 > 
-> Right.  Exactly my observation (http://marc.info/?l=linux-pci&m=148362622326066&w=2).
+> On Mon, Jan 30, 2017 at 03:12:37PM -0600, Bjorn Helgaas wrote:
+> > Hi Vadim,
+> > 
+> > On Mon, Jan 30, 2017 at 08:25:52AM -0800, Vadim Lomovtsev wrote:
+> > > This patch is to address PEM initialization issue
+> > > which causes network issues.
+> > > 
+> > > It is necessary to search for _HID:PNP0A08 while requesting
+> > > PEM resources via ACPI instead of "THRX0002".
+> > > 
+> > > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > > ---
+> > >  drivers/pci/host/pci-thunder-pem.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> > > index af722eb..aec30b8 100644
+> > > --- a/drivers/pci/host/pci-thunder-pem.c
+> > > +++ b/drivers/pci/host/pci-thunder-pem.c
+> > > @@ -331,7 +331,7 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+> > >  	if (!res_pem)
+> > >  		return -ENOMEM;
+> > >  
+> > > -	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
+> > > +	ret = acpi_get_rc_resources(dev, "PNP0A08", root->segment, res_pem);
+> > 
+> > This doesn't smell right: PNP0A08 is the generic ACPI ID.  There's no
+> > guarantee that if we find a PNP0A08 device, it is a ThunderX device.
+> > 
+> > I think the only way to call thunder_pem_acpi_init() is via an MCFG
+> > quirk that mentions thunder_pem_ecam_ops, which means we only call it
+> > if we find an MCFG with "CAVIUM" "THUNDERX" OEM and table IDs, so it's
+> > probably safe in that sense.
 > 
-> So on (newer) Windows something is done in order to make it work in addition to
-> the _PR3 _OSC handshake.
+> Agree, it is not the best solution.
+> We will implement such approach and send for review. 
 > 
-> So, I'd like to try to follow the Mika's suggestion to use the response we get
-> from the _OSC handshake for \_SB and if that says "no _PR3", ignore power
-> resources for PCIe ports at least.
+> > 
+> > But it's an abuse of the ACPI _HID model.  If you match a device using
+> > PNP0A08, all you can assume about it is that it uses the generic
+> > PNP0A08 programming model, and I don't think that includes "the first
+> > memory resource in _CRS contains ECAM space and MSI-X tables."
+> > 
+> > I expect this is a teething issue because you have firmware in the
+> > field that uses PNP0A08 and it's not feasible to update it.  If that's
+> > the case, the changelog should have details about it and we should
+> > have a comment in the code, because I don't think this is the model we
+> > want to end up with in future releases.
+> 
+> It could become so. However, for now I didn't get any reports on that,
+> (may be I miss something) except some internal emailings.
+> At my testing HW I was able to see some issues related to acpi-PEM stuff.
+> 
+> Thanks for feed-back, we will prepare another patch or patchset
+> implementing approach you've highlighted.
 
-Kilian send the dmesg back to me and unfortunately the BIOS on that
-machine acks use of _PR3:
+The approach I would like best is to search for THRX0002, because then
+you know you have a ThunderX PEM device, and you can assume
+device-specific details about its _CRS.
 
-[    0.699776] ACPI: Added _OSI(Module Device)
-[    0.699777] ACPI: Added _OSI(Processor Device)
-[    0.699777] ACPI: Added _OSI(3.0 _SCP Extensions)
-[    0.699778] ACPI: Added _OSI(Processor Aggregator Device)
-[    0.699783] ACPI : EC: EC started
-[    0.700466] ACPI: \: Used as first EC
-[    0.700467] ACPI: \: GPE=0x11, EC_CMD/EC_SC=0x66, EC_DATA=0x62
-[    0.700468] ACPI: \: Used as boot ECDT EC to handle transactions
-[    0.703905] ACPI: [Firmware Bug]: BIOS _OSI(Linux) query ignored
-[    0.880246] ACPI: \_SB_: Supported caps: 0x0000009f
-[    0.880278] ACPI: \_SB_: Acked caps: 0x0000009f (_PR3: on)
+But that's what the existing code does, and apparently that doesn't
+work.  My guess is that you have firmware in the field where the host
+bridge has only PNP0A08 (and maybe PNP0A03) as device IDs.
 
-So ignoring _PR3 based on that will not solve the issue :-(
+Per spec, the OS can only assume the generic PCI host bridge
+programming model in that case.  It can't use any device-specific
+features, like the register space you're extracting here, since
+there's no way to tell what specific device you have.
+
+If the OS needs to use device-specific features, there must be a
+device-specific _HID, i.e., THRX0002.  This is the important thing to
+get right in the future.
+
+If existing firmware in the field has no device-specific _HID, we
+might need something like this as a quirk to work around that firmware
+deficiency.  If that's the case, all I'm really asking for is:
+
+  - Some indication that you have a plan to change the firmware
+    strategy so future releases don't require similar quirks, and
+
+  - Some comments in the code pointing out that this is a workaround
+    for a firmware deficiency.
+
+As I mentioned, I think this change should be safe because we only run
+this code if we find a CAVIUM THUNDERX MCFG table, and we search for a
+PNP0A08 device that matches the segment from MCFG.
+
+The only way we could accidentally match the wrong device would be if
+we had another bridge in the same segment.  Maybe we should have made
+acpi_get_rc_resources() match on the bus range as well as the segment.
+But that feels like just a "pedantically correct" sort of thing and
+probably over-engineering for this situation; I don't think it would
+solve any current problem.
+
+I know you'd like to see this in v4.10, so we need to sort this out
+ASAP.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
