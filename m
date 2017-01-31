@@ -1,88 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34560 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754337AbdAKSuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jan 2017 13:50:13 -0500
-Date: Wed, 11 Jan 2017 12:50:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, helgaas@google.com, krzk@kernel.org,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: exynos: replace to one register accessor from
- each accessors
-Message-ID: <20170111185003.GG14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <20161219081614.5403-1-jh80.chung@samsung.com>
- <20161219081614.5403-2-jh80.chung@samsung.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:8549 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750861AbdAaRCG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 12:02:06 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        zhangjukuo <zhangjukuo@huawei.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: RE: Question: PCIe DPC not allowing for link retraining and bus
+ re-scan
+Date: Tue, 31 Jan 2017 16:59:31 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9FA346@lhreml507-mbx>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
+ <20170130161453.GC11699@localhost.localdomain>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
+ <20170131155336.GA24601@localhost.localdomain>
+In-Reply-To: <20170131155336.GA24601@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161219081614.5403-2-jh80.chung@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+Hi Keith
 
-On Mon, Dec 19, 2016 at 05:16:11PM +0900, Jaehoon Chung wrote:
-> There is no reason to maintain *_blk/phy/elbi_* as register accessors.
-> It can be replaced to one register accessor.
+> -----Original Message-----
+> From: Keith Busch [mailto:keith.busch@intel.com]
+> Sent: 31 January 2017 15:54
+> To: Gabriele Paoloni
+> Cc: linux-pci@vger.kernel.org; Linuxarm; liudongdong (C); zhangjukuo;
+> Wangzhou (B)
+> Subject: Re: Question: PCIe DPC not allowing for link retraining and
+> bus re-scan
 > 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  drivers/pci/host/pci-exynos.c | 214 +++++++++++++++++++-----------------------
->  1 file changed, 97 insertions(+), 117 deletions(-)
+> On Tue, Jan 31, 2017 at 09:35:58AM +0000, Gabriele Paoloni wrote:
+> > I don't mind writing the patches but currently I also do not have a
+> > platform to test on.
+> >
+> > Do you know if there is any Intel Server/Desktop with full support of
+> > DPC on the RP including "Software Triggering of DPC" (maybe some
+> > machines that are out on the market but you do not have there with
+> you)?
 > 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index f1c544b..6dbfa2c 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -102,197 +102,175 @@ struct exynos_pcie {
->  #define PCIE_PHY_TRSV3_PD_TSV		(0x1 << 7)
->  #define PCIE_PHY_TRSV3_LVCC		0x31c
->  
-> -static void exynos_elb_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
-> +static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
->  {
-> -	writel(val, exynos_pcie->elbi_base + reg);
-> +	writel(val, base + reg);
->  }
->  
-> -static u32 exynos_elb_readl(struct exynos_pcie *exynos_pcie, u32 reg)
-> +static u32 exynos_pcie_readl(void __iomem *base, u32 reg)
->  {
-> -	return readl(exynos_pcie->elbi_base + reg);
-> +	return readl(base + reg);
->  }
->  
-> -static void exynos_phy_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
-> -{
-> -	writel(val, exynos_pcie->phy_base + reg);
-> -}
-> -
-> -static u32 exynos_phy_readl(struct exynos_pcie *exynos_pcie, u32 reg)
-> -{
-> -	return readl(exynos_pcie->phy_base + reg);
-> -}
-> -
-> -static void exynos_blk_writel(struct exynos_pcie *exynos_pcie, u32 val, u32 reg)
-> -{
-> -	writel(val, exynos_pcie->block_base + reg);
-> -}
-> -
-> -static u32 exynos_blk_readl(struct exynos_pcie *exynos_pcie, u32 reg)
-> -{
-> -	return readl(exynos_pcie->block_base + reg);
-> -}
-> -
-> -static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *exynos_pcie,
-> -					    bool on)
-> +static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
+> Currently available Intel offerings do not have eDPC capable root
+> ports.
+> I use switches from Microsemi and PLX with these capabilities on their
+> downstream ports so I'm limited to non-root port testing at the moment.
+> 
+> > As an alternative I am thinking that maybe I can find a switch with
+> > full DPC support including "Software Triggering of DPC". In this case
+> > we test anything except the RP Busy bit...
+> >
+> > The idea is to have a sort of DPC SW Injection module to test DPC.
+> 
+> I think you can s/w inject from userspace with setpci:
+> 
+>   # setpci -s <B:D.f> ECAP_DPC+6.w=40:40
+> 
+> The port has to have a software trigger capability. I can get such a
+> switch, but don't have one immediately available.
+> 
+> Anyway, I'll write a couple patches and post them when I can get
+> validation. Thank you for pointing out the current gaps.
 
-Replacing all the separate accessors with one that takes the base
-pointer is OK, but please use the same name for all the "struct
-exynos_pcie *" pointers in the whole file.
+Many thanks for this, I'll try to get such switch too so maybe
+I can help with development and/or validation. 
+If you know of specific switches that support for sure such SW
+trigger feature please let me know and I'll try to buy them.
 
-Before your patch, they were all called "exynos_pci"; after it some
-are called "exynos_pci" and some are called "ep".
+I'll ping you as soon as I am able to get something to test this.
 
-Bjorn
+Cheers
+Gab
