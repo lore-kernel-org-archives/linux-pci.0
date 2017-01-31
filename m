@@ -1,53 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f175.google.com ([209.85.213.175]:36764 "EHLO
-        mail-yb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753033AbdAZPJW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2017 10:09:22 -0500
-Received: by mail-yb0-f175.google.com with SMTP id 123so43951746ybe.3
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2017 07:09:21 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 26 Jan 2017 09:09:21 -0600
-Message-ID: <CAO-JfphcgVUABRgq_vWmR0h1VqUevdkTyErn17P17wQtaXVOrg@mail.gmail.com>
-Subject: (#587510342) Gmail Forwarding Confirmation - Receive Mail from bugzilla.pci@gmail.com
-From: Gmail Team <forwarding-noreply@google.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from ale.deltatee.com ([207.54.116.67]:57911 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751820AbdAaSZ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jan 2017 13:25:29 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 31 Jan 2017 10:03:23 -0700
+Message-Id: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH 0/1] DRAFT: New Microsemi PCI Switch Management Driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-bugzilla.pci@gmail.com has requested to automatically forward mail to your email
-address linux-pci@vger.kernel.org.
-Confirmation code: 587510342
+Hi,
 
-To allow bugzilla.pci@gmail.com to automatically forward mail to your address,
-please click the link below to confirm the request:
+This is a continuation of the RFC we posted lasted month [1] which
+proposes a management driver for Microsemi's Switchtec line of PCI
+switches. This hardware is still looking to be used in the Open
+Compute Platform
 
-https://mail-settings.google.com/mail/vf-%5BANGjdJ8s2pjT1Tio1-DNx7kRmERcgR8l7p2IrQpTf84kQKvAwUPW3Rbb_46H3yCZnN21yHfBzQzOF7dU191szM20tD-vAsFrGL1zviTGXQ%5D-ZCqlcdmG5uKzO_d2phMOIU_F5J0
+To make this entirely clear: the Switchtec products are compliant
+with the PCI specifications and are supported today with the standard
+in-kernel driver. However, these devices also expose a management endpoint
+on a separate PCI function address which can be used to perform some
+advanced operations. This is a driver for that function. See the patch
+for more information.
 
-If you click the link and it appears to be broken, please copy and paste it
-into a new browser window. If you aren't able to access the link, you
-can send the confirmation code
-587510342 to bugzilla.pci@gmail.com.
+Since the RFC, we've made the changes requested by Greg Kroah-Hartman
+and Keith Busch, and we've also fleshed out a number of features. We've
+added a couple of IOCTLs and sysfs attributes which are documented in
+the patch. Significant work has also been done on the userspace tool
+which is available under a GPL license at [2]. We've also had testing
+done by some of the interested parties.
 
-Thanks for using Gmail!
+We hope to see this work included in either 4.11 or 4.12 assuming a
+smooth review process.
 
-Sincerely,
+The patch is based off of the v4.9 release.
 
-The Gmail Team
+Thanks for your review,
 
-If you do not approve of this request, no further action is required.
-bugzilla.pci@gmail.com cannot automatically forward messages to your
-email address
-unless you confirm the request by clicking the link above. If you accidentally
-clicked the link, but you do not want to allow bugzilla.pci@gmail.com to
-automatically forward messages to your address, click this link to cancel this
-verification:
-https://mail-settings.google.com/mail/uf-%5BANGjdJ9glPzNHvTWF_gDZ2g3_kx_4d2bDVlztae-i25aaOhFf7db27VFzvU3kKKlLcGGZuv5oJ09A1lPF444son-qLUEL_kYxYYL6r_o3w%5D-ZCqlcdmG5uKzO_d2phMOIU_F5J0
+Logan
 
-To learn more about why you might have received this message, please
-visit: http://support.google.com/mail/bin/answer.py?answer=184973.
+[1] https://www.spinics.net/lists/linux-pci/msg56897.html
+[2] https://github.com/sbates130272/switchtec-user
 
-Please do not respond to this message. If you'd like to contact the
-Google.com Team, please log in to your account and click 'Help' at
-the top of any page. Then, click 'Contact Us' along the bottom of the
-Help Center.
+--
+
+Changes since RFC:
+
+* Fixed incorrect use of the drive model as pointed out by Greg
+  Kroah-Hartman
+* Used devm functions as suggested by Keith Busch
+* Added a handful of sysfs attributes to the switchtec class
+* Added a handful of IOCTLs to the switchtec device
+* A number of miscelaneous bug fixes
+
+--
+
+Logan Gunthorpe (1):
+  MicroSemi Switchtec management interface driver
+
+ Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+ Documentation/ioctl/ioctl-number.txt            |    1 +
+ Documentation/switchtec.txt                     |   80 ++
+ MAINTAINERS                                     |   11 +
+ drivers/pci/Kconfig                             |    1 +
+ drivers/pci/Makefile                            |    1 +
+ drivers/pci/switch/Kconfig                      |   13 +
+ drivers/pci/switch/Makefile                     |    1 +
+ drivers/pci/switch/switchtec.c                  | 1320 +++++++++++++++++++++++
+ drivers/pci/switch/switchtec.h                  |  266 +++++
+ include/uapi/linux/switchtec_ioctl.h            |  129 +++
+ 11 files changed, 1919 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+ create mode 100644 Documentation/switchtec.txt
+ create mode 100644 drivers/pci/switch/Kconfig
+ create mode 100644 drivers/pci/switch/Makefile
+ create mode 100644 drivers/pci/switch/switchtec.c
+ create mode 100644 drivers/pci/switch/switchtec.h
+ create mode 100644 include/uapi/linux/switchtec_ioctl.h
+
+--
+2.1.4
