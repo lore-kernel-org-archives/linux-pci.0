@@ -1,145 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38242 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S940640AbdAIUh6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2017 15:37:58 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
-        netdev@vger.kernel.org, linux-media@vger.kernel.org
-Subject: [PATCH 3/3] PCI/msi: remove pci_enable_msi_{exact,range}
-Date: Mon,  9 Jan 2017 21:37:40 +0100
-Message-Id: <1483994260-19797-4-git-send-email-hch@lst.de>
-In-Reply-To: <1483994260-19797-1-git-send-email-hch@lst.de>
-References: <1483994260-19797-1-git-send-email-hch@lst.de>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:36354 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdAaPdR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 10:33:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 31 Jan 2017 16:33:15 +0100
+Message-ID: <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rcar: Check for OF device match early
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All multi-MSI allocations are now done through pci_irq_alloc_vectors,
-so remove the old interface.
+Hi Bjorn,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- Documentation/PCI/MSI-HOWTO.txt |  6 ++----
- drivers/pci/msi.c               | 26 +++++++++-----------------
- include/linux/pci.h             | 16 ++--------------
- 3 files changed, 13 insertions(+), 35 deletions(-)
+On Tue, Jan 31, 2017 at 4:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> A match in the rcar_pcie_of_match[] table is required, so check that first,
+> before we start setting up things that need to be undone if it fails.  No
+> functional change intended.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pcie-rcar.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 0d9b96c3c49d..c91ff0b91be8 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>         int err;
+>         int (*hw_init_fn)(struct rcar_pcie *);
+>
+> +       of_id = of_match_device(rcar_pcie_of_match, dev);
+> +       if (!of_id || !of_id->data)
+> +               return -EINVAL;
+> +
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index cd9c9f6..b570a92 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -162,8 +162,6 @@ The following old APIs to enable and disable MSI or MSI-X interrupts should
- not be used in new code:
- 
-   pci_enable_msi()		/* deprecated */
--  pci_enable_msi_range()	/* deprecated */
--  pci_enable_msi_exact()	/* deprecated */
-   pci_disable_msi()		/* deprecated */
-   pci_enable_msix_range()	/* deprecated */
-   pci_enable_msix_exact()	/* deprecated */
-@@ -268,5 +266,5 @@ or disabled (0).  If 0 is found in any of the msi_bus files belonging
- to bridges between the PCI root and the device, MSIs are disabled.
- 
- It is also worth checking the device driver to see whether it supports MSIs.
--For example, it may contain calls to pci_enable_msi_range() or
--pci_enable_msix_range().
-+For example, it may contain calls to pci_irq_alloc_vectors with the
-+PCI_IRQ_MSI or PCI_IRQ_MSIX flags.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003..16dda43 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1109,23 +1109,15 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 	}
- }
- 
--/**
-- * pci_enable_msi_range - configure device's MSI capability structure
-- * @dev: device to configure
-- * @minvec: minimal number of interrupts to configure
-- * @maxvec: maximum number of interrupts to configure
-- *
-- * This function tries to allocate a maximum possible number of interrupts in a
-- * range between @minvec and @maxvec. It returns a negative errno if an error
-- * occurs. If it succeeds, it returns the actual number of interrupts allocated
-- * and updates the @dev's irq member to the lowest new interrupt number;
-- * the other interrupt numbers allocated to this device are consecutive.
-- **/
--int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
-+/* deprecated, don't use */
-+int pci_enable_msi(struct pci_dev *dev)
- {
--	return __pci_enable_msi_range(dev, minvec, maxvec, NULL);
-+	int rc = __pci_enable_msi_range(dev, 1, 1, NULL);
-+	if (rc < 0)
-+		return rc;
-+	return 0;
- }
--EXPORT_SYMBOL(pci_enable_msi_range);
-+EXPORT_SYMBOL(pci_enable_msi);
- 
- static int __pci_enable_msix_range(struct pci_dev *dev,
- 				   struct msix_entry *entries, int minvec,
-@@ -1381,7 +1373,7 @@ int pci_msi_domain_check_cap(struct irq_domain *domain,
- {
- 	struct msi_desc *desc = first_pci_msi_entry(to_pci_dev(dev));
- 
--	/* Special handling to support pci_enable_msi_range() */
-+	/* Special handling to support __pci_enable_msi_range() */
- 	if (pci_msi_desc_is_multi_msi(desc) &&
- 	    !(info->flags & MSI_FLAG_MULTI_PCI_MSI))
- 		return 1;
-@@ -1394,7 +1386,7 @@ int pci_msi_domain_check_cap(struct irq_domain *domain,
- static int pci_msi_domain_handle_error(struct irq_domain *domain,
- 				       struct msi_desc *desc, int error)
- {
--	/* Special handling to support pci_enable_msi_range() */
-+	/* Special handling to support __pci_enable_msi_range() */
- 	if (pci_msi_desc_is_multi_msi(desc) && error == -ENOSPC)
- 		return 1;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..2159376 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1309,14 +1309,7 @@ void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
--int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
--static inline int pci_enable_msi_exact(struct pci_dev *dev, int nvec)
--{
--	int rc = pci_enable_msi_range(dev, nvec, nvec);
--	if (rc < 0)
--		return rc;
--	return 0;
--}
-+int pci_enable_msi(struct pci_dev *dev);
- int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 			  int minvec, int maxvec);
- static inline int pci_enable_msix_exact(struct pci_dev *dev,
-@@ -1347,10 +1340,7 @@ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
- static inline int pci_msi_enabled(void) { return 0; }
--static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
--				       int maxvec)
--{ return -ENOSYS; }
--static inline int pci_enable_msi_exact(struct pci_dev *dev, int nvec)
-+static inline int pci_enable_msi(struct pci_dev *dev)
- { return -ENOSYS; }
- static inline int pci_enable_msix_range(struct pci_dev *dev,
- 		      struct msix_entry *entries, int minvec, int maxvec)
-@@ -1426,8 +1416,6 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
- static inline void pcie_ecrc_get_policy(char *str) { }
- #endif
- 
--#define pci_enable_msi(pdev)	pci_enable_msi_exact(pdev, 1)
--
- #ifdef CONFIG_HT_IRQ
- /* The functions a driver should call */
- int  ht_create_irq(struct pci_dev *dev, int idx);
+As this driver is DT-only, none of the above can fail, and you could just do
+
+       hw_init_fn = of_device_get_match_data(dev);
+
+instead, getting rid of of_id completely.
+
+>         pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+>         if (!pcie)
+>                 return -ENOMEM;
+> @@ -1149,11 +1153,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>         if (err)
+>                 return err;
+>
+> -       of_id = of_match_device(rcar_pcie_of_match, dev);
+> -       if (!of_id || !of_id->data)
+> -               return -EINVAL;
+> -       hw_init_fn = of_id->data;
+> -
+>         pm_runtime_enable(dev);
+>         err = pm_runtime_get_sync(dev);
+>         if (err < 0) {
+> @@ -1162,6 +1161,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>         }
+>
+>         /* Failure to get a link might just be that no cards are inserted */
+> +       hw_init_fn = of_id->data;
+>         err = hw_init_fn(pcie);
+>         if (err) {
+>                 dev_info(dev, "PCIe link down\n");
+>
+
+
+
 -- 
-2.1.4
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
