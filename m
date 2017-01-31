@@ -1,117 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wj0-f196.google.com ([209.85.210.196]:34350 "EHLO
-        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdAaUsh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2017 15:48:37 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: Re: [PATCH v3] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+In-Reply-To: <8520D5D51A55D047800579B094147198263DDD4D@XAP-PVEXMBX02.xlnx.xilinx.com>
+ (Bharat Kumar Gogada's message of "Tue, 31 Jan 2017 09:34:43 +0000")
+References: <1485853152-31819-1-git-send-email-bharatku@xilinx.com>
+ <868tpr8u3r.fsf@arm.com>
+ <8520D5D51A55D047800579B094147198263DDD4D@XAP-PVEXMBX02.xlnx.xilinx.com>
+Date: Tue, 31 Jan 2017 10:23:45 +0000
+Message-ID: <86r33j7cjy.fsf@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1485882204-26947-2-git-send-email-logang@deltatee.com>
-References: <1485882204-26947-1-git-send-email-logang@deltatee.com> <1485882204-26947-2-git-send-email-logang@deltatee.com>
-From: Emil Velikov <emil.l.velikov@gmail.com>
-Date: Tue, 31 Jan 2017 20:48:34 +0000
-Message-ID: <CACvgo50ruxTOfhGF=bV+xWVq+5UZ_xWeoTqxA+SzSwFNCVaS8g@mail.gmail.com>
-Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Logan,
+On Tue, Jan 31 2017 at 09:34:43 AM, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+>  > On Tue, Jan 31 2017 at 08:59:12 AM, Bharat Kumar Gogada
+>> <bharat.kumar.gogada@xilinx.com> wrote:
+>> > - Adding mutex lock for protecting legacy mask register
+>> > - Few wifi end points which only support legacy interrupts, performs
+>> > hardware reset functionalities after disabling interrupts by invoking
+>> > disable_irq and then re-enable using enable_irq, they enable hardware
+>> > interrupts first and then virtual irq line later.
+>> > - The legacy irq line goes low only after DEASSERT_INTx is received.As
+>> > the legacy irq line is high immediately after hardware interrupts are
+>> > enabled but virq of EP is still in disabled state and EP handler is
+>> > never executed resulting no DEASSERT_INTx.If dummy irq chip is used,
+>> > interrutps are not masked and system is hanging with CPU stall.
+>> > - Adding irq chip functions instead of dummy irq chip for legacy
+>> > interrupts.
+>> > - Legacy interrupts are level sensitive, so using handle_level_irq is
+>> > more appropriate as it is masks interrupts until End point handles
+>> > interrupts and unmasks interrutps after End point handler is executed.
+>> > - Legacy interrupts are level triggered, virtual irq line of End Point
+>> > shows as edge in /proc/interrupts.
+>> > - Setting irq flags of virtual irq line of EP to level triggered at
+>> > the time of mapping.
+>> >
+>> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>> > ---
+>> >  drivers/pci/host/pcie-xilinx-nwl.c |   43
+>> +++++++++++++++++++++++++++++++++++-
+>> >  1 files changed, 42 insertions(+), 1 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
+>> > b/drivers/pci/host/pcie-xilinx-nwl.c
+>> > index 43eaa4a..76dd094 100644
+>> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
+>> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+>> > @@ -184,6 +184,7 @@ struct nwl_pcie {
+>> >  	u8 root_busno;
+>> >  	struct nwl_msi msi;
+>> >  	struct irq_domain *legacy_irq_domain;
+>> > +	struct mutex leg_mask_lock;
+>> >  };
+>> >
+>> >  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off) @@
+>> > -395,11 +396,50 @@ static void nwl_pcie_msi_handler_low(struct irq_desc
+>> *desc)
+>> >  	chained_irq_exit(chip, desc);
+>> >  }
+>> >
+>> > +static void nwl_mask_leg_irq(struct irq_data *data) {
+>> > +	struct irq_desc *desc = irq_to_desc(data->irq);
+>> > +	struct nwl_pcie *pcie;
+>> > +	u32 mask;
+>> > +	u32 val;
+>> > +
+>> > +	pcie = irq_desc_get_chip_data(desc);
+>> > +	mask = 1 << (data->hwirq - 1);
+>> > +	mutex_lock(&pcie->leg_mask_lock);
+>> > +	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
+>> > +	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
+>> > +	mutex_unlock(&pcie->leg_mask_lock);
+>> 
+>> Have you looked at which context this is called in? In a number of cases, the
+>> mask/unmask methods are called whilst you're in an interrupt context. If you
+>> sleep there (which is what happens with a contended mutex), you die horribly.
+>> 
+>> Given these constraints, you should use raw_spin_lock_irqsave and
+>> co, since this
+>> can be called from both interrupt and non-interrupt contexts.
+>> 
+> I have seen very few wifi drivers calling these in MAC flow,
 
-NOTE: Please take my comments with a healthy pinch of salt.
+Very few is already too many. But I'm afraid you're missing the point
+entirely: This patch is about using handle_level_irq as the flow
+handler. The first thing handle_level_irq does is to mask the
+interrupt. If you have a competing mask or unmask operation in progress
+on another CPU (or in the middle of one on the same CPU when the
+interrupt fired), your system explodes.
 
-I'd imagine that core/more experienced developers have more thorough
-feedback, so I'll mention a few things on the less common part -
-robust/compat UABI.
-Above all, please read through the in-tree documentation on the topic [1]
+Please have a look at Documentation/DocBook/kernel-locking.tmpl.
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/ioctl/botching-up-ioctls.txt?id=refs/tags/v4.10-rc6
+> raw_spin_lock_irqsave
+> looks more safe, will do it.
 
-On 31 January 2017 at 17:03, Logan Gunthorpe <logang@deltatee.com> wrote:
+Thanks,
 
-> --- /dev/null
-> +++ b/include/uapi/linux/switchtec_ioctl.h
+	M.
+-- 
+Jazz is not dead. It just smells funny.
 
-
-> +enum switchtec_ioctl_partition {
-
-> +       SWITCHTEC_IOCTL_NUM_PARTITIONS,
-> +};
-I'm not sure what the overall consensus on the topic of 'enums vs
-defines in UABI'. Fwiw personally I'm in favour of defines since enums
-can lead to subtle issues if one is not extra careful. For example:
- - add new enum amidst the list - ABI break
- - add new enum at the end of the list [just before NUM_PARTITIONS] - ABI break.
- - opt for negative value for existing/new enum - ABI break
- - other
-
-With a variable size in mind, carefully consider how you'll copy data
-back and forth in the case of new kernel (supports partition[X) + old
-userspace (partition [X-1]) and vice-versa. Feel free to look at the
-drm ioctl handler and/or others through the kernel.
-
-Hint - as-is we'll end up with buffer overflows/other issues.
-
-> +
-> +struct switchtec_ioctl_fw_info {
-> +       __u32 flash_length;
-> +
-> +       struct {
-> +               __u32 address;
-> +               __u32 length;
-> +               __u32 active;
-Something to keep in mind, not sure how likely it is here:
-If you embed structs (partition in this case), you will not be able to
-extend it [the embedded one] it in the future without the risk of ABI
-breakage.
-
-> +       } partition[SWITCHTEC_IOCTL_NUM_PARTITIONS];
-> +};
-> +
-Afaict this and most/all other structs [in this patch] are in
-violation of Prerequisites#2 and/or #3.
-Personally I find pahole quite useful - reference all the UABI structs
-in a dummy userspace app, compile with gcc -g -O0 and observe the
-output across 32 and 64bit builds. Members _must_ be at the same
-offset, otherwise things will be broken with 64bit kernel on a 32bit
-userspace. Something which people will eventually end up trying/using,
-even if you don't plan to support it.
-
-Please check that Basics (#2 and #5 in particular) are also covered.
-
-A couple more generic suggestions, which I may have noticed while
-skimming through:
- - please ensure that all the input is properly sanitised, before,
-going into the actual implementation
-Afaict having the separate step/separation helps clarity and reduces
-chances of you/others getting it wrong down the line.
- - user provided storage must not be changed when the ioctl fails.
-
-Additionally you want to provide a reference to open-source userspace
-[alongside acknowledgement of the maintainers/co-developers about the
-design] which makes use of said IOCTL(s). But please, do _not_ merge
-userspace code before the kernel work has landed.
-
-Hope that provided you with sufficient good points wrt IOCTL design.
-
-Regards,
-Emil
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
