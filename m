@@ -1,23 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- John Garry <john.garry@huawei.com>, catalin.marinas@arm.com,
- will.deacon@arm.com, robh+dt@kernel.org, frowand.list@gmail.com,
- bhelgaas@google.com, rafael@kernel.org, mark.rutland@arm.com,
- brian.starkey@arm.com, olof@lixom.net, arnd@arndb.de,
- linux-arm-kernel@lists.infradead.org
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
- <5dc0dc9c-124e-398f-a3b2-40059268e859@suse.de>
- <6d5523be-1841-18b9-9b83-6f7e591ed66b@huawei.com>
- <1a1f1e70-b6e7-f3c6-2b86-348b3d28edfe@suse.de>
- <58A1BFE5.7050800@hisilicon.com>
-From: Alexander Graf <agraf@suse.de>
-Message-ID: <ee15da3a-b1d6-2fcb-ddf5-ebe9249fd9ee@suse.de>
-Date: Tue, 14 Feb 2017 14:17:44 +0100
+Subject: Re: [PATCH 00/37] PCI: Support for configurable PCI endpoint
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5891D53E.5050409@ti.com>
+Date: Wed, 1 Feb 2017 18:01:58 +0530
 MIME-Version: 1.0
-In-Reply-To: <58A1BFE5.7050800@hisilicon.com>
+In-Reply-To: <1484216786-17292-1-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -25,251 +15,335 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, benh@kernel.crashing.org,
- zhichang.yuan02@gmail.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com, linux-serial@vger.kernel.org,
- linux-pci@vger.kernel.org, zourongrong@gmail.com, kantyzc@163.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+- list
 
+Hi Bjorn,
 
-On 13/02/2017 15:17, zhichang.yuan wrote:
-> Hi, Alex,
->
->
-> On 2017/2/1 3:37, Alexander Graf wrote:
->>
->>
->> On 31/01/2017 14:32, John Garry wrote:
->>> On 30/01/2017 17:12, Alexander Graf wrote:
->>>> On 01/24/2017 08:05 AM, zhichang.yuan wrote:
->>>>> Low-pin-count interface is integrated into some SoCs. The accesses to
->>>>> those
->>>>> peripherals under LPC make use of I/O ports rather than the memory
->>>>> mapped I/O.
->>>>>
->>>>> To drive these devices, this patch introduces a method named
->>>>> indirect-IO.
->>>>> In this method the in/out() accessor in include/asm-generic/io.h will be
->>>>> redefined. When upper layer drivers call in/out() with those known
->>>>> legacy port
->>>>> addresses to access the peripherals, the I/O operations will be routed
->>>>> to the
->>>>> right hooks which are registered specific to the host device, such as
->>>>> LPC.
->>>>> Then the hardware relevant manupulations are finished by the
->>>>> corresponding
->>>>> host.
->>>>>
->>>>> According to the comments on V5, this patch adds a common indirect-IO
->>>>> driver
->>>>> which support this I/O indirection to the generic directory.
->>>>>
->>>>> In the later pathches, some host-relevant drivers are implemented to
->>>>> support
->>>>> the specific I/O hooks and register them.
->>>>> Based on these, the upper layer drivers which depend on in/out() can
->>>>> work well
->>>>> without any extra work or any changes.
->>>>>
->>>>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
->>>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>>>> Signed-off-by: John Garry <john.garry@huawei.com>
->>>>
->>>> I like the extio idea. That allows us to handle all PIO requests on
->>>> platforms that don't have native PIO support via different routes
->>>> depending on the region they're in. Unfortunately we now we have 2
->>>> frameworks for handling sparse PIO regions: One in extio, one in PCI.
->>>>
->>>> Why don't we just merge the two? Most of the code that has #ifdef
->>>> PCI_IOBASE throughout the code base sounds like an ideal candidate to
->>>> get migrated to extio instead. Then we only have a single framework to
->>>> worry about ...
->>>
->>> To be clear, are you suggesting we merge the functionality from
->>> pci_register_io_range(), pci_pio_to_address(), pci_address_to_pio() into
->>> extio, so extio manages all PIO?
->>
->> Yes, I guess so.
->>
->>> And having a single type of node to
->>> register PIO ranges, by amalgamating struct extio_node and io_range (as
->>> Bjorn mentioned)?
->>
->> I'm not quite sure I follow you here. Basically I think you want a generic "non-x86 PIO" framework that PCI just plugs into.
->>
->> I don't think that necessarily means you want to statically allocate regions of that PIO space to separate (pseudo-)devices. Instead, everyone shares that space and should be able to fail gracefully if some space is already occupied.
->>
->>> It would make sense. We would be somewhat decoupling PIO from PCI.
->>
->> Yes :).
->>
->>> I think that other architectures, like PPC, and other code would need to
->>> be fixed up to handle this.
->>
->> I think only PPC, Microblaze and ARM are using this. Grep for PCI_IOBASE. It's not that many.
->>
->>> We need to consider all the other challenges/obstacles to this.
->>
->> Well, getting our abstraction levels right to me sounds like it's worth the obstacles.
->>
->>>
->>>>
->>>>> ---
->>>>>   include/asm-generic/io.h |  50 ++++++++++++++++
->>>>>   include/linux/extio.h    |  85 +++++++++++++++++++++++++++
->>>>>   include/linux/io.h       |   1 +
->>>>>   lib/Kconfig              |   8 +++
->>>>>   lib/Makefile             |   2 +
->>>>>   lib/extio.c              | 147
->>>>> +++++++++++++++++++++++++++++++++++++++++++++++ xc>>   create mode
->>>>> 100644 include/linux/extio.h
->>>>>   create mode 100644 lib/extio.c
->>>>>
->>>
->>> <snip>
->>>
->>>>> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
->>>>> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
->>>>> + *
->>>>> + * This program is free software; you can redistribute it and/or modify
->>>>> + * it under the terms of the GNU General Public License version 2 as
->>>>> + * published by the Free Software Foundation.
->>>>> + *
->>>>> + * This program is distributed in the hope that it will be useful,
->>>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>>> + * GNU General Public License for more details.
->>>>> + *
->>>>> + * You should have received a copy of the GNU General Public License
->>>>> + * along with this program.  If not, see
->>>>> <http://www.gnu.org/licenses/>.
->>>>> + */
->>>>> +
->>>>> +#include <linux/io.h>
->>>>> +#include <linux/spinlock.h>
->>>>> +
->>>>> +static LIST_HEAD(extio_dev_list);
->>>>> +static DEFINE_RWLOCK(extio_list_lock);
->>>>
->>>> Why not just make the list an RCU list? Then you don't need read locks.
->>>> We also wouldn't create potential lock contention between devices that
->>>> could easily have parallel PIO operations (say a PCI device and an LPC
->>>> device).
->>>>
->>>
->>> OK
->>>
->>>>> +
->>>>> +void register_extio(struct extio_node *node)
->>>>> +{
->>>>> +    write_lock(&extio_list_lock);
->>>>> +    list_add_tail(&node->list, &extio_dev_list);
->>>>> +    write_unlock(&extio_list_lock);
->>>>> +}
->>>>> +
->>>>> +static struct extio_node *find_extio_token(unsigned long addr)
->>>>> +{
->>>>> +    struct extio_node *extio_entry;
->>>>> +
->>>>> +    read_lock(&extio_list_lock);
->>>>> +    list_for_each_entry(extio_entry, &extio_dev_list, list) {
->>>>> +        if ((addr < extio_entry->io_start + extio_entry->range_size) &&
->>>>> +            (addr >= extio_entry->io_start))
->>>>> +            break;
->>>>> +    }
->>>>> +    read_unlock(&extio_list_lock);
->>>>> +    return (&extio_entry->list == &extio_dev_list) ? NULL :
->>>>> extio_entry;
->>>>> +}
->>>>> +
->>>>> +struct extio_node *extio_find_node(struct fwnode_handle *node)
->>>>> +{
->>>>> +    struct extio_node *entry;
->>>>> +
->>>>> +    read_lock(&extio_list_lock);
->>>>> +    list_for_each_entry(entry, &extio_dev_list, list) {
->>>>> +        if (entry->fwnode == node)
->>>>> +            break;
->>>>> +    }
->>>>> +    read_unlock(&extio_list_lock);
->>>>> +
->>>>> +    return (&entry->list == &extio_dev_list) ? NULL : entry;
->>>>> +}
->>>>> +
->>>>> +unsigned long extio_translate(struct fwnode_handle *node,
->>>>> +        unsigned long bus_addr)
->>>>> +{
->>>>> +    struct extio_node *entry;
->>>>> +    unsigned long port_id = -1;
->>>>> +
->>>>> +    read_lock(&extio_list_lock);
->>>>> +    list_for_each_entry(entry, &extio_dev_list, list) {
->>>>> +        if (entry->fwnode == node &&
->>>>> +            bus_addr >= entry->bus_start &&
->>>>> +            bus_addr - entry->bus_start < entry->range_size)
->>>>> +            port_id = entry->io_start + bus_addr -
->>>>> +                    entry->bus_start;
->>>>> +    }
->>>>> +    read_unlock(&extio_list_lock);
->>>>> +
->>>>> +    return port_id;
->>>>> +}
->>>>> +
->>>>> +#ifdef PCI_IOBASE
->>>>> +
->>>>> +#define BUILD_EXTIO(bw, type)                        \
->>>>> +type extio_in##bw(unsigned long addr)                    \
->>>>> +{                                    \
->>>>> +    struct extio_node *extio_entry = find_extio_token(addr);    \
->>>>> +                                    \
->>>>> +    if (!extio_entry)                        \
->>>>> +        return read##bw(PCI_IOBASE + addr);            \
->>>>> +    return extio_entry->ops->pfin ?                    \
->>>>> +            extio_entry->ops->pfin(extio_entry->devpara,    \
->>>>> +            addr, sizeof(type)) : -1;            \
->>>>> +}                                    \
->>>>> +                                    \
->>>>> +void extio_out##bw(type value, unsigned long addr)            \
->>>>> +{                                    \
->>>>> +    struct extio_node *extio_entry = find_extio_token(addr);    \
->>>>> +                                    \
->>>>> +    if (!extio_entry)                        \
->>>>> +        write##bw(value, PCI_IOBASE + addr);            \
->>>>
->>>> All of the fallback code would also disappear as a nice side effect of
->>>> making pci pio handling a user of extio :).
->>>
->>> Is your idea that PCI IO space will also register accessors, which would
->>> be the same read{b,w,l}/write{b,w,l}?
->
-> I am not so sure what is your ideas on this. Do you mean the snippet like these:
->
-> #define BUILD_IO(bw, type)					\
-> type extio_in##bw(unsigned long addr) 				\
-> { 								\
-> 	struct io_range *entry = find_io_range(addr); 		\
-> 								\
-> 	if (entry) 						\
-> 		return entry->ops->pfin(entry->devpara, 	\
-> 			addr, sizeof(type)); 			\
-> 	return read##bw(PCI_IOBASE + addr);			\
-> }
->
-> we add the last 'return read##bw(PCI_IOBASE + addr);' to keep the original logic of inX() in asm-generic/io.h;
-> In above snippet, all the hosts applied extio should register their own ops->pfin().
+How do you want to handle this series? I'll send one more version of the series
+including the directory restructuring in the same series. Should it be based on
+your -next?
 
-Right, PCI would just register its own ops->pfin() which then calls an 
-MMIO read function relative to *its own* PCI PIO window. There's no 
-reason we couldn't have 2 PCI root complexes in a system. Then you would 
-end up with 2 PIO spaces - one for each PCI bus.
+Cheers
+Kishon
 
-
-Alex
+On Thursday 12 January 2017 03:55 PM, Kishon Vijay Abraham I wrote:
+> The RFC series that was sent before this patch series can be found at [1].
+> The patches are split here so that it can be better reviewed.
+> 
+> This main purpose of this patch series is to
+>  *) add PCI endpoint core layer
+>  *) modifie designware/dra7xx driver to be configured in EP mode
+>  *) add a PCI endpoint *test* function driver and corresponding host
+>     driver
+> 
+> Major Improvements from RFC:
+>  *) support multi-function devices (hw supported not virtual)
+>  *) Access host side buffers
+>  *) Raise MSI interrupts
+>  *) Add user space program to use the host side PCI driver
+>  *) Adapt all other users of designware to use the new design (only
+>     compile tested. Since I have only dra7xx boards, the new design
+>     has only been tested in dra7xx. I'd require the help of others
+>     to test the platforms they have access to).
+> 
+> This patch series has been developed on top of 4.10-rc1, [2] & [3]
+> 
+> [1] -> https://lwn.net/Articles/700605/
+> [2] -> https://lkml.org/lkml/2016/12/28/34
+> [3] -> https://lkml.org/lkml/2017/1/11/238
+> 
+> I've also pushed the tree to
+> git://git.ti.com/linux-phy/linux-phy.git pci_ep_v1
+> 
+> Using PCI EPF Test:
+> ON THE EP SIDE:
+> ***************
+> /* EP function is configured using configfs */
+> # mount -t configfs none /sys/kernel/config
+> 
+> /* PCI EP core layer creates "pci_ep" entry in configfs */
+> # cd /sys/kernel/config/pci_ep/
+> 
+> /*
+>  * This is the 1st step in creating an endpoint function. This
+>  * creates the endpoint device.
+>  */
+> # mkdir dev
+> 
+> /*
+>  * dev has 2 entries. *epc* for binding a EPC device and *epf*
+>  * is a directory containing all the functions of the endpoint
+>  */
+> # ls dev
+> epc  epf
+> 
+> /*
+>  * This creates the endpoint function device *instance*. The string
+>  * before the .<num> suffix will identify the driver this
+>  * EP function will bind to.
+>  * Just pci_epf_test is also valid. The .<num> suffix is used
+>  * if there are multiple PCI controllers and all of them wants
+>  * to use the same function.
+>  */
+> # mkdir dev/epf/pci_epf_test.0
+> 
+> /*
+>  * When the above command is given, the function device will
+>  * also be bound to a function driver. To find the list of
+>  * function drivers available in the system, use the following
+>  * command. To create a new driver, the following can be referred
+>  * drivers/pci/endpoint/functions/pci-epf-test.c
+>  */
+> # ls /sys/bus/pci-epf/drivers
+> pci_epf_test
+> 
+> /* Now configure the endpoint function */
+> /* These are the fields that can be configured */
+> # ls dev/epf/pci_epf_test.0/
+> baseclass_code    function          progif_code       subsys_id
+> cache_line_size   interrupt_pin     revid             subsys_vendor_id
+> deviceid          msi_interrupts    subclass_code     vendorid
+> 
+> /* The function driver will populate these fields with default values */
+> # cat dev/epf/pci_epf_test.0/vendorid 
+> 0xffff
+> 
+> # cat dev/epf/pci_epf_test.0/interrupt_pin
+> 0x0001
+> 
+> /* The user can configure any of these fields */
+> # echo 0x104c > dev/epf/pci_epf_test.0/vendorid
+> # echo 16 > dev/epf/pci_epf_test.0/msi_interrupts
+> 
+> /*
+>  * Next is binding this function driver to the controller driver. In
+>  * order to find the possible controller drivers that this function
+>  * driver can be bound to, the following sysfs entry can be used
+>  */
+> # ls /sys/class/pci_epc/
+> 51000000.pci
+> 
+> /* Now bind the function driver to the controller driver */
+> # echo "51000000.pcie_ep" > epc
+> [  494.743487] dra7-pcie 51000000.pcie: no free inbound window
+> [  494.749367] pci_epf_test pci_epf_test.0: failed to set BAR4
+> [  494.755238] dra7-pcie 51000000.pcie: no free inbound window
+> [  494.761451] pci_epf_test pci_epf_test.0: failed to set BAR5
+> 
+> /*
+>  * the above error messages are due to non availability of free
+>  * inbound windows. So the function drivers in dra7xx can use
+>  * only 4 (BAR0..BAR3) BARs
+>  */
+> 
+> /****** PCI endpoint is configured ******/
+> 
+> ON THE HOST SIDE:
+> *****************
+> # ./pcitest.sh 
+> BAR tests
+> 
+> BAR0:           OKAY
+> BAR1:           OKAY
+> BAR2:           OKAY
+> BAR3:           OKAY
+> BAR4:           NOT OKAY
+> BAR5:           NOT OKAY
+> 
+> Interrupt tests
+> 
+> LEGACY IRQ:     NOT OKAY
+> MSI1:           OKAY
+> MSI2:           OKAY
+> MSI3:           OKAY
+> MSI4:           OKAY
+> MSI5:           OKAY
+> MSI6:           OKAY
+> MSI7:           OKAY
+> MSI8:           OKAY
+> MSI9:           OKAY
+> MSI10:          OKAY
+> MSI11:          OKAY
+> MSI12:          OKAY
+> MSI13:          OKAY
+> MSI14:          OKAY
+> MSI15:          OKAY
+> MSI16:          OKAY
+> MSI17:          NOT OKAY
+> MSI18:          NOT OKAY
+> MSI19:          NOT OKAY
+> MSI20:          NOT OKAY
+> MSI21:          NOT OKAY
+> MSI22:          NOT OKAY
+> MSI23:          NOT OKAY
+> MSI24:          NOT OKAY
+> MSI25:          NOT OKAY
+> MSI26:          NOT OKAY
+> MSI27:          NOT OKAY
+> MSI28:          NOT OKAY
+> MSI29:          NOT OKAY
+> MSI30:          NOT OKAY
+> MSI31:          NOT OKAY
+> MSI32:          NOT OKAY
+> 
+> Read Tests
+> 
+> READ (      1 bytes):           OKAY
+> READ (   1024 bytes):           OKAY
+> READ (   1025 bytes):           OKAY
+> READ (1024000 bytes):           OKAY
+> READ (1024001 bytes):           OKAY
+> 
+> Write Tests
+> 
+> WRITE (      1 bytes):          OKAY
+> WRITE (   1024 bytes):          OKAY
+> WRITE (   1025 bytes):          OKAY
+> WRITE (1024000 bytes):          OKAY
+> WRITE (1024001 bytes):          OKAY
+> 
+> Copy Tests
+> 
+> COPY (      1 bytes):           OKAY
+> COPY (   1024 bytes):           OKAY
+> COPY (   1025 bytes):           OKAY
+> COPY (1024000 bytes):           OKAY
+> COPY (1024001 bytes):           OKAY
+> 
+> Kishon Vijay Abraham I (37):
+>   PCI: dwc: dra7xx: Group all host related setup in add_pcie_port
+>   PCI: dwc: designware: Add new *ops* for cpu addr fixup
+>   PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
+>   PCI: dwc: designware: Move the register defines to designware header
+>     file
+>   PCI: dwc: Add platform_set_drvdata
+>   PCI: dwc: Rename cfg_read/cfg_write to read/write
+>   PCI: dwc: designware: Get device pointer at the start of
+>     dw_pcie_host_init
+>   PCI: dwc: Split *struct pcie_port* into host only and core structures
+>   PCI: dwc: designware: Parse *num-lanes* property in dw_pcie_setup_rc
+>   PCI: dwc: designware: Fix style errors in pcie-designware.c
+>   PCI: dwc: Split pcie-designware.c into host and core      files
+>   PCI: dwc: Create a new config symbol to enable pci dwc host
+>   PCI: dwc: Remove dependency of designware to CONFIG_PCI
+>   PCI: endpoint: Add EP core layer to enable EP controller and EP
+>     functions
+>   Documentation: PCI: Guide to use PCI Endpoint Core Layer
+>   PCI: endpoint: Introduce configfs entry for configuring EP functions
+>   Documentation: PCI: Guide to use pci endpoint configfs
+>   Documentation: PCI: Add specification for the *pci test* function
+>     device
+>   PCI: endpoint: functions: Add an EP function to test PCI
+>   Documentation: PCI: Add binding documentation for pci-test endpoint
+>     function
+>   PCI: dwc: Modify dbi accessors to take dbi_base as argument
+>   PCI: dwc: Modify dbi accessors to access data of 4/2/1 bytes
+>   PCI: dwc: Add *ops* to start and stop pcie link
+>   PCI: dwc: designware: Add EP mode support
+>   dt-bindings: PCI: Add dt bindings for pci designware EP mode
+>   PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled
+>     independently
+>   PCI: dwc: dra7xx: Add EP mode support
+>   dt-bindings: PCI: dra7xx: Add dt bindings for pci dra7xx EP mode
+>   PCI: dwc: dra7xx: Workaround for errata id i870
+>   dt-bindings: PCI: dra7xx: Add dt bindings to enable legacy mode
+>   misc: Add host side pci driver for pci test function device
+>   Documentation: misc-devices: Add Documentation for pci-endpoint-test
+>     driver
+>   tools: PCI: Add a userspace tool to test PCI endpoint
+>   tools: PCI: Add sample test script to invoke pcitest
+>   MAINTAINERS: add PCI EP maintainer
+>   ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to
+>     SW_WKUP
+>   ARM: dts: DRA7: Add pcie1 dt node for EP mode
+> 
+>  Documentation/PCI/00-INDEX                         |    8 +
+>  .../PCI/endpoint/function/binding/pci-test.txt     |   17 +
+>  Documentation/PCI/endpoint/pci-endpoint-cfs.txt    |   84 ++
+>  Documentation/PCI/endpoint/pci-endpoint.txt        |  190 +++++
+>  Documentation/PCI/endpoint/pci-test-function.txt   |   66 ++
+>  .../devicetree/bindings/pci/designware-pcie.txt    |   26 +-
+>  Documentation/devicetree/bindings/pci/ti-pci.txt   |   41 +-
+>  Documentation/misc-devices/pci-endpoint-test.txt   |   35 +
+>  MAINTAINERS                                        |    9 +
+>  arch/arm/boot/dts/am572x-idk.dts                   |    7 +-
+>  arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi    |    7 +-
+>  arch/arm/boot/dts/dra7-evm.dts                     |    4 +
+>  arch/arm/boot/dts/dra7.dtsi                        |   22 +-
+>  arch/arm/boot/dts/dra72-evm-common.dtsi            |    4 +
+>  arch/arm/mach-omap2/clockdomains7xx_data.c         |    2 +-
+>  drivers/Makefile                                   |    5 +
+>  drivers/misc/Kconfig                               |    7 +
+>  drivers/misc/Makefile                              |    1 +
+>  drivers/misc/pci_endpoint_test.c                   |  533 ++++++++++++
+>  drivers/pci/Kconfig                                |    1 +
+>  drivers/pci/Makefile                               |    3 -
+>  drivers/pci/dwc/Kconfig                            |   73 +-
+>  drivers/pci/dwc/Makefile                           |    6 +-
+>  drivers/pci/dwc/pci-dra7xx.c                       |  372 +++++++--
+>  drivers/pci/dwc/pci-exynos.c                       |   83 +-
+>  drivers/pci/dwc/pci-imx6.c                         |  142 ++--
+>  drivers/pci/dwc/pci-keystone-dw.c                  |   91 +-
+>  drivers/pci/dwc/pci-keystone.c                     |   56 +-
+>  drivers/pci/dwc/pci-keystone.h                     |    4 +-
+>  drivers/pci/dwc/pci-layerscape.c                   |   93 ++-
+>  drivers/pci/dwc/pcie-armada8k.c                    |   92 ++-
+>  drivers/pci/dwc/pcie-artpec6.c                     |   51 +-
+>  drivers/pci/dwc/pcie-designware-ep.c               |  342 ++++++++
+>  drivers/pci/dwc/pcie-designware-host.c             |  620 ++++++++++++++
+>  drivers/pci/dwc/pcie-designware-plat.c             |   29 +-
+>  drivers/pci/dwc/pcie-designware.c                  |  868 ++++----------------
+>  drivers/pci/dwc/pcie-designware.h                  |  254 +++++-
+>  drivers/pci/dwc/pcie-hisi.c                        |   60 +-
+>  drivers/pci/dwc/pcie-qcom.c                        |   72 +-
+>  drivers/pci/dwc/pcie-spear13xx.c                   |   85 +-
+>  drivers/pci/endpoint/Kconfig                       |   25 +
+>  drivers/pci/endpoint/Makefile                      |    7 +
+>  drivers/pci/endpoint/functions/Kconfig             |   12 +
+>  drivers/pci/endpoint/functions/Makefile            |    5 +
+>  drivers/pci/endpoint/functions/pci-epf-test.c      |  513 ++++++++++++
+>  drivers/pci/endpoint/pci-ep-cfs.c                  |  427 ++++++++++
+>  drivers/pci/endpoint/pci-epc-core.c                |  548 ++++++++++++
+>  drivers/pci/endpoint/pci-epc-mem.c                 |  143 ++++
+>  drivers/pci/endpoint/pci-epf-core.c                |  347 ++++++++
+>  include/linux/mod_devicetable.h                    |   10 +
+>  include/linux/pci-epc.h                            |  141 ++++
+>  include/linux/pci-epf.h                            |  160 ++++
+>  include/uapi/linux/Kbuild                          |    1 +
+>  include/uapi/linux/pcitest.h                       |   19 +
+>  tools/pci/pcitest.c                                |  186 +++++
+>  tools/pci/pcitest.sh                               |   56 ++
+>  56 files changed, 5880 insertions(+), 1185 deletions(-)
+>  create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
+>  create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+>  create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
+>  create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
+>  create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
+>  create mode 100644 drivers/misc/pci_endpoint_test.c
+>  create mode 100644 drivers/pci/dwc/pcie-designware-ep.c
+>  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
+>  create mode 100644 drivers/pci/endpoint/Kconfig
+>  create mode 100644 drivers/pci/endpoint/Makefile
+>  create mode 100644 drivers/pci/endpoint/functions/Kconfig
+>  create mode 100644 drivers/pci/endpoint/functions/Makefile
+>  create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
+>  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+>  create mode 100644 drivers/pci/endpoint/pci-epc-core.c
+>  create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
+>  create mode 100644 drivers/pci/endpoint/pci-epf-core.c
+>  create mode 100644 include/linux/pci-epc.h
+>  create mode 100644 include/linux/pci-epf.h
+>  create mode 100644 include/uapi/linux/pcitest.h
+>  create mode 100644 tools/pci/pcitest.c
+>  create mode 100644 tools/pci/pcitest.sh
+> 
 
 _______________________________________________
 linux-arm-kernel mailing list
