@@ -1,45 +1,69 @@
-Return-Path: <SRS0=k/9h=2J=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=k/9h=2J=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 28 Feb 2017 18:20:04 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Emil Velikov <emil.l.velikov@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-	Stefan Berger <stefanb@linux.vnet.ibm.com>,
-	Wei Zhang <wzhang@fb.com>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170228172004.GB11127@kroah.com>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170228150920.GB12481@bhelgaas-glaptop.roam.corp.google.com>
- <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/3] PCI: imx6: Allow probe deferal by reset GPIO
+Date: Wed,  1 Feb 2017 08:55:58 -0800
+Message-Id: <20170201165559.22436-3-andrew.smirnov@gmail.com>
+In-Reply-To: <20170201165559.22436-1-andrew.smirnov@gmail.com>
+References: <20170201165559.22436-1-andrew.smirnov@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2017 at 10:11:56AM -0700, Logan Gunthorpe wrote:
-> In any case, I also wish we could have had this discussion 3 months ago
-> when we posted the RFC and not when I have people pushing to get this
-> merged.
+Some designs implement reset GPIO via a GPIO expander connected to a
+peripheral bus. One such example would be i.MX7 Sabre board where said
+GPIO is provided by SPI shift register connected to a bitbanged SPI
+bus. In order to support such designs allow reset GPIO request to defer
+probing of the driver.
 
-Relax, there is no rush here, no deadlines, etc.  Moving the files to a
-different directly takes all of 5 minutes, max.
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-mellow out dude,
-
-greg k-h
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 50a1291..3ef8093 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -611,7 +611,7 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 	return 0;
+ }
+ 
+-static int __init imx6_pcie_probe(struct platform_device *pdev)
++static int imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct imx6_pcie *imx6_pcie;
+@@ -653,6 +653,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 			dev_err(dev, "unable to get reset gpio\n");
+ 			return ret;
+ 		}
++	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
++		return imx6_pcie->reset_gpio;
+ 	}
+ 
+ 	/* Fetch clocks */
+@@ -746,11 +748,12 @@ static struct platform_driver imx6_pcie_driver = {
+ 		.name	= "imx6q-pcie",
+ 		.of_match_table = imx6_pcie_of_match,
+ 	},
++	.probe    = imx6_pcie_probe,
+ 	.shutdown = imx6_pcie_shutdown,
+ };
+ 
+ static int __init imx6_pcie_init(void)
+ {
+-	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
++	return platform_driver_register(&imx6_pcie_driver);
+ }
+ device_initcall(imx6_pcie_init);
+-- 
+2.9.3
