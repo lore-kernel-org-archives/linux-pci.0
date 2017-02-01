@@ -1,164 +1,121 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 15 Feb 2017 15:03:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, krzk@kernel.org,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
-        pankaj.dubey@samsung.com, kishon@ti.com,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        vivek.gautam@codeaurora.org, robh+dt@kernel.org
-Subject: Re: [PATCH V3 4/4] PCI: exynos: support the using PHY generic
- framework
-Message-ID: <20170215210357.GA13006@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170213082613.19628-1-jh80.chung@samsung.com>
- <CGME20170213082616epcas5p2a20cca498e9ddde7c5d3f7664fb8606e@epcas5p2.samsung.com>
- <20170213082613.19628-5-jh80.chung@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170213082613.19628-5-jh80.chung@samsung.com>
+In-Reply-To: <20170130204106.31891.59164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170130203822.31891.22461.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170130204106.31891.59164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Andreas Boll <andreas.boll.dev@gmail.com>
+Date: Wed, 1 Feb 2017 16:45:42 +0100
+Message-ID: <CACiKqBfECOAsBHNqkkO84sZrjJ1itv5chOz4ZAu2jwQvBEyacg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] drm/radeon: make MacBook Pro d3_delay quirk more generic
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org,
+        Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 05:26:13PM +0900, Jaehoon Chung wrote:
-> Switch the pci-exynos driver to generic PHY framework. At the same time
-> backward compatibility is preserved: Warning will be printed for old
-> DTB.
-> 
-> Refer to the binding file:
-> - Documentation/devictree/bindings/pci/samsung,exynos5440-pcie.txt
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-> Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
+2017-01-30 21:41 GMT+01:00 Bjorn Helgaas <bhelgaas@google.com>:
+> The PCI Power Management Spec, r1.2, sec 5.6.1, requires a 10 millisecond
+> delay when powering on a device, i.e., transitioning from state D3hot to
+> D0.
+>
+> Apparently some devices require more time, and d1f9809ed131 ("drm/radeon:
+> add quirk for d3 delay during switcheroo poweron for apple macbooks") added
+> an additional delay for the Radeon device in a MacBook Pro.  4807c5a8a0c8
+> ("drm/radeon: add a PX quirk list") made the affected device more explicit.
+>
+> Add a generic PCI quirk to increase the d3_delay.  This means we will use
+> the additional delay for *all* wakeups from D3, not just those initiated by
+> radeon_switcheroo_set_state().
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Maarten Lankhorst <maarten.lankhorst@canonical.com>
 > ---
-> Changelog on V3:
-> - Changes the commit-message
-> - Fixes the merge conflict
-> 
-> Changelog on V2:
-> - This patch is split from previous PATCH[1/4]
-> - Maintain the backward compatibility
-> - Adds 'using_phy' for cheching whether phy framework is used or not
-> - Adds 'DEPRECATED' message for old dt-binding way
-> 
->  drivers/pci/host/pci-exynos.c | 54 +++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 50 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 758906b..f6a8b6e 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -21,6 +21,7 @@
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/phy/phy.h>
->  #include <linux/resource.h>
->  #include <linux/signal.h>
->  #include <linux/types.h>
-> @@ -110,6 +111,10 @@ struct exynos_pcie {
->  	struct exynos_pcie_clk_res	*clk_res;
->  	const struct exynos_pcie_ops	*ops;
->  	int				reset_gpio;
-> +
-> +	/* For Generic PHY Framework */
-> +	bool				using_phy;
-> +	struct phy			*phy;
+>  drivers/gpu/drm/radeon/radeon_device.c |   12 ------------
+>  drivers/pci/quirks.c                   |   13 +++++++++++++
+>  2 files changed, 13 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
+> index 8a1df2a1afbd..8b8fd981cae5 100644
+> --- a/drivers/gpu/drm/radeon/radeon_device.c
+> +++ b/drivers/gpu/drm/radeon/radeon_device.c
+> @@ -113,7 +113,6 @@ static inline bool radeon_is_atpx_hybrid(void) { return false; }
+>  #endif
+>
+>  #define RADEON_PX_QUIRK_DISABLE_PX  (1 << 0)
+> -#define RADEON_PX_QUIRK_LONG_WAKEUP (1 << 1)
+>
+>  struct radeon_px_quirk {
+>         u32 chip_vendor;
+> @@ -136,9 +135,6 @@ static struct radeon_px_quirk radeon_px_quirk_list[] = {
+>          * https://bugzilla.kernel.org/show_bug.cgi?id=51381
+>          */
+>         { PCI_VENDOR_ID_ATI, 0x6840, 0x1043, 0x2122, RADEON_PX_QUIRK_DISABLE_PX },
+> -       /* macbook pro 8.2 */
+> -       { PCI_VENDOR_ID_ATI, 0x6741, PCI_VENDOR_ID_APPLE, 0x00e2, RADEON_PX_QUIRK_LONG_WAKEUP },
+
+Do you intentionally removed the following line?
+> -       { 0, 0, 0, 0, 0 },
+
 >  };
->  
->  struct exynos_pcie_ops {
-> @@ -126,6 +131,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
->  	struct resource *res;
->  	struct device *dev = ep->pp.dev;
->  
-> +	/* If using the PHY framework, doesn't need to get other resource */
-> +	if (ep->using_phy)
-> +		return 0;
+>
+>  bool radeon_is_px(struct drm_device *dev)
+> @@ -1241,25 +1237,17 @@ static void radeon_check_arguments(struct radeon_device *rdev)
+>  static void radeon_switcheroo_set_state(struct pci_dev *pdev, enum vga_switcheroo_state state)
+>  {
+>         struct drm_device *dev = pci_get_drvdata(pdev);
+> -       struct radeon_device *rdev = dev->dev_private;
+>
+>         if (radeon_is_px(dev) && state == VGA_SWITCHEROO_OFF)
+>                 return;
+>
+>         if (state == VGA_SWITCHEROO_ON) {
+> -               unsigned d3_delay = dev->pdev->d3_delay;
+> -
+>                 printk(KERN_INFO "radeon: switched on\n");
+>                 /* don't suspend or resume card normally */
+>                 dev->switch_power_state = DRM_SWITCH_POWER_CHANGING;
+>
+> -               if (d3_delay < 20 && (rdev->px_quirk_flags & RADEON_PX_QUIRK_LONG_WAKEUP))
+> -                       dev->pdev->d3_delay = 20;
+> -
+>                 radeon_resume_kms(dev, true, true);
+>
+> -               dev->pdev->d3_delay = d3_delay;
+> -
+>                 dev->switch_power_state = DRM_SWITCH_POWER_ON;
+>                 drm_kms_helper_poll_enable(dev);
+>         } else {
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 1800befa8b8b..512d7a875d62 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1683,6 +1683,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,     0x2609, quirk_intel_pcie_pm);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,   0x260a, quirk_intel_pcie_pm);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,   0x260b, quirk_intel_pcie_pm);
+>
+> +static void quirk_radeon_pm(struct pci_dev *dev)
+> +{
+> +       if (dev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
+> +           dev->subsystem_device == 0x00e2) {
+> +               if (dev->d3_delay < 20) {
+> +                       dev->d3_delay = 20;
+> +                       dev_info(&dev->dev, "extending delay after power-on from D3 to %d msec\n",
+> +                                dev->d3_delay);
+> +               }
+> +       }
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
 > +
->  	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
->  	if (!ep->mem_res)
->  		return -ENOMEM;
-> @@ -396,10 +405,28 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
->  	}
->  
->  	exynos_pcie_assert_core_reset(ep);
-> -	exynos_pcie_assert_phy_reset(ep);
-> -	exynos_pcie_deassert_phy_reset(ep);
-> -	exynos_pcie_power_on_phy(ep);
-> -	exynos_pcie_init_phy(ep);
-> +
-> +	if (ep->using_phy) {
-> +		phy_reset(ep->phy);
-> +
-> +		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
-> +				PCIE_PWR_RESET);
-> +
-> +		phy_power_on(ep->phy);
-> +		phy_init(ep->phy);
-> +	} else {
-> +		exynos_pcie_assert_phy_reset(ep);
-> +		exynos_pcie_deassert_phy_reset(ep);
-> +		exynos_pcie_power_on_phy(ep);
-> +		exynos_pcie_init_phy(ep);
-> +
-> +		/* pulse for common reset */
-> +		exynos_pcie_writel(ep->mem_res->block_base, 1,
-> +					PCIE_PHY_COMMON_RESET);
-> +		udelay(500);
-> +		exynos_pcie_writel(ep->mem_res->block_base, 0,
-> +					PCIE_PHY_COMMON_RESET);
-> +	}
->  
->  	/* pulse for common reset */
->  	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_COMMON_RESET);
-> @@ -418,6 +445,11 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
->  	if (!dw_pcie_wait_for_link(pp))
->  		return 0;
->  
-> +	if (ep->using_phy) {
-> +		phy_power_off(ep->phy);
-> +		return -ETIMEDOUT;
-> +	}
-> +
->  	while (exynos_pcie_readl(ep->mem_res->phy_base,
->  				PCIE_PHY_PLL_LOCKED) == 0) {
->  		val = exynos_pcie_readl(ep->mem_res->block_base,
-> @@ -624,6 +656,17 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
->  
->  	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
->  
-> +	/* Assume that controller doesn't use the PHY framework */
-> +	ep->using_phy = false;
-> +
-> +	ep->phy = devm_of_phy_get(dev, np, NULL);
-> +	if (IS_ERR(ep->phy)) {
-> +		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
-> +			return PTR_ERR(ep->phy);
-> +		dev_warn(dev, "Use the 'phy' property. Current DT of pci-exynos was deprecated!!\n");
-> +	} else
-> +		ep->using_phy = true;
-> +
->  	if (ep->ops && ep->ops->get_mem_resources) {
->  		ret = ep->ops->get_mem_resources(pdev, ep);
->  		if (ret)
-> @@ -647,6 +690,9 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
->  	return 0;
->  
->  fail_probe:
-> +	if (ep->using_phy)
-> +		phy_exit(ep->phy);
-> +
->  	if (ep->ops && ep->ops->deinit_clk_resources)
->  		ep->ops->deinit_clk_resources(ep);
->  	return ret;
-> -- 
-> 2.10.2
-> 
+>  #ifdef CONFIG_X86_IO_APIC
+>  /*
+>   * Boot interrupts on some chipsets cannot be turned off. For these chipsets,
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
