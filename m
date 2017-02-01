@@ -1,41 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:50920 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751540AbdBGQ0t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2017 11:26:49 -0500
-Date: Tue, 07 Feb 2017 11:26:45 -0500 (EST)
-Message-Id: <20170207.112645.492478528794181275.davem@davemloft.net>
-To: David.Laight@ACULAB.COM
-Cc: alexander.duyck@gmail.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: Disabling msix interrupts
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB027DA37@AcuExch.aculab.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DB027CB6A@AcuExch.aculab.com>
-        <20170206.141449.371774071782410941.davem@davemloft.net>
-        <063D6719AE5E284EB5DD2968C1650D6DB027DA37@AcuExch.aculab.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <35aab5e1-c86d-efbb-f0c8-288469aeb52f@deltatee.com>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com> <CACvgo50ruxTOfhGF=bV+xWVq+5UZ_xWeoTqxA+SzSwFNCVaS8g@mail.gmail.com>
+ <35aab5e1-c86d-efbb-f0c8-288469aeb52f@deltatee.com>
+From: Emil Velikov <emil.l.velikov@gmail.com>
+Date: Wed, 1 Feb 2017 12:10:59 +0000
+Message-ID: <CACvgo520=CXUHNwd75Er0zPCiEQVfOu0h=eeHNDQ-uQn66kAJA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Laight <David.Laight@ACULAB.COM>
-Date: Tue, 7 Feb 2017 09:55:47 +0000
+On 31 January 2017 at 23:13, Logan Gunthorpe <logang@deltatee.com> wrote:
+> Hi Emil,
+>
+> Thanks for the feedback.
+>
+> On 31/01/17 01:48 PM, Emil Velikov wrote:
+>>> +struct switchtec_ioctl_fw_info {
+>>> +       __u32 flash_length;
+>>> +
+>>> +       struct {
+>>> +               __u32 address;
+>>> +               __u32 length;
+>>> +               __u32 active;
+>> Something to keep in mind, not sure how likely it is here:
+>> If you embed structs (partition in this case), you will not be able to
+>> extend it [the embedded one] it in the future without the risk of ABI
+>> breakage.
+>
+> Based on this feedback, I'll rework the fw_info IOCTL so the user only
+> requests one partition at a time. This will get rid of the embedded
+> struct and any concerns about size changes. I was originally trying to
+> make the ioctl RO to make it simpler but that maybe isn't the case.
+>
+You can keep it roughly as-is if you're ~reasonably certain one won't
+change it in the future.
 
-> From: David Miller
->> Sent: 06 February 2017 19:15
->> From: David Laight <David.Laight@ACULAB.COM>
->> Date: Mon, 6 Feb 2017 17:23:54 +0000
->> 
->> > Although the 'store buffer' on the sparc cpus I used to use would
->> > let reads overtake writes. So you did have to read back the address
->> > of the last write - not sure about modern sparc cpus.
->> 
->> Never would any sparc cpu do so when any of the operations involved
->> were to "side effect" locations, as PCI config space is.
-> 
-> I guess they used non-zero ASI, and that forced the flush??
-> Normal uncached memory reads would overtake writes.
-> (These were SuperSparc (Viking)).
+>> then you need a driver feature flag or revision number somewhere.
+>
+> We don't have this specifically. A new version ioctl could be added
+> later when and if changes occur; or the userspace code could easily read
+> the module version through sysfs and we could increment that with ioctl
+> changes.
+>
+Some teams frown upon adding new IOCTL(s) where existing ones can be
+made backward/forward compatible.
+I'm not fully aware of the general direction/consensus on the topic,
+so it might be a minority.
 
-On sun4m it was controlled by bits in the physical address.
+On the other hand, reading through sysfs for module version in order
+to use IOCTL A or B sounds quite hacky. Do you have an example where
+this is used or pointed out as good approach ?
+
+>> A couple more generic suggestions, which I may have noticed while
+>> skimming through:
+>>  - please ensure that all the input is properly sanitised, before,
+>> going into the actual implementation
+>> Afaict having the separate step/separation helps clarity and reduces
+>> chances of you/others getting it wrong down the line.
+>
+> The inputs are indeed properly checked in the code. Most of the ioctls
+> that take inputs are so simple it's hard to separate the two steps. ie.
+> Verifying that the input is right pretty much gives you the answer you
+> need to send back to userspace.
+>
+>>  - user provided storage must not be changed when the ioctl fails.
+>
+> This should already be true.
+>
+You're spot on [for both points]. I must have imagined something.
+
+>> Additionally you want to provide a reference to open-source userspace
+>> [alongside acknowledgement of the maintainers/co-developers about the
+>> design] which makes use of said IOCTL(s). But please, do _not_ merge
+>> userspace code before the kernel work has landed.
+>
+> I'm having trouble understanding what you're asking here. We provided a
+> reference to the userspace code in the commit message. Currently the
+> userspace code is completely useless without the kernel module and it is
+> entirely independent of other projects. I'm also the only committer so
+> far on the userspace code. So I assume this only applies if we were
+> merging changes to other existing code?
+>
+Yes, I'm blind - you have links to the userspace.
+
+Afaict the idea is to not ship/bundle/release userspace until kernel
+parts are in.
+The "do not commit the changes" is implied as [very rarely] distros
+package from "random" git checkouts. Leading to all sorts of fun when
+it is mismatched wrt the kernel parts. Likelihood of doing that here
+is virtually none here, so this is a JFYI inspired by some past
+experiences.
+
+>> Hope that provided you with sufficient good points wrt IOCTL design.
+>
+> Thanks, this was very helpful.
+>
+Glad to hear. Then again you already had most of the things nicely done, imho.
+
+-Emil
