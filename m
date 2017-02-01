@@ -1,13 +1,25 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 05/20] ARM: implement pci_remap_cfgspace() interface
-Date: Mon, 27 Feb 2017 15:14:16 +0000
-Message-Id: <20170227151436.18698-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Alexander Graf <agraf@suse.de>, John Garry <john.garry@huawei.com>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, "catalin.marinas@arm.com"
+ <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
+ <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "rafael@kernel.org" <rafael@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "brian.starkey@arm.com" <brian.starkey@arm.com>,
+ "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
+Date: Wed, 1 Feb 2017 12:29:39 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9FC04A@lhreml507-mbx>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
+ <5dc0dc9c-124e-398f-a3b2-40059268e859@suse.de>
+ <6d5523be-1841-18b9-9b83-6f7e591ed66b@huawei.com>
+ <1a1f1e70-b6e7-f3c6-2b86-348b3d28edfe@suse.de>
+In-Reply-To: <1a1f1e70-b6e7-f3c6-2b86-348b3d28edfe@suse.de>
+MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,98 +27,91 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "kantyzc@163.com" <kantyzc@163.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
-and Posting") define rules for PCI configuration space transactions
-ordering and posting, that state that configuration writes have to
-be non-posted transactions.
+Hi Alex
 
-Current ioremap interface on ARM provides mapping functions that
-provide "bufferable" writes transactions (ie ioremap uses MT_DEVICE
-memory type) aka posted writes, so PCI host controller drivers have
-no arch interface to remap PCI configuration space with memory
-attributes that comply with the PCI specifications for configuration
-space.
+> -----Original Message-----
+> From: Alexander Graf [mailto:agraf@suse.de]
 
-Implement an ARM specific pci_remap_cfgspace() interface that allows to
-map PCI config memory regions with MT_UNCACHED memory type (ie strongly
-ordered - non-posted writes), providing a remap function that complies
-with PCI specifications for config space transactions.
+[...]
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@armlinux.org.uk>
----
- arch/arm/include/asm/io.h | 10 ++++++++++
- arch/arm/mm/ioremap.c     |  7 +++++++
- 2 files changed, 17 insertions(+)
+> >>
+> >> I like the extio idea. That allows us to handle all PIO requests on
+> >> platforms that don't have native PIO support via different routes
+> >> depending on the region they're in. Unfortunately we now we have 2
+> >> frameworks for handling sparse PIO regions: One in extio, one in
+> PCI.
+> >>
+> >> Why don't we just merge the two? Most of the code that has #ifdef
+> >> PCI_IOBASE throughout the code base sounds like an ideal candidate
+> to
+> >> get migrated to extio instead. Then we only have a single framework
+> to
+> >> worry about ...
+> >
+> > To be clear, are you suggesting we merge the functionality from
+> > pci_register_io_range(), pci_pio_to_address(), pci_address_to_pio()
+> into
+> > extio, so extio manages all PIO?
+> 
+> Yes, I guess so.
+> 
+> > And having a single type of node to
+> > register PIO ranges, by amalgamating struct extio_node and io_range
+> (as
+> > Bjorn mentioned)?
+> 
+> I'm not quite sure I follow you here. Basically I think you want a
+> generic "non-x86 PIO" framework that PCI just plugs into.
+> 
+> I don't think that necessarily means you want to statically allocate
+> regions of that PIO space to separate (pseudo-)devices. Instead,
+> everyone shares that space and should be able to fail gracefully if
+> some
+> space is already occupied.
+> 
+> > It would make sense. We would be somewhat decoupling PIO from PCI.
+> 
+> Yes :).
+> 
+> > I think that other architectures, like PPC, and other code would need
+> to
+> > be fixed up to handle this.
+> 
+> I think only PPC, Microblaze and ARM are using this. Grep for
+> PCI_IOBASE. It's not that many.
+> 
+> > We need to consider all the other challenges/obstacles to this.
+> 
+> Well, getting our abstraction levels right to me sounds like it's worth
+> the obstacles.
+> 
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 42871fb..74d1b09 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -187,6 +187,16 @@ static inline void pci_ioremap_set_mem_type(int mem_type) {}
- extern int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr);
- 
- /*
-+ * PCI configuration space mapping function.
-+ *
-+ * PCI specifications does not allow configuration write
-+ * transactions to be posted. Add an arch specific
-+ * pci_remap_cfgspace definition that is implemented
-+ * through strongly ordered memory mappings.
-+ */
-+#define pci_remap_cfgspace pci_remap_cfgspace
-+void __iomem *pci_remap_cfgspace(resource_size_t res_cookie, size_t size);
-+/*
-  * Now, pick up the machine-defined IO definitions
-  */
- #ifdef CONFIG_NEED_MACH_IO_H
-diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
-index ff0eed2..fc91205 100644
---- a/arch/arm/mm/ioremap.c
-+++ b/arch/arm/mm/ioremap.c
-@@ -481,6 +481,13 @@ int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
- 				  __pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte));
- }
- EXPORT_SYMBOL_GPL(pci_ioremap_io);
-+
-+void __iomem *pci_remap_cfgspace(resource_size_t res_cookie, size_t size)
-+{
-+	return arch_ioremap_caller(res_cookie, size, MT_UNCACHED,
-+				   __builtin_return_address(0));
-+}
-+EXPORT_SYMBOL_GPL(pci_remap_cfgspace);
- #endif
- 
- /*
--- 
-2.10.0
+I have had a quick look and I think it should not be too difficult to
+unify the two frameworks.
 
+I'll follow up soon on this thread with a code sketch
+
+Thanks
+Gab
+
+[...]
 
 _______________________________________________
 linux-arm-kernel mailing list
