@@ -1,15 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 17 Feb 2017 09:15:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v2 04/22] Documentation: PCI: Guide to use pci endpoint
- configfs
-Message-ID: <20170217171506.GB15276@infradead.org>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-5-git-send-email-kishon@ti.com>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
+Date: Wed, 01 Feb 2017 12:11:57 +0100
+Message-ID: <2695922.yyinjvNuJK@wuerfel>
+In-Reply-To: <20170128204839.18330-2-linus.walleij@linaro.org>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <20170128204839.18330-2-linus.walleij@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <1487325042-28227-5-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,51 +16,105 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Linus Walleij <linus.walleij@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Janos Laube <janos.dev@gmail.com>, Hans Ulli Kroll <ulli.kroll@googlemail.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm commenting on the configfs layout here instead of the patch with the
-code as the issues are easier to explain that way.  I think the layout
-is a bit confusing and could be cleaner by making use of pre-created
-entries and symlinks.  Here is my suggestion:
+On Saturday, January 28, 2017 9:48:37 PM CET Linus Walleij wrote:
+> +static int gemini_pci_read_config(struct pci_bus *bus, unsigned int fn,
+> +				  int config, int size, u32 *value)
+> +{
+> +	struct gemini_pci *p = bus->sysdata;
+> +	unsigned long irq_flags;
+> +
+> +	spin_lock_irqsave(&p->lock, irq_flags);
+> +
+> +	writel(PCI_CONF_BUS(bus->number) |
+> +			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
+> +			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
+> +			PCI_CONF_WHERE(config) |
+> +			PCI_CONF_ENABLE,
+> +			p->base + PCI_CONFIG);
+> +
+> +	*value = readl(p->base + PCI_DATA);
+> +
+> +	if (size == 1)
+> +		*value = (*value >> (8 * (config & 3))) & 0xFF;
+> +	else if (size == 2)
+> +		*value = (*value >> (8 * (config & 3))) & 0xFFFF;
+> +
+> +	spin_unlock_irqrestore(&p->lock, irq_flags);
 
-/sys/kernel/config/pci_ep/functions/		
-    .. test/					# a directory for each function driver
-       ... user-specified-name1/
-       ... user-specified-name2
-    .. nvme/
-       ... user-specified-name42/		
+The read_config/write_config functions are called under a spinlock,
+no need for another one.
 
-Each directory under /sys/kernel/config/pci_ep/functions/ is owned
-by a function drivers.  Under that function driver's directory you
-can create a directory for each instance of a function driver.  The
-configfs layout is controlled by the function driver.  E.g. your current
-EPF fields would move into the test function driver, while the nvme
-function would expose totally different fields.
+> +	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	p->base = devm_ioremap_resource(dev, regs);
+> +	if (IS_ERR(p->base))
+> +		return PTR_ERR(p->base);
+> +
+> +	ret = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
+> +					       &res, &io_base);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = devm_request_pci_bus_resources(dev, &res);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* No clue what these do */
+> +	pcibios_min_io = 0x100;
+> +	pcibios_min_mem = 0;
 
+Don't touch these
 
-/sys/kernel/config/pci_ep/controllers/
-	... dwc-0/
-	    ... function
-	... dwc-1/
-	    ... function
-	... vhost-0/
-	    ... function
+> +	/* setup I/O space to 1MB size */
+> +	writel(GEMINI_PCI_IOSIZE_1M, p->base + PCI_IOSIZE);
 
-	Here you have a directory for each controller that can be bound
-	to a function.  The directories are pre-created for each
-	controller port that is EP capable.
-	Function is a symlink to the function instance above.
-	Additional parameters might also be present depending on the
-	EPC driver.
+Maybe get the size from the resource instead? Note that pci_remap_iospace
+only registers 64K of I/O space, so you could also use that.
 
+> +	/* setup hostbridge */
+> +	val = readl(p->base + PCI_CTRL);
+> +	val |= PCI_COMMAND_IO;
+> +	val |= PCI_COMMAND_MEMORY;
+> +	val |= PCI_COMMAND_MASTER;
+> +	writel(val, p->base + PCI_CTRL);
+> +
+> +	/* Get the I/O and memory ranges from DT */
+> +	resource_list_for_each_entry(win, &res) {
+> +		switch (resource_type(win->res)) {
+> +		case IORESOURCE_IO:
+> +			io = win->res;
+> +			io->name = "Gemini PCI I/O";
+> +			ret = pci_remap_iospace(io, io_base);
+> +			if (ret) {
+> +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> +					 ret, io);
+> +				continue;
+> +			}
+> +			break;
+> +		case IORESOURCE_MEM:
+> +			mem = win->res;
+> +			mem->name = "Gemini PCI MEM";
+> +			break;
+> +		case IORESOURCE_BUS:
+> +			break;
+> +		default:
+> +			break;
+> +		}
+> +	}
+> +
+> +	bus = pci_scan_root_bus(&pdev->dev, 0, &gemini_pci_ops, p, &res);
+
+Can you try using the new pci_register_host_bridge() API?
+
+	Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
