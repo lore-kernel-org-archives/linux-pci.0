@@ -1,35 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Feb 2017 14:43:31 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Christoph Hellwig <hch@lst.de>
-cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH 1/2] PCI/msi: remove unused function
- pci_msi_create_default_irq_domain
-In-Reply-To: <20170203162705.5182-2-hch@lst.de>
-Message-ID: <alpine.DEB.2.20.1702081441100.3536@nanos>
-References: <20170203162705.5182-1-hch@lst.de> <20170203162705.5182-2-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <festevam@gmail.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/3] i.MX7 PCI support
+Date: Wed,  1 Feb 2017 08:55:56 -0800
+Message-Id: <20170201165559.22436-1-andrew.smirnov@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 3 Feb 2017, Christoph Hellwig wrote:
+Hello, everyone:
 
-No objections, but then we also can remove:
+This is a second iteration of the code that adds PCI-subsystem bits
+necessary for enabling PCI support on i.MX7.
 
-struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
+Changes since v1 (can be found at [version1]):
 
-as there are no arch specific implementations
+	- All GPC related code moved into a separate driver (subject
+          of a different patch)
+	- Removed GPIO probe deferral logging
+	- Fixed section mismatch warning
+	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
+          Herring's request)
 
-along with:
-
-static struct irq_domain *pci_msi_default_domain;
-
-because pci_msi_create_default_irq_domain() is the only place where the
-default domain is ever set.
+[version1] https://lkml.org/lkml/2017/1/19/488
 
 Thanks,
+Andrey Smirnov
 
-	tglx
+Andrey Smirnov (3):
+  PCI: imx6: Fix a typo in error message
+  PCI: imx6: Allow probe deferal by reset GPIO
+  PCI: imx6: Add code to support i.MX7D
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
+ drivers/pci/host/pci-imx6.c                        | 145 ++++++++++++++++-----
+ include/linux/mfd/syscon/imx7-gpc.h                |  18 +++
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ include/linux/mfd/syscon/imx7-src.h                |  18 +++
+ 5 files changed, 161 insertions(+), 30 deletions(-)
+ create mode 100644 include/linux/mfd/syscon/imx7-gpc.h
+ create mode 100644 include/linux/mfd/syscon/imx7-src.h
+
+-- 
+2.9.3
