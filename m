@@ -1,15 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 15 Feb 2017 11:38:50 -0600
+Date: Wed, 1 Feb 2017 09:18:07 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
-Message-ID: <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
- <20170207155027.7734-4-andrew.smirnov@gmail.com>
- <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+Message-ID: <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131102830.GA13854@localhost.localdomain>
+ <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131145720.GA14231@localhost.localdomain>
+ <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
+ <20170201125325.GA15805@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
+In-Reply-To: <20170201125325.GA15805@localhost.localdomain>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,97 +21,139 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Andrey Smirnov <andrew.smirnov@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>, yurovsky@gmail.com,
- Lee Jones <lee.jones@linaro.org>, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
+Cc: David.Daney@cavium.com, tn@semihalf.com, linux-kernel@vger.kernel.org,
+ stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 11:17:00AM -0600, Rob Herring wrote:
-> On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
-> > Add various bits of code needed to support i.MX7D variant of the IP.
+On Wed, Feb 01, 2017 at 04:53:25AM -0800, Vadim Lomovtsev wrote:
+> On Tue, Jan 31, 2017 at 02:31:09PM -0600, Bjorn Helgaas wrote:
+> > On Tue, Jan 31, 2017 at 06:57:20AM -0800, Vadim Lomovtsev wrote:
+> > > On Tue, Jan 31, 2017 at 08:25:25AM -0600, Bjorn Helgaas wrote:
+> > > > On Tue, Jan 31, 2017 at 02:28:30AM -0800, Vadim Lomovtsev wrote:
+> > > > > Hi Bjorn,
+> > > > > 
+> > > > > On Mon, Jan 30, 2017 at 03:12:37PM -0600, Bjorn Helgaas wrote:
+> > > > > > Hi Vadim,
+> > > > > > 
+> > > > > > On Mon, Jan 30, 2017 at 08:25:52AM -0800, Vadim Lomovtsev wrote:
+> > > > > > > This patch is to address PEM initialization issue
+> > > > > > > which causes network issues.
+> > > > > > > 
+> > > > > > > It is necessary to search for _HID:PNP0A08 while requesting
+> > > > > > > PEM resources via ACPI instead of "THRX0002".
+> > > > > > > 
+> > > > > > > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > > > > > > ---
+> > > > > > >  drivers/pci/host/pci-thunder-pem.c | 2 +-
+> > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > > 
+> > > > > > > diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> > > > > > > index af722eb..aec30b8 100644
+> > > > > > > --- a/drivers/pci/host/pci-thunder-pem.c
+> > > > > > > +++ b/drivers/pci/host/pci-thunder-pem.c
+> > > > > > > @@ -331,7 +331,7 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+> > > > > > >  	if (!res_pem)
+> > > > > > >  		return -ENOMEM;
+> > > > > > >  
+> > > > > > > -	ret = acpi_get_rc_resources(dev, "THRX0002", root->segment, res_pem);
+> > > > > > > +	ret = acpi_get_rc_resources(dev, "PNP0A08", root->segment, res_pem);
+> > > > > > 
+> > > > > > This doesn't smell right: PNP0A08 is the generic ACPI ID.  There's no
+> > > > > > guarantee that if we find a PNP0A08 device, it is a ThunderX device.
+> > > > > > 
+> > > > > > I think the only way to call thunder_pem_acpi_init() is via an MCFG
+> > > > > > quirk that mentions thunder_pem_ecam_ops, which means we only call it
+> > > > > > if we find an MCFG with "CAVIUM" "THUNDERX" OEM and table IDs, so it's
+> > > > > > probably safe in that sense.
+> > > > > 
+> > > > > Agree, it is not the best solution.
+> > > > > We will implement such approach and send for review. 
+> > > > > 
+> > > > > > 
+> > > > > > But it's an abuse of the ACPI _HID model.  If you match a device using
+> > > > > > PNP0A08, all you can assume about it is that it uses the generic
+> > > > > > PNP0A08 programming model, and I don't think that includes "the first
+> > > > > > memory resource in _CRS contains ECAM space and MSI-X tables."
+> > > > > > 
+> > > > > > I expect this is a teething issue because you have firmware in the
+> > > > > > field that uses PNP0A08 and it's not feasible to update it.  If that's
+> > > > > > the case, the changelog should have details about it and we should
+> > > > > > have a comment in the code, because I don't think this is the model we
+> > > > > > want to end up with in future releases.
+> > > > > 
+> > > > > It could become so. However, for now I didn't get any reports on that,
+> > > > > (may be I miss something) except some internal emailings.
+> > > > > At my testing HW I was able to see some issues related to acpi-PEM stuff.
+> > > > > 
+> > > > > Thanks for feed-back, we will prepare another patch or patchset
+> > > > > implementing approach you've highlighted.
+> > > > 
+> > > > The approach I would like best is to search for THRX0002, because then
+> > > > you know you have a ThunderX PEM device, and you can assume
+> > > > device-specific details about its _CRS.
+> > > >
+> > > > But that's what the existing code does, and apparently that doesn't
+> > > > work.  My guess is that you have firmware in the field where the host
+> > > > bridge has only PNP0A08 (and maybe PNP0A03) as device IDs.
+> > > 
+> > > Because there is no such ACPI ID as "THRX0002" registered
+> > > (http://www.uefi.org/acpi_id_list).
 > > 
-> > Cc: yurovsky@gmail.com
-> > Cc: Lucas Stach <l.stach@pengutronix.de>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Cc: Mark Rutland <mark.rutland@arm.com>
-> > Cc: Lee Jones <lee.jones@linaro.org>
-> > Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> > Cc: linux-arm-kernel@lists.infradead.org
-> > Cc: devicetree@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-> > ---
-> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
-> >  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
-> >  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
-> >  3 files changed, 112 insertions(+), 26 deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > index 83aeb1f..11db2ab 100644
-> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
-> >  and thus inherits all the common properties defined in designware-pcie.txt.
-> >  
-> >  Required properties:
-> > -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
-> > +- compatible:
-> > +	- "fsl,imx6q-pcie"
-> > +	- "fsl,imx6sx-pcie",
-> > +	- "fsl,imx6qp-pcie"
-> > +	- "fsl,imx7d-pcie"
-> >  - reg: base address and length of the PCIe controller
-> >  - interrupts: A list of interrupt outputs of the controller. Must contain an
-> >    entry for each entry in the interrupt-names property.
-> > @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
-> >  - clock names: Must include the following additional entries:
-> >  	- "pcie_inbound_axi"
-> >  
-> > +Additional required properties for imx7d-pcie:
-> > +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
+> > To be pedantically correct, I think you want "THRX" registered.  Then
+> > you can manage the "0002" part internally without registering each
+> > individual device.
 > 
-> This domain is just the PHY? Seems like this needs a separate PHY 
-> driver.
-> 
-> > +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
-> > +- reset-names: Must contain the following entires:
-> > +  	       - "pciephy"
-> 
-> And for this too.
-> 
-> > +	       - "apps"
-> > +
-> >  Example:
-> >  
-> >  	pcie@0x01000000 {
-> 
-> [...]
-> 
-> > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
-> >  	u32 val, gpr1, gpr12;
-> >  
-> >  	switch (imx6_pcie->variant) {
-> > +	case IMX7D:
-> > +		reset_control_assert(imx6_pcie->pciephy_reset);
-> > +		reset_control_assert(imx6_pcie->apps_reset);
-> > +		break;
-> >  	case IMX6SX:
-> >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> >  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-> 
-> So the difference with i.MX7D is not really that it has a reset or not, 
-> but some platforms use a reset driver and some do not. The latter should 
-> be fixed.
+> Not sure if it would be registered that way, because (AFAIK)
+> it expected to be string constructed from Vendor ID (not the Product ID) plus
+> four hex digit manged internaly. So we suggest to change it to 177DXXXX
+> which corresponds to Cavium PCI ID https://pci-ids.ucw.cz/pci.ids.
+> It's also possible to use the 3-digit PNP ID, "CAV", to construct these
+> _HID/_CID/_SUB values (http://www.uefi.org/pnp_id_list).
 
-I have this patch queued for v4.11.  Are these things that should be
-fixed first?  If so, I can drop this.
+My point was that you only need to register the prefix ("CAV" or
+"THRX") of the PNP or ACPI ID.  Then you manage the suffixes
+internally.  You as long as you register "CAV" or "THRX", you can
+assign and use "THRX0002" yourself without registering that
+specifically.
+
+> So the FW will be updated accordingly.
+> 
+> For old FW we'll implement fallback scenario gathering resource info
+> via _CRS object (comments will be provided in the code also).
+> 
+> > 
+> > > From the other hand we may gather device resources through
+> > > _CRS (we have acpi_device already set by this moment) but
+> > > we need to be sure that we're running at Cavium ThunderX board then.
+> > > 
+> > > To do that we may add _SUB value (accrodingly to spec) with
+> > > exact ID string (a full PCI ID value "177DA22D" is suggested).
+> > > This will eventually become the main method of finding out
+> > > whether we run on a ThunderX PEM.
+> > 
+> > I don't understand why you would use _SUB.  I think the correct way to
+> > handle this is to use a _HID of "THRX0002" with a _CID of "PNP0A08".
+> > Is there some existing _SUB usage you're using as an example?
+> 
+> Here we were talking about extra quirk to match PEM and ECAM and thus make
+> a decision. This object could also store some vendor-specific IDs.
+> To be honest I didn't see usage in kernel (didn't search), but ACPI Spec
+> provide an example as (p 6.1.9) :
+>   Name (_SUB, "MSFT3000")// Vendor-defined subsystem
+> 
+> However this is still debatable and we probably stick to _HID while
+> implementing additional match functions.
+
+If you want a driver to bind to a specific device, e.g., the ThunderX
+PCI host bridge, the firmware should use a unique _HID in the ACPI
+namespace and the driver should claim that _HID.
+
+It's conceivable that you could use _SUB, but that's needlessly
+different from everything else.
 
 Bjorn
 
