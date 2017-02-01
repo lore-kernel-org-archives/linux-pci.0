@@ -1,19 +1,23 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Feb 2017 14:31:44 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: two small PCI MSI cleanups V2
-Message-ID: <20170210203144.GJ29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170208171744.17100-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170208171744.17100-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:34700 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751076AbdBANls (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2017 08:41:48 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-pci@vger.kernel.org
+Subject: convert the PCIe portdrv to pci_alloc_irq_vectors
+Date: Wed,  1 Feb 2017 14:41:41 +0100
+Message-Id: <1485956503-8194-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2017 at 06:17:42PM +0100, Christoph Hellwig wrote:
-> Now with even more dead code removal thanks to the review from Thomas!
+Hi all,
 
-Both applied with Thomas' acks to pci/msi for v4.11, thanks!
+this series has a small tweak to pci_alloc_irq_vectors and the conversion
+of the PCIe portdrv to use pci_alloc_irq_vectors.  Note that I could not
+actually find a root port that uses MSI-X vectors - mine all either seem
+to have no interrupts at all if they don't offer any interesting services
+or a use a single MSI vector if hotplug capable, so the somewhat hairy
+part of the patch isn't actually tested.  If anyone has a chance to
+test it (or carefully review it) that would be great.
