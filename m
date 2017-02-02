@@ -1,64 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 2/3] PCI: versatile: Configure PCIe MPS settings
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Date: Wed, 08 Feb 2017 16:09:02 -0600
-Message-ID: <20170208220902.8352.12732.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170208215558.8352.90635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170208215558.8352.90635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=CnNO=ZP=verge.net.au=horms@kernel.org>
+Return-Path: <SRS0=CnNO=ZP=verge.net.au=horms@kernel.org>
+Date: Thu, 2 Feb 2017 10:24:44 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: rcar: Check for OF device match early
+Message-ID: <20170202092443.GL21831@verge.net.au>
+References: <20170131151044.14062.85997.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMuHMdWxoMsZAobYSmxeuga1NdMbruss4g-KQjczNeurcn_wkA@mail.gmail.com>
+ <20170131180915.GA16450@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMuHMdUKVsxAHtLBC70EOY5uTcSkMm1qLBUf6mLck6YA=1qaBg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
- Michal Simek <michal.simek@xilinx.com>, Jon Mason <jon.mason@broadcom.com>,
- Ray Jui <ray.jui@broadcom.com>, linux-arm-kernel@lists.infradead.org,
- devel@linuxdriverproject.org, "K. Y. Srinivasan" <kys@microsoft.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMuHMdUKVsxAHtLBC70EOY5uTcSkMm1qLBUf6mLck6YA=1qaBg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Make sure PCIe MPS settings are valid when we enumerate a new hierarchy.
+On Tue, Jan 31, 2017 at 10:43:39PM +0100, Geert Uytterhoeven wrote:
+> Hi Bjorn,
+> 
+> On Tue, Jan 31, 2017 at 7:09 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jan 31, 2017 at 04:33:15PM +0100, Geert Uytterhoeven wrote:
+> >> On Tue, Jan 31, 2017 at 4:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> > A match in the rcar_pcie_of_match[] table is required, so check that first,
+> >> > before we start setting up things that need to be undone if it fails.  No
+> >> > functional change intended.
+> >> >
+> >> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> > ---
+> >> >  drivers/pci/host/pcie-rcar.c |   10 +++++-----
+> >> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> >> > index 0d9b96c3c49d..c91ff0b91be8 100644
+> >> > --- a/drivers/pci/host/pcie-rcar.c
+> >> > +++ b/drivers/pci/host/pcie-rcar.c
+> >> > @@ -1129,6 +1129,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+> >> >         int err;
+> >> >         int (*hw_init_fn)(struct rcar_pcie *);
+> >> >
+> >> > +       of_id = of_match_device(rcar_pcie_of_match, dev);
+> >> > +       if (!of_id || !of_id->data)
+> >> > +               return -EINVAL;
+> >> > +
+> >>
+> >> As this driver is DT-only, none of the above can fail, and you could just do
+> >>
+> >>        hw_init_fn = of_device_get_match_data(dev);
+> >>
+> >> instead, getting rid of of_id completely.
+> >
+> > Oh, I really like that, thanks for pointing that out!
+> >
+> > I was about to say that I personally would not check of_id->data for NULL,
+> > because it is only NULL if somebody adds an entry to rcar_pcie_of_match
+> > without a .data member.  In that case, I'd rather take the NULL pointer
+> > dereference than return -EINVAL because it's too easy to ignore the
+> > -EINVAL.
+> >
+> > What do you think about the following?
+> 
+> Thanks, looks fine!
+> 
+> > commit 25bd3aa972ee32f04590aa68b2b785dce36b036a
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Tue Jan 31 08:45:49 2017 -0600
+> >
+> >     PCI: rcar: Use of_device_get_match_data() to simplify probe
+> >
+> >     This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
+> >     match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
+> >
+> >     Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
+> >     has a NULL .data member.  That's a driver defect, and we don't want to
+> >     return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
+> >     dereference so we notice the problem and fix it.
+> >
+> >     Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
+> >     functional change intended.
+> >
+> >     Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Based-on-patch-by: Jon Mason <jon.mason@broadcom.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-versatile.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index b7dc07002f13..5ebee7d37ff5 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -124,7 +124,7 @@ static int versatile_pci_probe(struct platform_device *pdev)
- 	int ret, i, myslot = -1;
- 	u32 val;
- 	void __iomem *local_pci_cfg_base;
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *child;
- 	LIST_HEAD(pci_res);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-@@ -204,6 +204,8 @@ static int versatile_pci_probe(struct platform_device *pdev)
- 
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 	pci_assign_unassigned_bus_resources(bus);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
- 	pci_bus_add_devices(bus);
- 
- 	return 0;
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
