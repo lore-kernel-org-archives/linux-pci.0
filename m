@@ -1,135 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Long Li <longli@microsoft.com>
-To: KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [Resend PATCH 1/2 v3] pci-hyperv: properly handle pci bus remove
-Date: Sat, 11 Feb 2017 01:18:23 +0000
-Message-ID: <BN3PR03MB222777D21F0DAA735ADAE5CFCE470@BN3PR03MB2227.namprd03.prod.outlook.com>
-References: <1485236721-27620-1-git-send-email-longli@exchange.microsoft.com>
- <DM5PR03MB2490322EC48F7332D9ED3CB7A0760@DM5PR03MB2490.namprd03.prod.outlook.com>
-In-Reply-To: <DM5PR03MB2490322EC48F7332D9ED3CB7A0760@DM5PR03MB2490.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 02 Feb 2017 14:01:52 -0500
+From: Nate Watterson <nwatters@codeaurora.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Sricharan R <sricharan@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+In-Reply-To: <20170201185230.GA1922@red-moon>
+References: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+ <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+ <20170130143851.GJ16461@arm.com>
+ <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
+ <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
+ <20170130165124.GA11712@red-moon>
+ <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
+ <20170201185230.GA1922@red-moon>
+Message-ID: <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 2017-02-01 13:52, Lorenzo Pieralisi wrote:
+> 
+> I debugged the issue and Nate's fix is correct, the fact that you
+> can't it hit it with mainline is just a matter of timing because it has
+> to do with the CTX pointer value (we OR it with the existing value), so
+> it may work or not depending on how the cdptr memory allocation
+> pattern turns out to be (which explains why Nate and I can hit it with
+> simple PCI device remove/add execution too).
+> 
+> So it is neither an ACPI nor an IOMMU probe deferral issue per-se,
+> fix is already queued, so it is all good.
+> 
+> What about USB stalls ?
+Our fault. The USB controller was getting 48-bit IOVAs, but the
+bus it sits on only supports 44-bits so the controller's DMA
+transactions ended up targeting addresses that were never mapped.
 
-This patch and the other one in the series ([Resend PATCH 2/2 v3] pci-hyper=
-v: lock pci bus on device eject) have been Acked.
+It started working once I applied the iort/dma-mapping patches I
+sent out earlier this week that use the iort memory_address_limit
+field to check if a dma_mask is sane.
 
-Is there anything else should be done before it can be merged? Please let m=
-e know.
+Sorry for the false alarm.
+Nate
+> 
+> Thanks !
+> Lorenzo
 
-Thanks
-
-Long
-
-> -----Original Message-----
-> From: KY Srinivasan
-> Sent: Friday, January 27, 2017 10:42 AM
-> To: Long Li <longli@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>
-> Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Long Li <longli@microsoft.com>
-> Subject: RE: [Resend PATCH 1/2 v3] pci-hyperv: properly handle pci bus
-> remove
->=20
->=20
->=20
-> > -----Original Message-----
-> > From: Long Li [mailto:longli@exchange.microsoft.com]
-> > Sent: Monday, January 23, 2017 9:45 PM
-> > To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> > <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; Long Li <longli@microsoft.com>
-> > Subject: [Resend PATCH 1/2 v3] pci-hyperv: properly handle pci bus
-> > remove
-> >
-> > [This sender failed our fraud detection checks and may not be who they
-> > appear to be. Learn about spoofing at
-> > http://aka.ms/LearnAboutSpoofing]
-> >
-> > From: Long Li <longli@microsoft.com>
-> >
-> > hv_pci_devices_present is called in hv_pci_remove when we remove a PCI
-> > device from host (e.g. by disabling SRIOV on a device). In
-> > hv_pci_remove, the bus is already removed before the call, so we don't
-> > need to rescan the bus in the workqueue scheduled from
-> > hv_pci_devices_present. By introducing status hv_pcibus_removed, we
-> can avoid this situation.
-> >
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-> Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
-> >  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
-> >  1 file changed, 17 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pci-hyperv.c
-> > b/drivers/pci/host/pci-hyperv.c index a8deeca..4a37598 100644
-> > --- a/drivers/pci/host/pci-hyperv.c
-> > +++ b/drivers/pci/host/pci-hyperv.c
-> > @@ -348,6 +348,7 @@ enum hv_pcibus_state {
-> >         hv_pcibus_init =3D 0,
-> >         hv_pcibus_probed,
-> >         hv_pcibus_installed,
-> > +       hv_pcibus_removed,
-> >         hv_pcibus_maximum
-> >  };
-> >
-> > @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct
-> > work_struct *work)
-> >                 put_pcichild(hpdev, hv_pcidev_ref_initial);
-> >         }
-> >
-> > -       /* Tell the core to rescan bus because there may have been chan=
-ges.
-> */
-> > -       if (hbus->state =3D=3D hv_pcibus_installed) {
-> > +       switch (hbus->state) {
-> > +       case hv_pcibus_installed:
-> > +               /*
-> > +                * Tell the core to rescan bus
-> > +                * because there may have been changes.
-> > +                */
-> >                 pci_lock_rescan_remove();
-> >                 pci_scan_child_bus(hbus->pci_bus);
-> >                 pci_unlock_rescan_remove();
-> > -       } else {
-> > +               break;
-> > +
-> > +       case hv_pcibus_init:
-> > +       case hv_pcibus_probed:
-> >                 survey_child_resources(hbus);
-> > +               break;
-> > +
-> > +       default:
-> > +               break;
-> >         }
-> >
-> >         up(&hbus->enum_sem);
-> > @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
-> >         hbus =3D kzalloc(sizeof(*hbus), GFP_KERNEL);
-> >         if (!hbus)
-> >                 return -ENOMEM;
-> > +       hbus->state =3D hv_pcibus_init;
-> >
-> >         /*
-> >          * The PCI bus "domain" is what is called "segment" in ACPI
-> > and @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device
-> *hdev)
-> >                 pci_stop_root_bus(hbus->pci_bus);
-> >                 pci_remove_root_bus(hbus->pci_bus);
-> >                 pci_unlock_rescan_remove();
-> > +               hbus->state =3D hv_pcibus_removed;
-> >         }
-> >
-> >         ret =3D hv_send_resources_released(hdev);
-> > --
-> > 1.8.5.6
+-- 
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+Linux
+Foundation Collaborative Project.
