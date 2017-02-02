@@ -1,56 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49236 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753151AbdBJVED (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 16:04:03 -0500
-Date: Fri, 10 Feb 2017 15:03:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH 1/2] pcie-dpc: Decode extended reasons
-Message-ID: <20170210210335.GL29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 2 Feb 2017 10:25:41 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1 4/4] PCI: rcar: Use of_device_get_match_data() to
+ simplify probe
+Message-ID: <20170202092541.GM21831@verge.net.au>
+References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131202020.27605.39560.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170131202020.27605.39560.stgit@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Scott Branden <sbranden@broadcom.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jon Mason <jonmason@broadcom.com>, linux-pci@vger.kernel.org,
+ Roy Zang <tie-fei.zang@freescale.com>, linux-renesas-soc@vger.kernel.org,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Shailendra Verma <shailendra.v@samsung.com>, Ray Jui <rjui@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com, Mingkai Hu <mingkai.hu@freescale.com>,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 04:46:12PM -0500, Keith Busch wrote:
-> This is just informational to decode the currently defined extended
-> event reasons rather than just using the generic "extended" explanation.
+On Tue, Jan 31, 2017 at 02:20:20PM -0600, Bjorn Helgaas wrote:
+> This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
+> match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
+> has a NULL .data member.  That's a driver defect, and we don't want to
+> return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
+> dereference so we notice the problem and fix it.
+> 
+> Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
+> functional change intended.
+> 
+> Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Applied both of these to pci/dpc for v4.11, thanks, Keith!
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
 > ---
->  drivers/pci/pcie/pcie-dpc.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
+>  drivers/pci/host/pcie-rcar.c |    7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index d91e538..9ca74f4 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -77,11 +77,15 @@ static irqreturn_t dpc_irq(int irq, void *context)
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index aca85be101f8..b3b6d5273347 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1125,7 +1125,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	struct device *dev = &pdev->dev;
+>  	struct rcar_pcie *pcie;
+>  	unsigned int data;
+> -	const struct of_device_id *of_id;
+>  	int err;
+>  	int (*hw_init_fn)(struct rcar_pcie *);
 >  
->  	if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
->  		u16 reason = (status >> 1) & 0x3;
-> +		u16 ext_reason = (status >> 5) & 0x3;
+> @@ -1149,11 +1148,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	if (err)
+>  		return err;
 >  
-> -		dev_warn(&dpc->dev->device, "DPC %s triggered, remove downstream devices\n",
-> +		dev_warn(&dpc->dev->device, "DPC %s detected, remove downstream devices\n",
->  			 (reason == 0) ? "unmasked uncorrectable error" :
->  			 (reason == 1) ? "ERR_NONFATAL" :
-> -			 (reason == 2) ? "ERR_FATAL" : "extended error");
-> +			 (reason == 2) ? "ERR_FATAL" :
-> +			 (ext_reason == 0) ? "RP PIO error" :
-> +			 (ext_reason == 1) ? "software trigger" :
-> +					     "reserved error");
->  		schedule_work(&dpc->work);
+> -	of_id = of_match_device(rcar_pcie_of_match, dev);
+> -	if (!of_id || !of_id->data)
+> -		return -EINVAL;
+> -	hw_init_fn = of_id->data;
+> -
+>  	pm_runtime_enable(dev);
+>  	err = pm_runtime_get_sync(dev);
+>  	if (err < 0) {
+> @@ -1162,6 +1156,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
 >  	}
->  	return IRQ_HANDLED;
-> -- 
-> 2.7.2
+>  
+>  	/* Failure to get a link might just be that no cards are inserted */
+> +	hw_init_fn = of_device_get_match_data(dev);
+>  	err = hw_init_fn(pcie);
+>  	if (err) {
+>  		dev_info(dev, "PCIe link down\n");
 > 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
