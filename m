@@ -1,86 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Feb 2017 16:39:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI,pciehp: Don't handle PDC for cards with attention
- button
-Message-ID: <20170217223916.GG17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170217061247.5591-1-yinghai@kernel.org>
+Return-Path: <SRS0=lb7T=ZP=lst.de=hch@kernel.org>
+Return-Path: <SRS0=lb7T=ZP=lst.de=hch@kernel.org>
+Date: Thu, 2 Feb 2017 19:32:16 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com,
+	bart.vanassche@sandisk.com, tglx@linutronix.de,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
+	vectors left
+Message-ID: <20170202183216.GA8385@lst.de>
+References: <1485778541-28994-1-git-send-email-hch@lst.de> <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170217061247.5591-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 10:12:47PM -0800, Yinghai Lu wrote:
-> On one system during power off slot, find card get power on right away.
->  # echo 0 > /sys/bus/pci/slots/1/power
->  pci_hotplug: power_write_file: power = 0
->  pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 11f1
->  pciehp 0000:16:00.0:pcie004: pciehp_unconfigure_device: domain:bus:dev = 0000:17:00
->  pci 0000:17:00.0: PME# disabled
->  pci 0000:17:00.0: freeing pci_dev info
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
->  pciehp 0000:16:00.0:pcie004: pciehp_power_off_slot: SLOTCTRL a8 write cmd 400
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
->  pciehp 0000:16:00.0:pcie004: Slot(1): Link Down
->  pciehp 0000:16:00.0:pcie004: Slot(1): Link Down event ignored; already powering off
->  pciehp 0000:16:00.0:pcie004: pciehp_green_led_off: SLOTCTRL a8 write cmd 300
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0018 from Slot Status  <======
->  pciehp 0000:16:00.0:pcie004: Slot(1): Card present
->  pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
->  pciehp 0000:16:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
->  pciehp 0000:16:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
->  pciehp 0000:16:00.0:pcie004: pciehp_check_link_active: lnk_status = f103
->  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
->  pciehp 0000:16:00.0:pcie004: Slot(1): Link Up
-> ...
-> 
-> Somehow PDC bit get set, and during handling interrupt that is caused by
-> CC, that PDC also get handled, and the card get powered on again.
-> 
-> In pcie_enable_notification(), we already only enable notification
-> for PDC when attention button is not there.
-> So we can safely add checking in pciehp_isr() to skip that PDC handling.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -618,8 +618,9 @@ static irqreturn_t pciehp_isr(int irq, v
->  		present = !!(status & PCI_EXP_SLTSTA_PDS);
->  		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
->  			  present ? "" : "not ");
-> -		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
-> -					     INT_PRESENCE_OFF);
-> +		if (!ATTN_BUTTN(ctrl))
-> +			pciehp_queue_interrupt_event(slot, present ?
-> +					INT_PRESENCE_ON : INT_PRESENCE_OFF);
+On Thu, Feb 02, 2017 at 11:36:59AM -0600, Bjorn Helgaas wrote:
+> You didn't say exactly where the out of bounds access was, but I assume
+> it's probably in irq_create_affinity_masks() in this path:
 
-I don't think it really makes sense to tie PDC handling with the
-attention button.  It might happen to avoid the problem on your
-system, but I don't see the logical connection between them.
+Yes.  See the original report from Bart here:
 
-Can you reproduce this by disabling pciehp and driving this sequence
-manually with setpci?  I suspect that we are tripping over our own
-feet because we read PCI_EXP_SLTSTA once, clear it (probably too
-early), then queue multiple events, then process those events possibly
-simultaneously.
+http://www.spinics.net/lists/linux-scsi/msg104082.html
 
->  	}
->  
->  	/* Check Power Fault Detected */
+> The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
+> were closer to the actual problem.
+
+I plan to also fix the low-level issue, but:
+
+ a) I have other patches pending in that are for 4.11 and I'd like
+    to batch them up with those to avoid conflicts
+ b) we really need a high-level check like the one added in this
+    patch so that we do the right thing (drop affinity) in this
+    case instead of returning an error to the caller and failing
+    the probe.
