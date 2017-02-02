@@ -1,68 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43370 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:35304 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750766AbdBNXv5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Feb 2017 18:51:57 -0500
-Date: Tue, 14 Feb 2017 16:51:55 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        iommu@lists.linux-foundation.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org (open list)
-Subject: Re: [PATCH 2/2] iommu: add warning when sharing groups
-Message-ID: <20170214165155.7c49485e@t450s.home>
-In-Reply-To: <1487107522-8695-2-git-send-email-okaya@codeaurora.org>
-References: <1487107522-8695-1-git-send-email-okaya@codeaurora.org>
-        <1487107522-8695-2-git-send-email-okaya@codeaurora.org>
+        id S1751861AbdBBWiy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Feb 2017 17:38:54 -0500
+Date: Thu, 2 Feb 2017 16:38:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, bart.vanassche@sandisk.com,
+        tglx@linutronix.de, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
+ vectors left
+Message-ID: <20170202223848.GA11138@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485778541-28994-1-git-send-email-hch@lst.de>
+ <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
+ <20170202183216.GA8385@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170202183216.GA8385@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 Feb 2017 16:25:22 -0500
-Sinan Kaya <okaya@codeaurora.org> wrote:
-
-> The ACS requirement has been obscured in the current code and is only
-> known by certain individuals who happen to read the code. Print out a
-> warning with ACS path failure when ACS requirement is not met.
+On Thu, Feb 02, 2017 at 07:32:16PM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 02, 2017 at 11:36:59AM -0600, Bjorn Helgaas wrote:
+> > You didn't say exactly where the out of bounds access was, but I assume
+> > it's probably in irq_create_affinity_masks() in this path:
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/iommu/iommu.c | 3 +++
->  1 file changed, 3 insertions(+)
+> Yes.  See the original report from Bart here:
 > 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index dbe7f65..049ee0a 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -811,6 +811,9 @@ struct iommu_group *pci_device_group(struct device *dev)
->  	if (IS_ERR(group))
->  		return NULL;
->  
-> +	if (pci_is_root_bus(bus))
-> +		dev_warn_once(&pdev->dev, "using shared group due to ACS path failure\n");
-> +
->  	return group;
->  }
->  
+> http://www.spinics.net/lists/linux-scsi/msg104082.html
+> 
+> > The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
+> > were closer to the actual problem.
+> 
+> I plan to also fix the low-level issue, but:
+> 
+>  a) I have other patches pending in that are for 4.11 and I'd like
+>     to batch them up with those to avoid conflicts
+>  b) we really need a high-level check like the one added in this
+>     patch so that we do the right thing (drop affinity) in this
+>     case instead of returning an error to the caller and failing
+>     the probe.
 
-The premise here is flawed.  An IOMMU group based at the root bus
-doesn't necessarily imply a lack of ACS.  There are devices on root
-buses, integrated endpoints and root ports.  Naturally an IOMMU group
-for these devices needs to be based at the root bus.  Additionally,
-there can be IOMMU groups developed around a lack of ACS that don't
-intersect with the root bus.  Since this is a warn_once, the false
-positives for root bus devices are going to be enumerated first.  On an
-Intel system there's typically a device as 00.0 that will always be
-pointlessly listed first.  Also, it's not clear that grouping devices
-together is always wrong, as Robin pointed out in the EHCI/OHCI
-example.  Lack of ACS on downtream ports is likely to cause problems,
-especially if that downstream port exposes a slot.  Maybe that would be
-a good place to start.  Also, what is someone supposed to do when they
-see this error?  If we can hope they'll look for the error in the code
-(unlikely) a big comment with useful external links might be
-necessary.  Based on how easily vendors ignore kernel warnings, I'm
-dubious there's any value to this path though.  Thanks,
+OK.  I applied this to for-linus for v4.10.
 
-Alex
+I think b) refers to this piece:
+
+  +   /*
+  +    * If there aren't any vectors left after applying the pre/post
+  +    * vectors don't bother with assigning affinity.
+  +    */
+  +   if (affd->pre_vectors + affd->post_vectors == min_vecs)
+  +           affd = NULL;
+
+I think this can be (and really should be) fixed in
+irq_create_affinity_masks(), which can also ignore affinity without
+returning an error to the caller of pci_alloc_irq_vectors_affinity().
+But I guess it's ok to also check here.
+
+Thanks for reminding me to pick this up for v4.10.
+
+Bjorn
