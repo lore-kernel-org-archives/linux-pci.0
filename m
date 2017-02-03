@@ -1,102 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1486395217.2275.38.camel@pengutronix.de>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add code to support i.MX7D
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Mon, 06 Feb 2017 16:33:37 +0100
-In-Reply-To: <20170206151716.10381-4-andrew.smirnov@gmail.com>
-References: <20170206151716.10381-1-andrew.smirnov@gmail.com>
- <20170206151716.10381-4-andrew.smirnov@gmail.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Lee Jones <lee.jones@linaro.org>,
- linux-arm-kernel@lists.infradead.org, yurovsky@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751156AbdBCRcr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 12:32:47 -0500
+Date: Fri, 3 Feb 2017 11:32:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan =?iso-8859-1?Q?R=FCth?= <rueth@comsys.rwth-aachen.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/aspm: Fix null pointer dereference during
+ re-enumeration of PCI bus in pcie_aspm_init_link_state even though ASPM is
+ off
+Message-ID: <20170203173243.GB10291@bhelgaas-glaptop.roam.corp.google.com>
+References: <8dd91424-b38c-4875-9752-9cc42a6f5701@comsys.rwth-aachen.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <8dd91424-b38c-4875-9752-9cc42a6f5701@comsys.rwth-aachen.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 06.02.2017, 07:17 -0800 schrieb Andrey Smirnov:
-> Add various bits of code needed to support i.MX7D variant of the IP.
+On Tue, Jan 03, 2017 at 09:09:49AM +0100, Jan Rüth wrote:
+> This patch fixes a null pointer dereference during PCI bus enumeration
+> when ASPM is off. On an IBM x3850 8664 this bug causes the kernel to
+> halt, this behavior did not appear in 3.10, so this is a regression.
 > 
-> Cc: yurovsky@gmail.com
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Lee Jones <lee.jones@linaro.org>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> pcie_aspm_sanity_check should only be called if ASPM is on.
+> 
+> Signed-off-by: Jan Rueth <rueth@comsys.rwth-aachen.de>
 
-Two small comments inline, otherwise looks real good now.
+We have https://bugzilla.kernel.org/show_bug.cgi?id=187731 for this issue.
+
+Per the dmesg attached there, you're booting with "pcie_aspm=off".
+This patch fixes the NULL pointer dereference in that case, but I'm
+concerned that we may still trip over it if you boot without
+"pcie_aspm=off".
+
+I want to make sure we fix both cases.  Can you please try a boot
+with this patch but without "pcie_aspm=off"?
 
 > ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
->  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 105 insertions(+), 26 deletions(-)
+>  drivers/pci/pcie/aspm.c | +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 83aeb1f..9f57759 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->  and thus inherits all the common properties defined in designware-pcie.txt.
->  
->  Required properties:
-> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
-> +- compatible:
-> +	- "fsl,imx6q-pcie"
-> +	- "fsl,imx6sx-pcie",
-> +	- "fsl,imx6qp-pcie"
-> +	- "fsl,imx7d-pcie"
->  - reg: base address and length of the PCIe controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-
-This misses an "Additional required properties for imx7d-pcie" section
-listing the required reset handles.
-
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 3ef8093..34a21c9 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-
-[...]
-
->  static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index f981129..e758b56 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -552,11 +552,12 @@ static struct pcie_link_state
+> *alloc_pcie_link_state(struct pci_dev *pdev)
+>  void pcie_aspm_init_link_state(struct pci_dev *pdev)
 >  {
->  	struct pcie_port *pp = &imx6_pcie->pp;
-> @@ -381,6 +416,11 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
->  	}
->  
->  	switch (imx6_pcie->variant) {
-> +	case IMX7D:
-> +		reset_control_assert(imx6_pcie->apps_reset);
-
-Can this reset assertion be moved into imx6_pcie_assert_core_reset()?
-This may change the programming order slightly from the downstream
-driver, but I guess that won't hurt if this is the equivalent of the
-LTSSM enable signal.
-
-Regards,
-Lucas
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>         struct pcie_link_state *link;
+> -       int blacklist = !!pcie_aspm_sanity_check(pdev);
+> -
+> +       int blacklist;
+>         if (!aspm_support_enabled)
+>                 return;
+> 
+> +       blacklist = !!pcie_aspm_sanity_check(pdev);
+> +
+>         if (pdev->link_state)
+>                 return;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
