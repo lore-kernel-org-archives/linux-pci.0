@@ -1,77 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50108 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752786AbdBHR5m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Feb 2017 12:57:42 -0500
-Date: Wed, 8 Feb 2017 11:57:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
-Message-ID: <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
-References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
- <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
- <20170206212041.GC679@wunner.de>
- <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
- <20170207062101.GB791@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170207062101.GB791@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V8 08/11] drivers: acpi: Handle IOMMU lookup failure with deferred probing or error
+Date: Fri,  3 Feb 2017 21:18:50 +0530
+Message-Id: <1486136933-20328-9-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 07:21:01AM +0100, Lukas Wunner wrote:
-> On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
-> > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
-> > > > What is the hotplug event that causes generation of this wakeup event?
-> > > 
-> > > If you had read all e-mails in this thread or looked at the bugzilla
-> > > entry I've created, you wouldn't have to ask this question.
-> > 
-> > I'm sorry, I don't necessarily have time to sort through all the
-> > emails.  My idea is that the changelog should be a self-contained
-> > justification for the patch.  The bugzilla is for supporting details
-> > and future archaeologists.
-> > 
-> > > I think it's disappointing that you're asking me to jump through
-> > > various hoops like creating a bugzilla entry, as well as threatening
-> > > to revert my patch, but are unwilling to even look at the bugzilla
-> > > entry or read the entire thread.  It is equally disappointing that
-> > > the reporter of the regression was unwilling or unable to provide
-> > > dmesg output for both machines so that we've got no real idea what
-> > > we're dealing with.
-> > 
-> > I beg your pardon?  I don't think it's fair to malign Yinghai.  He's
-> > tested at least two machines and at least two patches, and it's only
-> > been two working days since he reported the problem.
-> 
-> I think the commercialization of Linux kernel development has put this
-> open source project in a sorry state if an unpaid volunteer is told off
-> because he expresses disappointment that a paid contributor is asking
-> him to debug an issue on secret hardware using secret patches and not
-> providing secret dmesg output.
+This is an equivalent to the DT's handling of the iommu master's probe
+with deferred probing when the corrsponding iommu is not probed yet.
+The lack of a registered IOMMU can be caused by the lack of a driver for
+the IOMMU, the IOMMU device probe not having been performed yet, having
+been deferred, or having failed.
 
-Just let me be clear that I greatly appreciate all problem reports.
-There's very little that I can actually test myself, so problem
-reports from others are absolutely essential.
+The first case occurs when the firmware describes the bus master and
+IOMMU topology correctly but no device driver exists for the IOMMU yet
+or the device driver has not been compiled in. Return NULL, the caller
+will configure the device without an IOMMU.
 
-Often we don't get all the information we'd like, but I treat all
-reports seriously.  For every report we get, there may be dozens or
-hundreds of people who hit the same problem but do not have the time
-or expertise to report it.
+The second and third cases are handled by deferring the probe of the bus
+master device which will eventually get reprobed after the IOMMU.
 
-> > If you think a bugzilla is onerous
-> 
-> Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
-> that you're asking me to create one and then don't look at it.
+The last case is currently handled by deferring the probe of the bus
+master device as well. A mechanism to either configure the bus master
+device without an IOMMU or to fail the bus master device probe depending
+on whether the IOMMU is optional or mandatory would be a good
+enhancement.
 
-I looked at it, and it had a few details, but no analysis of the
-situation.  Ideally, I'm looking for a précis of the situation in
-the changelog, with complete analysis and supporting details in the
-bugzilla.
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
+ drivers/acpi/scan.c        |  7 +++++--
+ drivers/base/dma-mapping.c |  2 +-
+ include/acpi/acpi_bus.h    |  2 +-
+ include/linux/acpi.h       |  7 +++++--
+ 5 files changed, 36 insertions(+), 7 deletions(-)
 
-Bjorn
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index bf0ed09..d01bae8 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 			return NULL;
+ 
+ 		ops = iommu_get_instance(iort_fwnode);
++		/*
++		 * If the ops look-up fails, this means that either
++		 * the SMMU drivers have not been probed yet or that
++		 * the SMMU drivers are not built in the kernel;
++		 * Depending on whether the SMMU drivers are built-in
++		 * in the kernel or not, defer the IOMMU configuration
++		 * or just abort it.
++		 */
+ 		if (!ops)
+-			return NULL;
++			return iort_iommu_driver_enabled(node->type) ?
++			       ERR_PTR(-EPROBE_DEFER) : NULL;
+ 
+ 		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
+ 	}
+@@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 
+ 		while (parent) {
+ 			ops = iort_iommu_xlate(dev, parent, streamid);
++			if (IS_ERR_OR_NULL(ops))
++				return ops;
+ 
+ 			parent = iort_node_get_id(node, &streamid,
+ 						  IORT_IOMMU_TYPE, i++);
+ 		}
+ 	}
+ 
++	/*
++	 * If we have reason to believe the IOMMU driver missed the initial
++	 * add_device callback for dev, replay it to get things in order.
++	 */
++	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
++	    dev->bus && !dev->iommu_group) {
++		int err = ops->add_device(dev);
++
++		if (err)
++			ops = ERR_PTR(err);
++	}
++
+ 	return ops;
+ }
+ 
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1926918..823b005 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1373,20 +1373,23 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+  * @dev: The pointer to the device
+  * @attr: device dma attributes
+  */
+-void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
++int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
+ 	const struct iommu_ops *iommu;
+ 
+ 	iort_set_dma_mask(dev);
+ 
+ 	iommu = iort_iommu_configure(dev);
+-
++	if (IS_ERR(iommu))
++		return PTR_ERR(iommu);
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+ 	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ 			   attr == DEV_DMA_COHERENT);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(acpi_dma_configure);
+ 
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 82bd45c..755a2b5 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
+ 	} else if (has_acpi_companion(dma_dev)) {
+ 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
+ 		if (attr != DEV_DMA_NOT_SUPPORTED)
+-			acpi_dma_configure(dev, attr);
++			ret = acpi_dma_configure(dev, attr);
+ 	}
+ 
+ 	if (bridge)
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 4242c31..9aa762fe 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -573,7 +573,7 @@ struct acpi_pci_root {
+ 
+ bool acpi_dma_supported(struct acpi_device *adev);
+ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
+-void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
++int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+ void acpi_dma_deconfigure(struct device *dev);
+ 
+ struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 5b36974..8b958b6 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -764,8 +764,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 	return DEV_DMA_NOT_SUPPORTED;
+ }
+ 
+-static inline void acpi_dma_configure(struct device *dev,
+-				      enum dev_dma_attr attr) { }
++static inline int acpi_dma_configure(struct device *dev,
++				     enum dev_dma_attr attr)
++{
++	return 0;
++}
+ 
+ static inline void acpi_dma_deconfigure(struct device *dev) { }
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
