@@ -1,16 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 30/37] dt-bindings: PCI: dra7xx: Add dt bindings to enable
- legacy mode
-To: Rob Herring <robh@kernel.org>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-31-git-send-email-kishon@ti.com>
- <20170118214603.qnewy3sm6sgw7lbg@rob-hp-laptop>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58A563F5.5040504@ti.com>
-Date: Thu, 16 Feb 2017 14:03:57 +0530
+Date: Fri, 3 Feb 2017 15:07:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1 0/4] PCI: Use of_device_get_match_data() to simplify
+ probe
+Message-ID: <20170203210740.GC24162@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170118214603.qnewy3sm6sgw7lbg@rob-hp-laptop>
+In-Reply-To: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,51 +16,61 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Cc: Scott Branden <sbranden@broadcom.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jon Mason <jonmason@broadcom.com>, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-renesas-soc@vger.kernel.org,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ linux-arm-kernel@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com, Mingkai Hu <mingkai.hu@freescale.com>,
+ Roy Zang <tie-fei.zang@freescale.com>,
+ Shailendra Verma <shailendra.v@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thursday 19 January 2017 03:16 AM, Rob Herring wrote:
-> On Thu, Jan 12, 2017 at 03:56:19PM +0530, Kishon Vijay Abraham I wrote:
->> Update device tree binding documentation of TI's dra7xx PCI
->> controller to include property for enabling legacy mode.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> index 62f5f59..ed85e8e 100644
->> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> @@ -39,6 +39,10 @@ DEVICE MODE
->>   - interrupts : one interrupt entries must be specified for main interrupt.
->>   - num-ib-windows : number of inbound address translation windows
->>   - num-ob-windows : number of outbound address translation windows
->> + - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
->> +		       contain the register offset within syscon and the 2nd
->> +		       argument should contain the bit field for setting the
->> +		       legacy mode
+On Tue, Jan 31, 2017 at 02:19:51PM -0600, Bjorn Helgaas wrote:
+> This turned into much ado about nothing, but Shailendra's hisi patch
+> prompted similar cleanups in other drivers.  It's a minor simplification,
+> but I think worth doing consistently across drivers.
 > 
-> What's legacy mode?
+> Basically this is Geert's observation that when the driver probe function
+> is called only as a result of matching something in <match_table>, a
+> subsequent of_match_device(<match_table>, dev) call should never fail.
+> 
+> Therefore, instead of this:
+> 
+>   struct of_device_id *match;
+> 
+>   match = of_match_device(<match_table>, dev);
+>   ... = match->data;
+> 
+> we can do this:
+> 
+>   ... = of_device_get_match_data(dev);
+> 
+> ---
+> 
+> Bjorn Helgaas (3):
+>       PCI: iproc: Use of_device_get_match_data() to simplify probe
+>       PCI: layerscape: Use of_device_get_match_data() to simplify probe
+>       PCI: rcar: Use of_device_get_match_data() to simplify probe
+> 
+> Shailendra Verma (1):
+>       PCI: hisi: Use of_device_get_match_data() to simplify probe
+> 
+> 
+>  drivers/pci/host/pci-layerscape.c      |    7 +------
+>  drivers/pci/host/pcie-hisi.c           |    8 +++-----
+>  drivers/pci/host/pcie-iproc-platform.c |    7 +------
+>  drivers/pci/host/pcie-rcar.c           |    7 +------
+>  4 files changed, 6 insertions(+), 23 deletions(-)
 
-It's the name of the bit-field defined in TRM used to add workaround for errata
-id i870 (See [PATCH 29/37] PCI: dwc: dra7xx: Workaround for errata id i870 of
-this series). I'm not sure what it does internally.
-
-Thanks
-Kishon
+I applied these to pci/host-layerscape, pci/host-hisi, pci/host-iproc,
+pci/host-rcar for v4.11.
 
 _______________________________________________
 linux-arm-kernel mailing list
