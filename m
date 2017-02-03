@@ -1,47 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1702051054240.26313@T420s>
-References: <20170128204839.18330-1-linus.walleij@linaro.org>
- <20170128204839.18330-2-linus.walleij@linaro.org>
- <alpine.LNX.2.00.1702051054240.26313@T420s>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Sun, 5 Feb 2017 15:36:41 +0100
-Message-ID: <CACRpkdY=gc4R5RwgPrFnjyfLVqgN0=ChVe6D7ibvAA+8Q1sqNA@mail.gmail.com>
-Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Janos Laube <janos.dev@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:22565 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751459AbdBCRrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 12:47:20 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv5 4/5] pci/msix: Skip disabling disconnected devices
+Date: Fri,  3 Feb 2017 12:55:54 -0500
+Message-Id: <1486144555-5526-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
+References: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 5, 2017 at 11:00 AM, Hans Ulli Kroll
-<ulli.kroll@googlemail.com> wrote:
+This patch checks the device connected state prior to executing device
+shutdown operations so that tear down on disconnected devices completes
+quicker.
 
-> irq: type mismatch, failed to map hwirq-26 for /soc/interrupt-controller@48000000!
->
-> We need to use the use the use the PCI IRQ from gemini as root for the irq
-> domain, not the next one in DT.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/msi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Hm I wonder if that is because I need to set the parent for the intcon
-in the device tree as Arnd pointed out in the bindings patch?
-
-Yours,
-Linus Walleij
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50c5003..17807eb3 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -317,7 +317,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0) {
++	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+@@ -1020,6 +1020,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
+ 		return;
+ 
++	if (pci_dev_is_disconnected(dev)) {
++		dev->msix_enabled = 0;
++		return;
++	}
++
+ 	/* Return the device with MSI-X masked as initial states */
+ 	for_each_pci_msi_entry(entry, dev) {
+ 		/* Keep cached states to be restored */
+-- 
+2.7.2
