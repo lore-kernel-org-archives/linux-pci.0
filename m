@@ -1,146 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58528 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751530AbdB0ULP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 15:11:15 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: [RFC PATCH 30/30] vfio: Allow to bind foreign task
-Date: Mon, 27 Feb 2017 19:54:41 +0000
-Message-Id: <20170227195441.5170-31-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-To: unlisted-recipients:; (no To-header on input)
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V8 10/11] iommu/arm-smmu: Clean up early-probing workarounds
+Date: Fri,  3 Feb 2017 21:18:52 +0530
+Message-Id: <1486136933-20328-11-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let the process that owns the device create an address space bond on
-behalf of another process. We add a pid argument to the BIND_TASK ioctl,
-allowing the caller to bind a foreign task. The expected program flow in
-this case is:
+From: Robin Murphy <robin.murphy@arm.com>
 
-* Process A creates the VFIO context and initializes the device.
-* Process B asks A to bind its address space.
-* Process A issues an ioctl to the VFIO device fd with BIND_TASK(pid).
-  It may communicate the given PASID back to process B or keep track of it
-  internally.
-* Process B asks A to perform transactions on its virtual address.
-* Process A launches transaction tagged with the given PASID.
+Now that the appropriate ordering is enforced via probe-deferral of
+masters in core code, rip it all out and bask in the simplicity.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+[Sricharan: Rebased on top of ACPI IORT SMMU series]
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
- drivers/vfio/vfio.c       | 35 +++++++++++++++++++++++++++++++++--
- include/uapi/linux/vfio.h | 15 +++++++++++++++
- 2 files changed, 48 insertions(+), 2 deletions(-)
+ drivers/iommu/arm-smmu-v3.c | 46 ++---------------------------------
+ drivers/iommu/arm-smmu.c    | 58 +++++++--------------------------------------
+ 2 files changed, 10 insertions(+), 94 deletions(-)
 
-diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-index c4505d8f4c61..ecc5d07e3dbb 100644
---- a/drivers/vfio/vfio.c
-+++ b/drivers/vfio/vfio.c
-@@ -26,6 +26,7 @@
- #include <linux/module.h>
- #include <linux/mutex.h>
- #include <linux/pci.h>
-+#include <linux/ptrace.h>
- #include <linux/rwsem.h>
- #include <linux/sched.h>
- #include <linux/slab.h>
-@@ -1660,7 +1661,7 @@ static long vfio_svm_ioctl(struct vfio_device *device, unsigned int cmd,
- 	struct vfio_device_svm svm;
- 	struct vfio_task *vfio_task;
- 
--	minsz = offsetofend(struct vfio_device_svm, pasid);
-+	minsz = offsetofend(struct vfio_device_svm, pid);
- 
- 	if (copy_from_user(&svm, (void __user *)arg, minsz))
- 		return -EFAULT;
-@@ -1669,9 +1670,39 @@ static long vfio_svm_ioctl(struct vfio_device *device, unsigned int cmd,
- 		return -EINVAL;
- 
- 	if (cmd == VFIO_DEVICE_BIND_TASK) {
--		struct task_struct *task = current;
-+		struct mm_struct *mm;
-+		struct task_struct *task;
-+
-+		if (svm.flags & ~VFIO_SVM_PID)
-+			return -EINVAL;
-+
-+		if (svm.flags & VFIO_SVM_PID) {
-+			rcu_read_lock();
-+			task = find_task_by_vpid(svm.pid);
-+			if (task)
-+				get_task_struct(task);
-+			rcu_read_unlock();
-+			if (!task)
-+				return -ESRCH;
-+
-+			/*
-+			 * Ensure process has RW access on the task's mm
-+			 * FIXME:
-+			 * - I think this ought to be in the IOMMU API
-+			 * - I'm assuming permission is never revoked during the
-+			 *   task's lifetime. Might be mistaken.
-+			 */
-+			mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-+			if (!mm || IS_ERR(mm))
-+				return IS_ERR(mm) ? PTR_ERR(mm) : -ESRCH;
-+			mmput(mm);
-+		} else {
-+			get_task_struct(current);
-+			task = current;
-+		}
- 
- 		ret = iommu_bind_task(device->dev, task, &svm.pasid, 0, NULL);
-+		put_task_struct(task);
- 		if (ret)
- 			return ret;
- 
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 3fe4197a5ea0..41ae8a231d42 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -415,7 +415,9 @@ struct vfio_device_svm {
- 	__u32	flags;
- #define VFIO_SVM_PASID_RELEASE_FLUSHED	(1 << 0)
- #define VFIO_SVM_PASID_RELEASE_CLEAN	(1 << 1)
-+#define VFIO_SVM_PID			(1 << 2)
- 	__u32	pasid;
-+	__u32	pid;
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 7bb157c..eba4ac8 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2743,51 +2743,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
  };
- /*
-  * VFIO_DEVICE_BIND_TASK - _IOWR(VFIO_TYPE, VFIO_BASE + 22,
-@@ -432,6 +434,19 @@ struct vfio_device_svm {
-  * On success, VFIO writes a Process Address Space ID (PASID) into @pasid. This
-  * ID is unique to a device.
-  *
-+ * VFIO_SVM_PID: bind task @pid instead of current task. The shared address
-+ *        space identified by @pasid is that of task identified by @pid.
-+ *
-+ *        Given that the caller owns the device, setting this flag grants the
-+ *        caller read and write permissions on the entire address space of
-+ *        foreign task described by @pid. Therefore, permission to perform the
-+ *        bind operation on a foreign process is governed by the ptrace access
-+ *        mode PTRACE_MODE_ATTACH_REALCREDS check. See man ptrace(2) for more
-+ *        information.
-+ *
-+ *        If the VFIO_SVM_PID flag is not set, @pid is unused and it is the
-+ *        current task that is bound to the device.
-+ *
-  * The bond between device and process must be removed with
-  * VFIO_DEVICE_UNBIND_TASK before exiting.
-  *
++module_platform_driver(arm_smmu_driver);
+ 
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
+-#endif
++IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 091d4a6..faea579 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -2190,56 +2190,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+-
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
+-#endif
++module_platform_driver(arm_smmu_driver);
++
++IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
++IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
++IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
++IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
++IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
++IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
