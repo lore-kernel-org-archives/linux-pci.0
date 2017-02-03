@@ -1,74 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56690 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751107AbdBBPZv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Feb 2017 10:25:51 -0500
-Date: Thu, 2 Feb 2017 09:25:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Sameer Nanda <snanda@google.com>,
-        Kirtika Ruchandani <kirtika@google.com>,
-        Rajat Jain <rajatxjain@gmail.com>
-Subject: Re: Can AER correctable errors make the device inaccessible?
-Message-ID: <20170202152540.GA21267@bhelgaas-glaptop.roam.corp.google.com>
-References: <CACK8Z6FTHQkYKfYUAiY8ty==9gxQAFUM4Fz0PsxpuLwvHS3Z8w@mail.gmail.com>
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36780 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753267AbdBCNt6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Feb 2017 08:49:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6FTHQkYKfYUAiY8ty==9gxQAFUM4Fz0PsxpuLwvHS3Z8w@mail.gmail.com>
+In-Reply-To: <fd54d9a2-5613-29b0-35fe-3db3ecbcdd05@deltatee.com>
+References: <1485882204-26947-1-git-send-email-logang@deltatee.com>
+ <1485882204-26947-2-git-send-email-logang@deltatee.com> <CACvgo50ruxTOfhGF=bV+xWVq+5UZ_xWeoTqxA+SzSwFNCVaS8g@mail.gmail.com>
+ <35aab5e1-c86d-efbb-f0c8-288469aeb52f@deltatee.com> <CACvgo520=CXUHNwd75Er0zPCiEQVfOu0h=eeHNDQ-uQn66kAJA@mail.gmail.com>
+ <fd54d9a2-5613-29b0-35fe-3db3ecbcdd05@deltatee.com>
+From: Emil Velikov <emil.l.velikov@gmail.com>
+Date: Fri, 3 Feb 2017 13:49:56 +0000
+Message-ID: <CACvgo506LPBscY6gdcV=3PSQ+ZaZ8HePZ58pczQ2WVdf_CuK9A@mail.gmail.com>
+Subject: Re: [PATCH 1/1] MicroSemi Switchtec management interface driver
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rajat,
+On 2 February 2017 at 16:37, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 01/02/17 05:10 AM, Emil Velikov wrote:
+>> You can keep it roughly as-is if you're ~reasonably certain one won't
+>> change it in the future.
+>
+> I've made the change anyway. I think it's better now.
+>
+>> Some teams frown upon adding new IOCTL(s) where existing ones can be
+>> made backward/forward compatible.
+>> I'm not fully aware of the general direction/consensus on the topic,
+>> so it might be a minority.
+>
+> Sure, I just don't know what might be needed in the future so it's hard
+> to add a version or flags ioctl now.
+>
+Yes knowing how things will need to change in the is hard. That's why
+the documentation suggestions adding a flag to the ioctl structs.
+It [the flag] might imply certain functional/implementation change,
+support for new/deprecation of old features and others.
 
-On Wed, Feb 01, 2017 at 04:22:49PM -0800, Rajat Jain wrote:
-> Hello,
-> 
-> We have a few devices out in the field and we get occasional kernel
-> crash reports where the PCI device driver often complains about not
-> being able to access the device (PCIe mem mapped registers read
-> returns all 0xFFs). Sometimes we do see a bunch of PCIe correctable
-> AER errors () in the dmesg for those devices:
-> 
-> [   58.527092] pcieport 0000:00:1c.0: PCIe Bus Error:
-> severity=Corrected, type=Data Link Layer, id=00e0(Transmitter ID)
-> [   58.527104] pcieport 0000:00:1c.0:   device [8086:0f48] error
-> status/mask=00001100/00002000
-> [   58.527114] pcieport 0000:00:1c.0:    [ 8] RELAY_NUM Rollover
-> [   58.527123] pcieport 0000:00:1c.0:    [12] Replay Timer Timeout
-> 
->  and thus we suspect that the PCIe link health may not be very good
-> causing this to happen. However, a lot of times, dmesg logs are not
-> available or has rolled over, and hence leaving us no good way of
-> identifying if the PCIe link has been seeing issues. I can't find any
-> counters or statistics in sysfs or elsewhere that can tell me what
-> kind of PCIE/AER errors were seen. My questions:
-> 
-> 1) I'm assuming that we might not be the first ones to have to feel
-> the need of such counters. Essentially I'm looking for some counters
-> that can give indication of PCIe errors (and possibly categorized by
-> error type) on a per device / link basis. Does something exist
-> already? Does it make sense to add some counters like that (I'd be
-> happy to add)?
-> 
-> 2) We only see the above correctable errors, and no uncorrectable
-> errors. Do they look that they may be noticable by the driver? I
-> looked up in the PCIe spec, and it seems that these only mean that the
-> PCIe may retry the packets and hence the PCIe transaction may take a
-> little longer to execute, but the transaction should not fail. Hence
-> the SW should not notice anything else other than the PCIe read taking
-> slightly longer than usual. I see that RELAY_NUM rollover may cause a
-> link to retrain, but in that case would the pending PCIe transaction
-> fail? In short can the above errors result in making a device
-> inaccessible to the driver?
-> 
-> My understanding so far is that these correctable errors should not
-> have a role (other than introducing some delay), and it may be more of
-> a device firmware issue (that may have landed in a bad state thus
-> returning all FFs), and will be happy to get any more pointers.
+>> On the other hand, reading through sysfs for module version in order
+>> to use IOCTL A or B sounds quite hacky. Do you have an example where
+>> this is used or pointed out as good approach ?
+>
+> I don't know of anything doing it that way now. But it sure would be
+> easy and make a bit of sense. (We'd actually use the module version for
+> something useful.) Either way, it would really depend on if and how
+> things change in the future. The point is there are options to expand if
+> needed.
+>
+The part that nobody else is doing such a thing should ring a bell ;-)
 
-There's an open issue with AER correctable errors:
-https://bugzilla.kernel.org/show_bug.cgi?id=111601
+It's no my call, but if it was I'd stick with the existing approach
+and not "reinvent the wheel" sort of speak.
 
-No idea whether it's related to what you're seeing, but worth checking
-it out.
+Thanks
+Emil
