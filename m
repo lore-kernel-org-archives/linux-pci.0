@@ -1,41 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:56900 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbdBFPeZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 10:34:25 -0500
-From: Gabriel Krisman Bertazi <krisman@collabora.co.uk>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-        Gabriel Krisman Bertazi <krisman@collabora.co.uk>
-Subject: [PATCH] pci: Don't duplicate fix up for positive error code
-Date: Mon,  6 Feb 2017 13:34:14 -0200
-Message-Id: <20170206153414.23854-1-krisman@collabora.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 3 Feb 2017 22:18:54 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc6 boot regression on Intel desktop, does not boot after
+ cold boots, boots after reboot
+Message-ID: <20170203211854.GA3697@amd>
+References: <20170203190414.GA3701@amd>
+ <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+ <20170203205129.GA3791@amd>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+In-Reply-To: <20170203205129.GA3791@amd>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function __pci_device_probe tries to be careful about a PCI driver
-probe() hook returning a positive value, but this is not really
-necessary, since the same fix up is already done in
-local_pci_probe (preceded by a noisy warning), which renders this
-instance dead code.
 
-Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.co.uk>
----
- drivers/pci/pci-driver.c | 2 --
- 1 file changed, 2 deletions(-)
+--UugvWAfsgieZRqgk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 1ccce1cd6aca..3e0516ee9eab 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -381,8 +381,6 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- 		id = pci_match_device(drv, pci_dev);
- 		if (id)
- 			error = pci_call_probe(drv, pci_dev, id);
--		if (error >= 0)
--			error = 0;
- 	}
- 	return error;
- }
--- 
-2.11.0
+Hi!
+
+> > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
+> > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
+> > > but I'll have to double check.
+> >=20
+> > But all the kernel versions worked when the keyboard was plugged into
+> > its original USB port?
+>=20
+> Aha. So it looks difference is probably in "where is keyboard plugged
+> in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+> a while :-(.
+>=20
+> Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouc=
+h.
+>=20
+> It happens with current Linus' tree.
+
+v4.10-rc6-feb3 : broken
+v4.9 : ok
+(v4.6 : ok)
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--UugvWAfsgieZRqgk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAliU874ACgkQMOfwapXb+vLWnACffepZZwJuwrFOhn+DM4DMyinb
+6b4AnR4Gy9BNFwbpUxZaVZ+OWwKW9C/z
+=QZht
+-----END PGP SIGNATURE-----
+
+--UugvWAfsgieZRqgk--
