@@ -1,72 +1,98 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 2/3] PCI: imx6: Allow probe deferal by reset GPIO
-Date: Tue,  7 Feb 2017 07:50:26 -0800
-Message-Id: <20170207155027.7734-3-andrew.smirnov@gmail.com>
-In-Reply-To: <20170207155027.7734-1-andrew.smirnov@gmail.com>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        "arnd@arndb.de" <arnd@arndb.de>
+Subject: RE: [PATCH v4] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+Date: Fri, 3 Feb 2017 12:16:55 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263E03C4@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <1486120110-15205-1-git-send-email-bharatku@xilinx.com>
+ <3c78506f-9bcb-0b43-4625-27229ee1f642@arm.com>
+In-Reply-To: <3c78506f-9bcb-0b43-4625-27229ee1f642@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some designs implement reset GPIO via a GPIO expander connected to a
-peripheral bus. One such example would be i.MX7 Sabre board where said
-GPIO is provided by SPI shift register connected to a bitbanged SPI
-bus. In order to support such designs allow reset GPIO request to defer
-probing of the driver.
+> On 03/02/17 11:08, Bharat Kumar Gogada wrote:
+> > - Adding mutex lock for protecting legacy mask register
+> > - Few wifi end points which only support legacy interrupts, performs
+> > hardware reset functionalities after disabling interrupts by invoking
+> > disable_irq and then re-enable using enable_irq, they enable hardware
+> > interrupts first and then virtual irq line later.
+> > - The legacy irq line goes low only after DEASSERT_INTx is received.As
+> > the legacy irq line is high immediately after hardware interrupts are
+> > enabled but virq of EP is still in disabled state and EP handler is
+> > never executed resulting no DEASSERT_INTx.If dummy irq chip is used,
+> > interrutps are not masked and system is hanging with CPU stall.
+> > - Adding irq chip functions instead of dummy irq chip for legacy
+> > interrupts.
+> > - Legacy interrupts are level sensitive, so using handle_level_irq is
+> > more appropriate as it is masks interrupts until End point handles
+> > interrupts and unmasks interrutps after End point handler is executed.
+> > - Legacy interrupts are level triggered, virtual irq line of End Point
+> > shows as edge in /proc/interrupts.
+> > - Setting irq flags of virtual irq line of EP to level triggered at
+> > the time of mapping.
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > ---
+> >  drivers/pci/host/pcie-xilinx-nwl.c |   45
+> +++++++++++++++++++++++++++++++++++-
+> >  1 files changed, 44 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
+> > b/drivers/pci/host/pcie-xilinx-nwl.c
+> > index 43eaa4a..e4605f9 100644
+> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> > @@ -184,6 +184,7 @@ struct nwl_pcie {
+> >  	u8 root_busno;
+> >  	struct nwl_msi msi;
+> >  	struct irq_domain *legacy_irq_domain;
+> > +	spinlock_t leg_mask_lock;
+> >  };
+> >
+> >  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off) @@
+> > -395,11 +396,52 @@ static void nwl_pcie_msi_handler_low(struct irq_desc
+> *desc)
+> >  	chained_irq_exit(chip, desc);
+> >  }
+> >
+> > +static void nwl_mask_leg_irq(struct irq_data *data) {
+> > +	struct irq_desc *desc =3D irq_to_desc(data->irq);
+> > +	struct nwl_pcie *pcie;
+> > +	unsigned long flags;
+> > +	u32 mask;
+> > +	u32 val;
+> > +
+> > +	pcie =3D irq_desc_get_chip_data(desc);
+> > +	mask =3D 1 << (data->hwirq - 1);
+> > +	spin_lock_irqsave(&pcie->leg_mask_lock, flags);
+>=20
+> I've asked you to use a raw spinlock for a reason. If using RT, this gets=
+ turned
+> into a sleeping lock...
+>=20
+ In include/linux/spinlock.h=20
+#define spin_lock_irqsave(lock, flags)                          \
+do {                                                            \
+        raw_spin_lock_irqsave(spinlock_check(lock), flags);     \
+} while (0)
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+The above API invokes raw_spin_lock_irqsave know.
+So is there any difference between raw_spin_lock_irqsave and spin_lock_irqs=
+ave ?
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 50a1291..3ef8093 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -611,7 +611,7 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 	return 0;
- }
- 
--static int __init imx6_pcie_probe(struct platform_device *pdev)
-+static int imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct imx6_pcie *imx6_pcie;
-@@ -653,6 +653,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev, "unable to get reset gpio\n");
- 			return ret;
- 		}
-+	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
-+		return imx6_pcie->reset_gpio;
- 	}
- 
- 	/* Fetch clocks */
-@@ -746,11 +748,12 @@ static struct platform_driver imx6_pcie_driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
- 	},
-+	.probe    = imx6_pcie_probe,
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
- static int __init imx6_pcie_init(void)
- {
--	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
-+	return platform_driver_register(&imx6_pcie_driver);
- }
- device_initcall(imx6_pcie_init);
--- 
-2.9.3
+Thanks & Regards,
+Bharat
