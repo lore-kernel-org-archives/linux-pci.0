@@ -1,119 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Alexander Graf <agraf@suse.de>, John Garry <john.garry@huawei.com>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, "catalin.marinas@arm.com"
- <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
- <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "rafael@kernel.org" <rafael@kernel.org>, "mark.rutland@arm.com"
- <mark.rutland@arm.com>, "brian.starkey@arm.com" <brian.starkey@arm.com>,
- "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
-Date: Wed, 1 Feb 2017 12:29:39 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F9FC04A@lhreml507-mbx>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
- <5dc0dc9c-124e-398f-a3b2-40059268e859@suse.de>
- <6d5523be-1841-18b9-9b83-6f7e591ed66b@huawei.com>
- <1a1f1e70-b6e7-f3c6-2b86-348b3d28edfe@suse.de>
-In-Reply-To: <1a1f1e70-b6e7-f3c6-2b86-348b3d28edfe@suse.de>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "minyard@acm.org" <minyard@acm.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "kantyzc@163.com" <kantyzc@163.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V8 11/11] ACPI/IORT: Remove linker section for IORT entries probing
+Date: Fri,  3 Feb 2017 21:18:53 +0530
+Message-Id: <1486136933-20328-12-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> -----Original Message-----
-> From: Alexander Graf [mailto:agraf@suse.de]
+The IORT linker section introduced by commit 34ceea275f62
+("ACPI/IORT: Introduce linker section for IORT entries probing")
+was needed to make sure SMMU drivers are registered (and therefore
+probed) in the kernel before devices using the SMMU have a chance
+to probe in turn.
 
-[...]
+Through the introduction of deferred IOMMU configuration the linker
+section based IORT probing infrastructure is not needed any longer, in
+that device/SMMU probe dependencies are managed through the probe
+deferral mechanism, making the IORT linker section infrastructure
+unused, so that it can be removed.
 
-> >>
-> >> I like the extio idea. That allows us to handle all PIO requests on
-> >> platforms that don't have native PIO support via different routes
-> >> depending on the region they're in. Unfortunately we now we have 2
-> >> frameworks for handling sparse PIO regions: One in extio, one in
-> PCI.
-> >>
-> >> Why don't we just merge the two? Most of the code that has #ifdef
-> >> PCI_IOBASE throughout the code base sounds like an ideal candidate
-> to
-> >> get migrated to extio instead. Then we only have a single framework
-> to
-> >> worry about ...
-> >
-> > To be clear, are you suggesting we merge the functionality from
-> > pci_register_io_range(), pci_pio_to_address(), pci_address_to_pio()
-> into
-> > extio, so extio manages all PIO?
-> 
-> Yes, I guess so.
-> 
-> > And having a single type of node to
-> > register PIO ranges, by amalgamating struct extio_node and io_range
-> (as
-> > Bjorn mentioned)?
-> 
-> I'm not quite sure I follow you here. Basically I think you want a
-> generic "non-x86 PIO" framework that PCI just plugs into.
-> 
-> I don't think that necessarily means you want to statically allocate
-> regions of that PIO space to separate (pseudo-)devices. Instead,
-> everyone shares that space and should be able to fail gracefully if
-> some
-> space is already occupied.
-> 
-> > It would make sense. We would be somewhat decoupling PIO from PCI.
-> 
-> Yes :).
-> 
-> > I think that other architectures, like PPC, and other code would need
-> to
-> > be fixed up to handle this.
-> 
-> I think only PPC, Microblaze and ARM are using this. Grep for
-> PCI_IOBASE. It's not that many.
-> 
-> > We need to consider all the other challenges/obstacles to this.
-> 
-> Well, getting our abstraction levels right to me sounds like it's worth
-> the obstacles.
-> 
+Remove the unused IORT linker section probing infrastructure
+from the kernel to complete the ACPI IORT IOMMU configure probe
+deferral mechanism implementation.
 
-I have had a quick look and I think it should not be too difficult to
-unify the two frameworks.
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/acpi/arm64/iort.c         | 2 --
+ include/asm-generic/vmlinux.lds.h | 1 -
+ include/linux/acpi_iort.h         | 3 ---
+ 3 files changed, 6 deletions(-)
 
-I'll follow up soon on this thread with a code sketch
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index d01bae8..ac45623 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -992,6 +992,4 @@ void __init acpi_iort_init(void)
+ 	}
+ 
+ 	iort_init_platform_devices();
+-
+-	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 4e09b28..93ea70a 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -567,7 +567,6 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
+-	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index 77e0809..f167e1d04 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -52,7 +52,4 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ { return NULL; }
+ #endif
+ 
+-#define IORT_ACPI_DECLARE(name, table_id, fn)		\
+-	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
+-
+ #endif /* __ACPI_IORT_H__ */
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-Thanks
-Gab
-
-[...]
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
