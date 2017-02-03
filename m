@@ -1,120 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 23 Feb 2017 17:07:22 -0700
-Message-Id: <1487894844-2721-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1487894844-2721-1-git-send-email-logang@deltatee.com>
-References: <1487894844-2721-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v3 2/4] switchtec: Add user interface documentation
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46547 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752260AbdBCUvc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Feb 2017 15:51:32 -0500
+Date: Fri, 3 Feb 2017 21:51:29 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc6 boot regression on Intel desktop, does not boot after
+ cold boots, boots after reboot
+Message-ID: <20170203205129.GA3791@amd>
+References: <20170203190414.GA3701@amd>
+ <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
+In-Reply-To: <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds standard documentation for the sysfs switchtec attributes and
-a RST formatted text file which documents the char device interface.
-Jonathan Corbet has indicated he will move this to a new user-space
-developer documentation book once it's created.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
-Tested-by: Krishna Dhulipala <krishnad@fb.com>
-Reviewed-by: Wei Zhang <wzhang@fb.com>
-Reviewed-by: Jens Axboe <axboe@fb.com>
----
- Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
- MAINTAINERS                 |  1 +
- 2 files changed, 54 insertions(+)
- create mode 100644 Documentation/switchtec.txt
+--opJtzjQTFsWo+cga
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
-new file mode 100644
-index 0000000..4bced4c
---- /dev/null
-+++ b/Documentation/switchtec.txt
-@@ -0,0 +1,53 @@
-+========================
-+Linux Switchtec Support
-+========================
-+
-+Microsemi's "Switchtec" line of PCI switch devices is already
-+supported by the kernel with standard PCI switch drivers. However, the
-+Switchtec device advertises a special management endpoint which
-+enables some additional functionality. This includes:
-+
-+* Packet and Byte Counters
-+* Firmware Upgrades
-+* Event and Error logs
-+* Querying port link status
-+* Custom user firmware commands
-+
-+The switchtec kernel module implements this functionality.
-+
-+
-+Interface
-+=========
-+
-+The primary means of communicating with the Switchtec management firmware is
-+through the Memory-mapped Remote Procedure Call (MRPC) interface.
-+Commands are submitted to the interface with a 4-byte command
-+identifier and up to 1KB of command specific data. The firmware will
-+respond with a 4 bytes return code and up to 1KB of command specific
-+data. The interface only processes a single command at a time.
-+
-+
-+Userspace Interface
-+===================
-+
-+The MRPC interface will be exposed to userspace through a simple char
-+device: /dev/switchtec#, one for each management endpoint in the system.
-+
-+The char device has the following semantics:
-+
-+* A write must consist of at least 4 bytes and no more than 1028 bytes.
-+  The first four bytes will be interpreted as the command to run and
-+  the remainder will be used as the input data. A write will send the
-+  command to the firmware to begin processing.
-+
-+* Each write must be followed by exactly one read. Any double write will
-+  produce an error and any read that doesn't follow a write will
-+  produce an error.
-+
-+* A read will block until the firmware completes the command and return
-+  the four bytes of status plus up to 1024 bytes of output data. (The
-+  length will be specified by the size parameter of the read call --
-+  reading less than 4 bytes will produce an error.
-+
-+* The poll call will also be supported for userspace applications that
-+  need to do other things while waiting for the command to complete.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a57686f..aa702b0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9512,6 +9512,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
- M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
-+F:	Documentation/switchtec.txt
- F:	drivers/pci/switch/switchtec*
- 
- PCI DRIVER FOR NVIDIA TEGRA
--- 
-2.1.4
+Hi!
+
+> > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
+> > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
+> > but I'll have to double check.
+>=20
+> But all the kernel versions worked when the keyboard was plugged into
+> its original USB port?
+
+Aha. So it looks difference is probably in "where is keyboard plugged
+in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+a while :-(.
+
+Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouch.
+
+It happens with current Linus' tree.
+
+"usbcore.nousb usbcore.nousb=3D1" on kernel command line does not
+help. So maybe it is not USB after all. (Sorry).
+
+> Last message I can see on console is something like:
+>
+> pci 0000:00:02.0: Video device with shadowed ROM at [mem 0x000c0000-0x000=
+dffff]
+
+If I do the reboot dance with 4.10-rc6, messages around the hang are:
+
+[    0.281948] RPC: Registered named UNIX socket transport module.
+[    0.282009] RPC: Registered udp transport module.
+[    0.282068] RPC: Registered tcp transport module.
+[    0.282126] RPC: Registered tcp NFSv4.1 backchannel transport
+module.
+[    0.282205] pci 0000:00:02.0: Video device with shadowed ROM at
+[mem 0x000c0000-0x000dffff]
+[    0.316266] PCI: CLS 64 bytes, default 64
+[    0.316330] PCI-DMA: Using software bounce buffering for IO
+(SWIOTLB)
+[    0.316395] software IO TLB [mem 0xb987e000-0xbd87e000] (64MB)
+mapped at [ffff8800b987e000-ffff8800bd87dfff]
+[    0.317912] futex hash table entries: 1024 (order: 5, 131072 bytes)
+[    0.318646] workingset: timestamp_bits=3D62 max_order=3D20
+bucket_order=3D0
+
+So I guess this is something with PCI subsystem?
+
+Ideas welcome...
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--opJtzjQTFsWo+cga
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAliU7VEACgkQMOfwapXb+vKoNQCgl9llWEYKIiIBJpCDzK6AJnoy
+6vIAoIA9e2k9rYUvKzB6gR2RkYGvxRXG
+=6VFX
+-----END PGP SIGNATURE-----
+
+--opJtzjQTFsWo+cga--
