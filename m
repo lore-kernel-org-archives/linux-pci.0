@@ -1,280 +1,214 @@
-Return-Path: <SRS0=k3+F=ZW=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=k3+F=ZW=intel.com=ashok.raj@kernel.org>
-Date: Thu, 9 Feb 2017 10:46:13 -0800
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bart Van Assche <bart.vanassche@sandisk.com>,
-	Christoph Hellwig <hch@lst.de>, Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Keith Busch <keith.busch@intel.com>, ashok.raj@intel.com
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-Message-ID: <20170209184613.GA78375@otc-nc-03>
-References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170209040648.GA1304@wunner.de>
- <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
- <20170209182328.GB77900@otc-nc-03>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53498 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751368AbdBCTpH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 14:45:07 -0500
+Date: Fri, 3 Feb 2017 13:45:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Emil Tantilov <emil.s.tantilov@intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: lock each enable/disable num_vfs operation in
+ sysfs
+Message-ID: <20170203194503.GD10291@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
-In-Reply-To: <20170209182328.GB77900@otc-nc-03>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170106215908.20736.34632.stgit@localhost6.localdomain6>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi Bjorn/Lucas
-
-I did a lspci and captured after a fresh reboot on the slot before 
-attempting a power off via sysfs.
-
-lspci-at-poweron - values after a cold reset poweron.
-lspci-aft-poweroff - values after a echo 0 > power
-lspci-aft-poweron - values after a echo 1 > power
-
-i would expect most or all of those values to stay same between poweron
-and after the next sysfs managed poweron. Would be worth taking a look and see 
-if we have any escapes.
-
-Cheers,
-Ashok
-
-On Thu, Feb 09, 2017 at 10:23:28AM -0800, Raj, Ashok wrote:
-> Thanks Bjorn,
+On Fri, Jan 06, 2017 at 01:59:08PM -0800, Emil Tantilov wrote:
+> Enabling/disabling SRIOV via sysfs by echo-ing multiple values
+> simultaneously:
 > 
-> With the fixes below, managed add remove via sysfs seems to work on my
-> SKX system. 
+> echo 63 > /sys/class/net/ethX/device/sriov_numvfs&
+> echo 63 > /sys/class/net/ethX/device/sriov_numvfs
 > 
-> I'm not familiar with runtime PM aspects, just started looking into it 
-> after this one. There seems some interactions with ASPM and how we handle 
-> devices that support ARI for e.g.
+> sleep 5
 > 
-> For hotplug, we have a good set of tests to check coverage. That matrix
-> might need to be expanded for runtime PM interactions.
+> echo 0 > /sys/class/net/ethX/device/sriov_numvfs&
+> echo 0 > /sys/class/net/ethX/device/sriov_numvfs
 > 
-> Cheers,
-> Ashok
+> Results in the following bug:
 > 
+> kernel BUG at drivers/pci/iov.c:495!
+> invalid opcode: 0000 [#1] SMP
+> CPU: 1 PID: 8050 Comm: bash Tainted: G   W   4.9.0-rc7-net-next #2092
+> RIP: 0010:[<ffffffff813b1647>]
+> 	  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+> 
+> Call Trace:
+>  [<ffffffff81391726>] pci_release_dev+0x26/0x70
+>  [<ffffffff8155be6e>] device_release+0x3e/0xb0
+>  [<ffffffff81365ee7>] kobject_cleanup+0x67/0x180
+>  [<ffffffff81365d9d>] kobject_put+0x2d/0x60
+>  [<ffffffff8155bc27>] put_device+0x17/0x20
+>  [<ffffffff8139c08a>] pci_dev_put+0x1a/0x20
+>  [<ffffffff8139cb6b>] pci_get_dev_by_id+0x5b/0x90
+>  [<ffffffff8139cca5>] pci_get_subsys+0x35/0x40
+>  [<ffffffff8139ccc8>] pci_get_device+0x18/0x20
+>  [<ffffffff8139ccfb>] pci_get_domain_bus_and_slot+0x2b/0x60
+>  [<ffffffff813b09e7>] pci_iov_remove_virtfn+0x57/0x180
+>  [<ffffffff813b0b95>] pci_disable_sriov+0x65/0x140
+>  [<ffffffffa00a1af7>] ixgbe_disable_sriov+0xc7/0x1d0 [ixgbe]
+>  [<ffffffffa00a1e9d>] ixgbe_pci_sriov_configure+0x3d/0x170 [ixgbe]
+>  [<ffffffff8139d28c>] sriov_numvfs_store+0xdc/0x130
+> ...
+> RIP  [<ffffffff813b1647>] pci_iov_release+0x57/0x60
+> 
+> Use the existing mutex lock to protect each enable/disable operation.
+> 
+> -v2: move the existing lock from protecting the config of the IOV bus
+> to protecting the writes to sriov_numvfs in sysfs without maintaining
+> a "locked" version of pci_iov_add/remove_virtfn().
+> As suggested by Gavin Shan <gwshan@linux.vnet.ibm.com>
+> 
+> CC: Alexander Duyck <alexander.h.duyck@intel.com>
+> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=lspci-at-poweron
+Applied with Gavin's reviewed-by to pci/virtualization for v4.11, thanks!
 
-b2:00.0 PCI bridge: Intel Corporation Sky Lake-E PCI Express Root Port 1A (rev 04) (prog-if 00 [Normal decode])
-	Physical Slot: 2
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin A routed to IRQ 29
-	Bus: primary=b2, secondary=b3, subordinate=b4, sec-latency=0
-	I/O behind bridge: 0000c000-0000cfff
-	Memory behind bridge: e1500000-e18fffff
-	Prefetchable memory behind bridge: 00000000e1000000-00000000e14fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Subsystem: Intel Corporation Sky Lake-E PCI Express Root Port 1A
-	Capabilities: [60] MSI: Enable+ Count=1/2 Maskable+ 64bit-
-		Address: fee00000  Data: 40b1
-		Masking: 00000002  Pending: 00000000
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-			ExtTag+ RBE+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 256 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #9, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L0s <512ns, L1 <16us
-			ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-		SltCap:	AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise-
-			Slot #2, PowerLimit 0.000W; Interlock- NoCompl-
-		SltCtl:	Enable: AttnBtn+ PwrFlt- MRL+ PresDet- CmdCplt+ HPIrq+ LinkChg+
-			Control: AttnInd Off, PwrInd On, Power- Interlock-
-		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-			Changed: MRL- PresDet- LinkState-
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-		RootCap: CRSVisible+
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-		DevCap2: Completion Timeout: Range BCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [e0] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [100 v1] Vendor Specific Information: ID=0002 Rev=0 Len=00c <?>
-	Capabilities: [110 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-	Capabilities: [148 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [1d0 v1] Vendor Specific Information: ID=0003 Rev=1 Len=00a <?>
-	Capabilities: [250 v1] #19
-	Capabilities: [280 v1] Vendor Specific Information: ID=0005 Rev=3 Len=018 <?>
-	Capabilities: [298 v1] Vendor Specific Information: ID=0007 Rev=0 Len=024 <?>
-	Capabilities: [300 v1] Vendor Specific Information: ID=0008 Rev=0 Len=038 <?>
-	Kernel driver in use: pcieport
-	Kernel modules: shpchp
-
-
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=lspci-aft-poweroff
-
-b2:00.0 PCI bridge: Intel Corporation Sky Lake-E PCI Express Root Port 1A (rev 04) (prog-if 00 [Normal decode])
-	Physical Slot: 2
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin A routed to IRQ 29
-	Bus: primary=b2, secondary=b3, subordinate=b4, sec-latency=0
-	I/O behind bridge: 0000c000-0000cfff
-	Memory behind bridge: e1500000-e18fffff
-	Prefetchable memory behind bridge: 00000000e1000000-00000000e14fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Subsystem: Intel Corporation Sky Lake-E PCI Express Root Port 1A
-	Capabilities: [60] MSI: Enable+ Count=1/2 Maskable+ 64bit-
-		Address: fee3c000  Data: 4064
-		Masking: 00000002  Pending: 00000000
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-			ExtTag+ RBE+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 256 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #9, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L0s <512ns, L1 <16us
-			ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-		SltCap:	AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise-
-			Slot #2, PowerLimit 0.000W; Interlock- NoCompl-
-		SltCtl:	Enable: AttnBtn+ PwrFlt- MRL+ PresDet- CmdCplt+ HPIrq+ LinkChg+
-			Control: AttnInd Off, PwrInd Off, Power+ Interlock-
-		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-			Changed: MRL- PresDet- LinkState-
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-		RootCap: CRSVisible+
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-		DevCap2: Completion Timeout: Range BCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [e0] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D3 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME+
-	Capabilities: [100 v1] Vendor Specific Information: ID=0002 Rev=0 Len=00c <?>
-	Capabilities: [110 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-	Capabilities: [148 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [1d0 v1] Vendor Specific Information: ID=0003 Rev=1 Len=00a <?>
-	Capabilities: [250 v1] #19
-	Capabilities: [280 v1] Vendor Specific Information: ID=0005 Rev=3 Len=018 <?>
-	Capabilities: [298 v1] Vendor Specific Information: ID=0007 Rev=0 Len=024 <?>
-	Capabilities: [300 v1] Vendor Specific Information: ID=0008 Rev=0 Len=038 <?>
-	Kernel driver in use: pcieport
-	Kernel modules: shpchp
-
-
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=lspci-aft-poweron
-
-b2:00.0 PCI bridge: Intel Corporation Sky Lake-E PCI Express Root Port 1A (rev 04) (prog-if 00 [Normal decode])
-	Physical Slot: 2
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin A routed to IRQ 29
-	Bus: primary=b2, secondary=b3, subordinate=b4, sec-latency=0
-	I/O behind bridge: 0000c000-0000cfff
-	Memory behind bridge: e1a00000-e21fffff
-	Prefetchable memory behind bridge: 00000000e1000000-00000000e14fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Subsystem: Intel Corporation Sky Lake-E PCI Express Root Port 1A
-	Capabilities: [60] MSI: Enable+ Count=1/2 Maskable+ 64bit-
-		Address: fee3c000  Data: 4064
-		Masking: 00000002  Pending: 00000000
-	Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-			ExtTag+ RBE+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 256 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #9, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L0s <512ns, L1 <16us
-			ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt+
-		SltCap:	AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise-
-			Slot #2, PowerLimit 0.000W; Interlock- NoCompl-
-		SltCtl:	Enable: AttnBtn+ PwrFlt- MRL+ PresDet- CmdCplt+ HPIrq+ LinkChg+
-			Control: AttnInd Off, PwrInd On, Power- Interlock-
-		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-			Changed: MRL- PresDet- LinkState-
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-		RootCap: CRSVisible+
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-		DevCap2: Completion Timeout: Range BCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [e0] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME+
-	Capabilities: [100 v1] Vendor Specific Information: ID=0002 Rev=0 Len=00c <?>
-	Capabilities: [110 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-	Capabilities: [148 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [1d0 v1] Vendor Specific Information: ID=0003 Rev=1 Len=00a <?>
-	Capabilities: [250 v1] #19
-	Capabilities: [280 v1] Vendor Specific Information: ID=0005 Rev=3 Len=018 <?>
-	Capabilities: [298 v1] Vendor Specific Information: ID=0007 Rev=0 Len=024 <?>
-	Capabilities: [300 v1] Vendor Specific Information: ID=0008 Rev=0 Len=038 <?>
-	Kernel driver in use: pcieport
-	Kernel modules: shpchp
-
-
---8t9RHnE3ZwKMSgU+--
+> ---
+>  drivers/pci/iov.c       |    7 -------
+>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++-------
+>  drivers/pci/pci.h       |    2 +-
+>  3 files changed, 17 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 4722782..2479ae8 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -124,7 +124,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  	struct pci_sriov *iov = dev->sriov;
+>  	struct pci_bus *bus;
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+>  	if (!bus)
+>  		goto failed;
+> @@ -162,7 +161,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  		__pci_reset_function(virtfn);
+>  
+>  	pci_device_add(virtfn, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	pci_bus_add_device(virtfn);
+>  	sprintf(buf, "virtfn%u", id);
+> @@ -181,12 +179,10 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  	sysfs_remove_link(&dev->dev.kobj, buf);
+>  failed1:
+>  	pci_dev_put(dev);
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+>  failed0:
+>  	virtfn_remove_bus(dev->bus, bus);
+>  failed:
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	return rc;
+>  }
+> @@ -195,7 +191,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+>  {
+>  	char buf[VIRTFN_ID_LEN];
+>  	struct pci_dev *virtfn;
+> -	struct pci_sriov *iov = dev->sriov;
+>  
+>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>  					     pci_iov_virtfn_bus(dev, id),
+> @@ -218,10 +213,8 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+>  	if (virtfn->dev.kobj.sd)
+>  		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+>  	virtfn_remove_bus(dev->bus, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	/* balance pci_get_domain_bus_and_slot() */
+>  	pci_dev_put(virtfn);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 0666287..25d010d 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -472,6 +472,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  				  const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_sriov *iov = pdev->sriov;
+>  	int ret;
+>  	u16 num_vfs;
+>  
+> @@ -482,38 +483,46 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>  		return -ERANGE;
+>  
+> +	mutex_lock(&iov->dev->sriov->lock);
+> +
+>  	if (num_vfs == pdev->sriov->num_VFs)
+> -		return count;		/* no change */
+> +		goto exit;
+>  
+>  	/* is PF driver loaded w/callback */
+>  	if (!pdev->driver || !pdev->driver->sriov_configure) {
+>  		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
+> -		return -ENOSYS;
+> +		ret = -ENOENT;
+> +		goto exit;
+>  	}
+>  
+>  	if (num_vfs == 0) {
+>  		/* disable VFs */
+>  		ret = pdev->driver->sriov_configure(pdev, 0);
+> -		if (ret < 0)
+> -			return ret;
+> -		return count;
+> +		goto exit;
+>  	}
+>  
+>  	/* enable VFs */
+>  	if (pdev->sriov->num_VFs) {
+>  		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
+>  			 pdev->sriov->num_VFs, num_vfs);
+> -		return -EBUSY;
+> +		ret = -EBUSY;
+> +		goto exit;
+>  	}
+>  
+>  	ret = pdev->driver->sriov_configure(pdev, num_vfs);
+>  	if (ret < 0)
+> -		return ret;
+> +		goto exit;
+>  
+>  	if (ret != num_vfs)
+>  		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
+>  			 num_vfs, ret);
+>  
+> +exit:
+> +	mutex_unlock(&iov->dev->sriov->lock);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	return count;
+>  }
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index cb17db2..8dd38e6 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -270,7 +270,7 @@ struct pci_sriov {
+>  	u16 driver_max_VFs;	/* max num VFs driver supports */
+>  	struct pci_dev *dev;	/* lowest numbered PF */
+>  	struct pci_dev *self;	/* this PF */
+> -	struct mutex lock;	/* lock for VF bus */
+> +	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+>  };
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
