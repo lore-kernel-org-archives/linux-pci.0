@@ -1,61 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49628 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934978AbdBQVrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 16:47:14 -0500
-Date: Fri, 17 Feb 2017 15:47:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, mstowe@redhat.com,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RESENT PATCH] PCI/MSI: Fix msi_desc->affinity memory leak when
- freeing MSI IRQs.
-Message-ID: <20170217214710.GF17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487177588-31369-1-git-send-email-prarit@redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org
+Subject: [PATCH V8 01/11] iommu/of: Refactor of_iommu_configure() for error
+ handling
+Date: Fri,  3 Feb 2017 21:18:43 +0530
+Message-Id: <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487177588-31369-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 11:53:08AM -0500, Prarit Bhargava wrote:
-> No response ... trying again.
-> 
-> P.
-> 
-> ---8<---
-> 
-> During device setup, msix_setup_entries() and msi_setup_entry() allocate
-> msi_desc by calling alloc_msi_entry().  alloc_msi_entry() can also allocate a
-> affinity cpumask.  During device teardown free_msi_irqs() is called and the
-> msi_desc is freed, but the affinity cpumask is leaked.
-> 
-> Fix it by calling free_msi_entry() which frees both the msi_desc and the
-> affinity cpumask.
-> 
-> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-> Cc: mstowe@redhat.com
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+From: Robin Murphy <robin.murphy@arm.com>
 
-Applied to pci/msi for v4.11, thanks, Prarit!
+In preparation for some upcoming cleverness, rework the control flow in
+of_iommu_configure() to minimise duplication and improve the propogation
+of errors. It's also as good a time as any to switch over from the
+now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
+IOMMU instance interface directly.
 
-> ---
->  drivers/pci/msi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 50c5003295ca..3d709311052d 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -379,7 +379,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->  		}
->  
->  		list_del(&entry->list);
-> -		kfree(entry);
-> +		free_msi_entry(entry);
->  	}
->  
->  	if (dev->msi_irq_groups) {
-> -- 
-> 1.7.9.3
-> 
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
+ [*] Resolved a conflict while rebasing on top linux-next as the patch
+     is not there in mainline master.
+
+        "iommu: Drop the of_iommu_{set/get}_ops() interface"
+        https://lkml.org/lkml/2017/1/3/489
+
+ drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 53 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index d7f480a..ee49081 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ }
+ EXPORT_SYMBOL_GPL(of_get_dma_window);
+ 
++static const struct iommu_ops
++*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
++{
++	const struct iommu_ops *ops;
++	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
++	int err;
++
++	ops = iommu_get_instance(fwnode);
++	if (!ops || !ops->of_xlate)
++		return NULL;
++
++	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
++	if (err)
++		return ERR_PTR(err);
++
++	err = ops->of_xlate(dev, iommu_spec);
++	if (err)
++		return ERR_PTR(err);
++
++	return ops;
++}
++
+ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	struct of_phandle_args *iommu_spec = data;
+@@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ }
+ 
+ static const struct iommu_ops
+-*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
++*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
+ {
+ 	const struct iommu_ops *ops;
+ 	struct of_phandle_args iommu_spec;
++	int err;
+ 
+ 	/*
+ 	 * Start by tracing the RID alias down the PCI topology as
+@@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ 	 * bus into the system beyond, and which IOMMU it ends up at.
+ 	 */
+ 	iommu_spec.np = NULL;
+-	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
+-			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
+-		return NULL;
++	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
++			     "iommu-map-mask", &iommu_spec.np,
++			     iommu_spec.args);
++	if (err)
++		return ERR_PTR(err);
+ 
+-	ops = iommu_get_instance(&iommu_spec.np->fwnode);
+-	if (!ops || !ops->of_xlate ||
+-	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
+-	    ops->of_xlate(&pdev->dev, &iommu_spec))
+-		ops = NULL;
++	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
+ 
+ 	of_node_put(iommu_spec.np);
+ 	return ops;
+ }
+ 
+-const struct iommu_ops *of_iommu_configure(struct device *dev,
+-					   struct device_node *master_np)
++static const struct iommu_ops
++*of_platform_iommu_init(struct device *dev, struct device_node *np)
+ {
+ 	struct of_phandle_args iommu_spec;
+-	struct device_node *np;
+ 	const struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+ 
+-	if (dev_is_pci(dev))
+-		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
+-
+ 	/*
+ 	 * We don't currently walk up the tree looking for a parent IOMMU.
+ 	 * See the `Notes:' section of
+ 	 * Documentation/devicetree/bindings/iommu/iommu.txt
+ 	 */
+-	while (!of_parse_phandle_with_args(master_np, "iommus",
+-					   "#iommu-cells", idx,
+-					   &iommu_spec)) {
+-		np = iommu_spec.np;
+-		ops = iommu_get_instance(&np->fwnode);
+-
+-		if (!ops || !ops->of_xlate ||
+-		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
+-		    ops->of_xlate(dev, &iommu_spec))
+-			goto err_put_node;
+-
+-		of_node_put(np);
++	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
++					   idx, &iommu_spec)) {
++		ops = of_iommu_xlate(dev, &iommu_spec);
++		of_node_put(iommu_spec.np);
+ 		idx++;
++		if (IS_ERR_OR_NULL(ops))
++			break;
+ 	}
+ 
+ 	return ops;
++}
++
++const struct iommu_ops *of_iommu_configure(struct device *dev,
++					   struct device_node *master_np)
++{
++	const struct iommu_ops *ops;
++
++	if (!master_np)
++		return NULL;
++
++	if (dev_is_pci(dev))
++		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
++	else
++		ops = of_platform_iommu_init(dev, master_np);
+ 
+-err_put_node:
+-	of_node_put(np);
+-	return NULL;
++	return IS_ERR(ops) ? NULL : ops;
+ }
+ 
+ static int __init of_iommu_init(void)
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
