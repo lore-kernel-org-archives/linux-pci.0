@@ -1,147 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 04/22] Documentation: PCI: Guide to use pci endpoint
- configfs
-Date: Fri, 17 Feb 2017 15:20:24 +0530
-Message-ID: <1487325042-28227-5-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60980 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752325AbdBCUmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 15:42:06 -0500
+Date: Fri, 3 Feb 2017 14:42:02 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+        linuxarm@huawei.com
+Subject: Re: [PATCH 2/3] PCI: Set pdev->no_msi=1 for HiSilicon Hip06/Hip07
+ host controllers
+Message-ID: <20170203204202.GG10291@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+ <1484202504-96686-3-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484202504-96686-3-git-send-email-liudongdong3@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation to help users use pci endpoint to configure
-pci endpoint function and to bind the endpoint function
-with endpoint controller.
+On Thu, Jan 12, 2017 at 02:28:23PM +0800, Dongdong Liu wrote:
+> The PCIe root port in Hip06/Hip07 SoCs does not support MSI/MSI-X,
+> it can only transfer MSI/MSI-X from EP, so we add the quirk to
+> set root port pdev->no_msi = 1.
+> 
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                      |    2 +
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt |   84 +++++++++++++++++++++++
- 2 files changed, 86 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+Applied as follows to pci/host-hisi for v4.11.    I removed the device
+ID, since we don't add those to pci_ids.h unless they're used in more
+than one place.  I also reworded the changelog; let me know if I
+didn't understand it correctly.
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index ba950b2..f84a23c 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -14,3 +14,5 @@ pcieaer-howto.txt
- 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
- endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
-+endpoint/pci-endpoint-cfs.txt
-+	- guide to use configfs to configure the pci endpoint function.
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-new file mode 100644
-index 0000000..d9f8734
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-@@ -0,0 +1,84 @@
-+                   CONFIGURING PCI ENDPOINT USING CONFIGFS
-+                    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+The PCI Endpoint Core exposes configfs entry (pci_ep) in order to configure the
-+PCI endpoint function and in order to bind the endpoint function
-+with the endpoint controller. (For introducing other mechanisms to
-+configure the PCI Endpoint Function refer [1]).
-+
-+*) Mounting configfs
-+
-+The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
-+directory. configfs can be mounted using the following command.
-+
-+	mount -t configfs none /sys/kernel/config
-+
-+*) Directory Structure
-+
-+The pci_ep configfs directory structure has been created to reflect the
-+natural tree like structure of PCI devices. So every directory created
-+inside pci_ep represents a EPC device and every directory created inside
-+epf directory represents EPF device.
-+
-+/sys/kernel/config/pci_ep/
-+			 | <dir>/ --------------------------------------> [2]
-+				| epc
-+				| epf/
-+				     | <dir>/ --------------------------> [3]
-+					    | vendorid
-+					    | deviceid
-+					    | revid
-+					    | progif_code
-+					    | subclass_code
-+					    | baseclass_code
-+					    | cache_line_size
-+					    | subsys_vendor_id
-+					    | subsys_id
-+					    | interrupt_pin
-+					    | function
-+
-+*) Creating configfs entry for EPC
-+
-+Any directory created inside *pci_ep* represents an EPC device. In the above
-+directory structure [2] represents an EPC device. It consists of
-+
-+	*) epc: Use it to associate the configfs entry to an actual EPC device.
-+		The list of valid entries for this field can be obtained from
-+			ls /sys/class/pci_epc/
-+
-+	*) epf: Directory that contains all the endpoint functions. The name
-+		of the created directory determines the driver this particular
-+		epf device will be bound to. The name can be obtained either
-+		from the function binding documentation [4] or
-+			ls /sys/bus/pci-epf/drivers
-+
-+		If more than one endpoint function device has to be bound to
-+		the same driver, then the directory should be created using
-+		the following notation
-+			mkdir <name>.<num>
-+
-+*) Creating configfs entry for EPF
-+
-+Any directory created inside *epf* directory represents an EPF device. In the
-+above directory structure, [3] represents an EPF device. It consists of the
-+following entries that can be used to configure the standard configuration
-+header of the endpoint function. (These entries are created by the
-+framework when any new directory is created inside epf directory.)
-+
-+        | vendorid
-+        | deviceid
-+        | revid
-+        | progif_code
-+        | subclass_code
-+        | baseclass_code
-+        | cache_line_size
-+        | subsys_vendor_id
-+        | subsys_id
-+        | interrupt_pin
-+
-+The following entry identifies the function driver that is bound to the
-+function device
-+	| function
-+
-+[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
-+[4] -> Documentation/PCI/endpoint/function/binding/
--- 
-1.7.9.5
+commit c2f8051a8a0c7ea9e93d80e484948cab583b7605
+Author: Dongdong Liu <liudongdong3@huawei.com>
+Date:   Thu Jan 12 14:28:23 2017 +0800
 
+    PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports
+    
+    The PCIe Root Port in Hip06/Hip07 SoCs can transfer MSI/MSI-X from
+    downstream devices, but does not support MSI/MSI-X itself.
+    
+    Add a quirk to prevent use of MSI/MSI-X by the Root Port.
+    
+    [bhelgaas: changelog, sort vendor ID #define, drop device ID #define]
+    Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1800befa8b8b..c49ac99bda4b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1634,6 +1634,7 @@ static void quirk_pcie_mch(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7320_MCH,	quirk_pcie_mch);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quirk_pcie_mch);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI,	0x1610,	quirk_pcie_mch);
+ 
+ 
+ /*
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 73dda0edcb97..a4f77feecbb0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2516,6 +2516,8 @@
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF2	0x1700
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF3	0x17ff
+ 
++#define PCI_VENDOR_ID_HUAWEI         	0x19e5
++
+ #define PCI_VENDOR_ID_NETRONOME		0x19ee
+ #define PCI_DEVICE_ID_NETRONOME_NFP3200	0x3200
+ #define PCI_DEVICE_ID_NETRONOME_NFP3240	0x3240
+
+> ---
+>  drivers/pci/quirks.c    | 1 +
+>  include/linux/pci_ids.h | 3 +++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 1800bef..20cbdae 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1634,6 +1634,7 @@ static void quirk_pcie_mch(struct pci_dev *pdev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7320_MCH,	quirk_pcie_mch);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quirk_pcie_mch);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI,	PCI_DEVICE_ID_HISILICON_1610,	quirk_pcie_mch);
+>  
+>  
+>  /*
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 73dda0e..9cc4720 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -3054,4 +3054,7 @@
+>  
+>  #define PCI_VENDOR_ID_OCZ		0x1b85
+>  
+> +#define PCI_VENDOR_ID_HUAWEI         	0x19e5
+> +#define PCI_DEVICE_ID_HISILICON_1610 	0x1610
+> +
+>  #endif /* _LINUX_PCI_IDS_H */
+> -- 
+> 1.9.1
+> 
