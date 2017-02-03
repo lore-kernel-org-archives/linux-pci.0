@@ -1,75 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54795 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753221AbdBPEcw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 23:32:52 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1G4ONbq161042
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:32:51 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 28mq9uhn27-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:32:50 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-        Thu, 16 Feb 2017 14:32:47 +1000
-Subject: Re: [PATCH 2/3] pci/hotplug/pnv-php: Disable surprise hotplug
- capability on conflicts
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        "# v4 . 9+" <stable@vger.kernel.org>
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Date: Thu, 16 Feb 2017 15:31:48 +1100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5893FAE0.8070301@linaro.org>
+Date: Fri, 03 Feb 2017 11:37:04 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Nate Watterson <nwatters@codeaurora.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Sinan Kaya <okaya@codeaurora.org>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Sricharan R <sricharan@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+References: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org> <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com> <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org> <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org> <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org> <20170130143851.GJ16461@arm.com> <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org> <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org> <20170130165124.GA11712@red-moon> <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org> <20170201185230.GA1922@red-moon> <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
+In-Reply-To: <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
 Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <48c227b2-756d-a5d3-227f-58ad51dd1565@au1.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/02/17 10:22, Gavin Shan wrote:
-> The root port or PCIe switch downstream port might have been associated
-> with driver other than pnv-php. The MSI or MSIx might also have been
-> enabled by that driver (e.g. pcieport_drv). Attempt to enable MSI incurs
-> below backtrace:
+On 02/03/2017 03:01 AM, Nate Watterson wrote:
+> On 2017-02-01 13:52, Lorenzo Pieralisi wrote:
+>>
+>> I debugged the issue and Nate's fix is correct, the fact that you
+>> can't it hit it with mainline is just a matter of timing because it has
+>> to do with the CTX pointer value (we OR it with the existing value), so
+>> it may work or not depending on how the cdptr memory allocation
+>> pattern turns out to be (which explains why Nate and I can hit it with
+>> simple PCI device remove/add execution too).
+>>
+>> So it is neither an ACPI nor an IOMMU probe deferral issue per-se,
+>> fix is already queued, so it is all good.
+>>
+>> What about USB stalls ?
+> Our fault. The USB controller was getting 48-bit IOVAs, but the
+> bus it sits on only supports 44-bits so the controller's DMA
+> transactions ended up targeting addresses that were never mapped.
 >
->  PowerPC PowerNV PCI Hotplug Driver version: 0.1
->  ------------[ cut here ]------------
->  WARNING: CPU: 19 PID: 1004 at drivers/pci/msi.c:1071 \
->                               __pci_enable_msi_range+0x84/0x4e0
->  NIP [c000000000665c34] __pci_enable_msi_range+0x84/0x4e0
->  LR [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
->  Call Trace:
->  [c000000384d67600] [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
->  [c000000384d676e0] [d00000000aa31b04] pnv_php_register+0x564/0x5a0 [pnv_php]
->  [c000000384d677c0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
->  [c000000384d678a0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
->  [c000000384d67980] [d00000000aa31dfc] pnv_php_init+0x60/0x98 [pnv_php]
->  [c000000384d679f0] [c00000000000cfdc] do_one_initcall+0x6c/0x1d0
->  [c000000384d67ab0] [c000000000b92354] do_init_module+0x94/0x254
->  [c000000384d67b40] [c00000000019719c] load_module+0x258c/0x2c60
->  [c000000384d67d30] [c000000000197bb0] SyS_finit_module+0xf0/0x170
->  [c000000384d67e30] [c00000000000b184] system_call+0x38/0xe0
-> 360aebd85a4c
-> This fixes the issue by skipping enabling the surprise hotplug
-> capability if the MSI or MSIx on the PCI slot's upstream port has
-> been enabled by other driver.
->
-> Cc: <stable@vger.kernel.org> # v4.9+
-> Fixes: 360aebd85a4c ("drivers/pci/hotplug: Support surprise hotplug in powernv driver")
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> It started working once I applied the iort/dma-mapping patches I
+> sent out earlier this week that use the iort memory_address_limit
+> field to check if a dma_mask is sane.
 
-Should this print something to the kernel log to indicate that surprise 
-hotplug is unavailable?
+OK, great, I tested this patch with platform USB device which was
+working fine on Hisilicon D03, so I didn't miss anything here.
 
-Otherwise:
+Thanks
+Hanjun
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-
--- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
