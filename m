@@ -1,62 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 03/22] PCI: endpoint: Introduce configfs entry for
- configuring EP functions
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-4-git-send-email-kishon@ti.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58A6E609.9070709@ti.com>
-Date: Fri, 17 Feb 2017 17:31:13 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:33930 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752284AbdBCUnX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 15:43:23 -0500
+Date: Fri, 3 Feb 2017 15:52:20 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        zhangjukuo <zhangjukuo@huawei.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: Re: Question: PCIe DPC not allowing for link retraining and bus
+ re-scan
+Message-ID: <20170203205219.GE24601@localhost.localdomain>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1FA01473@lhreml507-mbx>
 MIME-Version: 1.0
-In-Reply-To: <1487325042-28227-4-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1FA01473@lhreml507-mbx>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Friday 17 February 2017 03:20 PM, Kishon Vijay Abraham I wrote:
-> Introduce a new configfs entry to configure the EP function (like
-> configuring the standard configuration header entries) and to
-> bind the EP function with EP controller.
+On Fri, Feb 03, 2017 at 10:35:47AM +0000, Gabriele Paoloni wrote:
+> > If my understanding is correct upon an incoming DPC event
+> > the DPC IRQ handler will:
+> > 1) stop and remove all the devices in the hierarchy under the
+> > downstream port that raised the event
+> > 2) wait for the data link to be inactive
+> > 3) keep the downstream port status in DPC (in fact we set the DPC
+> >    trigger status again here:
+> >    http://lxr.free-electrons.com/source/drivers/pci/pcie/pcie-
+> > dpc.c#L55)
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/endpoint/Kconfig      |   14 +-
->  drivers/pci/endpoint/Makefile     |    1 +
->  drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 440 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+> As you can see above, after waiting for the link to be inactive
+> we raise again a DPC event (according to PCIe3.0 6.2.10.1 we have
+> DPC Interrupt Enable bit set to 1b and we set DPC Interrupt Status bit
+> to 1b), also we keep the port in DPC status as we set also "DPC Trigger
+> Status" to 1b. However this seems wrong to me as I would expect SW to
+> clear "DPC Trigger Status" to allow the link to retrain and then to
+> raise the Hot-plug event...
 > 
-> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-> index 7eb1c79..8470f0b 100644
-> --- a/drivers/pci/endpoint/Kconfig
-> +++ b/drivers/pci/endpoint/Kconfig
-> @@ -6,7 +6,6 @@ menu "PCI Endpoint"
->  
->  config PCI_ENDPOINT
->  	bool "PCI Endpoint Support"
-> -	select CONFIGFS_FS
->  	help
->  	   Enable this configuration option to support configurable PCI
->  	   endpoint. This should be enabled if the platform has a PCI
-> @@ -14,8 +13,19 @@ config PCI_ENDPOINT
->  
->  	   Enabling this option will build the endpoint library, which
->  	   includes endpoint controller library and endpoint function
-> -	   library.
-> +	   library. This will also enable the configfs entry required to
-> +	   configure the endpoint function and used to bind the
-> +	   function with a endpoint controller.
+> What do you think?
 
-This chunk shouldn't be added. I've missed removing this (it's added below).
-I'll wait to get other review comments before sending a new revision.
-
-Thanks
-Kishon
+I think it's just fine as-is. These are defined as RW1C fields, meaning
+write 1 to clear.
